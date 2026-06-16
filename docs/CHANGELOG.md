@@ -2,6 +2,14 @@
 
 Major features and milestones in chronological order.
 
+## 2026-06-16 — P-024 OSS Release: public at `dholbach/my-practice` (AGPL-3.0, v0.1.0)
+
+- **Public repository**: Orphan snapshot (`895ad65`, "Initial public release v0.1.0") pushed to GitHub with no private dev history. AGPL-3.0 licensed, tagged `v0.1.0`, description + 8 topics set (`django`, `dsgvo`, `gdpr`, `healthcare`, `postgresql`, `practice-management`, `psychotherapy`, `self-hosted`).
+- **Contribution onramp** (PR #1): `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, bug/feature issue templates, PR template.
+- **Compliance prominence** (PR #2): elevated DPIA / data-security guides for non-technical practitioners.
+- **CI + architecture tour** (PR #3, scaled to lint-only in follow-ups): `.github/workflows/ci.yml` runs `ruff check` + `ruff format --check` on push/PR; README gained an architecture tour and badges; AGPL clarified (PR #4).
+- P-024 closed; remaining OSS work (first-run wizard, prod docker-compose, pytest/GHCR CI, semver releases, governance) moved to backlog.
+
 ## 2026-06-15 — P-045 Phase 2: Tailwind CSS migration (25/29 per-page CSS files)
 
 - **Tailwind pipeline** (Phase 0): `@tailwindcss/cli` in Docker, `--watch=always` sidecar, `tailwind.out.css` in `base.html`, preflight disabled, `@theme` tokens mapped from existing CSS variables.

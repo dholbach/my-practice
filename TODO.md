@@ -10,11 +10,17 @@ Open backlog only. For completed work history: [docs/CHANGELOG.md](docs/CHANGELO
 | --- | --- | --- | --- |
 | P-029 | Import Old Session Logs | ~4h | Management command `import_session_logs`, CSV + Fernet |
 | P-023 | SMS-Versand (seven.io) | ~4h | Absagen + Schnell-SMS; AVV zuerst → [P-023](docs/projects/todo/P-023_SMS_CANCELLATION.md) |
-| P-024 | OSS Release | ~1h | Orphan push to GitHub (screenshots done) → [P-024](docs/projects/wip/P-024_OSS_RELEASE.md) |
 
 ---
 
 ## Enhancements & Kleinaufgaben
+
+### OSS / Self-hosting (post P-024)
+
+- [ ] `docker-compose.prod.yml` for VPS (Caddy, HTTPS, health-check)
+- [ ] Extend CI beyond lint: run pytest suite + build/publish Docker image on GHCR
+- [ ] Semver release process + `UPGRADING.md` for self-hosters
+- [ ] OSS governance: GitHub Discussions + responsible-disclosure policy
 
 ### Backup
 
