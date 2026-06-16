@@ -1,0 +1,46 @@
+{% comment %}
+Widget Base Template - P-003 Phase 3
+Collapsible widget card with state persistence via LocalStorage
+
+Usage:
+{% include 'includes/widget_base.html' with widget_id="agenda" widget_title="📅 Heute" widget_content="..." %}
+
+Required parameters:
+- widget_id: Unique identifier for the widget (used for LocalStorage key)
+- widget_title: Display title for the widget header
+- widget_content: The main content to display (can be another include)
+
+Optional parameters:
+- widget_subtitle: Optional subtitle text
+- widget_badge: Optional badge HTML (stats, counts, etc.)
+- default_collapsed: Boolean, whether widget starts collapsed (default: false)
+- widget_class: Additional CSS classes for the widget
+{% endcomment %}
+
+<div class="dashboard-widget {% if widget_class %}{{ widget_class }}{% endif %}"
+     data-widget-id="{{ widget_id }}"
+     {% if default_collapsed %}data-default-collapsed="true"{% endif %}>
+
+    <div class="widget-header">
+        <div class="widget-title-group">
+            <h3 class="widget-title">
+                {{ widget_title }}
+                {% if widget_subtitle %}
+                    <span class="widget-subtitle">{{ widget_subtitle }}</span>
+                {% endif %}
+            </h3>
+            {% if widget_badge %}
+                <div class="widget-badge-group">
+                    {{ widget_badge }}
+                </div>
+            {% endif %}
+        </div>
+        <button class="widget-toggle" aria-label="Toggle widget">
+            <span class="toggle-icon">▼</span>
+        </button>
+    </div>
+
+    <div class="widget-content">
+        {{ widget_content }}
+    </div>
+</div>

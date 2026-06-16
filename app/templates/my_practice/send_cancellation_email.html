@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Absage-Mail senden{% endblock %}
+
+{% block page_title %}🤒 Absage-Mail senden{% endblock %}
+{% block page_subtitle %}<span class="sensitive-data">{{ client.full_name }}</span> ({{ client.client_code }}) &mdash; {% if client.language == 'en' %}🇬🇧 English{% else %}🇩🇪 Deutsch{% endif %}{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+
+<div class="email-preview">
+    <h2>🤒 Absage wegen Krankheit</h2>
+
+    {% if not client.salutation %}
+    <div class="callout callout-warning">
+        <strong>⚠️ Keine persönliche Anrede für diesen Klienten hinterlegt</strong><br>
+        Die E-Mail verwendet eine generische Anrede. Du kannst die Anrede im Textfeld unten anpassen.
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.recipient.id_for_label }}">{{ form.recipient.label }}</label>
+            {{ form.recipient }}
+            {% if form.recipient.errors %}<div class="error">{{ form.recipient.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<div class="error">{{ form.subject.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
+            {{ form.body }}
+            {% if form.body.errors %}<div class="error">{{ form.body.errors }}</div>{% endif %}
+            <div class="helptext">
+                Du kannst den Text frei anpassen. Keine Anhänge — nur Text.
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                📧 Absage senden
+            </button>
+            <a href="{% url 'client_detail' client.pk %}" class="btn btn-secondary">
+                Abbrechen
+            </a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily My Practice System Backup
+Requires=my-practice-backup.service
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=12h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

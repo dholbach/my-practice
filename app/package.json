@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "build:css": "tailwindcss --input static/css/tailwind.css --output static/css/tailwind.out.css --minify",
+    "watch:css": "tailwindcss --input static/css/tailwind.css --output static/css/tailwind.out.css --watch=always"
+  }
+}

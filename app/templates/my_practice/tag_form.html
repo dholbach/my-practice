@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object.pk %}Tag bearbeiten{% else %}Neues Tag{% endif %}{% endblock %}
+
+{% block page_title %}{% if object.pk %}Tag bearbeiten{% else %}Neues Tag erstellen{% endif %}{% endblock %}
+
+{% block content %}
+<div class="section-card" style="max-width: 600px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">Name *</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="error-message">{{ form.name.errors }}</div>
+            {% endif %}
+            <small class="text-muted text-sm">
+                z.B. "missing-paperwork", "follow-up", "needs-documentation"
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.color.id_for_label }}">Farbe *</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
+                {% for value, label in form.color.field.choices %}
+                    <label class="color-option" style="cursor: pointer;">
+                        <input type="radio" name="color" value="{{ value }}"
+                               {% if form.color.value == value %}checked{% endif %}
+                               style="display: none;">
+                        <span class="color-box {{ value }}" style="display: block; padding: 0.75rem; border-radius: 8px; text-align: center; font-size: 0.75rem; font-weight: 600; color: white; border: 3px solid transparent; transition: all 0.2s;">
+                            {{ label }}
+                        </span>
+                    </label>
+                {% endfor %}
+            </div>
+            {% if form.color.errors %}
+                <div class="error-message">{{ form.color.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Beschreibung (optional)</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div class="error-message">{{ form.description.errors }}</div>
+            {% endif %}
+            <small class="text-muted text-sm">
+                Was bedeutet dieses Tag? Wann sollte es verwendet werden?
+            </small>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn">
+                {% if object.pk %}💾 Speichern{% else %}➕ Erstellen{% endif %}
+            </button>
+            <a href="{% url 'tag_list' %}" class="btn btn-secondary">
+                Abbrechen
+            </a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

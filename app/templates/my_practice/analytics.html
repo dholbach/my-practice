@@ -1,0 +1,1062 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load payment_tags %}
+
+{% block title %}Analysen{% endblock %}
+
+{% block page_icon %}📊{% endblock %}
+{% block page_title %}Analysen{% endblock %}
+{% block page_subtitle %}Umsatz, Klienten, Kapazität & Ausgaben{% endblock %}
+
+{% block extra_css %}
+<!-- Modular chart utilities -->
+<script src="{% static 'js/charts/chart_core.js' %}"></script>
+<script src="{% static 'js/charts/chart_config.js' %}"></script>
+<script src="{% static 'js/charts/chart_helpers.js' %}"></script>
+<script src="{% static 'js/charts/chart_canvas.js' %}"></script>
+<script src="{% static 'js/charts/chart_primitives.js' %}"></script>
+<script src="{% static 'js/charts/chart_bar.js' %}"></script>
+<script src="{% static 'js/charts/chart_line.js' %}"></script>
+<script src="{% static 'js/charts/chart_tooltip.js' %}"></script>
+<script src="{% static 'js/charts/chart_tooltip_enhanced.js' %}"></script>
+<script src="{% static 'js/charts/chart_math.js' %}"></script>
+<script src="{% static 'js/charts/chart_builder.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+<!-- Time Period Filter -->
+<div class="analytics-card analytics-card--filter-header">
+    <form method="get" id="periodFilterForm" class="period-filter-form">
+        <input type="hidden" name="tab" value="{{ active_tab }}">
+        <div class="period-filter-form__field">
+            <label for="period" class="filter-label">
+                📅 Zeitraum
+            </label>
+            <select name="period" id="period" class="form-control">
+                <option value="all" {% if selected_period == 'all' %}selected{% endif %}>Alle Jahre ({{ data_start_year }}-heute)</option>
+                <option value="year" {% if selected_period == 'year' %}selected{% endif %}>Letztes Jahr</option>
+                <option value="quarter" {% if selected_period == 'quarter' %}selected{% endif %}>Letztes Quartal</option>
+                <option value="month" {% if selected_period == 'month' %}selected{% endif %}>Letzter Monat</option>
+                <option value="custom" {% if selected_period == 'custom' %}selected{% endif %}>Benutzerdefiniert</option>
+            </select>
+        </div>
+
+        <div id="customDates" class="period-filter-form__custom-dates">
+            <div class="period-filter-form__date-field">
+                <label for="start_date" class="filter-label">
+                    Von
+                </label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="period-filter-form__date-field">
+                <label for="end_date" class="filter-label">
+                    Bis
+                </label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            🔍 Anwenden
+        </button>
+        {% if selected_period != 'all' %}
+        <a href="{% url 'analytics' %}?tab={{ active_tab }}" class="btn btn-secondary">
+            ↺ Zurücksetzen
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+function toggleCustomDates() {
+    const period = document.getElementById('period').value;
+    const customDates = document.getElementById('customDates');
+    if (period === 'custom') {
+        customDates.style.display = 'flex';
+    } else {
+        customDates.style.display = 'none';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleCustomDates();
+    document.getElementById('period').addEventListener('change', toggleCustomDates);
+});
+</script>
+
+<!-- Tab Navigation -->
+<div class="tabs-container">
+    <div class="tabs-nav">
+        <button class="tab-button {% if active_tab == 'revenue' %}active{% endif %}" data-tab="revenue">
+            <span class="tab-icon">💰</span> Umsatz
+        </button>
+        <button class="tab-button {% if active_tab == 'clients' %}active{% endif %}" data-tab="clients">
+            <span class="tab-icon">👥</span> Klienten
+        </button>
+        <button class="tab-button {% if active_tab == 'capacity' %}active{% endif %}" data-tab="capacity">
+            <span class="tab-icon">📊</span> Kapazität
+        </button>
+        <button class="tab-button {% if active_tab == 'expenses' %}active{% endif %}" data-tab="expenses">
+            <span class="tab-icon">💸</span> Ausgaben
+        </button>
+    </div>
+</div>
+
+<!-- Tab Content: Revenue -->
+<div id="revenue-tab" class="tab-content {% if active_tab == 'revenue' %}active{% endif %}">
+    <h2>💰 Umsatz & Gewinn</h2>
+
+    <!-- Quick Actions -->
+    <div class="tab-actions">
+        <a href="{% url 'revenue_report' %}" class="btn btn-primary btn-sm">
+            📊 Detaillierter Umsatz-Report
+        </a>
+    </div>
+
+    <!-- Profit Analysis -->
+    <div class="analytics-card mb-4">
+        <h3>💰 Gewinn (Umsatz - Ausgaben)</h3>
+        <p class="chart-subtitle">
+            Geschäftsgewinn {{ data_start_year }}-heute • Kumulative Entwicklung
+        </p>
+
+        <div class="table-container">
+            <table class="data-table data-table--wide">
+                <thead>
+                    <tr>
+                        <th class="text-left">Jahr</th>
+                        <th class="text-right">Einnahmen</th>
+                        <th class="text-right">Ausgaben</th>
+                        <th class="text-right">Gewinn</th>
+                        <th class="text-right">Kumulativ</th>
+                        <th class="text-right">Entnahmen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in profit_data %}
+                    <tr>
+                        <td class="fw-700 text-primary">{{ item.year }}</td>
+                        <td class="text-success text-right">{{ item.revenue|currency }}</td>
+                        <td class="text-warning text-right">{{ item.expenses|currency }}</td>
+                        <td class="text-right fw-700 {{ item.profit|highlight_diff }}">
+                            {{ item.profit|currency }}
+                        </td>
+                        <td class="text-right fw-700 {{ item.cumulative_profit|highlight_diff }}">
+                            {{ item.cumulative_profit|currency }}
+                        </td>
+                        <td class="text-danger text-right">{{ item.withdrawals|currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Revenue vs Expenses vs Withdrawals -->
+    <div class="analytics-card mb-4">
+        <h3>💰 Umsatz, Ausgaben & Entnahmen</h3>
+        <p class="chart-subtitle">
+            Vollständige Finanzübersicht
+        </p>
+
+        <div id="comparisonChartContainer" class="chart-wrapper chart-wrapper--xl">
+            <canvas id="comparisonChart" width="100%" height="100%"></canvas>
+        </div>
+    </div>
+
+    <script>
+    initChart('comparisonChart', function(canvas) {
+        const years = [{% for item in comparison_data %}'{{ item.year }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+        const revenues = [{% for item in comparison_data %}{{ item.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+        const expenses = [{% for item in comparison_data %}{{ item.expenses|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+        const withdrawals = [{% for item in comparison_data %}{{ item.withdrawals|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+        const datasets = [
+            { data: revenues, color: '#48bb78', colorEnd: '#38a169', label: 'Umsatz' },
+            { data: expenses, color: '#f56565', colorEnd: '#e53e3e', label: 'Ausgaben' },
+            { data: withdrawals, color: '#9f7aea', colorEnd: '#805ad5', label: 'Entnahmen' }
+        ];
+
+        new ChartBuilder(canvas)
+            .type('grouped-bar')
+            .labels(years)
+            .datasets(datasets)
+            .options({
+                padding: { top: 40, right: 20, bottom: 80, left: 70 },
+                showLegend: true
+            })
+            .tooltip((d) => {
+                const lines = [`<strong>${d.label}</strong>`];
+                d.values.forEach(v => {
+                    lines.push(`${v.label}: ${Math.round(v.value).toLocaleString('de-DE')}€`);
+                });
+                return lines.join('<br>');
+            })
+            .build();
+    });
+    </script>
+
+    <!-- Revenue Trends Line Chart -->
+    <div class="analytics-card mb-4">
+        <h3>📈 Umsatz-Trend (Monatlich)</h3>
+        <p class="chart-subtitle">
+            Entwicklung der monatlichen Umsätze • Wachstum visualisiert
+        </p>
+
+        <div class="chart-wrapper chart-wrapper--lg">
+            <canvas id="revenueLineChart" width="100%" height="100%"></canvas>
+        </div>
+
+        <div class="chart-legend mt-2">
+            <div class="legend-item">
+                <div class="legend-line-swatch"></div>
+                <span>Monatlicher Umsatz • {{ revenue_trends|length }} Monate • Max: {{ max_revenue|floatformat:0 }}€</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    initChart('revenueLineChart', function(canvas) {
+        const rawData = [{% for month in revenue_trends %}{{ month.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+        const rawLabels = [{% for month in revenue_trends %}'{{ month.month|slice:":3" }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+
+        const startIndex = findFirstNonZeroIndex(rawData);
+        const data = rawData.slice(startIndex);
+        const labels = rawLabels.slice(startIndex);
+
+        new ChartBuilder(canvas)
+            .type('line')
+            .data(data)
+            .labels(labels)
+            .preset('revenue')
+            .options({
+                padding: { top: 20, right: 20, bottom: 60, left: 50 },
+                showYearSeparators: true
+            })
+            .tooltip((d) => `<strong>${d.label}</strong><br>${Math.round(d.value)} €`)
+            .build();
+    });
+    </script>
+
+    <!-- Busiest Months -->
+    <div class="analytics-card mt-4">
+        <h3>🔥 Stärkste Monate</h3>
+        {% with max_month=busiest_months|dictsort:"revenue"|last %}
+        <ul class="busiest-months">
+            {% for month in busiest_months %}
+            <li>
+                <span class="year-badge year-{{ month.year }}">{{ month.year }}</span>
+                <span class="busiest-months__month-name">{{ month.month }}</span>
+                <div class="bar-track"><div class="month-bar year-{{ month.year }}" style="width: {% widthratio month.revenue max_month.revenue 100 %}%;"></div></div>
+                <span class="month-hours">{{ month.session_hours }}h</span>
+                <span class="month-revenue">{{ month.revenue|currency }}</span>
+            </li>
+            {% empty %}
+            <p class="text-muted">Keine Daten verfügbar</p>
+            {% endfor %}
+        </ul>
+        {% endwith %}
+        {% if busiest_years %}
+        <div class="year-legend">
+            {% for yr in busiest_years %}
+            <div class="year-legend-item">
+                <span class="year-legend-dot year-{{ yr }}"></span>
+                {{ yr }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Days to Payment Trend -->
+    {% if days_to_payment %}
+    {{ days_to_payment|json_script:"days-to-payment-data" }}
+    <div class="analytics-card mt-4">
+        <h3>⏱️ Zahlungsverzug (letzte 24 Monate)</h3>
+        <p class="chart-subtitle">
+            Durchschnittliche Tage von Rechnungsdatum bis Zahlungseingang
+        </p>
+        <div class="chart-wrapper chart-wrapper--sm">
+            <canvas id="daysToPaymentChart" width="100%" height="100%"></canvas>
+        </div>
+    </div>
+    <script>
+    initChart('daysToPaymentChart', function(canvas) {
+        const raw = JSON.parse(document.getElementById('days-to-payment-data').textContent);
+        if (!raw || raw.length === 0) return;
+
+        const labels = raw.map(d => d.month);
+        const days = raw.map(d => d.avg_days);
+        const counts = raw.map(d => d.count);
+        const startYear = raw[0].year;
+
+        new ChartBuilder(canvas)
+            .type('line')
+            .data(days)
+            .labels(labels)
+            .options({
+                padding: { top: 20, right: 20, bottom: 60, left: 50 },
+                showYearSeparators: true,
+                startYear: startYear,
+                yAxisSuffix: 'd',
+                maxValue: Math.max(60, Math.ceil(Math.max(...days) * 1.3))
+            })
+            .tooltip((d) => {
+                const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
+                return `<strong>${d.label}</strong><br>` +
+                       `Ø ${d.value} Tage<br>` +
+                       `${counts[idx]} Rechnungen`;
+            })
+            .build();
+    });
+    </script>
+    {% endif %}
+</div>
+
+<!-- Tab Content: Clients -->
+<div id="clients-tab" class="tab-content {% if active_tab == 'clients' %}active{% endif %}">
+    <h2>👥 Klienten-Übersicht</h2>
+
+    <!-- Top Clients by Revenue -->
+    <div class="analytics-card mb-4">
+        <h3>👑 Top 10 Klienten nach Umsatz</h3>
+        {% if top_clients %}
+        <table class="client-table">
+            <thead>
+                <tr>
+                    <th>Rang</th>
+                    <th>Code</th>
+                    <th>Rechnungen</th>
+                    <th>Stunden</th>
+                    <th class="text-right">Gesamtumsatz</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client_data in top_clients %}
+                <tr>
+                    <td class="rank">#{{ forloop.counter }}</td>
+                    <td>
+                        <a href="{% url 'client_detail' client_data.client.id %}" class="client-code link-plain">
+                            {{ client_data.client.client_code }}
+                        </a>
+                    </td>
+                    <td class="text-primary">{{ client_data.invoice_count }}</td>
+                    <td class="text-primary">{{ client_data.session_hours }}h</td>
+                    <td class="revenue-amount text-right fw-700">{{ client_data.total_revenue|floatformat:2 }}&nbsp;€</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">Keine Umsatzdaten verfügbar</p>
+        {% endif %}
+    </div>
+
+    {% if practice_analysis %}
+    <!-- Client Classification Table -->
+    <div class="analytics-card mb-4">
+        <h3>📋 Klienten-Details ({{ practice_analysis.period.label }})</h3>
+
+        {% if practice_analysis.clients.list %}
+        <div class="toggle-section mb-2">
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-dormant">
+                <span>Ruhende Klienten anzeigen</span>
+            </label>
+        </div>
+
+        <div class="table-container">
+            <table class="client-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Sitzungen (Zeitraum)</th>
+                        <th>Gesamt-Sitzungen</th>
+                        <th>Typ</th>
+                        <th>Rechnungen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in practice_analysis.clients.list %}
+                    <tr data-client-status="{{ client.classification }}">
+                        <td class="client-code">{{ client.client_code }}</td>
+                        <td>
+                            <a href="{% url 'client_detail' client.client.id %}">
+                                <span class="sensitive-data">{{ client.client_name }}</span>
+                            </a>
+                        </td>
+                        <td>
+                            {% if client.classification == 'probatoric' %}
+                                <span class="badge badge-probatoric">Probatorik</span>
+                            {% elif client.classification == 'active' %}
+                                <span class="badge badge-active">Aktiv</span>
+                            {% elif client.classification == 'established' %}
+                                <span class="badge badge-established">Etabliert</span>
+                            {% elif client.classification == 'dormant' %}
+                                <span class="badge badge-dormant">Ruhend</span>
+                            {% endif %}
+                        </td>
+                        <td class="font-weight-600">{{ client.sessions_in_period|floatformat:1 }}h</td>
+                        <td>{{ client.sessions_total|floatformat:1 }}h</td>
+                        <td>
+                            {% if client.is_online %}
+                                <span class="badge badge-online">Online</span>
+                            {% else %}
+                                <span class="text-muted">Präsenz</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ client.invoices_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">Keine Klientendaten für diesen Zeitraum.</p>
+        {% endif %}
+    </div>
+
+    <script>
+    function toggleDormantClients() {
+        const checkbox = document.getElementById('toggle-dormant');
+        if (!checkbox) return;
+
+        const rows = document.querySelectorAll('table.client-table tbody tr');
+        rows.forEach(row => {
+            if (row.dataset.clientStatus === 'dormant') {
+                row.style.display = checkbox.checked ? '' : 'none';
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleDormantClients();
+        const checkbox = document.getElementById('toggle-dormant');
+        if (checkbox) {
+            checkbox.addEventListener('change', toggleDormantClients);
+        }
+    });
+    </script>
+    {% endif %}
+
+    <!-- Session Type Distribution -->
+    <div class="analytics-card">
+        <h3>🎯 Sitzungstypen-Verteilung</h3>
+        {% if session_distribution.total > 0 %}
+        <div class="text-center mb-3">
+            <div class="stat-display__value">
+                {{ session_distribution.total }}
+            </div>
+            <div class="stat-display__label">
+                Gesamt Sitzungen
+            </div>
+        </div>
+
+        <ul class="session-types-list">
+            {% for type_name, data in session_distribution.types.items %}
+            <li>
+                <span class="text-primary">
+                    <span class="type-indicator" style="background: {% cycle '#667eea' '#48bb78' '#f6ad55' '#fc8181' %};"></span>
+                    {{ type_name }}
+                </span>
+                <span>
+                    <strong class="text-primary">{{ data.count }}</strong>
+                    <span class="stat-note">({{ data.percentage }}%)</span>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Keine Sitzungsdaten verfügbar</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tab Content: Capacity -->
+<div id="capacity-tab" class="tab-content {% if active_tab == 'capacity' %}active{% endif %}">
+    <h2>📊 Kapazität & Auslastung</h2>
+
+    {% if practice_analysis %}
+    <!-- Insights Section -->
+    {% if practice_analysis.insights %}
+    <div class="insights-section">
+        <h2>💡 Wichtige Erkenntnisse</h2>
+        <ul class="insights-list">
+            {% for insight in practice_analysis.insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Key Metrics -->
+    <div class="analysis-header">
+        <div class="metric-card primary">
+            <div class="metric-value">{{ practice_analysis.clients.active_in_period }}</div>
+            <div class="metric-label">Aktive Klienten</div>
+        </div>
+
+        <div class="metric-card success">
+            <div class="metric-value">{{ practice_analysis.summary.total_sessions_booked|floatformat:0 }}</div>
+            <div class="metric-label">Gebuchte Sitzungen</div>
+        </div>
+
+        <div class="metric-card warning">
+            <div class="metric-value">{{ practice_analysis.capacity.capacity_percentage }}%</div>
+            <div class="metric-label">Kapazität genutzt</div>
+            <div class="capacity-bar">
+                <div class="capacity-fill" style="width: {{ practice_analysis.capacity.capacity_percentage }}%;">
+                    {{ practice_analysis.capacity.capacity_percentage }}%
+                </div>
+            </div>
+            {% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %}
+            <div class="hint-text">
+                ℹ️ Buchungen bis {{ practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="metric-card danger">
+            <div class="metric-value">{{ practice_analysis.timeoff.total_workdays }}</div>
+            <div class="metric-label">Freie Tage</div>
+        </div>
+    </div>
+
+    <!-- Capacity Analysis -->
+    <div class="analytics-card mb-4">
+        <h3>📊 Kapazitätsanalyse{% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %} (bis {{ practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" }}){% endif %}</h3>
+        {% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %}
+        <p class="hint-paragraph">
+            ℹ️ <strong>Hinweis:</strong> Für zukunftsgerichtete Zeiträume wird nur der Zeitraum bis <strong>{{ practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" }}</strong>
+            (2 Wochen ab heute) berücksichtigt, da die meisten Klienten kurzfristig buchen.
+        </p>
+        {% endif %}
+
+        <div class="analysis-header">
+            <div class="metric-card">
+                <div class="metric-value">{{ practice_analysis.capacity.available_hours|floatformat:0 }}h</div>
+                <div class="metric-label">Verfügbare Stunden</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{{ practice_analysis.capacity.booked_hours|floatformat:1 }}h</div>
+                <div class="metric-label">Gebuchte Stunden</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{{ practice_analysis.capacity.remaining_hours|floatformat:0 }}h</div>
+                <div class="metric-label">Freie Kapazität</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{{ practice_analysis.capacity.working_days_available }}</div>
+                <div class="metric-label">Arbeitstage</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4-Quarter Trends -->
+    {% if practice_trends %}
+    <div class="analytics-card mb-4">
+        <h3>📈 4-Quartals-Trends</h3>
+        <div class="table-container">
+            <table class="client-table">
+                <thead>
+                    <tr>
+                        <th>Quartal</th>
+                        <th class="text-center">Kapazität %</th>
+                        <th class="text-center">Klienten</th>
+                        <th class="text-center">Stunden</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in practice_trends %}
+                    <tr>
+                        <td>{{ q.label }}</td>
+                        <td class="text-center fw-600">{{ q.capacity_percentage }}%</td>
+                        <td class="text-center">{{ q.active_clients }}</td>
+                        <td class="text-center">{{ q.total_sessions|floatformat:0 }}h</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- TimeOff Overview -->
+    {% if practice_analysis.timeoff.entries %}
+    <div class="analytics-card">
+        <h3>🏖️ Urlaubszeiten in {{ practice_analysis.period.label }}</h3>
+        <ul class="bare-list">
+            {% for entry in practice_analysis.timeoff.entries %}
+            <li class="timeoff-entry">
+                <span>
+                    <strong class="text-primary">{{ entry.title }}</strong>
+                    <span class="text-muted"> ({{ entry.period_days|default:entry.full_days }} Tage)</span>
+                </span>
+                <span class="text-muted">{{ entry.period_start|date:"d.m." }} - {{ entry.period_end|date:"d.m.Y" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- TimeOff Statistics -->
+    <div class="analytics-card mb-4 mt-4">
+        <h3>🏖️ Urlaub {{ timeoff_label }}</h3>
+        <p class="chart-subtitle">
+            Urlaubstage im ausgewählten Zeitraum
+        </p>
+        <div class="analysis-header">
+            <div class="timeoff-stat">
+                <div class="timeoff-stat-value">{{ total_days_off }}</div>
+                <div class="timeoff-stat-label">Tage gesamt</div>
+            </div>
+            <div class="timeoff-stat">
+                <div class="timeoff-stat-value">{{ total_weeks_off }}</div>
+                <div class="timeoff-stat-label">Wochen</div>
+            </div>
+            <div class="timeoff-stat">
+                <div class="timeoff-stat-value">{{ total_workdays_off }}</div>
+                <div class="timeoff-stat-label">Arbeitstage frei</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yearly TimeOff Breakdown -->
+    {% if yearly_timeoff %}
+    <div class="analytics-card mb-4">
+        <h3>📅 Urlaub nach Jahren</h3>
+        <table class="timeoff-table">
+            <thead>
+                <tr>
+                    <th>Jahr</th>
+                    <th>Tage</th>
+                    <th>Wo.</th>
+                    <th title="Urlaub">🏖️</th>
+                    <th title="Fortbildung">📚</th>
+                    <th title="Krank">🤒</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in yearly_timeoff %}
+                <tr>
+                    <td>{{ item.year }}</td>
+                    <td>{{ item.total_days }}</td>
+                    <td class="timeoff-table__muted">{{ item.total_weeks }}</td>
+                    <td class="timeoff-table__vacation">{% if item.vacation %}{{ item.vacation }}{% else %}-{% endif %}</td>
+                    <td class="timeoff-table__training">{% if item.training %}{{ item.training }}{% else %}-{% endif %}</td>
+                    <td class="timeoff-table__sick">{% if item.sick %}{{ item.sick }}{% else %}-{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Capacity Utilization Trends -->
+    <div class="analytics-card mb-4 mt-4">
+        <h3>📈 Kapazitätsauslastung über Zeit</h3>
+        <p class="chart-subtitle">
+            Monatliche Auslastung in % (10h/Woche bis Jul 2023, danach 20h/Woche)
+        </p>
+
+        <div class="chart-wrapper chart-wrapper--lg">
+            <canvas id="capacityTrendsChart" width="100%" height="100%"></canvas>
+        </div>
+    </div>
+
+    <script>
+    initChart('capacityTrendsChart', function(canvas) {
+        const rawData = [{% for item in capacity_trends %}{{ item.capacity_percentage|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+        const rawLabels = [{% for item in capacity_trends %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+        const rawBookedHours = [{% for item in capacity_trends %}{{ item.booked_hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+        const rawCapacityHours = [{% for item in capacity_trends %}{{ item.capacity_hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+        const startIndex = findFirstNonZeroIndex(rawData);
+        const data = rawData.slice(startIndex);
+        const labels = rawLabels.slice(startIndex);
+        const bookedHours = rawBookedHours.slice(startIndex);
+        const capacityHours = rawCapacityHours.slice(startIndex);
+
+        new ChartBuilder(canvas)
+            .type('line')
+            .data(data)
+            .labels(labels)
+            .preset('revenue')
+            .options({
+                padding: { top: 20, right: 20, bottom: 60, left: 50 },
+                showYearSeparators: true,
+                yAxisSuffix: '%',
+                maxValue: 120
+            })
+            .tooltip((d) => {
+                const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
+                return `<strong>${d.label}</strong><br>` +
+                       `Auslastung: ${d.value}%<br>` +
+                       `Gebucht: ${bookedHours[idx]}h<br>` +
+                       `Kapazität: ${capacityHours[idx]}h`;
+            })
+            .build();
+    });
+    </script>
+
+    <!-- Cumulative year overlay chart -->
+    {% if cumulative_year_data %}
+    {{ cumulative_year_data|json_script:"cumulative-year-data" }}
+    <div class="analytics-card mt-3">
+        <h3>📈 Jahresvergleich – Stunden pro Monat</h3>
+        <p class="chart-subtitle">
+            Therapeutenstunden pro Kalendermonat (letzte 4 Jahre + Durchschnitt)
+        </p>
+        <div class="chart-wrapper chart-wrapper--xs">
+            <canvas id="cumulativeYearsChart" width="100%" height="100%"></canvas>
+        </div>
+    </div>
+    <script>
+    initChart('cumulativeYearsChart', function(canvas) {
+        const cyd = JSON.parse(document.getElementById('cumulative-year-data').textContent);
+        if (!cyd || !cyd.years || cyd.years.length === 0) return;
+
+        const MONTH_LABELS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+        const YEAR_COLORS = {
+            2020: '#374151', 2021: '#64748b', 2022: '#14b8a6',
+            2023: '#8b5cf6', 2024: '#0ea5e9', 2025: '#22c55e', 2026: '#f59e0b'
+        };
+
+        // Find max value for Y scaling
+        let maxVal = 0;
+        cyd.years.forEach(y => {
+            const vals = cyd.datasets[String(y)].filter(v => v !== null);
+            if (vals.length) maxVal = Math.max(maxVal, Math.max(...vals));
+        });
+        if (cyd.average) {
+            const avgVals = cyd.average.filter(v => v !== null);
+            if (avgVals.length) maxVal = Math.max(maxVal, Math.max(...avgVals));
+        }
+        if (maxVal === 0) return;
+        maxVal = maxVal * 1.15;
+
+        const setup = initializeChart(canvas, { padding: { top: 20, right: 20, bottom: 50, left: 55 } });
+        if (!setup) return;
+        const { ctx, chartWidth, chartHeight, padding } = setup;
+
+        drawYAxisLabels(ctx, padding, chartHeight, maxVal, 'h');
+
+        // X-axis month labels
+        const xStep = chartWidth / 11;
+        const textSecondary = getCSSVariable('--text-secondary', '#718096');
+        ctx.fillStyle = textSecondary;
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'center';
+        MONTH_LABELS.forEach((label, i) => {
+            ctx.fillText(label, padding.left + i * xStep, padding.top + chartHeight + 18);
+        });
+
+        // Draw one polyline per dataset (no fill to avoid obscuring)
+        function drawLine(data, color, dashed, lineWidth) {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth || (dashed ? 2 : 2.5);
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            if (dashed) ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            let started = false;
+            data.forEach((val, i) => {
+                if (val === null) return;
+                const x = padding.left + i * xStep;
+                const y = padding.top + chartHeight - (val / maxVal) * chartHeight;
+                if (!started) { ctx.moveTo(x, y); started = true; }
+                else ctx.lineTo(x, y);
+            });
+            if (started) ctx.stroke();
+            ctx.restore();
+        }
+
+        // Average line first (drawn behind year lines)
+        if (cyd.average) drawLine(cyd.average, 'rgba(255,255,255,0.6)', true, 2.5);
+
+        // Draw years oldest → newest (newest on top), line width scales with recency
+        const nYears = cyd.years.length;
+        cyd.years.forEach((y, i) => {
+            const lw = 1.5 + (i / Math.max(nYears - 1, 1)) * 1.5; // 1.5px oldest → 3px newest
+            drawLine(cyd.datasets[String(y)], YEAR_COLORS[y] || '#888', false, lw);
+        });
+
+        // Legend
+        const allSeries = cyd.years.map(y => ({ label: String(y), color: YEAR_COLORS[y] || '#888', dashed: false }));
+        allSeries.push({ label: 'Ø', color: 'rgba(200,200,200,0.6)', dashed: true });
+        const slotW = 58;
+        const legendTotalW = allSeries.length * slotW;
+        let lx = padding.left + (chartWidth - legendTotalW) / 2;
+        const ly = padding.top + chartHeight + 38;
+        ctx.font = '12px sans-serif';
+        allSeries.forEach(s => {
+            ctx.fillStyle = s.color;
+            ctx.beginPath();
+            ctx.arc(lx + 6, ly, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = getCSSVariable('--text-secondary', '#718096');
+            ctx.textAlign = 'left';
+            ctx.fillText(s.label, lx + 14, ly + 4);
+            lx += slotW;
+        });
+    });
+    </script>
+    {% endif %}
+
+    <!-- Seasonality -->
+    {% if seasonality_data %}
+    <div class="analytics-card mt-3">
+        <h3>🗓️ Saisonalität</h3>
+        <p class="chart-subtitle">
+            Durchschnittliche Auslastung pro Kalendermonat (Ø über alle Jahre, inkl. Urlaub)
+        </p>
+        {% with max_pct=seasonality_data|dictsort:"avg_capacity_pct"|last %}
+        <ul class="seasonality-bars">
+            {% for m in seasonality_data %}
+            <li>
+                <span class="month-label">{{ m.month_name }}</span>
+                <div class="bar-track"><div class="seasonality-bar" style="width: {{ m.avg_capacity_pct }}%;"></div></div>
+                <span class="seasonality-hours">{{ m.avg_capacity_pct }}%</span>
+                <span class="seasonality-detail">Ø {{ m.avg_booked_hours }}h / {{ m.avg_capacity_hours }}h</span>
+                <span class="seasonality-years">({{ m.years_count }}×)</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endwith %}
+    </div>
+    {% endif %}
+
+    <!-- Cancellation Rate Trend -->
+    {% if cancellation_trends %}
+    {{ cancellation_trends|json_script:"cancellation-trends-data" }}
+    <div class="analytics-card mt-3">
+        <h3>❌ Ausfallquote (letzte 24 Monate)</h3>
+        <p class="chart-subtitle">
+            Abgesagte Sitzungen in % aller Sitzungen pro Monat
+        </p>
+        <div class="chart-wrapper chart-wrapper--sm">
+            <canvas id="cancellationTrendsChart" width="100%" height="100%"></canvas>
+        </div>
+    </div>
+    <script>
+    initChart('cancellationTrendsChart', function(canvas) {
+        const raw = JSON.parse(document.getElementById('cancellation-trends-data').textContent);
+        if (!raw || raw.length === 0) return;
+
+        const labels = raw.map(d => d.month);
+        const rates = raw.map(d => d.rate);
+        const totals = raw.map(d => d.total);
+        const cancelled = raw.map(d => d.cancelled);
+        const startYear = raw[0].year;
+
+        new ChartBuilder(canvas)
+            .type('line')
+            .data(rates)
+            .labels(labels)
+            .options({
+                padding: { top: 20, right: 20, bottom: 60, left: 50 },
+                showYearSeparators: true,
+                startYear: startYear,
+                yAxisSuffix: '%',
+                maxValue: Math.max(20, Math.ceil(Math.max(...rates) * 1.3))
+            })
+            .tooltip((d) => {
+                const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
+                return `<strong>${d.label}</strong><br>` +
+                       `Ausfallquote: ${d.value}%<br>` +
+                       `Abgesagt: ${cancelled[idx]} / ${totals[idx]}`;
+            })
+            .build();
+    });
+    </script>
+    {% endif %}
+
+</div>
+
+<!-- Tab Content: Expenses -->
+<div id="expenses-tab" class="tab-content {% if active_tab == 'expenses' %}active{% endif %}">
+    <h2>💸 Ausgaben-Übersicht</h2>
+
+    <!-- Quick Actions -->
+    <div class="tab-actions">
+        <a href="{% url 'expense_list' %}" class="btn btn-secondary btn-sm">
+            💸 Ausgaben verwalten
+        </a>
+        <a href="{% url 'withdrawal_list' %}" class="btn btn-secondary btn-sm">
+            💰 Entnahmen verwalten
+        </a>
+    </div>
+
+    <!-- Expense Category Distribution -->
+    <div class="analytics-card mb-4">
+        <h3>💸 Ausgaben nach Kategorie</h3>
+            {% if expense_distribution.total > 0 %}
+            <div class="text-center mb-3">
+                <div class="stat-display__value">
+                    {{ expense_distribution.total|floatformat:0 }}&nbsp;€
+                </div>
+                <div class="stat-display__label">
+                    Gesamtausgaben
+                </div>
+            </div>
+
+            <ul class="session-types-list">
+                {% for category in expense_distribution.categories %}
+                <li class="expense-category-item">
+                    <span class="expense-category-item__label">
+                        <span class="type-indicator" style="background: {% cycle '#ed8936' '#f56565' '#9f7aea' '#38b2ac' '#667eea' '#48bb78' %}; flex-shrink: 0;"></span>
+                        <span class="text-break">{{ category.category }}</span>
+                    </span>
+                    <span class="expense-category-item__amount">
+                        <strong class="text-primary">{{ category.amount|floatformat:0 }}&nbsp;€</strong>
+                        <span class="stat-note">({{ category.percentage }}%)</span>
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">Keine Ausgabendaten verfügbar</p>
+            {% endif %}
+        </div>
+
+    <!-- Expense Trends -->
+    <div class="analytics-card mb-4 mt-4">
+        <h3>💸 Ausgaben-Trends</h3>
+        <p class="chart-subtitle">
+            Jährliche Betriebsausgaben {{ data_start_year }}-heute
+        </p>
+
+        <div class="chart-wrapper chart-wrapper--lg-alt">
+            <canvas id="expenseTrendsChart" width="100%" height="100%"></canvas>
+        </div>
+    </div>
+
+    <script>
+    initChart('expenseTrendsChart', function(canvas) {
+        // Use yearly totals from comparison_data (same source as profit table)
+        // so the current year shows actual expenses, not a partial-year sum of
+        // monthly-distributed values.
+        const years = [{% for item in comparison_data %}'{{ item.year }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+        const data  = [{% for item in comparison_data %}{{ item.expenses|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+        new ChartBuilder(canvas)
+            .type('bar')
+            .data(data)
+            .labels(years)
+            .preset('expense')
+            .tooltip((d) => `<strong>${d.label}</strong><br>${Math.round(d.value).toLocaleString('de-DE')} €`)
+            .build();
+    });
+    </script>
+</div>
+
+<!-- Tab Switching Script -->
+<script>
+function switchTab(tabName, clickedButton) {
+    // Update URL with tab parameter
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabName);
+    window.history.pushState({}, '', url);
+
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.add('active');
+
+    // Add active class to clicked button
+    clickedButton.classList.add('active');
+
+    // Update hidden input in form
+    const tabInput = document.querySelector('input[name="tab"]');
+    if (tabInput) {
+        tabInput.value = tabName;
+    }
+
+    // CRITICAL: Redraw charts in newly visible tab
+    // Charts rendered in hidden tabs (display: none) have incorrect dimensions
+    // because container.clientHeight returns 0
+    setTimeout(function() {
+        const tabContainer = document.getElementById(tabName + '-tab');
+        if (tabContainer) {
+            const canvases = tabContainer.querySelectorAll('canvas');
+            canvases.forEach(canvas => {
+                const canvasId = canvas.id;
+                if (canvasId && typeof chartRegistry !== 'undefined' && chartRegistry[canvasId]) {
+                    // Clear and redraw the chart
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    chartRegistry[canvasId](canvas);
+                }
+            });
+        }
+    }, 50); // Small delay to ensure tab is fully visible
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Wire tab buttons
+    document.querySelectorAll('.tab-button[data-tab]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            switchTab(this.dataset.tab, this);
+        });
+    });
+
+    // Get tab from URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'revenue';
+
+    // Activate the correct tab
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    const tabContent = document.getElementById(activeTab + '-tab');
+    if (tabContent) {
+        tabContent.classList.add('active');
+    }
+
+    const tabButton = document.querySelector(`.tab-button[data-tab="${activeTab}"]`);
+    if (tabButton) {
+        tabButton.classList.add('active');
+    }
+
+    // Redraw charts in the active tab after a short delay
+    // This ensures charts in non-revenue tabs are rendered correctly
+    setTimeout(function() {
+        if (tabContent) {
+            const canvases = tabContent.querySelectorAll('canvas');
+            canvases.forEach(canvas => {
+                const canvasId = canvas.id;
+                if (canvasId && typeof chartRegistry !== 'undefined' && chartRegistry[canvasId]) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    chartRegistry[canvasId](canvas);
+                }
+            });
+        }
+    }, 100); // Delay to ensure DOM is fully rendered
+});
+</script>
+
+<div class="text-center mt-4">
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">🏠 Zurück zur Übersicht</a>
+</div>
+
+{% endblock %}

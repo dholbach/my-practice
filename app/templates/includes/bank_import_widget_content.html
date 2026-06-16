@@ -1,0 +1,39 @@
+{% if show_reminder %}
+<div class="bank-import-status warning">
+    <span class="bank-import-status__icon">⚠️</span>
+    <div class="bank-import-status__body">
+        <div class="bank-import-status__text-main">
+            {{ message }}
+        </div>
+        {% if last_import_date %}
+        <div class="bank-import-status__text-secondary">
+            Letzter Import: {{ last_import_date|date:"d.m.Y" }}
+        </div>
+        {% else %}
+        <div class="bank-import-status__text-secondary">
+            Noch keine Kontoauszüge importiert
+        </div>
+        {% endif %}
+    </div>
+    <a href="{{ import_url }}" class="bank-import-status__btn">
+        📁 Jetzt importieren
+    </a>
+</div>
+{% else %}
+<div class="bank-import-status success">
+    <span class="bank-import-status__icon">✅</span>
+    <div class="bank-import-status__body">
+        <div class="bank-import-status__text-main">
+            Bank Import aktuell
+        </div>
+        {% if last_import_date %}
+        <div class="bank-import-status__text-secondary">
+            Letzter Import: {{ last_import_date|date:"d.m.Y" }} ({{ days_since_import }} Tage)
+        </div>
+        {% endif %}
+    </div>
+    <a href="{{ import_url }}" class="bank-import-status__link">
+        Zur Bank Import Seite →
+    </a>
+</div>
+{% endif %}

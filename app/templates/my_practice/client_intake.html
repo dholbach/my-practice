@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object.pk %}Klient bearbeiten{% else %}Neuer Klient{% endif %}{% endblock %}
+
+{% block page_title %}{% if object.pk %}Klient bearbeiten{% else %}Neuer Klient{% endif %}{% endblock %}
+{% block page_subtitle %}{% if object.pk %}{{ object.full_name }} ({{ object.client_code }}){% else %}Klienten-Aufnahmeformular{% endif %}{% endblock %}
+
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    {% if object %}
+    <input type="hidden" name="client_id" value="{{ object.pk }}">
+    {% endif %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+    <div class="form-row">
+        <div class="form-group">
+            {{ form.client_code.label_tag }}
+            {{ form.client_code }}
+            {{ form.client_code.errors }}
+            {% if form.client_code.help_text %}
+            <div class="helptext">{{ form.client_code.help_text }}</div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ form.language.label_tag }}
+            {{ form.language }}
+            {{ form.language.errors }}
+        </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.salutation.label_tag }}
+        {{ form.salutation }}
+        {{ form.salutation.errors }}
+        <div class="helptext">
+            💡 Personal greeting for invoice emails (e.g., "Dear John", "Liebe Maria").<br>
+            If left empty, a generic salutation will be used. <strong>Highly recommended for better client experience!</strong>
+        </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.active.label_tag }}
+        {{ form.active }}
+        {{ form.active.errors }}
+        <div class="helptext">
+            Inaktive Klienten erscheinen nicht in den Standard-Ansichten.
+        </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.is_online_client.label_tag }}
+        {{ form.is_online_client }}
+        {{ form.is_online_client.errors }}
+        <div class="helptext">
+            💻 Für Klienten, die hauptsächlich Online-Sitzungen haben.
+        </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.full_name.label_tag }}
+        {{ form.full_name }}
+        {{ form.full_name.errors }}
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            {{ form.date_of_birth.label_tag }}
+            {{ form.date_of_birth }}
+            {{ form.date_of_birth.errors }}
+        </div>
+        <div class="form-group">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {{ form.email.errors }}
+        </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.phone.label_tag }}
+        {{ form.phone }}
+        {{ form.phone.errors }}
+    </div>
+
+    <div class="form-group">
+        {{ form.address.label_tag }}
+        {{ form.address }}
+        {{ form.address.errors }}
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            {{ form.hourly_rate_60.label_tag }}
+            {{ form.hourly_rate_60 }}
+            {{ form.hourly_rate_60.errors }}
+        </div>
+        <div class="form-group">
+            {{ form.hourly_rate_90.label_tag }}
+            {{ form.hourly_rate_90 }}
+            {{ form.hourly_rate_90.errors }}
+        </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.notes.label_tag }}
+        {{ form.notes }}
+        {{ form.notes.errors }}
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">💾 {% if object.pk %}Änderungen Speichern{% else %}Klient Speichern{% endif %}</button>
+        <a href="{% if next %}{{ next }}{% elif object.pk %}{% url 'client_detail' object.pk %}{% else %}{% url 'client_list' %}{% endif %}" class="btn btn-secondary">❌ Abbrechen</a>
+    </div>
+</form>
+{% endblock %}

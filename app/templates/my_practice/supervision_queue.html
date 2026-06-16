@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supervision – Offene Themen{% endblock %}
+{% block page_title %}🔍 Supervision{% endblock %}
+{% block page_subtitle %}{{ total_open }} offene Themen{% endblock %}
+
+
+{% block content %}
+{% if grouped_items %}
+{% for group in grouped_items %}
+<div class="section-card">
+    <h3 class="cn-client-heading">
+        <a href="{% url 'client_detail' group.client.pk %}#tab-supervision">
+            {{ group.client.client_code }}
+        </a>
+        <span class="cn-badge">{{ group.items|length }}</span>
+    </h3>
+    <div class="cn-supervision-list">
+        {% for item in group.items %}
+        <div class="cn-supervision-item cn-status-{{ item.status }}">
+            <div class="cn-supervision-content">{{ item.content }}</div>
+            <div class="cn-supervision-meta">
+                <span class="cn-date-hint">{{ item.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <div class="cn-supervision-actions">
+            {% url 'supervision_item_toggle' group.client.pk item.pk as toggle_url %}
+            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text='✓ Besprochen' button_class='btn btn-secondary btn-sm' action_name='next' action_value='/supervision/' %}
+            {% url 'supervision_item_delete' group.client.pk item.pk as delete_url %}
+            {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm='Supervisionsthema wirklich löschen?' action_name='next' action_value='/supervision/' %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="section-card">
+    <p class="cn-empty-state">Keine offenen Supervisionsthemen. 🎉</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ checklist_type_display }}{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <div class="checklist-header">
+        <div>
+            <h1 class="mb-0">📋 {{ checklist_type_display }}</h1>
+            <p class="text-muted mt-1">
+                Periode: {{ period_start|date:"F Y" }}
+            </p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Übersicht</a>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}info{% endif %} mb-3">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if checklist.is_completed %}
+    <div class="checklist-done-banner">
+        <div class="checklist-done-banner__title">
+            ✅ Abgeschlossen am {{ checklist.completed_at|date:"d.m.Y" }} um {{ checklist.completed_at|time:"H:i" }} Uhr
+        </div>
+        {% if checklist.notes %}
+        <div class="checklist-done-banner__notes">
+            <strong>Notizen:</strong> {{ checklist.notes }}
+        </div>
+        {% endif %}
+        <div class="checklist-done-banner__actions">
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary me-1">← Zur Übersicht</a>
+        </div>
+    </div>
+
+    <h3 class="checklist-section-label">Erledigte Punkte</h3>
+    <div class="checklist-list checklist-list--completed">
+        {% for item in items %}
+        <div class="checklist-item-done checklist-list__divider">
+            <span class="checklist-item-done__icon">✅</span>
+            <span class="checklist-item-done__title">{{ item.title }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <form method="post" action="{% url 'checklist_complete' checklist_type %}" id="checklist-form">
+        {% csrf_token %}
+
+        <div class="checklist-list">
+            {% for item in items %}
+            <div class="checklist-list__divider">
+                {% if item.pause %}
+                {# Paused item: show badge + reason, no checkbox #}
+                <div class="checklist-item-paused">
+                    <span class="checklist-item-paused__icon">⏸</span>
+                    <div class="checklist-item-paused__body">
+                        <span class="checklist-item-paused__title">{{ item.title }}</span>
+                        <div class="checklist-item-paused__reason">
+                            <strong>Pausiert:</strong> {{ item.pause.reason }}
+                            {% if item.pause.paused_until %}
+                            · <em>bis {{ item.pause.paused_until|date:"d.m.Y" }}</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <form method="post" action="{% url 'checklist_unpause' checklist_type item.id %}" class="checklist-item-paused__actions">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary checklist-unpause-btn" title="Pause aufheben">
+                            ▶ Fortsetzen
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                {# Active item: checkbox + collapsible pause form #}
+                <div class="checklist-row">
+                    <input
+                        class="checklist-checkbox"
+                        type="checkbox"
+                        id="{{ item.id }}"
+                        name="{{ item.id }}"
+                        data-required="true"
+                    >
+                    <div class="checklist-row__body">
+                        <label for="{{ item.id }}" class="checklist-label">
+                            {{ item.title }}
+                        </label>
+                        <details class="checklist-pause-details">
+                            <summary class="checklist-pause-summary">⏸ Pausieren</summary>
+                            <form method="post" action="{% url 'checklist_pause' checklist_type item.id %}" class="checklist-pause-form">
+                                {% csrf_token %}
+                                <label class="checklist-pause-form__label">Grund</label>
+                                <textarea name="reason" rows="2" required
+                                    class="checklist-pause-form__textarea"
+                                    placeholder="z.B. Neue MicroSD-Karten noch nicht geliefert…"></textarea>
+                                <label class="checklist-pause-form__label">
+                                    Pausiert bis <span class="checklist-pause-form__label--optional">(leer = unbegrenzt)</span>
+                                </label>
+                                <input type="date" name="paused_until" class="checklist-pause-form__date">
+                                <div>
+                                    <button type="submit" class="btn btn-secondary checklist-pause-form__btn">⏸ Element pausieren</button>
+                                </div>
+                            </form>
+                        </details>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="checklist-notes-section">
+            <label for="notes" class="checklist-notes-label">
+                Notizen <span class="checklist-notes-label__optional">(optional)</span>
+            </label>
+            <textarea
+                class="checklist-notes-textarea"
+                id="notes"
+                name="notes"
+                rows="3"
+                placeholder="z.B. Restore-Test OK, 676 Rechnungen verifiziert, keine Fehler in Logs…"
+            ></textarea>
+        </div>
+
+        <div class="checklist-submit-row">
+            <button type="submit" id="complete-btn" class="btn btn-primary checklist-submit-btn" disabled>
+                ✅ Checkliste abschließen
+            </button>
+            <span id="progress-hint" class="checklist-progress-hint">
+                0 von ? erledigt
+            </span>
+        </div>
+    </form>
+    {% endif %}
+
+    <hr class="checklist-nav-divider">
+
+    <h3 class="checklist-nav-title">Andere Checklisten</h3>
+    <div class="checklist-type-list">
+        {% for type_id, type_label in all_types %}
+        <a href="{% url 'checklist' type_id %}"
+           style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.9rem;
+                  {% if type_id == checklist_type %}
+                  background: var(--color-primary); color: white;
+                  {% else %}
+                  background: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border);
+                  {% endif %}">
+            {{ type_label }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+(function() {
+    // Only count checkboxes for non-paused items
+    const checkboxes = document.querySelectorAll('.checklist-checkbox[data-required="true"]');
+    const btn = document.getElementById('complete-btn');
+    const hint = document.getElementById('progress-hint');
+    const total = checkboxes.length;
+
+    function updateProgress() {
+        const checked = document.querySelectorAll('.checklist-checkbox[data-required="true"]:checked').length;
+        const allDone = total === 0 || checked === total;
+
+        if (btn) btn.disabled = !allDone;
+        if (hint) {
+            const pausedCount = document.querySelectorAll('[data-required]').length;
+            if (total === 0) {
+                hint.textContent = 'Alle Punkte pausiert';
+            } else {
+                hint.textContent = checked + ' von ' + total + ' erledigt';
+            }
+        }
+    }
+
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            const row = this.closest('.checklist-row');
+            const label = row ? row.querySelector('.checklist-label') : null;
+            if (label) {
+                label.style.textDecoration = this.checked ? 'line-through' : '';
+                label.style.color = this.checked ? 'var(--color-text-secondary)' : 'var(--color-text-primary)';
+            }
+            updateProgress();
+        });
+    });
+
+    updateProgress();
+})();
+</script>
+{% endblock %}

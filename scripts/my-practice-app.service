@@ -1,0 +1,18 @@
+[Unit]
+Description=My Practice Application
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=YOUR_USERNAME
+Group=YOUR_USERNAME
+WorkingDirectory=/path/to/my-practice
+ExecStart=/usr/bin/env python3 /path/to/my-practice/dev.py start
+ExecStop=/usr/bin/env python3 /path/to/my-practice/dev.py stop
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

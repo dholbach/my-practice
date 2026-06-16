@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load payment_tags %}
+
+{% block title %}Klientenübersicht{% endblock %}
+
+{% block page_title %}Klienten{% endblock %}
+{% block page_subtitle %}Workflow-Übersicht{% endblock %}
+
+{% block content %}
+
+<div class="workflow-header">
+    <div class="workflow-filters">
+        <span class="filter-label">Tags:</span>
+        <a href="?filter={{ current_filter }}" class="btn btn-sm {% if not current_tag %}btn-primary{% else %}btn-secondary{% endif %}">
+            Alle
+        </a>
+        {% for tag in all_tags %}
+            <a href="?filter={{ current_filter }}&tag={{ tag.slug }}"
+               class="btn btn-sm {% if current_tag == tag.slug %}btn-primary{% else %}btn-secondary{% endif %}">
+                {{ tag.name }} ({{ tag.client_count }})
+            </a>
+        {% endfor %}
+        <a href="{% url 'tag_list' %}" class="btn btn-sm btn-secondary">
+            ⚙️ Tags
+        </a>
+    </div>
+    <a href="{% url 'client_intake' %}" class="btn">➕ Neuer Klient</a>
+</div>
+
+<div class="client-workflow-stats">
+    <div class="stat-card">
+        <div class="stat-label">Aktiv</div>
+        <div class="stat-value">{{ stats.active_ok }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Brauchen Aufmerksamkeit</div>
+        <div class="stat-value alert">{{ stats.needs_attention }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Inaktiv</div>
+        <div class="stat-value">{{ stats.inactive }}</div>
+    </div>
+</div>
+
+<!-- Active Clients - Needs Attention -->
+{% if clients_needs_attention %}
+<div class="section-header">
+    ⚠️ Benötigen Aufmerksamkeit
+    <span class="count">{{ clients_needs_attention|length }}</span>
+</div>
+<div class="client-cards">
+    {% for client in clients_needs_attention %}
+        {% include 'includes/client_card.html' with card_class='needs-attention' show_days_alert=True %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Active Clients - All Good -->
+{% if clients_active_ok %}
+<div class="section-header">
+    ✅ Aktiv & OK
+    <span class="count">{{ clients_active_ok|length }}</span>
+</div>
+<div class="client-cards">
+    {% for client in clients_active_ok %}
+        {% include 'includes/client_card.html' %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Inactive Clients -->
+{% if clients_inactive %}
+<div class="section-header">
+    💤 Inaktiv
+    <span class="count">{{ clients_inactive|length }}</span>
+</div>
+{% for year, clients in clients_inactive_by_year.items %}
+<div class="section-subheader">
+    {{ year }}
+</div>
+<div class="client-cards">
+    {% for client in clients %}
+        {% include 'includes/client_card.html' with card_class='inactive' %}
+    {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+
+{% if not clients_needs_attention and not clients_active_ok and not clients_inactive %}
+<div class="empty-state">
+    <h2>Keine Klienten</h2>
+    <p>Es wurden noch keine Klienten hinzugefügt.</p>
+</div>
+{% endif %}
+
+{% if clients_deletion_eligible %}
+<div class="section-header section-header--gdpr">
+    Löschreife Klienten (DSGVO Art. 17)
+    <span class="count">{{ clients_deletion_eligible|length }}</span>
+</div>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Name</th>
+      <th>Letzte Sitzung</th>
+      <th>E-Mail</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for client in clients_deletion_eligible %}
+    <tr>
+      <td>{{ client.client_code }}</td>
+      <td>{{ client.full_name }}</td>
+      <td>{{ client.last_session_date|date:"d.m.Y" }}</td>
+      <td>{% if client.email %}✓{% else %}—{% endif %}</td>
+      <td>
+        <a href="{% url 'client_gdpr_delete_confirm' client.pk %}"
+           class="btn btn-sm btn-danger">
+          Löschen{% if client.email %} &amp; Benachrichtigen{% endif %}
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% endblock %}

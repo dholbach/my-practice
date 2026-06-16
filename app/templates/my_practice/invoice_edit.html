@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load payment_tags %}
+
+{% block title %}Rechnung bearbeiten - {{ invoice.invoice_number }}{% endblock %}
+
+{% block page_title %}Rechnung bearbeiten{% endblock %}
+{% block page_subtitle %}{{ invoice.invoice_number }} - <span class="sensitive-data">{{ invoice.client.full_name }}</span>{% endblock %}
+
+{% block content %}
+<form method="post" id="invoice-form">
+    {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+    {# Hidden field for practice - set by view #}
+    {{ form.practice.as_hidden }}
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="{{ form.client.id_for_label }}">{{ form.client.label }}</label>
+            {{ form.client }}
+            {{ form.client.errors }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.invoice_number.id_for_label }}">{{ form.invoice_number.label }}</label>
+            {{ form.invoice_number }}
+            {{ form.invoice_number.errors }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="{{ form.invoice_date.id_for_label }}">{{ form.invoice_date.label }}</label>
+            {{ form.invoice_date }}
+            {{ form.invoice_date.errors }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.paid_date.id_for_label }}">{{ form.paid_date.label }}</label>
+            {{ form.paid_date }}
+            {{ form.paid_date.errors }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+            {{ form.status }}
+            {{ form.status.errors }}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="{{ form.tax_rate.id_for_label }}">{{ form.tax_rate.label }}</label>
+        {{ form.tax_rate }}
+        {{ form.tax_rate.errors }}
+    </div>
+
+    <div class="form-group">
+        <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+        {{ form.notes }}
+        {{ form.notes.errors }}
+    </div>
+
+    <!-- Invoice Items Formset -->
+    <div class="formset-container">
+        <div class="formset-title">
+            <span>📋 Rechnungspositionen</span>
+            <button type="button" id="add-item" class="btn btn-sm btn-success">
+                ➕ Position hinzufügen
+            </button>
+        </div>
+
+        {{ formset.management_form }}
+
+        {% if formset.total_form_count == 0 %}
+        <div class="info-box" style="margin-bottom: 1rem;">
+            <strong>Keine Positionen vorhanden.</strong><br>
+            <span>Klicken Sie auf "➕ Position hinzufügen" um eine neue Position zu erstellen.</span>
+        </div>
+        {% endif %}
+
+        <div id="items-container">
+            {% for item_form in formset %}
+            <div class="formset-item" data-form-index="{{ forloop.counter0 }}">
+                <div class="formset-item-header">
+                    <strong>Position {{ forloop.counter }}</strong>
+                    {% if item_form.instance.pk %}
+                    <label class="delete-label">
+                        {{ item_form.DELETE }}
+                        <span class="delete-text">🗑️ Löschen</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Hidden ID field -->
+                {{ item_form.id }}
+
+                <div class="item-grid">
+                    <div class="form-group">
+                        <label for="{{ item_form.session_date.id_for_label }}">Sitzungsdatum *</label>
+                        {{ item_form.session_date }}
+                        {{ item_form.session_date.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ item_form.service_type.id_for_label }}">Service *</label>
+                        {{ item_form.service_type }}
+                        {{ item_form.service_type.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ item_form.duration.id_for_label }}">Dauer (min) *</label>
+                        {{ item_form.duration }}
+                        {{ item_form.duration.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ item_form.rate.id_for_label }}">Stundensatz (€) *</label>
+                        {{ item_form.rate }}
+                        {{ item_form.rate.errors }}
+                    </div>
+                </div>
+
+                <div class="item-grid-wide">
+                    <div class="form-group">
+                        <label for="{{ item_form.description.id_for_label }}">Beschreibung</label>
+                        {{ item_form.description }}
+                        {{ item_form.description.errors }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-gradient">
+            💾 Speichern
+        </button>
+        <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-secondary">❌ Abbrechen</a>
+    </div>
+</form>
+
+<script>
+// Client rates data
+const clientRates = {
+    {% for client in form.fields.client.queryset %}
+    '{{ client.id }}': {
+        code: '{{ client.client_code }}',
+        rate_60: {{ client.hourly_rate_60|js_number }},
+        rate_90: {{ client.hourly_rate_90|js_number }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+// Mark deleted items visually
+document.addEventListener('change', function(e) {
+    if (e.target.type === 'checkbox' && e.target.name.includes('DELETE')) {
+        const formsetItem = e.target.closest('.formset-item');
+        if (formsetItem) {
+            if (e.target.checked) {
+                formsetItem.classList.add('deleted');
+            } else {
+                formsetItem.classList.remove('deleted');
+            }
+        }
+    }
+});
+
+// Update rate field based on client and service type
+function updateRateForItem(rateField, serviceSelect) {
+    const clientSelect = document.getElementById('id_client');
+    const clientId = clientSelect.value;
+    if (!clientId || !clientRates[clientId]) return;
+
+    const rates = clientRates[clientId];
+    const serviceText = serviceSelect?.options[serviceSelect.selectedIndex]?.text || '';
+
+    if (serviceText.includes('90')) {
+        rateField.value = rates.rate_90;
+    } else {
+        rateField.value = rates.rate_60;
+    }
+}
+
+// Auto-populate rate and duration when service type changes
+document.addEventListener('change', function(e) {
+    if (e.target.matches('[data-item-service]')) {
+        const clientSelect = document.getElementById('id_client');
+        const clientId = clientSelect.value;
+        const row = e.target.closest('.formset-item');
+        const rateField = row.querySelector('[data-item-rate]');
+        const durationField = row.querySelector('input[name*="duration"]');
+        const serviceText = e.target.options[e.target.selectedIndex]?.text;
+
+        if (serviceText) {
+            // Set duration based on service type
+            if (serviceText.includes('60')) {
+                if (durationField) durationField.value = '60';
+                if (clientId && clientRates[clientId] && rateField) {
+                    rateField.value = clientRates[clientId].rate_60;
+                }
+            } else if (serviceText.includes('90')) {
+                if (durationField) durationField.value = '90';
+                if (clientId && clientRates[clientId] && rateField) {
+                    rateField.value = clientRates[clientId].rate_90;
+                }
+            } else if (serviceText.toLowerCase().includes('cancellation')) {
+                if (durationField) durationField.value = '0';
+                if (clientId && clientRates[clientId] && rateField) {
+                    rateField.value = clientRates[clientId].rate_60;
+                }
+            } else {
+                // Default
+                if (durationField) durationField.value = '60';
+                if (clientId && clientRates[clientId] && rateField) {
+                    rateField.value = clientRates[clientId].rate_60;
+                }
+            }
+        }
+    }
+});
+
+// Add more invoice items dynamically
+document.getElementById('add-item').addEventListener('click', function() {
+    const container = document.getElementById('items-container');
+    const totalForms = document.querySelector('#id_items-TOTAL_FORMS');
+    const formNum = parseInt(totalForms.value);
+
+    // Get the first item as template
+    const firstItem = container.querySelector('.formset-item');
+    if (!firstItem) return;
+
+    const newItem = firstItem.cloneNode(true);
+    newItem.classList.remove('deleted');
+
+    // Update form number in all fields
+    const formRegex = new RegExp('items-(\\d+)-', 'g');
+    newItem.innerHTML = newItem.innerHTML.replace(formRegex, `items-${formNum}-`);
+
+    // Update data-form-index
+    newItem.setAttribute('data-form-index', formNum);
+
+    // Clear values in new form
+    newItem.querySelectorAll('input, select, textarea').forEach(field => {
+        if (field.type === 'checkbox') {
+            field.checked = false;
+        } else if (!field.name.includes('TOTAL_FORMS') && !field.name.includes('INITIAL_FORMS') && !field.name.includes('MIN_NUM') && !field.name.includes('MAX_NUM')) {
+            if (field.name.includes('-id')) {
+                field.value = ''; // Clear ID for new items
+            } else {
+                field.value = '';
+            }
+        }
+        // Set default session_date to today
+        if (field.name.includes('session_date') && field.type === 'date') {
+            field.value = new Date().toISOString().split('T')[0];
+        }
+        // Set default duration to 60
+        if (field.name.includes('duration')) {
+            field.value = '60';
+        }
+    });
+
+    // Set default service type to therapy_60
+    const serviceTypeSelect = newItem.querySelector('select[name*="service_type"]');
+    if (serviceTypeSelect) {
+        const therapy60Option = Array.from(serviceTypeSelect.options).find(opt =>
+            opt.text.includes('60-Min') || opt.text.includes('60')
+        );
+        if (therapy60Option) {
+            serviceTypeSelect.value = therapy60Option.value;
+            serviceTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    // Update item counter
+    newItem.querySelector('strong').textContent = `Position ${formNum + 1}`;
+
+    // Remove delete checkbox from header (new items don't need it initially)
+    const deleteLabel = newItem.querySelector('.delete-label');
+    if (deleteLabel) {
+        deleteLabel.remove();
+    }
+
+    // Add to container
+    container.appendChild(newItem);
+
+    // Increment total forms
+    totalForms.value = formNum + 1;
+
+    // Trigger rate auto-population for new item
+    const clientSelect = document.getElementById('id_client');
+    if (clientSelect.value && clientRates[clientSelect.value]) {
+        const serviceSelect = newItem.querySelector('[data-item-service]');
+        const rateField = newItem.querySelector('[data-item-rate]');
+        if (serviceSelect && rateField) {
+            const rates = clientRates[clientSelect.value];
+            rateField.value = rates.rate_60;
+        }
+    }
+});
+
+// Initialize: Mark already-deleted items
+document.querySelectorAll('input[type="checkbox"][name*="DELETE"]:checked').forEach(checkbox => {
+    const formsetItem = checkbox.closest('.formset-item');
+    if (formsetItem) {
+        formsetItem.classList.add('deleted');
+    }
+});
+</script>
+{% endblock %}

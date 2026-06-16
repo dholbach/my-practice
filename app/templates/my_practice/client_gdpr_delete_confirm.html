@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DSGVO-Löschung bestätigen{% endblock %}
+{% block page_title %}DSGVO-Löschung{% endblock %}
+{% block page_subtitle %}{{ client.client_code }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+
+  <div class="alert alert-warning">
+    <strong>Diese Aktion ist unwiderruflich.</strong>
+    Alle Daten zu diesem Klienten werden dauerhaft gelöscht.
+  </div>
+
+  <h3>Was wird gelöscht</h3>
+  <ul>
+    <li>Klientenstammdaten (Name, Adresse, Kontakt)</li>
+    <li>{{ invoice_count }} Rechnung{{ invoice_count|pluralize:"en" }} inkl. Sitzungsposten</li>
+    <li>{{ document_count }} Dokument{{ document_count|pluralize:"e" }} (Dateien auf Disk)</li>
+    <li>Klinische Notizen, Sitzungsprotokolle, Supervision</li>
+    <li>Alle Sitzungsdaten</li>
+  </ul>
+
+  <h3>Vor der Löschung zu erledigen</h3>
+  <form method="post" action="{% url 'client_gdpr_delete' client.pk %}">
+    {% csrf_token %}
+
+    <div class="checklist-item">
+      <label>
+        <input type="checkbox" name="confirm_email" required>
+        Ich habe Korrespondenz mit diesem Klienten aus meinem E-Mail-Programm gelöscht.
+      </label>
+    </div>
+
+    <div class="checklist-item">
+      <label>
+        <input type="checkbox" name="confirm_retention" required>
+        Ich bestätige, dass die gesetzliche Aufbewahrungsfrist von 10 Jahren abgelaufen ist.
+        Letzte Sitzung: <strong>{{ last_session|date:"d.m.Y" }}</strong>
+      </label>
+    </div>
+
+    {% if has_email %}
+    <p class="help-text">
+      Eine Löschbenachrichtigung wird an <strong>{{ client.email }}</strong>
+      (Art. 17 DSGVO) gesendet.
+    </p>
+    {% else %}
+    <p class="help-text">
+      Keine E-Mail-Adresse hinterlegt — es wird keine Benachrichtigung gesendet.
+    </p>
+    {% endif %}
+
+    <div class="form-actions">
+      <a href="{% url 'client_list' %}" class="btn btn-secondary">Abbrechen</a>
+      <button type="submit" class="btn btn-danger">
+        Löschen{% if has_email %} &amp; Benachrichtigen{% endif %}
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

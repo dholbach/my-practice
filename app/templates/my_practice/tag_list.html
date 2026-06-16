@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Tag-Verwaltung{% endblock %}
+
+{% block page_title %}Tags{% endblock %}
+{% block page_subtitle %}Verwalte Client-Tags für bessere Organisation{% endblock %}
+
+{% block content %}
+<div class="actions" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <a href="{% url 'client_list' %}" class="btn btn-secondary">
+        ← Zurück zur Klientenliste
+    </a>
+    <a href="{% url 'tag_create' %}" class="btn">
+        ➕ Neues Tag erstellen
+    </a>
+</div>
+
+{% if tags %}
+<div class="section-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Farbe</th>
+                <th>Beschreibung</th>
+                <th>Verwendet von</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tag in tags %}
+            <tr>
+                <td>
+                    <span class="tag {{ tag.color }}" style="display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: white;">
+                        {{ tag.name }}
+                        {% if tag.is_system %}
+                            <span style="margin-left: 0.25rem; opacity: 0.7; font-size: 0.625rem;">(System)</span>
+                        {% endif %}
+                    </span>
+                </td>
+                <td>
+                    <span class="tag {{ tag.color }}" style="display: inline-block; padding: 0.25rem 0.5rem; border-radius: 8px; font-size: 0.625rem; color: white;">
+                        {{ tag.get_color_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if tag.description %}
+                        {{ tag.description }}
+                    {% else %}
+                        <span class="text-muted-light italic">Keine Beschreibung</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'client_list' %}?tag={{ tag.slug }}" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                        {{ tag.client_count }} Klient{{ tag.client_count|pluralize:"en" }}
+                    </a>
+                </td>
+                <td>
+                    {% if not tag.is_system %}
+                        <a href="{% url 'tag_update' tag.pk %}" class="btn btn-sm btn-secondary" style="margin-right: 0.5rem;">
+                            ✏️ Bearbeiten
+                        </a>
+                        <a href="{% url 'tag_delete' tag.pk %}" class="btn btn-sm btn-danger">
+                            🗑️ Löschen
+                        </a>
+                    {% else %}
+                        <span class="text-muted-light text-sm">System-Tag</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <h2>Keine Tags vorhanden</h2>
+    <p>Erstelle dein erstes Tag, um Klienten besser zu organisieren.</p>
+    <a href="{% url 'tag_create' %}" class="btn" style="margin-top: 1rem;">
+        ➕ Erstes Tag erstellen
+    </a>
+</div>
+{% endif %}
+
+
+{% endblock %}

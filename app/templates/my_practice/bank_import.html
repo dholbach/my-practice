@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Bank-Import{% endblock %}
+
+{% block content %}
+<div class="bank-import-page">
+    <div class="flex-between mb-4">
+        <h1 class="mb-0">💳 Bank-Import</h1>
+        <a href="{% url 'bank_review' %}" class="btn btn-secondary">
+            📋 Zur Prüfung
+        </a>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="upload-card">
+        <h2 class="upload-card__title">CSV-Datei hochladen</h2>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="upload-card__error">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="upload-form-field">
+                <label class="upload-form-field__label">
+                    {{ form.csv_file.label }}
+                </label>
+                {{ form.csv_file }}
+                {% if form.csv_file.help_text %}
+                    <div class="upload-form-field__hint">
+                        {{ form.csv_file.help_text }}
+                    </div>
+                {% endif %}
+                {% if form.csv_file.errors %}
+                    <div class="upload-form-field__error">
+                        {{ form.csv_file.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="upload-form-field">
+                <label class="upload-form-field__checkbox-label">
+                    {{ form.skip_expenses }}
+                    <span>{{ form.skip_expenses.label }}</span>
+                </label>
+                {% if form.skip_expenses.help_text %}
+                    <div class="upload-form-field__checkbox-hint">
+                        {{ form.skip_expenses.help_text }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary upload-submit-btn">
+                📤 Importieren & Verarbeiten
+            </button>
+        </form>
+    </div>
+
+    <!-- Format Info -->
+    <div class="format-info-box">
+        <h3 class="format-info-box__title">ℹ️ Unterstützte Formate</h3>
+        <ul class="format-info-box__list">
+            <li>CSV-Kontoauszug (Semikolon-getrennt)</li>
+            <li>UTF-8 Encoding</li>
+            <li>Deutsche Dezimalformate (90,00 €)</li>
+            <li>Datumformat: TT.MM.JJJJ</li>
+        </ul>
+    </div>
+
+    <!-- Recent Transactions -->
+    {% if recent_transactions %}
+    <div class="recent-transactions-card">
+        <h2 class="recent-transactions-card__title">Letzte Importe</h2>
+
+        <div class="overflow-x-auto">
+            <table class="data-table--bank">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Name</th>
+                        <th>Verwendungszweck</th>
+                        <th class="text-right">Betrag</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trans in recent_transactions %}
+                    <tr>
+                        <td>{{ trans.transaction_date|date:"d.m.Y" }}</td>
+                        <td><span class="sensitive-data">{{ trans.payer_name }}</span></td>
+                        <td class="td-reference">
+                            {{ trans.reference }}
+                        </td>
+                        <td class="td-amount {% if trans.amount > 0 %}text-success{% else %}text-secondary{% endif %}">
+                            {{ trans.amount|floatformat:2 }}&nbsp;€
+                        </td>
+                        <td>
+                            {% if trans.match_confidence == 'exact' %}
+                                <span class="import-badge import-badge--matched">
+                                    ✓ Exakt
+                                </span>
+                            {% elif trans.match_confidence == 'fuzzy' %}
+                                <span class="import-badge import-badge--fuzzy">
+                                    ~ Fuzzy
+                                </span>
+                            {% elif trans.match_confidence == 'manual' %}
+                                <span class="import-badge import-badge--manual">
+                                    ✍️ Manuell
+                                </span>
+                            {% elif trans.match_confidence == 'ignored' %}
+                                <span class="import-badge import-badge--neutral">
+                                    ➖ Ignoriert
+                                </span>
+                            {% elif trans.match_confidence == 'auto-withdrawal' %}
+                                <span class="import-badge import-badge--neutral">
+                                    💸 Entnahme
+                                </span>
+                            {% elif trans.match_confidence == 'auto-expense' %}
+                                <span class="import-badge import-badge--neutral">
+                                    📋 Ausgabe
+                                </span>
+                            {% else %}
+                                <span class="import-badge import-badge--open">
+                                    ? Offen
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

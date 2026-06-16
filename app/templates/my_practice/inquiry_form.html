@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Anfrage {{ action }}{% endblock %}
+
+
+
+{% block page_icon %}📬{% endblock %}
+{% block page_title %}Anfrage {{ action }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    {% if show_convert_button %}
+    <div class="convert-hint">
+        <a href="{% url 'inquiry_convert' object.pk %}" class="btn-success">✅ Als Klient:in aufnehmen</a>
+    </div>
+    {% endif %}
+
+    <form method="post" class="card">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-error">
+            <strong>Fehler beim Speichern:</strong>
+            <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.full_name.id_for_label }}">{{ form.full_name.label }}</label>
+                {{ form.full_name }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.inquiry_date.id_for_label }}">{{ form.inquiry_date.label }}</label>
+                {{ form.inquiry_date }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                {{ form.email }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                {{ form.phone }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.source.id_for_label }}">{{ form.source.label }}</label>
+                {{ form.source }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                {{ form.status }}
+            </div>
+        </div>
+
+        <fieldset class="milestone-dates-fieldset">
+            <legend>Meilensteine <span class="fieldset-hint">(werden beim Statuswechsel automatisch gesetzt)</span></legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.contacted_date.id_for_label }}">{{ form.contacted_date.label }}</label>
+                    {{ form.contacted_date }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.intro_date.id_for_label }}">{{ form.intro_date.label }}</label>
+                    {{ form.intro_date }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.decision_date.id_for_label }}">{{ form.decision_date.label }}</label>
+                    {{ form.decision_date }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.converted_date.id_for_label }}">{{ form.converted_date.label }}</label>
+                    {{ form.converted_date }}
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="form-group">
+            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+            {{ form.notes }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.initial_contact_notes.id_for_label }}">{{ form.initial_contact_notes.label }}</label>
+            {{ form.initial_contact_notes }}
+            {% if form.initial_contact_notes.help_text %}
+            <small class="form-hint">{{ form.initial_contact_notes.help_text }}</small>
+            {% endif %}
+        </div>
+
+        {% if object %}
+        <details class="guide-details">
+            <summary>📋 Leitfaden: Erstgespräch</summary>
+            <div class="guide-body">
+                <table class="guide-table">
+                    <thead>
+                        <tr><th>Zeit</th><th>Schritt</th><th>Hinweis</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>~1 min</td>
+                            <td><strong>Ankommen</strong></td>
+                            <td>Honorar nennen, Kanal-Frage — bevor sich die Person emotional einlässt</td>
+                        </tr>
+                        <tr>
+                            <td>~5 min</td>
+                            <td><strong>Lebenssituation &amp; Ressourcen</strong></td>
+                            <td>Beschäftigung, soziales Umfeld, erste Einschätzung Regulationsfähigkeit</td>
+                        </tr>
+                        <tr>
+                            <td>~5 min</td>
+                            <td><strong>Anliegen &amp; Veränderungsziel</strong></td>
+                            <td>Vorige Therapieerfahrung, Erwartungen</td>
+                        </tr>
+                        <tr>
+                            <td>~2 min</td>
+                            <td><strong>Akute Lage</strong></td>
+                            <td>Ein Satz — Krisen, Psychiatrie, Medikation; nicht wie ein Formular</td>
+                        </tr>
+                        <tr>
+                            <td>~4 min</td>
+                            <td><strong>Ansatz erklären</strong></td>
+                            <td>SE, körperorientiert; bei Neueinsteigern Fremdartigkeit normalisieren</td>
+                        </tr>
+                        <tr>
+                            <td>~2 min</td>
+                            <td><strong>Abschluss &amp; nächster Schritt</strong></td>
+                            <td>Nächste Handlung klar benennen, keine offene Unklarheit über Kontaktweg</td>
+                        </tr>
+                        <tr>
+                            <td>Σ ~19 min + 1 Puffer</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+        {% endif %}
+
+        {% if all_email_templates %}
+        <div class="stage-email-section" x-data="{ status: '{{ current_status }}' }">
+            <div class="template-selector-row">
+                <label for="template-selector">Vorlage:</label>
+                <select id="template-selector" x-on:change="status = $el.value">
+                    {% for tmpl in all_email_templates %}
+                    <option value="{{ tmpl.status }}"{% if tmpl.status == current_status %} selected{% endif %}>{{ tmpl.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% for tmpl in all_email_templates %}
+            <div class="stage-email-card" x-show="status === '{{ tmpl.status }}'"{% if tmpl.status != current_status %} style="display:none"{% endif %}>
+                {% include 'includes/email_card.html' with card_title=tmpl.label card_id="stage-template-"|add:tmpl.status subject_de=tmpl.subject body_de=tmpl.body subject_en=tmpl.subject_en body_en=tmpl.body_en %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn">{{ action }}</button>
+            <a href="{% url 'inquiry_list' %}" class="btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

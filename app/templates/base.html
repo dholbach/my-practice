@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Therapy Practice{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/tailwind.out.css' %}">
+    {% block extra_css %}{% endblock %}
+    <script src="{% static 'js/htmx.min.js' %}" defer></script>
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div class="container">
+        <div class="header">
+            <h1>
+                {% if request.current_practice and request.current_practice.logo %}
+                    <img src="{{ request.current_practice.logo.url }}" alt="{{ request.current_practice.name }}" class="practice-logo">
+                {% else %}
+                    {% block page_icon %}🏥{% endblock %}
+                {% endif %}
+                {% block page_title %}{% if request.current_practice and request.current_practice.short_title %}{{ request.current_practice.short_title }}{% else %}Praxisverwaltung{% endif %}{% endblock %}
+            </h1>
+            <p class="subtitle">{% block page_subtitle %}Praxisverwaltung{% endblock %}</p>
+            <nav>
+                <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 Übersicht</a>
+                <a href="{% url 'invoice_list' %}" {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' %}class="active"{% endif %}>📄 Rechnungen</a>
+                <a href="{% url 'monthly_billing' %}" {% if request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' %}class="active"{% endif %}>📅 Abrechnung</a>
+                <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' %}class="active"{% endif %}>📋 Klienten</a>
+                <a href="{% url 'inquiry_list' %}" {% if 'inquiry' in request.resolver_match.url_name %}class="active"{% endif %}>📬 Anfragen</a>
+                <a href="{% url 'todo_list' %}" {% if 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>✅ Aufgaben</a>
+                <a href="{% url 'bank_import' %}" {% if 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>
+                    🏦 Bank
+                    {% if request.unmatched_bank_count %}<span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %}
+                </a>
+                <a href="{% url 'analytics' %}" {% if request.resolver_match.url_name == 'analytics' %}class="active"{% endif %}>📊 Analysen</a>
+                <div class="dropdown">
+                    <span {% if request.resolver_match.url_name == 'withdrawal_list' or request.resolver_match.url_name == 'expense_list' or request.resolver_match.url_name == 'tax_year_summary' or request.resolver_match.url_name == 'tax_quarter_overview' or 'bank_expense' in request.resolver_match.url_name %}class="active"{% endif %}>💰 Finanzen ▾</span>
+                    <div class="dropdown-content">
+                        <a href="{% url 'withdrawal_list' %}">📤 Entnahmen</a>
+                        <a href="{% url 'expense_list' %}">💸 Ausgaben</a>
+                        <a href="{% url 'bank_expense_review' %}">🏦 Bank-Ausgaben</a>
+                        <a href="{% url 'tax_year_summary' %}">📋 Steuer-Jahresübersicht</a>
+                        <a href="{% url 'tax_quarter_overview' %}">📊 Steuer-Quartalsübersicht</a>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <span>⚙️ Admin ▾</span>
+                    <div class="dropdown-content">
+                        <a href="{% url 'calendar_approval_queue' %}">📅 Kalender-Genehmigung</a>
+                        <a href="{% url 'supervision_queue' %}">🔍 Supervision</a>
+                        <a href="{% url 'boilerplate' %}">✉️ E-Mail-Textbausteine</a>
+                        <a href="{% url 'admin:index' %}">⚙️ Django Admin</a>
+                    </div>
+                </div>
+                {% if user.is_authenticated and user.practices.exists %}
+                <div class="dropdown practice-switcher">
+                    <span>{{ request.current_practice.short_title|default:"Praxis" }} ▾</span>
+                    <div class="dropdown-content">
+                        {% for practice in user.practices.all %}
+                        <a href="{% url 'practice_switch' practice.slug %}"
+                           {% if practice.id == request.current_practice.id %}class="current-practice"{% endif %}>
+                            {{ practice.short_title|default:practice.name }}
+                            {% if practice.id == request.current_practice.id %}✓{% endif %}
+                        </a>
+                        {% endfor %}
+                        <a href="{% url 'practice_management' %}" class="nav-manage-link">⚙️ Praxen verwalten</a>
+                    </div>
+                </div>
+                {% endif %}
+                <button class="theme-toggle" id="themeToggle" title="Dark Mode umschalten">
+                    🌙
+                </button>
+                <button class="privacy-toggle" id="privacyToggle" title="Klicken zum Verbergen sensibler Daten">
+                    👁️ Privacy
+                </button>
+            </nav>
+        </div>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script>
+        // Dark Mode Toggle
+        (function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const htmlElement = document.documentElement;
+
+            // Load saved theme from localStorage (default: light)
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            htmlElement.setAttribute('data-theme', savedTheme);
+            themeToggle.innerHTML = savedTheme === 'dark' ? '☀️' : '🌙';
+
+            // Toggle theme
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = htmlElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                htmlElement.setAttribute('data-theme', newTheme);
+                themeToggle.innerHTML = newTheme === 'dark' ? '☀️' : '🌙';
+
+                // Save to localStorage
+                localStorage.setItem('theme', newTheme);
+
+                // Dispatch event for charts to redraw
+                window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+            });
+        })();
+
+        // Privacy Mode Toggle
+        (function() {
+            const toggle = document.getElementById('privacyToggle');
+            const body = document.body;
+
+            // Load saved state from localStorage
+            const privacyMode = localStorage.getItem('privacyMode') === 'true';
+            if (privacyMode) {
+                body.classList.add('privacy-mode');
+                toggle.classList.add('active');
+                toggle.innerHTML = '🔒 Privacy';
+            }
+
+            // Toggle privacy mode
+            toggle.addEventListener('click', function() {
+                body.classList.toggle('privacy-mode');
+                const isActive = body.classList.contains('privacy-mode');
+                toggle.classList.toggle('active');
+                toggle.innerHTML = isActive ? '🔒 Privacy' : '👁️ Privacy';
+
+                // Save state to localStorage
+                localStorage.setItem('privacyMode', isActive);
+            });
+        })();
+
+        // Dropdown menu toggle (all dropdowns)
+        (function() {
+            const dropdowns = document.querySelectorAll('.dropdown');
+            if (!dropdowns.length) return;
+
+            dropdowns.forEach(function(dropdown) {
+                const dropdownContent = dropdown.querySelector('.dropdown-content');
+                if (!dropdownContent) return;
+
+                let hideTimeout;
+
+                // Show dropdown
+                dropdown.addEventListener('mouseenter', function() {
+                    clearTimeout(hideTimeout);
+                    dropdownContent.style.display = 'block';
+                });
+
+                // Hide dropdown with delay
+                dropdown.addEventListener('mouseleave', function() {
+                    hideTimeout = setTimeout(function() {
+                        dropdownContent.style.display = 'none';
+                    }, 200);
+                });
+
+                // Keep dropdown open when hovering over content
+                dropdownContent.addEventListener('mouseenter', function() {
+                    clearTimeout(hideTimeout);
+                });
+
+                dropdownContent.addEventListener('mouseleave', function() {
+                    hideTimeout = setTimeout(function() {
+                        dropdownContent.style.display = 'none';
+                    }, 200);
+                });
+            });
+        })();
+    </script>
+
+    <!-- Keyboard Navigation -->
+    <script src="{% static 'js/keyboard-nav.js' %}"></script>
+
+    <!-- Global Search -->
+    <script src="{% static 'js/global-search.js' %}"></script>
+
+    <!-- Widget System (P-003 Phase 3) -->
+    <script src="{% static 'js/widgets.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

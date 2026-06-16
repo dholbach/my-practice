@@ -1,0 +1,77 @@
+{% comment %}
+Calendar pre-flight check widget for invoice detail page (P-013).
+Include this inside the invoice detail template when `calendar_preflight` is available.
+
+Context expected:
+  calendar_preflight.item_results  — list of {item, status, calendar_event, suggested_date}
+  calendar_preflight.unaccounted_events — list of PendingCalendarEvent not on the invoice
+  calendar_preflight.has_warnings  — bool
+{% endcomment %}
+
+{% if calendar_preflight %}
+<div class="{% if calendar_preflight.has_warnings %}warning-box{% else %}info-box{% endif %} mt-4" id="calendar-preflight">
+    <strong class="preflight-title">
+        {% if calendar_preflight.has_warnings %}
+        ⚠️ Kalender-Abgleich: Abweichungen gefunden
+        {% else %}
+        ✅ Kalender-Abgleich: Alle Termine bestätigt
+        {% endif %}
+    </strong>
+
+    <table class="preflight-table">
+        <thead>
+            <tr>
+                <th>Datum (Rechnung)</th>
+                <th>Dauer</th>
+                <th>Status</th>
+                <th>Hinweis</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in calendar_preflight.item_results %}
+            <tr class="{% if result.status == 'cancelled' %}row-cancelled{% elif result.status == 'moved' %}row-moved{% endif %}">
+                <td class="preflight-td-primary">
+                    {{ result.item.session.session_date|date:"d.m.Y"|default:"–" }}
+                </td>
+                <td class="preflight-td-secondary">
+                    {{ result.item.session.duration }} min
+                </td>
+                <td>
+                    {% if result.status == 'confirmed' %}
+                        <span class="preflight-status-confirmed">✅ Bestätigt</span>
+                    {% elif result.status == 'cancelled' %}
+                        <span class="preflight-status-cancelled">🚫 Abgesagt</span>
+                    {% elif result.status == 'moved' %}
+                        <span class="preflight-status-moved">📅 Verschoben</span>
+                    {% else %}
+                        <span class="preflight-status-unmatched">❓ Kein Abgleich</span>
+                    {% endif %}
+                </td>
+                <td class="preflight-td-note">
+                    {% if result.status == 'cancelled' %}
+                        Termin wurde im Kalender abgesagt — Rechnung prüfen
+                    {% elif result.status == 'moved' %}
+                        Kalender-Datum: {{ result.suggested_date|date:"d.m.Y" }} — Datum in Rechnung ggf. anpassen
+                    {% elif result.status == 'unmatched' %}
+                        Kein passender Kalender-Eintrag gefunden
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if calendar_preflight.unaccounted_events %}
+    <div class="preflight-unaccounted">
+        <strong class="preflight-unaccounted__title">
+            📋 {{ calendar_preflight.unaccounted_events|length }} Kalender-Termin{{ calendar_preflight.unaccounted_events|length|pluralize:"e" }} nicht auf der Rechnung:
+        </strong>
+        <ul class="preflight-unaccounted__list">
+            {% for event in calendar_preflight.unaccounted_events %}
+            <li>{{ event.event_date|date:"d.m.Y" }} — {{ event.summary }} ({{ event.duration_minutes }} min)</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

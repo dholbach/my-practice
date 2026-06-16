@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Neue Rechnung{% endblock %}
+
+{% block page_title %}Neue Rechnung{% endblock %}
+{% block page_subtitle %}Rechnung erstellen{% endblock %}
+
+{% block content %}
+<form method="post" id="invoice-form">
+    {% csrf_token %}
+
+    {# Hidden field for practice - set by view #}
+    {{ form.practice.as_hidden }}
+
+    <div class="form-row">
+        <div class="form-group sensitive-data">
+            {{ form.client.label_tag }}
+            {{ form.client }}
+            {{ form.client.errors }}
+        </div>
+        <div class="form-group">
+            {{ form.status.label_tag }}
+            {{ form.status }}
+            {{ form.status.errors }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            {{ form.invoice_number.label_tag }}
+            {{ form.invoice_number }}
+            {{ form.invoice_number.errors }}
+        </div>
+        <div class="form-group">
+            {{ form.invoice_date.label_tag }}
+            {{ form.invoice_date }}
+            {{ form.invoice_date.errors }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            {{ form.paid_date.label_tag }}
+            {{ form.paid_date }}
+            {{ form.paid_date.errors }}
+            <div class="helptext">Optional: Datum der Zahlung (nur bei Status "Bezahlt" relevant)</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.tax_rate.label_tag }}
+        {{ form.tax_rate }}
+        {{ form.tax_rate.errors }}
+        <div class="helptext">Kleinunternehmer = 0%</div>
+    </div>
+
+    <div class="form-group">
+        {{ form.notes.label_tag }}
+        {{ form.notes }}
+        {{ form.notes.errors }}
+    </div>
+
+    <div class="formset-container">
+        <div class="formset-title">📋 Rechnungspositionen</div>
+
+        {{ items.management_form }}
+        {{ items.non_form_errors }}
+
+        <div id="items-container">
+            {% for item_form in items %}
+            <div class="formset-item">
+                <div class="formset-item-header">
+                    <strong>Item {{ forloop.counter }}</strong>
+                    {% if items.can_delete and not item_form.instance.pk %}
+                    <label class="delete-checkbox">
+                        {{ item_form.DELETE }}
+                        Löschen
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div class="item-grid">
+                    <div class="form-group">
+                        {{ item_form.session_date.label_tag }}
+                        {{ item_form.session_date }}
+                        {{ item_form.session_date.errors }}
+                    </div>
+                    <div class="form-group">
+                        {{ item_form.service_type.label_tag }}
+                        {{ item_form.service_type }}
+                        {{ item_form.service_type.errors }}
+                    </div>
+                    <div class="form-group">
+                        {{ item_form.duration.label_tag }}
+                        {{ item_form.duration }}
+                        {{ item_form.duration.errors }}
+                    </div>
+                    <div class="form-group">
+                        {{ item_form.quantity.label_tag }}
+                        {{ item_form.quantity }}
+                        {{ item_form.quantity.errors }}
+                    </div>
+                    <div class="form-group">
+                        {{ item_form.rate.label_tag }}
+                        {{ item_form.rate }}
+                        {{ item_form.rate.errors }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ item_form.description.label_tag }}
+                    {{ item_form.description }}
+                    {{ item_form.description.errors }}
+                </div>
+
+                {{ item_form.id }}
+                {{ item_form.invoice }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" id="add-item" class="btn btn-secondary" style="margin-top: 1rem;">
+            ➕ Weiteres Item hinzufügen
+        </button>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">💾 Rechnung Erstellen</button>
+        <a href="{% url 'invoice_list' %}" class="btn btn-secondary">❌ Abbrechen</a>
+    </div>
+</form>
+
+<script>
+// DOM elements
+const clientSelect = document.getElementById('id_client');
+const invoiceNumberField = document.getElementById('id_invoice_number');
+const invoiceDateField = document.querySelector('input[name="invoice_date"]');
+const statusField = document.querySelector('select[name="status"]');
+
+// Client rates data
+const clientRates = {
+    {% for client in form.fields.client.queryset %}
+    '{{ client.id }}': {
+        code: '{{ client.client_code }}',
+        rate_60: {{ client.hourly_rate_60|js_number }},
+        rate_90: {{ client.hourly_rate_90|js_number }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+// Auto-update invoice date to latest session date (only for drafts)
+function updateInvoiceDateToLatest() {
+    // Only auto-adjust for drafts
+    if (statusField && statusField.value !== 'draft') return;
+
+    const sessionDateFields = document.querySelectorAll('input[name*="session_date"]');
+    let latestDate = null;
+
+    sessionDateFields.forEach(field => {
+        if (field.value) {
+            const date = new Date(field.value);
+            if (!latestDate || date > latestDate) {
+                latestDate = date;
+            }
+        }
+    });
+
+    if (latestDate && invoiceDateField) {
+        const currentInvoiceDate = invoiceDateField.value ? new Date(invoiceDateField.value) : null;
+        // Only update if latest item date is after current invoice date
+        if (!currentInvoiceDate || latestDate > currentInvoiceDate) {
+            invoiceDateField.value = latestDate.toISOString().split('T')[0];
+        }
+    }
+}
+
+// Update rate field based on client and service type
+function updateRateForItem(rateField, serviceSelect) {
+    const clientId = clientSelect.value;
+    if (!clientId || !clientRates[clientId]) return;
+
+    const rates = clientRates[clientId];
+    const serviceText = serviceSelect?.options[serviceSelect.selectedIndex]?.text || '';
+
+    if (serviceText.includes('90')) {
+        rateField.value = rates.rate_90;
+    } else {
+        rateField.value = rates.rate_60;
+    }
+}
+
+// Update all rate fields when client changes
+function updateAllRates() {
+    const clientId = clientSelect.value;
+    if (!clientId || !clientRates[clientId]) return;
+
+    document.querySelectorAll('[data-item-rate]').forEach(function(rateField) {
+        const row = rateField.closest('.formset-item');
+        if (row) {
+            const serviceSelect = row.querySelector('[data-item-service]');
+            updateRateForItem(rateField, serviceSelect);
+        }
+    });
+}
+
+// Fetch next invoice number from server when client changes
+async function suggestInvoiceNumber(clientId) {
+    if (!clientId || invoiceNumberField.value) return;
+
+    try {
+        const response = await fetch(`/invoices/next-number/?client=${clientId}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.suggested_number && !invoiceNumberField.value) {
+                invoiceNumberField.value = data.suggested_number;
+            }
+        }
+    } catch (error) {
+        console.log('Could not fetch next invoice number:', error);
+    }
+}
+
+// Client change handler
+clientSelect.addEventListener('change', function() {
+    const clientId = this.value;
+    suggestInvoiceNumber(clientId);
+    updateAllRates();
+});
+
+// Auto-populate rate and duration when service type changes
+document.addEventListener('change', function(e) {
+    if (e.target.matches('[data-item-service]')) {
+        const clientId = clientSelect.value;
+        const row = e.target.closest('.formset-item');
+        const rateField = row.querySelector('[data-item-rate]');
+        const durationField = row.querySelector('input[name*="duration"]');
+        const serviceText = e.target.options[e.target.selectedIndex]?.text;
+
+        if (serviceText) {
+            // Set duration based on service type
+            if (serviceText.includes('60')) {
+                if (durationField) durationField.value = '60';
+                if (clientId && clientRates[clientId] && rateField) {
+                    rateField.value = clientRates[clientId].rate_60;
+                }
+            } else if (serviceText.includes('90')) {
+                if (durationField) durationField.value = '90';
+                if (clientId && clientRates[clientId] && rateField) {
+                    rateField.value = clientRates[clientId].rate_90;
+                }
+            } else if (serviceText.toLowerCase().includes('cancellation')) {
+                if (durationField) durationField.value = '0';
+                if (clientId && clientRates[clientId] && rateField) {
+                    rateField.value = clientRates[clientId].rate_60; // Or cancellation_fee if available
+                }
+            } else {
+                // Default
+                if (durationField) durationField.value = '60';
+                if (clientId && clientRates[clientId] && rateField) {
+                    rateField.value = clientRates[clientId].rate_60;
+                }
+            }
+        }
+    }
+});
+
+// Trigger on page load if client already selected
+if (clientSelect.value) {
+    clientSelect.dispatchEvent(new Event('change'));
+}
+
+// Set today's date if invoice_date is empty
+if (invoiceDateField && !invoiceDateField.value) {
+    const today = new Date().toISOString().split('T')[0];
+    invoiceDateField.value = today;
+}
+
+// Listen for session_date changes to update invoice date
+document.addEventListener('change', function(e) {
+    if (e.target.matches('input[name*="session_date"]')) {
+        updateInvoiceDateToLatest();
+    }
+});
+
+// Add more invoice items dynamically
+document.getElementById('add-item').addEventListener('click', function() {
+    const container = document.getElementById('items-container');
+    const totalForms = document.querySelector('#id_items-TOTAL_FORMS');
+    const formNum = parseInt(totalForms.value);
+
+    // Get the last item as template
+    const lastItem = container.querySelector('.formset-item:last-child');
+    const newItem = lastItem.cloneNode(true);
+
+    // Update form number in all fields
+    const formRegex = new RegExp('items-(\\d+)-', 'g');
+    newItem.innerHTML = newItem.innerHTML.replace(formRegex, `items-${formNum}-`);
+
+    // Clear values in new form
+    newItem.querySelectorAll('input, select, textarea').forEach(field => {
+        if (field.type === 'checkbox') {
+            field.checked = false;
+        } else if (!field.name.includes('TOTAL_FORMS') && !field.name.includes('INITIAL_FORMS')) {
+            field.value = '';
+        }
+        // Set default session_date to today
+        if (field.name.includes('session_date') && field.type === 'date') {
+            field.value = new Date().toISOString().split('T')[0];
+        }
+        // Set default duration to 60
+        if (field.name.includes('duration')) {
+            field.value = '60';
+        }
+    });
+
+    // Set default service type to therapy_60 (60 min session)
+    const serviceTypeSelect = newItem.querySelector('select[name*="service_type"]');
+    if (serviceTypeSelect) {
+        // Find the therapy_60 option by looking for the option with that value
+        const therapy60Option = Array.from(serviceTypeSelect.options).find(opt =>
+            opt.text.includes('60-Min') || opt.text.includes('60')
+        );
+        if (therapy60Option) {
+            serviceTypeSelect.value = therapy60Option.value;
+            // Trigger change event to auto-populate duration and rate
+            serviceTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    // Update item counter
+    newItem.querySelector('strong').textContent = `Item ${formNum + 1}`;
+
+    // Add to container
+    container.appendChild(newItem);
+
+    // Increment total forms
+    totalForms.value = formNum + 1;
+
+    // Trigger rate auto-population for new item
+    if (clientSelect.value && clientRates[clientSelect.value]) {
+        const serviceSelect = newItem.querySelector('[data-item-service]');
+        const rateField = newItem.querySelector('[data-item-rate]');
+        if (serviceSelect && rateField) {
+            const rates = clientRates[clientSelect.value];
+            rateField.value = rates.rate_60; // Default to 60min rate
+        }
+    }
+
+    // Update invoice date after adding new item (new item has today's date)
+    updateInvoiceDateToLatest();
+});
+</script>
+{% endblock %}

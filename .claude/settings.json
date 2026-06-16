@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C * status)",
+      "Bash(git -C * diff *)",
+      "Bash(git -C * log *)",
+      "Bash(./dev.py logs *)"
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Anamnesebogen senden{% endblock %}
+
+{% block page_title %}📧 Anamnesebogen senden{% endblock %}
+{% block page_subtitle %}<span class="sensitive-data">{{ client.client_code }}</span>{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="email-preview">
+    <form method="post">
+        {% csrf_token %}
+
+        {% if not client.salutation %}
+        <div class="warning-box">
+            <strong>⚠️ Keine persönliche Anrede hinterlegt</strong>
+            Es wird eine generische Anrede verwendet. Eine individuelle Anrede kann im Klientenprofil gesetzt werden.
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="id_recipient">{{ form.recipient.label }}</label>
+            {{ form.recipient }}
+            {% if form.recipient.errors %}
+                <div class="error">{{ form.recipient.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_subject">{{ form.subject.label }}</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}
+                <div class="error">{{ form.subject.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_body">{{ form.body.label }}</label>
+            {{ form.body }}
+            {% if form.body.errors %}
+                <div class="error">{{ form.body.errors }}</div>
+            {% endif %}
+            <div class="help-text">
+                Text kann frei angepasst werden. Die Signatur ist durch "-- " abgetrennt.
+            </div>
+        </div>
+
+        <div class="attachment-preview">
+            <strong style="display: block; margin-bottom: 0.5rem;">📎 Anhang</strong>
+            <span style="font-weight: 600;">📄 {{ docx_name }}</span>
+            <div style="margin-top: 0.5rem; font-size: 0.875rem;">
+                Diese Datei wird automatisch angehängt.
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                📧 Senden
+            </button>
+            <a href="{% url 'client_detail' client.pk %}" class="btn btn-secondary">
+                Abbrechen
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

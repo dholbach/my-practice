@@ -1,0 +1,72 @@
+{% comment %}
+Client Attention Widget Content - P-003 Phase 4
+Shows clients requiring attention (no recent sessions, tags)
+Uses centralized styles from widgets.css
+{% endcomment %}
+
+<div class="widget-content-section">
+    {% if total_attention_count > 0 %}
+        {% if no_recent_session_count > 0 %}
+            <div class="widget-section">
+                <div class="section-header">
+                    <h4>⏰ Keine Sitzungen seit 60+ Tagen</h4>
+                </div>
+                <ul class="widget-pill-list">
+                    {% for client in no_recent_session_clients %}
+                        <li class="widget-pill">
+                            <a href="{% url 'client_detail' client.id %}">
+                                {{ client.client_code }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                    {% if no_recent_session_count > 5 %}
+                        <li class="widget-pill dashed">
+                            <a href="{% url 'client_list' %}?tag=no-next-session">
+                                +{{ no_recent_session_count|add:"-5" }} weitere
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% for tag_name, data in tagged_clients.items %}
+            <div class="widget-section">
+                <div class="section-header">
+                    <h4>
+                        <span class="tag-badge" style="background: {{ data.tag.color }}20; color: {{ data.tag.color }};">
+                            {{ data.tag.name }}
+                        </span>
+                        {{ data.count }} Klient{{ data.count|pluralize:"en,en" }}
+                    </h4>
+                </div>
+                <ul class="widget-pill-list">
+                    {% for client in data.clients|slice:":5" %}
+                        <li class="widget-pill">
+                            <a href="{% url 'client_detail' client.id %}">
+                                {{ client.client_code }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                    {% if data.count > 5 %}
+                        <li class="widget-pill dashed">
+                            <a href="{% url 'client_list' %}?tag={{ data.tag.id }}">
+                                +{{ data.count|add:"-5" }} weitere
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endfor %}
+
+        <div style="padding-top: 1rem; border-top: 1px solid var(--color-border);">
+            <a href="{% url 'client_list' %}" class="widget-btn-secondary">
+                Alle Klienten ansehen
+            </a>
+        </div>
+    {% else %}
+        <div class="widget-empty-state">
+            <p>✨ Keine Klienten benötigen aktuell besondere Aufmerksamkeit</p>
+        </div>
+    {% endif %}
+</div>

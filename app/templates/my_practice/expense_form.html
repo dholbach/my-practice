@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ausgabe {{ action }}{% endblock %}
+
+{% block page_icon %}💸{% endblock %}
+{% block page_title %}Ausgabe {{ action }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="post" enctype="multipart/form-data" class="card">
+        {% csrf_token %}
+
+        {# Hidden practice field - will be set by view if needed #}
+        {% if form.practice %}
+            {{ form.practice.as_hidden }}
+        {% endif %}
+
+        {% if form.errors %}
+        <div class="alert alert-error">
+            <strong>Fehler beim Speichern:</strong>
+            <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.date.id_for_label }}">{{ form.date.label }}</label>
+            {{ form.date }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                {{ form.category }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.amount.id_for_label }}">{{ form.amount.label }}</label>
+                {{ form.amount }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-check">
+                {{ form.is_tax_deductible }}
+                <label for="{{ form.is_tax_deductible.id_for_label }}">{{ form.is_tax_deductible.label }}</label>
+            </div>
+
+            <div class="form-check">
+                {{ form.has_invoice }}
+                <label for="{{ form.has_invoice.id_for_label }}">{{ form.has_invoice.label }}</label>
+            </div>
+
+            <div class="form-check">
+                {{ form.is_filed_in_tax_return }}
+                <label for="{{ form.is_filed_in_tax_return.id_for_label }}">{{ form.is_filed_in_tax_return.label }}</label>
+            </div>
+        </div>
+
+        {# Receipts section — upload dropzone (inside main form) #}
+        <div class="form-group receipt-section">
+            <label>Belege</label>
+
+            {# Existing receipts are rendered OUTSIDE the main form below (no nested forms) #}
+            {% if expense %}
+            <div id="receipts-existing-placeholder"></div>
+            {% endif %}
+
+            <div class="receipt-dropzone" id="receipt-dropzone">
+                <input type="file" name="receipts" id="id_receipts"
+                       accept="application/pdf,image/*" class="receipt-input" multiple>
+                <div class="dropzone-content">
+                    <div class="dropzone-icon">📄</div>
+                    <div class="dropzone-text">Dateien hierher ziehen oder <span class="dropzone-link">klicken</span></div>
+                    <div class="dropzone-hint">PDF, JPG oder PNG — mehrere Dateien möglich</div>
+                </div>
+                <div class="dropzone-filelist hidden" id="dropzone-filelist"></div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Speichern</button>
+            <a href="{% if next %}{{ next }}{% else %}{% url 'expense_list' %}{% endif %}" class="btn btn-secondary">Abbrechen</a>
+            {% if expense %}
+            <a href="{% url 'expense_delete' expense.pk %}{% if next %}?next={{ next|urlencode }}{% endif %}"
+               class="btn btn-danger btn-delete-expense">Löschen</a>
+            {% endif %}
+        </div>
+    </form>
+
+    {# Existing receipt delete forms — outside the main form to avoid nesting #}
+    {% if expense %}
+    {% with existing_receipts=expense.receipts.all %}
+    {% if existing_receipts %}
+    <div class="receipts-list" id="receipts-existing">
+        {% for r in existing_receipts %}
+        <div class="receipt-item">
+            <span class="receipt-icon">📎</span>
+            <a href="{{ r.file.url }}" target="_blank" class="receipt-filename">
+                {{ r.file.name|slice:"6:" }}
+            </a>
+            <form method="post" action="{% url 'expense_receipt_delete' r.pk %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="receipt-delete-form">
+                {% csrf_token %}
+                <button type="submit" class="btn-link receipt-delete-btn" title="Beleg löschen">🗑</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    <script>
+        // Move the receipts list into the placeholder inside the card
+        (function () {
+            var list = document.getElementById("receipts-existing");
+            var placeholder = document.getElementById("receipts-existing-placeholder");
+            if (list && placeholder) placeholder.replaceWith(list);
+        })();
+    </script>
+    {% endif %}
+    {% endwith %}
+    {% endif %}
+
+    {# Bank transaction linking — edit mode only #}
+    {% if expense %}
+    <div class="card bank-link-section">
+        <h3 class="bank-link-section__title">Bankbuchungen</h3>
+
+        {# Linked transactions #}
+        {% with linked=linked_transactions %}
+        {% if linked %}
+        <div class="bank-tx-list">
+            {% for tx in linked %}
+            <div class="bank-tx-row bank-tx-row--linked">
+                <span class="bank-tx-date">{{ tx.transaction_date|date:"d.m.Y" }}</span>
+                <span class="bank-tx-payer">{{ tx.payer_name }}</span>
+                <span class="bank-tx-ref">{{ tx.reference|truncatechars:60 }}</span>
+                <span class="bank-tx-amount bank-tx-amount--negative">{{ tx.amount }} €</span>
+                <form method="post"
+                      action="{% url 'expense_unlink_transaction' expense.pk tx.pk %}"
+                      class="bank-tx-action-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-link bank-tx-unlink-btn"
+                            title="Verknüpfung aufheben">✕</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="bank-link-section__empty">Keine Buchungen verknüpft.</p>
+        {% endif %}
+        {% endwith %}
+
+        {# Search form for available transactions #}
+        <details class="bank-link-search" {% if available_transactions or tx_search or tx_year %}open{% endif %}>
+            <summary class="bank-link-search__toggle">Buchung hinzufügen</summary>
+            <form method="get" action="." class="bank-link-search__form">
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                <input type="text" name="tx_search" value="{{ tx_search }}"
+                       placeholder="Empfänger oder Verwendungszweck …"
+                       class="bank-link-search__input form-control">
+                <input type="number" name="tx_year" value="{{ tx_year }}"
+                       placeholder="Jahr" min="2000" max="2099"
+                       class="bank-link-search__year form-control">
+                <button type="submit" class="btn btn-secondary btn-sm">Suchen</button>
+            </form>
+
+            {% if available_transactions %}
+            <div class="bank-tx-list bank-tx-list--available">
+                {% for tx in available_transactions %}
+                <div class="bank-tx-row bank-tx-row--available">
+                    <span class="bank-tx-date">{{ tx.transaction_date|date:"d.m.Y" }}</span>
+                    <span class="bank-tx-payer">{{ tx.payer_name }}</span>
+                    <span class="bank-tx-ref">{{ tx.reference|truncatechars:60 }}</span>
+                    <span class="bank-tx-amount bank-tx-amount--negative">{{ tx.amount }} €</span>
+                    <form method="post"
+                          action="{% url 'expense_link_transaction' expense.pk %}"
+                          class="bank-tx-action-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="transaction_id" value="{{ tx.pk }}">
+                        <button type="submit" class="btn btn-primary btn-sm">Verknüpfen</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% elif tx_search or tx_year %}
+            <p class="bank-link-section__empty">Keine freien Buchungen gefunden.</p>
+            {% else %}
+            <p class="bank-link-section__empty bank-link-section__empty--hint">
+                Zeigt Buchungen ±45 Tage um das Ausgabedatum. Suche verfeinern oder Jahr eingeben.
+            </p>
+            {% endif %}
+        </details>
+    </div>
+    {% endif %}
+    {# Merge — edit mode only, only when there are same-category candidates #}
+    {% if expense and merge_candidates %}
+    <div class="card bank-link-section">
+        <h3 class="bank-link-section__title">Zusammenführen</h3>
+        <p class="bank-link-section__empty bank-link-section__empty--hint">
+            Andere Ausgabe in diese zusammenführen — Buchungen, Belege und Betrag werden übernommen, die Quelle wird gelöscht.
+        </p>
+        <form method="post" action="{% url 'expense_merge' expense.pk %}"
+              x-data x-on:submit="confirm('Ausgabe wirklich zusammenführen? Die Quelle wird gelöscht.') || $event.preventDefault()">
+            {% csrf_token %}
+            <div class="bank-link-search__form">
+                <select name="source_id" class="form-control" required>
+                    <option value="">— Quelle auswählen …</option>
+                    {% for candidate in merge_candidates %}
+                    <option value="{{ candidate.pk }}">
+                        {{ candidate.date|date:"d.m.Y" }} – {{ candidate.amount }} € – {{ candidate.description|truncatechars:40|default:"(ohne Beschreibung)" }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-danger btn-sm">Zusammenführen</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/expense_form.js' %}"></script>
+{% endblock %}

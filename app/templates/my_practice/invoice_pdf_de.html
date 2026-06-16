@@ -1,0 +1,112 @@
+{% load payment_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rechnung {{ invoice.invoice_number }}</title>
+    <style>
+        {% include 'my_practice/invoice_pdf_base.css' %}
+    </style>
+</head>
+<body>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead><tr><td>
+            <div class="header-space">&nbsp;</div>
+        </td></tr></thead>
+        <tbody><tr><td>
+
+    <div class="header">
+        {% if logo_data %}
+        <img src="data:image/png;base64,{{ logo_data }}" class="logo" alt="Logo">
+        {% endif %}
+        <div class="practice-info">
+            {{ practice.title }}<br>
+            {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
+            E-Mail: {{ practice.email }}<br>
+            Web: {{ practice.website }}
+        </div>
+    </div>
+
+    <div class="client-address">
+        An<br>
+        {{ invoice.client.full_name }}<br>
+        {% if invoice.client.address %}
+        {{ invoice.client.address|linebreaksbr }}
+        {% else %}
+        [Adresse]
+        {% endif %}
+    </div>
+
+    <div class="date-line">
+        Berlin, den {{ invoice.invoice_date|date:"d.m.Y" }}
+    </div>
+
+    <div class="invoice-title">
+        <strong>Rechnung Nr. {{ invoice.invoice_number }}</strong>
+    </div>
+
+    <div class="intro-text">
+        Für folgende Leistungen erlaube ich mir zu berechnen:
+    </div>
+
+    <table class="items">
+        {% for item in invoice.items.all %}
+        <tr>
+            <td>{{ item.session.session_date|date:"d.m.Y" }}</td>
+            <td>{{ item.service_type.name_de|default:item.service_type.name }} =</td>
+            <td>{{ item.rate|currency }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="sum-line">
+        <strong>Rechnungssumme: {{ invoice.total|currency }}</strong>
+    </div>
+
+    <div class="client-note">
+        Alle Leistungen wurden für {{ invoice.client.full_name }}, geb. {{ invoice.client.date_of_birth|date:"d.m.Y" }}, erbracht.
+    </div>
+
+    <div class="payment-terms">
+        {{ practice.payment_terms_text_de }}
+    </div>
+
+    <div class="signature-section">
+        {% if signature_data %}
+        <img src="data:image/png;base64,{{ signature_data }}" class="signature" alt="Unterschrift">
+        {% endif %}
+        <div class="signature-name">
+            {{ practice.name }}<br>
+            {{ practice.title }}
+        </div>
+    </div>
+
+        </td></tr></tbody>
+        <tfoot><tr><td>
+            <div class="footer-space">&nbsp;</div>
+        </td></tr></tfoot>
+    </table>
+
+    <div class="footer">
+        <div class="footer-row">
+            {% if practice.is_kleinunternehmer %}
+                {{ practice.kleinunternehmer_text_de }}
+            {% else %}
+                {{ practice.vat_exempt_text_de }}
+            {% endif %}
+        </div>
+        <div class="footer-row">
+            {{ practice.memberships_de|linebreaksbr }}
+        </div>
+        <div class="footer-row">
+            Steuernummer: {{ practice.tax_id }}
+        </div>
+
+        <div class="footer-row">
+            Bankverbindung:<br>
+            IBAN: {{ practice.iban }}<br>
+            BIC/SWIFT: {{ practice.bic }}
+        </div>
+    </div>
+</body>
+</html>

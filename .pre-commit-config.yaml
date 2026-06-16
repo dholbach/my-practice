@@ -1,0 +1,48 @@
+# Pre-commit hooks for code quality
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Ruff - Python formatter + linter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.6
+    hooks:
+      - id: ruff-format
+        exclude: ^(app/payments_app/migrations/|scripts/archive/)
+      - id: ruff
+        args: [--fix]
+        exclude: ^(app/payments_app/migrations/|scripts/archive/)
+
+  # isort - Import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 8.0.1
+    hooks:
+      - id: isort
+        language_version: python3.14
+        args: [--profile=black, --line-length=100]
+        exclude: ^(app/payments_app/migrations/|scripts/archive/)
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(app/payments_app/migrations/)
+      - id: end-of-file-fixer
+        exclude: ^(app/payments_app/migrations/)
+      - id: check-yaml
+        exclude: ^(docker-compose\.yml)
+      - id: check-json
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+# Run specific hooks only
+default_stages: [pre-commit]
+fail_fast: false

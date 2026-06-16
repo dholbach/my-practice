@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Rechnungen{% endblock %}
+
+{% block page_icon %}📄{% endblock %}
+{% block page_title %}Rechnungen{% endblock %}
+{% block page_subtitle %}Übersicht aller Rechnungen{% endblock %}
+
+{% block content %}
+{% if unbilled.client_count %}
+<div class="info-box unbilled-callout">
+    <strong>{{ unbilled.client_count }} Klient{{ unbilled.client_count|pluralize:",en" }} mit nicht abgerechneten Sitzungen</strong>
+    &mdash; ca. {{ unbilled.amount|floatformat:2 }} €
+    &ensp;<a href="{% url 'monthly_billing' %}">→ Monatsabrechnung öffnen</a>
+</div>
+{% endif %}
+<div class="flex gap-4 mb-8 flex-wrap">
+    <a href="{% url 'invoice_list' %}{% if current_year != 'all' %}?year={{ current_year }}{% endif %}" class="stat-card link-plain {% if current_status == 'all' %}active{% endif %}">
+        <div class="stat-label">Gesamt</div>
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="text-muted text-sm mt-1">{{ stats.total_amount|currency }}</div>
+    </a>
+    <a href="{% url 'invoice_list' %}?status=draft{% if current_year != 'all' %}&year={{ current_year }}{% endif %}" class="stat-card link-plain {% if current_status == 'draft' %}active{% endif %}">
+        <div class="stat-label">Entwurf</div>
+        <div class="stat-value">{{ stats.draft }}</div>
+        <div class="text-muted text-sm mt-1">{{ stats.draft_amount|currency }}</div>
+    </a>
+    <a href="{% url 'invoice_list' %}?status=sent{% if current_year != 'all' %}&year={{ current_year }}{% endif %}" class="stat-card link-plain {% if current_status == 'sent' %}active{% endif %}">
+        <div class="stat-label">Gesendet</div>
+        <div class="stat-value">{{ stats.sent }}</div>
+        <div class="text-muted text-sm mt-1">{{ stats.sent_amount|floatformat:2 }} €</div>
+    </a>
+    <a href="{% url 'invoice_list' %}?status=paid{% if current_year != 'all' %}&year={{ current_year }}{% endif %}" class="stat-card link-plain {% if current_status == 'paid' %}active{% endif %}">
+        <div class="stat-label">Bezahlt</div>
+        <div class="stat-value">{{ stats.paid }}</div>
+        <div class="text-muted text-sm mt-1">{{ stats.paid_amount|floatformat:2 }} €</div>
+    </a>
+</div>
+
+<!-- Advanced Filters Section -->
+<div class="filter-panel">
+    <details {% if start_date or end_date or min_amount or max_amount %}open{% endif %}>
+        <summary class="filter-panel__summary">
+            🔍 Filter
+        </summary>
+
+        <form method="get" class="filter-panel__form">
+
+            <!-- Date Range -->
+            <div>
+                <label class="filter-panel__label">Von Datum</label>
+                <input
+                    type="date"
+                    name="start_date"
+                    value="{{ start_date }}"
+                    class="filter-panel__input"
+                >
+            </div>
+
+            <div>
+                <label class="filter-panel__label">Bis Datum</label>
+                <input
+                    type="date"
+                    name="end_date"
+                    value="{{ end_date }}"
+                    class="filter-panel__input"
+                >
+            </div>
+
+            <!-- Amount Range -->
+            <div>
+                <label class="filter-panel__label">Min. Betrag (€)</label>
+                <input
+                    type="number"
+                    name="min_amount"
+                    value="{{ min_amount }}"
+                    step="0.01"
+                    placeholder="0.00"
+                    class="filter-panel__input"
+                >
+            </div>
+
+            <div>
+                <label class="filter-panel__label">Max. Betrag (€)</label>
+                <input
+                    type="number"
+                    name="max_amount"
+                    value="{{ max_amount }}"
+                    step="0.01"
+                    placeholder="9999.99"
+                    class="filter-panel__input"
+                >
+            </div>
+
+            <!-- Year Filter -->
+            <div>
+                <label class="filter-panel__label">Jahr</label>
+                <select
+                    name="year"
+                    class="filter-panel__input"
+                >
+                    <option value="">Alle Jahre</option>
+                    {% for year in available_years %}
+                    <option value="{{ year }}" {% if current_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Keep current status filter -->
+            {% if current_status != 'all' %}
+            <input type="hidden" name="status" value="{{ current_status }}">
+            {% endif %}
+
+            <!-- Action buttons -->
+            <div class="filter-panel__actions">
+                <button type="submit" class="btn filter-panel__btn">Filtern</button>
+                <a href="{% url 'invoice_list' %}" class="btn btn-secondary filter-panel__btn text-center">Zurücksetzen</a>
+            </div>
+        </form>
+
+        {% if start_date or end_date or min_amount or max_amount %}
+        <p class="filter-results-summary">
+            <strong class="text-primary">{{ invoices.paginator.count }}</strong> Rechnung{% if invoices.paginator.count != 1 %}en{% endif %} gefunden
+            {% if start_date %} • Ab: {{ start_date }}{% endif %}
+            {% if end_date %} • Bis: {{ end_date }}{% endif %}
+            {% if min_amount %} • Min: {{ min_amount }}€{% endif %}
+            {% if max_amount %} • Max: {{ max_amount }}€{% endif %}
+        </p>
+        {% endif %}
+    </details>
+</div>
+
+<div class="actions">
+    <a href="{% url 'invoice_create' %}" class="btn">➕ Neue Rechnung</a>
+    <a href="{% url 'monthly_billing' %}" class="btn btn-primary">📅 Monatsabrechnung</a>
+
+    {% if current_year != 'all' %}
+    <form method="post" action="{% url 'invoice_batch_download' %}" class="d-inline-block ml-1">
+        {% csrf_token %}
+        <input type="hidden" name="year" value="{{ current_year }}">
+        <input type="hidden" name="status" value="paid">
+        <button type="submit" class="btn btn-secondary" title="Alle bezahlten Rechnungen {{ current_year }} als ZIP herunterladen">
+            📥 Rechnungen {{ current_year }} (ZIP)
+        </button>
+    </form>
+    {% endif %}
+
+    <div class="inline-block ml-4">
+        <label for="year-filter" class="text-muted me-1">Jahr:</label>
+        <select id="year-filter" x-data x-on:change="window.location.href = '{% url 'invoice_list' %}{% if current_status != 'all' %}?status={{ current_status }}&year={% else %}?year={% endif %}' + $el.value" class="p-2 border border-border rounded">
+            <option value="">Alle Jahre</option>
+            {% for year in available_years %}
+            <option value="{{ year }}" {% if current_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+{% if invoices %}
+<table class="data-table table-fixed">
+    <thead>
+        <tr>
+            <th class="w-[140px]">Invoice No.</th>
+            <th class="w-[220px]">Client</th>
+            <th class="w-[110px]">Date</th>
+            <th class="w-[120px]">Status</th>
+            <th class="w-[130px] text-right">Amount</th>
+            <th class="w-[100px]">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for invoice in invoices %}
+        <tr>
+            <td class="truncate"><a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain"><span class="invoice-number">{{ invoice.invoice_number }}</span></a></td>
+            <td class="truncate"><span class="sensitive-data">{{ invoice.client.full_name }}</span></td>
+            <td class="truncate">{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+            <td id="invoice-status-{{ invoice.pk }}">
+                {% include 'includes/invoice_status_badge.html' %}
+            </td>
+            <td class="truncate text-right">{{ invoice.total|floatformat:2 }}&nbsp;€</td>
+            <td class="truncate">
+                <a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain font-semibold">👁️ Ansehen</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+{% include 'includes/pagination.html' with page_obj=page_obj %}
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <h2>Keine Rechnungen</h2>
+    <p>Es wurden noch keine Rechnungen erstellt.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Praxis deaktivieren - Therapy Practice{% endblock %}
+
+{% block page_title %}Praxis deaktivieren{% endblock %}
+{% block page_subtitle %}{{ object.name }}{% endblock %}
+
+{% block content %}
+<div class="warning-box">
+    <h3>⚠️ Achtung: Praxis deaktivieren</h3>
+    <p>Sie sind dabei, diese Praxis zu deaktivieren. Bitte beachten Sie:</p>
+    <ul>
+        <li>Die Praxis wird nicht gelöscht, sondern nur deaktiviert</li>
+        <li>Alle Daten (Klienten, Rechnungen, etc.) bleiben erhalten</li>
+        <li>Die Praxis wird nicht mehr in der Auswahl angezeigt</li>
+        <li>Sie können die Praxis später wieder aktivieren</li>
+    </ul>
+</div>
+
+<div class="practice-details">
+    <h3>Praxis-Details</h3>
+    <div class="detail-row">
+        <span class="detail-label">Name:</span>
+        <span>{{ object.name }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">Berufsbezeichnung:</span>
+        <span>{{ object.title }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">Stadt:</span>
+        <span>{{ object.city }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">E-Mail:</span>
+        <span>{{ object.email }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">Slug:</span>
+        <span><code>{{ object.slug }}</code></span>
+    </div>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-danger">
+            🗑️ Ja, Praxis deaktivieren
+        </button>
+        <a href="{% url 'practice_management' %}" class="btn btn-secondary">Abbrechen</a>
+    </div>
+</form>
+
+{% endblock %}

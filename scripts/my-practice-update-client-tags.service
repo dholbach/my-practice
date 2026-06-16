@@ -1,0 +1,13 @@
+[Unit]
+Description=Update client tags for therapy practice
+After=network.target
+
+[Service]
+Type=oneshot
+User=YOUR_USERNAME
+Group=YOUR_USERNAME
+WorkingDirectory=/path/to/my-practice
+ExecStart=/usr/bin/env python3 /path/to/my-practice/dev.py manage update_client_tags
+
+[Install]
+WantedBy=default.target

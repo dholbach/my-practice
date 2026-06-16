@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Kalender-Termine genehmigen{% endblock %}
+{% block page_title %}Kalender-Termine genehmigen{% endblock %}
+{% block page_subtitle %}{{ total_pending }} ausstehende Termin{{ total_pending|pluralize:"e" }}{% endblock %}
+
+{% block content %}
+
+<p class="mb-3">
+    <a href="{% url 'calendar_import' %}" class="btn btn-secondary btn-sm">← Manueller Import</a>
+</p>
+
+{% if not grouped %}
+<div class="info-box">
+    <strong class="text-primary">✅ Keine ausstehenden Kalender-Termine</strong><br>
+    <span class="text-muted">Alle Termine wurden bereits genehmigt oder übersprungen.</span>
+</div>
+{% else %}
+
+<div class="alert-box info mb-3">
+    <strong class="text-primary">ℹ️ Hinweis</strong><br>
+    <span class="text-muted">
+        Wählen Sie Termine aus und fügen Sie diese einer bestehenden Rechnung hinzu.
+        Termine sind nach Klient und Abrechnungsmonat gruppiert, damit nicht versehentlich
+        mehrere Monate auf eine Rechnung landen.
+    </span>
+</div>
+
+{% if total_duplicates > 0 %}
+<div class="alert-box warning alert-box--flex mb-3">
+    <span>
+        <strong>⚠️ {{ total_duplicates }} bereits importiert</strong><br>
+        <span class="alert-box__hint">
+            Diese Termine haben bereits passende Rechnungspositionen und können übersprungen werden.
+        </span>
+    </span>
+    <button type="button" class="btn btn-danger-solid" id="skip-duplicates-btn">
+        🚫 Alle Duplikate überspringen
+    </button>
+</div>
+{% endif %}
+
+{% for group in grouped %}
+<div class="form-section mb-3" id="group-{{ forloop.counter }}">
+    <div class="queue-group-header">
+        <div>
+            <h3 class="queue-group-header__title">
+                {% if group.client %}
+                    <a href="{% url 'client_detail' group.client.pk %}"
+                       class="queue-group-header__title-link">
+                        👤 {{ group.client.client_code }}
+                        <span class="sensitive-data"> — {{ group.client.full_name }}</span>
+                    </a>
+                {% else %}
+                    <span class="queue-group-header__unknown">❓ Klient nicht identifiziert</span>
+                {% endif %}
+            </h3>
+            <div class="queue-group-header__subtitle">
+                {{ group.month|date:"F Y" }} · {{ group.count }} Termin{{ group.count|pluralize:"e" }}
+            </div>
+        </div>
+        {% if group.client %}
+        <div class="queue-group-header__actions">
+            <select class="form-control invoice-select invoice-select-{{ group.client.pk }}-{{ group.month|date:'Y-m' }}"
+                    data-client="{{ group.client.pk }}" data-month="{{ group.month|date:'Y-m' }}">
+                <option value="">Rechnung auswählen…</option>
+                {% for invoice in group.invoices %}
+                <option value="{{ invoice.pk }}">{{ invoice.invoice_number }} ({{ invoice.invoice_date|date:"d.m.Y" }}){% if invoice.item_count %} · {{ invoice.item_count }} Pos.{% endif %}{% if invoice.total %} · {{ invoice.total|floatformat:0 }} €{% endif %}</option>
+                {% endfor %}
+                <option value="new">+ Neue Rechnung erstellen</option>
+            </select>
+            <button type="button"
+                    class="btn import-group-btn btn-import-group"
+                    data-group="{{ forloop.counter }}"
+                    data-client="{{ group.client.pk }}"
+                    data-month="{{ group.month|date:'Y-m' }}">
+                📥 Importieren
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="th-checkbox-sm">
+                    <input type="checkbox" class="select-all-{{ forloop.counter }}" checked
+                           title="Alle auswählen">
+                </th>
+                <th>Datum</th>
+                <th>Uhrzeit</th>
+                <th>Dauer</th>
+                <th>Titel</th>
+                <th>Leistungsart</th>
+                <th class="th-action-sm">Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in group.events %}
+            <tr data-event-id="{{ event.pk }}">
+                <td>
+                    <input type="checkbox" class="event-checkbox event-checkbox-group-{{ forloop.parentloop.counter }}"
+                           name="event_ids" value="{{ event.pk }}" checked>
+                </td>
+                <td class="text-primary">{{ event.event_date|date:"d.m.Y" }}</td>
+                <td class="text-muted">
+                    {% if event.event_time %}{{ event.event_time|time:"H:i" }}{% else %}–{% endif %}
+                </td>
+                <td class="text-muted">{{ event.duration_minutes }} min</td>
+                <td class="text-primary">{{ event.summary }}</td>
+                <td class="text-muted text-sm">
+                    {% if event.suggested_service_type %}
+                        {{ event.suggested_service_type.name_de|default:event.suggested_service_type.name }}
+                    {% else %}
+                        <em>—</em>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if event.is_duplicate %}
+                    <span class="badge-duplicate">✓ vorhanden</span>
+                    {% endif %}
+                    <button type="button" class="btn btn-skip skip-event-btn"
+                            data-event-id="{{ event.pk }}"
+                            title="Termin überspringen">
+                        🚫
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+
+{% endif %}
+
+<div class="actions mt-4">
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Zurück zum Dashboard</a>
+</div>
+
+<script>
+const CSRF_TOKEN = document.cookie.split('; ')
+    .find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+
+// Skip all duplicates
+const skipDuplicatesBtn = document.getElementById('skip-duplicates-btn');
+if (skipDuplicatesBtn) {
+    skipDuplicatesBtn.addEventListener('click', async function () {
+        this.disabled = true;
+        this.textContent = 'Überspringe…';
+        try {
+            const res = await fetch("{% url 'calendar_queue_skip_duplicates' %}", {
+                method: 'POST',
+                headers: {'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json'},
+            });
+            const data = await res.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fehler beim Überspringen.');
+                this.disabled = false;
+                this.textContent = '🚫 Alle Duplikate überspringen';
+            }
+        } catch (e) {
+            alert('Netzwerkfehler.');
+            this.disabled = false;
+            this.textContent = '🚫 Alle Duplikate überspringen';
+        }
+    });
+}
+
+// Select all checkboxes within a group
+document.querySelectorAll('[class^="select-all-"]').forEach(selectAll => {
+    const suffix = selectAll.className.split('-').pop();
+    selectAll.addEventListener('change', function () {
+        document.querySelectorAll(`.event-checkbox-group-${suffix}`).forEach(cb => {
+            cb.checked = this.checked;
+        });
+    });
+});
+
+// Skip individual event
+document.querySelectorAll('.skip-event-btn').forEach(btn => {
+    btn.addEventListener('click', async function () {
+        const eventId = this.dataset.eventId;
+        const row = document.querySelector(`tr[data-event-id="${eventId}"]`);
+        try {
+            const res = await fetch(`/calendar/events/${eventId}/skip/`, {
+                method: 'POST',
+                headers: {'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json'},
+            });
+            if (res.ok) {
+                row.style.opacity = '0.35';
+                row.style.transition = 'opacity 0.3s';
+                setTimeout(() => row.remove(), 350);
+            }
+        } catch (e) {
+            alert('Fehler beim Überspringen des Termins.');
+        }
+    });
+});
+
+// Import group
+document.querySelectorAll('.import-group-btn').forEach(btn => {
+    btn.addEventListener('click', async function () {
+        const groupNum = this.dataset.group;
+        const clientPk = this.dataset.client;
+        const month = this.dataset.month;
+        const invoiceSelect = document.querySelector(
+            `.invoice-select-${clientPk}-${month}`
+        );
+        const invoiceId = invoiceSelect?.value || null;
+
+        const checkedBoxes = document.querySelectorAll(
+            `.event-checkbox-group-${groupNum}:checked`
+        );
+        if (checkedBoxes.length === 0) {
+            alert('Bitte mindestens einen Termin auswählen.');
+            return;
+        }
+
+        const eventIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+        const body = {event_ids: eventIds};
+        if (invoiceId && invoiceId !== 'new') body.invoice_id = parseInt(invoiceId);
+
+        btn.disabled = true;
+        btn.textContent = 'Importiere…';
+
+        try {
+            const res = await fetch("{% url 'calendar_queue_import' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': CSRF_TOKEN,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Remove imported rows
+                eventIds.forEach(id => {
+                    const row = document.querySelector(`tr[data-event-id="${id}"]`);
+                    if (row) row.remove();
+                });
+                // Check if group is now empty
+                const groupEl = document.getElementById(`group-${groupNum}`);
+                const remaining = groupEl.querySelectorAll('tbody tr').length;
+                if (remaining === 0) groupEl.remove();
+
+                // Show success toast
+                const toast = document.createElement('div');
+                toast.className = 'alert-box success';
+                toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:1000;min-width:260px;';
+                toast.innerHTML = `<strong>✅ ${data.created} Termin${data.created !== 1 ? 'e' : ''} importiert</strong>` +
+                    (data.skipped ? `<br><small>${data.skipped} übersprungen</small>` : '');
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+            } else {
+                alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+                btn.disabled = false;
+                btn.textContent = '📥 Importieren';
+            }
+        } catch (e) {
+            alert('Netzwerkfehler beim Importieren.');
+            btn.disabled = false;
+            btn.textContent = '📥 Importieren';
+        }
+    });
+});
+</script>
+{% endblock %}

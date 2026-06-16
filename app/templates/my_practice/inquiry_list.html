@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Anfragen{% endblock %}
+
+
+{% block page_icon %}📬{% endblock %}
+{% block page_title %}Anfragen{% endblock %}
+{% block page_subtitle %}Interessent:innen & Anfrageverwaltung{% endblock %}
+
+{% block content %}
+<div class="inquiry-container">
+    <div class="page-header">
+        <h1>📬 Anfragen</h1>
+        <a href="{% url 'inquiry_create' %}" class="btn">+ Neue Anfrage</a>
+    </div>
+
+    {# Active marketing periods #}
+    {% if marketing_periods %}
+    <div class="marketing-periods">
+        <span class="marketing-periods-label">Aktive Kanäle:</span>
+        {% for period in marketing_periods %}
+        <span class="marketing-period-badge">
+            {{ period.start_date|date:"M y" }}{% if period.end_date %} – {{ period.end_date|date:"M y" }}{% endif %}:
+            {{ period.description }}
+        </span>
+        {% endfor %}
+        <a href="/admin/my_practice/marketingperiod/add/" class="marketing-periods-manage">+ Hinzufügen</a>
+    </div>
+    {% else %}
+    <div class="marketing-periods marketing-periods-empty">
+        <a href="/admin/my_practice/marketingperiod/add/" class="marketing-periods-manage">+ Marketing-Zeitraum erfassen</a>
+    </div>
+    {% endif %}
+
+    {# Analytics panel #}
+    <div class="analytics-panel" x-data="{ open: true }">
+        <div class="analytics-toggle" x-on:click="open = !open" id="analytics-toggle">
+            <span class="analytics-toggle-label">Auswertung</span>
+            <span class="analytics-toggle-counts">
+                {{ analytics.total_inquiries }} gesamt &middot;
+                {% for status, label, count in analytics.funnel_stages %}{% if count %}<span class="status-badge status-{{ status }}">{{ count }} {{ label }}</span> {% endif %}{% endfor %}
+                {% if analytics.closed_count %}<span class="status-badge status-declined">{{ analytics.closed_count }} geschlossen</span>{% endif %}
+            </span>
+            <span class="analytics-chevron" x-text="open ? '▲' : '▼'">▲</span>
+        </div>
+
+        <div class="analytics-body" x-show="open" id="analytics-body">
+            <div class="analytics-grid">
+
+                {# Funnel #}
+                <div class="analytics-section">
+                    <h4>Pipeline</h4>
+                    <div class="funnel-row">
+                        {% for status, label, count in analytics.funnel_stages %}
+                        <div class="funnel-stage">
+                            <span class="funnel-count {% if count == 0 %}funnel-empty{% endif %}">{{ count }}</span>
+                            <span class="funnel-label status-badge status-{{ status }}">{{ label }}</span>
+                        </div>
+                        {% if not forloop.last %}<span class="funnel-arrow">›</span>{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if analytics.closed_count %}
+                    <div class="funnel-closed">{{ analytics.closed_count }} geschlossen (Abgelehnt / Kein Match / Nicht erreichbar)</div>
+                    {% endif %}
+                </div>
+
+                {# Time in stage #}
+                <div class="analytics-section">
+                    <h4>Ø Wartezeit (Werktage)</h4>
+                    <table class="time-table">
+                        {% for label, avg, n in analytics.time_in_stage %}
+                        <tr>
+                            <td class="time-label">{{ label }}</td>
+                            <td class="time-value">
+                                {% if avg is not None %}{{ avg }} Werktage <span class="time-n">(n={{ n }})</span>
+                                {% else %}<span class="time-none">–</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+
+                {# Source breakdown #}
+                <div class="analytics-section">
+                    <h4>Quellen</h4>
+                    <div class="source-breakdown">
+                        {% for row in analytics.source_breakdown %}
+                        <div class="source-row">
+                            <span class="source-badge source-{{ row.source }}">{{ row.label }}</span>
+                            <div class="source-bar-wrap">
+                                <div class="source-bar" style="width:{{ row.pct }}%"></div>
+                            </div>
+                            <span class="source-count">{{ row.count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# Language breakdown #}
+                {% if analytics.language_breakdown %}
+                <div class="analytics-section">
+                    <h4>Sprache</h4>
+                    <div class="source-breakdown">
+                        {% for row in analytics.language_breakdown %}
+                        <div class="source-row">
+                            <span class="lang-badge lang-{{ row.language }}">{{ row.label }}</span>
+                            <div class="source-bar-wrap">
+                                <div class="source-bar" style="width:{{ row.pct }}%"></div>
+                            </div>
+                            <span class="source-count">{{ row.count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {# Monthly trend #}
+                {% if analytics.monthly_trend %}
+                <div class="analytics-section analytics-section-wide">
+                    <h4>Anfragen pro Monat (letzte 12 Monate)</h4>
+                    <div class="monthly-bars">
+                        {% for row in analytics.monthly_trend %}
+                        <div class="monthly-bar-col">
+                            <span class="monthly-count">{{ row.count }}</span>
+                            <div class="monthly-bar-wrap">
+                                <div class="monthly-bar" style="height:{{ row.pct }}%"></div>
+                            </div>
+                            <span class="monthly-label">{{ row.month }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>{# /analytics-grid #}
+        </div>{# /analytics-body #}
+    </div>{# /analytics-panel #}
+
+    {# Filter bar #}
+    <form method="get" class="filter-bar">
+        <select name="status" class="form-control filter-select" x-data x-on:change="$el.form.submit()">
+            <option value="">Alle Status</option>
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="source" class="form-control filter-select" x-data x-on:change="$el.form.submit()">
+            <option value="">Alle Quellen</option>
+            {% for value, label in source_choices %}
+            <option value="{{ value }}" {% if source_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        {% if status_filter or source_filter %}
+        <a href="{% url 'inquiry_list' %}" class="btn-secondary">✕ Filter löschen</a>
+        {% endif %}
+    </form>
+    {% if not status_filter %}
+    <div class="closed-toggle">
+        {% if show_closed %}
+        <a href="{% url 'inquiry_list' %}" class="btn-secondary">Geschlossene ausblenden</a>
+        {% elif closed_count %}
+        <a href="{% url 'inquiry_list' %}?show_closed=1" class="btn-secondary">Geschlossene anzeigen ({{ closed_count }})</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if inquiries %}
+    <table class="inquiry-table">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Name</th>
+                <th>Quelle</th>
+                <th>Sprache</th>
+                <th>Status</th>
+                <th>Kontakt</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inquiry in inquiries %}
+            {% ifchanged inquiry.status_priority %}
+            {% if not forloop.first %}<tr class="inquiry-group-divider"><td colspan="7"></td></tr>{% endif %}
+            {% endifchanged %}
+            <tr class="inquiry-row {% if inquiry.is_closed %}inquiry-closed{% endif %}">
+                <td class="inquiry-date">{{ inquiry.inquiry_date|date:"d.m.Y" }}</td>
+                <td class="inquiry-name">
+                    <a href="{% url 'inquiry_edit' inquiry.pk %}"><span class="sensitive-data">{{ inquiry.full_name }}</span></a>
+                    {% if inquiry.converted_client %}
+                    <a href="{% url 'client_detail' inquiry.converted_client.pk %}" class="converted-badge" title="Klient:in anzeigen">→ {{ inquiry.converted_client.client_code }}</a>
+                    {% endif %}
+                </td>
+                <td><span class="source-badge source-{{ inquiry.source }}">{{ inquiry.get_source_display }}</span></td>
+                <td><span class="lang-badge lang-{{ inquiry.language }}">{{ inquiry.get_language_display }}</span></td>
+                <td><span class="status-badge status-{{ inquiry.status }}">{{ inquiry.get_status_display }}</span></td>
+                <td class="inquiry-contact">
+                    {% if inquiry.email %}<a href="mailto:{{ inquiry.email }}" class="contact-link">✉ <span class="sensitive-data">{{ inquiry.email }}</span></a>{% endif %}
+                    {% if inquiry.phone %}<span class="contact-link">☎ <span class="sensitive-data">{{ inquiry.phone }}</span></span>{% endif %}
+                </td>
+                <td class="inquiry-actions">
+                    <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-sm">Bearbeiten</a>
+                    {% if inquiry.status != 'converted' and not inquiry.converted_client %}
+                    <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn-sm btn-success">Aufnehmen</a>
+                    {% endif %}
+                    <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn-sm btn-danger">Löschen</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>Keine Anfragen gefunden.</p>
+        <a href="{% url 'inquiry_create' %}" class="btn">Erste Anfrage erfassen</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

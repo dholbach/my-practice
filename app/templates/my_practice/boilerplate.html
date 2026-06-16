@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}E-Mail-Textbausteine{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <div class="bp-header">
+        <h1>✉️ E-Mail-Textbausteine</h1>
+        <p class="bp-subtitle">Texte anklicken zum Kopieren.</p>
+    </div>
+
+    <div class="bp-grid">
+        {% for card in cards %}
+        {% include 'includes/email_card.html' with card_title=card.title card_id=card.id body_de=card.body_de body_en=card.body_en %}
+        {% endfor %}
+    </div>{# /bp-grid #}
+</div>{# /content-container #}
+{% endblock %}

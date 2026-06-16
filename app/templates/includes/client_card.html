@@ -1,0 +1,38 @@
+{% load payment_tags %}
+{# Reusable client card component #}
+{# Required context: client, show_days_alert (optional) #}
+
+<a href="{% url 'client_detail' client.id %}" class="client-card-link">
+    <div class="client-card {% if card_class %}{{ card_class }}{% endif %}">
+        <div class="card-header">
+            <div class="card-title">
+                <span class="client-code">{{ client.client_code }}</span>
+                {% if client.id in clients_needing_log %}<span class="card-missing-log" title="Protokoll fehlt">📝</span>{% endif %}
+            </div>
+        </div>
+        <div class="client-name sensitive-data">{{ client.full_name }}</div>
+
+        <div class="card-meta">
+            {% if client.total_sessions %}
+            <div class="meta-item">
+                📊 <strong>{{ client.total_sessions|floatformat:0 }}</strong> Sessions
+            </div>
+            {% endif %}
+        </div>
+
+        {% if client.tags.all %}
+        <div class="card-tags">
+            {% for tag in client.tags.all %}
+                <span class="tag-mini {{ tag.color }}">{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if client.last_session_date %}
+        <div class="last-invoice {% if show_days_alert %}{% if client.days_since_session > 90 %}alert{% elif client.days_since_session > 60 %}warning{% endif %}{% endif %}">
+            Letzte Session: {{ client.last_session_date|format_month_year }}
+            {% if show_days_alert %}(vor {{ client.days_since_session }} Tagen){% endif %}
+        </div>
+        {% endif %}
+    </div>
+</a>

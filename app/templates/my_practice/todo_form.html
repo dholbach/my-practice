@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}TODO bearbeiten{% else %}Neue Aufgabe{% endif %}{% endblock %}
+
+{% block page_icon %}✅{% endblock %}
+{% block page_title %}{% if object %}TODO bearbeiten{% else %}Neue Aufgabe erstellen{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card form-container">
+    <form method="post" style="max-width: 600px;">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+            <div class="error">{{ form.title.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+            <div class="error">{{ form.description.errors }}</div>
+            {% endif %}
+            <small class="text-secondary">Optional: Detaillierte Notizen zur Aufgabe</small>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                <div class="error">{{ form.category.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
+                {{ form.priority }}
+                {% if form.priority.errors %}
+                <div class="error">{{ form.priority.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.due_date.id_for_label }}">{{ form.due_date.label }}</label>
+            {{ form.due_date }}
+            {% if form.due_date.errors %}
+            <div class="error">{{ form.due_date.errors }}</div>
+            {% endif %}
+            <small class="text-secondary">Optional: Fälligkeitsdatum (TT.MM.JJJJ oder JJJJ-MM-TT)</small>
+        </div>
+
+        {% if object %}
+        <div class="form-group">
+            <label for="{{ form.completed_at.id_for_label }}">{{ form.completed_at.label }}</label>
+            {{ form.completed_at }}
+            {% if form.completed_at.errors %}
+            <div class="error">{{ form.completed_at.errors }}</div>
+            {% endif %}
+            <small class="text-secondary">Leer lassen für "nicht erledigt"</small>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn">💾 Speichern</button>
+            <a href="{% url 'todo_list' %}" class="btn btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</div>
+
+
+{% endblock %}

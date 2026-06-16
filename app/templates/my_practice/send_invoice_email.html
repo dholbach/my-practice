@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rechnung versenden{% endblock %}
+
+{% block page_title %}📧 Rechnung versenden{% endblock %}
+{% block page_subtitle %}Invoice {{ invoice.invoice_number }} - <span class="sensitive-data">{{ invoice.client.full_name }}</span>{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="email-preview">
+    <h2>📧 Customize Email</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if not invoice.client.salutation %}
+        <div class="warning-box">
+            <strong>⚠️ No custom salutation set for this client</strong>
+            The email will use a generic salutation. Consider setting a custom salutation in the client profile for a more personal touch.
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="id_recipient">{{ form.recipient.label }}</label>
+            {{ form.recipient }}
+            {% if form.recipient.errors %}
+                <div class="error">{{ form.recipient.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_subject">{{ form.subject.label }}</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}
+                <div class="error">{{ form.subject.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_body">{{ form.body.label }}</label>
+            {{ form.body }}
+            {% if form.body.errors %}
+                <div class="error">{{ form.body.errors }}</div>
+            {% endif %}
+            <div class="help-text">
+                Edit the complete email body. You can add personal notes or modify the text as needed. The signature is separated by "-- ".
+            </div>
+        </div>
+
+        <div class="callout callout-primary mt-3">
+            <strong style="display: block; margin-bottom: 0.5rem;">📎 Attachment</strong>
+            {% if invoice.client.language == 'de' %}
+                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="link-primary">
+                    📄 Rechnung_{{ invoice.invoice_number }}.pdf
+                </a>
+            {% else %}
+                <a href="{% url 'invoice_pdf' invoice.pk %}" target="_blank" class="link-primary">
+                    📄 Invoice_{{ invoice.invoice_number }}.pdf
+                </a>
+            {% endif %}
+            <div class="text-muted mt-1">
+                This PDF will be automatically attached to the email
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                📧 Send Email
+            </button>
+            <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="callout callout-success mt-4">
+    <strong>💾 IMAP Note:</strong> The sent email will automatically appear in your Sent folder
+</div>
+{% endblock %}

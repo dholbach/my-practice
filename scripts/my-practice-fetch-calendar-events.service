@@ -1,0 +1,13 @@
+[Unit]
+Description=Fetch Google Calendar events into pending queue (P-013)
+After=network.target
+
+[Service]
+Type=oneshot
+User=YOUR_USERNAME
+Group=YOUR_USERNAME
+WorkingDirectory=/path/to/my-practice
+ExecStart=/usr/bin/env python3 /path/to/my-practice/dev.py manage fetch_calendar_events
+
+[Install]
+WantedBy=default.target

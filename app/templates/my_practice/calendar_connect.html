@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Google Calendar verbinden{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <h1>Google Calendar verbinden</h1>
+
+    <div class="info-box">
+        <h3>🗓️ Google Calendar verbinden</h3>
+        <p>
+            Kalender-Events werden automatisch als Sitzungen erkannt und können direkt in die Abrechnung übernommen werden.
+        </p>
+        <ul>
+            <li>Neue Events werden als ausstehende Sitzungen vorgeschlagen</li>
+            <li>Absagen und Verschiebungen werden erkannt und synchronisiert</li>
+            <li>Duplikate werden automatisch gefiltert</li>
+        </ul>
+    </div>
+
+    <div class="card" style="max-width: 600px; margin: 30px auto; padding: 30px; text-align: center;">
+        <h2>Zugriff autorisieren</h2>
+        <p class="text-secondary" style="margin: 20px 0;">
+            Um Kalender-Events zu importieren, musst du den Zugriff auf deinen Google Calendar autorisieren.
+        </p>
+
+        <div class="info-box">
+            <p><strong>Erforderliche Berechtigung:</strong></p>
+            <p style="margin: 10px 0;">
+                <code>calendar.readonly</code> - Lesezugriff auf Kalender-Events
+            </p>
+        </div>
+
+        <a href="{% url 'calendar_authorize' %}"
+           class="btn btn-primary"
+           style="display: inline-block; padding: 15px 30px; font-size: 16px; margin-top: 20px;">
+            🔐 Mit Google verbinden
+        </a>
+    </div>
+
+    <div class="info-box" style="max-width: 600px; margin: 0 auto;">
+        <h4>Datenschutz</h4>
+        <ul>
+            <li>Nur Lesezugriff auf deinen Kalender</li>
+            <li>Keine Änderungen an deinen Events</li>
+            <li>Token wird verschlüsselt in der lokalen Datenbank gespeichert</li>
+            <li>Du kannst den Zugriff jederzeit in deinem Google-Konto widerrufen</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Arbeitstage-Nachweis {{ year }}{% endblock %}
+{% block page_title %}Arbeitstage-Nachweis{% endblock %}
+{% block page_subtitle %}Audit-Liste für Steuererklärung — {{ year }}{% endblock %}
+
+{% block content %}
+<div class="audit-container">
+    <div class="audit-nav no-print">
+        <a href="{% url 'tax_year_summary' %}?year={{ year }}">&larr; Zurück zur Steuer-Jahresübersicht</a>
+    </div>
+
+    <!-- Year selector -->
+    <div class="year-selector no-print">
+        <form method="get">
+            <label for="year">Jahr:</label>
+            <select name="year" id="year" x-data x-on:change="$el.form.submit()">
+                {% for y in available_years %}
+                <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    {% if not audit or not audit.entries %}
+    <p class="empty-hint">Keine Daten – Praxistage sind noch nicht konfiguriert.</p>
+    {% else %}
+
+    <!-- Summary -->
+    <div class="audit-summary">
+        <div class="audit-stat">
+            <span class="audit-stat__label">Praxistage</span>
+            <span class="audit-stat__value practice">{{ audit.practice_days }}</span>
+        </div>
+        <div class="audit-stat">
+            <span class="audit-stat__label">Home-Office-Tage</span>
+            <span class="audit-stat__value home-office">{{ audit.home_office_days }}</span>
+        </div>
+        <div class="audit-stat">
+            <span class="audit-stat__label">Feiertage</span>
+            <span class="audit-stat__value holiday">{{ audit.holiday_count }}</span>
+        </div>
+        <div class="audit-stat">
+            <span class="audit-stat__label">Urlaubs- / Ausfalltage</span>
+            <span class="audit-stat__value timeoff">{{ audit.timeoff_days }}</span>
+        </div>
+    </div>
+
+    <!-- Print button -->
+    <div class="no-print audit-print-btn-wrap">
+        <button x-data x-on:click="window.print()" class="btn-print">🖨 Drucken / als PDF speichern</button>
+    </div>
+
+    <!-- Day table -->
+    <table class="audit-table">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Wochentag</th>
+                <th>Typ</th>
+                <th class="text-right">Sitzungen</th>
+                <th>Anmerkung</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in audit.entries %}
+            <tr class="audit-row--{{ entry.day_type }}">
+                <td>{{ entry.day|date:"d.m.Y" }}</td>
+                <td>{{ entry.day|date:"l" }}</td>
+                <td>
+                    {% if entry.day_type == "practice" %}
+                        <span class="badge badge--practice">Praxis</span>
+                    {% elif entry.day_type == "home_office" %}
+                        <span class="badge badge--home-office">Home-Office</span>
+                    {% elif entry.day_type == "holiday" %}
+                        <span class="badge badge--holiday">Feiertag</span>
+                    {% elif entry.day_type == "timeoff" %}
+                        <span class="badge badge--timeoff">Urlaub / Ausfall</span>
+                    {% endif %}
+                </td>
+                <td class="text-right">{% if entry.sessions %}{{ entry.sessions }}{% else %}&ndash;{% endif %}</td>
+                <td class="muted">{{ entry.holiday_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p class="audit-footer">
+        Generiert: {% now "d.m.Y H:i" %} &mdash; Praxis: {{ practice.name }} &mdash; Jahr: {{ year }}
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

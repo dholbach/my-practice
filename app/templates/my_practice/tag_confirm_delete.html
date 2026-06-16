@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Tag löschen{% endblock %}
+
+{% block page_title %}Tag löschen{% endblock %}
+
+{% block content %}
+<div class="section-card" style="max-width: 600px; margin: 0 auto;">
+    <div class="callout callout-danger">
+        <strong>⚠️ Achtung</strong><br>
+        Möchtest du das Tag wirklich löschen?
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 0.5rem;">Tag:</h3>
+        <span class="tag {{ object.color }}" style="display: inline-flex; align-items: center; padding: 0.5rem 1rem; border-radius: 16px; font-size: 1rem; font-weight: 600; color: white;">
+            {{ object.name }}
+        </span>
+    </div>
+
+    {% if object.clients.count > 0 %}
+    <div class="callout callout-warning">
+        <strong>📌 Hinweis:</strong> Dieses Tag ist derzeit bei <strong>{{ object.clients.count }} Klient{{ object.clients.count|pluralize:"en" }}</strong> zugeordnet.
+        Diese Zuordnungen werden entfernt.
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-danger">
+                🗑️ Ja, löschen
+            </button>
+            <a href="{% url 'tag_list' %}" class="btn btn-secondary">
+                Abbrechen
+            </a>
+        </div>
+    </form>
+</div>
+
+
+{% endblock %}

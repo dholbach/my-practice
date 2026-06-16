@@ -1,0 +1,9 @@
+{# Inline POST button - single-button form with CSRF #}
+{# Usage: {% include 'includes/inline_post_button.html' with action_url='...' button_text='Delete' button_class='btn-danger btn-sm' confirm='Sure?' step='value' reset='1' %} #}
+<form method="post"{% if action_url %} action="{{ action_url }}"{% endif %} class="form-inline"{% if confirm %} x-data x-on:submit="confirm('{{ confirm }}') || $event.preventDefault()"{% endif %}>
+    {% csrf_token %}
+    {% if step %}<input type="hidden" name="step" value="{{ step }}">{% endif %}
+    {% if reset %}<input type="hidden" name="reset" value="{{ reset }}">{% endif %}
+    {% if action_name %}<input type="hidden" name="{{ action_name }}" value="{{ action_value }}">{% endif %}
+    <button type="submit" class="btn {{ button_class|default:'btn-secondary btn-sm' }}">{{ button_text }}</button>
+</form>

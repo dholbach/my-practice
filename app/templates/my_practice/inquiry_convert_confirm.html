@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Klient:in aufnehmen{% endblock %}
+
+
+{% block page_icon %}✅{% endblock %}
+{% block page_title %}Klient:in aufnehmen{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card inquiry-convert-summary">
+        <h2>Anfrage</h2>
+        <div class="detail-row">
+            <span class="label">Name:</span>
+            <span class="value">{{ inquiry.full_name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">E-Mail:</span>
+            <span class="value">{{ inquiry.email|default:"—" }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Telefon:</span>
+            <span class="value">{{ inquiry.phone|default:"—" }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Quelle:</span>
+            <span class="value">{{ inquiry.get_source_display }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Eingangsdatum:</span>
+            <span class="value">{{ inquiry.inquiry_date|date:"d.m.Y" }}</span>
+        </div>
+    </div>
+
+    <form method="post" class="card">
+        {% csrf_token %}
+        <h2>Klientendaten</h2>
+        <p class="form-hint">Name, E-Mail und Telefon werden aus der Anfrage übernommen. Bitte ergänzen Sie die folgenden Felder:</p>
+
+        {% if form.errors %}
+        <div class="alert alert-error">
+            <strong>Fehler:</strong>
+            <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.client_code.id_for_label }}">{{ form.client_code.label }}</label>
+                {{ form.client_code }}
+                {% if form.client_code.help_text %}
+                <small class="help-text">{{ form.client_code.help_text }}</small>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.first_seen_date.id_for_label }}">{{ form.first_seen_date.label }}</label>
+                {{ form.first_seen_date }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.default_hourly_rate.id_for_label }}">{{ form.default_hourly_rate.label }}</label>
+            {{ form.default_hourly_rate }}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-success">✅ Klient:in anlegen</button>
+            <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

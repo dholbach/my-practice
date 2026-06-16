@@ -1,0 +1,10 @@
+{# Dashboard stat card #}
+{# Usage: {% include 'includes/stat_card.html' with title='💰 Revenue' value='12345 €' label='20 invoices' variant='success' hint='● Active' %} #}
+<div class="stat-card{% if variant %} {{ variant }}{% endif %}">
+    <h3>{{ title }}</h3>
+    <div class="value">{{ value }}</div>
+    <div class="label">{{ label }}</div>
+    {% if hint %}
+    <div class="stat-hint{% if hint_color %} stat-hint--{{ hint_color }}{% endif %}">{{ hint }}</div>
+    {% endif %}
+</div>

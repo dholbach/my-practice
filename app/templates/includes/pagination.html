@@ -1,0 +1,24 @@
+{% load payment_tags %}
+{% comment %}
+Reusable pagination component.
+
+Usage:
+    {% include 'includes/pagination.html' with page_obj=page_obj %}
+
+Parameters:
+    - page_obj: Django paginator page object (required)
+
+Automatically preserves all current query parameters (status, year, etc.)
+{% endcomment %}
+
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?{% query_string page=page_obj.previous_page_number %}" class="btn btn-secondary">← Previous</a>
+    {% endif %}
+    <span class="pagination-info">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?{% query_string page=page_obj.next_page_number %}" class="btn btn-secondary">Next →</a>
+    {% endif %}
+</div>
+{% endif %}

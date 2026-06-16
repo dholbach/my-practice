@@ -1,0 +1,294 @@
+{% load markdown_filters %}
+<!-- ══ Clinical Documentation Tabs (P-009) — primary workspace ══════════ -->
+<div class="section-card" id="clinical-documentation">
+    <div class="cn-tab-bar">
+        <button class="cn-tab-btn cn-tab-active" data-tab="profil" onclick="cnSwitchTab('profil', this)">📋 Profil</button>
+        <button class="cn-tab-btn" data-tab="protokoll" onclick="cnSwitchTab('protokoll', this)">📝 Protokoll
+            {% if log_entries %}<span class="cn-badge">{{ log_entries|length }}</span>{% endif %}
+        </button>
+        <button class="cn-tab-btn" data-tab="supervision" onclick="cnSwitchTab('supervision', this)">🔍 Supervision
+            {% if supervision_items.count %}<span class="cn-badge">{{ supervision_items|length }}</span>{% endif %}
+        </button>
+    </div>
+
+    <!-- ── Tab: Profil ──────────────────────────────────────────────────── -->
+    <div id="tab-profil" class="cn-tab-content cn-tab-content-active">
+        <form method="post" action="{% url 'client_profile_save' client.pk %}">
+            {% csrf_token %}
+            <div class="cn-field">
+                <label class="cn-label" for="id_arbeitsdiagnose">Arbeitsdiagnose</label>
+                <input type="text" id="id_arbeitsdiagnose" name="arbeitsdiagnose"
+                       class="form-control" value="{{ profile.arbeitsdiagnose }}">
+            </div>
+            <div class="cn-field">
+                <label class="cn-label" for="id_intake_notes">Aufnahme &amp; Anamnese</label>
+                <textarea id="id_intake_notes" name="intake_notes" class="form-control cn-textarea-large"
+                          placeholder="Klinische Erstbewertung…">{{ profile.intake_notes|default:intake_notes_template }}</textarea>
+                {% if profile.intake_notes %}
+                <details class="cn-notes-preview" open>
+                    <summary>📖 Vorschau</summary>
+                    <div class="md-rendered">{{ profile.intake_notes|render_markdown }}</div>
+                </details>
+                {% endif %}
+            </div>
+            <div class="cn-field">
+                <label class="cn-label" for="id_case_notes">Fallnotizen</label>
+                <textarea id="id_case_notes" name="case_notes" class="form-control cn-textarea-large"
+                          placeholder="Themen, Dynamik, Herausforderungen…">{{ profile.case_notes|default:case_notes_template }}</textarea>
+                {% if profile.case_notes %}
+                <details class="cn-notes-preview" open>
+                    <summary>📖 Vorschau</summary>
+                    <div class="md-rendered">{{ profile.case_notes|render_markdown }}</div>
+                </details>
+                {% endif %}
+            </div>
+            <div class="cn-actions">
+                <button type="submit" class="btn btn-primary">Profil speichern</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── Tab: Protokoll (sessions + notes, chronological) ───────────── -->
+    <div id="tab-protokoll" class="cn-tab-content" x-data="{ showNote: false, showSupervision: false }">
+        <div class="cn-actions cn-actions-top">
+            <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary btn-sm">
+                + Sitzungsprotokoll
+            </a>
+            <button type="button" class="btn btn-secondary btn-sm"
+                    x-on:click="showNote = !showNote">
+                + Notiz
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm"
+                    x-on:click="showSupervision = !showSupervision">
+                🔍 + Supervision
+            </button>
+        </div>
+
+        <div class="cn-collapsed-hidden" x-show="showNote">
+            <form method="post" action="{% url 'client_note_create' client.pk %}" class="cn-note-new-form">
+                {% csrf_token %}
+                <div class="cn-note-new-row">
+                    <input type="date" name="note_date" class="form-control" required
+                           value="{% now 'Y-m-d' %}" class="input-date-narrow">
+                    <button type="submit" class="btn btn-primary btn-sm">Speichern</button>
+                </div>
+                <textarea name="content" class="form-control cn-textarea"
+                          placeholder="Notiz (Markdown unterstützt)…" rows="4" required></textarea>
+            </form>
+        </div>
+
+        <div class="cn-collapsed-hidden" x-show="showSupervision">
+            <form method="post" action="{% url 'client_note_create' client.pk %}" class="cn-note-new-form">
+                {% csrf_token %}
+                <input type="hidden" name="note_type" value="supervision">
+                <div class="cn-note-new-row">
+                    <input type="date" name="note_date" class="form-control" required
+                           value="{% now 'Y-m-d' %}" class="input-date-narrow">
+                    <button type="submit" class="btn btn-primary btn-sm">Speichern</button>
+                </div>
+                <textarea name="content" class="form-control cn-textarea"
+                          placeholder="Supervisionsfeedback und Empfehlungen (Markdown)…" rows="4" required></textarea>
+            </form>
+        </div>
+
+        {% if log_entries %}
+        <div class="cn-session-list" x-data="{ showOld: false, oldCount: {{ log_entries|length|add:'-10' }} }">
+        {% for entry in log_entries %}
+        {% if forloop.counter == 11 %}
+        <button type="button" id="cn-old-entries-toggle" class="btn btn-secondary btn-sm cn-old-toggle"
+                x-on:click="showOld = !showOld"
+                x-text="showOld ? '▴ Einklappen' : '▾ Ältere Einträge anzeigen (' + oldCount + ' mehr)'">
+            ▾ Ältere Einträge anzeigen ({{ log_entries|length|add:'-10' }} mehr)
+        </button>
+        <div x-show="showOld">
+        {% endif %}
+
+        {% if entry.type == "session" %}
+        {% with session=entry.obj log=entry.obj.log %}
+        <div class="cn-session-row {% if log %}cn-has-log{% endif %}{% if session.pk in recent_sessions_needing_log %} cn-needs-log{% endif %}">
+            {% if log and log.content %}
+            {# Two-column layout: narrow left (date + tags), wide right (content + interventions) #}
+            <div class="cn-session-grid">
+                <div class="cn-session-left">
+                    <span class="cn-session-date">{{ session.session_date|date:"d.m.Y" }}</span>
+                    <span class="cn-session-duration">{{ session.duration }} Min</span>
+                    {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">Unberechnet</span>{% else %}<span class="cn-session-not-billable">Nicht abrechenbar</span>{% endif %}{% endif %}
+                    {% if log.session_type %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% endif %}
+                    {% for tag in log.mood_tags %}
+                    <span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>
+                    {% endfor %}
+                </div>
+                <div class="cn-session-content">
+                    <div class="md-rendered">{{ log.content|render_markdown }}</div>
+                    {% if log.interventions %}
+                    <div class="cn-session-interventions">{{ log.interventions }}</div>
+                    {% endif %}
+                    {% if log.therapist_reflection %}
+                    <details class="cn-reflection">
+                        <summary class="cn-reflection-label">Eigene Reflexion</summary>
+                        <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
+                    </details>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="cn-session-actions cn-session-actions-bar">
+                <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ Bearbeiten</a>
+                {% if not session.invoice_items.all %}
+                {% url 'session_bill' client.pk session.pk as session_bill_url %}
+                {% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text='🧾 Zur Rechnung' %}
+                {% url 'session_toggle_billable' client.pk session.pk as session_toggle_billable_url %}
+                {% if session.billable %}
+                {% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text='🚷 Nicht abrechenbar' button_class='btn-secondary btn-sm' %}
+                {% else %}
+                {% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text='✅ Abrechenbar' button_class='btn-secondary btn-sm' %}
+                {% endif %}
+                {% endif %}
+                {% if log.session_type != 'ausfall' %}
+                {% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
+                {% include 'includes/inline_post_button.html' with action_url=session_log_mark_noshow_url button_text='🚫 Ausfall' %}
+                {% endif %}
+                {% url 'session_log_delete' client.pk log.pk as session_log_delete_url %}
+                {% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm='Sitzungsprotokoll löschen?' %}
+            </div>
+            {% else %}
+            {# No content yet — simple single-row layout #}
+            <div class="cn-session-meta">
+                <span class="cn-session-date">{{ session.session_date|date:"d.m.Y" }}</span>
+                <span class="cn-session-duration">{{ session.duration }} Min</span>
+                {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">Unberechnet</span>{% else %}<span class="cn-session-not-billable">Nicht abrechenbar</span>{% endif %}{% endif %}
+                {% if session.pk in recent_sessions_needing_log %}<span class="cn-session-missing-log">📝 Protokoll fehlt</span>{% endif %}
+                {% if log %}
+                <span class="cn-session-type">{{ log.get_session_type_display }}</span>
+                {% for tag in log.mood_tags %}
+                <span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>
+                {% endfor %}
+                {% endif %}
+            </div>
+            <div class="cn-session-actions">
+                {% if log %}
+                <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ Bearbeiten</a>
+                {% if log.session_type != 'ausfall' %}
+                {% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
+                {% include 'includes/inline_post_button.html' with action_url=session_log_mark_noshow_url button_text='🚫 Ausfall' %}
+                {% endif %}
+                {% url 'session_log_delete' client.pk log.pk as session_log_delete_url %}
+                {% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm='Sitzungsprotokoll löschen?' %}
+                {% else %}
+                {% if not session.invoice_items.all %}
+                {% url 'session_bill' client.pk session.pk as session_bill_url %}
+                {% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text='🧾 Zur Rechnung' %}
+                {% url 'session_toggle_billable' client.pk session.pk as session_toggle_billable_url %}
+                {% if session.billable %}
+                {% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text='🚷 Nicht abrechenbar' button_class='btn-secondary btn-sm' %}
+                {% else %}
+                {% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text='✅ Abrechenbar' button_class='btn-secondary btn-sm' %}
+                {% endif %}
+                {% endif %}
+                {% if session.pk not in no_log_needed_session_ids %}<a href="{% url 'session_log_create' client.pk %}?session_date={{ session.session_date|date:'Y-m-d' }}" class="btn btn-sm">+ Protokoll</a>{% endif %}
+                <form method="post" action="{% url 'session_duration_edit' client.pk session.pk %}" class="form-inline cn-duration-edit-form">
+                    {% csrf_token %}
+                    <input type="number" name="duration" value="{{ session.duration }}" min="1" max="300" class="form-control cn-duration-input" title="Dauer in Minuten">
+                    <button type="submit" class="btn btn-secondary btn-sm">Min. speichern</button>
+                </form>
+                {% if not session.invoice_items.all %}
+                {% url 'session_delete' client.pk session.pk as session_delete_url %}
+                {% include 'includes/inline_post_button.html' with action_url=session_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm='Sitzung löschen?' %}
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endwith %}
+
+        {% elif entry.type == "note" %}
+        {% with note=entry.obj %}
+        {% if note.note_type == "supervision" %}
+        <div class="cn-note-item cn-supervision-inline" x-data="{ editing: false }">
+            <div class="cn-note-header">
+                <span class="cn-note-date">{{ note.note_date|date:"d.m.Y" }}</span>
+                <span class="cn-supervision-tag">🔍 Supervision</span>
+                <button type="button" class="btn btn-secondary btn-sm"
+                        x-on:click="editing = !editing">✏️</button>
+                <form method="post" action="{% url 'client_note_delete' client.pk note.pk %}"
+                      class="form-inline"
+                      x-on:submit="confirm('Supervisionsnotiz löschen?') || $event.preventDefault()">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                </form>
+            </div>
+            <div class="cn-note-content md-rendered">{{ note.content|render_markdown }}</div>
+            <div class="cn-note-edit-form" x-show="editing">
+                <form method="post" action="{% url 'client_note_update' client.pk note.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}#tab-protokoll">
+                    <div class="cn-note-edit-date-row">
+                        <input type="date" name="note_date" value="{{ note.note_date|date:'Y-m-d' }}"
+                               class="form-control cn-note-edit-date">
+                    </div>
+                    <textarea name="content" class="form-control cn-textarea-small" rows="4">{{ note.content }}</textarea>
+                    <div class="cn-note-edit-actions">
+                        <button type="submit" class="btn btn-primary btn-sm">Speichern</button>
+                        <button type="button" class="btn btn-secondary btn-sm"
+                                x-on:click="editing = false">Abbrechen</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="cn-note-item">
+            <div class="cn-note-header">
+                <span class="cn-note-date">{{ note.note_date|date:"d.m.Y" }}</span>
+                <form method="post" action="{% url 'client_note_delete' client.pk note.pk %}"
+                      class="form-inline"
+                      x-data x-on:submit="confirm('Notiz löschen?') || $event.preventDefault()">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                </form>
+            </div>
+            <div class="cn-note-content md-rendered">{{ note.content|render_markdown }}</div>
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% endif %}
+
+        {% endfor %}
+        {% if log_entries|length > 10 %}</div>{% endif %}
+        </div>
+        {% else %}
+        <p class="cn-empty-state">Noch keine Einträge. Sitzungsprotokolle entstehen beim Erstellen neuer Einträge.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Tab: Supervision ────────────────────────────────────────────── -->
+    <div id="tab-supervision" class="cn-tab-content">
+        <form method="post" action="{% url 'supervision_item_create' client.pk %}" class="cn-field cn-supervision-new-form">
+            {% csrf_token %}
+            <textarea name="content" class="form-control cn-textarea-small"
+                      placeholder="Supervisionsthema oder -frage…" rows="3"></textarea>
+            <button type="submit" class="btn btn-primary btn-sm">Hinzufügen</button>
+        </form>
+
+        {% if supervision_items %}
+        <div class="cn-supervision-list">
+        {% for item in supervision_items %}
+        <div class="cn-supervision-item cn-status-{{ item.status }}">
+            <div class="cn-supervision-content">{{ item.content }}</div>
+            <div class="cn-supervision-meta">
+                <span class="cn-status-badge cn-status-{{ item.status }}">{{ item.get_status_display }}</span>
+                <span class="cn-date-hint">{{ item.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <div class="cn-supervision-actions">
+            {% url 'supervision_item_toggle' client.pk item.pk as toggle_url %}
+            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=item.status|yesno:'↩ Öffnen,✓ Besprochen' button_class='btn btn-secondary btn-sm' %}
+            {% url 'supervision_item_delete' client.pk item.pk as delete_url %}
+            {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm='Supervisionsthema wirklich löschen?' %}
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+        {% else %}
+        <p class="cn-empty-state">Noch keine Supervisionsthemen für diesen Klienten.</p>
+        {% endif %}
+    </div>
+
+</div><!-- /clinical-documentation -->
