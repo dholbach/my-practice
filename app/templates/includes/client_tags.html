@@ -1,0 +1,160 @@
+{% comment %}
+Reusable tag display component
+Usage: {% include 'includes/client_tags.html' with client=client editable=True %}
+{% endcomment %}
+
+
+<div class="tag-container">
+    {% for tag in client.tags.all %}
+        <span class="tag {{ tag.color }}{% if tag.is_system %} system-tag{% endif %}" data-tag-id="{{ tag.id }}">
+            {{ tag.name }}
+            {% if editable and not tag.is_system %}
+                <span class="tag-remove" data-tag-id="{{ tag.id }}">×</span>
+            {% endif %}
+        </span>
+    {% endfor %}
+
+    {% if editable %}
+        <div class="tag-dropdown" id="tagDropdown{{ client.id }}">
+            <button type="button" class="tag-add-btn">
+                ➕ Tag hinzufügen
+            </button>
+            <div class="tag-dropdown-content" id="tagDropdownContent{{ client.id }}">
+                {% for tag in available_tags %}
+                    <div class="tag-dropdown-item" data-tag-id="{{ tag.id }}" data-tag-name="{{ tag.name }}" data-tag-color="{{ tag.color }}">
+                        <span class="tag-preview {{ tag.color }}">{{ tag.name }}</span>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted-light text-sm p-1">
+                        Keine weiteren Tags verfügbar<br>
+                        <a href="{% url 'tag_create' %}" class="link-primary">Neues Tag erstellen →</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% if editable %}
+<script>
+(function () {
+    const clientId = {{ client.id }};
+
+    function toggleTagDropdown(cid) {
+        const dropdown = document.getElementById('tagDropdown' + cid);
+        const dropdownContent = document.getElementById('tagDropdownContent' + cid);
+        const button = dropdown.querySelector('.tag-add-btn');
+
+        dropdown.classList.toggle('active');
+
+        if (dropdown.classList.contains('active')) {
+            const rect = button.getBoundingClientRect();
+            dropdownContent.style.top = (rect.bottom + 5) + 'px';
+            dropdownContent.style.left = rect.left + 'px';
+
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 100);
+        }
+    }
+
+    function addTag(cid, tagId, tagName, tagColor) {
+        fetch(`/api/clients/${cid}/tags/add/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `tag_id=${tagId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fehler beim Hinzufügen des Tags');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Fehler beim Hinzufügen des Tags');
+        });
+    }
+
+    function removeTag(cid, tagId, element) {
+        fetch(`/api/clients/${cid}/tags/${tagId}/remove/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                element.closest('.tag').remove();
+            } else {
+                alert('Fehler beim Entfernen des Tags');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Fehler beim Entfernen des Tags');
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        if (!cookieValue) {
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfInput) {
+                cookieValue = csrfInput.value;
+            }
+        }
+        return cookieValue;
+    }
+
+    // Wire event listeners — DOM elements above are already rendered at this point
+    const dropdown = document.getElementById('tagDropdown' + clientId);
+    if (!dropdown) return;
+
+    const tagContainer = dropdown.closest('.tag-container');
+
+    // Remove-tag buttons
+    tagContainer.querySelectorAll('.tag-remove[data-tag-id]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            removeTag(clientId, parseInt(this.dataset.tagId), this);
+        });
+    });
+
+    // Add-tag dropdown toggle
+    const addBtn = dropdown.querySelector('.tag-add-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', function () {
+            toggleTagDropdown(clientId);
+        });
+    }
+
+    // Tag dropdown items
+    dropdown.querySelectorAll('.tag-dropdown-item[data-tag-id]').forEach(function (item) {
+        item.addEventListener('click', function () {
+            addTag(clientId, parseInt(this.dataset.tagId), this.dataset.tagName, this.dataset.tagColor);
+        });
+    });
+})();
+</script>
+{% endif %}

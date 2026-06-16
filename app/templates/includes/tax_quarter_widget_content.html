@@ -1,0 +1,49 @@
+{% if show_warning %}
+<div style="padding: 0.75rem 0;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0;">
+        <div>
+            <div class="font-medium text-primary">
+                Q{{ current_quarter }} Umsatz: {{ quarter_revenue|floatformat:0 }}&nbsp;€
+            </div>
+            <div class="text-xs text-secondary mt-1">
+                Noch keine Steuervorauszahlung für Q{{ current_quarter }} erfasst
+            </div>
+        </div>
+        <a href="{{ add_payment_url }}" class="btn btn-warning btn-sm">
+            Erfassen
+        </a>
+    </div>
+    <div style="margin-top: 0.5rem;">
+        <a href="{{ quarter_overview_url }}"
+           class="text-xs text-secondary link-plain">
+            → Quartalsübersicht anzeigen
+        </a>
+    </div>
+</div>
+{% elif has_tax_payment %}
+<div style="padding: 0.75rem 0;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0;">
+        <div>
+            <div class="font-medium text-primary">
+                Q{{ current_quarter }} Umsatz: {{ quarter_revenue|floatformat:0 }}&nbsp;€
+            </div>
+            <div class="text-xs text-success mt-1">
+                ✅ Steuervorauszahlung für Q{{ current_quarter }} erfasst
+            </div>
+        </div>
+        <a href="{{ quarter_overview_url }}" class="btn btn-secondary btn-sm">
+            Übersicht
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="text-secondary text-sm" style="padding: 0.75rem 0;">
+    <div>Q{{ current_quarter }} Umsatz: {{ quarter_revenue|floatformat:0 }}&nbsp;€</div>
+    <div style="margin-top: 0.5rem;">
+        <a href="{{ quarter_overview_url }}"
+           class="text-xs text-secondary link-plain">
+            → Quartalsübersicht anzeigen
+        </a>
+    </div>
+</div>
+{% endif %}

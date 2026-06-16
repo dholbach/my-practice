@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+{% load number_filters %}
+{% load static %}
+
+{% block title %}Kalender Import{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <h1>📅 Google Calendar Import</h1>
+    <p class="mb-3">
+        <a href="{% url 'calendar_approval_queue' %}" class="btn btn-secondary btn-sm">→ Genehmigungswarteschlange</a>
+    </p>
+
+    <div class="filter-controls">
+        <form method="get">
+            <div>
+                <label for="start_date">Von:</label>
+                <input type="date"
+                       id="start_date"
+                       name="start_date"
+                       value="{{ start_date|date:'Y-m-d' }}">
+            </div>
+            <div>
+                <label for="end_date">Bis:</label>
+                <input type="date"
+                       id="end_date"
+                       name="end_date"
+                       value="{{ end_date|date:'Y-m-d' }}">
+            </div>
+            <button type="submit" class="btn btn-primary">
+                🔍 Laden
+            </button>
+        </form>
+    </div>
+
+    {% if events %}
+    <div class="summary-cards">
+        <div class="stat-card">
+            <h3>Events gesamt</h3>
+            <div class="value">{{ total_events }}</div>
+        </div>
+        <div class="stat-card stat-card--success">
+            <h3>✅ Neu & Bereit</h3>
+            <div class="value">{{ ready_count }}</div>
+        </div>
+        <div class="stat-card stat-card--info">
+            <h3>🔄 Duplikate</h3>
+            <div class="value">{{ duplicate_count }}</div>
+        </div>
+        <div class="stat-card stat-card--warning">
+            <h3>⚠️ Unbekannt</h3>
+            <div class="value">{{ unknown_count }}</div>
+        </div>
+        <div class="stat-card stat-card--danger">
+            <h3>❌ Storniert</h3>
+            <div class="value">{{ cancelled_count }}</div>
+        </div>
+        {% if already_imported_count %}
+        <div class="stat-card stat-card--muted">
+            <h3>✓ Bereits importiert</h3>
+            <div class="value">{{ already_imported_count }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions" id="bulkActions">
+        <span id="selectedCount">0 ausgewählt</span>
+        <button class="action-btn primary" id="js-import-top">
+            ✅ Ausgewählte importieren
+        </button>
+        <button class="action-btn secondary" id="toggleDuplicatesTop">
+            🚫 Duplikate ausblenden
+        </button>
+        <button class="action-btn secondary" id="js-clear-selection">
+            ❌ Abbrechen
+        </button>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="th-checkbox">
+                    <input type="checkbox" class="select-checkbox" id="selectAll">
+                </th>
+                <th>Datum</th>
+                <th>Zeit</th>
+                <th>Event</th>
+                <th>Dauer</th>
+                <th>Client</th>
+                <th>Service</th>
+                <th>Status</th>
+                <th class="th-actions" title="Event überspringen (wird nicht importiert)">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr class="event-row {% if event.is_duplicate %}event-duplicate{% endif %} {% if event.matched_client and not event.is_cancelled and not event.is_duplicate %}event-ready{% endif %}"
+                data-event-id="{{ event.id }}"
+                data-is-ready="{% if event.matched_client and not event.is_cancelled and not event.is_duplicate %}true{% else %}false{% endif %}"
+                id="event-{{ event.id }}">
+                <td>
+                    <input type="checkbox"
+                           class="select-checkbox event-checkbox"
+                           {% if event.is_cancelled or event.is_duplicate %}disabled{% endif %}>
+                </td>
+                <td>
+                    {% if event.start %}{{ event.start|date:'d.m.Y' }}{% else %}-{% endif %}
+                </td>
+                <td>
+                    {% if event.start %}{{ event.start|date:'H:i' }}{% else %}-{% endif %}
+                </td>
+                <td>
+                    <strong>{{ event.summary }}</strong>
+                </td>
+                <td>
+                    {% if event.duration_minutes > 0 %}
+                        {{ event.duration_minutes }} min
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <select class="form-control client-select" {% if event.is_duplicate %}disabled{% endif %}>
+                        <option value="">-- Client auswählen --</option>
+                        {% for client in clients %}
+                        <option value="{{ client.id }}"
+                                {% if event.matched_client and event.matched_client.id == client.id %}selected{% endif %}>
+                            {{ client.client_code }} - {{ client.full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control service-select" {% if event.is_duplicate %}disabled{% endif %}>
+                        <option value="">-- Service auswählen --</option>
+                        {% for service in service_types %}
+                        <option value="{{ service.id }}"
+                                {% if event.suggested_service_type_obj and event.suggested_service_type_obj.id == service.id %}selected{% endif %}>
+                            {{ service.name_de|default:service.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    {% if event.is_duplicate %}
+                        <span class="badge badge-info" title="Bereits als InvoiceItem importiert">🔄 Duplikat</span>
+                    {% elif event.matched_client and not event.is_cancelled %}
+                        <span class="badge badge-success" title="Client erkannt, bereit zum Import">✅ Bereit</span>
+                    {% elif event.is_cancelled %}
+                        <span class="badge badge-danger" title="Event wurde storniert">❌ Storniert</span>
+                    {% else %}
+                        <span class="badge badge-warning" title="Client nicht erkannt - bitte manuell zuordnen">⚠️ Unbekannt</span>
+                    {% endif %}
+                </td>
+                <td class="td-actions">
+                    <button class="btn btn-sm btn-secondary" data-event-id="{{ event.id }}" title="Event überspringen (nicht importieren)" {% if event.is_duplicate %}disabled{% endif %}>
+                        ⏭️
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="cal-import-bottom-bar">
+        <button class="action-btn primary" id="js-import-bottom">
+            ✅ Ausgewählte Events importieren
+        </button>
+        <button class="action-btn secondary" id="toggleDuplicates">
+            🚫 Duplikate ausblenden
+        </button>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <p>Keine Events im ausgewählten Zeitraum gefunden.</p>
+        <p>Wähle einen anderen Datumsbereich.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Track selected events
+let selectedEvents = new Set();
+let duplicatesHidden = false;
+
+// Toggle duplicate rows visibility
+function toggleDuplicates() {
+    duplicatesHidden = !duplicatesHidden;
+    const duplicateRows = document.querySelectorAll('.event-duplicate');
+    const toggleBtn = document.getElementById('toggleDuplicates');
+    const toggleBtnTop = document.getElementById('toggleDuplicatesTop');
+
+    duplicateRows.forEach(row => {
+        row.style.display = duplicatesHidden ? 'none' : '';
+    });
+
+    const newText = duplicatesHidden ? '🔄 Duplikate anzeigen' : '🚫 Duplikate ausblenden';
+    if (toggleBtn) toggleBtn.textContent = newText;
+    if (toggleBtnTop) toggleBtnTop.textContent = newText;
+}
+
+// Auto-select ready events on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.event-row[data-is-ready="true"]').forEach(row => {
+        const checkbox = row.querySelector('.event-checkbox');
+        if (checkbox && !checkbox.disabled) {
+            checkbox.checked = true;
+            selectedEvents.add(row.dataset.eventId);
+            row.classList.add('selected');
+        }
+    });
+    updateBulkActions();
+
+    // Wire import buttons
+    const importTopBtn = document.getElementById('js-import-top');
+    const importBottomBtn = document.getElementById('js-import-bottom');
+    if (importTopBtn) importTopBtn.addEventListener('click', function() { importSelected(this); });
+    if (importBottomBtn) importBottomBtn.addEventListener('click', function() { importSelected(this); });
+
+    // Wire duplicate toggle buttons
+    const toggleTop = document.getElementById('toggleDuplicatesTop');
+    const toggleBottom = document.getElementById('toggleDuplicates');
+    if (toggleTop) toggleTop.addEventListener('click', toggleDuplicates);
+    if (toggleBottom) toggleBottom.addEventListener('click', toggleDuplicates);
+
+    // Wire clear selection button
+    const clearBtn = document.getElementById('js-clear-selection');
+    if (clearBtn) clearBtn.addEventListener('click', clearSelection);
+
+    // Wire select-all checkbox
+    const selectAll = document.getElementById('selectAll');
+    if (selectAll) selectAll.addEventListener('change', function() { toggleSelectAll(this); });
+
+    // Wire per-row checkboxes
+    document.querySelectorAll('.event-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateBulkActions);
+    });
+
+    // Wire skip buttons
+    document.querySelectorAll('button[data-event-id]').forEach(btn => {
+        btn.addEventListener('click', function() { skipEvent(this.dataset.eventId); });
+    });
+});
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.event-checkbox:not([disabled])');
+    checkboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+        const eventId = cb.closest('.event-row').dataset.eventId;
+        if (checkbox.checked) {
+            selectedEvents.add(eventId);
+            cb.closest('.event-row').classList.add('selected');
+        } else {
+            selectedEvents.delete(eventId);
+            cb.closest('.event-row').classList.remove('selected');
+        }
+    });
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.event-checkbox:checked');
+    selectedEvents.clear();
+    checkboxes.forEach(cb => {
+        const eventId = cb.closest('.event-row').dataset.eventId;
+        selectedEvents.add(eventId);
+        cb.closest('.event-row').classList.add('selected');
+    });
+
+    // Update unselected rows
+    document.querySelectorAll('.event-checkbox:not(:checked)').forEach(cb => {
+        cb.closest('.event-row').classList.remove('selected');
+    });
+
+    const bulkActions = document.getElementById('bulkActions');
+    const count = selectedEvents.size;
+
+    if (count > 0) {
+        bulkActions.classList.add('visible');
+        document.getElementById('selectedCount').textContent = `${count} ausgewählt`;
+    } else {
+        bulkActions.classList.remove('visible');
+    }
+}
+
+function skipEvent(eventId) {
+    const row = document.getElementById(`event-${eventId}`);
+    row.classList.add('skipped');
+    const checkbox = row.querySelector('.event-checkbox');
+    checkbox.checked = false;
+    checkbox.disabled = true;
+    selectedEvents.delete(eventId);
+    updateBulkActions();
+}
+
+function clearSelection() {
+    document.querySelectorAll('.event-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    selectedEvents.clear();
+    updateBulkActions();
+}
+
+async function importSelected(btnElement) {
+    if (selectedEvents.size === 0) {
+        alert('Bitte wähle mindestens ein Event aus.');
+        return;
+    }
+
+    btnElement.disabled = true;
+    btnElement.textContent = '⏳ Importiere...';
+
+    // Collect event data
+    const eventsData = Array.from(selectedEvents).map(eventId => {
+        const row = document.getElementById(`event-${eventId}`);
+        const clientId = row.querySelector('.client-select').value;
+        const serviceTypeId = row.querySelector('.service-select').value;
+
+        if (!clientId || !serviceTypeId) {
+            return null;
+        }
+
+        return {
+            id: eventId,
+            action: 'import',
+            client_id: parseInt(clientId),
+            service_type_id: parseInt(serviceTypeId)
+        };
+    }).filter(e => e !== null);
+
+    if (eventsData.length === 0) {
+        alert('Bitte wähle für alle Events einen Client und Service Type aus.');
+        btnElement.disabled = false;
+        btnElement.textContent = '✅ Ausgewählte importieren';
+        return;
+    }
+
+    try {
+        const response = await fetch("{% url 'calendar_import_events' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ events: eventsData })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            let message = `✅ Erfolgreich!\n\n${result.created} Events importiert\n${result.skipped} übersprungen`;
+            if (result.errors && result.errors.length > 0) {
+                message += `\n\n❌ ${result.errors.length} Fehler:\n\n`;
+                result.errors.forEach((err, idx) => {
+                    message += `${idx + 1}. ${err}\n`;
+                });
+            }
+            alert(message);
+
+            // Only reload if something was created
+            if (result.created > 0) {
+                window.location.reload();
+            }
+        } else {
+            alert(`❌ Fehler: ${result.error}`);
+        }
+    } catch (error) {
+        alert(`❌ Fehler beim Importieren: ${error.message}`);
+    } finally {
+        btnElement.disabled = false;
+        btnElement.textContent = '✅ Ausgewählte importieren';
+    }
+}
+</script>
+
+{% endblock %}

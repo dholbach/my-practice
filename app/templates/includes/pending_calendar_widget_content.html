@@ -1,0 +1,21 @@
+{% if show_widget %}
+<div style="padding: 0.75rem 0;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0;">
+        <div>
+            <div class="font-medium text-primary">
+                {{ pending_count }} Termin{{ pending_count|pluralize:"e" }} warten auf Genehmigung
+            </div>
+            <div class="text-xs text-secondary">
+                Kalender-Termine wurden automatisch abgerufen
+            </div>
+        </div>
+        <a href="{{ approval_url }}" class="btn btn-primary btn-sm">
+            Genehmigen
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="text-secondary text-sm text-center" style="padding: 0.75rem 0;">
+    ✅ Keine ausstehenden Kalender-Termine
+</div>
+{% endif %}

@@ -1,0 +1,19 @@
+{% if pending_checklists %}
+<div class="checklist-widget">
+    {% for item in pending_checklists %}
+    <div class="checklist-item">
+        <div>
+            <div class="checklist-item__label">{{ item.label }}</div>
+            <div class="checklist-item__period">{{ item.period_start|date:"F Y" }}</div>
+        </div>
+        <a href="{% url 'checklist' item.type %}" class="checklist-item__btn">
+            Erledigen
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="checklist-empty">
+    ✅ Alle Checklisten für aktuelle Periode erledigt
+</div>
+{% endif %}

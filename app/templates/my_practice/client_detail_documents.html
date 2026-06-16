@@ -1,0 +1,201 @@
+<!-- P-026: Client Documents -->
+<div class="section-card" id="client-documents">
+    <h3>📎 Dokumente</h3>
+
+    <!-- Upload zone -->
+    <div class="doc-upload-zone" id="docDropZone">
+        <p>Datei hierher ziehen oder <strong>klicken</strong> zum Auswählen</p>
+        <input type="file" id="docFileInput" class="doc-upload-hidden"
+               accept=".pdf,.jpg,.jpeg,.png,.docx">
+    </div>
+
+    <!-- Upload form (appears after file selected) -->
+    <div id="docUploadForm" class="doc-upload-hidden">
+        <div class="doc-upload-form">
+            <select id="docTypeSelect" class="form-control">
+                {% for value, label in doc_type_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" id="docDescription" class="form-control"
+                   placeholder="Beschreibung (optional)" maxlength="200">
+            <input type="date" id="docDate" class="form-control">
+            <button type="button" class="btn btn-primary btn-sm" id="docUploadBtn">
+                Hochladen
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="docCancelBtn">
+                Abbrechen
+            </button>
+        </div>
+        <div class="doc-upload-progress" id="docProgress">Wird hochgeladen…</div>
+    </div>
+
+    <!-- Hidden list: populated by JS after upload; full list lives in sidebar -->
+    <ul class="doc-list doc-upload-hidden" id="docList"></ul>
+</div>
+
+<script>
+(function() {
+    const clientPk = {{ client.pk }};
+    const uploadUrl = "{% url 'client_document_upload' client.pk %}";
+    const deleteUrlBase = "/documents/";
+    const csrfToken = "{{ csrf_token }}";
+
+    const dropZone = document.getElementById('docDropZone');
+    const fileInput = document.getElementById('docFileInput');
+    const uploadForm = document.getElementById('docUploadForm');
+    const uploadBtn = document.getElementById('docUploadBtn');
+    const cancelBtn = document.getElementById('docCancelBtn');
+    const progress = document.getElementById('docProgress');
+    const docList = document.getElementById('docList');
+    const emptyState = null;  // list lives in sidebar now
+    const dateInput = document.getElementById('docDate');
+
+    // Set date default to today
+    dateInput.value = new Date().toISOString().slice(0, 10);
+
+    let selectedFile = null;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) showUploadForm(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) showUploadForm(fileInput.files[0]);
+    });
+
+    // Infer date and document type from filename like "2026-01-09-behandlungsvertrag.pdf"
+    function inferFromFilename(name) {
+        const stem = name.replace(/\.[^.]+$/, '').toLowerCase();
+
+        // Date: leading YYYY-MM-DD
+        const dateMatch = stem.match(/^(\d{4}-\d{2}-\d{2})[-_]?(.*)$/);
+        const inferredDate = dateMatch ? dateMatch[1] : null;
+
+        // Description: rest of stem after the date, dashes → spaces, trimmed
+        const inferredDesc = (dateMatch && dateMatch[2])
+            ? dateMatch[2].replace(/[-_]+/g, ' ').trim()
+            : null;
+
+        // Document type: keyword matching (first match wins)
+        const typeMap = [
+            ['vorgespräch',        'intro_notes'],
+            ['vorgesprach',        'intro_notes'],   // without umlaut
+            ['vorgespräch',        'intro_notes'],
+            ['aufnahmebogen',      'intake'],
+            ['intake',             'intake'],
+            ['anamnesebogen',      'anamnese'],
+            ['anamnese',           'anamnese'],
+            ['behandlungsvertrag', 'contract'],
+            ['vertrag',            'contract'],
+            ['überweisung',        'referral'],
+            ['uberweisung',        'referral'],      // without umlaut
+            ['referral',           'referral'],
+        ];
+        let inferredType = null;
+        for (const [keyword, type] of typeMap) {
+            if (stem.includes(keyword)) { inferredType = type; break; }
+        }
+        return { inferredDate, inferredType, inferredDesc };
+    }
+
+    function showUploadForm(file) {
+        selectedFile = file;
+        dropZone.querySelector('p').textContent = file.name;
+
+        const { inferredDate, inferredType, inferredDesc } = inferFromFilename(file.name);
+        if (inferredDate) dateInput.value = inferredDate;
+        if (inferredType) document.getElementById('docTypeSelect').value = inferredType;
+        if (inferredDesc) document.getElementById('docDescription').value = inferredDesc;
+
+        uploadForm.style.display = 'block';
+    }
+
+    cancelBtn.addEventListener('click', () => {
+        selectedFile = null;
+        fileInput.value = '';
+        uploadForm.style.display = 'none';
+        dropZone.querySelector('p').innerHTML = 'Datei hierher ziehen oder <strong>klicken</strong> zum Auswählen';
+    });
+
+    uploadBtn.addEventListener('click', () => {
+        if (!selectedFile) return;
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('document_type', document.getElementById('docTypeSelect').value);
+        formData.append('description', document.getElementById('docDescription').value);
+        formData.append('document_date', dateInput.value);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        uploadBtn.disabled = true;
+        progress.classList.add('visible');
+
+        fetch(uploadUrl, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) { alert(data.error); return; }
+                if (data.onboarding_step_completed) {
+                    location.reload();
+                    return;
+                }
+                appendDocRow(data);
+                cancelBtn.click();
+            })
+            .catch(() => alert('Upload fehlgeschlagen.'))
+            .finally(() => {
+                uploadBtn.disabled = false;
+                progress.classList.remove('visible');
+            });
+    });
+
+    function appendDocRow(doc) {
+        // Mirror into sidebar
+        const sbList = document.querySelector('#client-documents ~ * .cd-sidebar ul, .cd-sidebar ul');
+        const sidebarWidget = document.querySelector('.cd-sidebar .section-card ul');
+        if (sidebarWidget) {
+            const sbLi = document.createElement('li');
+            sbLi.id = 'sb-doc-' + doc.id;
+            sbLi.className = 'sidebar-doc-item';
+            sbLi.innerHTML = `
+                <span class="doc-type-badge sidebar-doc-badge">${doc.document_type_display}</span>
+                <a href="${doc.url}" target="_blank" class="sidebar-doc-name">
+                   ${doc.description || doc.filename}</a>
+                <span class="sidebar-doc-date">${formatDate(doc.document_date)}</span>
+            `;
+            sidebarWidget.appendChild(sbLi);
+            // Make sure the sidebar widget is visible
+            const sbCard = sidebarWidget.closest('.section-card');
+            if (sbCard) sbCard.style.display = '';
+        }
+    }
+
+    function formatDate(iso) {
+        const [y, m, d] = iso.split('-');
+        return `${d}.${m}.${y}`;
+    }
+})();
+
+function docDelete(btn) {
+    if (!confirm('Dokument wirklich löschen?')) return;
+    const docId = btn.dataset.docId;
+    const csrf = btn.dataset.csrf;
+    fetch('/documents/' + docId + '/delete/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrf, 'Content-Type': 'application/x-www-form-urlencoded' },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const li = document.getElementById('doc-' + docId);
+            if (li) li.remove();
+            const sbLi = document.getElementById('sb-doc-' + docId);
+            if (sbLi) sbLi.remove();
+        }
+    })
+    .catch(() => alert('Löschen fehlgeschlagen.'));
+}
+</script>

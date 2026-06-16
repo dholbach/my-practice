@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Klientenliste{% endblock %}
+
+{% block page_icon %}👥{% endblock %}
+{% block page_title %}Klienten{% endblock %}
+{% block page_subtitle %}Übersicht aller Klienten{% endblock %}
+
+{% endblock %}
+
+{% block content %}
+<div class="flex gap-4 mb-8 flex-wrap">
+    <a href="?filter=all" class="stat-card-link">
+        <div class="stat-card {% if current_filter == 'all' %}active{% endif %}">
+            <div class="stat-label">Gesamt</div>
+            <div class="stat-value">{{ stats.total }}</div>
+        </div>
+    </a>
+    <a href="?filter=active" class="stat-card-link">
+        <div class="stat-card {% if current_filter == 'active' %}active{% endif %}">
+            <div class="stat-label">Aktiv</div>
+            <div class="stat-value">{{ stats.active }}</div>
+        </div>
+    </a>
+    <a href="?filter=online" class="stat-card-link">
+        <div class="stat-card {% if current_filter == 'online' %}active{% endif %}">
+            <div class="stat-label">💻 Online</div>
+            <div class="stat-value">{{ stats.online }}</div>
+        </div>
+    </a>
+    <a href="?filter=in_person" class="stat-card-link">
+        <div class="stat-card {% if current_filter == 'in_person' %}active{% endif %}">
+            <div class="stat-label">🏢 Vor Ort</div>
+            <div class="stat-value">{{ stats.in_person }}</div>
+        </div>
+    </a>
+    <a href="?filter=de" class="stat-card-link">
+        <div class="stat-card {% if current_filter == 'de' %}active{% endif %}">
+            <div class="stat-label">Deutsch</div>
+            <div class="stat-value">{{ stats.de }}</div>
+        </div>
+    </a>
+    <a href="?filter=en" class="stat-card-link">
+        <div class="stat-card {% if current_filter == 'en' %}active{% endif %}">
+            <div class="stat-label">English</div>
+            <div class="stat-value">{{ stats.en }}</div>
+        </div>
+    </a>
+</div>
+
+<!-- Action Bar -->
+<div class="actions items-center justify-between">
+    <div class="flex gap-2 flex-wrap items-center">
+        <span class="text-sm text-text-secondary font-semibold">Tags:</span>
+        <a href="?filter={{ current_filter }}" class="btn btn-sm text-xs {% if not current_tag %}btn-primary{% else %}btn-secondary{% endif %}">
+            Alle
+        </a>
+        {% for tag in all_tags %}
+            <a href="?filter={{ current_filter }}&tag={{ tag.slug }}"
+               class="btn btn-sm text-xs {% if current_tag == tag.slug %}btn-primary{% else %}btn-secondary{% endif %}">
+                {{ tag.name }} ({{ tag.client_count }})
+            </a>
+        {% endfor %}
+        <a href="{% url 'tag_list' %}" class="btn btn-sm btn-secondary text-xs">
+            ⚙️ Tags verwalten
+        </a>
+    </div>
+    <a href="{% url 'client_intake' %}" class="btn">➕ Neuer Klient</a>
+</div>
+
+{% if clients %}
+<table class="data-table table-fixed">
+    <thead>
+        <tr>
+            <th class="w-[80px]">
+                <a href="?filter={{ current_filter }}&sort={% if current_sort == 'client_code' %}-client_code{% else %}client_code{% endif %}">
+                    Code {% if current_sort == 'client_code' %}▲{% elif current_sort == '-client_code' %}▼{% endif %}
+                </a>
+            </th>
+            <th class="w-[200px]">
+                <a href="?filter={{ current_filter }}&sort={% if current_sort == 'full_name' %}-full_name{% else %}full_name{% endif %}">
+                    Name {% if current_sort == 'full_name' %}▲{% elif current_sort == '-full_name' %}▼{% endif %}
+                </a>
+            </th>
+            <th class="w-[150px]">Tags</th>
+            <th class="w-[80px]">Sprache</th>
+            <th class="w-[100px]">
+                <a href="?filter={{ current_filter }}&sort={% if current_sort == '-total_sessions' %}total_sessions{% else %}-total_sessions{% endif %}">
+                    Sessions {% if current_sort == 'total_sessions' %}▲{% elif current_sort == '-total_sessions' %}▼{% endif %}
+                </a>
+            </th>
+            <th class="w-[140px]">
+                <a href="?filter={{ current_filter }}&sort={% if current_sort == '-last_invoice_date' %}last_invoice_date{% else %}-last_invoice_date{% endif %}">
+                    Letzte Rechnung {% if current_sort == 'last_invoice_date' %}▲{% elif current_sort == '-last_invoice_date' %}▼{% endif %}
+                </a>
+            </th>
+            <th class="w-[100px]">Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for client in clients %}
+        <tr>
+            <td class="truncate">
+                <a href="{% url 'client_detail' client.id %}" class="client-code">
+                    {{ client.client_code }}
+                </a>
+            </td>
+            <td class="truncate">
+                <a href="{% url 'client_detail' client.id %}" class="text-text-primary font-medium no-underline">
+                    <span class="sensitive-data">{{ client.full_name }}</span>
+                </a>
+            </td>
+            <td class="truncate">
+                {% if client.tags.all %}
+                    {% for tag in client.tags.all %}
+                        <span class="tag {{ tag.color }}">{{ tag.name }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="text-text-secondary text-xs">–</span>
+                {% endif %}
+            </td>
+            <td class="truncate">
+                <span class="badge badge-{{ client.language }}">
+                    {{ client.get_language_display|upper }}
+                </span>
+            </td>
+            <td class="truncate">
+                {% if client.total_sessions %}
+                    <span class="font-semibold">{{ client.total_sessions|floatformat:0 }}</span>
+                {% else %}
+                    <span class="text-muted">0</span>
+                {% endif %}
+            </td>
+            <td class="truncate">
+                {% if client.last_invoice_date %}
+                    <span class="{% if client.last_invoice_date < '2025-01-01'|date:'Y-m-d' %}text-red-500 font-semibold{% endif %}">
+                        {{ client.last_invoice_date|date:"d.m.Y" }}
+                    </span>
+                {% else %}
+                    <span class="text-muted">Keine Rechnung</span>
+                {% endif %}
+            </td>
+            <td class="truncate">
+                {% if client.active %}
+                <span class="badge badge-active">Aktiv</span>
+                {% else %}
+                <span class="badge badge-inactive">Inaktiv</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+{% include 'includes/pagination.html' with page_obj=page_obj %}
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <h2>Keine Klienten</h2>
+    <p>Es wurden noch keine Klienten hinzugefügt.</p>
+    <p>No clients have been added yet.</p>
+</div>
+{% endif %}
+{% endblock %}

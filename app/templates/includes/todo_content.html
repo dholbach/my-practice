@@ -1,0 +1,118 @@
+{% load static %}
+{# Partial rendered by TodoListView (full page) and todo_toggle_complete (HTMX swap). #}
+<div id="todo-content">
+
+<!-- Stats -->
+<div class="todo-stats">
+    <a href="{% url 'todo_list' %}" class="stat-card {% if current_status == 'all' %}active{% endif %}" style="text-decoration: none;">
+        <div class="stat-label">Gesamt</div>
+        <div class="stat-value">{{ stats.total }}</div>
+    </a>
+    <a href="{% url 'todo_list' %}?status=active" class="stat-card {% if current_status == 'active' %}active{% endif %}" style="text-decoration: none;">
+        <div class="stat-label">Aktiv</div>
+        <div class="stat-value">{{ stats.active }}</div>
+    </a>
+    <a href="{% url 'todo_list' %}?status=completed" class="stat-card {% if current_status == 'completed' %}active{% endif %}" style="text-decoration: none;">
+        <div class="stat-label">Erledigt</div>
+        <div class="stat-value">{{ stats.completed }}</div>
+    </a>
+    <div class="stat-card {% if stats.overdue > 0 %}overdue{% else %}surface{% endif %}">
+        <div class="stat-label">Überfällig</div>
+        <div class="stat-value">{{ stats.overdue }}</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="todo-filters">
+    <a href="{% url 'todo_create' %}" class="btn">➕ Neue Aufgabe</a>
+
+    <form method="get" style="display: flex; gap: 1rem; flex: 1; align-items: center;">
+        <label for="category-filter" class="text-muted">Kategorie:</label>
+        <select name="category" id="category-filter" x-data x-on:change="$el.form.submit()">
+            <option value="">Alle</option>
+            {% for value, label in categories %}
+            <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="priority-filter" class="text-muted">Priorität:</label>
+        <select name="priority" id="priority-filter" x-data x-on:change="$el.form.submit()">
+            <option value="">Alle</option>
+            {% for value, label in priorities %}
+            <option value="{{ value }}" {% if current_priority == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="hidden" name="status" value="{{ current_status }}">
+
+        {% if current_category or current_priority %}
+        <a href="{% url 'todo_list' %}?status={{ current_status }}" class="btn btn-secondary">Filter zurücksetzen</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- TODO List -->
+{% if todos %}
+<div class="todo-list">
+    {% for todo in todos %}
+    <div class="todo-item {% if todo.is_completed %}completed{% elif todo.is_overdue %}overdue{% endif %}" data-todo-id="{{ todo.id }}">
+        <input type="checkbox"
+               class="todo-checkbox"
+               {% if todo.is_completed %}checked{% endif %}
+               hx-post="{% url 'todo_toggle' todo.pk %}?status={{ current_status }}&category={{ current_category }}&priority={{ current_priority }}"
+               hx-target="#todo-content"
+               hx-swap="outerHTML"
+               title="{% if todo.is_completed %}Als unerledigt markieren{% else %}Als erledigt markieren{% endif %}">
+
+        <div class="todo-content">
+            <div class="todo-title">{{ todo.title }}</div>
+
+            {% if todo.description %}
+            <div class="todo-description">{{ todo.description|linebreaks }}</div>
+            {% endif %}
+
+            <div class="todo-meta">
+                <span class="todo-badge category-{{ todo.category }}">{{ todo.get_category_display }}</span>
+                <span class="todo-badge priority-{{ todo.priority }}">{{ todo.get_priority_display }}</span>
+
+                {% if todo.due_date %}
+                <span class="todo-due-date {% if todo.is_overdue and not todo.is_completed %}overdue{% endif %}">
+                    📅 {{ todo.due_date|date:"d.m.Y" }}
+                    {% if todo.is_overdue and not todo.is_completed %}(überfällig!){% endif %}
+                </span>
+                {% endif %}
+
+                {% if todo.completed_at %}
+                <span class="text-secondary">
+                    ✅ {{ todo.completed_at|date:"d.m.Y H:i" }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="todo-actions">
+            <button class="btn-focus-toggle {% if todo.is_focus %}is-focused{% endif %}"
+                    hx-post="{% url 'todo_toggle_focus' todo.pk %}?status={{ current_status }}&category={{ current_category }}&priority={{ current_priority }}"
+                    hx-target="#todo-content"
+                    hx-swap="outerHTML"
+                    title="{% if todo.is_focus %}Fokus entfernen{% else %}Als Fokus markieren{% endif %}">{% if todo.is_focus %}⭐{% else %}☆{% endif %}</button>
+            <a href="{% url 'todo_edit' todo.pk %}" class="link-primary" title="Bearbeiten">✏️</a>
+            <a href="{% url 'todo_delete' todo.pk %}" class="text-danger link-plain" title="Löschen">🗑️</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+{% include 'includes/pagination.html' with page_obj=page_obj %}
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <h2>Keine Aufgaben</h2>
+    <p>{% if current_status == 'completed' %}Noch keine Aufgaben erledigt.{% elif current_status == 'active' %}Keine aktiven Aufgaben.{% else %}Noch keine Aufgaben erstellt.{% endif %}</p>
+    <a href="{% url 'todo_create' %}" class="btn">➕ Erste Aufgabe erstellen</a>
+</div>
+{% endif %}
+
+</div>{# /todo-content #}

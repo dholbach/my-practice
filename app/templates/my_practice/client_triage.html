@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Triage-Übersicht – Notfallzugang{% endblock %}
+{% block page_title %}🚨 Triage-Übersicht{% endblock %}
+{% block page_subtitle %}Generiert am {{ generated_date|date:"d.m.Y" }} — Nur Metadaten (keine klinischen Inhalte){% endblock %}
+
+
+{% block content %}
+<div class="mb-6 flex gap-4 items-center">
+    <button x-data x-on:click="window.print()" class="btn btn-secondary">🖨️ Drucken</button>
+    <span class="text-sm text-text-secondary">
+        Diese Ansicht enthält ausschließlich unverschlüsselte Metadaten.
+        Klinische Inhalte sind nicht sichtbar.
+    </span>
+</div>
+
+{% for entry in triage_data %}
+<div class="section-card cn-triage-card {% if entry.has_crisis_tag_recent %}cn-triage-attention{% endif %}">
+    <div class="cn-triage-header">
+        <strong>{{ entry.client.client_code }}</strong>
+        {% if entry.has_crisis_tag_recent %}
+        <span class="cn-triage-badge cn-triage-badge-attention">Krise in letzten Sitzungen</span>
+        {% endif %}
+    </div>
+
+    {% if entry.sessions %}
+    <div class="cn-triage-sessions">
+        <div class="cn-label-small">Letzte {{ entry.sessions|length }} Sitzungen:</div>
+        {% for s in entry.sessions %}
+        <div class="cn-triage-session-row">
+            <span class="cn-session-date">{{ s.date|date:"d.m.Y" }}</span>
+            {% if s.session_type %}
+            <span class="cn-session-type">{{ s.session_type }}</span>
+            {% endif %}
+            {% for tag in s.mood_tags %}
+            <span class="cn-tag cn-tag-{{ tag }}">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-sm text-text-secondary">Noch keine Sitzungsprotokolle.</div>
+    {% endif %}
+</div>
+{% empty %}
+<div class="section-card">
+    <p class="cn-empty-state">Keine aktiven Klienten gefunden.</p>
+</div>
+{% endfor %}
+{% endblock %}

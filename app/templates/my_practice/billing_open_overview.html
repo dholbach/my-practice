@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Offene Abrechnungen{% endblock %}
+{% block page_icon %}⚠️{% endblock %}
+{% block page_title %}Offene Abrechnungen{% endblock %}
+{% block page_subtitle %}Alle Monate mit unerledigten Posten{% endblock %}
+
+{% block content %}
+
+<div class="billing-nav">
+    <a href="{% url 'monthly_billing' %}" class="btn btn-secondary btn-sm">‹ Monatsansicht</a>
+    <span class="billing-nav__month">
+        {% if total_unresolved %}
+        {{ total_unresolved }} offene{{ total_unresolved|pluralize:"r Posten,  Posten" }}
+        {% else %}
+        Alles erledigt
+        {% endif %}
+    </span>
+</div>
+
+{% if not months %}
+<div class="empty-state">
+    <p class="empty-state-msg">Keine offenen Posten.</p>
+    <p class="text-muted">Alle Sitzungen sind abgerechnet und alle Rechnungen bezahlt.</p>
+</div>
+{% else %}
+
+{% for month in months %}
+<div class="billing-open-month">
+    <div class="billing-open-month__header">
+        <a href="{% url 'monthly_billing_overview' month=month.month_str %}" class="billing-open-month__link">
+            {{ month.month_date|date:"F Y" }}
+        </a>
+        <div class="billing-summary" style="margin-bottom: 0;">
+            {% if month.summary.warning %}
+            <span class="billing-summary__chip chip-warning">⚠️ {{ month.summary.warning }} offen</span>
+            {% endif %}
+            {% if month.summary.draft %}
+            <span class="billing-summary__chip chip-draft">📄 {{ month.summary.draft }} Entwurf{{ month.summary.draft|pluralize:"e" }}</span>
+            {% endif %}
+            {% if month.summary.sent %}
+            <span class="billing-summary__chip chip-sent">📤 {{ month.summary.sent }} versendet</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <table class="data-table billing-table">
+        <thead>
+            <tr>
+                <th>Klient</th>
+                <th class="text-center">Kalender</th>
+                <th class="text-center">Sitzungen</th>
+                <th class="text-center">Abgerechnet</th>
+                <th>Rechnung</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in month.rows %}
+            <tr class="billing-row billing-row--{{ row.status }}">
+                <td class="billing-row__client">
+                    <a href="{% url 'client_detail' row.client.pk %}" class="client-link">
+                        {{ row.client.client_code }}
+                    </a>
+                </td>
+                <td class="text-center">
+                    {% if row.pending_count %}
+                    <a href="{% url 'calendar_approval_queue' %}" class="badge badge-warning" title="{{ row.pending_count }} ausstehende Termine">
+                        {{ row.pending_count }}
+                    </a>
+                    {% else %}
+                    <span class="text-muted">–</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% with total=row.billed_session_count|add:row.unbilled_count %}
+                    {% if total %}
+                    {{ total }}
+                    {% else %}
+                    <span class="text-muted">–</span>
+                    {% endif %}
+                    {% endwith %}
+                </td>
+                <td class="text-center">
+                    {% with total=row.billed_session_count|add:row.unbilled_count %}
+                    {% if total %}
+                    {% if row.unbilled_count %}
+                    <span class="text-warning fw-700">{{ row.billed_session_count }}/{{ total }}</span>
+                    {% else %}
+                    {{ row.billed_session_count }}/{{ total }}
+                    {% endif %}
+                    {% if row.cancelled_billed_count %}
+                    <span class="badge badge-danger ms-1" title="{{ row.cancelled_billed_count }} abgesagte Sitzung(en) in Rechnung">🚫{{ row.cancelled_billed_count }}</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="text-muted">–</span>
+                    {% endif %}
+                    {% endwith %}
+                </td>
+                <td>
+                    {% if row.primary_invoice %}
+                    <a href="{% url 'invoice_detail' row.primary_invoice.pk %}">
+                        {{ row.primary_invoice.invoice_number }}
+                    </a>
+                    <span class="status-badge {{ row.primary_invoice.status }}">{{ row.primary_invoice.get_status_display|upper }}</span>
+                    {% if row.invoices|length > 1 %}
+                    <span class="text-muted" title="{{ row.invoices|length }} Rechnungen">+{{ row.invoices|length|add:"-1" }}</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="text-muted">–</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="billing-status billing-status--{{ row.status }}">
+                        {{ row.status_icon }} {{ row.status_label }}
+                    </span>
+                </td>
+                <td class="billing-row__actions">
+                    <a href="{% url 'client_detail' row.client.pk %}" class="action-link" title="Klient öffnen">👤</a>
+                    {% if row.primary_invoice %}
+                    <a href="{% url 'invoice_detail' row.primary_invoice.pk %}" class="action-link" title="Rechnung öffnen">📄</a>
+                    {% if row.unbilled_sessions and row.primary_invoice.status == 'draft' %}
+                    <form method="post" action="{% url 'invoice_add_sessions' row.primary_invoice.pk %}" class="action-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        {% for session in row.unbilled_sessions %}
+                        <input type="hidden" name="session_ids" value="{{ session.pk }}">
+                        {% endfor %}
+                        <button type="submit" class="action-link action-link--button" title="{{ row.unbilled_count }} Sitzung{% if row.unbilled_count != 1 %}en{% endif %} zu {{ row.primary_invoice.invoice_number }} hinzufügen">➕</button>
+                    </form>
+                    {% elif row.cancelled_billed_count %}
+                    <a href="{% url 'invoice_edit' row.primary_invoice.pk %}" class="action-link" title="Rechnung bearbeiten">✏️</a>
+                    {% endif %}
+                    {% else %}
+                    {% if row.unbilled_sessions %}
+                    <form method="post" action="{% url 'invoice_create_with_sessions' %}" class="action-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="client_id" value="{{ row.client.pk }}">
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        {% for session in row.unbilled_sessions %}
+                        <input type="hidden" name="session_ids" value="{{ session.pk }}">
+                        {% endfor %}
+                        <button type="submit" class="action-link action-link--button" title="Entwurf mit {{ row.unbilled_count }} Sitzung{% if row.unbilled_count != 1 %}en{% endif %} erstellen">➕</button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'invoice_create' %}?client={{ row.client.pk }}" class="action-link" title="Entwurf erstellen">➕</a>
+                    {% endif %}
+                    {% endif %}
+                    {% if row.primary_invoice and row.primary_invoice.status == 'sent' %}
+                    <form method="post" action="{% url 'update_invoice_status' row.primary_invoice.pk %}" class="action-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="written_off">
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button type="submit" class="action-link action-link--button"
+                                title="Rechnung abschreiben"
+                                x-data x-on:click="confirm('Rechnung {{ row.primary_invoice.invoice_number }} abschreiben?') || $event.preventDefault()">✍️</button>
+                    </form>
+                    {% endif %}
+                    {% if row.pending_count %}
+                    <a href="{% url 'calendar_approval_queue' %}" class="action-link" title="Kalender prüfen">📅</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,139 @@
+[tool.vulture]
+# Exclude patterns
+exclude = [
+    "*/migrations/*",
+    "*/__pycache__/*",
+    ".venv/*",
+    "venv/*",
+    "env/*",
+]
+
+# Ignore Django-specific patterns
+ignore_names = [
+    # Django settings
+    "*SECRET_KEY*",
+    "*ALLOWED_HOSTS*",
+    "*INSTALLED_APPS*",
+    "*MIDDLEWARE*",
+    "*ROOT_URLCONF*",
+    "*TEMPLATES*",
+    "*WSGI_APPLICATION*",
+    "*DATABASES*",
+    "*AUTH_PASSWORD_VALIDATORS*",
+    "*LANGUAGE_CODE*",
+    "*TIME_ZONE*",
+    "*USE_I18N*",
+    "*USE_TZ*",
+    "*STATIC_*",
+    "*STORAGES*",
+    "*DEFAULT_AUTO_FIELD*",
+    "*LOGGING*",
+    "*EMAIL_*",
+    "*DEFAULT_FROM_EMAIL*",
+
+    # Django WSGI/ASGI
+    "application",
+
+    # Django Admin attributes
+    "list_display",
+    "list_filter",
+    "search_fields",
+    "readonly_fields",
+    "fieldsets",
+    "ordering",
+    "date_hierarchy",
+    "inlines",
+    "short_description",
+    "site_header",
+    "site_title",
+    "index_title",
+
+    # Django Model Meta
+    "verbose_name",
+    "verbose_name_plural",
+    "unique_together",
+    "indexes",
+    "Meta",
+
+    # Django Forms
+    "widgets",
+    "labels",
+
+    # Django Views
+    "model",
+    "form_class",
+    "context_object_name",
+    "paginate_by",
+
+    # Django Management Commands
+    "help",
+    "add_arguments",
+    "handle",
+
+    # Django URLs
+    "urlpatterns",
+
+    # Django Migrations
+    "dependencies",
+    "operations",
+
+    # Django Apps
+    "default_auto_field",
+
+    # Django Middleware
+    "process_response",
+
+    # Framework-required callback parameters (not used but required by API)
+    "server",  # Gunicorn callbacks (on_starting, on_reload, when_ready)
+    "sender",  # Django signal handlers (required by @receiver decorator)
+    "db",      # pytest fixtures (required for database access in tests)
+
+    # Model fields (accessed via ORM)
+    "created_at",
+    "updated_at",
+]
+
+# Minimum confidence level (0-100)
+# Higher = fewer false positives
+min_confidence = 80
+
+# Paths to check
+paths = ["app"]
+
+[tool.pytest.ini_options]
+# pytest-django: point at Django settings
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["."]
+testpaths = ["my_practice/tests"]
+addopts = "--tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "env",
+    "__pycache__",
+    ".pytest_cache",
+    "*/migrations/*",
+]
+
+[tool.ruff.lint]
+select = [
+    "E4",    # pycodestyle errors (imports)
+    "E7",    # pycodestyle errors (statements)
+    "E9",    # pycodestyle errors (runtime)
+    "F",     # pyflakes
+    "PERF",  # perflint — performance anti-patterns
+]
+# PERF203: try-except-in-loop overhead warning — acceptable in Django views/management commands
+# UP034: "extraneous parentheses" — ruff lint counterpart to the formatter bug below; kept in
+#        ignore as belt-and-suspenders even though UP is not in `select`.
+ignore = ["PERF203", "UP034"]
+
+# Python 3.14 introduced bracketless multi-exception syntax (`except A, B:`)
+# as equivalent to `except (A, B):` — see https://github.com/astral-sh/ruff/issues/23090
+# ruff format normalises to the bracketless form for target-version = "py314", which
+# is correct. No `# fmt: skip` workarounds needed; the old ones have been removed.

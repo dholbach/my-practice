@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}TODO löschen{% endblock %}
+
+{% block page_icon %}🗑️{% endblock %}
+{% block page_title %}TODO löschen{% endblock %}
+
+{% block content %}
+<div class="confirm-delete">
+    <div class="warning-box">
+        <h2>⚠️ Wirklich löschen?</h2>
+        <p>Möchten Sie diese Aufgabe wirklich löschen?</p>
+
+        <div class="object-details">
+            <h3>{{ object.title }}</h3>
+            {% if object.description %}
+            <p class="text-secondary mt-1">{{ object.description|linebreaks }}</p>
+            {% endif %}
+            <div class="helptext mt-2">
+                <span class="badge">{{ object.get_category_display }}</span>
+                <span class="badge">{{ object.get_priority_display }}</span>
+                {% if object.due_date %}
+                <span>📅 {{ object.due_date|date:"d.m.Y" }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">🗑️ Ja, löschen</button>
+            <a href="{% url 'todo_list' %}" class="btn btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

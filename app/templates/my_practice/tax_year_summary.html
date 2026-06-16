@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Steuer-Jahresübersicht {{ year }}{% endblock %}
+
+{% block page_title %}Steuer-Jahresübersicht{% endblock %}
+{% block page_subtitle %}Übersicht für Steuererklärung{% endblock %}
+
+{% block content %}
+<div class="tax-summary-container">
+    <!-- Cross-link -->
+    <div class="tax-nav-link-wrap">
+        <a href="{% url 'tax_quarter_overview' %}?year={{ year }}" class="tax-nav-link">
+            📊 → Steuer-Quartalübersicht (Vorauszahlungen)
+        </a>
+        &nbsp;·&nbsp;
+        <a href="{% url 'tax_workday_audit' %}?year={{ year }}" class="tax-nav-link">
+            📋 → Arbeitstage-Nachweis {{ year }}
+        </a>
+    </div>
+    <!-- Year Selector -->
+    <div class="year-selector">
+        <form method="get">
+            <label for="year">Jahr:</label>
+            <select name="year" id="year" x-data x-on:change="$el.form.submit()">
+                {% for y in available_years %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="stat-card success">
+            <h3>Gesamtumsatz</h3>
+            <div class="value">{{ total_revenue|currency }}</div>
+        </div>
+        <div class="stat-card warning">
+            <h3>Steuerlich absetzbare Ausgaben</h3>
+            <div class="value">{{ total_expenses|currency }}</div>
+        </div>
+        <div class="stat-card primary">
+            <h3>Gewinn</h3>
+            <div class="value">{{ gross_profit|currency }}</div>
+        </div>
+    </div>
+
+    {% if practice_split %}
+    <div class="allocation-note">
+        <h3>Pauschalen-Aufteilung bei mehreren Tätigkeiten ({{ active_practice_count }} Praxen)</h3>
+        <p>
+            Home-Office- und Entfernungspauschale dürfen pro Kalendertag nur einmal angesetzt werden.
+            Die Tabelle zeigt den berechneten Anteil dieser Praxis für {{ year }}:
+        </p>
+        <table class="data-table allocation-split-table">
+            <thead>
+                <tr>
+                    <th>Aufteilungs&shy;schlüssel</th>
+                    <th class="text-right">Anteil</th>
+                    <th class="text-right">HO-Pauschale</th>
+                    <th class="text-right">Pendler-Pauschale</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Einnahmen ({{ practice_split.this_revenue|currency }} / {{ practice_split.total_revenue_all|currency }} gesamt)</td>
+                    <td class="text-right">{{ revenue_share_pct }} %</td>
+                    <td class="text-right">{{ home_office_split_revenue|currency }}</td>
+                    <td class="text-right">{{ fahrtkosten_split_revenue|currency }}</td>
+                </tr>
+                <tr>
+                    <td>Sitzungstage ({{ practice_split.this_session_days }} / {{ practice_split.total_session_days_all }} gesamt)</td>
+                    <td class="text-right">{{ session_share_pct }} %</td>
+                    <td class="text-right">{{ home_office_split_sessions|currency }}</td>
+                    <td class="text-right">{{ fahrtkosten_split_sessions|currency }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="allocation-note__footer">
+            Einen Schlüssel wählen, dokumentieren und konsistent für alle Praxen verwenden.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Revenue Section -->
+    <div class="section-card">
+        <h2>💰 Umsätze ({{ year }})</h2>
+        <p class="section-subtitle">
+            {{ invoice_count }} Rechnungen • {{ total_revenue|currency }}
+        </p>
+
+        <!-- Monthly Breakdown -->
+        {% if monthly_revenue %}
+        <div class="subsection">
+            <h3>Monatliche Aufschlüsselung</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Monat</th>
+                        <th class="text-right">Anzahl</th>
+                        <th class="text-right">Betrag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for month in monthly_revenue %}
+                    <tr>
+                        <td>{{ month.month }}</td>
+                        <td class="text-right">{{ month.count }}</td>
+                        <td class="text-right">{{ month.amount|currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Invoice List -->
+        <details>
+            <summary>Alle Rechnungen anzeigen ({{ invoice_count }})</summary>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Rechnungsnr.</th>
+                        <th>Klient</th>
+                        <th>Rechnungsdatum</th>
+                        <th>Bezahlt am</th>
+                        <th class="text-right">Betrag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in paid_invoices %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'invoice_detail' invoice.id %}">{{ invoice.invoice_number }}</a>
+                        </td>
+                        <td class="sensitive-data">{{ invoice.client.full_name }}</td>
+                        <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                        <td>{{ invoice.paid_date|date:"d.m.Y"|default:"–" }}</td>
+                        <td class="text-right">{{ invoice.total|currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </details>
+    </div>
+
+    <!-- Expenses Section -->
+    <div class="section-card">
+        <h2>📊 Steuerlich absetzbare Ausgaben ({{ year }})</h2>
+        <p class="section-subtitle">
+            {{ expense_count }} Ausgaben • {{ total_expenses|currency }}
+        </p>
+
+        <!-- Category Breakdown -->
+        {% if expense_by_category %}
+        <div class="subsection">
+            <h3>Nach Kategorie</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Kategorie</th>
+                        <th class="text-right">Anzahl</th>
+                        <th class="text-right">Betrag</th>
+                        <th class="text-right">%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in expense_by_category %}
+                    <tr>
+                        <td>{{ item.category_name }}</td>
+                        <td class="text-right">{{ item.count }}</td>
+                        <td class="text-right">{{ item.total|currency }}</td>
+                        <td class="text-right">{{ item.total|percentage:total_expenses }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Expense List -->
+        <details{% if expense_sort == "se" %} open{% endif %}>
+            <summary>Alle Ausgaben anzeigen ({{ expense_count }})</summary>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Beschreibung</th>
+                        <th>Kategorie</th>
+                        <th class="text-center">Rechnung</th>
+                        <th class="text-center">
+                            {% if expense_sort == "se" %}
+                            <a href="?year={{ year }}" title="Sortierung aufheben">SE ↓</a>
+                            {% else %}
+                            <a href="?year={{ year }}&sort=se" title="Nach Steuererklärung sortieren">SE</a>
+                            {% endif %}
+                        </th>
+                        <th class="text-right">Betrag</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td>{{ expense.date|date:"d.m.Y" }}</td>
+                        <td>{{ expense.description }}</td>
+                        <td>{{ expense.get_category_display }}</td>
+                        <td class="text-center">{% if expense.has_invoice %}✓{% else %}–{% endif %}</td>
+                        <td class="text-center">{% if expense.is_filed_in_tax_return %}✓{% else %}–{% endif %}</td>
+                        <td class="text-right">{{ expense.amount|currency }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'expense_update' expense.pk %}?next={{ request.get_full_path|urlencode }}"
+                               title="Bearbeiten">✎</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </details>
+    </div>
+
+    <!-- Fahrtkosten Section (P-027) -->
+    {% if fahrtkosten and fahrtkosten.is_configured %}
+    <div class="section-card">
+        <h2>🚗 Fahrtkosten — Entfernungspauschale ({{ year }})</h2>
+        <p class="section-subtitle">
+            {{ fahrtkosten.session_days }} Sitzungstage à {{ fahrtkosten.distance_km }} km —
+            <strong>{{ fahrtkosten.deduction_total|currency }} absetzbar</strong>
+        </p>
+        <details>
+            <summary>Details anzeigen</summary>
+            <div class="tax-details-block">
+                <table class="data-table">
+                    <tbody>
+                        <tr>
+                            <td>Konfigurierte Praxistage</td>
+                            <td>
+                                {% for wd in fahrtkosten.configured_weekdays %}
+                                <span class="tag">{{ wd|weekday_name }}</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tage mit Sitzungen in {{ year }}</td>
+                            <td><strong>{{ fahrtkosten.session_days }}</strong></td>
+                        </tr>
+                        <tr class="muted-row">
+                            <td>Kalenderbasiert (Wochentage − Feiertage − Urlaub)</td>
+                            <td>{{ fahrtkosten.practice_days }}</td>
+                        </tr>
+                        <tr><td colspan="2"><hr></td></tr>
+                        <tr>
+                            <td>Entfernung (einfach)</td>
+                            <td>{{ fahrtkosten.distance_km }} km</td>
+                        </tr>
+                        <tr>
+                            <td>Erste 20 km × 0,30 € × {{ fahrtkosten.session_days }} Tage</td>
+                            <td>{{ fahrtkosten.deduction_first_20_km|currency }}</td>
+                        </tr>
+                        {% if fahrtkosten.distance_km > 20 %}
+                        <tr>
+                            <td>Ab km 21 ({{ fahrtkosten.distance_km|add:"-20" }} km) × 0,38 € × {{ fahrtkosten.session_days }} Tage</td>
+                            <td>{{ fahrtkosten.deduction_above_20_km|currency }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="total-row">
+                            <td><strong>Entfernungspauschale gesamt</strong></td>
+                            <td><strong>{{ fahrtkosten.deduction_total|currency }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="help-text compact-help">
+                    § 9 Abs. 1 Nr. 4 EStG. Als Betriebsausgabe in der Einnahmenüberschussrechnung eintragen.
+                </p>
+                <a href="{% url 'practice_edit' request.current_practice.slug %}" class="settings-link">
+                    Entfernung / Praxistage anpassen ↗
+                </a>
+            </div>
+        </details>
+    </div>
+    {% elif fahrtkosten %}
+    <div class="section-card">
+        <h2>🚗 Fahrtkosten — Entfernungspauschale</h2>
+        <p class="section-subtitle">
+            Noch nicht konfiguriert.
+            <a href="{% url 'practice_edit' request.current_practice.slug %}">Entfernung und Praxistage in den Praxiseinstellungen hinterlegen ↗</a>
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Home-Office Section -->
+    {% if home_office and home_office.is_configured %}
+    <div class="section-card">
+        <h2>🏠 Home-Office-Pauschale ({{ year }})</h2>
+        <p class="section-subtitle">
+            {{ home_office.home_office_days }} Home-Office-Tage
+            {% if home_office.home_office_days > home_office.capped_days %}
+            (davon {{ home_office.capped_days }} berücksichtigt)
+            {% endif %}
+            — <strong>{{ home_office.deduction_total|currency }} absetzbar</strong>
+        </p>
+        <details>
+            <summary>Details anzeigen</summary>
+            <div class="tax-details-block">
+                <table class="data-table">
+                    <tbody>
+                        <tr>
+                            <td>Konfigurierte Praxistage</td>
+                            <td>
+                                {% for wd in home_office.configured_practice_weekdays %}
+                                <span class="tag">{{ wd|weekday_name }}</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Home-Office-Wochentage (nicht Praxis)</td>
+                            <td>
+                                {% for wd in home_office.home_office_weekdays %}
+                                <span class="tag">{{ wd|weekday_name }}</span>
+                                {% empty %}
+                                <span class="tag">Keine</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        <tr class="muted-row">
+                            <td>Kalenderbasiert (Wochentage − Feiertage − Urlaub)</td>
+                            <td>{{ home_office.home_office_days }}</td>
+                        </tr>
+                        <tr>
+                            <td>Pauschale: {{ home_office.capped_days }} Tage × 6,00 €</td>
+                            <td>{{ home_office.deduction_total|currency }}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Home-Office-Pauschale gesamt</strong></td>
+                            <td><strong>{{ home_office.deduction_total|currency }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="help-text compact-help">
+                    Als Betriebsausgabe in der EÜR erfassen (Home-Office-Pauschale).
+                </p>
+            </div>
+        </details>
+    </div>
+    {% endif %}
+
+    <!-- Summary Box -->
+    <div class="section-card summary-box">
+        <h2>✅ Zusammenfassung {{ year }}</h2>
+        <table class="summary-table">
+            <tr>
+                <td class="label">Gesamtumsatz</td>
+                <td class="value">{{ total_revenue|currency }}</td>
+            </tr>
+            <tr>
+                <td class="label">Abzgl. steuerlich absetzbare Ausgaben</td>
+                <td class="value warning-color">{{ total_expenses|currency }}</td>
+            </tr>
+            {% if fahrtkosten_deduction %}
+            <tr>
+                <td class="label">Abzgl. Fahrtkosten (Entfernungspauschale)</td>
+                <td class="value warning-color">{{ fahrtkosten_deduction|currency }}</td>
+            </tr>
+            {% endif %}
+            {% if home_office_deduction %}
+            <tr>
+                <td class="label">Abzgl. Home-Office-Pauschale</td>
+                <td class="value warning-color">{{ home_office_deduction|currency }}</td>
+            </tr>
+            {% endif %}
+            <tr class="total-row">
+                <td class="label"><strong>= Gewinn</strong></td>
+                <td class="value final">{{ gross_profit|currency }}</td>
+            </tr>
+        </table>
+
+        <!-- Allocation note widget -->
+        <div class="tax-note-widget" data-save-url="{% url 'save_tax_year_note' %}" data-year="{{ year }}">
+            <label class="tax-note-widget__label" for="tax-note-textarea">
+                📝 Aufteilungsnotiz (z. B. verwendeter Schlüssel für Pauschalen-Aufteilung)
+            </label>
+            <textarea id="tax-note-textarea"
+                      class="tax-note-widget__textarea"
+                      placeholder="z. B. Einnahmenanteil Therapie 95 % / Coaching 5 % für {{ year }}">{{ tax_year_note.allocation_note|default:"" }}</textarea>
+            <div class="tax-note-widget__actions">
+                <button type="button" class="tax-note-widget__btn" id="tax-note-save-btn">Notiz speichern</button>
+                <span class="tax-note-widget__status" id="tax-note-status">
+                    {% if tax_year_note %}Zuletzt gespeichert: {{ tax_year_note.updated_at|date:"d.m.Y H:i" }}{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Audit link -->
+        <div class="audit-link-row">
+            <a href="{% url 'tax_workday_audit' %}?year={{ year }}">📋 Arbeitstage-Nachweis {{ year }} (druckbare Audit-Liste)</a>
+        </div>
+    </div>
+
+    <!-- Export Tip -->
+    <div class="info-tip">
+        <p>
+            💡 <strong>Tipp:</strong> Verwende <kbd>Strg+P</kbd> (oder <kbd>Cmd+P</kbd>) um diese Seite als PDF zu drucken
+        </p>
+    </div>
+</div>
+
+<script>
+(function () {
+    const widget = document.querySelector('.tax-note-widget');
+    if (!widget) return;
+    const btn = document.getElementById('tax-note-save-btn');
+    const status = document.getElementById('tax-note-status');
+    const textarea = document.getElementById('tax-note-textarea');
+
+    btn.addEventListener('click', function () {
+        const body = new URLSearchParams();
+        body.append('year', widget.dataset.year);
+        body.append('note', textarea.value);
+        body.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        btn.disabled = true;
+        status.textContent = 'Speichern\u2026';
+
+        fetch(widget.dataset.saveUrl, {method: 'POST', body: body})
+            .then(r => r.json())
+            .then(data => {
+                if (data.saved) {
+                    status.textContent = 'Gespeichert: ' + data.updated_at;
+                } else {
+                    status.textContent = 'Fehler beim Speichern.';
+                }
+            })
+            .catch(() => { status.textContent = 'Netzwerkfehler.'; })
+            .finally(() => { btn.disabled = false; });
+    });
+})();
+</script>
+{% endblock %}

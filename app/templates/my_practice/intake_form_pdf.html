@@ -1,0 +1,211 @@
+{% load payment_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% if lang == "en" %}Intake Form{% else %}Aufnahmebogen{% endif %} – {{ client.client_code }}</title>
+    <style>
+        {% include 'my_practice/invoice_pdf_base.css' %}
+
+        body {
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+
+        .doc-title {
+            text-align: center;
+            margin-top: 0.6cm;
+            margin-bottom: 0.8cm;
+        }
+        .doc-title h1 {
+            font-size: 13pt;
+            font-weight: bold;
+            margin: 0;
+        }
+        .doc-title .subtitle {
+            font-size: 9pt;
+            color: #555;
+            margin-top: 0.15cm;
+        }
+
+        .section {
+            margin-bottom: 0.5cm;
+        }
+        .section-heading {
+            font-size: 10pt;
+            font-weight: bold;
+            border-bottom: 1.5px solid #333;
+            padding-bottom: 0.1cm;
+            margin-bottom: 0.3cm;
+        }
+
+        .field-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 0.25cm;
+        }
+        .field-label {
+            display: table-cell;
+            width: 4.5cm;
+            font-size: 9pt;
+            color: #444;
+            vertical-align: bottom;
+            padding-right: 0.3cm;
+        }
+        .field-value {
+            display: table-cell;
+            font-size: 12pt;
+            border-bottom: 1px solid #000;
+            vertical-align: bottom;
+            padding-bottom: 1pt;
+            min-width: 8cm;
+        }
+        .field-value.blank {
+            color: transparent;  /* keep the underline but show blank */
+        }
+        .field-value.filled {
+            font-weight: normal;
+        }
+
+        .two-col {
+            display: table;
+            width: 100%;
+        }
+        .col {
+            display: table-cell;
+            width: 50%;
+            padding-right: 0.5cm;
+        }
+        .col:last-child {
+            padding-right: 0;
+        }
+
+        .checkbox-row {
+            margin: 0.2cm 0;
+            font-size: 9.5pt;
+        }
+        .checkbox {
+            display: inline-block;
+            width: 0.35cm;
+            height: 0.35cm;
+            border: 1px solid #000;
+            margin-right: 0.25cm;
+            vertical-align: middle;
+        }
+
+        .signature-block {
+            margin-top: 1cm;
+        }
+        .sig-row {
+            display: table;
+            width: 100%;
+        }
+        .sig-cell {
+            display: table-cell;
+            width: 48%;
+            padding-right: 2%;
+            vertical-align: bottom;
+        }
+        .sig-cell:last-child {
+            padding-right: 0;
+            padding-left: 2%;
+        }
+        .sig-line {
+            border-bottom: 1px solid #000;
+            height: 0.8cm;
+            margin-bottom: 0.1cm;
+        }
+        .sig-label {
+            font-size: 8pt;
+            color: #555;
+        }
+
+        .note {
+            font-size: 8.5pt;
+            color: #555;
+            margin-top: 0.3cm;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Practice header -->
+    <div class="header">
+        {% if logo_data %}
+        <img src="data:image/png;base64,{{ logo_data }}" class="logo" alt="Logo">
+        {% endif %}
+        <div class="practice-info">
+            {{ practice.title }}<br>
+            {{ practice.name }}<br>
+            {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
+            E-Mail: {{ practice.email }}
+        </div>
+    </div>
+    <div class="header-space">&nbsp;</div>
+
+    <!-- Title -->
+    <div class="doc-title">
+        {% if lang == "en" %}
+        <h1>Intake Form</h1>
+        {% else %}
+        <h1>Aufnahmebogen</h1>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <div class="field-row">
+            <div class="field-label">{% if lang == "en" %}Surname, first name{% else %}Name, Vorname{% endif %}</div>
+            <div class="field-value filled">{{ client.full_name }}</div>
+        </div>
+
+        <div class="field-row">
+            <div class="field-label">{% if lang == "en" %}Date of Birth{% else %}Geburtsdatum{% endif %}</div>
+            <div class="field-value filled">{% if client.date_of_birth %}{{ client.date_of_birth|date:"d.m.Y" }}{% else %}&nbsp;{% endif %}</div>
+        </div>
+
+        <div class="field-row">
+            <div class="field-label">{% if lang == "en" %}Address{% else %}Anschrift{% endif %}</div>
+            <div class="field-value filled">{% if client.address %}{{ client.address }}{% else %}&nbsp;{% endif %}</div>
+        </div>
+
+        <div class="field-row">
+            <div class="field-label">{% if lang == "en" %}Zip Code, City{% else %}PLZ, Wohnort{% endif %}</div>
+            <div class="field-value blank">&nbsp;</div>
+        </div>
+
+        <div class="field-row">
+            <div class="field-label">E-Mail</div>
+            <div class="field-value filled">{% if client.email %}{{ client.email }}{% else %}&nbsp;{% endif %}</div>
+        </div>
+
+        <div class="field-row">
+            <div class="field-label">{% if lang == "en" %}Telephone number{% else %}Telefonnummer{% endif %}</div>
+            <div class="field-value filled">{% if client.phone %}{{ client.phone }}{% else %}&nbsp;{% endif %}</div>
+        </div>
+
+        <div class="field-row">
+            <div class="field-label">{% if lang == "en" %}Cost carrier{% else %}Kostenträger{% endif %}</div>
+            <div class="field-value filled">{% if client.cost_carrier %}{{ client.cost_carrier }}{% else %}&nbsp;{% endif %}</div>
+        </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature-block" style="margin-top: 2cm;">
+        <div class="sig-row">
+            <div class="sig-cell">
+                <div class="sig-line"></div>
+                <div class="sig-label">{% if lang == "en" %}(Place, Date){% else %}(Ort, Datum){% endif %}</div>
+            </div>
+            <div class="sig-cell">&nbsp;</div>
+        </div>
+        <div class="sig-row" style="margin-top: 1cm;">
+            <div class="sig-cell">
+                <div class="sig-line"></div>
+                <div class="sig-label">{% if lang == "en" %}(Signature Patient){% else %}(Unterschrift Patient/in){% endif %}</div>
+            </div>
+            <div class="sig-cell">&nbsp;</div>
+        </div>
+    </div>
+
+</body>
+</html>

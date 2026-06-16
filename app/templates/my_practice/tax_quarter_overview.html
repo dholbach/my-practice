@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Steuer-Quartalsübersicht {{ year }}{% endblock %}
+
+{% block page_title %}Steuer-Quartalsübersicht{% endblock %}
+{% block page_subtitle %}Vorauszahlungen & Umsatz je Quartal{% endblock %}
+
+{% block content %}
+<div class="tax-summary-container">
+
+    <!-- Cross-link -->
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'tax_year_summary' %}?year={{ year }}"
+           class="text-sm text-secondary link-plain">
+            📋 → Steuer-Jahresübersicht (für Steuererklärung)
+        </a>
+    </div>
+
+    <!-- Year Selector -->
+    <div class="year-selector" style="margin-bottom: 1.5rem;">
+        <form method="get">
+            <label for="year">Jahr:</label>
+            <select name="year" id="year" x-data x-on:change="$el.form.submit()">
+                {% for y in available_years %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards" style="margin-bottom: 1.5rem;">
+        <div class="stat-card success">
+            <h3>Gesamtumsatz</h3>
+            <div class="value">{{ total_revenue|currency }}</div>
+            <div class="label">{{ year }}</div>
+        </div>
+        <div class="stat-card warning">
+            <h3>Absetzbare Ausgaben</h3>
+            <div class="value">{{ total_expenses|currency }}</div>
+            <div class="label">{{ year }}</div>
+        </div>
+        <div class="stat-card primary">
+            <h3>Steuervorauszahlungen</h3>
+            <div class="value">{{ total_tax_paid|currency }}</div>
+            <div class="label">{{ year }}</div>
+        </div>
+    </div>
+
+    <!-- Batch PDF download -->
+    <form method="post" action="{% url 'invoice_batch_download' %}" style="display: inline-block; margin-bottom: 1rem;">
+        {% csrf_token %}
+        <input type="hidden" name="year" value="{{ year }}">
+        <input type="hidden" name="status" value="paid">
+        <button type="submit" class="btn btn-secondary">
+            📥 Bezahlte Rechnungen {{ year }} herunterladen (ZIP)
+        </button>
+    </form>
+
+    <!-- Add Payment CTA -->
+    <a href="{{ add_payment_url }}" class="add-payment-btn">
+        + Neue Steuervorauszahlung erfassen
+    </a>
+
+    <!-- Quarterly Table -->
+    <div class="section-card">
+        <h2>📊 Quartalszahlen {{ year }}</h2>
+
+        <table class="quarter-table">
+            <thead>
+                <tr>
+                    <th>Quartal</th>
+                    <th>Zeitraum</th>
+                    <th class="text-right">Umsatz</th>
+                    <th class="text-right">Ausgaben</th>
+                    <th class="text-right">Nettogewinn</th>
+                    <th class="text-right">Vorauszahlung</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in quarters %}
+                <tr class="{% if q.needs_attention %}quarter-row--attention{% elif q.is_current %}quarter-row--current{% endif %}">
+                    <td>
+                        <strong>{{ q.label }}</strong>
+                        {% if q.is_current %}<span class="text-xs text-secondary"> (aktuell)</span>{% endif %}
+                    </td>
+                    <td class="text-sm text-secondary">
+                        {{ q.start|date:"d.m." }} – {{ q.end|date:"d.m.Y" }}
+                    </td>
+                    <td class="text-right">{{ q.revenue|currency }}</td>
+                    <td class="text-right">{{ q.expenses|currency }}</td>
+                    <td class="text-right">{{ q.net_profit|currency }}</td>
+                    <td class="text-right">
+                        {% if q.tax_paid %}
+                            {{ q.tax_paid|currency }}
+                            <ul class="withdrawal-list">
+                                {% for w in q.tax_withdrawals %}
+                                <li>{{ w.date|date:"d.m." }}: {{ w.amount|currency }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <span class="text-secondary">–</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if q.needs_attention %}
+                            <span class="badge--warn">⚠️ Fehlt</span>
+                        {% elif q.tax_paid %}
+                            <span class="badge--ok">✅ Erfasst</span>
+                        {% elif q.revenue == 0 %}
+                            <span class="badge--neutral">kein Umsatz</span>
+                        {% else %}
+                            <span class="badge--neutral">ausstehend</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="totals-row">
+                    <td colspan="2"><strong>Gesamt {{ year }}</strong></td>
+                    <td class="text-right">{{ total_revenue|currency }}</td>
+                    <td class="text-right">{{ total_expenses|currency }}</td>
+                    <td class="text-right">{{ total_net_profit|currency }}</td>
+                    <td class="text-right">{{ total_tax_paid|currency }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

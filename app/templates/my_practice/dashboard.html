@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load number_filters %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Übersicht{% endblock %}
+
+{% block page_icon %}📊{% endblock %}
+{% block page_title %}Übersicht{% endblock %}
+{% block page_subtitle %}Übersicht & Statistiken{% endblock %}
+
+
+
+{% block content %}
+<!-- Heute & Diese Woche 2-col grid (P-028) -->
+<div class="today-week-grid">
+{% with widget_content=agenda_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="agenda" widget_title="📅 Heute" widget_badge=agenda_badge_html %}
+{% endwith %}
+{% with widget_content=weekly_focus_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title="📆 Diese Woche" widget_badge=weekly_focus_badge %}
+{% endwith %}
+</div>
+
+<!-- Bank Import Reminder Widget (P-012) -->
+{% if bank_import_show_reminder %}
+{% with widget_content=bank_import_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="bank_import" widget_title="🏦 Bank Import" widget_badge=bank_import_badge %}
+{% endwith %}
+{% endif %}
+
+<!-- Operational Checklist Widget (P-012) -->
+{% with widget_content=checklist_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="checklist" widget_title="📋 Operative Checklisten" widget_badge=checklist_badge default_collapsed=True %}
+{% endwith %}
+
+<!-- Client Attention Widget (P-003 Phase 4) -->
+{% with widget_content=client_attention_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="client_attention" widget_title="👥 Klienten Aufmerksamkeit" widget_badge=client_attention_badge default_collapsed=True %}
+{% endwith %}
+
+<!-- Invoice Actions Widget (P-003 Phase 4) -->
+{% with widget_content=invoice_actions_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="invoice_actions" widget_title="💰 Rechnungs-Aktionen" widget_badge=invoice_actions_badge %}
+{% endwith %}
+
+<!-- Tax Quarter Widget (P-013 Phase 2) -->
+{% with widget_content=tax_quarter_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="tax_quarter" widget_title="📊 Steuervorauszahlung" widget_badge=tax_quarter_badge default_collapsed=True %}
+{% endwith %}
+
+<!-- Capacity Monitoring Widget (P-013 Phase 3) -->
+{% if capacity_show_widget %}
+{% with widget_content=capacity_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="capacity_monitoring" widget_title="📈 Kapazitäts-Monitoring" widget_badge=capacity_badge %}
+{% endwith %}
+{% endif %}
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <h3>💰 Gesamtumsatz</h3>
+        <div class="value">{{ total_revenue|floatformat:0 }}&nbsp;€</div>
+        <div class="label">{{ total_invoices }} Rechnungen (gesamt)</div>
+    </div>
+
+    <div class="stat-card secondary">
+        <h3>📅 {{ current_year }} Umsatz</h3>
+        <div class="value">{{ year_revenue|floatformat:0 }}&nbsp;€</div>
+        <div class="label">{{ year_count }} Rechnungen bezahlt</div>
+    </div>
+
+    <div class="stat-card success">
+        <h3>💚 {{ current_year }} Gewinn</h3>
+        <div class="value">{{ year_profit|floatformat:0 }}&nbsp;€</div>
+        <div class="label">Umsatz - Ausgaben</div>
+    </div>
+
+    <div class="stat-card warning">
+        <h3>⏳ Offen</h3>
+        <div class="value">{{ unpaid_value|floatformat:0 }}&nbsp;€</div>
+        <div class="label">{{ unpaid_count }} Rechnungen versendet</div>
+    </div>
+
+    <div class="stat-card neutral">
+        <h3>🏖️ Urlaub {{ current_year }}</h3>
+        <div class="value">{{ total_weeks_off|floatformat:1 }} Wochen</div>
+        <div class="label">{{ total_workdays_off }} Arbeitstage frei</div>
+        {% if current_timeoff %}
+            <div class="stat-hint stat-hint--green">
+                ● Aktuell: {{ current_timeoff.title }}
+            </div>
+        {% elif upcoming_timeoff %}
+            <div class="stat-hint stat-hint--purple">
+                📅 Nächster: {{ upcoming_timeoff.title }} ({{ upcoming_timeoff.start_date|date:"d.m." }})
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if practice_stats %}
+<!-- Multi-Practice Overview -->
+<div class="mp-overview">
+    <h3 class="mp-overview-header">
+        <span>🏥 Praxen-Übersicht {{ current_year }}</span>
+        <a href="{% url 'practice_management' %}">
+            ⚙️ Verwalten
+        </a>
+    </h3>
+    <div class="mp-grid">
+        {% for stat in practice_stats %}
+        {% if stat.is_current %}
+        <div class="mp-card mp-card--active">
+        {% else %}
+        <a href="{% url 'practice_switch' stat.practice.slug %}" class="mp-card">
+        {% endif %}
+            <div class="mp-card-header">
+                <strong>{{ stat.practice.name }}</strong>
+                {% if stat.is_current %}
+                <span class="mp-card-badge">✓ Aktiv</span>
+                {% endif %}
+            </div>
+            <div class="mp-card-subtitle">
+                {{ stat.practice.title }}
+            </div>
+            <div class="mp-card-stats">
+                <div>
+                    <div class="mp-card-revenue">{{ stat.revenue|floatformat:0 }}&nbsp;€</div>
+                    <div class="mp-card-invoice-count">
+                        {{ stat.invoice_count }} Rechnung{{ stat.invoice_count|pluralize:"en" }}
+                    </div>
+                </div>
+                {% if not stat.is_current %}
+                <div class="mp-card-switch">Wechseln →</div>
+                {% endif %}
+            </div>
+        {% if stat.is_current %}</div>{% else %}</a>{% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="section">
+    <h2>📊 Status-Übersicht (All-Time)</h2>
+    <div class="status-grid">
+        <div class="status-card draft">
+            <h4>Entwurf</h4>
+            <div class="count">{{ status_stats.draft.count|default:0 }}</div>
+            <div class="amount">{{ status_stats.draft.total|default:0|currency }}</div>
+        </div>
+        <div class="status-card sent">
+            <h4>Versendet</h4>
+            <div class="count">{{ status_stats.sent.count|default:0 }}</div>
+            <div class="amount">{{ status_stats.sent.total|default:0|currency }}</div>
+        </div>
+        <div class="status-card paid">
+            <h4>Bezahlt</h4>
+            <div class="count">{{ status_stats.paid.count|default:0 }}</div>
+            <div class="amount">{{ status_stats.paid.total|default:0|currency }}</div>
+        </div>
+        <div class="status-card cancelled">
+            <h4>Storniert</h4>
+            <div class="count">{{ status_stats.cancelled.count|default:0 }}</div>
+            <div class="amount">{{ status_stats.cancelled.total|default:0|currency }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📈 Monatlicher Umsatz (letzte 12 Monate)</h2>
+    <div class="chart-container">
+        <div class="chart">
+            {% for month in monthly_data %}
+            {% if max_monthly_revenue > 0 %}
+                {% widthratio month.revenue max_monthly_revenue 100 as bar_height %}
+            {% else %}
+                {% widthratio 0 1 0 as bar_height %}
+            {% endif %}
+            <div class="chart-bar" style="height: {% if bar_height < 10 %}10{% else %}{{ bar_height }}{% endif %}%;">
+                {% if month.revenue > 0 %}
+                <span class="value">{{ month.revenue|floatformat:0 }} €</span>
+                {% endif %}
+                <span class="label">{{ month.month }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% include 'my_practice/includes/heatmap.html' %}
+
+<div class="section">
+    <h2>📄 Aktuelle Rechnungen</h2>
+    <div class="recent-invoices">
+        {% for invoice in recent_invoices %}
+        <a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain">
+            <div class="invoice-row">
+                <div class="invoice-info">
+                    <span class="invoice-number">{{ invoice.invoice_number }}</span>
+                    <span class="invoice-client sensitive-data">{{ invoice.client.full_name }}</span>
+                    <span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display }}</span>
+                </div>
+                <div class="invoice-amount">{{ invoice.total|currency }}</div>
+            </div>
+        </a>
+        {% empty %}
+        <p class="text-muted">Noch keine Rechnungen vorhanden.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="section text-center">
+    <a href="{% url 'invoice_create' %}" class="btn">➕ Neue Rechnung erstellen</a>
+    <a href="{% url 'client_intake' %}" class="btn btn-secondary ml-2">👤 Neuer Klient</a>
+</div>
+{% endblock %}

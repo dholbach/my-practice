@@ -1,0 +1,11 @@
+[Unit]
+Description=Fetch calendar events hourly (P-013)
+Requires=my-practice-fetch-calendar-events.service
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

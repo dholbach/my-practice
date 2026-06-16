@@ -1,0 +1,23 @@
+# Development dependencies for local development
+# Install: pip install -r requirements-dev.txt
+
+# Code Quality Tools
+pre-commit>=4.6.0
+isort>=5.13.2
+vulture>=2.16
+pip-audit>=2.9.0
+
+# Type Checking
+mypy>=2.1.0
+django-stubs>=6.0.4
+types-requests>=2.33.0.20260518
+
+# Testing
+pytest>=9.1.0
+pytest-django>=4.9.0
+pytest-asyncio>=0.25.0
+pytest-cov>=7.1.0
+
+# Documentation
+sphinx>=8.1.0
+sphinx-rtd-theme>=3.0.0

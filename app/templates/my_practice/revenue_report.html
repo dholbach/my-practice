@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Umsatzbericht{% endblock %}
+
+{% block page_title %}Umsatzbericht{% endblock %}
+{% block page_subtitle %}Detaillierte Umsatzübersicht nach Zahlungsjahr{% endblock %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="bg-surface border border-border rounded-lg p-6 mb-8 flex gap-4 items-center">
+    <label for="year-select" style="font-weight: 600;">Jahr auswählen:</label>
+    <select id="year-select" class="form-control" style="width: auto;" x-data x-on:change="window.location.href = '{% url 'revenue_report' %}?year=' + $el.value">
+        <option value="">Alle Jahre</option>
+        {% for y in available_years %}
+        <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+{% if selected_year %}
+<div class="bg-surface rounded-lg p-6 mb-8">
+    <h3 style="margin: 0 0 1rem 0;">📊 Zusammenfassung {{ selected_year }}</h3>
+    <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+        <div class="bg-surface border border-border rounded-lg p-4 text-center">
+            <div class="text-sm text-text-secondary mb-2">Gesamtumsatz</div>
+            <div class="text-2xl font-bold">{{ summary.total|currency }}</div>
+        </div>
+        <div class="bg-surface border border-border rounded-lg p-4 text-center">
+            <div class="text-sm text-text-secondary mb-2">Anzahl Rechnungen</div>
+            <div class="text-2xl font-bold">{{ summary.count }}</div>
+        </div>
+        <div class="bg-surface border border-border rounded-lg p-4 text-center">
+            <div class="text-sm text-text-secondary mb-2">Rechnungen aus {{ selected_year }}</div>
+            <div class="text-2xl font-bold">{{ summary.same_year_count }} ({{ summary.same_year_total|currency }})</div>
+        </div>
+        <div class="bg-surface border border-border rounded-lg p-4 text-center">
+            <div class="text-sm text-text-secondary mb-2">Rechnungen aus Vorjahren</div>
+            <div class="text-2xl font-bold">{{ summary.prev_year_count }} ({{ summary.prev_year_total|currency }})</div>
+        </div>
+    </div>
+</div>
+
+<h3 style="margin-bottom: 1rem;">📋 Detaillierte Rechnungsliste</h3>
+<table class="invoice-table">
+    <thead>
+        <tr>
+            <th>Rechnungs-Nr.</th>
+            <th>Klient</th>
+            <th>Rechnungsdatum</th>
+            <th>Zahlungsdatum</th>
+            <th>Jahr Differenz</th>
+            <th>Status</th>
+            <th style="text-align: right;">Betrag</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for invoice in invoices %}
+        <tr class="hover:bg-dropdown-hover{% if invoice.year_diff %} opacity-95{% endif %}">
+            <td><a href="{% url 'invoice_detail' invoice.pk %}" class="link-primary">{{ invoice.invoice_number }}</a></td>
+            <td class="sensitive-data">{{ invoice.client.full_name }}</td>
+            <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+            <td>
+                {% if invoice.paid_date %}
+                    {{ invoice.paid_date|date:"d.m.Y" }}
+                    {% if invoice.year_diff %}<span class="font-semibold text-red-500"> (Vorjahr)</span>{% endif %}
+                {% else %}
+                    <em class="text-muted">Kein Datum</em>
+                {% endif %}
+            </td>
+            <td>
+                {% if invoice.year_diff %}
+                    <span class="font-semibold text-red-500">{{ invoice.invoice_date.year }}</span>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td><span class="status-badge status-{{ invoice.status }}">{{ invoice.get_status_display }}</span></td>
+            <td style="text-align: right; font-weight: 600;">{{ invoice.total|currency }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="empty-state-msg">
+                Keine Rechnungen gefunden für {{ selected_year }}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr class="tr-summary">
+            <td colspan="6" style="text-align: right;">Gesamt:</td>
+            <td style="text-align: right;">{{ summary.total|currency }}</td>
+        </tr>
+    </tfoot>
+</table>
+
+{% else %}
+<div class="empty-state">
+    <p>Bitte wählen Sie ein Jahr aus, um den Report anzuzeigen.</p>
+</div>
+{% endif %}
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{% url 'analytics' %}" class="btn btn-secondary">← Zurück zu Analytics</a>
+</div>
+
+{% endblock %}

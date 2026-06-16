@@ -1,0 +1,21 @@
+{% comment %}
+Reusable stats grid component
+
+Usage:
+{% include 'includes/stats_grid.html' with stats=stats_list %}
+
+Where stats_list is a list of dicts with:
+- label: Text to display
+- value: Numeric value (will be formatted with number_filters)
+- emoji: Optional emoji icon (default: 📊)
+{% endcomment %}
+
+<div class="stats-grid">
+    {% for stat in stats %}
+    <div class="stat-card">
+        <div class="stat-label">{{ stat.emoji|default:"📊" }} {{ stat.label }}</div>
+        {% load number_filters %}
+        <div class="stat-value">{% if stat.is_currency %}{{ stat.value|format_currency }}{% else %}{{ stat.value|default:0|floatformat:0 }}{% endif %}</div>
+    </div>
+    {% endfor %}
+</div>

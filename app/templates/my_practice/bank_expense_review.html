@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load payment_tags %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ page_title }}</h1>
+
+    <!-- Statistics -->
+    <div class="expense-stats-card">
+        <div class="expense-stats-grid">
+            <div>
+                <div class="expense-stat__label">Nicht zugeordnet</div>
+                <div class="expense-stat__value expense-stat__value--warning">{{ stats.unmatched }}</div>
+            </div>
+            <div>
+                <div class="expense-stat__label">Gesamt-Betrag</div>
+                <div class="expense-stat__value expense-stat__value--primary">{{ stats.total_amount|currency }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if transactions %}
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+
+        <!-- Action Controls -->
+        <div class="expense-action-panel">
+            <div class="expense-action-panel__fields">
+                <div class="expense-action-panel__field-wide">
+                    <label class="expense-action-panel__field-label">Kategorie</label>
+                    <select name="category" required class="expense-action-panel__select">
+                        <option value="miete">Miete</option>
+                        <option value="telefon">Telefon</option>
+                        <option value="verband">Verband / Mitgliedsbeiträge</option>
+                        <option value="versicherung">Versicherung</option>
+                        <option value="konto">Konto / Kontoführung</option>
+                        <option value="webseite">Webseite / Domain</option>
+                        <option value="werbung">Werbung / Marketing</option>
+                        <option value="software">Software</option>
+                        <option value="selbsterfahrung">Selbsterfahrung</option>
+                        <option value="supervision">Supervision</option>
+                        <option value="training">Training / Weiterbildung</option>
+                        <option value="ausbildung_ort">Ausbildung Ort</option>
+                        <option value="gruppe">Gruppe</option>
+                        <option value="materialien">Materialien</option>
+                        <option value="hardware">Hardware</option>
+                        <option value="literatur">Literatur</option>
+                        <option value="kongress">Kongress</option>
+                        <option value="other" selected>Sonstiges</option>
+                    </select>
+                </div>
+
+                <div class="expense-action-panel__field-xl">
+                    <label class="expense-action-panel__field-label">Beschreibung (optional)</label>
+                    <textarea name="description" rows="2" placeholder="Wird automatisch generiert, wenn leer" class="expense-action-panel__textarea"></textarea>
+                </div>
+
+                <div class="expense-action-panel__checkboxes">
+                    <label class="expense-action-panel__checkbox-label">
+                        <input type="checkbox" name="has_invoice">
+                        <span class="expense-action-panel__checkbox-text">Rechnung vorhanden</span>
+                    </label>
+                    <label class="expense-action-panel__checkbox-label">
+                        <input type="checkbox" name="is_tax_deductible" checked>
+                        <span class="expense-action-panel__checkbox-text">Steuerlich absetzbar</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="expense-action-panel__buttons">
+                <button type="submit" name="action" value="group" class="btn btn-primary">
+                    ✓ Zu Ausgabe zusammenfassen
+                </button>
+                <button type="submit" name="action" value="ignore" class="btn btn-secondary">
+                    ➖ Ignorieren
+                </button>
+            </div>
+        </div>
+
+        <!-- Transactions List -->
+        {% for trans in transactions %}
+        <div class="expense-trans-card">
+            <div class="expense-trans-card__row">
+                <input type="checkbox" name="transactions" value="{{ trans.id }}" class="expense-trans-card__checkbox">
+
+                <div class="expense-trans-card__body">
+                    <div class="expense-trans-card__header">
+                        <div>
+                            <span class="expense-trans-card__date">{{ trans.transaction_date|date:"d.m.Y" }}</span>
+                            <span class="expense-trans-card__payer">{{ trans.payer_name }}</span>
+                        </div>
+                        <span class="expense-trans-card__amount">{{ trans.amount|currency }}</span>
+                    </div>
+
+                    <div class="expense-trans-card__reference">
+                        {{ trans.reference }}
+                    </div>
+
+                    {% if trans.payer_iban %}
+                    <div class="expense-trans-card__iban">
+                        IBAN: {{ trans.payer_iban }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </form>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="pagination-bar">
+        {% if page_obj.has_previous %}
+            <a href="?page=1" class="btn btn-secondary">« Erste</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary">‹ Zurück</a>
+        {% endif %}
+
+        <span class="text-muted p-1">
+            Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">Weiter ›</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-secondary">Letzte »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="expense-empty-state">
+        <div class="expense-empty-state__title">
+            ✓ Alle Transaktionen zugeordnet
+        </div>
+        <div class="expense-empty-state__desc">
+            Es gibt keine unzugeordneten negativen Transaktionen.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Navigation Links -->
+    <div class="expense-nav-footer">
+        <a href="{% url 'bank_review' %}" class="btn btn-secondary">← Rechnungen prüfen</a>
+        <a href="{% url 'bank_import' %}" class="btn btn-secondary">Bank Import</a>
+        <a href="{% url 'expense_list' %}" class="btn btn-secondary">Ausgaben-Liste</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Übersicht</a>
+    </div>
+</div>
+{% endblock %}

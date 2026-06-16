@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Zahlungserinnerung senden{% endblock %}
+
+{% block page_title %}📧 Zahlungserinnerung senden{% endblock %}
+{% block page_subtitle %}<span class="sensitive-data">{{ client.full_name }}</span> ({{ client.client_code }}) &mdash; {% if client.language == 'en' %}🇬🇧 English{% else %}🇩🇪 Deutsch{% endif %}{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+
+<!-- Open invoices summary -->
+<div class="form-section" style="border-left: 4px solid var(--color-warning);">
+    <h3 style="margin: 0 0 1rem 0;">📄 Offene Rechnungen ({{ open_invoices|length }})</h3>
+    <table class="open-invoices-table">
+        <thead>
+            <tr>
+                <th>Rechnungsnr.</th>
+                <th>Datum</th>
+                <th>Status</th>
+                <th style="text-align: right;">Betrag</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in open_invoices %}
+            <tr>
+                <td>
+                    <a href="{% url 'invoice_detail' invoice.pk %}" target="_blank"
+                       class="link-primary">
+                        {{ invoice.invoice_number }}
+                    </a>
+                </td>
+                <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
+                <td style="text-align: right; font-weight: 600;">{{ invoice.total|currency }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3">Gesamt offen</td>
+                <td style="text-align: right;"><strong>{{ open_invoices_total|floatformat:2 }} €</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<!-- Email form -->
+<div class="email-preview">
+    <h2>📧 E-Mail anpassen und senden</h2>
+
+    {% if not client.salutation %}
+    <div class="callout callout-warning">
+        <strong>⚠️ Keine persönliche Anrede für diesen Klienten hinterlegt</strong><br>
+        Die E-Mail verwendet eine generische Anrede. Du kannst die Anrede im Tekstfeld unten anpassen.
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.recipient.id_for_label }}">{{ form.recipient.label }}</label>
+            {{ form.recipient }}
+            {% if form.recipient.errors %}<div class="error">{{ form.recipient.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<div class="error">{{ form.subject.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
+            {{ form.body }}
+            {% if form.body.errors %}<div class="error">{{ form.body.errors }}</div>{% endif %}
+            <div class="helptext">
+                Du kannst den Text frei anpassen. Keine Anhänge — nur Text.
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                📧 Erinnerung senden
+            </button>
+            <a href="{% url 'client_detail' client.pk %}" class="btn btn-secondary">
+                Abbrechen
+            </a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

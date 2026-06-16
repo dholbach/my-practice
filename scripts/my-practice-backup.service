@@ -1,0 +1,9 @@
+[Unit]
+Description=My Practice System Backup
+After=docker.service
+
+[Service]
+Type=oneshot
+User=YOUR_USERNAME
+WorkingDirectory=/path/to/my-practice
+ExecStart=/usr/bin/env bash /path/to/my-practice/scripts/backup.sh

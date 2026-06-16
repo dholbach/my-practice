@@ -1,0 +1,146 @@
+{% extends 'base.html' %}{% load payment_tags %}
+{% block title %}Firmen-Entnahmen{% endblock %}
+
+{% block page_title %}Firmen-Entnahmen{% if current_year != 'all' %} {{ current_year }}{% endif %}{% endblock %}
+{% block page_subtitle %}Übersicht aller Entnahmen{% endblock %}
+
+{% block content %}
+
+<!-- Quick Actions -->
+<div style="margin-top: 1.5rem; margin-bottom: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+    <a href="{% url 'withdrawal_create' %}" class="btn btn-success btn-sm">
+        ➕ Neue Entnahme
+    </a>
+
+    <a href="{% url 'analytics' %}" class="btn btn-secondary btn-sm">
+        📊 Auswertungen
+    </a>
+</div>
+
+<!-- Yearly Summary -->
+<div style="margin-bottom: 1.5rem;">
+    <h2 style="margin-bottom: 1rem;">Entnahmen nach Jahr
+        {% if current_year != 'all' %}
+        <a href="{% url 'withdrawal_list' %}" class="btn btn-sm btn-secondary" style="font-size: 0.9rem;">✕ Filter löschen</a>
+        {% endif %}
+    </h2>
+</div>
+
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <a href="{% url 'withdrawal_list' %}" class="stat-card {% if current_year == 'all' %}active{% endif %}" style="text-decoration: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+        <div class="stat-label">Gesamt</div>
+        <div class="stat-value">{{ grand_total|currency_rounded }}</div>
+    </a>
+
+    {% for year_data in yearly_totals %}
+    <a href="{% url 'withdrawal_list' %}?year={{ year_data.date__year }}"
+       class="stat-card {% if current_year|stringformat:'s' == year_data.date__year|stringformat:'s' %}active{% endif %}"
+       style="text-decoration: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
+        <div class="stat-label">{{ year_data.date__year }}</div>
+        <div class="stat-value">{{ year_data.total|currency_rounded }}</div>
+    </a>
+    {% endfor %}
+</div>
+
+{% comment %}Reusable withdrawal row macro{% endcomment %}
+{% with show_rows=True %}{% endwith %}
+
+<!-- Entnahmen (outgoing) -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="margin: 0;">
+            💸 Entnahmen{% if current_year != 'all' %} {{ current_year }}{% endif %}
+            <span class="text-sm text-secondary">({{ outgoing.count }})</span>
+        </h3>
+        <span style="font-size: 1.1rem; font-weight: 700;">{{ outgoing_total|currency }}</span>
+    </div>
+
+    {% if outgoing %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th style="text-align: right;">Betrag</th>
+                <th>Kategorie</th>
+                <th>Notizen</th>
+                <th style="text-align: center;">Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for withdrawal in outgoing %}
+            <tr>
+                <td>{{ withdrawal.date|date:"d.m.Y" }}</td>
+                <td style="text-align: right; font-weight: 700;">
+                    {{ withdrawal.amount|currency }}
+                </td>
+                <td>
+                    <span class="badge {% if withdrawal.category == 'tax' %}badge-draft{% elif withdrawal.category == 'private_transfer' %}badge-info{% else %}badge-paid{% endif %}">
+                        {{ withdrawal.get_category_display }}
+                    </span>
+                </td>
+                <td class="text-secondary">{{ withdrawal.description|default:"–" }}</td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <a href="{% url 'withdrawal_update' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-secondary" title="Bearbeiten">✏️</a>
+                    <a href="{% url 'withdrawal_delete' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-danger" title="Löschen">🗑️</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state-msg">
+        Keine Entnahmen für diesen Zeitraum.
+    </p>
+    {% endif %}
+</div>
+
+<!-- Einlagen & Korrekturen (incoming / adjustments) -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="margin: 0;">
+            💰 Einlagen & Korrekturen{% if current_year != 'all' %} {{ current_year }}{% endif %}
+            <span class="text-sm text-secondary">({{ incoming.count }})</span>
+        </h3>
+        <span style="font-size: 1.1rem; font-weight: 700;">{{ incoming_total|currency }}</span>
+    </div>
+
+    {% if incoming %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th style="text-align: right;">Betrag</th>
+                <th>Kategorie</th>
+                <th>Notizen</th>
+                <th style="text-align: center;">Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for withdrawal in incoming %}
+            <tr>
+                <td>{{ withdrawal.date|date:"d.m.Y" }}</td>
+                <td style="text-align: right; font-weight: 700;" class="{{ withdrawal.amount|highlight_diff }}">
+                    {% if withdrawal.category == 'contribution' %}-{% endif %}{{ withdrawal.amount|currency }}
+                </td>
+                <td>
+                    <span class="badge {% if withdrawal.category == 'correction' %}badge-cancelled{% else %}badge-success{% endif %}">
+                        {% if withdrawal.category == 'contribution' %}💰 {% endif %}{{ withdrawal.get_category_display }}
+                    </span>
+                </td>
+                <td class="text-secondary">{{ withdrawal.description|default:"–" }}</td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <a href="{% url 'withdrawal_update' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-secondary" title="Bearbeiten">✏️</a>
+                    <a href="{% url 'withdrawal_delete' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-danger" title="Löschen">🗑️</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state-msg">
+        Keine Einlagen oder Korrekturen für diesen Zeitraum.
+    </p>
+    {% endif %}
+</div>
+
+{% endblock %}

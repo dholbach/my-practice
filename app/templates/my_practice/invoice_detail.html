@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load payment_tags %}
+{% load static %}
+
+{% block title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+
+{% block page_title %}Rechnung {{ invoice.invoice_number }}{% endblock %}
+{% block page_subtitle %}<span class="sensitive-data">{{ invoice.client.full_name }}</span>{% endblock %}
+
+{% block content %}
+<div class="invoice-header bg-surface border border-border rounded-lg p-6 mb-8">
+    <div class="invoice-meta grid gap-4 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+        <div class="meta-item p-4 bg-bg-secondary rounded-lg border-l-4 border-l-btn-primary">
+            <div class="meta-label text-text-secondary text-sm uppercase tracking-wide">Invoice Number</div>
+            <div class="meta-value text-lg font-semibold mt-1">{{ invoice.invoice_number }}</div>
+        </div>
+        <div class="meta-item p-4 bg-bg-secondary rounded-lg border-l-4 border-l-btn-primary">
+            <div class="meta-label text-text-secondary text-sm uppercase tracking-wide">Datum</div>
+            <div class="meta-value text-lg font-semibold mt-1">{{ invoice.invoice_date|date:"d.m.Y" }}</div>
+        </div>
+        <div class="meta-item p-4 bg-bg-secondary rounded-lg border-l-4 border-l-btn-primary">
+            <div class="meta-label text-text-secondary text-sm uppercase tracking-wide">Bezahlt am</div>
+            <div class="meta-value text-lg font-semibold mt-1">
+                {% if invoice.paid_date %}
+                {{ invoice.paid_date|date:"d.m.Y" }}
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="meta-item p-4 bg-bg-secondary rounded-lg border-l-4 border-l-btn-primary">
+            <div class="meta-label text-text-secondary text-sm uppercase tracking-wide">Status</div>
+            <div class="meta-value text-lg font-semibold mt-1">
+                <span class="status-badge {{ invoice.status }}" id="status-badge">
+                    {{ invoice.get_status_display }}
+                </span>
+                <select id="status-select" class="form-control" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; border-radius: 4px; width: auto; display: inline-block;">
+                    <option value="">Status ändern...</option>
+                    <option value="draft">Entwurf</option>
+                    <option value="sent">Gesendet</option>
+                    <option value="paid">Bezahlt</option>
+                    <option value="cancelled">Storniert</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <strong>Klient:</strong>
+        <a href="{% url 'client_detail' invoice.client.pk %}" class="link-primary ml-1">
+            👤 Details anzeigen →
+        </a>
+        <br>
+        <span class="sensitive-data">
+            {{ invoice.client.full_name }}<br>
+            {{ invoice.client.email }}<br>
+            {% if invoice.client.address %}
+            {{ invoice.client.address|linebreaks }}
+            {% endif %}
+        </span>
+    </div>
+
+    {% if invoice.client.full_name|slice:":7" == "Klient " and "@example.com" in invoice.client.email %}
+    <div class="alert-box error" style="margin-top: 1rem;">
+        <strong >📋 Importierte Klientendaten - benötigen Aktualisierung</strong><br>
+        <span class="text-danger">Dieser Klient wurde mit Platzhalterdaten importiert. Bitte mit echten Informationen aktualisieren:
+        <a href="{% url 'client_intake' %}?client={{ invoice.client.pk }}" class="text-danger underline font-semibold">
+            ✏️ Klientendaten bearbeiten →
+        </a>
+        </span>
+    </div>
+    {% endif %}
+
+</div>
+
+<h3 class="mb-2">📋 Positionen</h3>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Service</th>
+            <th>Duration</th>
+            <th class="text-right">Rate</th>
+            <th class="text-right">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in invoice.items.all %}
+        <tr>
+            <td>{{ item.session.session_date|date:"d.m.Y" }}</td>
+            <td>
+                {% if item.service_type %}
+                    {% if invoice.client.language == 'en' %}
+                        {{ item.service_type.name_en|default:item.service_type.name }}
+                    {% else %}
+                        {{ item.service_type.name_de|default:item.service_type.name }}
+                    {% endif %}
+                {% else %}
+                    <em class="text-muted">No service type</em>
+                {% endif %}
+                {% if item.description %}
+                    <br><small class="text-muted">{{ item.description }}</small>
+                {% endif %}
+            </td>
+            <td>{{ item.session.duration }} min</td>
+            <td class="text-right">{{ item.rate|currency }}</td>
+            <td class="text-right font-bold">{{ item.total|currency }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="form-section">
+    <div class="flex-between mb-2">
+        <span>Zwischensumme:</span>
+        <span class="font-semibold">{{ invoice.subtotal|currency }}</span>
+    </div>
+    {% if invoice.tax_rate > 0 %}
+    <div class="flex-between mb-2">
+        <span>MwSt. ({{ invoice.tax_rate }}%):</span>
+        <span class="font-semibold">{{ invoice.tax_amount|currency }}</span>
+    </div>
+    {% else %}
+    <div class="flex-between mb-2">
+        <span><em>Kleinunternehmerregelung § 19 UStG - keine Steuer</em></span>
+        <span class="font-semibold">{{ invoice.tax_amount|currency }}</span>
+    </div>
+    {% endif %}
+    <div class="flex-between mt-3" style="padding-top: 1rem; border-top: 2px solid var(--color-link); font-size: 1.25rem;">
+        <span class="font-bold">Gesamt:</span>
+        <span class="font-bold" class="text-primary">{{ invoice.total|currency }}</span>
+    </div>
+</div>
+
+{% if invoice.notes %}
+<div class="info-box mt-4">
+    <strong >Notizen:</strong><br>
+    <span >{{ invoice.notes|linebreaks }}</span>
+</div>
+{% endif %}
+
+{% include "includes/calendar_preflight_widget.html" %}
+
+<div class="actions">
+    <a href="{% url 'invoice_list' %}" class="btn btn-secondary">← Zurück zur Liste</a>
+    <a href="{% url 'invoice_edit' invoice.pk %}" class="btn btn-gradient">✏️ Bearbeiten</a>
+    <a href="{% url 'invoice_pdf' invoice.pk %}" class="btn btn-secondary" target="_blank">📄 PDF anzeigen</a>
+
+    {% if invoice.status != 'sent' %}
+    <a href="{% url 'send_invoice_email' invoice.pk %}" class="btn btn-secondary">📧 Per E-Mail versenden</a>
+    {% else %}
+    <span class="text-muted" style="padding: 0.5rem 1rem; background: var(--color-bg-secondary); border-radius: 8px; display: inline-block;">
+        ✅ E-Mail bereits versendet
+    </span>
+    {% endif %}
+
+    <a href="{% url 'invoice_delete' invoice.pk %}" class="btn btn-danger" x-data x-on:click="confirm('Möchten Sie diese Rechnung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.') || $event.preventDefault()">🗑️ Löschen</a>
+</div>
+
+<script>
+document.getElementById('status-select').addEventListener('change', async function() {
+    const newStatus = this.value;
+    if (!newStatus) return;
+
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                      document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+
+    try {
+        const response = await fetch('{% url "update_invoice_status" invoice.pk %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken
+            },
+            body: `status=${newStatus}`
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const badge = document.getElementById('status-badge');
+            badge.className = `status-badge ${data.status}`;
+            badge.textContent = data.display;
+            this.value = ''; // Reset select
+
+            // Update paid_date display
+            const paidDateElements = document.querySelectorAll('.invoice-meta .meta-item');
+            paidDateElements.forEach(el => {
+                if (el.querySelector('.meta-label')?.textContent === 'Bezahlt am') {
+                    const valueEl = el.querySelector('.meta-value');
+                    if (data.paid_date) {
+                        valueEl.innerHTML = data.paid_date;
+                    } else {
+                        valueEl.innerHTML = '<span class="text-muted">-</span>';
+                    }
+                }
+            });
+
+            // Show success message
+            const message = document.createElement('div');
+            message.className = 'alert-box success';
+            message.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            message.innerHTML = `<strong >Status geändert zu: ${data.display}</strong>`;
+            document.body.appendChild(message);
+            setTimeout(() => message.remove(), 3000);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fehler beim Ändern des Status');
+    }
+});
+</script>
+{% endblock %}

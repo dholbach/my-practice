@@ -1,0 +1,638 @@
+{% comment %}
+IMPORTANT FOR SELF-HOSTERS: This treatment contract template is provided as an example
+only. It reflects one specific practice in Germany (Heilpraktiker für Psychotherapie,
+self-pay, GebüH does not apply). The legal clauses, cancellation policy, fee structure,
+and regulatory references WILL NOT be correct for your practice without review.
+
+Before using this in production:
+  - Have the content reviewed by a qualified legal/professional advisor for your context
+  - Adjust §1 (subject matter) to match your actual therapeutic modality and credentials
+  - Adjust §2 (fees) to match your billing model and applicable fee schedule
+  - Adjust §5 (cancellation) to match your cancellation policy and notice period
+  - Remove or replace any clauses that reference frameworks not applicable to you
+  - Verify DSGVO / data-processing language for your setup
+
+The PDF generation framework (WeasyPrint, bilingual DE/EN, logo/signature) is fully
+reusable — only the contract text needs to be replaced.
+{% endcomment %}
+{% load payment_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Behandlungsvertrag – {{ client.client_code }}</title>
+    <style>
+        {% include 'my_practice/invoice_pdf_base.css' %}
+
+        /* Contract-specific overrides */
+        body {
+            font-size: 9.5pt;
+            line-height: 1.45;
+        }
+
+        .contract-title-block {
+            text-align: center;
+            margin-top: 0.8cm;
+            margin-bottom: 0.7cm;
+        }
+        .contract-title-block h1 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 0 0 0.15cm 0;
+        }
+        .contract-title-block .subtitle {
+            font-size: 9pt;
+            color: #333;
+        }
+
+        .parties-section {
+            margin-bottom: 0.5cm;
+        }
+        .parties-heading {
+            font-size: 9pt;
+            font-style: italic;
+            margin: 0.3cm 0 0.2cm 0;
+        }
+        .party-block {
+            margin: 0 0 0.2cm 0;
+        }
+        .party-label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 3.5cm;
+            vertical-align: top;
+        }
+        .party-value {
+            display: inline-block;
+        }
+        .party-row {
+            margin: 0.05cm 0;
+        }
+        .filled {
+            font-weight: bold;
+        }
+        .blank {
+            display: inline-block;
+            min-width: 5cm;
+            border-bottom: 1px solid #000;
+            vertical-align: bottom;
+            font-size: 12pt;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin: 0.4cm 0;
+        }
+
+        .paragraph {
+            margin: 0.4cm 0 0.15cm 0;
+        }
+        .paragraph h2 {
+            font-size: 10pt;
+            font-weight: bold;
+            margin: 0;
+            display: inline;
+        }
+        .paragraph-text {
+            margin: 0.1cm 0 0 0;
+        }
+        .paragraph-sub {
+            margin: 0.1cm 0 0.1cm 0.4cm;
+        }
+        .checkbox-row {
+            margin: 0.1cm 0;
+        }
+
+        /* Increase bottom margin so signatures don't sit right at the paper edge */
+        @page { margin-bottom: 1.5cm; }
+
+        .signature-block {
+            margin-top: 0.6cm;
+        }
+        .sig-row {
+            display: table;
+            width: 100%;
+        }
+        .sig-cell {
+            display: table-cell;
+            width: 48%;
+            padding-right: 2%;
+            vertical-align: bottom;
+        }
+        .sig-cell:last-child {
+            padding-right: 0;
+            padding-left: 2%;
+        }
+        .sig-line {
+            border-bottom: 1px solid #000;
+            height: 0.8cm;
+            margin-bottom: 0.1cm;
+        }
+        .sig-label {
+            font-size: 8pt;
+            color: #555;
+        }
+
+        /* Header is not fixed on contract — renders once at top of page 1 only */
+        .header {
+            position: static;
+            height: auto;
+            margin-bottom: 0.4cm;
+        }
+        .header-space {
+            display: none;
+        }
+        .practice-info {
+            position: static;
+            text-align: right;
+        }
+        .logo {
+            position: static;
+            float: right;
+            margin-bottom: 0.3cm;
+        }
+
+        .gdpr-section {
+            page-break-before: always;
+            margin-top: 0;
+        }
+        .gdpr-section h2 {
+            font-size: 10pt;
+            font-weight: bold;
+            margin: 0 0 0.2cm 0;
+        }
+        .gdpr-sub-heading {
+            font-weight: bold;
+            margin: 0.25cm 0 0.1cm 0;
+        }
+        .form-row {
+            margin: 0.15cm 0;
+        }
+        .form-row .form-label {
+            display: inline-block;
+            min-width: 4.5cm;
+            font-size: 9pt;
+        }
+        .form-row .form-value {
+            display: inline-block;
+            min-width: 8cm;
+            border-bottom: 1px solid #000;
+            vertical-align: bottom;
+            padding-bottom: 1pt;
+            font-size: 12pt;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fixed practice header (same pattern as invoices) -->
+    <div class="header">
+        {% if logo_data %}
+        <img src="data:image/png;base64,{{ logo_data }}" class="logo" alt="Logo">
+        {% endif %}
+        <div class="practice-info">
+            {{ practice.title }}<br>
+            {{ practice.name }}<br>
+            {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
+            E-Mail: {{ practice.email }}
+        </div>
+    </div>
+    <div class="header-space">&nbsp;</div>
+
+    <!-- Title -->
+    <div class="contract-title-block">
+        {% if lang == "en" %}
+        <h1>Treatment contract and data protection agreement</h1>
+        <div class="subtitle">(GDPR) including remote consultation</div>
+        {% else %}
+        <h1>Behandlungsvertrag und Datenschutzvereinbarung</h1>
+        <div class="subtitle">(DSGVO) einschlie&szlig;lich Fernberatung</div>
+        {% endif %}
+    </div>
+
+    <!-- Parties -->
+    <div class="parties-section">
+        <div class="parties-heading">{% if lang == "en" %}between{% else %}zwischen{% endif %}</div>
+
+        <div class="party-block">
+            <div class="party-row">
+                <span class="party-label">{% if lang == "en" %}Profession{% else %}Berufsbezeichnung{% endif %}</span>
+                <span class="party-value filled">{{ practice.title }}</span>
+            </div>
+            <div class="party-row">
+                <span class="party-label">Name</span>
+                <span class="party-value filled">{{ practice.name }}</span>
+            </div>
+            <div class="party-row">
+                <span class="party-label">{% if lang == "en" %}Practice address{% else %}Praxisanschrift{% endif %}</span>
+                <span class="party-value filled">{{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}</span>
+            </div>
+        </div>
+
+        <div class="parties-heading">{% if lang == "en" %}and{% else %}und{% endif %}</div>
+
+        <div class="party-block">
+            <div class="party-row">
+                <span class="party-label">Name</span>
+                <span class="party-value filled">{{ client.full_name }}</span>
+            </div>
+            <div class="party-row">
+                <span class="party-label">{% if lang == "en" %}Date of birth{% else %}Geburtsdatum{% endif %}</span>
+                {% if client.date_of_birth %}
+                <span class="party-value filled">{{ client.date_of_birth|date:"d.m.Y" }}</span>
+                {% else %}
+                <span class="party-value"><span class="blank">&nbsp;</span></span>
+                {% endif %}
+            </div>
+            <div class="party-row">
+                <span class="party-label">{% if lang == "en" %}Address{% else %}Anschrift{% endif %}</span>
+                {% if client.address %}
+                <span class="party-value filled">{{ client.address|linebreaksbr }}</span>
+                {% else %}
+                <span class="party-value"><span class="blank">&nbsp;</span></span>
+                {% endif %}
+            </div>
+            <div class="party-row">
+                <span class="party-label">E-Mail</span>
+                {% if client.email %}
+                <span class="party-value filled">{{ client.email }}</span>
+                {% else %}
+                <span class="party-value"><span class="blank">&nbsp;</span></span>
+                {% endif %}
+            </div>
+            <div class="party-row">
+                <span class="party-label">{% if lang == "en" %}Telephone number{% else %}Telefonnummer{% endif %}</span>
+                {% if client.phone %}
+                <span class="party-value filled">{{ client.phone }}</span>
+                {% else %}
+                <span class="party-value"><span class="blank">&nbsp;</span></span>
+                {% endif %}
+            </div>
+            <div class="party-row">
+                <span class="party-label">{% if lang == "en" %}Paying body{% else %}Kostentr&auml;ger{% endif %}</span>
+                {% if client.cost_carrier %}
+                <span class="party-value filled">{{ client.cost_carrier }}</span>
+                {% else %}
+                <span class="party-value"><span class="blank">&nbsp;</span></span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- § 1 -->
+    <div class="paragraph">
+        <h2>§ 1 {% if lang == "en" %}Subject matter of the contract{% else %}Vertragsgegenstand{% endif %}</h2>
+        {% if lang == "en" %}
+        <p class="paragraph-text">
+            The patient receives psychotherapeutic treatment from the therapist, including the necessary
+            diagnostic and testing procedures. In addition to the scientifically recognised procedures,
+            procedures that are not recognised by conventional medicine and that follow the rules of
+            alternative medicine can also be used. The treatment can take place in the form of a personal
+            meeting in the practice, during a home visit or in the form of a video consultation.
+        </p>
+        {% else %}
+        <p class="paragraph-text">
+            Der Patient/die Patientin nimmt bei dem Therapeuten eine psychotherapeutische Behandlung in
+            Anspruch einschlie&szlig;lich der dazu notwendigen Diagnose- und Testverfahren. Dabei k&ouml;nnen
+            au&szlig;er den wissenschaftlich anerkannten auch solche Verfahren Anwendung finden, denen eine
+            schulmedizinische Anerkennung fehlt und die den Regeln der Alternativmedizin folgen. Die
+            Behandlung kann in Form einer pers&ouml;nlichen Begegnung in der Praxis, bei einem Hausbesuch
+            oder auch in Form einer Videosprechstunde erfolgen.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- § 2 -->
+    <div class="paragraph">
+        <h2>§ 2 {% if lang == "en" %}Fee, reimbursement of costs, duration of treatment{% else %}Honorar, Kostenerstattung, Behandlungsdauer{% endif %}</h2>
+        {% if lang == "en" %}
+        <p class="paragraph-text">
+            The fee is calculated according to the time required for the treatment. A fee of
+            <strong>{{ client.hourly_rate_60|currency }}</strong> per treatment (60 minutes) is agreed.
+            For sessions exceeding 60 minutes, the additional time is charged proportionally at the
+            same rate. Minor overruns of a few minutes to bring a session to a proper close are not
+            billed. Any significant extension of a session is agreed upon jointly in advance.
+        </p>
+        <p class="paragraph-sub checkbox-row">( x ) The fee is due immediately and must be paid without deduction upon receipt of the invoice.</p>
+        <p class="paragraph-sub checkbox-row">( x ) The non-binding fee schedule for alternative practitioners (Geb&uuml;H) from 1985 is not applied.</p>
+        {% else %}
+        <p class="paragraph-text">
+            Das Honorar berechnet sich nach dem jeweiligen Zeitaufwand der Behandlung. Vereinbart wird
+            eine Verg&uuml;tung in H&ouml;he von <strong>{{ client.hourly_rate_60|currency }}</strong>/Behandlung
+            (60 Minuten). Bei l&auml;ngeren Sitzungen wird die &uuml;ber 60 Minuten hinausgehende Zeit
+            anteilig nach demselben Stundensatz berechnet. Geringf&uuml;gige &Uuml;berschreitungen von
+            wenigen Minuten, um eine Sitzung angemessen abzuschlie&szlig;en, werden nicht berechnet.
+            Eine wesentliche Verl&auml;ngerung einer Sitzung wird stets gemeinsam und im Voraus vereinbart.
+        </p>
+        <p class="paragraph-sub checkbox-row">( x ) Das Honorar ist unmittelbar zu Zahlung f&auml;llig und ist ohne Abzug nach Erhalt der Rechnung zu begleichen.</p>
+        <p class="paragraph-sub checkbox-row">( x ) Das unverbindliche Geb&uuml;hrenverzeichnis der Heilpraktiker (Geb&uuml;H) aus dem Jahr 1985 wird nicht angewendet.</p>
+        {% endif %}
+    </div>
+
+    <!-- § 3 -->
+    <div class="paragraph">
+        <h2>§ 3 {% if lang == "en" %}Explanation / Notes{% else %}Aufkl&auml;rung / Hinweise{% endif %}</h2>
+        {% if lang == "en" %}
+        <p class="paragraph-sub">
+            (1) The treatment does not completely replace a medical diagnosis and therapy. If medical
+            advice is required, either due to the type of illness or due to legal regulations, further
+            treatment by a doctor will be arranged immediately.
+        </p>
+        <p class="paragraph-sub">
+            (3) The statutory health insurance companies (GKV) do not cover the treatment costs of
+            alternative practitioners.
+        </p>
+        <p class="paragraph-sub">
+            (4) Those insured with private health insurance companies with full or supplementary insurance
+            can have a claim for reimbursement of their treatment costs from their insurance company.
+            The patient must clarify and carry out the reimbursement claim against a funding body
+            independently before the start of therapy. The alternative practitioner will hand over the
+            necessary documents (including invoices) to the patient (in duplicate for persons entitled
+            to benefits).
+        </p>
+        <p class="paragraph-sub">
+            (5) Reimbursements from private health insurance or, if applicable, state aid are generally
+            limited to the rates in the fee schedule for alternative practitioners. Any differences
+            between the amounts in the fee schedule and the contractually agreed alternative practitioner
+            fee are to be borne by the patient. The results of all reimbursement procedures have no
+            influence on the agreed alternative practitioner fee. The therapist&rsquo;s fee claim must be
+            paid in full by the patient, regardless of any insurance benefits and/or benefits.
+        </p>
+        {% else %}
+        <p class="paragraph-sub">
+            (1) Die Behandlung ersetzt eine &auml;rztliche Diagnose und Therapie nicht vollst&auml;ndig.
+            Sofern &auml;rztlicher Rat erforderlich ist, sei es aufgrund der Art der Erkrankung oder
+            aufgrund gesetzlicher Vorschriften, wird sofort eine Weiterbehandlung durch einen Arzt/eine
+            &Auml;rztin veranlasst.
+        </p>
+        <p class="paragraph-sub">
+            (3) Die gesetzlichen Krankenversicherungen (GKV) &uuml;bernehmen keine Behandlungskosten
+            von Heilpraktiker*innen.
+        </p>
+        <p class="paragraph-sub">
+            (4) Versicherte bei privaten Krankenkassen mit Voll- oder Zusatzversicherung k&ouml;nnen
+            einen Erstattungsanspruch ihrer Behandlungskosten gegen&uuml;ber ihrer Versicherung haben.
+            Der Erstattungsanspruch gegen&uuml;ber einem Kostentr&auml;ger ist vor Beginn der Therapie
+            von dem Patienten/der Patientin eigenverantwortlich zu kl&auml;ren und durchzuf&uuml;hren.
+            Hierzu erforderliche Unterlagen (u.&thinsp;a. Rechnungen) h&auml;ndigt der Heilpraktiker dem
+            Patienten/der Patientin (bei beihilfeberechtigten Personen in doppelter Ausfertigung) aus.
+        </p>
+        <p class="paragraph-sub">
+            (5) Die Erstattungen der PKV oder ggf. der staatlichen Beihilfe sind in der Regel auf die
+            S&auml;tze des Geb&uuml;hrenverzeichnisses f&uuml;r Heilpraktiker beschr&auml;nkt. Etwaige
+            Differenzen zwischen den Betr&auml;gen aus dem Geb&uuml;hrenverzeichnis und dem vertraglich
+            vereinbarten Heilpraktiker-Honorar sind von dem Patienten/der Patientin zu tragen. Die
+            Ergebnisse s&auml;mtlicher Erstattungsverfahren haben keinen Einfluss auf das vereinbarte
+            Heilpraktiker-Honorar. Der Honoraranspruch des Therapeuten/der Therapeutin ist von dem
+            Patienten/der Patientin unabh&auml;ngig von jeglicher Versicherungsleistung und/oder
+            Beihilfeleistung in voller H&ouml;he zu begleichen.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- § 4 -->
+    <div class="paragraph">
+        <h2>§ 4 {% if lang == "en" %}Video consultation{% else %}Videosprechstunde{% endif %}</h2>
+        {% if lang == "en" %}
+        <p class="paragraph-text">
+            In suitable cases and under certain conditions, the consultation can take place as part of a
+            video consultation. In order to comply with data protection requirements, consultations are
+            provided using video consultations via a secure video service provider. This provider ensures
+            that the video consultation is end-to-end encrypted throughout the entire transmission and
+            that the consultation cannot be recorded.
+        </p>
+        {% else %}
+        <p class="paragraph-text">
+            In geeigneten F&auml;llen und unter bestimmten Voraussetzungen kann die Beratung im Rahmen
+            einer Videosprechstunde erfolgen. Zur Wahrung datenschutzrechtlicher Anforderungen wird eine
+            Beratung mit Hilfe der Videosprechstunde &uuml;ber einen sicheren Videodienstanbieter
+            erbracht. Durch diesen Anbieter wird gew&auml;hrleistet, dass die Videoberatung w&auml;hrend
+            der gesamten &Uuml;bertragung Ende-zu-Ende verschl&uuml;sselt ist und die Beratung nicht
+            aufgezeichnet werden kann.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- § 5 -->
+    <div class="paragraph">
+        <h2>§ 5 {% if lang == "en" %}Cancellation fee{% else %}Ausfallhonorar{% endif %}</h2>
+        {% if lang == "en" %}
+        <p class="paragraph-text">
+            If patients miss a fixed appointment without prior cancellation, they owe the alternative
+            practitioner a cancellation fee equal to the agreed session fee
+            (<strong>{{ client.hourly_rate_60|currency }}</strong> per 60-minute session).
+            This does not apply if patients cancel at least 24 hours before the agreed appointment.
+            In cases of illness, emergencies, or other understandable circumstances, the cancellation
+            fee is handled with flexibility &mdash; regardless of whether the 24-hour notice period
+            was met. Proof that no damage or only significantly less damage was caused remains
+            unaffected by this, as does proof of greater damage by the alternative practitioner.
+        </p>
+        {% else %}
+        <p class="paragraph-text">
+            Vers&auml;umen Patient*innen einen fest vereinbarten Behandlungstermin ohne vorherige
+            Absage, schulden Sie dem Heilpraktiker ein Ausfallhonorar in H&ouml;he des vereinbarten
+            Sitzungshonorars (<strong>{{ client.hourly_rate_60|currency }}</strong> pro 60-Minuten-Sitzung).
+            Dies gilt nicht, wenn Patient*innen mindestens 24 Stunden vor dem vereinbarten Termin
+            absagen. Bei Krankheit, Notf&auml;llen oder anderen nachvollziehbaren Umst&auml;nden wird
+            das Ausfallhonorar kulant gehandhabt &mdash; unabh&auml;ngig davon, ob die 24-Stunden-Frist
+            eingehalten wurde. Der Nachweis, dass kein Schaden oder nur ein wesentlich niedrigerer
+            entstanden sei, bleibt hiervon unber&uuml;hrt, ebenso der Nachweis eines h&ouml;heren
+            Schadens durch den Heilpraktiker.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- § 6 -->
+    <div class="paragraph">
+        <h2>§ 6 {% if lang == "en" %}Duty of confidentiality{% else %}Schweigepflicht{% endif %}</h2>
+        {% if lang == "en" %}
+        <p class="paragraph-text">
+            All employees are subject to a duty of confidentiality. In the event of a request for
+            information, e.g. by cost carriers, relatives or doctors, the alternative practitioner must
+            be released from the duty of confidentiality in writing by the patient.
+        </p>
+        {% else %}
+        <p class="paragraph-text">
+            Alle Mitarbeiter*innen unterliegen der Schweigepflicht. Im Falle eines Auskunftsersuchens
+            z.&thinsp;B. durch Kostentr&auml;ger, Bezugspersonen oder Arzt*innen muss der Heilpraktiker
+            schriftlich durch den Patienten/die Patientin von der Schweigepflicht entbunden werden.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- § 7 -->
+    <div class="paragraph">
+        <h2>§ 7 {% if lang == "en" %}Place of jurisdiction{% else %}Gerichtsstand{% endif %}</h2>
+        {% if lang == "en" %}
+        <p class="paragraph-text">
+            Differences of opinion should be settled amicably. Complaints, counter-representations or
+            differing opinions should always be submitted to the other party in writing. In the event of
+            differences of opinion arising from the treatment contract that cannot be settled amicably
+            despite mutual efforts, the place of jurisdiction is the practice address.
+        </p>
+        {% else %}
+        <p class="paragraph-text">
+            Meinungsverschiedenheiten sollten g&uuml;tlich beigelegt werden. Beschwerden,
+            Gegenvorstellungen oder abweichende Meinungen sollten immer schriftlich der anderen Partei
+            vorgelegt werden. Bei Meinungsverschiedenheiten aus dem Behandlungsvertrag, die trotz
+            beiderseitigen Bem&uuml;hungen nicht g&uuml;tlich beigelegt werden, ist der Gerichtsstand
+            die Praxisanschrift.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- § 8 -->
+    <div class="paragraph">
+        <h2>§ 8 {% if lang == "en" %}Final provisions{% else %}Schlussbestimmungen{% endif %}</h2>
+        {% if lang == "en" %}
+        <p class="paragraph-text">
+            The treatment or video consultation does not relieve patients of the responsibility for
+            their own actions. In order to jointly seek a remedy in the event of possible problems,
+            patients undertake to report promptly. This treatment contract or its implementation is
+            subject exclusively to German law. Deviating agreements to this treatment contract are only
+            valid if they have been agreed in writing.
+        </p>
+        {% else %}
+        <p class="paragraph-text">
+            Die Behandlung bzw. Videosprechstunde enthebt Patient*innen nicht, die volle Verantwortung
+            f&uuml;r seine/ihre Handlungen selbst zu &uuml;bernehmen. Um bei m&ouml;glichen
+            St&ouml;rungen gemeinsam nach Abhilfe zu suchen, verpflichten sich Patient*innen, sich
+            zeitnah zu melden. F&uuml;r diesen Behandlungsvertrag, bzw. dessen Durchf&uuml;hrung gilt
+            ausschlie&szlig;lich deutsches Recht. Abweichende Vereinbarungen zu diesem
+            Behandlungsvertrag sind nur dann wirksam, wenn sie schriftlich vereinbart wurden.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Signatures §1–§8 -->
+    <div class="signature-block">
+        <div class="sig-row">
+            <div class="sig-cell">
+                <div class="sig-line">&nbsp;</div>
+                <div class="sig-label">{% if lang == "en" %}(Place, date){% else %}(Ort, Datum){% endif %}</div>
+            </div>
+            <div class="sig-cell">
+                <div class="sig-line">&nbsp;</div>
+                <div class="sig-label">{% if lang == "en" %}(Place, date){% else %}(Ort, Datum){% endif %}</div>
+            </div>
+        </div>
+        <div class="sig-row" style="margin-top:0.5cm;">
+            <div class="sig-cell">
+                <div class="sig-line">&nbsp;</div>
+                <div class="sig-label">{% if lang == "en" %}(Patient&rsquo;s signature){% else %}(Unterschrift Patient/in){% endif %}</div>
+            </div>
+            <div class="sig-cell">
+                <div class="sig-line">&nbsp;</div>
+                <div class="sig-label">{% if lang == "en" %}(Natural practitioner&rsquo;s signature){% else %}(Unterschrift Heilpraktiker/in){% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="divider" style="margin-top:0.8cm;">
+
+    <!-- § 9 DSGVO / GDPR -->
+    <div class="gdpr-section">
+        {% if lang == "en" %}
+        <h2>§ 9 Declaration of consent to the processing of data in accordance with the GDPR</h2>
+        {% else %}
+        <h2>§ 9 Einwilligungserkl&auml;rung gem&auml;&szlig; DSGVO in die Verarbeitung von Daten</h2>
+        {% endif %}
+
+        <div class="form-row">
+            <span class="form-label">{% if lang == "en" %}Full name{% else %}Name{% endif %}</span>
+            <span class="form-value">{% if client.full_name %}{{ client.full_name }}{% else %}&nbsp;{% endif %}</span>
+        </div>
+        <div class="form-row">
+            <span class="form-label">{% if lang == "en" %}Date of birth{% else %}Geburtsdatum{% endif %}</span>
+            <span class="form-value">{% if client.date_of_birth %}{{ client.date_of_birth|date:"d.m.Y" }}{% else %}&nbsp;{% endif %}</span>
+        </div>
+        <div class="form-row">
+            <span class="form-label">{% if lang == "en" %}Address{% else %}Anschrift{% endif %}</span>
+            <span class="form-value">{% if client.address %}{{ client.address|linebreaksbr }}{% else %}&nbsp;{% endif %}</span>
+        </div>
+
+        {% if lang == "en" %}
+        <p style="margin-top:0.35cm;">
+            I hereby consent to the storage and processing of my data and my health data for the
+            purposes of treatment, documentation and billing (according to Section 630 Paragraph 1 of
+            the German Civil Code). The data can only be viewed and processed by authorised persons.
+            I am informed that without my consent, treatment can only be carried out to a limited
+            extent, or possibly not at all.
+        </p>
+        <p>This consent expires with the termination of the treatment contract.</p>
+
+        <div class="gdpr-sub-heading">Your rights</div>
+        <p>
+            The undersigned has the right to revoke this consent at any time and without giving reasons,
+            with effect for the future. The revocation can be sent to me/us by email, fax or post.
+            The legality of the processing carried out on the basis of the consent until the revocation
+            is not affected by the revocation.
+        </p>
+        <p>
+            You have the right to receive information about the personal data concerning you. Your data
+            is processed on the basis of legal regulations. Under certain conditions, you have the right
+            to delete data, the right to restrict data processing and the right to data portability.
+        </p>
+        <p>
+            You also have the right to contact the responsible supervisory authority for data protection
+            if you believe that the processing of your personal data is not lawful. The legal basis for
+            the processing of your data is Article 9 paragraph 2 GDPR in conjunction with Section 22
+            paragraph 1 Federal Data Protection Act.
+        </p>
+        {% else %}
+        <p style="margin-top:0.35cm;">
+            Hiermit willige ich in die Speicherung und Verarbeitung meiner Daten sowie meiner
+            Gesundheitsdaten zum Zwecke der Behandlung, Dokumentation und Abrechnung (nach &sect;630
+            Abs.&thinsp;1 BGB) ein. Die Daten k&ouml;nnen nur von berechtigten Personen eingesehen und
+            bearbeitet werden. Ich bin dar&uuml;ber informiert, dass ohne mein Einverst&auml;ndnis eine
+            Behandlung nur eingeschr&auml;nkt, gegebenenfalls gar nicht erfolgen kann.
+        </p>
+        <p>Diese Einwilligung erlischt mit der Beendigung des Behandlungsvertrages.</p>
+
+        <div class="gdpr-sub-heading">Ihre Rechte</div>
+        <p>
+            Der/die Unterzeichnende hat das Recht, diese Einwilligung jederzeit und ohne Angabe einer
+            Begr&uuml;ndung mit Wirkung f&uuml;r die Zukunft zu widerrufen. Der Widerruf kann per
+            E-Mail, Fax oder postalisch an mich/uns &uuml;bermittelt werden. Die Rechtm&auml;&szlig;igkeit
+            der aufgrund der Einwilligung bis zum Widerruf erfolgten Verarbeitung wird durch den
+            Widerruf nicht ber&uuml;hrt.
+        </p>
+        <p>
+            Sie haben das Recht, &uuml;ber die Sie betreffenden personenbezogenen Daten Auskunft zu
+            erhalten. Die Verarbeitung Ihrer Daten erfolgt auf Basis von gesetzlichen Regelungen. Unter
+            bestimmten Voraussetzungen steht Ihnen das Recht auf L&ouml;schung von Daten, das Recht auf
+            Einschr&auml;nkung der Datenverarbeitung sowie das Recht auf Daten&uuml;bertragbarkeit zu.
+        </p>
+        <p>
+            Au&szlig;erdem haben Sie das Recht, sich an die zust&auml;ndige Aufsichtsbeh&ouml;rde
+            f&uuml;r den Datenschutz zu wenden, wenn Sie der Ansicht sind, dass die Verarbeitung Ihrer
+            personenbezogenen Daten nicht rechtm&auml;&szlig;ig erfolgt. Rechtsgrundlage f&uuml;r die
+            Verarbeitung Ihrer Daten ist Artikel&thinsp;9 Absatz&thinsp;2 DSGVO in Verbindung mit
+            Paragraf&thinsp;22 Absatz&thinsp;1 Bundesdatenschutzgesetz.
+        </p>
+        {% endif %}
+
+        <!-- Signature §9 -->
+        <div class="signature-block">
+            <div class="sig-row">
+                <div class="sig-cell">
+                    <div class="sig-line">&nbsp;</div>
+                    <div class="sig-label">{% if lang == "en" %}(Place, date){% else %}(Ort, Datum){% endif %}</div>
+                </div>
+                <div class="sig-cell">&nbsp;</div>
+            </div>
+            <div class="sig-row" style="margin-top:0.5cm;">
+                <div class="sig-cell">
+                    <div class="sig-line">&nbsp;</div>
+                    <div class="sig-label">{% if lang == "en" %}(Patient&rsquo;s signature){% else %}(Unterschrift Patient/in){% endif %}</div>
+                </div>
+                <div class="sig-cell">&nbsp;</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+{% load payment_tags %}
+{% load number_filters %}
+
+{% if heatmap_data %}
+<div class="section" id="heatmap">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="margin: 0;">🔥 Aktivitäts-Heatmap ({{ months_to_show }} Monate)</h2>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="text-xs text-muted">Sortierung:</span>
+            <a href="?offset={{ start_offset }}&months={{ months_to_show }}&sort=total#heatmap"
+               class="btn btn-sm{% if heatmap_sort != 'recent' %} btn-primary{% endif %}">
+                Σ Sessions
+            </a>
+            <a href="?offset={{ start_offset }}&months={{ months_to_show }}&sort=recent#heatmap"
+               class="btn btn-sm{% if heatmap_sort == 'recent' %} btn-primary{% endif %}">
+                Zuletzt aktiv
+            </a>
+            {% if start_offset != 0 %}
+            <a href="?offset=0&months={{ months_to_show }}&sort={{ heatmap_sort }}#heatmap"
+               class="btn btn-sm">
+                Aktuell
+            </a>
+            {% endif %}
+            {% if can_go_back %}
+            <a href="?offset={{ start_offset|add:months_to_show }}&months={{ months_to_show }}&sort={{ heatmap_sort }}#heatmap"
+               class="btn btn-secondary btn-sm">
+                ← Früher
+            </a>
+            {% endif %}
+            {% if can_go_forward %}
+            <a href="?offset={{ next_offset }}&months={{ months_to_show }}&sort={{ heatmap_sort }}#heatmap"
+               class="btn btn-secondary btn-sm">
+                Später →
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="chart-container">
+        <div class="heatmap">
+            <div class="heatmap-grid">
+                {# Year headers #}
+                <div class="heatmap-header">
+                    <div class="heatmap-cell header-cell"></div>
+                    {% regroup heatmap_data by month_date.year as years %}
+                    {% for year_group in years %}
+                    <div class="heatmap-cell year-header" style="min-width: calc({{ year_group.list|length }} * 62px - 2px);">
+                        {{ year_group.grouper }}
+                    </div>
+                    {% endfor %}
+                    <div class="heatmap-cell header-cell"></div>
+                </div>
+                {# Month headers #}
+                <div class="heatmap-header">
+                    <div class="heatmap-cell header-cell"></div>
+                    {% for month in heatmap_data %}
+                    <div class="heatmap-cell month-header">{{ month.month_date|date:"M" }}</div>
+                    {% endfor %}
+                    <div class="heatmap-cell header-cell total-cell">Σ</div>
+                </div>
+                {% for client in active_clients_with_totals %}
+                <div class="heatmap-row">
+                    <div class="heatmap-cell client-cell">{{ client.code }}</div>
+                    {% for month in heatmap_data %}
+                    {% with client_hours=month.clients|dict_get:client.code|default:0 %}
+                    <div class="heatmap-cell data-cell {% if client_hours > 0 %}has-activity{% if client_hours >= 4 %} high-activity{% elif client_hours >= 2 %} medium-activity{% else %} low-activity{% endif %}{% endif %}"
+                         data-hours="{{ client_hours }}"
+                         title="{{ client.code }}: {{ client_hours }}h in {{ month.month }}">
+                        {% if client_hours > 0 %}
+                        <span class="hours-label">{{ client_hours|format_hours }}</span>
+                        {% else %}
+                        <span class="empty-marker">·</span>
+                        {% endif %}
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                    <div class="heatmap-cell total-cell" title="Total: {{ client.total }}h">
+                        <strong>{{ client.total|format_hours }}</strong>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="heatmap-row heatmap-footer">
+                    <div class="heatmap-cell header-cell total-cell">Σ</div>
+                    {% for month in heatmap_data %}
+                    <div class="heatmap-cell total-cell" title="Total: {{ month.total }}h">
+                        <strong>{{ month.total|format_hours }}</strong>
+                    </div>
+                    {% endfor %}
+                    <div class="heatmap-cell total-cell grand-total"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.client_code }} - Client Details{% endblock %}
+
+{% block page_title %}👤 <span class="client-detail-title-code">{{ client.client_code }}</span>{% endblock %}
+{% block page_subtitle %}
+    <div class="client-detail-subtitle-row">
+        <span class="sensitive-data client-detail-name">{{ client.full_name }}</span>
+        {% include 'includes/client_tags.html' with client=client editable=True available_tags=available_tags %}
+    </div>
+{% endblock %}
+
+{% load static %}
+{% load payment_tags %}
+{% load markdown_filters %}
+
+{% block extra_css %}
+<script src="{% static 'js/charts/chart_core.js' %}"></script>
+<script src="{% static 'js/charts/chart_canvas.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+<!-- CSRF Token for AJAX requests -->
+{% csrf_token %}
+
+{% if client.full_name|slice:":7" == "Klient " and "@example.com" in client.email %}
+<div class="placeholder-warning">
+    <strong>📋 Imported client data - needs updating</strong><br>
+    <span>This client was imported with placeholder data. Please update with real information:
+    <a href="{% url 'client_edit' client.pk %}">
+        ✏️ Edit client details →
+    </a>
+    </span>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="client-actions">
+    <div class="client-actions-left">
+        <a href="{% url 'invoice_create' %}?client={{ client.id }}" class="btn btn-invoice-create">
+            ➕ Neue Rechnung
+        </a>
+        {% if client.email %}
+        {% if reminder_urgency == "high" %}
+        <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-urgent" title="Älteste offene Rechnung: über 30 Tage">
+            📧 Zahlungserinnerung
+        </a>
+        {% elif reminder_urgency == "medium" %}
+        <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-warning" title="Älteste offene Rechnung: 14–30 Tage">
+            📧 Zahlungserinnerung
+        </a>
+        {% elif reminder_urgency == "low" %}
+        <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-secondary"
+           title="Offene Rechnung vorhanden">
+            📧 Zahlungserinnerung
+        </a>
+        {% else %}
+        <span class="btn btn-secondary btn-disabled"
+              title="Keine gesendeten Rechnungen offen">
+            📧 Zahlungserinnerung
+        </span>
+        {% endif %}
+        <a href="{% url 'send_cancellation_email' client.pk %}" class="btn btn-secondary"
+           title="Absage-Mail wegen Krankheit vorbereiten">
+            🤒 Sitzung absagen
+        </a>
+        {% endif %}
+    </div>
+    <div class="client-actions-right">
+        <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">
+            ← Zurück zur Liste
+        </a>
+        <a href="{% url 'client_edit' client.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">
+            ✏️ Bearbeiten
+        </a>
+    </div>
+</div>
+
+<!-- ══ Two-column layout: main (clinical + billing) + sidebar (meta) ══════ -->
+<div class="cd-layout">
+
+<!-- ══ MAIN COLUMN ═══════════════════════════════════════════════════════ -->
+<div class="cd-main">
+
+{% include 'my_practice/client_detail_tabs.html' %}
+
+{% if pending_sessions %}
+<!-- Upcoming Sessions -->
+<div class="section-card">
+    <h3>📅 Ausstehende Sitzungen</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Uhrzeit</th>
+                <th>Dauer</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in pending_sessions %}
+            <tr>
+                <td>{{ event.event_date|date:"d.m.Y" }}</td>
+                <td>{{ event.event_time|time:"H:i"|default:"–" }}</td>
+                <td>{{ event.duration_minutes }} Min</td>
+                <td><span class="status-badge pending">Ausstehend</span></td>
+                <td>
+                    <form method="post" action="{% url 'calendar_event_quick_action' event.pk %}" class="pending-session-actions">
+                        {% csrf_token %}
+                        {% if current_draft_invoice %}
+                            <button type="submit" name="action" value="current_invoice" class="btn btn-sm" title="Zu Rechnung {{ current_draft_invoice.invoice_number }} hinzufügen">
+                                + Rechnung {{ current_draft_invoice.invoice_number }}
+                            </button>
+                            <button type="submit" name="action" value="new_invoice" class="btn btn-secondary btn-sm">
+                                + Separate Rechnung
+                            </button>
+                        {% else %}
+                            <button type="submit" name="action" value="current_invoice" class="btn btn-sm">
+                                + Neue Rechnung
+                            </button>
+                        {% endif %}
+                        <button type="submit" name="action" value="ignore" class="btn btn-secondary btn-sm">
+                            Ignorieren
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Invoice History -->
+<div class="section-card">
+    <div class="section-card-header">
+        <h3>📄 Rechnungshistorie</h3>
+        {% if current_month_pending_count or current_month_unbilled_count %}
+        <a href="{% url 'monthly_billing_overview' month=current_month_str %}" class="current-month-alert">
+            {% if current_month_pending_count %}⚠️ {{ current_month_pending_count }} Termin{{ current_month_pending_count|pluralize:"e" }} ausstehend{% endif %}
+            {% if current_month_pending_count and current_month_unbilled_count %} · {% endif %}
+            {% if current_month_unbilled_count %}📝 {{ current_month_unbilled_count }} Sitzung{{ current_month_unbilled_count|pluralize:"en" }} offen{% endif %}
+        </a>
+        {% endif %}
+    </div>
+
+    {% if invoices %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Rechnungsnr.</th>
+                <th>Datum</th>
+                <th>Sitzungen</th>
+                <th>Status</th>
+                <th class="text-right">Betrag</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td>
+                    <a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-primary">
+                        <span class="invoice-number">{{ invoice.invoice_number }}</span>
+                    </a>
+                </td>
+                <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                <td>{{ invoice.items.count }}</td>
+                <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
+                <td class="text-right fw-700">{{ invoice.total|currency }}</td>
+                <td>
+                    <a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-secondary">
+                        👁️ Ansehen
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state-msg">
+        Noch keine Rechnungen für diesen Klienten.
+    </p>
+    {% endif %}
+</div>
+
+{% if monthly_sessions %}
+<!-- Session Activity Timeline -->
+<div class="section-card">
+    <h3>📊 Sitzungsaktivität</h3>
+    <div class="chart-wrapper">
+        <canvas id="sessionTimeline" width="100%" height="100%"></canvas>
+    </div>
+</div>
+{% endif %}
+
+{% include 'my_practice/client_detail_documents.html' %}
+
+</div><!-- /cd-main -->
+
+{% include 'my_practice/client_detail_sidebar.html' %}
+</div><!-- /cd-layout -->
+
+<script>
+function cnSwitchTab(tabName, btn) {
+    document.querySelectorAll('#clinical-documentation .cn-tab-content').forEach(el => {
+        el.classList.remove('cn-tab-content-active');
+    });
+    document.querySelectorAll('#clinical-documentation .cn-tab-btn').forEach(el => {
+        el.classList.remove('cn-tab-active');
+    });
+    document.getElementById('tab-' + tabName).classList.add('cn-tab-content-active');
+    btn.classList.add('cn-tab-active');
+
+    // Restore hash for bookmark / redirect targets
+    if (history.replaceState) {
+        history.replaceState(null, '', '#tab-' + tabName);
+    }
+}
+
+// Activate tab from URL hash on page load (default already Protokoll)
+(function() {
+    const hash = window.location.hash;
+    const valid = ['profil', 'protokoll', 'supervision'];
+    if (hash.startsWith('#tab-')) {
+        const tabName = hash.replace('#tab-', '');
+        if (valid.includes(tabName)) {
+            const btn = document.querySelector('[data-tab="' + tabName + '"]');
+            if (btn) cnSwitchTab(tabName, btn);
+        }
+    }
+})();
+</script>
+
+{% if monthly_sessions %}
+<script>
+initChart('sessionTimeline', function(canvas) {
+    const months = [{% for item in monthly_sessions %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+    const hours = [{% for item in monthly_sessions %}{{ item.hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const maxHours = Math.max(...hours, 1);
+
+    // Setup canvas
+    const setup = setupCanvas(canvas, { top: 15, right: 10, bottom: 35, left: 40 });
+    if (!setup) return;
+    const { ctx, padding, chartWidth, chartHeight, width, height } = setup;
+
+    // Draw grid and axes
+    drawGrid(ctx, padding, chartWidth, chartHeight);
+    drawAxes(ctx, padding, chartWidth, chartHeight);
+    drawYAxisLabels(ctx, padding, chartHeight, maxHours, 'h');
+
+    // Calculate bar positions and store for tooltip
+    const barData = [];
+    const barWidth = chartWidth / (hours.length * 1.5);
+    const barSpacing = barWidth * 0.5;
+
+    // Draw bars
+    if (hours.length > 0) {
+        hours.forEach((sessionHours, index) => {
+            const barHeight = (sessionHours / maxHours) * chartHeight;
+            const x = padding.left + (barWidth + barSpacing) * index + barSpacing;
+            const y = padding.top + chartHeight - barHeight;
+
+            // Store bar info for hover detection
+            barData.push({
+                x: x,
+                y: y,
+                width: barWidth,
+                height: barHeight,
+                centerX: x + barWidth / 2,
+                centerY: y + barHeight / 2
+            });
+
+            // Draw gradient bar (green gradient for sessions)
+            const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
+            gradient.addColorStop(0, '#48bb78');
+            gradient.addColorStop(1, '#38a169');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(x, y, barWidth, barHeight);
+
+            // X-labels (every 3rd month or if few months)
+            const labelInterval = hours.length > 12 ? 3 : 2;
+            if (index % labelInterval === 0 || hours.length <= 6) {
+                const textPrimary = getCSSVariable('--text-primary');
+                ctx.fillStyle = textPrimary;
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(months[index], x + barWidth / 2, height - 8);
+            }
+        });
+    }
+
+    // Setup hover tooltip
+    const tooltip = document.createElement('div');
+    tooltip.style.cssText = 'position: fixed; background: rgba(0,0,0,0.9); color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 9999; white-space: nowrap;';
+    document.body.appendChild(tooltip);
+
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        let hoveredBar = null;
+
+        // Check if mouse is over any bar
+        barData.forEach((bar, index) => {
+            if (mouseX >= bar.x && mouseX <= bar.x + bar.width &&
+                mouseY >= bar.y && mouseY <= bar.y + bar.height) {
+                hoveredBar = index;
+            }
+        });
+
+        if (hoveredBar !== null) {
+            const value = hours[hoveredBar];
+            tooltip.innerHTML = `<strong>${months[hoveredBar]}</strong><br>${value}h`;
+            tooltip.style.left = (e.clientX + 10) + 'px';
+            tooltip.style.top = (e.clientY - 45) + 'px';
+            tooltip.style.opacity = '1';
+            canvas.style.cursor = 'pointer';
+        } else {
+            tooltip.style.opacity = '0';
+            canvas.style.cursor = 'default';
+        }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        tooltip.style.opacity = '0';
+        canvas.style.cursor = 'default';
+    });
+});
+</script>
+{% endif %}
+
+{% endblock %}
+
+

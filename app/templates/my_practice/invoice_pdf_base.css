@@ -1,0 +1,147 @@
+/* Shared CSS for invoice PDF templates (DE/EN) */
+@page {
+    size: A4;
+    margin: 2cm 2cm 0.5cm 2cm;
+}
+
+body {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 10.5pt;
+    color: #000;
+    line-height: 1.3;
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3cm;
+}
+
+.header-space {
+    height: 3cm;
+}
+
+.logo {
+    position: absolute;
+    top: 0;
+    right: 0;
+    max-width: 200px;
+    max-height: 80px;
+}
+
+.practice-info {
+    position: absolute;
+    top: 85px;
+    right: 0;
+    font-size: 8pt;
+    text-align: right;
+    line-height: 1.3;
+}
+
+.client-address {
+    margin-top: 2.5cm;
+    margin-bottom: 1cm;
+    font-size: 10.5pt;
+}
+
+.date-line {
+    text-align: right;
+    margin-bottom: 1cm;
+    font-size: 10.5pt;
+}
+
+.invoice-title {
+    font-weight: bold;
+    margin-bottom: 0.6cm;
+    font-size: 10.5pt;
+}
+
+.intro-text {
+    margin-bottom: 0.3cm;
+    font-size: 10.5pt;
+}
+
+table.items {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.5cm;
+}
+
+table.items td {
+    padding: 0 5px;
+}
+
+table.items td:first-child {
+    width: 20%;
+}
+
+table.items td:nth-child(2) {
+    width: 60%;
+}
+
+table.items td:last-child {
+    width: 20%;
+    text-align: right;
+}
+
+.client-note {
+    margin-bottom: 0.3cm;
+    font-size: 10.5pt;
+}
+
+.sum-line {
+    margin-top: 0.3cm;
+    margin-bottom: 0.6cm;
+    font-weight: bold;
+    font-size: 10.5pt;
+    text-align: right;
+    padding-right: 5px;
+}
+
+.payment-terms {
+    margin-bottom: 1cm;
+    font-size: 10.5pt;
+}
+
+.signature-section {
+    margin-bottom: 1cm;
+}
+
+.signature {
+    max-width: 200px;
+    max-height: 80px;
+    margin-bottom: 0.3cm;
+}
+
+.signature-name {
+    font-size: 10pt;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3.5cm;
+    font-size: 7pt;
+    color: #000;
+    line-height: 1.3;
+    text-align: center;
+    border-top: 1px solid #ccc;
+    padding-top: 0.3cm;
+}
+
+.footer-space {
+    height: 3.5cm;
+}
+
+.footer-row {
+    margin-bottom: 0.15cm;
+}
+
+.payment-info {
+    margin-top: 1cm;
+    font-size: 10pt;
+}

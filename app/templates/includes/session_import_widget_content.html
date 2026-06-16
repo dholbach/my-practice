@@ -1,0 +1,50 @@
+{% comment %}
+Session Import Widget Content - P-003 Phase 4
+Shows Google Calendar connection status and import link
+Uses centralized styles from widgets.css
+{% endcomment %}
+
+<div class="widget-content-section">
+    {% if is_connected %}
+        <div class="status-box success">
+            <span class="status-box-icon">✓</span>
+            <div class="status-box-text">
+                <strong>Google Calendar verbunden</strong>
+                <p>Bereit zum Importieren neuer Sitzungen</p>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <a href="{{ import_url }}" class="widget-btn-primary">
+                📅 Sitzungen importieren
+            </a>
+            <p class="text-xs text-secondary text-center">
+                Letzte 30 Tage aus "Praxis" Kalender
+            </p>
+        </div>
+    {% elif has_calendar_token and token_expired %}
+        <div class="status-box warning">
+            <span class="status-box-icon">⚠️</span>
+            <div class="status-box-text">
+                <strong>Token abgelaufen</strong>
+                <p>Bitte verbinde dich erneut mit Google Calendar</p>
+            </div>
+        </div>
+
+        <a href="{{ connect_url }}" class="widget-btn-secondary">
+            🔄 Erneut verbinden
+        </a>
+    {% else %}
+        <div class="status-box info">
+            <span class="status-box-icon">📆</span>
+            <div class="status-box-text">
+                <strong>Nicht verbunden</strong>
+                <p>Verbinde Google Calendar um Sessions zu importieren</p>
+            </div>
+        </div>
+
+        <a href="{{ connect_url }}" class="widget-btn-secondary">
+            🔗 Calendar verbinden
+        </a>
+    {% endif %}
+</div>

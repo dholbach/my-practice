@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load markdown_filters %}
+
+{% block title %}Sitzungsprotokoll – {{ client.client_code }}{% endblock %}
+{% block page_title %}📝 Sitzungsprotokoll{% endblock %}
+{% block page_subtitle %}{{ client.client_code }}{% endblock %}
+
+
+{% block content %}
+<div class="section-card">
+    {% if is_edit %}
+    <form method="post" action="{% url 'session_log_edit' client.pk log.pk %}">
+    {% else %}
+    <form method="post" action="{% url 'session_log_create' client.pk %}">
+    {% endif %}
+    {% csrf_token %}
+
+    {% if not is_edit %}
+    <div class="cn-field">
+        <label class="cn-label" for="id_session_date">Sitzungsdatum</label>
+        <input type="date" id="id_session_date" name="session_date"
+               class="form-control" value="{{ prefill_date }}" required>
+    </div>
+    <div class="cn-field">
+        <label class="cn-label" for="id_duration">Dauer (Minuten)</label>
+        <input type="number" id="id_duration" name="duration"
+               class="form-control" value="{{ prefill_duration }}" min="1" style="max-width: 120px;">
+    </div>
+    {% else %}
+    <div class="cn-field" style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
+        <div>
+            <label class="cn-label">Sitzungsdatum</label>
+            <div class="text-secondary" style="padding: 0.5rem 0;">
+                {{ log.session.session_date|date:"d.m.Y" }}
+            </div>
+        </div>
+        <div>
+            <label class="cn-label" for="id_duration">Dauer (Minuten)</label>
+            <input type="number" id="id_duration" name="duration"
+                   class="form-control" value="{{ log.session.duration }}" min="1" style="max-width: 120px;">
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="cn-field">
+        <label class="cn-label" for="id_session_type">Sitzungstyp</label>
+        <select id="id_session_type" name="session_type" class="form-control">
+            {% for value, label in session_type_choices %}
+            <option value="{{ value }}"
+                {% if is_edit and log.session_type == value %}selected
+                {% elif not is_edit and value == 'standard' %}selected
+                {% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="cn-field">
+        <label class="cn-label">Stimmungs-Tags</label>
+        <div class="cn-tag-grid">
+            {% for value, label in mood_tag_choices %}
+            <label class="cn-tag-check">
+                <input type="checkbox" name="mood_tags" value="{{ value }}"
+                       {% if is_edit and value in log.mood_tags %}checked{% endif %}>
+                <span class="cn-tag cn-tag-{{ value }}">{{ label }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="cn-field">
+        <label class="cn-label" for="id_content">Sitzungsnotiz</label>
+        <textarea id="id_content" name="content" class="form-control cn-textarea-large"
+                  placeholder="Reflexion nach der Sitzung…">{% if is_edit %}{{ log.content }}{% else %}{{ content_template }}{% endif %}</textarea>
+        {% if is_edit and log.content %}
+        <details class="cn-notes-preview">
+            <summary>📖 Vorschau (gespeicherter Stand)</summary>
+            <div class="md-rendered">{{ log.content|render_markdown }}</div>
+        </details>
+        {% endif %}
+    </div>
+
+    <div class="cn-field">
+        <label class="cn-label" for="id_therapist_reflection">Eigene Reflexion</label>
+        <textarea id="id_therapist_reflection" name="therapist_reflection"
+                  class="form-control cn-textarea-medium"
+                  placeholder="Wie ging es mir dabei? Gegenübertragungsimpulse…">{% if is_edit %}{{ log.therapist_reflection }}{% endif %}</textarea>
+        {% if is_edit and log.therapist_reflection %}
+        <details class="cn-notes-preview">
+            <summary>📖 Vorschau (gespeicherter Stand)</summary>
+            <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
+        </details>
+        {% endif %}
+    </div>
+
+    <div class="cn-field">
+        <label class="cn-label" for="id_interventions">Interventionen</label>
+        <textarea id="id_interventions" name="interventions"
+                  class="form-control cn-textarea-small"
+                  placeholder="Angewandte Techniken, Methoden…" rows="3">{% if is_edit %}{{ log.interventions }}{% endif %}</textarea>
+    </div>
+
+    <div class="cn-actions">
+        <button type="submit" class="btn btn-primary">
+            {% if is_edit %}Aktualisieren{% else %}Protokoll speichern{% endif %}
+        </button>
+        <a href="{% url 'client_detail' client.pk %}#tab-sitzungen" class="btn btn-secondary">Abbrechen</a>
+    </div>
+    </form>
+</div>
+{% endblock %}

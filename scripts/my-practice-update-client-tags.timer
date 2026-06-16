@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly client tags update timer
+Requires=my-practice-update-client-tags.service
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

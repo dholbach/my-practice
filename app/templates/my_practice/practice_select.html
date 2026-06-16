@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Praxis auswählen - Therapy Practice{% endblock %}
+
+{% block page_title %}Praxis auswählen{% endblock %}
+{% block page_subtitle %}Bitte wählen Sie eine Praxis aus, um fortzufahren{% endblock %}
+
+{% block content %}
+<div class="practice-grid">
+    {% for practice in practices %}
+    <a href="{% url 'practice_switch' practice.slug %}" class="practice-card">
+        <h3>🏥 {{ practice.name }}</h3>
+        <div class="practice-title">{{ practice.title }}</div>
+        {% if practice.city %}
+        <div class="text-secondary text-sm">
+            📍 {{ practice.city }}
+        </div>
+        {% endif %}
+        <div class="practice-select-btn">
+            Praxis auswählen →
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% if not practices %}
+<div class="empty-state">
+    <p>Sie haben keinen Zugriff auf eine Praxis.</p>
+    <p>Bitte kontaktieren Sie den Administrator.</p>
+</div>
+{% endif %}
+{% endblock %}
