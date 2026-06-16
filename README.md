@@ -144,6 +144,12 @@ Full walkthrough including real-use setup: [docs/guides/GETTING_STARTED.md](docs
 
 ---
 
+## Keeping up to date
+
+See [UPGRADING.md](UPGRADING.md) for the standard upgrade procedure and any version-specific steps.
+
+---
+
 ## Status and limitations
 
 - **Daily driver** — used in production for one practice since early 2026; ~945 tests
@@ -174,6 +180,7 @@ Reference: `./dev.py --help` or [docs/operations/SCRIPTS.md](docs/operations/SCR
 
 | | |
 |---|---|
+| [UPGRADING.md](UPGRADING.md) | Upgrade procedure and breaking-change notes |
 | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) | First-run walkthrough |
 | [FEATURES.md](docs/FEATURES.md) | Full feature list |
 | [CUSTOMISATION.md](docs/guides/CUSTOMISATION.md) | What to replace before using for your own practice |
