@@ -3,7 +3,7 @@
 [![CI](https://github.com/dholbach/my-practice/actions/workflows/ci.yml/badge.svg)](https://github.com/dholbach/my-practice/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Django 6](https://img.shields.io/badge/Django-6.0-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
-[![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
 **Self-hosted practice management for independent, private-pay practices** — therapy, coaching, and similar.  
 Invoicing, session tracking, notes, analytics — on your own hardware, under your own control.
