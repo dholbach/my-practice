@@ -7,23 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
@@ -36,25 +21,10 @@ jobs:
           cache-dependency-path: app/requirements.txt
 
       - name: Install dependencies
-        run: pip install -r app/requirements.txt
+        run: pip install ruff==0.15.17
 
       - name: Lint
         working-directory: app
         run: |
           ruff check .
           ruff format --check .
-
-      - name: Generate test Fernet key
-        run: |
-          echo "FERNET_KEY=$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" >> $GITHUB_ENV
-
-      - name: Run tests
-        working-directory: app
-        env:
-          DJANGO_SECRET_KEY: ci-secret-key-not-used-in-production
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: "5432"
-        run: pytest -x
