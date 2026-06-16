@@ -67,5 +67,5 @@ Committed: `33b0361`
 ## Related
 
 - [CLAUDE.md Language Policy](../../../CLAUDE.md#language-policy-p-038)
-- [P-024 OSS Release](../todo/P-024_OSS_RELEASE.md)
+- [P-024 OSS Release](P-024_OSS_RELEASE.md)
 - [P-039 Django i18n](../todo/P-039_I18N.md)
