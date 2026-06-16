@@ -1,0 +1,29 @@
+# Upgrading
+
+This document is for self-hosters moving from one version to the next.
+
+## Standard upgrade procedure
+
+```bash
+git pull
+./dev.py restart --force   # rebuilds image, reloads .env
+./dev.py manage migrate    # applies any new database migrations
+```
+
+That's it in the normal case. If a release has additional steps — config changes, data migrations, removed settings — they are documented in the version section below.
+
+## Breaking changes by version
+
+### v0.1.0 → next
+
+No breaking changes documented yet. Check back when the next release is tagged.
+
+## Versioning policy
+
+Releases follow [semantic versioning](https://semver.org/):
+
+- **Patch** (`v0.1.x`) — bug fixes and dependency updates; always safe to apply
+- **Minor** (`v0.x.0`) — new features; backwards-compatible; run migrations
+- **Major** (`vX.0.0`) — breaking changes; read the version section below before upgrading
+
+Breaking changes that require manual intervention (config renames, removed fields, changed env vars) are always called out explicitly in the relevant version section above.
