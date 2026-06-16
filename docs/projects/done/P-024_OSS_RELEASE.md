@@ -171,12 +171,12 @@ Carved out of P-024 as "out of scope", these landed shortly after publication
   `.github/workflows/ci.yml` runs `ruff check` + `ruff format --check` on push/PR; README
   gained an architecture tour and badges
 - ✅ **AGPL clarification** (PR #4, `2f664c7`)
+- ✅ **First-run wizard**: `setup_practice` management command (interactive — creates a `Practice` from prompted fields and links it to all superusers; `--no-input` for testing)
 
 ### Still open (backlog — see TODO.md / PROJECTS.md)
 
 These were also originally listed as out of scope and remain future work:
 
-- First-run wizard / `setup_practice` management command
 - `docker-compose.prod.yml` for VPS (Caddy, HTTPS, health-check)
 - Extend CI beyond lint: run the pytest suite + build/publish a Docker image on GHCR
 - Semver release process / `UPGRADING.md` update story for self-hosters
