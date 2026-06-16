@@ -15,7 +15,7 @@ pypdf==6.13.2
 urllib3==2.7.0
 
 # Google Calendar API
-google-auth==2.54.0
+google-auth==2.55.0
 google-auth-oauthlib==1.4.0
 google-auth-httplib2==0.4.0
 google-api-python-client==2.197.0
