@@ -4,6 +4,10 @@ about: Suggest an improvement or new capability
 labels: enhancement
 ---
 
+<!-- Large features (multi-session work, architecture changes, compliance implications) may be
+     tracked as internal P-XXX planning projects rather than issues. See CONTRIBUTING.md for the
+     distinction. If unsure, open the issue — it's easy to convert later. -->
+
 ## What problem does this solve?
 
 <!-- Describe the workflow or limitation you're running into. Focus on the problem, not the solution. -->
