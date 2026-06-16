@@ -49,6 +49,14 @@ Full walkthrough: [docs/guides/GETTING_STARTED.md](docs/guides/GETTING_STARTED.m
 4. Open a PR using the template; fill in all sections
 5. PRs are reviewed by the maintainer when time allows — this is a one-person project
 
+## Issues vs. Projects
+
+**GitHub issues** are the right place for anything a contributor could reasonably pick up: bugs, well-scoped feature requests, documentation gaps, or test coverage improvements. A good issue results in one PR (or a small handful).
+
+**P-XXX planning projects** are used for larger efforts that need a design document before any PR makes sense — multi-session work, features with compliance or architecture implications, or things that are not yet ready for outside contribution. These live in [`docs/projects/`](docs/projects/) and are tracked in [`PROJECTS.md`](PROJECTS.md). If you open a feature request that turns out to be that scale, the maintainer will note it and link to the planning doc when one exists.
+
+In short: **file an issue for anything you'd accept a PR for today**. If you're unsure, file the issue — it's easy to close or convert later.
+
 ## Issues
 
 Use the issue templates. For bugs, include your Django/Docker versions and a minimal reproduction. For feature requests, explain the workflow problem you're solving, not just the solution you have in mind.
