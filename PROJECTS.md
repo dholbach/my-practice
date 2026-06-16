@@ -28,7 +28,7 @@
 
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
-- **OSS follow-ups** (post P-024): first-run wizard / `setup_practice`; `docker-compose.prod.yml` (Caddy/HTTPS); extend CI beyond lint (pytest + GHCR image); semver release + `UPGRADING.md`; GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
+- **OSS follow-ups** (post P-024): `docker-compose.prod.yml` (Caddy/HTTPS); extend CI beyond lint (pytest + GHCR image); semver release + `UPGRADING.md`; GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
 - **P-039 Django i18n** (post-OSS): Full bilingual UI via `{% trans %}` / `.po` files; ~2 weeks effort → [docs/projects/todo/P-039_I18N.md](docs/projects/todo/P-039_I18N.md)
 
 ### ✅ Abgeschlossen
