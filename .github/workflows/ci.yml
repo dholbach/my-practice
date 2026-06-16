@@ -57,4 +57,4 @@ jobs:
           POSTGRES_PASSWORD: test_password
           POSTGRES_HOST: localhost
           POSTGRES_PORT: "5432"
-        run: pytest
+        run: pytest -x
