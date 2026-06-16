@@ -3,7 +3,7 @@
 
 # Code Quality Tools
 pre-commit>=4.6.0
-isort>=5.13.2
+isort>=8.0.1
 vulture>=2.16
 pip-audit>=2.9.0
 
