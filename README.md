@@ -23,14 +23,33 @@ The name is a little self-conscious. "my practice" isn't meant as a possessive �
 
 The hard requirement, before anything else: **client data does not leave my machine.** No third-party cloud, no SaaS backend, no "encrypted in transit" hand-waving. Personal and health data (Art. 9 GDPR) stays on hardware I control, with sensitive notes encrypted at rest under a key only I hold.
 
-Building it this way forced me to think properly about questions that any private practice handling personal data should be able to answer — and which off-the-shelf SaaS quietly answers *for* you. The notes I made along the way are in the repo, and might be a useful checklist even if you never run the app:
-
-- **What actually goes into a data-protection impact assessment?** → [DPIA template](docs/operations/DPIA-template.md)
-- **How are backups and legal retention (§ 147 AO — 10 years) handled?** → [backup setup](docs/guides/BACKUP_SETUP.md)
-- **What happens to the data if I'm suddenly unavailable?** → [emergency access planning](docs/guides/EMERGENCY_ACCESS_PLANNING.md)
-- **How is sensitive data secured at rest?** → [clinical data security](docs/guides/CLINICAL_DATA_SECURITY.md), [security model](docs/operations/SECURITY.md)
+Building it this way forced me to think explicitly about questions that any private practice handling personal data should be able to answer — and which off-the-shelf SaaS quietly answers *for* you, invisibly. The notes I made along the way are in the repo.
 
 Fork it, rename it, make it yours.
+
+---
+
+## Not a developer? These resources are still for you
+
+You don't need to run the app to get value from this project. Running a private practice means handling Art. 9 health data under GDPR — and most of what that requires, SaaS tools handle silently on your behalf, without you ever seeing how. Building this system meant answering those questions explicitly. The documents below are usable as standalone references:
+
+**[DPIA template](docs/operations/DPIA-template.md)**  
+When you systematically process Art. 9 health data, GDPR Art. 35 requires a Data Protection Impact Assessment before you start. Many solo practitioners don't know they need one. This is a filled-in template for a single-practitioner psychotherapy practice — adapt it to your setup and you're most of the way there.
+
+**[Emergency access planning](docs/guides/EMERGENCY_ACCESS_PLANNING.md)**  
+What happens to your clients and your data if you're suddenly unavailable — illness, accident, incapacitation? Your clients need continuity of care; your practice needs an administrative handover. This guide walks through a concrete model for solo practitioners: who can reach clients, who can access records, and what the legal boundaries are.
+
+**[Backup and § 147 AO retention](docs/guides/BACKUP_SETUP.md)**  
+German law requires keeping business records — including invoices — for ten years (§ 147 AO). That's not a technical problem; it's a compliance question every practice has to answer, regardless of what software they use. The backup guide explains the strategy used here; the questions it raises apply universally.
+
+**[Clinical data security](docs/guides/CLINICAL_DATA_SECURITY.md)**  
+Session notes and client profiles are the most sensitive data in a practice. This guide explains the two-key model used here — full-disk encryption plus a separate Fernet key for clinical content — what each layer protects against, and the questions every practitioner should be able to answer about wherever their data lives.
+
+**[Client privacy notices](docs/operations/PRIVACY_NOTICE_CLIENTS_DE.md)**  
+Ready-to-adapt privacy notices (DE + EN) for informing clients about data processing under GDPR Art. 13. Most practices need these and most don't have them written down.
+
+**[Record of processing activities](docs/operations/DATA_REGISTER.md)**  
+A Verzeichnis von Verarbeitungstätigkeiten as required under GDPR Art. 30 — the register of what data you hold, why, how long, and who has access. Filled in for a solo psychotherapy practice.
 
 ---
 
