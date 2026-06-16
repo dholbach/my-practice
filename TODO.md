@@ -19,7 +19,6 @@ Open backlog only. For completed work history: [docs/CHANGELOG.md](docs/CHANGELO
 
 - [ ] `docker-compose.prod.yml` for VPS (Caddy, HTTPS, health-check)
 - [ ] Extend CI beyond lint: run pytest suite + build/publish Docker image on GHCR
-- [ ] Semver release process + `UPGRADING.md` for self-hosters
 - [ ] OSS governance: GitHub Discussions + responsible-disclosure policy
 
 ### Backup
