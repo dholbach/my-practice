@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-06-16 — P-024 OSS Release complete**: Repo public at `dholbach/my-practice` (AGPL-3.0, `v0.1.0`); orphan snapshot pushed with no private history; topics + description set. Post-release onramp merged on top: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue/PR templates, lint-only CI workflow, compliance-doc prominence, README architecture tour + badges.
 - **2026-06-16 — P-040 + P-024 improvements**: Seed data gains session logs, client profiles, time-off entries, cancelled sessions, fixed invoice quantities and numbering; 5 README screenshots added; nav emoji/badge bugs fixed; Ausfallquote chart fixed.
-- **2026-06-16 — P-045 complete**: All hardcoded hex colors in templates replaced with semantic classes; badge + gradient tokens in `@theme`; `:root` gone; zero dark-mode blind spots.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -28,7 +28,7 @@
 
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
-- **P-024 OSS Release**: migrations squashed ✅, DPIA template ✅, SessionHistory removed ✅, README rewritten ✅, OSS messaging clarified ✅, screenshots ✅ — remaining: create GitHub repo + orphan push → [docs/projects/wip/P-024_OSS_RELEASE.md](docs/projects/wip/P-024_OSS_RELEASE.md)
+- **OSS follow-ups** (post P-024): first-run wizard / `setup_practice`; `docker-compose.prod.yml` (Caddy/HTTPS); extend CI beyond lint (pytest + GHCR image); semver release + `UPGRADING.md`; GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
 - **P-039 Django i18n** (post-OSS): Full bilingual UI via `{% trans %}` / `.po` files; ~2 weeks effort → [docs/projects/todo/P-039_I18N.md](docs/projects/todo/P-039_I18N.md)
 
 ### ✅ Abgeschlossen
@@ -37,6 +37,7 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 
 | Projekt | Beschreibung | Abgeschlossen |
 | ------- | ------------ | ------------- |
+| P-024 | OSS Release: repo public (AGPL-3.0, `v0.1.0`), orphan push without private history, topics/description set; post-release onramp (CONTRIBUTING, CoC, issue/PR templates, lint CI, compliance prominence) | Jun 2026 |
 | P-045 | Tailwind CSS: full migration — 29 per-page CSS files deleted, `common.css` merged, `@theme` token system, zero hardcoded hex in templates, dark mode everywhere | Jun 2026 |
 | P-044 | Alpine.js: CDN drop-in, `inline-handlers.js` + `email_card.js` deleted, all inline event handlers migrated across 16 templates | Jun 2026 |
 | P-100 | Complexity reduction: all 7 radon hotspots → extracted builders, processors, topic methods | Mai 2026 |
