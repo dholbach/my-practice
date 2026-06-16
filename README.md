@@ -150,7 +150,7 @@ Full walkthrough including real-use setup: [docs/guides/GETTING_STARTED.md](docs
 - **German UI** — the interface is in German. Full i18n via Django `{% trans %}` is on the roadmap — see [P-039](docs/projects/todo/P-039_I18N.md). If you'd like to help translate, PRs are very welcome.
 - **One practice, one setup** — multi-practice support exists in the data model but the UX assumes a solo practitioner
 - **Some parts are mine** — the backup checklist items, bank CSV parser, and treatment contract template reflect my specific setup; see [CUSTOMISATION.md](docs/guides/CUSTOMISATION.md)
-- **AGPL-3.0** — if you run a modified version for others, you must share the source
+- **AGPL-3.0** — Using it for your own practice: no restrictions. Offering it as a service to others: AGPL applies.
 
 ---
 
