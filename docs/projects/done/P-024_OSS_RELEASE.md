@@ -1,9 +1,20 @@
 # P-024 — OSS Release
 
-**Status**: TODO  
+**Status**: ✅ DONE  
 **Priority**: Medium  
 **Created**: March 2026  
-**Updated**: June 2026
+**Updated**: June 2026  
+**Completed**: June 2026
+
+---
+
+## Summary
+
+The repository is **public** at [github.com/dholbach/my-practice](https://github.com/dholbach/my-practice)
+under **AGPL-3.0**, tagged `v0.1.0`. The orphan snapshot (`895ad65`, "Initial public
+release v0.1.0") was pushed with no private dev history, description and topics are set, and
+the post-release onramp (contribution docs, CI, compliance prominence) has merged on top.
+See [§8 Post-Release Follow-ups](#8-post-release-follow-ups) for what landed after publication.
 
 ---
 
@@ -102,8 +113,8 @@ git push -u origin public:main
 - [x] SessionHistory exported to CSV ($MY_PRACTICE_DATA_DIR/documents/) and removed from codebase (June 2026)
 - [x] Full content review completed — `git grep` clean, docs gitignored where personal (June 2026)
 - [x] Add screenshots to `docs/screenshots/` (5 views with seed data — June 2026)
-- [ ] Create repo + push orphan branch (see `memory/PUBLISH_STEPS.md` for step-by-step)
-- [ ] Set topics/description on GitHub
+- [x] Create repo + push orphan branch — public at `dholbach/my-practice`, orphan commit `895ad65` "Initial public release v0.1.0" (June 2026)
+- [x] Set topics/description on GitHub — description set; topics: `django`, `dsgvo`, `gdpr`, `healthcare`, `postgresql`, `practice-management`, `psychotherapy`, `self-hosted` (June 2026)
 
 ### 7. Customization Audit — What OSS Adopters Must Configure
 
@@ -147,15 +158,29 @@ that must be replaced**.
 
 ---
 
-## Out of Scope for P-024
+## 8. Post-Release Follow-ups
 
-Goes into a follow-up project (P-025 or similar):
+Carved out of P-024 as "out of scope", these landed shortly after publication
+(PRs #1–#4) and are recorded here rather than in a separate project:
+
+- ✅ **Contribution onramp** (PR #1, `f9ac5ac`): `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
+  `.github/ISSUE_TEMPLATE/` (bug + feature), `.github/pull_request_template.md`
+- ✅ **Compliance prominence** (PR #2, `c15b784`): elevated DPIA / data-security guides for
+  non-technical practitioners
+- ✅ **CI workflow + architecture tour** (PR #3, `3c86d40` → scaled to lint-only `a1d5f83`):
+  `.github/workflows/ci.yml` runs `ruff check` + `ruff format --check` on push/PR; README
+  gained an architecture tour and badges
+- ✅ **AGPL clarification** (PR #4, `2f664c7`)
+
+### Still open (backlog — see TODO.md / PROJECTS.md)
+
+These were also originally listed as out of scope and remain future work:
 
 - First-run wizard / `setup_practice` management command
 - `docker-compose.prod.yml` for VPS (Caddy, HTTPS, health-check)
-- GitHub Actions CI (ruff + pytest, Docker image build on GHCR)
-- `CONTRIBUTING.md`, issue templates, GitHub org, semver release process
-- OSS governance (discussions, responsible-disclosure policy)
+- Extend CI beyond lint: run the pytest suite + build/publish a Docker image on GHCR
+- Semver release process / `UPGRADING.md` update story for self-hosters
+- OSS governance (GitHub Discussions, responsible-disclosure policy)
 
 ---
 
