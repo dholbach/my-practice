@@ -1,5 +1,10 @@
 # my-practice
 
+[![CI](https://github.com/dholbach/my-practice/actions/workflows/ci.yml/badge.svg)](https://github.com/dholbach/my-practice/actions/workflows/ci.yml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Django 6](https://img.shields.io/badge/Django-6.0-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+
 **Self-hosted practice management for independent, private-pay practices** — therapy, coaching, and similar.  
 Invoicing, session tracking, notes, analytics — on your own hardware, under your own control.
 
@@ -103,6 +108,21 @@ Full feature list: [docs/FEATURES.md](docs/FEATURES.md)
 
 ---
 
+## Architecture
+
+A conventional Django 6 monolith backed by PostgreSQL (psycopg3, async-capable), ~950 tests, no external services required beyond the database. A few non-obvious choices:
+
+**Encrypted clinical fields**  
+Session notes and sensitive client data use a custom [`EncryptedTextField`](app/my_practice/fields.py) backed by Fernet symmetric encryption (`cryptography` library). The key lives in `FERNET_KEY` (env var), separate from the LUKS full-disk-encryption key — two independent keys, two independent attack surfaces. A plain SQL `SELECT` on an encrypted column returns `gAAAAA...` ciphertext; the ORM is the only path to plaintext. Trade-off: no `.filter()`/`.exclude()` on encrypted columns — navigate clinical records by client, date, and tags instead.
+
+**Why PostgreSQL**  
+Performance indexes on the invoice/client foreign keys (migrations 0013, 0014), and psycopg3's async driver for Django's async views. The load of a single-practitioner practice doesn't require it, but it keeps the deployment realistic and the door open for async features.
+
+**Pattern layer**  
+Views stay thin by delegating to builder classes (`AnalyticsDashboardBuilder`, `FinancialListContextBuilder`) and filter helpers (`InvoiceFilterHelper`). Models, views, and utils are split into domain-focused modules under `app/my_practice/{models,views,utils}/`. The full pattern catalogue — including the builder API, CRUD mixins, and query helpers — is in [`CLAUDE.md`](CLAUDE.md). It was written as AI-assistant instructions but reads as a practical architecture reference for anyone contributing to the codebase.
+
+---
+
 ## Quick start
 
 **Requirements**: Docker with the Compose plugin, Git, Python 3 (for `dev.py`).
@@ -163,6 +183,7 @@ Reference: `./dev.py --help` or [docs/operations/SCRIPTS.md](docs/operations/SCR
 | [SECURITY.md](docs/operations/SECURITY.md) | Security model and deployment notes |
 | [DPIA-template.md](docs/operations/DPIA-template.md) | Data protection impact assessment template |
 | [CODE_STRUCTURE.md](docs/architecture/CODE_STRUCTURE.md) | Codebase patterns |
+| [CLAUDE.md](CLAUDE.md) | Builder classes, view mixins, query helpers — AI instructions that double as an architecture reference |
 | [PROJECTS.md](PROJECTS.md) | Roadmap and backlog |
 
 ---
