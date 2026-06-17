@@ -24,6 +24,7 @@ services:
     environment:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_DEBUG=False
+      - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-false}
       - POSTGRES_DB=${POSTGRES_DB:-my_practice}
       - POSTGRES_USER=${POSTGRES_USER:-my_practice}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
