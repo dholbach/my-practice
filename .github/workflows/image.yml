@@ -1,6 +1,9 @@
 name: Build & push Docker image
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       tag:
@@ -18,7 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag }}
+          # workflow_dispatch: check out the requested tag
+          # push (tag): github.event.inputs.tag is empty, falls back to github.ref
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Determine image tag
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -40,7 +54,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/dholbach/my-practice:${{ github.event.inputs.tag }}
+            ghcr.io/dholbach/my-practice:${{ steps.meta.outputs.tag }}
             ghcr.io/dholbach/my-practice:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
