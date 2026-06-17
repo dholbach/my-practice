@@ -27,6 +27,11 @@ class UpdateCheckContextProcessorTest(TestCase):
         ctx = update_check(_make_request())
         self.assertEqual(ctx, {})
 
+    @override_settings(DEBUG=True)
+    def test_debug_mode_returns_empty(self):
+        ctx = update_check(_make_request())
+        self.assertEqual(ctx, {})
+
     def test_anonymous_user_returns_empty(self):
         ctx = update_check(_make_request(authenticated=False))
         self.assertEqual(ctx, {})
@@ -52,6 +57,7 @@ class UpdateCheckContextProcessorTest(TestCase):
             ctx = update_check(_make_request())
         self.assertTrue(ctx.get("update_available"))
         self.assertEqual(ctx.get("latest_version"), "v99.0.0")
+        self.assertEqual(ctx.get("current_version"), VERSION)
 
     def test_result_is_cached(self):
         with patch("urllib.request.urlopen") as mock_open:

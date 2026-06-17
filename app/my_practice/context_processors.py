@@ -12,8 +12,13 @@ _CACHE_TIMEOUT = 86400  # 24 hours
 
 
 def update_check(request):
-    """Inject update_available + latest_version when a newer release exists on GitHub."""
+    """Inject update_available + latest_version when a newer release exists on GitHub.
+
+    Skipped in DEBUG mode — dev users track git and don't need the nudge.
+    """
     if getattr(settings, "UPDATE_CHECK_DISABLED", False):
+        return {}
+    if settings.DEBUG:
         return {}
     if not request.user.is_authenticated:
         return {}
@@ -28,5 +33,5 @@ def update_check(request):
             return {}
 
     if latest and latest != VERSION:
-        return {"update_available": True, "latest_version": latest}
+        return {"update_available": True, "current_version": VERSION, "latest_version": latest}
     return {}
