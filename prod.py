@@ -233,10 +233,16 @@ def cmd_setup(_args):
     if not _wait_for_healthy():
         abort(
             "Django did not become healthy in time.\n"
-            "  Check what went wrong:\n"
+            "  Check the logs for details:\n"
             "    ./prod.py logs\n"
-            "  Common causes: wrong POSTGRES_PASSWORD, missing FERNET_KEY,\n"
-            "  or a port conflict on 8000."
+            "\n"
+            "  Common causes:\n"
+            "  - Password mismatch: a postgres volume exists from a previous run with a\n"
+            "    different POSTGRES_PASSWORD. Fix: remove the old volume and retry:\n"
+            "      docker compose -f docker-compose.prod.yml down -v\n"
+            "      ./prod.py start\n"
+            "  - Missing or invalid FERNET_KEY in .env\n"
+            "  - Port 8000 already in use on this machine"
         )
 
     # 6. Create superuser
