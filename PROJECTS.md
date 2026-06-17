@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-06-17 — in-app update banner**: context processor polls GitHub releases API (24h cache); banner shown to authenticated users when a newer release exists; opt-out via `UPDATE_CHECK_DISABLED`.
 - **2026-06-17 — npm tooling cleanup**: `npm ci` + lock file in Dockerfile for reproducible CSS builds; `npm audit` added to `./dev.py review`; stale root `requirements-dev.txt` deleted; `dependabot.yml` YAML fix.
-- **2026-06-17 — v0.2.0 release**: `prod.py` one-command setup (secrets, pull, start, createsuperuser, setup_practice); version-pinned compose download; fixes: bridge networking, collectstatic crash, HTTPS redirect loop, postal_code field width, production image stage, `-it` exec docs.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
