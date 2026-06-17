@@ -17,8 +17,7 @@ Open backlog only. For completed work history: [docs/CHANGELOG.md](docs/CHANGELO
 
 ### OSS / Self-hosting (post P-024)
 
-- [ ] `docker-compose.prod.yml` for VPS (Caddy, HTTPS, health-check)
-- [ ] Extend CI: run pytest suite in GitHub Actions
+- [ ] Extend CI beyond lint: run pytest suite
 - [ ] OSS governance: GitHub Discussions + responsible-disclosure policy
 
 ### Backup
