@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: my-practice-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-my_practice}
+      - POSTGRES_USER=${POSTGRES_USER:-my_practice}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-my_practice} -d ${POSTGRES_DB:-my_practice}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  django:
+    image: ghcr.io/dholbach/my-practice:latest
+    container_name: my-practice-django
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=False
+      - POSTGRES_DB=${POSTGRES_DB:-my_practice}
+      - POSTGRES_USER=${POSTGRES_USER:-my_practice}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=127.0.0.1
+      - POSTGRES_PORT=5432
+      - USE_PROTON_BRIDGE=${USE_PROTON_BRIDGE:-false}
+      - EMAIL_HOST=${EMAIL_HOST:-127.0.0.1}
+      - EMAIL_PORT=${EMAIL_PORT:-1025}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-}
+      - GOOGLE_CALENDAR_CLIENT_ID=${GOOGLE_CALENDAR_CLIENT_ID:-}
+      - GOOGLE_CALENDAR_CLIENT_SECRET=${GOOGLE_CALENDAR_CLIENT_SECRET:-}
+      - FERNET_KEY=${FERNET_KEY}
+      - MY_PRACTICE_DATA_DIR=/my-practice-data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/backups:/app/backups
+      - static_data:/app/staticfiles
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/media:/app/media
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/documents:/my-practice-data/documents
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/admin/login/"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 300 config.wsgi:application"
+
+volumes:
+  postgres_data:
+    driver: local
+  static_data:
+    driver: local
