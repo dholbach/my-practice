@@ -40,11 +40,11 @@ ENV NODE_PATH=/usr/lib/node_modules
 # Copy application
 COPY . .
 
+# Build compiled CSS (tailwind.out.css is gitignored; must be generated at image build time)
+RUN npm run build:css
+
 # Make manage.py executable
 RUN chmod +x manage.py
-
-# Collect static files (will be done at runtime)
-# RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
