@@ -1,5 +1,5 @@
 # ── Stage 1: compile Tailwind CSS ───────────────────────────────────────────
-FROM node:20-slim AS css-builder
+FROM node:22-slim AS css-builder
 WORKDIR /app
 
 RUN npm install -g @tailwindcss/cli tailwindcss
@@ -55,8 +55,9 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "config.wsgi:applic
 # ── Stage 3: development image (extends production) ──────────────────────────
 FROM production AS development
 
-# Node.js for CSS rebuilding (npm run watch:css) and JS tests
-RUN apt-get update && apt-get install -y nodejs npm \
+# Node.js 22 (LTS) for CSS rebuilding (npm run watch:css) and JS tests
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 RUN npm install -g @tailwindcss/cli tailwindcss
 ENV NODE_PATH=/usr/lib/node_modules
