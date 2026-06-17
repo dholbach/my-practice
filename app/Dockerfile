@@ -45,6 +45,8 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 # Copy application and drop in the compiled CSS from the builder stage
 COPY . .
 COPY --from=css-builder /app/static/css/tailwind.out.css static/css/tailwind.out.css
+# Remove the Tailwind source file — only the compiled output is served
+RUN rm static/css/tailwind.css
 
 RUN chmod +x manage.py
 
