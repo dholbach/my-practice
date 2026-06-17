@@ -134,7 +134,7 @@ curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compo
 # create .env with DJANGO_SECRET_KEY, POSTGRES_PASSWORD, FERNET_KEY
 docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
-docker compose -f docker-compose.prod.yml exec django python manage.py createsuperuser
+docker compose -f docker-compose.prod.yml exec -it django python manage.py createsuperuser
 ```
 
 ### Source-based (for developers)
