@@ -40,9 +40,18 @@ That's it in the normal case. If a release has additional steps — config chang
 
 ## Breaking changes by version
 
-### v0.1.0 → next
+### v0.2.0 → next
 
-No breaking changes documented yet. Check back when the next release is tagged.
+No breaking changes documented yet.
+
+### v0.1.0 → v0.2.0
+
+No breaking changes. Two new files self-hosters may want:
+
+- **`docker-compose.prod.yml`** — production compose file using the pre-built GHCR image; replaces the source-based workflow for self-hosters who don't need to build from source
+- **`app/requirements-dev.txt`** — dev/CI dependencies split out from `requirements.txt`; only relevant if you build the image yourself
+
+If you were running source-based (`git pull` + `./dev.py restart --force`), no action needed — the split requirements file is handled automatically by the updated Dockerfile.
 
 ## Versioning policy
 
