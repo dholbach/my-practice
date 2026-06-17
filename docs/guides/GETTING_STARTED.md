@@ -12,44 +12,51 @@ Two paths depending on how you want to run the app:
 
 ## Image-based setup (recommended for self-hosters)
 
-### 1 — Get the compose file
+### The fast path — `prod.py setup`
 
-If you don't have the repository cloned, download just the compose file:
-
-```bash
-curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml
-```
-
-Or if you already have a clone: `cd my-practice` — the file is there.
-
-### 2 — Create your `.env`
-
-The three required secrets — the app refuses to start without them:
+Download one file and run one command:
 
 ```bash
-cat > .env <<'EOF'
-DJANGO_SECRET_KEY=
-POSTGRES_PASSWORD=
-FERNET_KEY=
-EOF
+curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/prod.py
+chmod +x prod.py
+./prod.py setup
 ```
 
-Fill them in — generate each value with:
+`setup` will:
+1. Check Docker is available
+2. Pull the image
+3. Generate the three required secrets and save them to `.env`
+4. Start the stack and wait for it to be healthy
+5. Walk you through `createsuperuser` and `setup_practice`
+
+Open **http://localhost:8000** when it finishes.
+
+> **`.env` does much more than three keys** — email, Google Calendar, backup location, HTTPS, and more are all configured there. Review the full reference once you're up and running:
+> [`/.env.example`](https://github.com/dholbach/my-practice/blob/main/.env.example)
+
+---
+
+### Manual setup (step by step)
+
+If you prefer to do it yourself, or `prod.py setup` hit an error partway through:
+
+#### 1 — Create your `.env`
 
 ```bash
 # DJANGO_SECRET_KEY
-python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+python3 -c "import secrets; print('DJANGO_SECRET_KEY=' + secrets.token_urlsafe(50))" >> .env
 
-# POSTGRES_PASSWORD — any strong password
-python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+# POSTGRES_PASSWORD
+python3 -c "import secrets; print('POSTGRES_PASSWORD=' + secrets.token_urlsafe(32))" >> .env
 
-# FERNET_KEY — must be this exact format
-python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# FERNET_KEY — generates inside the Docker image (no extra host deps needed)
+echo "FERNET_KEY=$(docker run --rm ghcr.io/dholbach/my-practice:latest \
+  python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" >> .env
 ```
 
-> `FERNET_KEY` encrypts clinical notes at rest (Art. 9 GDPR data). Keep a copy somewhere safe — losing it means losing access to encrypted content.
+> `FERNET_KEY` encrypts clinical notes at rest (Art. 9 GDPR data). Keep a copy somewhere safe — losing it means losing access to that encrypted content.
 
-### 3 — Pull and start
+#### 2 — Pull and start
 
 ```bash
 docker compose -f docker-compose.prod.yml pull
@@ -58,36 +65,32 @@ docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
 Migrations run automatically on first start. Wait a few seconds for Django to come up.
 
-### 4 — Create a login
+#### 3 — Create a login
 
 ```bash
 docker compose -f docker-compose.prod.yml exec -it django python manage.py createsuperuser
 ```
 
-### 5 — Set up your practice
+#### 4 — Set up your practice
 
 ```bash
 docker compose -f docker-compose.prod.yml exec -it django python manage.py setup_practice
 ```
 
-This prompts for your name, address, bank details, and tax status, then creates the practice and links it to your account.
-
-### 6 — Open the app
+#### 5 — Open the app
 
 Go to **http://localhost:8000** and log in.
 
-### Useful commands
+### Day-to-day commands
 
 ```bash
-# Follow logs
-docker compose -f docker-compose.prod.yml logs -f django
-
-# Run any management command
-docker compose -f docker-compose.prod.yml exec -it django python manage.py <command>
-
-# Upgrade to a new release
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
+./prod.py update          # pull latest image + restart
+./prod.py logs            # follow Django logs
+./prod.py logs --tail 50  # last 50 lines
+./prod.py status          # container health
+./prod.py manage migrate  # run migrations manually
+./prod.py shell           # Django shell
+./prod.py --help          # full command list
 ```
 
 ---
