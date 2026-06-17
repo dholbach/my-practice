@@ -2,9 +2,9 @@
 FROM node:22-slim AS css-builder
 WORKDIR /app
 
-# Install deps first so this layer is cached unless package.json changes
-COPY package.json .
-RUN npm install
+# Install deps first so this layer is cached unless package.json/lock changes
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # Only the files Tailwind's @source directives scan
 COPY static/css/tailwind.css static/css/tailwind.css
