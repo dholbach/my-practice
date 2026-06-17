@@ -2,7 +2,33 @@
 
 This document is for self-hosters moving from one version to the next.
 
-## Standard upgrade procedure
+## Image-based upgrade (recommended)
+
+Uses the pre-built image from GHCR — no build toolchain needed on the host.
+
+```bash
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Migrations run automatically on startup. That's it in the normal case.
+
+### Common management commands
+
+```bash
+# Create the first admin user
+docker compose -f docker-compose.prod.yml exec django python manage.py createsuperuser
+
+# Run any Django management command
+docker compose -f docker-compose.prod.yml exec django python manage.py <command>
+
+# Open a Django shell
+docker compose -f docker-compose.prod.yml exec django python manage.py shell
+```
+
+## Source-based upgrade
+
+For dev setups that run from a local clone:
 
 ```bash
 git pull
