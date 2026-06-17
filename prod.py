@@ -12,11 +12,15 @@ import sys
 import time
 import urllib.request
 
+VERSION = "v0.2.0"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
+
 COMPOSE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docker-compose.prod.yml")
 COMPOSE = ["docker", "compose", "-f", COMPOSE_FILE]
 IMAGE = "ghcr.io/dholbach/my-practice:latest"
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-ENV_DOCS = "https://github.com/dholbach/my-practice/blob/main/.env.example"
+ENV_DOCS = f"https://github.com/dholbach/my-practice/blob/{VERSION}/.env.example"
+RELEASES_API = "https://api.github.com/repos/dholbach/my-practice/releases/latest"
+RAW_BASE = f"https://raw.githubusercontent.com/dholbach/my-practice/{VERSION}"
 
 
 def compose(*args):
@@ -158,7 +162,7 @@ def cmd_setup(_args):
 
     if not os.path.exists(COMPOSE_FILE):
         print("  docker-compose.prod.yml not found — downloading...")
-        compose_url = "https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml"
+        compose_url = f"{RAW_BASE}/docker-compose.prod.yml"
         try:
             with urllib.request.urlopen(compose_url, timeout=10) as r:
                 with open(COMPOSE_FILE, "wb") as f:
@@ -292,10 +296,14 @@ def cmd_restart(_args):
 def cmd_update(_args):
     """Pull the latest image and restart."""
     try:
-        url = "https://api.github.com/repos/dholbach/my-practice/releases/latest"
-        with urllib.request.urlopen(url, timeout=5) as r:
-            tag = json.loads(r.read())["tag_name"]
-            print(f"Latest release: {tag}")
+        with urllib.request.urlopen(RELEASES_API, timeout=5) as r:
+            latest = json.loads(r.read())["tag_name"]
+        print(f"Latest release: {latest}")
+        if latest != VERSION:
+            print(f"  This script is {VERSION}. A newer version is available.")
+            print(f"  To update prod.py:")
+            print(f"    curl -O {RAW_BASE.replace(VERSION, latest)}/prod.py")
+            print()
     except Exception:
         pass  # offline or rate-limited — just pull whatever is in the registry
 
