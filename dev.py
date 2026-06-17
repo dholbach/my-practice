@@ -597,7 +597,7 @@ def _print_outdated_dev_packages():
     import json
     import re
 
-    dev_req = os.path.join(os.path.dirname(__file__), "requirements-dev.txt")
+    dev_req = os.path.join(os.path.dirname(__file__), "app", "requirements-dev.txt")
     try:
         with open(dev_req) as f:
             # Extract bare package names, normalise to lowercase with hyphens
@@ -701,13 +701,13 @@ def cmd_review(args):
         print("⚠️  Unused symbols found above")
     print()
 
-    # --- 3. Security: known CVEs (pip-audit) ---
-    print("3️⃣  Dependency security (pip-audit)")
+    # --- 3. Security: known CVEs (pip-audit + npm audit) ---
+    print("3️⃣  Dependency security (pip-audit + npm audit)")
     print("-" * 30)
     # Check if pip-audit is available before running
     check = run_docker_command(["python", "-c", "import pip_audit"])
     if check.returncode != 0:
-        print("⏭️  pip-audit not installed — skipping CVE check")
+        print("⏭️  pip-audit not installed — skipping Python CVE check")
         print("   Install: pip install pip-audit")
         results.append(("CVE audit (pip-audit)", None))
     else:
@@ -716,9 +716,16 @@ def cmd_review(args):
         )
         results.append(("CVE audit (pip-audit)", audit_result.returncode))
         if audit_result.returncode == 0:
-            print("✅ No known CVEs")
+            print("✅ No known Python CVEs")
         else:
-            print("⚠️  Vulnerabilities found above")
+            print("⚠️  Python vulnerabilities found above")
+
+    npm_audit = run_docker_command(["npm", "audit", "--prefix", "/app"])
+    results.append(("CVE audit (npm audit)", npm_audit.returncode))
+    if npm_audit.returncode == 0:
+        print("✅ No known JS CVEs")
+    else:
+        print("⚠️  JS vulnerabilities found above")
     print()
 
     # --- 4. Outdated packages ---
