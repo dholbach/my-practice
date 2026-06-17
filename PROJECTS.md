@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-06-17 — npm tooling cleanup**: `npm ci` + lock file in Dockerfile for reproducible CSS builds; `npm audit` added to `./dev.py review`; stale root `requirements-dev.txt` deleted; `dependabot.yml` YAML fix.
 - **2026-06-17 — v0.2.0 release**: `prod.py` one-command setup (secrets, pull, start, createsuperuser, setup_practice); version-pinned compose download; fixes: bridge networking, collectstatic crash, HTTPS redirect loop, postal_code field width, production image stage, `-it` exec docs.
-- **2026-06-17 — Docker image builds (issue #18)**: Multi-arch (`amd64`+`arm64`) image published to GHCR; multi-stage Dockerfile (css-builder + production + development stages); `requirements-dev.txt` split; `docker-compose.prod.yml`; tag-triggered CI workflow; image-based setup docs.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
