@@ -127,15 +127,16 @@ Views stay thin by delegating to builder classes (`AnalyticsDashboardBuilder`, `
 
 ### Image-based (recommended for self-hosters)
 
-**Requirements**: Docker with the Compose plugin.
+**Requirements**: Docker with the Compose plugin, Python 3.
 
 ```bash
 curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml
-# create .env with DJANGO_SECRET_KEY, POSTGRES_PASSWORD, FERNET_KEY
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
-docker compose -f docker-compose.prod.yml exec -it django python manage.py createsuperuser
+curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/prod.py
+chmod +x prod.py
+./prod.py setup
 ```
+
+`setup` generates secrets, pulls the image, starts the stack, and walks you through creating a login and configuring your practice.
 
 ### Source-based (for developers)
 
