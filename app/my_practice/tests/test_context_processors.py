@@ -20,6 +20,7 @@ def _make_request(authenticated=True):
 class UpdateCheckContextProcessorTest(TestCase):
     def setUp(self):
         from django.core.cache import cache
+
         cache.delete(_CACHE_KEY)
 
     @override_settings(UPDATE_CHECK_DISABLED=True)
