@@ -157,11 +157,20 @@ def cmd_setup(_args):
     print("  Docker OK")
 
     if not os.path.exists(COMPOSE_FILE):
-        abort(
-            f"docker-compose.prod.yml not found at {COMPOSE_FILE}\n"
-            "  Download it first:\n"
-            "    curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml"
-        )
+        print("  docker-compose.prod.yml not found — downloading...")
+        compose_url = "https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml"
+        try:
+            with urllib.request.urlopen(compose_url, timeout=10) as r:
+                with open(COMPOSE_FILE, "wb") as f:
+                    f.write(r.read())
+            print(f"  Saved to {COMPOSE_FILE}")
+        except Exception as e:
+            abort(
+                f"Could not download docker-compose.prod.yml: {e}\n"
+                "  Download it manually:\n"
+                "    curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml\n"
+                "  then re-run ./prod.py setup"
+            )
 
     # 2. Pull image (needed before we can generate the Fernet key inside it)
     step("Pulling image")

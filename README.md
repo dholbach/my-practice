@@ -130,7 +130,6 @@ Views stay thin by delegating to builder classes (`AnalyticsDashboardBuilder`, `
 **Requirements**: Docker with the Compose plugin, Python 3.
 
 ```bash
-curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml
 curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/prod.py
 chmod +x prod.py
 ./prod.py setup

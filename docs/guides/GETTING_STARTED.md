@@ -14,10 +14,9 @@ Two paths depending on how you want to run the app:
 
 ### The fast path — `prod.py setup`
 
-Download two files and run one command:
+Download one file and run one command:
 
 ```bash
-curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml
 curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/prod.py
 chmod +x prod.py
 ./prod.py setup
