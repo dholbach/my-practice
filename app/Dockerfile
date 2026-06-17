@@ -1,5 +1,5 @@
 # ── Stage 1: compile Tailwind CSS ───────────────────────────────────────────
-FROM node:22-slim AS css-builder
+FROM node:26-slim AS css-builder
 WORKDIR /app
 
 # Install deps first so this layer is cached unless package.json/lock changes
