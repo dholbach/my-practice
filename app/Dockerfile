@@ -1,8 +1,23 @@
-FROM python:3.14-slim
-
+# ── Stage 1: compile Tailwind CSS ───────────────────────────────────────────
+FROM node:20-slim AS css-builder
 WORKDIR /app
 
-# Install system dependencies including WeasyPrint requirements
+RUN npm install -g @tailwindcss/cli tailwindcss
+ENV NODE_PATH=/usr/lib/node_modules
+
+# Only the files Tailwind's @source directives scan
+COPY static/css/tailwind.css static/css/tailwind.css
+COPY static/js/ static/js/
+COPY templates/ templates/
+COPY package.json .
+
+RUN npm run build:css
+
+# ── Stage 2: production image ────────────────────────────────────────────────
+FROM python:3.14-slim AS production
+WORKDIR /app
+
+# System dependencies for WeasyPrint and psycopg
 # zlib1g-dev, libjpeg-dev, libopenjp2-7-dev: needed to compile Pillow from source on Python 3.14
 # (no pre-built cp314 wheels available yet for all platforms)
 RUN apt-get update && apt-get install -y \
@@ -23,30 +38,28 @@ RUN apt-get update && apt-get install -y \
     ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js (for JavaScript tests)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
+# Production Python dependencies only
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Install Tailwind CSS CLI + framework globally so both survive the app volume mount.
-# NODE_PATH lets the CLI resolve the tailwindcss package from its global install path.
-RUN npm install -g @tailwindcss/cli tailwindcss
-ENV NODE_PATH=/usr/lib/node_modules
-
-# Copy application
+# Copy application and drop in the compiled CSS from the builder stage
 COPY . .
+COPY --from=css-builder /app/static/css/tailwind.out.css static/css/tailwind.out.css
 
-# Build compiled CSS (tailwind.out.css is gitignored; must be generated at image build time)
-RUN npm run build:css
-
-# Make manage.py executable
 RUN chmod +x manage.py
 
 EXPOSE 8000
 
-# Start Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "config.wsgi:application"]
+
+# ── Stage 3: development image (extends production) ──────────────────────────
+FROM production AS development
+
+# Node.js for CSS rebuilding (npm run watch:css) and JS tests
+RUN apt-get update && apt-get install -y nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+RUN npm install -g @tailwindcss/cli tailwindcss
+ENV NODE_PATH=/usr/lib/node_modules
+
+# Dev Python dependencies (requirements-dev.txt already present from COPY . .)
+RUN pip install --no-cache-dir -r requirements-dev.txt
