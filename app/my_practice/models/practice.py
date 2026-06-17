@@ -62,7 +62,7 @@ class Practice(models.Model):
 
     # Address
     street = models.CharField(max_length=200, default="")
-    postal_code = models.CharField(max_length=10, default="")
+    postal_code = models.CharField(max_length=20, default="")
     city = models.CharField(max_length=100, default="")
     country = models.CharField(max_length=100, default="Deutschland", blank=True)
 
