@@ -1,5 +1,99 @@
 # Getting Started
 
+Two paths depending on how you want to run the app:
+
+| | Image-based | Source-based |
+|---|---|---|
+| **Best for** | Self-hosters who want stable releases | Developers, contributors, or anyone who wants to run from main |
+| **Requirements** | Docker + Compose plugin | Docker + Compose plugin + Git + Python 3 |
+| **Upgrades** | `docker compose pull` | `git pull` + `./dev.py restart --force` |
+
+---
+
+## Image-based setup (recommended for self-hosters)
+
+### 1 — Get the compose file
+
+If you don't have the repository cloned, download just the compose file:
+
+```bash
+curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml
+```
+
+Or if you already have a clone: `cd my-practice` — the file is there.
+
+### 2 — Create your `.env`
+
+The three required secrets — the app refuses to start without them:
+
+```bash
+cat > .env <<'EOF'
+DJANGO_SECRET_KEY=
+POSTGRES_PASSWORD=
+FERNET_KEY=
+EOF
+```
+
+Fill them in — generate each value with:
+
+```bash
+# DJANGO_SECRET_KEY
+python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+
+# POSTGRES_PASSWORD — any strong password
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# FERNET_KEY — must be this exact format
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+> `FERNET_KEY` encrypts clinical notes at rest (Art. 9 GDPR data). Keep a copy somewhere safe — losing it means losing access to encrypted content.
+
+### 3 — Pull and start
+
+```bash
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d --remove-orphans
+```
+
+Migrations run automatically on first start. Wait a few seconds for Django to come up.
+
+### 4 — Create a login
+
+```bash
+docker compose -f docker-compose.prod.yml exec django python manage.py createsuperuser
+```
+
+### 5 — Set up your practice
+
+```bash
+docker compose -f docker-compose.prod.yml exec django python manage.py setup_practice
+```
+
+This prompts for your name, address, bank details, and tax status, then creates the practice and links it to your account.
+
+### 6 — Open the app
+
+Go to **http://localhost:8000** and log in.
+
+### Useful commands
+
+```bash
+# Follow logs
+docker compose -f docker-compose.prod.yml logs -f django
+
+# Run any management command
+docker compose -f docker-compose.prod.yml exec django python manage.py <command>
+
+# Upgrade to a new release
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+---
+
+## Source-based setup (for developers and contributors)
+
 This guide walks you through running the system for the first time — from zero to a
 fully-populated demo practice you can click through and explore.
 
