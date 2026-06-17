@@ -1,6 +1,6 @@
 # Upgrading
 
-This document is for self-hosters moving from one version to the next.
+This document is for self-hosters moving from one version to the next. For first-time setup see [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md).
 
 ## Image-based upgrade (recommended)
 
