@@ -17,13 +17,13 @@ Migrations run automatically on startup. That's it in the normal case.
 
 ```bash
 # Create the first admin user
-docker compose -f docker-compose.prod.yml exec django python manage.py createsuperuser
+docker compose -f docker-compose.prod.yml exec -it django python manage.py createsuperuser
 
 # Run any Django management command
-docker compose -f docker-compose.prod.yml exec django python manage.py <command>
+docker compose -f docker-compose.prod.yml exec -it django python manage.py <command>
 
 # Open a Django shell
-docker compose -f docker-compose.prod.yml exec django python manage.py shell
+docker compose -f docker-compose.prod.yml exec -it django python manage.py shell
 ```
 
 ## Source-based upgrade
