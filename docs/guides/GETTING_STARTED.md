@@ -61,13 +61,13 @@ Migrations run automatically on first start. Wait a few seconds for Django to co
 ### 4 — Create a login
 
 ```bash
-docker compose -f docker-compose.prod.yml exec django python manage.py createsuperuser
+docker compose -f docker-compose.prod.yml exec -it django python manage.py createsuperuser
 ```
 
 ### 5 — Set up your practice
 
 ```bash
-docker compose -f docker-compose.prod.yml exec django python manage.py setup_practice
+docker compose -f docker-compose.prod.yml exec -it django python manage.py setup_practice
 ```
 
 This prompts for your name, address, bank details, and tax status, then creates the practice and links it to your account.
@@ -83,7 +83,7 @@ Go to **http://localhost:8000** and log in.
 docker compose -f docker-compose.prod.yml logs -f django
 
 # Run any management command
-docker compose -f docker-compose.prod.yml exec django python manage.py <command>
+docker compose -f docker-compose.prod.yml exec -it django python manage.py <command>
 
 # Upgrade to a new release
 docker compose -f docker-compose.prod.yml pull
