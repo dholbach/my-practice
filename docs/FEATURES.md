@@ -384,5 +384,6 @@ For planned and in-progress work see [PROJECTS.md](../PROJECTS.md) and [docs/pro
 - ✅ `prod.py` — one-command setup: generates secrets, pulls image, starts stack, walks through login + practice creation
 - ✅ `docker-compose.prod.yml` — production compose file; downloaded automatically by `prod.py setup`
 - ✅ Version-pinned: `prod.py` and `docker-compose.prod.yml` always match; `update` notifies when a newer `prod.py` is available
+- ✅ In-app update banner — checks GitHub releases once per day; shows a dismissible banner when a newer release is available; opt-out via `UPDATE_CHECK_DISABLED=true`
 
 Last Updated: 17. Juni 2026

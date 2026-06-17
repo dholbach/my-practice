@@ -87,6 +87,14 @@
         </div>
         {% endif %}
 
+        {% if update_available %}
+        <div x-data="{ show: true }" x-show="show" class="update-banner">
+            <span>{{ current_version }} → <a href="https://github.com/dholbach/my-practice/releases/tag/{{ latest_version }}" target="_blank" rel="noopener"><strong>{{ latest_version }}</strong></a> verfügbar</span>
+            <a href="https://github.com/dholbach/my-practice/blob/main/UPGRADING.md" target="_blank" rel="noopener">Upgrade</a>
+            <button @click="show = false" class="update-banner__dismiss" title="Schließen">✕</button>
+        </div>
+        {% endif %}
+
         <div class="content">
             {% block content %}{% endblock %}
         </div>

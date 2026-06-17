@@ -74,6 +74,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "my_practice.context_processors.update_check",
             ],
             # Disable template caching in DEBUG mode for instant updates
             "debug": DEBUG,
@@ -248,3 +249,7 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
 DEFAULT_EXCEPTION_REPORTER_FILTER = "config.exception_reporter.PIIExceptionReporterFilter"
+
+# Update check — context processor polls GitHub releases API (once per day, cached).
+# Set UPDATE_CHECK_DISABLED=true in .env to opt out.
+UPDATE_CHECK_DISABLED = os.environ.get("UPDATE_CHECK_DISABLED", "false").lower() == "true"
