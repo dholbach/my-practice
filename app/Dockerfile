@@ -2,14 +2,14 @@
 FROM node:22-slim AS css-builder
 WORKDIR /app
 
-RUN npm install -g @tailwindcss/cli tailwindcss
-ENV NODE_PATH=/usr/lib/node_modules
+# Install deps first so this layer is cached unless package.json changes
+COPY package.json .
+RUN npm install
 
 # Only the files Tailwind's @source directives scan
 COPY static/css/tailwind.css static/css/tailwind.css
 COPY static/js/ static/js/
 COPY templates/ templates/
-COPY package.json .
 
 RUN npm run build:css
 
@@ -59,8 +59,7 @@ FROM production AS development
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
-RUN npm install -g @tailwindcss/cli tailwindcss
-ENV NODE_PATH=/usr/lib/node_modules
+RUN npm install
 
 # Dev Python dependencies (requirements-dev.txt already present from COPY . .)
 RUN pip install --no-cache-dir -r requirements-dev.txt
