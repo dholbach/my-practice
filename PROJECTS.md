@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
-- **2026-06-16 — P-040 + P-024 improvements**: Seed data gains session logs, client profiles, time-off entries, cancelled sessions, fixed invoice quantities and numbering; 5 README screenshots added; nav emoji/badge bugs fixed; Ausfallquote chart fixed.
 - **2026-06-17 — UPGRADING.md (issue #9)**: Added `UPGRADING.md` at repo root with standard upgrade procedure and versioned breaking-change structure; README gains "Keeping up to date" section and docs-table entry.
+- **2026-06-17 — Docker image builds (issue #18)**: Multi-arch (`amd64`+`arm64`) image published to GHCR; multi-stage Dockerfile (css-builder + production + development stages); `requirements-dev.txt` split; `docker-compose.prod.yml`; tag-triggered CI workflow; image-based setup docs in `GETTING_STARTED.md` and `README.md`.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
