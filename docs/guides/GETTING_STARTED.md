@@ -78,16 +78,28 @@ Go to **http://localhost:8000** and log in.
 
 ### Useful commands
 
+Download `prod.py` for a shorter command interface:
+
 ```bash
-# Follow logs
+curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/prod.py
+chmod +x prod.py
+```
+
+```bash
+./prod.py update          # pull latest image + restart
+./prod.py logs            # follow Django logs
+./prod.py status          # container health
+./prod.py manage migrate  # run migrations manually
+./prod.py shell           # Django shell
+./prod.py --help          # full command list
+```
+
+Or use `docker compose` directly:
+
+```bash
 docker compose -f docker-compose.prod.yml logs -f django
-
-# Run any management command
 docker compose -f docker-compose.prod.yml exec -it django python manage.py <command>
-
-# Upgrade to a new release
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d
 ```
 
 ---
