@@ -1,6 +1,6 @@
 -r requirements.txt
 
-ruff==0.15.17
+ruff==0.15.18
 vulture==2.16
 radon==6.0.1
 pip-audit==2.10.1
