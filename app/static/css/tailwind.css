@@ -254,8 +254,8 @@
   .color-box.pink   { background: #ed64a6; } .color-box.gray   { background: #718096; }
   .color-option input[type="radio"]:checked + .color-box { border-color: #2d3748; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); }
 
-  /* Warning box (specific — overrides the base in @layer via this later definition) */
-  .warning-box { background: var(--color-warning-bg); color: var(--color-warning); border: 2px solid #f59e0b; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+  /* Warning box */
+  .warning-box { background: var(--color-warning-bg); color: var(--color-warning); border: 2px solid var(--color-warning); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
   .warning-box h2, .warning-box h3 { margin-top: 0; color: var(--color-warning); }
   .warning-box ul { margin-left: 1.5rem; margin-top: 0.5rem; }
 
@@ -263,11 +263,10 @@
   /* ── common.css batch 2 ── */
 
   /* Info / Alert boxes */
-  .info-box, .alert-box, .warning-box { padding: 1rem; border-radius: 8px; border-left: 4px solid; margin-bottom: 1.5rem; }
-  .info-box    { background: var(--color-surface); color: var(--color-text-primary); border-left-color: #0284c7; opacity: 0.95; }
-  .warning-box { background: var(--color-surface); color: var(--color-text-primary); border-left-color: #faad14; opacity: 0.95; }
-  .alert-box.error   { background: var(--color-surface); color: var(--color-text-primary); border-left-color: #ef4444; opacity: 0.95; }
-  .alert-box.success { background: var(--color-surface); border-left-color: #22c55e; opacity: 0.95; }
+  .info-box, .alert-box { padding: 1rem; border-radius: 8px; border-left: 4px solid; margin-bottom: 1.5rem; }
+  .info-box          { background: var(--color-surface); color: var(--color-text-primary); border-left-color: var(--color-info); opacity: 0.95; }
+  .alert-box.error   { background: var(--color-surface); color: var(--color-text-primary); border-left-color: var(--color-danger); opacity: 0.95; }
+  .alert-box.success { background: var(--color-surface); border-left-color: var(--color-success); opacity: 0.95; }
 
   /* Data table (canonical) */
   .data-table { width: 100%; border-collapse: collapse; background: var(--color-surface); border-radius: 8px; overflow: hidden; }
@@ -414,11 +413,11 @@
   .widget-empty-state p { font-size: 1rem; margin: 0 0 0.5rem; }
   .widget-empty-state .subtext { font-size: 0.875rem; }
   .status-box { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 8px; border-left: 4px solid; }
-  .status-box.success  { background: var(--color-success-bg); border-left-color: #10b981; }
+  .status-box.success  { background: var(--color-success-bg); border-left-color: var(--color-success); }
   .status-box.success strong, .status-box.success p { color: var(--color-success); }
-  .status-box.warning  { background: var(--color-warning-bg); border-left-color: #f57c00; }
+  .status-box.warning  { background: var(--color-warning-bg); border-left-color: var(--color-warning); }
   .status-box.warning strong, .status-box.warning p { color: var(--color-warning); }
-  .status-box.info     { background: var(--color-info-bg);    border-left-color: #0284c7; }
+  .status-box.info     { background: var(--color-info-bg);    border-left-color: var(--color-info); }
   .status-box.info strong, .status-box.info p { color: var(--color-info); }
   .status-box-icon { font-size: 2rem; flex-shrink: 0; }
   .widget-btn-primary, .widget-btn-secondary { padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.2s; width: 100%; text-align: center; display: block; }
@@ -439,7 +438,7 @@
   .widget-view-more:hover { color: var(--color-primary); border-color: var(--color-primary); background: var(--color-bg-secondary); }
   .tag-badge { padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
   .tag-badge.info-badge { background: var(--color-info-bg); color: var(--color-info); }
-  .widget-highlight { border-left: 4px solid #f57c00; }
+  .widget-highlight { border-left: 4px solid var(--color-warning); }
   @media (max-width: 768px) {
     .widget-list-item a { flex-direction: column; align-items: flex-start; }
     .widget-list-primary { min-width: auto; }
@@ -521,9 +520,9 @@
   .checklist-empty { padding: 0.75rem 0; color: var(--color-text-secondary); font-size: 0.9rem; text-align: center; }
   /* Bank import widget */
   .bank-import-status { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 8px; border-left: 4px solid; margin-bottom: 1rem; }
-  .bank-import-status.warning { background: var(--color-warning-bg); border-left-color: #f59e0b; }
+  .bank-import-status.warning { background: var(--color-warning-bg); border-left-color: var(--color-warning); }
   .bank-import-status.warning strong, .bank-import-status.warning p, .bank-import-status.warning div { color: var(--color-warning); }
-  .bank-import-status.success { background: var(--color-success-bg); border-left-color: #10b981; }
+  .bank-import-status.success { background: var(--color-success-bg); border-left-color: var(--color-success); }
   .bank-import-status.success strong, .bank-import-status.success p, .bank-import-status.success div { color: var(--color-success); }
   .bank-import-status__icon { font-size: 1.5rem; flex-shrink: 0; }
   .bank-import-status__body { flex: 1; }
@@ -1270,7 +1269,7 @@
 
   /* ── Checklist page ── */
   .checklist-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
-  .checklist-done-banner { padding: 1.5rem; background: var(--color-success-bg); color: var(--color-success); border-radius: 8px; border-left: 4px solid #10b981; margin-bottom: 2rem; }
+  .checklist-done-banner { padding: 1.5rem; background: var(--color-success-bg); color: var(--color-success); border-radius: 8px; border-left: 4px solid var(--color-success); margin-bottom: 2rem; }
   .checklist-done-banner__title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
   .checklist-done-banner__notes { margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.9; }
   .checklist-done-banner__actions { margin-top: 1rem; }
