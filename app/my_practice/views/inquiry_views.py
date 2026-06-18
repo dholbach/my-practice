@@ -352,10 +352,9 @@ class InquiryListView(PracticeScopedListView):
         context["show_closed"] = bool(self.request.GET.get("show_closed"))
         context["status_choices"] = ClientInquiry._meta.get_field("status").choices
         context["source_choices"] = ClientInquiry._meta.get_field("source").choices
-        context["marketing_periods"] = (
-            MarketingPeriod.objects.filter(practice=self.request.current_practice)
-            .order_by("-start_date")
-        )
+        context["marketing_periods"] = MarketingPeriod.objects.filter(
+            practice=self.request.current_practice
+        ).order_by("-start_date")
         analytics = _build_inquiry_analytics(self.request)
         context["analytics"] = analytics
         context["closed_count"] = analytics["closed_count"]
