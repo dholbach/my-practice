@@ -16,7 +16,7 @@ VERSION = "v0.2.0"  # updated each release — keeps prod.py and docker-compose.
 
 COMPOSE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docker-compose.prod.yml")
 COMPOSE = ["docker", "compose", "-f", COMPOSE_FILE]
-IMAGE = "ghcr.io/dholbach/my-practice:latest"
+IMAGE = f"ghcr.io/dholbach/my-practice:{VERSION}"
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 ENV_DOCS = f"https://github.com/dholbach/my-practice/blob/{VERSION}/.env.example"
 RELEASES_API = "https://api.github.com/repos/dholbach/my-practice/releases/latest"
@@ -128,6 +128,23 @@ def _write_env(env: dict):
                 f.write(f"{k}={v}\n")
 
 
+def _ensure_gitignore():
+    """Add .env to .gitignore next to prod.py (create the file if needed)."""
+    gitignore_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".gitignore")
+    entry = ".env"
+    if os.path.exists(gitignore_path):
+        with open(gitignore_path) as f:
+            existing = {line.strip() for line in f}
+        if entry in existing:
+            return False
+        with open(gitignore_path, "a") as f:
+            f.write(f"\n{entry}\n")
+    else:
+        with open(gitignore_path, "w") as f:
+            f.write(f"{entry}\n")
+    return True
+
+
 def _wait_for_healthy(timeout=120):
     """Wait for the django container to become healthy."""
     print("  Waiting for Django to be ready", end="", flush=True)
@@ -210,6 +227,9 @@ def cmd_setup(_args):
     else:
         print("  All required secrets already present in .env — nothing changed.")
 
+    if _ensure_gitignore():
+        print("  Created .gitignore — .env will not be accidentally committed to Git.")
+
     print()
     print("  ⚠  Keep your .env safe — especially FERNET_KEY.")
     print("     FERNET_KEY encrypts clinical notes (Art. 9 GDPR data).")
@@ -268,6 +288,11 @@ def cmd_setup(_args):
     print()
     print("  Open the app: http://localhost:8000")
     print()
+    print("  ⚠  Back up your .env file before anything else.")
+    print("     It contains FERNET_KEY, which encrypts clinical notes (Art. 9 GDPR data).")
+    print("     Losing it means that encrypted content cannot be recovered.")
+    print("     Copy .env to a safe location now — USB drive or password manager.")
+    print()
     print("  Next steps:")
     print("    ./prod.py logs          — check everything looks healthy")
     print("    ./prod.py update        — upgrade to a new release when one is out")
@@ -300,9 +325,11 @@ def cmd_update(_args):
             latest = json.loads(r.read())["tag_name"]
         print(f"Latest release: {latest}")
         if latest != VERSION:
+            new_base = RAW_BASE.replace(VERSION, latest)
             print(f"  This script is {VERSION}. A newer version is available.")
-            print(f"  To update prod.py:")
-            print(f"    curl -O {RAW_BASE.replace(VERSION, latest)}/prod.py")
+            print(f"  To update prod.py and docker-compose.prod.yml:")
+            print(f"    curl -O {new_base}/prod.py")
+            print(f"    curl -O {new_base}/docker-compose.prod.yml")
             print()
     except Exception:
         pass  # offline or rate-limited — just pull whatever is in the registry
