@@ -4,6 +4,7 @@ Django Admin configuration for payments app.
 
 from django.contrib import admin, messages
 from django.utils.html import format_html, mark_safe
+from django.template.defaultfilters import truncatewords
 
 from .models import (
     BankTransaction,
@@ -12,6 +13,7 @@ from .models import (
     ClientAlias,
     ClientDocument,
     ClientInquiry,
+    ClientNote,
     ClientProfile,
     ClientTag,
     CompanyExpense,
@@ -1153,3 +1155,13 @@ class PendingCalendarEventAdmin(admin.ModelAdmin):
         self.message_user(
             request, f"{updated} Termine als übersprungen markiert.", messages.SUCCESS
         )
+
+
+@admin.register(ClientNote)
+class ClientNoteAdmin(admin.ModelAdmin):
+    list_display = ['client', 'note_date', 'content_preview']
+    list_filter = ['client']
+
+    @admin.display(description= 'Content preview')
+    def content_preview(self, obj):
+        return truncatewords(obj.content, 5) if obj.content else ""
