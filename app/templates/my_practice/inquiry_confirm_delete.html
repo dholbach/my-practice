@@ -1,33 +1,33 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Anfrage löschen{% endblock %}
+{% block title %}{% trans "Anfrage löschen" %}{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-[600px] p-2.5 sm:p-5">
-    <h1>🗑️ Anfrage löschen</h1>
+    <h1>🗑️ {% trans "Anfrage löschen" %}</h1>
 
     <div class="bg-surface border border-border rounded-lg p-5 sm:p-8 shadow">
         <div class="flex flex-col items-center p-5 bg-red-600/10 border-2 border-red-600 rounded-lg mb-8">
             <span class="text-5xl mb-2.5">⚠️</span>
-            <p class="m-0 text-lg font-semibold text-center">Möchten Sie diese Anfrage wirklich löschen?</p>
+            <p class="m-0 text-lg font-semibold text-center">{% trans "Möchten Sie diese Anfrage wirklich löschen?" %}</p>
         </div>
 
         <div class="mb-8">
             <div class="flex justify-between p-3 border-b border-border last:border-b-0">
-                <span class="font-medium text-text-secondary">Name:</span>
+                <span class="font-medium text-text-secondary">{% trans "Name" %}:</span>
                 <span class="font-semibold">{{ inquiry.full_name }}</span>
             </div>
             <div class="flex justify-between p-3 border-b border-border last:border-b-0">
-                <span class="font-medium text-text-secondary">Eingangsdatum:</span>
+                <span class="font-medium text-text-secondary">{% trans "Eingangsdatum" %}:</span>
                 <span class="font-semibold">{{ inquiry.inquiry_date|date:"d.m.Y" }}</span>
             </div>
             <div class="flex justify-between p-3 border-b border-border last:border-b-0">
-                <span class="font-medium text-text-secondary">Quelle:</span>
+                <span class="font-medium text-text-secondary">{% trans "Quelle" %}:</span>
                 <span class="font-semibold">{{ inquiry.get_source_display }}</span>
             </div>
             <div class="flex justify-between p-3 border-b border-border last:border-b-0">
-                <span class="font-medium text-text-secondary">Status:</span>
+                <span class="font-medium text-text-secondary">{% trans "Status" %}:</span>
                 <span class="font-semibold">{{ inquiry.get_status_display }}</span>
             </div>
         </div>
@@ -35,8 +35,8 @@
         <form method="post">
             {% csrf_token %}
             <div class="flex flex-col sm:flex-row gap-4 justify-center pt-5 border-t border-border">
-                <button type="submit" class="btn-danger w-full sm:w-auto">Ja, löschen</button>
-                <a href="{% url 'inquiry_list' %}" class="btn-secondary w-full sm:w-auto">Abbrechen</a>
+                <button type="submit" class="btn-danger w-full sm:w-auto">{% trans "Ja, löschen" %}</button>
+                <a href="{% url 'inquiry_list' %}" class="btn-secondary w-full sm:w-auto">{% trans "Abbrechen" %}</a>
             </div>
         </form>
     </div>
