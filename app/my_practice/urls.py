@@ -38,6 +38,21 @@ urlpatterns = [
     path("inquiries/<int:pk>/edit/", views.InquiryUpdateView.as_view(), name="inquiry_edit"),
     path("inquiries/<int:pk>/delete/", views.InquiryDeleteView.as_view(), name="inquiry_delete"),
     path("inquiries/<int:pk>/convert/", views.InquiryConvertView.as_view(), name="inquiry_convert"),
+    path(
+        "marketing-periods/new/",
+        views.MarketingPeriodCreateView.as_view(),
+        name="marketing_period_create",
+    ),
+    path(
+        "marketing-periods/<int:pk>/edit/",
+        views.MarketingPeriodUpdateView.as_view(),
+        name="marketing_period_edit",
+    ),
+    path(
+        "marketing-periods/<int:pk>/delete/",
+        views.MarketingPeriodDeleteView.as_view(),
+        name="marketing_period_delete",
+    ),
     path("invoices/", views.InvoiceListView.as_view(), name="invoice_list"),
     path("billing/", views.monthly_billing_redirect, name="monthly_billing"),
     path("billing/open/", views.billing_open_overview, name="billing_open_overview"),
