@@ -2,6 +2,16 @@
 
 Major features and milestones in chronological order.
 
+## 2026-06-18 — v0.2.1 patch release
+
+- **Bug fix**: weekly focus widget crashed with `NoReverseMatch` when a focus task was rendered — URL name was `todo_toggle_complete` (function name) instead of `todo_toggle` (registered name).
+- **Bug fix**: `.warning-box` rendered as a neutral grey panel instead of a warning-coloured box — a duplicate `@layer components` definition added during the `common.css` migration was overriding `background`, `color`, padding, and border-radius. Affects delete confirms, email-send warnings, calendar preflight widget.
+- **Self-hoster fix** (`prod.py`): image was pulled as `:latest` instead of the pinned version tag, meaning new installs could pull a different image than tested. Both `prod.py` and `docker-compose.prod.yml` now pin to the release tag. Setup also creates a `.gitignore` protecting `.env` (FERNET_KEY), and a backup reminder is shown at setup completion.
+- **CSS**: hardcoded hex border-left colors in `info-box`, `alert-box`, `status-box`, `bank-import-status`, `widget-highlight`, `checklist-done-banner` replaced with `--color-*` tokens — dark mode now adapts automatically.
+- **In-app update banner**: context processor polls GitHub releases API (24h cache); banner shown to authenticated users when a newer release exists; opt-out via `UPDATE_CHECK_DISABLED=true` in `.env`.
+- **Deps**: Node 26-slim, pypdf 6.13.3, GitHub Actions (checkout@6, login@4, build-push@7, qemu@4, buildx@4).
+- **Tooling**: reproducible npm builds (`npm ci` + lock file in Dockerfile); `npm audit` added to `./dev.py review`.
+
 ## 2026-06-16 — P-024 OSS Release: public at `dholbach/my-practice` (AGPL-3.0, v0.1.0)
 
 - **Public repository**: Orphan snapshot (`895ad65`, "Initial public release v0.1.0") pushed to GitHub with no private dev history. AGPL-3.0 licensed, tagged `v0.1.0`, description + 8 topics set (`django`, `dsgvo`, `gdpr`, `healthcare`, `postgresql`, `practice-management`, `psychotherapy`, `self-hosted`).

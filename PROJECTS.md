@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
-- **2026-06-17 — in-app update banner**: context processor polls GitHub releases API (24h cache); banner shown to authenticated users when a newer release exists; opt-out via `UPDATE_CHECK_DISABLED`.
-- **2026-06-17 — npm tooling cleanup**: `npm ci` + lock file in Dockerfile for reproducible CSS builds; `npm audit` added to `./dev.py review`; stale root `requirements-dev.txt` deleted; `dependabot.yml` YAML fix.
+- **2026-06-18 — v0.2.1**: weekly focus `NoReverseMatch` fix, `.warning-box` cascade fix, `prod.py` image pinning + `.gitignore` + backup reminder, CSS hex→token cleanup, dep bumps.
+- **2026-06-17 — in-app update banner + npm tooling**: update banner polls GitHub releases API (24h cache); `npm ci` lock file in Dockerfile; `npm audit` in `./dev.py review`.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
