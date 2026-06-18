@@ -44,9 +44,8 @@ Medium gaps (30–55%):
 
 Identified during P-045 follow-up (2026-06-18). No template changes needed unless noted.
 
-- [ ] **Left-accent box family** — `.callout`, `.inline-note`, `.status-box`, `.bank-import-status`, `.info-box`/`.alert-box` all share the same left-border-panel pattern; extract a shared base class (needs care: padding/margin/color semantics vary per variant)
-- [ ] **`.warning-box` cascade confusion** — defined twice in `@layer components` (lines ~261 and ~275); the earlier "specific" rule is partially overridden by the grouped rule that follows; clarify intent and collapse into one definition
-- [ ] **Hardcoded hex colors in CSS classes** — stat-card gradient variants (`.stat-card.secondary`, `.success`, `.warning`, etc.), tag/tag-mini color swatches, `.badge-active`/`.badge-inactive`, `.priority-badge.*`, `.cn-tag-*` — convert to `var(--color-*)` tokens or `--color-badge-*` palette (large surface, risk of dark-mode regressions if done carelessly)
+- [ ] **Left-accent box family** — `.callout`, `.inline-note`, `.status-box`, `.bank-import-status`, `.info-box`/`.alert-box` all share the same left-border-panel pattern; extract a shared base class and migrate templates to `.callout` (needs care: padding/margin semantics vary per variant)
+- [ ] **Hardcoded hex colors in CSS classes** — stat-card gradient variants (`.stat-card.secondary`, `.success`, `.warning`, etc.), tag/tag-mini color swatches, `.badge-active`/`.badge-inactive`, `.priority-badge.*`, `.cn-tag-*`, `.metric-card.*`, `.status-card.*`, `.agenda-item.*` — convert to `var(--color-*)` tokens (large surface, risk of dark-mode regressions if done carelessly)
 
 ---
 
