@@ -25,6 +25,8 @@ jobs:
 
       - name: Lint
         working-directory: app
-        run: |
-          ruff check .
-          ruff format --check .
+        run: ruff check .
+
+      - name: Format
+        working-directory: app
+        run: ruff format --check --diff .
