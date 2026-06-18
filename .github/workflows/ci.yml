@@ -21,7 +21,7 @@ jobs:
           cache-dependency-path: app/requirements-dev.txt
 
       - name: Install dependencies
-        run: pip install ruff==0.15.17
+        run: pip install ruff==0.15.18
 
       - name: Lint
         working-directory: app
