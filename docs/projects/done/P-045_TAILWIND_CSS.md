@@ -1,6 +1,6 @@
 # P-045: Tailwind CSS — Design System Migration
 
-**Status**: WIP — Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ongoing
+**Status**: DONE — all phases complete (2026-06-16)
 **Priority**: Medium (deliberate, not opportunistic)
 **Risk**: Medium — needs planned setup; safe to do incrementally once scaffolding is in place
 **Effort**: ~1–2 days setup + months of gradual per-template migration
