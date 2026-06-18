@@ -225,20 +225,17 @@
   .gap-md { gap: 1rem; }
   .gap-lg { gap: 1.5rem; }
   .actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-  .text-center  { text-align: center; }
-  .text-right   { text-align: right; }
   .font-bold    { font-weight: 700; }
   .font-semibold { font-weight: 600; }
   .font-medium  { font-weight: 500; }
   .underline    { text-decoration: underline; }
-  .text-muted   { color: var(--color-text-secondary); }
   .text-primary { color: var(--color-text-primary); }
   .rounded { border-radius: 8px; } .rounded-sm { border-radius: 4px; } .rounded-lg { border-radius: 12px; }
   .border { border: 1px solid var(--color-border); } .border-0 { border: none; }
   .action-buttons { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
   .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; color: var(--color-text-primary); }
   .card h3 { margin-top: 0; margin-bottom: 1rem; color: var(--color-text-primary); }
-  .d-none { display: none; } .d-block { display: block; } .d-inline { display: inline; } .d-inline-block { display: inline-block; } .d-flex { display: flex; } .d-grid { display: grid; }
+  .d-inline-block { display: inline-block; } .d-grid { display: grid; }
   .w-full { width: 100%; } .w-auto { width: auto; } .w-50 { width: 50%; } .w-25 { width: 25%; } .w-75 { width: 75%; }
   .h-full { height: 100%; } .h-auto { height: auto; }
   .flex-col { flex-direction: column; } .flex-row { flex-direction: row; }
@@ -262,12 +259,6 @@
   .warning-box h2, .warning-box h3 { margin-top: 0; color: var(--color-warning); }
   .warning-box ul { margin-left: 1.5rem; margin-top: 0.5rem; }
 
-  /* Bottom utility aliases */
-  .form-inline { display: inline; }
-  .text-left   { text-align: left; }
-  .link-plain  { text-decoration: none; color: inherit; }
-  .fw-700 { font-weight: 700; } .fw-600 { font-weight: 600; } .fw-500 { font-weight: 500; }
-  .text-secondary { color: var(--color-text-secondary); }
 
   /* ── common.css batch 2 ── */
 
@@ -277,7 +268,6 @@
   .warning-box { background: var(--color-surface); color: var(--color-text-primary); border-left-color: #faad14; opacity: 0.95; }
   .alert-box.error   { background: var(--color-surface); color: var(--color-text-primary); border-left-color: #ef4444; opacity: 0.95; }
   .alert-box.success { background: var(--color-surface); border-left-color: #22c55e; opacity: 0.95; }
-  /* Note: specific .warning-box override stays in common.css (unlayered, wins) */
 
   /* Data table (canonical) */
   .data-table { width: 100%; border-collapse: collapse; background: var(--color-surface); border-radius: 8px; overflow: hidden; }
@@ -1082,7 +1072,6 @@
   .doc-upload-hidden { display: none; }
   .btn-done     { background: #48bb78; color: #fff; }
   .btn-complete { background: #667eea; color: #fff; }
-  .status-inactive { color: #a0aec0; }
   .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .contact-grid > * { min-width: 0; }
   .contact-grid-full { grid-column: span 2; }
@@ -1137,7 +1126,6 @@
   .invoice-number { min-width: 80px; }
   .invoice-client { color: var(--color-text-secondary); }
   .invoice-amount { font-weight: 700; color: var(--color-text-primary); }
-  .chart-container { background: var(--color-surface); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
   .chart { display: flex; align-items: flex-end; justify-content: space-between; height: 200px; gap: 0.5rem; }
   .chart-bar { flex: 1; background: linear-gradient(to top, #667eea, #764ba2); border-radius: 4px 4px 0 0; position: relative; min-height: 10px; transition: all 0.3s; }
   .chart-bar:hover { opacity: 0.8; }
@@ -1687,7 +1675,6 @@
   [data-theme="dark"] .billing-status.billing-status--sent    { color: #fbd38d; }
   [data-theme="dark"] .billing-status.billing-status--warning { color: #fbd38d; }
   [data-theme="dark"] .billing-status.billing-status--error   { color: #fca5a5; }
-  .text-warning { color: var(--color-warning); }
   .billing-open-month { margin-bottom: 2.5rem; }
   .billing-open-month__header {
     display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
