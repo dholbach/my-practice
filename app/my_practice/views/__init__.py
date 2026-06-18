@@ -173,6 +173,9 @@ from .inquiry_views import (  # noqa: F401
     InquiryUpdateView,
     InquiryDeleteView,
     InquiryConvertView,
+    MarketingPeriodCreateView,
+    MarketingPeriodUpdateView,
+    MarketingPeriodDeleteView,
 )
 
 __all__ = [

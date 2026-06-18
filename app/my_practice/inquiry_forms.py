@@ -6,7 +6,7 @@ from typing import Any
 from django import forms
 
 from .forms import DateFormField, StyledFormMixin
-from .models import Client, ClientInquiry, InquiryStatus
+from .models import Client, ClientInquiry, InquiryStatus, MarketingPeriod
 
 
 class InquiryForm(StyledFormMixin, forms.ModelForm):
@@ -94,3 +94,25 @@ class InquiryConvertForm(StyledFormMixin, forms.Form):
         if Client.objects.filter(client_code=code).exists():
             raise forms.ValidationError(f'Kürzel "{code}" ist bereits vergeben.')
         return str(code)
+
+
+class MarketingPeriodForm(StyledFormMixin, forms.ModelForm):
+    """Form for creating and editing a MarketingPeriod."""
+
+    start_date = DateFormField(label="Von")
+    end_date = DateFormField(label="Bis", required=False)
+
+    class Meta:
+        model = MarketingPeriod
+        fields = ["description", "start_date", "end_date"]
+        widgets = {
+            "description": forms.TextInput(attrs={"placeholder": 'z.B. "Google Ads 5 €/Tag"'}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        start = cleaned.get("start_date")
+        end = cleaned.get("end_date")
+        if start and end and end < start:
+            self.add_error("end_date", "Das Enddatum muss nach dem Startdatum liegen.")
+        return cleaned

@@ -15,23 +15,19 @@
         <a href="{% url 'inquiry_create' %}" class="btn">+ Neue Anfrage</a>
     </div>
 
-    {# Active marketing periods #}
-    {% if marketing_periods %}
+    {# Marketing periods #}
     <div class="marketing-periods">
-        <span class="marketing-periods-label">Aktive Kanäle:</span>
+        <span class="marketing-periods-label">Marketing-Zeiträume:</span>
         {% for period in marketing_periods %}
-        <span class="marketing-period-badge">
+        <span class="marketing-period-badge {% if period.is_active %}marketing-period-active{% endif %}">
             {{ period.start_date|date:"M y" }}{% if period.end_date %} – {{ period.end_date|date:"M y" }}{% endif %}:
             {{ period.description }}
+            <a href="{% url 'marketing_period_edit' period.pk %}" class="marketing-period-action" title="Bearbeiten">✎</a>
+            <a href="{% url 'marketing_period_delete' period.pk %}" class="marketing-period-action marketing-period-delete" title="Löschen">✕</a>
         </span>
         {% endfor %}
-        <a href="/admin/my_practice/marketingperiod/add/" class="marketing-periods-manage">+ Hinzufügen</a>
+        <a href="{% url 'marketing_period_create' %}" class="marketing-periods-manage">+ Hinzufügen</a>
     </div>
-    {% else %}
-    <div class="marketing-periods marketing-periods-empty">
-        <a href="/admin/my_practice/marketingperiod/add/" class="marketing-periods-manage">+ Marketing-Zeitraum erfassen</a>
-    </div>
-    {% endif %}
 
     {# Analytics panel #}
     <div class="analytics-panel" x-data="{ open: true }">

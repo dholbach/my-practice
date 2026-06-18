@@ -5,7 +5,6 @@ from typing import cast
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import models
 from django.db.models import (
     Case,
     Count,
@@ -19,7 +18,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 
-from ..inquiry_forms import InquiryConvertForm, InquiryForm
+from ..inquiry_forms import InquiryConvertForm, InquiryForm, MarketingPeriodForm
 from ..models import Client, ClientInquiry, InquiryStatus, MarketingPeriod
 from ..utils import DateRangeHelper
 from ..utils.practice_days import berlin_public_holidays
@@ -353,18 +352,9 @@ class InquiryListView(PracticeScopedListView):
         context["show_closed"] = bool(self.request.GET.get("show_closed"))
         context["status_choices"] = ClientInquiry._meta.get_field("status").choices
         context["source_choices"] = ClientInquiry._meta.get_field("source").choices
-        today = date.today()
         context["marketing_periods"] = (
-            MarketingPeriod.objects.filter(
-                practice=self.request.current_practice,
-            )
-            .filter(
-                start_date__lte=today,
-            )
-            .filter(
-                models.Q(end_date__isnull=True) | models.Q(end_date__gte=today),
-            )
-            .order_by("start_date")
+            MarketingPeriod.objects.filter(practice=self.request.current_practice)
+            .order_by("-start_date")
         )
         analytics = _build_inquiry_analytics(self.request)
         context["analytics"] = analytics
@@ -428,6 +418,46 @@ class InquiryDeleteView(PracticeScopedDeleteView):
     success_url = reverse_lazy("inquiry_list")
     context_object_name = "inquiry"
     success_message = "Anfrage von {obj.full_name} gelöscht."
+
+
+class MarketingPeriodCreateView(PracticeScopedCreateView):
+    """Create a new marketing period."""
+
+    model = MarketingPeriod
+    form_class = MarketingPeriodForm
+    template_name = "my_practice/marketing_period_form.html"
+    success_url = reverse_lazy("inquiry_list")
+    success_message = "Marketing-Zeitraum erfasst."
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["action"] = "Erstellen"
+        return context
+
+
+class MarketingPeriodUpdateView(PracticeScopedUpdateView):
+    """Edit an existing marketing period."""
+
+    model = MarketingPeriod
+    form_class = MarketingPeriodForm
+    template_name = "my_practice/marketing_period_form.html"
+    success_url = reverse_lazy("inquiry_list")
+    success_message = "Marketing-Zeitraum gespeichert."
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["action"] = "Bearbeiten"
+        return context
+
+
+class MarketingPeriodDeleteView(PracticeScopedDeleteView):
+    """Delete a marketing period."""
+
+    model = MarketingPeriod
+    template_name = "my_practice/marketing_period_confirm_delete.html"
+    success_url = reverse_lazy("inquiry_list")
+    context_object_name = "period"
+    success_message = "Marketing-Zeitraum gelöscht."
 
 
 class InquiryConvertView(LoginRequiredMixin, View):

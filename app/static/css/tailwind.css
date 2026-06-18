@@ -991,7 +991,11 @@
   .marketing-periods { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; padding: 0.5rem 0.75rem; background: var(--color-bg-muted); border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.82rem; }
   .marketing-periods-empty { background: none; border-style: dashed; }
   .marketing-periods-label { font-weight: 600; color: var(--color-text-muted); white-space: nowrap; }
-  .marketing-period-badge { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 2px 8px; color: var(--color-text-primary); }
+  .marketing-period-badge { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 2px 8px; color: var(--color-text-primary); display: inline-flex; align-items: center; gap: 0.35rem; }
+  .marketing-period-active { border-color: var(--color-success); background: var(--color-success-bg, color-mix(in srgb, var(--color-success) 10%, transparent)); }
+  .marketing-period-action { color: var(--color-text-muted); text-decoration: none; font-size: 0.75rem; line-height: 1; opacity: 0.6; }
+  .marketing-period-action:hover { opacity: 1; color: var(--color-link); }
+  .marketing-period-delete:hover { color: var(--color-danger); }
   .marketing-periods-manage { margin-left: auto; color: var(--color-link); text-decoration: none; white-space: nowrap; font-size: 0.8rem; }
   .marketing-periods-manage:hover { text-decoration: underline; }
   .guide-details { margin-top: 1.5rem; border: 1px solid var(--color-border); border-radius: 6px; padding: 0; overflow: hidden; }
