@@ -35,7 +35,7 @@ Shows Mon–Sun sessions and focus tasks (is_focus=True).
                 <div class="weekly-focus-task-item{% if task.is_overdue %} is-overdue{% endif %}">
                     <div class="weekly-focus-task-meta">
                         <button class="btn-focus-complete"
-                                hx-post="{% url 'todo_toggle_complete' task.pk %}?ctx=weekly_focus"
+                                hx-post="{% url 'todo_toggle' task.pk %}?ctx=weekly_focus"
                                 hx-target="#weekly-focus-content"
                                 hx-swap="outerHTML"
                                 title="Als erledigt markieren">☐</button>
