@@ -260,6 +260,14 @@
             const privacyToggle = document.getElementById('privacyToggle');
             const themeToggle = document.getElementById('themeToggle');
 
+            const langToggle = document.getElementById('langToggle');
+
+            if (langToggle) {
+                langToggle.style.float = 'none';
+                langToggle.style.marginRight = '0';
+                controlsWrapper.appendChild(langToggle);
+            }
+
             if (privacyToggle) {
                 privacyToggle.style.float = 'none';
                 privacyToggle.style.marginRight = '0';

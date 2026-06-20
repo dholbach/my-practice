@@ -2237,6 +2237,23 @@
     border-color: var(--color-btn-primary);
   }
 
+  .lang-toggle {
+    float: right;
+    margin-right: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--color-toggle-bg);
+    color: var(--color-text-primary);
+    border: 2px solid var(--color-toggle-border);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+  }
+
+  .lang-toggle:hover { background: var(--color-toggle-border); }
+
   .theme-toggle {
     float: right;
     margin-right: 0.5rem;
