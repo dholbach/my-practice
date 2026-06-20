@@ -68,6 +68,14 @@
                     </div>
                 </div>
                 {% endif %}
+                <form id="lang-form" action="{% url 'set_language' %}" method="post" style="display:none">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="hidden" name="language" id="lang-input" value="">
+                </form>
+                <button class="lang-toggle" id="langToggle" title="Sprache wechseln / Switch language">
+                    {{ CURRENT_LANGUAGE|upper }}
+                </button>
                 <button class="theme-toggle" id="themeToggle" title="Dark Mode umschalten">
                     🌙
                 </button>
@@ -149,6 +157,19 @@
 
                 // Save state to localStorage
                 localStorage.setItem('privacyMode', isActive);
+            });
+        })();
+
+        // Language switcher
+        (function() {
+            const toggle = document.getElementById('langToggle');
+            const form = document.getElementById('lang-form');
+            const input = document.getElementById('lang-input');
+            const currentLang = '{{ CURRENT_LANGUAGE }}';
+
+            toggle.addEventListener('click', function() {
+                input.value = currentLang === 'de' ? 'en' : 'de';
+                form.submit();
             });
         })();
 
