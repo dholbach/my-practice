@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-06-17
+**Last Updated**: 2026-06-20
 
 ## 🔍 Recent Activity
 
+- **2026-06-20 — P-039 i18n foundation**: Django i18n scaffold merged; DE/EN language switcher in nav header; initial `.po` catalogs committed; `.mo` compiled in Docker build; tracking issue #69 filed.
 - **2026-06-18 — v0.2.1**: weekly focus `NoReverseMatch` fix, `.warning-box` cascade fix, `prod.py` image pinning + `.gitignore` + backup reminder, CSS hex→token cleanup, dep bumps.
-- **2026-06-17 — in-app update banner + npm tooling**: update banner polls GitHub releases API (24h cache); `npm ci` lock file in Dockerfile; `npm audit` in `./dev.py review`.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -24,12 +24,15 @@
 - **P-044 Alpine.js**: ✅ Complete — see [docs/projects/done/P-044_ALPINE_JS.md](docs/projects/done/P-044_ALPINE_JS.md)
 - **P-045 Tailwind CSS**: ✅ Complete — see [docs/projects/done/P-045_TAILWIND_CSS.md](docs/projects/done/P-045_TAILWIND_CSS.md)
 
+### 🔄 In Progress
+
+- **P-039 Django i18n** (WIP): scaffold + language switcher done; template wrapping in progress → [docs/projects/wip/P-039_I18N.md](docs/projects/wip/P-039_I18N.md)
+
 ### Concept / Mid-term
 
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
 - **OSS follow-ups** (post P-024): extend CI beyond lint (pytest); GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
-- **P-039 Django i18n** (WIP): scaffold + language switcher done; template wrapping in progress → [docs/projects/wip/P-039_I18N.md](docs/projects/wip/P-039_I18N.md)
 
 ### ✅ Abgeschlossen
 
