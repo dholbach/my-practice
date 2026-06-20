@@ -24,22 +24,24 @@
             <p class="subtitle">{% block page_subtitle %}Praxisverwaltung{% endblock %}</p>
             <nav>
                 <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 Übersicht</a>
-                <a href="{% url 'invoice_list' %}" {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' %}class="active"{% endif %}>📄 Rechnungen</a>
-                <a href="{% url 'monthly_billing' %}" {% if request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' %}class="active"{% endif %}>📅 Abrechnung</a>
+                <div class="dropdown">
+                    <span {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' or request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' %}class="active"{% endif %}>📄 Rechnungen ▾</span>
+                    <div class="dropdown-content">
+                        <a href="{% url 'invoice_list' %}">📄 Rechnungen</a>
+                        <a href="{% url 'monthly_billing' %}">📅 Abrechnung</a>
+                    </div>
+                </div>
                 <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' %}class="active"{% endif %}>📋 Klienten</a>
                 <a href="{% url 'inquiry_list' %}" {% if 'inquiry' in request.resolver_match.url_name %}class="active"{% endif %}>📬 Anfragen</a>
                 <a href="{% url 'todo_list' %}" {% if 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>✅ Aufgaben</a>
-                <a href="{% url 'bank_import' %}" {% if 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>
-                    🏦 Bank
-                    {% if request.unmatched_bank_count %}<span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %}
-                </a>
-                <a href="{% url 'analytics' %}" {% if request.resolver_match.url_name == 'analytics' %}class="active"{% endif %}>📊 Analysen</a>
                 <div class="dropdown">
-                    <span {% if request.resolver_match.url_name == 'withdrawal_list' or request.resolver_match.url_name == 'expense_list' or request.resolver_match.url_name == 'tax_year_summary' or request.resolver_match.url_name == 'tax_quarter_overview' or 'bank_expense' in request.resolver_match.url_name %}class="active"{% endif %}>💰 Finanzen ▾</span>
+                    <span {% if request.resolver_match.url_name == 'withdrawal_list' or request.resolver_match.url_name == 'expense_list' or request.resolver_match.url_name == 'tax_year_summary' or request.resolver_match.url_name == 'tax_quarter_overview' or request.resolver_match.url_name == 'analytics' or 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>💰 Finanzen{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %} ▾</span>
                     <div class="dropdown-content">
+                        <a href="{% url 'bank_import' %}">🏦 Bank-Import{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %}</a>
                         <a href="{% url 'withdrawal_list' %}">📤 Entnahmen</a>
                         <a href="{% url 'expense_list' %}">💸 Ausgaben</a>
                         <a href="{% url 'bank_expense_review' %}">🏦 Bank-Ausgaben</a>
+                        <a href="{% url 'analytics' %}">📊 Analysen</a>
                         <a href="{% url 'tax_year_summary' %}">📋 Steuer-Jahresübersicht</a>
                         <a href="{% url 'tax_quarter_overview' %}">📊 Steuer-Quartalsübersicht</a>
                     </div>
