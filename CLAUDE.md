@@ -28,7 +28,6 @@ Therapy practice payment/invoicing system built with Django, PostgreSQL, running
 - Exports use codes unless explicitly needed
 
 ## Current Focus (Q2 2026)
-- Workflow-oriented dashboard (P-013): Phases 1–2 ✅; Phase 3 pending
 - Django i18n bilingual UI (P-039): scaffold ✅, language switcher ✅, template wrapping in progress
 
 See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TODO/WIP/DONE).
