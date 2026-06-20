@@ -51,6 +51,9 @@ RUN rm static/css/tailwind.css
 
 RUN chmod +x manage.py
 
+# Compile translation catalogs into binary .mo files
+RUN python manage.py compilemessages
+
 EXPOSE 8000
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "config.wsgi:application"]
