@@ -1,0 +1,48 @@
+# German translations for my-practice.
+# Copyright (C) 2026 Daniel Holbach
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: my-practice\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-20 16:36+0200\n"
+"PO-Revision-Date: 2026-06-20 16:36+0200\n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/my_practice/inquiry_confirm_delete.html:4
+#: templates/my_practice/inquiry_confirm_delete.html:8
+msgid "Anfrage löschen"
+msgstr ""
+
+#: templates/my_practice/inquiry_confirm_delete.html:13
+msgid "Möchten Sie diese Anfrage wirklich löschen?"
+msgstr ""
+
+#: templates/my_practice/inquiry_confirm_delete.html:18
+msgid "Name"
+msgstr ""
+
+#: templates/my_practice/inquiry_confirm_delete.html:22
+msgid "Eingangsdatum"
+msgstr ""
+
+#: templates/my_practice/inquiry_confirm_delete.html:26
+msgid "Quelle"
+msgstr ""
+
+#: templates/my_practice/inquiry_confirm_delete.html:30
+msgid "Status"
+msgstr ""
+
+#: templates/my_practice/inquiry_confirm_delete.html:38
+msgid "Ja, löschen"
+msgstr ""
+
+#: templates/my_practice/inquiry_confirm_delete.html:39
+msgid "Abbrechen"
+msgstr ""

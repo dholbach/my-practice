@@ -27,12 +27,9 @@ Therapy practice payment/invoicing system built with Django, PostgreSQL, running
 - Admin interface respects privacy settings
 - Exports use codes unless explicitly needed
 
-## Current Focus (Q1 2026)
-- Language consistency complete (P-002) ✅
-- Security foundation complete (P-011) ✅: LUKS + Yubikey + backup encryption + DPIA
-- Emergency access plan scoping (P-010): crisis buddy + admin buddy architecture
-- Operational backup checklist complete (P-012) ✅: in-app checklist widget + pause feature
-- Workflow-oriented dashboard in progress (P-013): Phase 1 ✅ calendar queue + preflight; Phase 2 ✅ Steuer-Quartal widget + overview; Phase 3 pending
+## Current Focus (Q2 2026)
+- Workflow-oriented dashboard (P-013): Phases 1–2 ✅; Phase 3 pending
+- Django i18n bilingual UI (P-039): scaffold ✅, language switcher ✅, template wrapping in progress
 
 See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TODO/WIP/DONE).
 
@@ -47,7 +44,11 @@ See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TO
 ./dev.py logs -f            # Follow container logs
 ./dev.py restart --force    # Full restart (reloads .env)
 ./dev.py quality            # Run ruff format, ruff lint, tests
+./dev.py i18n               # Extract + compile translation strings
 ```
+
+### Git workflow
+**`main` is branch-protected — all changes require a PR**, even trivial ones like generated files or docs. Always work on a feature branch and open a PR via `gh pr create`.
 
 ### Testing Strategy
 
