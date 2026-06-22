@@ -54,6 +54,20 @@ See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TO
 ### Git workflow
 **`main` is branch-protected — all changes require a PR**, even trivial ones like generated files or docs. Always work on a feature branch and open a PR via `gh pr create`.
 
+### Release process
+Full checklist: [docs/operations/RELEASE.md](docs/operations/RELEASE.md). Summary:
+
+1. **Bump all three version strings** (they must match):
+   - `app/my_practice/version.py` — `VERSION = "vX.Y.Z"`
+   - `prod.py` — `VERSION = "vX.Y.Z"`
+   - `docker-compose.prod.yml` — `image: ghcr.io/dholbach/my-practice:vX.Y.Z`
+2. **Docs pass**: `docs/CHANGELOG.md`, `docs/FEATURES.md`, `PROJECTS.md`, `TODO.md`
+3. **Merge PR**, then tag and create GitHub release (required for `./prod.py update`):
+   ```bash
+   git tag vX.Y.Z && git push origin vX.Y.Z
+   gh release create vX.Y.Z --title "vX.Y.Z" --notes "See docs/CHANGELOG.md"
+   ```
+
 ### Testing Strategy
 
 Match test scope to change scope — don't run the full suite for every edit:

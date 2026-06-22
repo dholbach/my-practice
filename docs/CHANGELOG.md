@@ -2,6 +2,13 @@
 
 Major features and milestones in chronological order.
 
+## 2026-06-23 — v0.2.3 patch release
+
+- **Invoice PDF redesign**: New typography (Newsreader serif for headings/totals, Hanken Grotesk for body); running multi-column footer on every page (VAT/Kleinunternehmer note, memberships, IBAN/BIC, contact, tax ID); practice address block removed from parties section (info is in the footer); invoice number/date bumped to 10pt for readability; logo and signature now composite onto paper background before JPEG encoding, fixing black fill for transparent PNGs.
+- **Practice logos on management page**: Logo shown inline in the practice heading on `/practice/manage/`; emoji fallback when no logo is set.
+- **i18n convention** (P-039): English strings as `msgids` in templates (`{% trans "Switch" %}`), German text as `msgstr` in `locale/de/django.po`. `practice_management.html` and `inquiry_confirm_delete.html` fully wrapped.
+- **License attribution**: `THIRD_PARTY_LICENSES.md` added (Alpine.js 3.15.12 MIT, htmx 2.0.4 BSD-2-Clause); `app/static/fonts/OFL.txt` added alongside font files (Newsreader + Hanken Grotesk, OFL 1.1).
+
 ## 2026-06-22 — v0.2.2 patch release
 
 - **Bug fix**: creating a new inquiry failed with "Sprache: Dieses Feld ist zwingend erforderlich" — the `language` field was in the form's `Meta.fields` but never rendered in `inquiry_form.html`. Added it between `source` and `status`.
