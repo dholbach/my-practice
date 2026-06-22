@@ -30,6 +30,11 @@ Therapy practice payment/invoicing system built with Django, PostgreSQL, running
 ## Current Focus (Q2 2026)
 - Django i18n bilingual UI (P-039): scaffold ✅, language switcher ✅, template wrapping in progress
 
+### i18n Conventions (P-039)
+- **English as msgids**: `{% trans "Switch" %}` not `{% trans "Wechseln" %}`. German text lives in `locale/de/django.po` as `msgstr`.
+- **Any template touched for any reason must be fully wrapped** with `{% load i18n %}` and `{% trans %}`/`{% blocktrans %}` in the same commit. PDF templates (`invoice_pdf_*.html`, `treatment_contract_pdf.html`, `intake_form_pdf.html`) are exempt — they handle language per-document, not via Django i18n.
+- After changing templates, run `./dev.py i18n` to extract + compile.
+
 See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TODO/WIP/DONE).
 
 ## Development Commands (use `./dev.py` for everything)
