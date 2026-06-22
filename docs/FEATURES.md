@@ -33,7 +33,7 @@ Complete feature list for the Therapy Practice Management System.
 
 ### Invoice Management
 - ✅ Invoice creation with line items
-- ✅ PDF generation (bilingual DE/EN)
+- ✅ PDF generation (bilingual DE/EN) — redesigned with Newsreader/Hanken Grotesk typography, running footer (IBAN, VAT note, memberships), transparency-correct logo/signature rendering
 - ✅ Email sending with custom templates; smart `{sessions_intro}` placeholder — "sessions in May 2026" when all items in same month, "last N sessions" otherwise
 - ✅ Status tracking (Draft/Sent/Paid/Cancelled)
 - ✅ Duplicate prevention (unique invoice numbers)
