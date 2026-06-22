@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Praxen verwalten - Therapy Practice{% endblock %}
+{% block title %}{% trans "Manage practices" %}{% endblock %}
 
-{% block page_title %}Praxen verwalten{% endblock %}
-{% block page_subtitle %}Übersicht Ihrer Praxen{% endblock %}
+{% block page_title %}{% trans "Manage practices" %}{% endblock %}
+{% block page_subtitle %}{% trans "Overview of your practices" %}{% endblock %}
 
 {% block content %}
 <div class="action-bar">
     <div>
-        <h2>Meine Praxen ({{ practices_with_ownership|length }})</h2>
+        <h2>{% blocktrans with count=practices_with_ownership|length %}My practices ({{ count }}){% endblocktrans %}</h2>
     </div>
-    <a href="{% url 'practice_create' %}" class="btn">➕ Neue Praxis erstellen</a>
+    <a href="{% url 'practice_create' %}" class="btn">➕ {% trans "Create new practice" %}</a>
 </div>
 
 {% if practices_with_ownership %}
@@ -21,9 +22,9 @@
         <div class="practice-info">
             <h3>
                 {% if practice.logo %}<img src="{{ practice.logo.url }}" alt="{{ practice.name }}" class="practice-list-logo">{% else %}🏥{% endif %} {{ practice.name }}
-                {% if is_owner %}<span class="badge badge-owner">Eigentümer</span>{% endif %}
-                {% if practice.id == request.current_practice.id %}<span class="badge badge-current">✓ Aktiv</span>{% endif %}
-                {% if not practice.is_active %}<span class="badge badge-inactive">Inaktiv</span>{% endif %}
+                {% if is_owner %}<span class="badge badge-owner">{% trans "Owner" %}</span>{% endif %}
+                {% if practice.id == request.current_practice.id %}<span class="badge badge-current">✓ {% trans "Active" %}</span>{% endif %}
+                {% if not practice.is_active %}<span class="badge badge-inactive">{% trans "Inactive" %}</span>{% endif %}
             </h3>
             <div class="text-secondary">{{ practice.title }}</div>
             <div class="practice-meta">
@@ -35,16 +36,16 @@
         <div class="practice-actions">
             {% if practice.id != request.current_practice.id and practice.is_active %}
             <a href="{% url 'practice_switch' practice.slug %}" class="btn btn-secondary">
-                Wechseln
+                {% trans "Switch" %}
             </a>
             {% endif %}
             {% if is_owner %}
             <a href="{% url 'practice_edit' practice.slug %}" class="btn btn-secondary">
-                ⚙️ Bearbeiten
+                ⚙️ {% trans "Edit" %}
             </a>
             {% if practice.is_active %}
             <a href="{% url 'practice_delete' practice.slug %}" class="btn btn-secondary" style="background: var(--color-danger-bg); color: var(--color-danger);">
-                🗑️ Deaktivieren
+                🗑️ {% trans "Deactivate" %}
             </a>
             {% endif %}
             {% endif %}
@@ -55,8 +56,8 @@
 </div>
 {% else %}
 <div class="empty-state">
-    <p>Sie haben noch keine Praxen erstellt.</p>
-    <p>Erstellen Sie Ihre erste Praxis, um zu beginnen.</p>
+    <p>{% trans "You haven't created any practices yet." %}</p>
+    <p>{% trans "Create your first practice to get started." %}</p>
 </div>
 {% endif %}
 
