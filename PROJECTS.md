@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-06-23 — invoice PDF redesign + license attribution**: Newsreader/Hanken Grotesk typography, running multi-column footer (IBAN, VAT note, memberships), transparency-correct logo/signature rendering; `THIRD_PARTY_LICENSES.md` + `app/static/fonts/OFL.txt` added for Alpine.js/htmx/fonts.
 - **2026-06-20 — P-039 i18n foundation**: Django i18n scaffold merged; DE/EN language switcher in nav header; initial `.po` catalogs committed; `.mo` compiled in Docker build; tracking issue #69 filed.
-- **2026-06-18 — v0.2.1**: weekly focus `NoReverseMatch` fix, `.warning-box` cascade fix, `prod.py` image pinning + `.gitignore` + backup reminder, CSS hex→token cleanup, dep bumps.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
