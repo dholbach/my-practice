@@ -88,7 +88,12 @@ class PracticeAdmin(admin.ModelAdmin):
         (
             "Bilder",
             {
-                "fields": ("logo", "logo_preview", "signature", "signature_preview"),
+                "fields": (
+                    "logo",
+                    "logo_preview",
+                    "signature",
+                    "signature_preview",
+                ),
                 "classes": ("collapse",),
             },
         ),
