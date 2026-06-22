@@ -8,6 +8,7 @@ import zipfile
 from datetime import date
 from io import BytesIO
 
+from django.conf import settings
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -41,7 +42,9 @@ def next_invoice_number(request: HttpRequest) -> JsonResponse:
 # ---------------------------------------------------------------------------
 
 
-def _prepare_practice_images(practice: Practice) -> tuple[str | None, str | None]:
+def _prepare_practice_images(
+    practice: Practice,
+) -> tuple[str | None, str | None]:
     """
     Load and optimise practice logo and signature images.
 
@@ -52,20 +55,27 @@ def _prepare_practice_images(practice: Practice) -> tuple[str | None, str | None
     logo_data: str | None = None
     signature_data: str | None = None
 
-    for attr, target in (("logo", "logo"), ("signature", "signature")):
+    for attr, max_size in (
+        ("logo", (400, 160)),
+        ("signature", (400, 160)),
+    ):
         field = getattr(practice, attr, None)
-        if field and os.path.exists(field.path):
-            img: Image.Image = Image.open(field.path)
-            if img.mode in ("RGBA", "LA", "P"):
-                img = img.convert("RGB")
-            img.thumbnail((400, 160), Image.Resampling.LANCZOS)
-            buf = BytesIO()
-            img.save(buf, format="JPEG", quality=85, optimize=True)
-            encoded = base64.b64encode(buf.getvalue()).decode("utf-8")
-            if target == "logo":
-                logo_data = encoded
-            else:
-                signature_data = encoded
+        if not (field and os.path.exists(field.path)):
+            continue
+        img: Image.Image = Image.open(field.path)
+        if img.mode in ("RGBA", "LA", "P"):
+            # Composite onto paper background so transparent areas render
+            # correctly in the PDF (plain convert("RGB") fills with black).
+            bg = Image.new("RGBA", img.size, (251, 250, 246, 255))
+            img = Image.alpha_composite(bg, img.convert("RGBA")).convert("RGB")
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        buf = BytesIO()
+        img.save(buf, format="JPEG", quality=85, optimize=True)
+        encoded = base64.b64encode(buf.getvalue()).decode("utf-8")
+        if attr == "logo":
+            logo_data = encoded
+        else:
+            signature_data = encoded
 
     return logo_data, signature_data
 
@@ -104,7 +114,9 @@ def _render_invoice_pdf_bytes(
             "signature_data": signature_data,
         },
     )
-    pdf_bytes = HTML(string=html_string).write_pdf(font_config=font_config)
+    # base_url lets WeasyPrint resolve static font files (fonts/ dir) relative to the app
+    base_url = f"file://{settings.BASE_DIR}/static/"
+    pdf_bytes = HTML(string=html_string, base_url=base_url).write_pdf(font_config=font_config)
     return pdf_bytes, filename
 
 
