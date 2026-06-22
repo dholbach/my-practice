@@ -2,6 +2,13 @@
 
 Major features and milestones in chronological order.
 
+## 2026-06-22 — v0.2.2 patch release
+
+- **Bug fix**: creating a new inquiry failed with "Sprache: Dieses Feld ist zwingend erforderlich" — the `language` field was in the form's `Meta.fields` but never rendered in `inquiry_form.html`. Added it between `source` and `status`.
+- **i18n foundation** (P-039): initial DE/EN `.po` catalogs committed; `compilemessages` now runs during Docker image build so translations ship with the image.
+- **Nav consolidation**: Abrechnung moved into the Rechnungen dropdown; Bank-Import and Analysen moved into a Finanzen dropdown. Reduces top-level nav items from 11 to 8, fixing overflow on narrow viewports (closes #70).
+- **Docs**: stale P-013 "Phase 3 pending" note corrected — all phases were done March 2026.
+
 ## 2026-06-18 — v0.2.1 patch release
 
 - **Bug fix**: weekly focus widget crashed with `NoReverseMatch` when a focus task was rendered — URL name was `todo_toggle_complete` (function name) instead of `todo_toggle` (registered name).
