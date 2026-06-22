@@ -20,7 +20,7 @@
     <div class="practice-item {% if practice.id == request.current_practice.id %}current{% endif %}">
         <div class="practice-info">
             <h3>
-                🏥 {{ practice.name }}
+                {% if practice.logo %}<img src="{{ practice.logo.url }}" alt="{{ practice.name }}" class="practice-list-logo">{% else %}🏥{% endif %} {{ practice.name }}
                 {% if is_owner %}<span class="badge badge-owner">Eigentümer</span>{% endif %}
                 {% if practice.id == request.current_practice.id %}<span class="badge badge-current">✓ Aktiv</span>{% endif %}
                 {% if not practice.is_active %}<span class="badge badge-inactive">Inaktiv</span>{% endif %}
