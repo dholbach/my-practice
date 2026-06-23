@@ -16,7 +16,7 @@ msgstr ""
 
 #: templates/my_practice/client_detail.html:7
 msgid "Client"
-msgstr "Klient"
+msgstr "Klient:in"
 
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/practice_management.html:26
