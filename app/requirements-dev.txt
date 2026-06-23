@@ -4,7 +4,7 @@ ruff==0.15.18
 vulture==2.16
 radon==6.0.1
 pip-audit==2.10.1
-pytest==9.1.0
+pytest==9.1.1
 pytest-asyncio==1.4.0
 pytest-django==4.12.0
 pytest-testmon==2.2.0
