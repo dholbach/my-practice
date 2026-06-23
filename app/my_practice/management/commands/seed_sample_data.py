@@ -1082,7 +1082,13 @@ class Command(BaseCommand):
         )
         has_inquiries = ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).exists()
 
-        if not seeded.exists() and not has_todos and not has_expenses and not has_inquiries:
+        if (
+            not seeded.exists()
+            and not has_todos
+            and not has_expenses
+            and not has_inquiries
+            and not demo_practice
+        ):
             self.stdout.write("  Nothing to clear.")
             return
 
@@ -1113,6 +1119,8 @@ class Command(BaseCommand):
         PracticeTodo.objects.filter(title__in=SEED_TODO_TITLES).delete()
         if demo_practice:
             CompanyExpense.objects.filter(practice=demo_practice).delete()
+            UserPractice.objects.filter(practice=demo_practice).delete()
+            demo_practice.delete()
 
         # Remove seed tags only if no real (non-seed) clients still use them.
         # Deleting seed clients above already removed the M2M associations, so
@@ -1133,6 +1141,8 @@ class Command(BaseCommand):
             parts.append("expenses")
         if n_tags:
             parts.append(f"{n_tags} tags")
+        if demo_practice:
+            parts.append("demo practice")
         self.stdout.write(self.style.WARNING(f"🗑  Cleared seeded: {', '.join(parts)}."))
 
 
