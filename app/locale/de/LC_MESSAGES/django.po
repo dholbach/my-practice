@@ -407,10 +407,8 @@ msgid "Download PDF and hand it out, then mark as done"
 msgstr "PDF herunterladen und aushändigen, dann als erledigt markieren"
 
 #: templates/my_practice/client_detail.html:493
-#, fuzzy
-#| msgid "Contact"
 msgid "Contract"
-msgstr "Kontakt"
+msgstr "Behandlungsvertrag"
 
 #: templates/my_practice/client_detail.html:494
 #, python-format
