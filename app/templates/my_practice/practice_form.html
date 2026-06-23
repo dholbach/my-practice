@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}{% if object %}Praxis bearbeiten{% else %}Neue Praxis{% endif %} - Therapy Practice{% endblock %}
+{% block title %}{% if object %}{% trans "Edit practice" %}{% else %}{% trans "New practice" %}{% endif %} - Therapy Practice{% endblock %}
 
-{% block page_title %}{% if object %}Praxis bearbeiten{% else %}Neue Praxis erstellen{% endif %}{% endblock %}
-{% block page_subtitle %}{% if object %}{{ object.name }}{% else %}Praxisinformationen eingeben{% endif %}{% endblock %}
+{% block page_title %}{% if object %}{% trans "Edit practice" %}{% else %}{% trans "Create new practice" %}{% endif %}{% endblock %}
+{% block page_subtitle %}{% if object %}{{ object.name }}{% else %}{% trans "Enter practice information" %}{% endif %}{% endblock %}
 
 {% block content %}
 <form method="post" enctype="multipart/form-data">
@@ -11,7 +12,7 @@
 
     {% if form.errors %}
     <div class="message error" style="margin-bottom: 1.5rem;">
-        <strong>Fehler beim Speichern:</strong>
+        <strong>{% trans "Error saving:" %}</strong>
         <ul>
             {% for field, errors in form.errors.items %}
                 {% for error in errors %}
@@ -23,17 +24,17 @@
     {% endif %}
 
     <div class="form-section">
-        <h3>Grundinformationen</h3>
+        <h3>{% trans "Basic information" %}</h3>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.name.id_for_label }}">Praxis-Name *</label>
+                <label for="{{ form.name.id_for_label }}">{% trans "Practice name" %} *</label>
                 {{ form.name }}
                 {% if form.name.help_text %}
                 <div class="help-text">{{ form.name.help_text }}</div>
                 {% endif %}
             </div>
             <div class="form-group">
-                <label for="{{ form.short_title.id_for_label }}">Kurzbezeichnung</label>
+                <label for="{{ form.short_title.id_for_label }}">{% trans "Short title" %}</label>
                 {{ form.short_title }}
                 {% if form.short_title.help_text %}
                 <div class="help-text">{{ form.short_title.help_text }}</div>
@@ -42,59 +43,59 @@
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.title.id_for_label }}">Berufsbezeichnung *</label>
+                <label for="{{ form.title.id_for_label }}">{% trans "Professional title" %} *</label>
                 {{ form.title }}
             </div>
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.subtitle_de.id_for_label }}">Untertitel (Deutsch)</label>
+                <label for="{{ form.subtitle_de.id_for_label }}">{% trans "Subtitle (German)" %}</label>
                 {{ form.subtitle_de }}
             </div>
             <div class="form-group">
-                <label for="{{ form.subtitle_en.id_for_label }}">Untertitel (English)</label>
+                <label for="{{ form.subtitle_en.id_for_label }}">{% trans "Subtitle (English)" %}</label>
                 {{ form.subtitle_en }}
             </div>
         </div>
         {% if object %}
         <div class="form-group checkbox-group">
             {{ form.is_active }}
-            <label for="{{ form.is_active.id_for_label }}" style="margin-bottom: 0;">Praxis ist aktiv</label>
+            <label for="{{ form.is_active.id_for_label }}" style="margin-bottom: 0;">{% trans "Practice is active" %}</label>
         </div>
         {% endif %}
     </div>
 
     <div class="form-section">
-        <h3>Adresse</h3>
+        <h3>{% trans "Address" %}</h3>
         <div class="form-group">
-            <label for="{{ form.street.id_for_label }}">Straße und Hausnummer *</label>
+            <label for="{{ form.street.id_for_label }}">{% trans "Street and house number" %} *</label>
             {{ form.street }}
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.postal_code.id_for_label }}">Postleitzahl *</label>
+                <label for="{{ form.postal_code.id_for_label }}">{% trans "Postal code" %} *</label>
                 {{ form.postal_code }}
             </div>
             <div class="form-group">
-                <label for="{{ form.city.id_for_label }}">Stadt *</label>
+                <label for="{{ form.city.id_for_label }}">{% trans "City" %} *</label>
                 {{ form.city }}
             </div>
         </div>
         <div class="form-group">
-            <label for="{{ form.country.id_for_label }}">Land</label>
+            <label for="{{ form.country.id_for_label }}">{% trans "Country" %}</label>
             {{ form.country }}
         </div>
     </div>
 
     <div class="form-section">
-        <h3>Kontakt</h3>
+        <h3>{% trans "Contact" %}</h3>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.email.id_for_label }}">E-Mail *</label>
+                <label for="{{ form.email.id_for_label }}">{% trans "Email" %} *</label>
                 {{ form.email }}
             </div>
             <div class="form-group">
-                <label for="{{ form.email_from_name.id_for_label }}">E-Mail Absender-Name *</label>
+                <label for="{{ form.email_from_name.id_for_label }}">{% trans "Email sender name" %} *</label>
                 {{ form.email_from_name }}
                 {% if form.email_from_name.help_text %}
                 <div class="help-text">{{ form.email_from_name.help_text }}</div>
@@ -103,127 +104,136 @@
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.website.id_for_label }}">Website *</label>
+                <label for="{{ form.website.id_for_label }}">{% trans "Website" %} *</label>
                 {{ form.website }}
             </div>
             <div class="form-group">
-                <label for="{{ form.phone.id_for_label }}">Telefon</label>
+                <label for="{{ form.phone.id_for_label }}">{% trans "Phone" %}</label>
                 {{ form.phone }}
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.booking_url.id_for_label }}">{% trans "Booking URL" %}</label>
+                {{ form.booking_url }}
+                {% if form.booking_url.help_text %}
+                <div class="help-text">{{ form.booking_url.help_text }}</div>
+                {% endif %}
             </div>
         </div>
     </div>
 
     <div class="form-section">
-        <h3>Bankverbindung</h3>
+        <h3>{% trans "Bank account" %}</h3>
         <div class="form-group">
-            <label for="{{ form.bank_name.id_for_label }}">Bank *</label>
+            <label for="{{ form.bank_name.id_for_label }}">{% trans "Bank" %} *</label>
             {{ form.bank_name }}
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.iban.id_for_label }}">IBAN *</label>
+                <label for="{{ form.iban.id_for_label }}">{% trans "IBAN" %} *</label>
                 {{ form.iban }}
             </div>
             <div class="form-group">
-                <label for="{{ form.bic.id_for_label }}">BIC *</label>
+                <label for="{{ form.bic.id_for_label }}">{% trans "BIC" %} *</label>
                 {{ form.bic }}
             </div>
         </div>
     </div>
 
     <div class="form-section">
-        <h3>Steuer & Umsatzsteuer</h3>
+        <h3>{% trans "Tax & VAT" %}</h3>
         <div class="form-group">
-            <label for="{{ form.tax_id.id_for_label }}">Steuernummer *</label>
+            <label for="{{ form.tax_id.id_for_label }}">{% trans "Tax ID" %} *</label>
             {{ form.tax_id }}
         </div>
         <div class="form-group checkbox-group">
             {{ form.is_kleinunternehmer }}
             <label for="{{ form.is_kleinunternehmer.id_for_label }}" style="margin-bottom: 0;">
-                Kleinunternehmer (§19 UStG - keine Umsatzsteuer)
+                {% trans "Small business owner (§19 UStG — no VAT)" %}
             </label>
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.kleinunternehmer_text_de.id_for_label }}">Kleinunternehmer-Text (Deutsch)</label>
+                <label for="{{ form.kleinunternehmer_text_de.id_for_label }}">{% trans "Small business text (German)" %}</label>
                 {{ form.kleinunternehmer_text_de }}
-                <div class="help-text">Text für Kleinunternehmer-Regelung auf deutschen Rechnungen</div>
+                <div class="help-text">{% trans "Text for small business rule on German invoices" %}</div>
             </div>
             <div class="form-group">
-                <label for="{{ form.kleinunternehmer_text_en.id_for_label }}">Kleinunternehmer-Text (English)</label>
+                <label for="{{ form.kleinunternehmer_text_en.id_for_label }}">{% trans "Small business text (English)" %}</label>
                 {{ form.kleinunternehmer_text_en }}
-                <div class="help-text">Text für Kleinunternehmer-Regelung auf englischen Rechnungen</div>
+                <div class="help-text">{% trans "Text for small business rule on English invoices" %}</div>
             </div>
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.vat_exempt_text_de.id_for_label }}">MwSt.-Befreiungs-Text (Deutsch)</label>
+                <label for="{{ form.vat_exempt_text_de.id_for_label }}">{% trans "VAT exemption text (German)" %}</label>
                 {{ form.vat_exempt_text_de }}
-                <div class="help-text">Alternativer Text falls von Umsatzsteuer befreit</div>
+                <div class="help-text">{% trans "Alternative text if exempt from VAT" %}</div>
             </div>
             <div class="form-group">
-                <label for="{{ form.vat_exempt_text_en.id_for_label }}">MwSt.-Befreiungs-Text (English)</label>
+                <label for="{{ form.vat_exempt_text_en.id_for_label }}">{% trans "VAT exemption text (English)" %}</label>
                 {{ form.vat_exempt_text_en }}
-                <div class="help-text">Alternativer Text falls von Umsatzsteuer befreit</div>
+                <div class="help-text">{% trans "Alternative text if exempt from VAT" %}</div>
             </div>
         </div>
     </div>
 
     <div class="form-section">
-        <h3>Zahlungsbedingungen</h3>
+        <h3>{% trans "Payment terms" %}</h3>
         <div class="form-group">
-            <label for="{{ form.payment_terms_days.id_for_label }}">Zahlungsziel (Tage)</label>
+            <label for="{{ form.payment_terms_days.id_for_label }}">{% trans "Payment due (days)" %}</label>
             {{ form.payment_terms_days }}
-            <div class="help-text">Standard-Zahlungsziel in Tagen (z.B. 14 für "Zahlung innerhalb 14 Tagen")</div>
+            <div class="help-text">{% trans "Standard payment due in days (e.g. 14)" %}</div>
         </div>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.payment_terms_text_de.id_for_label }}">Zahlungsbedingungen-Text (Deutsch)</label>
+                <label for="{{ form.payment_terms_text_de.id_for_label }}">{% trans "Payment terms text (German)" %}</label>
                 {{ form.payment_terms_text_de }}
             </div>
             <div class="form-group">
-                <label for="{{ form.payment_terms_text_en.id_for_label }}">Zahlungsbedingungen-Text (English)</label>
+                <label for="{{ form.payment_terms_text_en.id_for_label }}">{% trans "Payment terms text (English)" %}</label>
                 {{ form.payment_terms_text_en }}
             </div>
         </div>
     </div>
 
     <div class="form-section">
-        <h3>Mitgliedschaften & Verbände</h3>
+        <h3>{% trans "Memberships & associations" %}</h3>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.memberships_de.id_for_label }}">Mitgliedschaften (Deutsch)</label>
+                <label for="{{ form.memberships_de.id_for_label }}">{% trans "Memberships (German)" %}</label>
                 {{ form.memberships_de }}
-                <div class="help-text">Verbandsmitgliedschaften, durch Komma getrennt</div>
+                <div class="help-text">{% trans "Association memberships, comma-separated" %}</div>
             </div>
             <div class="form-group">
-                <label for="{{ form.memberships_en.id_for_label }}">Mitgliedschaften (English)</label>
+                <label for="{{ form.memberships_en.id_for_label }}">{% trans "Memberships (English)" %}</label>
                 {{ form.memberships_en }}
-                <div class="help-text">Verbandsmitgliedschaften, durch Komma getrennt</div>
+                <div class="help-text">{% trans "Association memberships, comma-separated" %}</div>
             </div>
         </div>
     </div>
 
     <div class="form-section">
-        <h3>Dateien & Bilder</h3>
+        <h3>{% trans "Files & images" %}</h3>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.logo.id_for_label }}">Logo</label>
+                <label for="{{ form.logo.id_for_label }}">{% trans "Logo" %}</label>
                 {{ form.logo }}
-                <div class="help-text">Praxis-Logo für Rechnungen und Dokumente</div>
+                <div class="help-text">{% trans "Practice logo for invoices and documents" %}</div>
                 {% if object.logo %}
                 <div style="margin-top: 0.5rem;">
-                    <img src="{{ object.logo.url }}" alt="Logo" class="border rounded-sm" style="max-height: 100px;">
+                    <img src="{{ object.logo.url }}" alt="{% trans "Logo" %}" class="border rounded-sm" style="max-height: 100px;">
                 </div>
                 {% endif %}
             </div>
             <div class="form-group">
-                <label for="{{ form.signature.id_for_label }}">Unterschrift</label>
+                <label for="{{ form.signature.id_for_label }}">{% trans "Signature" %}</label>
                 {{ form.signature }}
-                <div class="help-text">Digitale Unterschrift für Rechnungen</div>
+                <div class="help-text">{% trans "Digital signature for invoices" %}</div>
                 {% if object.signature %}
                 <div style="margin-top: 0.5rem;">
-                    <img src="{{ object.signature.url }}" alt="Unterschrift" class="border rounded-sm" style="max-height: 100px;">
+                    <img src="{{ object.signature.url }}" alt="{% trans "Signature" %}" class="border rounded-sm" style="max-height: 100px;">
                 </div>
                 {% endif %}
             </div>
@@ -231,15 +241,15 @@
     </div>
 
     <div class="form-section">
-        <h3>🚗 Fahrtkosten — Entfernungspauschale</h3>
+        <h3>🚗 {% trans "Travel costs — commute allowance" %}</h3>
         <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.commute_distance_km.id_for_label }}">Entfernung zur Praxis (km)</label>
+                <label for="{{ form.commute_distance_km.id_for_label }}">{% trans "Distance to practice (km)" %}</label>
                 {{ form.commute_distance_km }}
-                <div class="help-text">Einfache Strecke in km. §&thinsp;9 Abs.&thinsp;1 Nr.&thinsp;4 EStG.</div>
+                <div class="help-text">{% trans "One-way distance in km." %} §&thinsp;9 Abs.&thinsp;1 Nr.&thinsp;4 EStG.</div>
             </div>
             <div class="form-group">
-                <label>Praxistage (Wochentage)</label>
+                <label>{% trans "Practice days (weekdays)" %}</label>
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem;">
                     {% for checkbox in form.practice_weekdays %}
                     <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: normal; cursor: pointer;">
@@ -247,16 +257,16 @@
                     </label>
                     {% endfor %}
                 </div>
-                <div class="help-text">Wochentage, an denen Sie zur Praxis fahren.</div>
+                <div class="help-text">{% trans "Weekdays on which you commute to the practice." %}</div>
             </div>
         </div>
     </div>
 
     <div class="form-actions">
         <button type="submit" class="btn">
-            💾 {% if object %}Änderungen speichern{% else %}Praxis erstellen{% endif %}
+            💾 {% if object %}{% trans "Save changes" %}{% else %}{% trans "Create practice" %}{% endif %}
         </button>
-        <a href="{% url 'practice_management' %}" class="btn btn-secondary">Abbrechen</a>
+        <a href="{% url 'practice_management' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
     </div>
 </form>
 
