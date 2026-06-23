@@ -4,11 +4,11 @@
 {% load markdown_filters %}
 {% load i18n %}
 
-{% block title %}{{ client.client_code }} - Klient{% endblock %}
+{% block title %}{{ client.client_code }} - {% trans "Client" %}{% endblock %}
 
 {% block page_title %}
 <span class="client-detail-title-code">{{ client.client_code }}</span>
-{% if client.active %}<span class="cd-status-pill cd-status-active">● Aktiv</span>{% else %}<span class="cd-status-pill cd-status-inactive">● Inaktiv</span>{% endif %}
+{% if client.active %}<span class="cd-status-pill cd-status-active">● {% trans "Active" %}</span>{% else %}<span class="cd-status-pill cd-status-inactive">● {% trans "Inactive" %}</span>{% endif %}
 {% for tag in client.tags.all %}<span class="status-badge tag-{{ tag.color }}">{{ tag.name }}</span>{% endfor %}
 {% endblock %}
 
@@ -37,21 +37,21 @@
 
 <!-- Header actions -->
 <div class="cd-header-actions">
-    <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">← Liste</a>
-    <a href="{% url 'client_edit' client.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">✏️ Bearbeiten</a>
+    <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">{% trans "← List" %}</a>
+    <a href="{% url 'client_edit' client.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">{% trans "✏️ Edit" %}</a>
 </div>
 
 <!-- Page-level tab bar -->
 <div class="page-tab-bar">
-    <button class="page-tab-btn page-tab-active" data-tab="ueberlick" onclick="pageTab('ueberlick', this)">Überblick</button>
-    <button class="page-tab-btn" data-tab="protokoll" onclick="pageTab('protokoll', this)">📝 Protokoll
+    <button class="page-tab-btn page-tab-active" data-tab="ueberlick" onclick="pageTab('ueberlick', this)">{% trans "Overview" %}</button>
+    <button class="page-tab-btn" data-tab="protokoll" onclick="pageTab('protokoll', this)">📝 {% trans "Protocol" %}
         {% if log_entries %}<span class="cn-badge">{{ log_entries|length }}</span>{% endif %}
     </button>
-    <button class="page-tab-btn" data-tab="profil" onclick="pageTab('profil', this)">📋 Profil</button>
-    <button class="page-tab-btn" data-tab="abrechnung" onclick="pageTab('abrechnung', this)">💶 Abrechnung
+    <button class="page-tab-btn" data-tab="profil" onclick="pageTab('profil', this)">📋 {% trans "Profile" %}</button>
+    <button class="page-tab-btn" data-tab="abrechnung" onclick="pageTab('abrechnung', this)">💶 {% trans "Billing" %}
         {% if stats.open_amount %}<span class="cn-badge cn-badge-warn">{{ stats.open_amount|floatformat:0 }} €</span>{% endif %}
     </button>
-    <button class="page-tab-btn" data-tab="dokumente" onclick="pageTab('dokumente', this)">📎 Dokumente</button>
+    <button class="page-tab-btn" data-tab="dokumente" onclick="pageTab('dokumente', this)">📎 {% trans "Documents" %}</button>
 </div>
 
 <!-- ══ Tab: Überblick ══════════════════════════════════════════════════════ -->
@@ -60,21 +60,21 @@
     <!-- 4 stat cards -->
     <div class="cockpit-stats">
         <div class="info-card">
-            <h4>Arbeitsdiagnose</h4>
+            <h4>{% trans "Working diagnosis" %}</h4>
             <div class="value sensitive-data">{% if profile.arbeitsdiagnose %}{{ profile.arbeitsdiagnose }}{% else %}–{% endif %}</div>
         </div>
         <div class="info-card">
-            <h4>Letzte Sitzung</h4>
+            <h4>{% trans "Last session" %}</h4>
             <div class="value">{% if stats.last_session_date %}{{ stats.last_session_date|date:"d.m.Y" }}{% else %}–{% endif %}</div>
-            {% if stats.last_session_date %}<div class="sub-value">vor {{ stats.last_session_date|timesince }}</div>{% endif %}
+            {% if stats.last_session_date %}<div class="sub-value">{% blocktrans with ago=stats.last_session_date|timesince %}{{ ago }} ago{% endblocktrans %}</div>{% endif %}
         </div>
         <div class="info-card">
-            <h4>Sitzungsstunden</h4>
+            <h4>{% trans "Session hours" %}</h4>
             <div class="value">{{ stats.total_hours|floatformat:1 }} h</div>
-            <div class="sub-value">{{ stats.session_count }} Sitzungen</div>
+            <div class="sub-value">{% blocktrans count count=stats.session_count %}{{ count }} session{% plural %}{{ count }} sessions{% endblocktrans %}</div>
         </div>
         <div class="info-card {% if stats.open_amount %}info-card-warn{% endif %}">
-            <h4>Offener Betrag</h4>
+            <h4>{% trans "Open balance" %}</h4>
             <div class="value">
                 {% if stats.open_amount %}{{ stats.open_amount|currency }}
                     <a href="#" onclick="pageTab('abrechnung', document.querySelector('[data-tab=abrechnung]')); return false;" class="cockpit-stat-arrow">→</a>
@@ -89,8 +89,8 @@
         <!-- Recent sessions -->
         <div class="section-card">
             <div class="section-card-header">
-                <h3>Letzte Sitzungen</h3>
-                <a href="#" onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); return false;" class="cockpit-link">ganzes Protokoll →</a>
+                <h3>{% trans "Recent sessions" %}</h3>
+                <a href="#" onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); return false;" class="cockpit-link">{% trans "full protocol →" %}</a>
             </div>
             {% if recent_session_logs %}
             <div class="cockpit-session-list">
@@ -107,7 +107,7 @@
             {% endfor %}
             </div>
             {% else %}
-            <p class="cn-empty-state">Noch keine Sitzungen mit Protokoll.</p>
+            <p class="cn-empty-state">{% trans "No sessions with log yet." %}</p>
             {% endif %}
         </div>
 
@@ -115,14 +115,14 @@
         <div class="cockpit-right-col">
             {% if profile.case_notes %}
             <div class="section-card">
-                <h3>Fallnotizen</h3>
+                <h3>{% trans "Case notes" %}</h3>
                 <div class="md-rendered sensitive-data">{{ profile.case_notes|render_markdown }}</div>
             </div>
             {% endif %}
 
             <div class="section-card">
                 <div class="section-card-header">
-                    <h3>Aufnahmeprozess</h3>
+                    <h3>{% trans "Intake process" %}</h3>
                     <span class="cockpit-progress-count">{{ intake_steps_done }} / 4</span>
                 </div>
                 <div class="cockpit-progress-bar">
@@ -134,7 +134,7 @@
                     {% endfor %}
                 </div>
                 <div class="cockpit-intake-detail-link">
-                    <a href="{% url 'client_detail' client.pk %}#onboarding" class="cockpit-link">Details im Seitenprotokoll →</a>
+                    <a href="{% url 'client_detail' client.pk %}#onboarding" class="cockpit-link">{% trans "Details in profile tab →" %}</a>
                 </div>
             </div>
         </div>
@@ -142,14 +142,14 @@
 
     <!-- Cockpit quick actions -->
     <div class="cockpit-actions">
-        <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary">+ Sitzungsprotokoll</a>
+        <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary">{% trans "+ Session log" %}</a>
         <button type="button" class="btn btn-secondary"
                 onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); setTimeout(function(){ var el=document.querySelector('#ptab-protokoll [x-on\\:click*=showNote]'); if(el) el.click(); }, 100);">
-            + Notiz
+            {% trans "+ Note" %}
         </button>
         <button type="button" class="btn btn-secondary"
                 onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); setTimeout(function(){ var el=document.querySelector('#ptab-protokoll [x-on\\:click*=showSupervision]'); if(el) el.click(); }, 100);">
-            🔍 + Supervision
+            🔍 {% trans "+ Supervision" %}
         </button>
     </div>
 
@@ -347,7 +347,7 @@
 
     <!-- Supervision section at bottom of Protokoll tab -->
     <div class="cn-supervision-section">
-        <h3 class="cn-supervision-heading">🔍 Supervision</h3>
+        <h3 class="cn-supervision-heading">🔍 {% trans "Supervision" %}</h3>
         <form method="post" action="{% url 'supervision_item_create' client.pk %}" class="cn-field cn-supervision-new-form">
             {% csrf_token %}
             <textarea name="content" class="form-control cn-textarea-small"
@@ -423,40 +423,40 @@
 
     <!-- Contact & conditions (previously in sidebar) -->
     <div class="section-card">
-        <h3>📧 Kontakt &amp; Konditionen</h3>
+        <h3>📧 {% trans "Contact & Conditions" %}</h3>
         <div class="contact-grid">
             <div>
-                <div class="contact-label">Email</div>
+                <div class="contact-label">{% trans "Email" %}</div>
                 <div class="contact-value"><span class="sensitive-data">{{ client.email }}</span></div>
             </div>
             <div>
-                <div class="contact-label">Telefon</div>
+                <div class="contact-label">{% trans "Phone" %}</div>
                 <div class="contact-value"><span class="sensitive-data">{{ client.phone|default:"–" }}</span></div>
             </div>
             {% if client.address %}
             <div class="contact-grid-full">
-                <div class="contact-label">Adresse</div>
+                <div class="contact-label">{% trans "Address" %}</div>
                 <div class="contact-value"><span class="sensitive-data">{{ client.address|linebreaksbr }}</span></div>
             </div>
             {% endif %}
             <div>
-                <div class="contact-label">Kostenträger</div>
+                <div class="contact-label">{% trans "Cost carrier" %}</div>
                 <div class="contact-value"><span class="sensitive-data">{{ client.cost_carrier|default:"–" }}</span></div>
             </div>
             <div>
-                <div class="contact-label">Sprache</div>
+                <div class="contact-label">{% trans "Language" %}</div>
                 <div class="contact-value">{{ client.get_language_display }}</div>
             </div>
             <div>
-                <div class="contact-label">Sitzungsformat</div>
-                <div class="contact-value">{% if client.is_online_client %}💻 Online{% else %}🏢 Vor Ort{% endif %}</div>
+                <div class="contact-label">{% trans "Session format" %}</div>
+                <div class="contact-value">{% if client.is_online_client %}{% trans "💻 Online" %}{% else %}{% trans "🏢 In-person" %}{% endif %}</div>
             </div>
             <div>
-                <div class="contact-label">Stundensatz</div>
+                <div class="contact-label">{% trans "Hourly rate" %}</div>
                 <div class="stat-value-bold">{{ client.hourly_rate_60|floatformat:0 }}&nbsp;€</div>
             </div>
             <div>
-                <div class="contact-label">Gesamtumsatz</div>
+                <div class="contact-label">{% trans "Total revenue" %}</div>
                 <div class="stat-value-bold">{{ stats.total_revenue|currency }}</div>
             </div>
         </div>
@@ -467,18 +467,18 @@
         <details class="onboarding-details" {% if not client.onboarding_complete_date %}open{% endif %}>
         <summary class="onboarding-summary">
             {% if client.onboarding_complete_date %}
-            ✅ Aufnahmeprozess abgeschlossen am {{ client.onboarding_complete_date|date:"d.m.Y" }}
+            {% blocktrans with date=client.onboarding_complete_date|date:"d.m.Y" %}✅ Intake completed on {{ date }}{% endblocktrans %}
             {% else %}
-            📋 Aufnahmeprozess
+            📋 {% trans "Intake process" %}
             {% endif %}
         </summary>
         <ul class="onboarding-steps">
             <li class="onboarding-step {% if client.intake_sent_date %}step-done{% else %}step-pending{% endif %}">
                 <span class="step-icon">{% if client.intake_sent_date %}✅{% else %}○{% endif %}</span>
                 <div class="step-body">
-                    <div class="step-title">Aufnahme</div>
-                    {% if client.intake_sent_date %}<div class="step-date">Ausgehändigt am {{ client.intake_sent_date|date:"d.m.Y" }}</div>
-                    {% else %}<div class="step-pending-hint">PDF herunterladen und aushändigen, dann als erledigt markieren</div>{% endif %}
+                    <div class="step-title">{% trans "Intake" %}</div>
+                    {% if client.intake_sent_date %}<div class="step-date">{% blocktrans with date=client.intake_sent_date|date:"d.m.Y" %}Handed out on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Download PDF and hand it out, then mark as done" %}</div>{% endif %}
                 </div>
                 <div class="step-actions">
                     <a href="{% url 'intake_form_pdf' client.pk %}" class="btn btn-secondary btn-sm">📄 PDF</a>
@@ -490,13 +490,13 @@
             <li class="onboarding-step {% if client.contract_signed_date %}step-done{% else %}step-pending{% endif %}">
                 <span class="step-icon">{% if client.contract_signed_date %}✅{% else %}○{% endif %}</span>
                 <div class="step-body">
-                    <div class="step-title">Vertrag</div>
-                    {% if client.contract_signed_date %}<div class="step-date">Unterzeichnet am {{ client.contract_signed_date|date:"d.m.Y" }}</div>
-                    {% else %}<div class="step-pending-hint">Vertrag per E-Mail zusenden, unterschrieben zurückerhalten</div>{% endif %}
+                    <div class="step-title">{% trans "Contract" %}</div>
+                    {% if client.contract_signed_date %}<div class="step-date">{% blocktrans with date=client.contract_signed_date|date:"d.m.Y" %}Signed on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Send contract by email, receive signed copy back" %}</div>{% endif %}
                 </div>
                 <div class="step-actions">
-                    {% if client.email %}<a href="{% url 'send_contract_email' client.pk %}" class="btn btn-secondary btn-sm">📧 Senden</a>
-                    {% else %}<span class="text-muted no-email-hint">keine E-Mail</span>{% endif %}
+                    {% if client.email %}<a href="{% url 'send_contract_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>
+                    {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
                     {% url 'client_onboarding_step' client.pk as onboarding_url %}
                     {% if client.contract_signed_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='contract' reset='1' %}
                     {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Erledigt' button_class='btn btn-sm btn-done' step='contract' %}{% endif %}
@@ -505,13 +505,13 @@
             <li class="onboarding-step {% if client.questionnaire_sent_date %}step-done{% else %}step-pending{% endif %}">
                 <span class="step-icon">{% if client.questionnaire_sent_date %}✅{% else %}○{% endif %}</span>
                 <div class="step-body">
-                    <div class="step-title">Anamnese</div>
-                    {% if client.questionnaire_sent_date %}<div class="step-date">Gesendet am {{ client.questionnaire_sent_date|date:"d.m.Y" }}</div>
-                    {% else %}<div class="step-pending-hint">Fragebogen per E-Mail zusenden</div>{% endif %}
+                    <div class="step-title">{% trans "Anamnesis" %}</div>
+                    {% if client.questionnaire_sent_date %}<div class="step-date">{% blocktrans with date=client.questionnaire_sent_date|date:"d.m.Y" %}Sent on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Send questionnaire by email" %}</div>{% endif %}
                 </div>
                 <div class="step-actions">
-                    {% if client.email %}<a href="{% url 'send_questionnaire_docx' client.pk %}" class="btn btn-secondary btn-sm">📧 Senden</a>
-                    {% else %}<span class="text-muted no-email-hint">keine E-Mail</span>{% endif %}
+                    {% if client.email %}<a href="{% url 'send_questionnaire_docx' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>
+                    {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
                     {% url 'client_onboarding_step' client.pk as onboarding_url %}
                     {% if client.questionnaire_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='questionnaire' reset='1' %}
                     {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Erledigt' button_class='btn btn-sm btn-done' step='questionnaire' %}{% endif %}
@@ -520,9 +520,9 @@
             <li class="onboarding-step {% if client.onboarding_complete_date %}step-done{% else %}step-pending{% endif %}">
                 <span class="step-icon">{% if client.onboarding_complete_date %}🎉{% else %}○{% endif %}</span>
                 <div class="step-body">
-                    <div class="step-title">Aufnahme abgeschlossen</div>
-                    {% if client.onboarding_complete_date %}<div class="step-date">Abgeschlossen am {{ client.onboarding_complete_date|date:"d.m.Y" }}</div>
-                    {% else %}<div class="step-pending-hint">Alle Unterlagen vollständig — Aufnahme abschließen</div>{% endif %}
+                    <div class="step-title">{% trans "Intake complete" %}</div>
+                    {% if client.onboarding_complete_date %}<div class="step-date">{% blocktrans with date=client.onboarding_complete_date|date:"d.m.Y" %}Completed on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "All documents complete — finalise intake" %}</div>{% endif %}
                 </div>
                 <div class="step-actions">
                     {% url 'client_onboarding_step' client.pk as onboarding_url %}
@@ -536,7 +536,7 @@
 
     {% if client.source_inquiry %}
     <div class="section-card">
-        <div class="sidebar-section-label">📬 Anfragequelle</div>
+        <div class="sidebar-section-label">📬 {% trans "Source inquiry" %}</div>
         <a href="{% url 'inquiry_edit' client.source_inquiry.pk %}" class="sidebar-source-link">
             {{ client.source_inquiry.get_source_display }} &mdash; {{ client.source_inquiry.inquiry_date|date:"d.m.Y" }}
         </a>
@@ -551,46 +551,48 @@
     <!-- Billing quick actions -->
     <div class="client-actions" style="margin-bottom: 1.5rem;">
         <div class="client-actions-left">
-            <a href="{% url 'invoice_create' %}?client={{ client.id }}" class="btn btn-invoice-create">➕ Neue Rechnung</a>
+            <a href="{% url 'invoice_create' %}?client={{ client.id }}" class="btn btn-invoice-create">➕ {% trans "New invoice" %}</a>
             {% if client.email %}
             {% if reminder_urgency == "high" %}
-            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-urgent" title="Älteste offene Rechnung: über 30 Tage">📧 Zahlungserinnerung</a>
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-urgent" title="{% trans 'Oldest open invoice: over 30 days' %}">📧 {% trans "Payment reminder" %}</a>
             {% elif reminder_urgency == "medium" %}
-            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-warning" title="Älteste offene Rechnung: 14–30 Tage">📧 Zahlungserinnerung</a>
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-warning" title="{% trans 'Oldest open invoice: 14–30 days' %}">📧 {% trans "Payment reminder" %}</a>
             {% elif reminder_urgency == "low" %}
-            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-secondary" title="Offene Rechnung vorhanden">📧 Zahlungserinnerung</a>
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-secondary" title="{% trans 'Open invoice exists' %}">📧 {% trans "Payment reminder" %}</a>
             {% else %}
-            <span class="btn btn-secondary btn-disabled" title="Keine gesendeten Rechnungen offen">📧 Zahlungserinnerung</span>
+            <span class="btn btn-secondary btn-disabled" title="{% trans 'No outstanding sent invoices' %}">📧 {% trans "Payment reminder" %}</span>
             {% endif %}
-            <a href="{% url 'send_cancellation_email' client.pk %}" class="btn btn-secondary" title="Absage-Mail wegen Krankheit vorbereiten">🤒 Sitzung absagen</a>
+            <a href="{% url 'send_cancellation_email' client.pk %}" class="btn btn-secondary" title="{% trans 'Prepare cancellation email due to illness' %}">🤒 {% trans "Cancel session" %}</a>
             {% endif %}
         </div>
     </div>
 
     {% if pending_sessions %}
     <div class="section-card">
-        <h3>📅 Ausstehende Sitzungen</h3>
+        <h3>📅 {% trans "Pending sessions" %}</h3>
         <table class="data-table">
             <thead>
-                <tr><th>Datum</th><th>Uhrzeit</th><th>Dauer</th><th>Status</th><th>Aktionen</th></tr>
+                <tr><th>{% trans "Date" %}</th><th>{% trans "Time" %}</th><th>{% trans "Duration" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr>
             </thead>
             <tbody>
             {% for event in pending_sessions %}
             <tr>
                 <td>{{ event.event_date|date:"d.m.Y" }}</td>
                 <td>{{ event.event_time|time:"H:i"|default:"–" }}</td>
-                <td>{{ event.duration_minutes }} Min</td>
-                <td><span class="status-badge pending">Ausstehend</span></td>
+                <td>{{ event.duration_minutes }} {% trans "min" %}</td>
+                <td><span class="status-badge pending">{% trans "Pending" %}</span></td>
                 <td>
                     <form method="post" action="{% url 'calendar_event_quick_action' event.pk %}" class="pending-session-actions">
                         {% csrf_token %}
                         {% if current_draft_invoice %}
-                        <button type="submit" name="action" value="current_invoice" class="btn btn-sm" title="Zu Rechnung {{ current_draft_invoice.invoice_number }} hinzufügen">+ Rechnung {{ current_draft_invoice.invoice_number }}</button>
-                        <button type="submit" name="action" value="new_invoice" class="btn btn-secondary btn-sm">+ Separate Rechnung</button>
+                        {% blocktrans with num=current_draft_invoice.invoice_number asvar lbl_add_invoice %}+ Invoice {{ num }}{% endblocktrans %}
+                        {% blocktrans with num=current_draft_invoice.invoice_number asvar title_add_invoice %}Add to invoice {{ num }}{% endblocktrans %}
+                        <button type="submit" name="action" value="current_invoice" class="btn btn-sm" title="{{ title_add_invoice }}">{{ lbl_add_invoice }}</button>
+                        <button type="submit" name="action" value="new_invoice" class="btn btn-secondary btn-sm">{% trans "+ Separate invoice" %}</button>
                         {% else %}
-                        <button type="submit" name="action" value="current_invoice" class="btn btn-sm">+ Neue Rechnung</button>
+                        <button type="submit" name="action" value="current_invoice" class="btn btn-sm">{% trans "+ New invoice" %}</button>
                         {% endif %}
-                        <button type="submit" name="action" value="ignore" class="btn btn-secondary btn-sm">Ignorieren</button>
+                        <button type="submit" name="action" value="ignore" class="btn btn-secondary btn-sm">{% trans "Ignore" %}</button>
                     </form>
                 </td>
             </tr>
@@ -602,19 +604,19 @@
 
     <div class="section-card">
         <div class="section-card-header">
-            <h3>📄 Rechnungshistorie</h3>
+            <h3>📄 {% trans "Invoice history" %}</h3>
             {% if current_month_pending_count or current_month_unbilled_count %}
             <a href="{% url 'monthly_billing_overview' month=current_month_str %}" class="current-month-alert">
-                {% if current_month_pending_count %}⚠️ {{ current_month_pending_count }} Termin{{ current_month_pending_count|pluralize:"e" }} ausstehend{% endif %}
+                {% if current_month_pending_count %}{% blocktrans count count=current_month_pending_count %}⚠️ {{ count }} appointment pending{% plural %}⚠️ {{ count }} appointments pending{% endblocktrans %}{% endif %}
                 {% if current_month_pending_count and current_month_unbilled_count %} · {% endif %}
-                {% if current_month_unbilled_count %}📝 {{ current_month_unbilled_count }} Sitzung{{ current_month_unbilled_count|pluralize:"en" }} offen{% endif %}
+                {% if current_month_unbilled_count %}{% blocktrans count count=current_month_unbilled_count %}📝 {{ count }} session open{% plural %}📝 {{ count }} sessions open{% endblocktrans %}{% endif %}
             </a>
             {% endif %}
         </div>
         {% if invoices %}
         <table class="data-table">
             <thead>
-                <tr><th>Rechnungsnr.</th><th>Datum</th><th>Sitzungen</th><th>Status</th><th class="text-right">Betrag</th><th>Aktionen</th></tr>
+                <tr><th>{% trans "Invoice no." %}</th><th>{% trans "Date" %}</th><th>{% trans "Sessions" %}</th><th>{% trans "Status" %}</th><th class="text-right">{% trans "Amount" %}</th><th>{% trans "Actions" %}</th></tr>
             </thead>
             <tbody>
             {% for invoice in invoices %}
@@ -624,19 +626,19 @@
                 <td>{{ invoice.items.count }}</td>
                 <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
                 <td class="text-right fw-700">{{ invoice.total|currency }}</td>
-                <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-secondary">👁️ Ansehen</a></td>
+                <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-secondary">👁️ {% trans "View" %}</a></td>
             </tr>
             {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <p class="empty-state-msg">Noch keine Rechnungen für diesen Klienten.</p>
+        <p class="empty-state-msg">{% trans "No invoices for this client yet." %}</p>
         {% endif %}
     </div>
 
     {% if monthly_sessions %}
     <div class="section-card">
-        <h3>📊 Sitzungsaktivität</h3>
+        <h3>📊 {% trans "Session activity" %}</h3>
         <div class="chart-wrapper">
             <canvas id="sessionTimeline" width="100%" height="100%"></canvas>
         </div>
@@ -651,7 +653,7 @@
 
     {% if documents %}
     <div class="section-card" style="margin-top: 1rem;">
-        <h3>Hochgeladene Dokumente</h3>
+        <h3>{% trans "Uploaded documents" %}</h3>
         <ul class="sidebar-doc-list">
             {% for doc in documents %}
             <li id="doc-{{ doc.pk }}" class="sidebar-doc-item">
