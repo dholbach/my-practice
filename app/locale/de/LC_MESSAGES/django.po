@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 12:34+0200\n"
+"POT-Creation-Date: 2026-06-23 15:48+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -165,6 +165,8 @@ msgstr "Supervisionsnotiz löschen?"
 
 #: templates/my_practice/client_detail_tabs.html:243
 #: templates/my_practice/inquiry_confirm_delete.html:39
+#: templates/my_practice/inquiry_form.html:190
+#: templates/my_practice/practice_form.html:269
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -229,6 +231,339 @@ msgstr "Status"
 msgid "Yes, delete"
 msgstr "Ja, löschen"
 
+#: templates/my_practice/inquiry_form.html:5
+#: templates/my_practice/inquiry_form.html:8
+msgid "Inquiry"
+msgstr "Anfrage"
+
+#: templates/my_practice/inquiry_form.html:14
+msgid "Add as client"
+msgstr "Als Klient:in aufnehmen"
+
+#: templates/my_practice/inquiry_form.html:23
+#: templates/my_practice/practice_form.html:15
+msgid "Error saving:"
+msgstr "Fehler beim Speichern:"
+
+#: templates/my_practice/inquiry_form.html:78
+msgid "Milestones"
+msgstr "Meilensteine"
+
+#: templates/my_practice/inquiry_form.html:78
+msgid "(set automatically on status change)"
+msgstr "(werden beim Statuswechsel automatisch gesetzt)"
+
+#: templates/my_practice/inquiry_form.html:116
+msgid "Guide: Initial consultation"
+msgstr "Leitfaden: Erstgespräch"
+
+#: templates/my_practice/inquiry_form.html:120
+msgid "Time"
+msgstr "Zeit"
+
+#: templates/my_practice/inquiry_form.html:120
+msgid "Step"
+msgstr "Schritt"
+
+#: templates/my_practice/inquiry_form.html:120
+msgid "Note"
+msgstr "Hinweis"
+
+#: templates/my_practice/inquiry_form.html:125
+msgid "Welcome"
+msgstr "Ankommen"
+
+#: templates/my_practice/inquiry_form.html:126
+msgid "State the fee, ask about communication channel — before the person becomes emotionally engaged"
+msgstr "Honorar nennen, Kanal-Frage — bevor sich die Person emotional einlässt"
+
+#: templates/my_practice/inquiry_form.html:130
+msgid "Life situation & resources"
+msgstr "Lebenssituation & Ressourcen"
+
+#: templates/my_practice/inquiry_form.html:131
+msgid "Occupation, social environment, first assessment of regulation capacity"
+msgstr "Beschäftigung, soziales Umfeld, erste Einschätzung Regulationsfähigkeit"
+
+#: templates/my_practice/inquiry_form.html:135
+msgid "Concern & goal for change"
+msgstr "Anliegen & Veränderungsziel"
+
+#: templates/my_practice/inquiry_form.html:136
+msgid "Previous therapy experience, expectations"
+msgstr "Vorige Therapieerfahrung, Erwartungen"
+
+#: templates/my_practice/inquiry_form.html:140
+msgid "Current situation"
+msgstr "Akute Lage"
+
+#: templates/my_practice/inquiry_form.html:141
+msgid "One sentence — crises, psychiatry, medication; not like a form"
+msgstr "Ein Satz — Krisen, Psychiatrie, Medikation; nicht wie ein Formular"
+
+#: templates/my_practice/inquiry_form.html:145
+msgid "Explain approach"
+msgstr "Ansatz erklären"
+
+#: templates/my_practice/inquiry_form.html:146
+msgid "SE, body-oriented; normalise the unfamiliarity for newcomers"
+msgstr "SE, körperorientiert; bei Neueinsteigern Fremdartigkeit normalisieren"
+
+#: templates/my_practice/inquiry_form.html:150
+msgid "Closing & next step"
+msgstr "Abschluss & nächster Schritt"
+
+#: templates/my_practice/inquiry_form.html:151
+msgid "Name the next action clearly, leave no ambiguity about how to get in touch"
+msgstr "Nächste Handlung klar benennen, keine offene Unklarheit über Kontaktweg"
+
+#: templates/my_practice/inquiry_form.html:154
+msgid "buffer"
+msgstr "Puffer"
+
+#: templates/my_practice/inquiry_form.html:169
+#, python-format
+msgid "No booking URL configured — <a href=\"%(url)s\">set one in practice settings</a> so it is filled in automatically."
+msgstr "Keine Buchungs-URL konfiguriert — <a href=\"%(url)s\">eine in den Praxiseinstellungen hinterlegen</a>, damit sie automatisch eingefügt wird."
+
+#: templates/my_practice/inquiry_form.html:173
+msgid "Template:"
+msgstr "Vorlage:"
+
+#: templates/my_practice/practice_form.html:4
+#: templates/my_practice/practice_form.html:6
+msgid "Edit practice"
+msgstr "Praxis bearbeiten"
+
+#: templates/my_practice/practice_form.html:4
+msgid "New practice"
+msgstr "Neue Praxis"
+
+#: templates/my_practice/practice_form.html:6
+#: templates/my_practice/practice_management.html:14
+msgid "Create new practice"
+msgstr "Neue Praxis erstellen"
+
+#: templates/my_practice/practice_form.html:7
+msgid "Enter practice information"
+msgstr "Praxisinformationen eingeben"
+
+#: templates/my_practice/practice_form.html:27
+msgid "Basic information"
+msgstr "Grundinformationen"
+
+#: templates/my_practice/practice_form.html:30
+msgid "Practice name"
+msgstr "Praxis-Name"
+
+#: templates/my_practice/practice_form.html:37
+msgid "Short title"
+msgstr "Kurzbezeichnung"
+
+#: templates/my_practice/practice_form.html:46
+msgid "Professional title"
+msgstr "Berufsbezeichnung"
+
+#: templates/my_practice/practice_form.html:52
+msgid "Subtitle (German)"
+msgstr "Untertitel (Deutsch)"
+
+#: templates/my_practice/practice_form.html:56
+msgid "Subtitle (English)"
+msgstr "Untertitel (English)"
+
+#: templates/my_practice/practice_form.html:63
+msgid "Practice is active"
+msgstr "Praxis ist aktiv"
+
+#: templates/my_practice/practice_form.html:69
+msgid "Address"
+msgstr "Adresse"
+
+#: templates/my_practice/practice_form.html:71
+msgid "Street and house number"
+msgstr "Straße und Hausnummer"
+
+#: templates/my_practice/practice_form.html:76
+msgid "Postal code"
+msgstr "Postleitzahl"
+
+#: templates/my_practice/practice_form.html:80
+msgid "City"
+msgstr "Stadt"
+
+#: templates/my_practice/practice_form.html:85
+msgid "Country"
+msgstr "Land"
+
+#: templates/my_practice/practice_form.html:91
+msgid "Contact"
+msgstr "Kontakt"
+
+#: templates/my_practice/practice_form.html:94
+msgid "Email"
+msgstr "E-Mail"
+
+#: templates/my_practice/practice_form.html:98
+msgid "Email sender name"
+msgstr "E-Mail Absender-Name"
+
+#: templates/my_practice/practice_form.html:107
+msgid "Website"
+msgstr "Website"
+
+#: templates/my_practice/practice_form.html:111
+msgid "Phone"
+msgstr "Telefon"
+
+#: templates/my_practice/practice_form.html:117
+msgid "Booking URL"
+msgstr "Buchungs-URL"
+
+#: templates/my_practice/practice_form.html:127
+msgid "Bank account"
+msgstr "Bankverbindung"
+
+#: templates/my_practice/practice_form.html:129
+msgid "Bank"
+msgstr "Bank"
+
+#: templates/my_practice/practice_form.html:134
+msgid "IBAN"
+msgstr "IBAN"
+
+#: templates/my_practice/practice_form.html:138
+msgid "BIC"
+msgstr "BIC"
+
+#: templates/my_practice/practice_form.html:145
+msgid "Tax & VAT"
+msgstr "Steuer & Umsatzsteuer"
+
+#: templates/my_practice/practice_form.html:147
+msgid "Tax ID"
+msgstr "Steuernummer"
+
+#: templates/my_practice/practice_form.html:153
+msgid "Small business owner (§19 UStG — no VAT)"
+msgstr "Kleinunternehmer (§19 UStG - keine Umsatzsteuer)"
+
+#: templates/my_practice/practice_form.html:158
+msgid "Small business text (German)"
+msgstr "Kleinunternehmer-Text (Deutsch)"
+
+#: templates/my_practice/practice_form.html:160
+msgid "Text for small business rule on German invoices"
+msgstr "Text für Kleinunternehmer-Regelung auf deutschen Rechnungen"
+
+#: templates/my_practice/practice_form.html:163
+msgid "Small business text (English)"
+msgstr "Kleinunternehmer-Text (English)"
+
+#: templates/my_practice/practice_form.html:165
+msgid "Text for small business rule on English invoices"
+msgstr "Text für Kleinunternehmer-Regelung auf englischen Rechnungen"
+
+#: templates/my_practice/practice_form.html:170
+msgid "VAT exemption text (German)"
+msgstr "MwSt.-Befreiungs-Text (Deutsch)"
+
+#: templates/my_practice/practice_form.html:172
+#: templates/my_practice/practice_form.html:177
+msgid "Alternative text if exempt from VAT"
+msgstr "Alternativer Text falls von Umsatzsteuer befreit"
+
+#: templates/my_practice/practice_form.html:175
+msgid "VAT exemption text (English)"
+msgstr "MwSt.-Befreiungs-Text (English)"
+
+#: templates/my_practice/practice_form.html:183
+msgid "Payment terms"
+msgstr "Zahlungsbedingungen"
+
+#: templates/my_practice/practice_form.html:185
+msgid "Payment due (days)"
+msgstr "Zahlungsziel (Tage)"
+
+#: templates/my_practice/practice_form.html:187
+msgid "Standard payment due in days (e.g. 14)"
+msgstr "Standard-Zahlungsziel in Tagen (z.B. 14)"
+
+#: templates/my_practice/practice_form.html:191
+msgid "Payment terms text (German)"
+msgstr "Zahlungsbedingungen-Text (Deutsch)"
+
+#: templates/my_practice/practice_form.html:195
+msgid "Payment terms text (English)"
+msgstr "Zahlungsbedingungen-Text (English)"
+
+#: templates/my_practice/practice_form.html:202
+msgid "Memberships & associations"
+msgstr "Mitgliedschaften & Verbände"
+
+#: templates/my_practice/practice_form.html:205
+msgid "Memberships (German)"
+msgstr "Mitgliedschaften (Deutsch)"
+
+#: templates/my_practice/practice_form.html:207
+#: templates/my_practice/practice_form.html:212
+msgid "Association memberships, comma-separated"
+msgstr "Verbandsmitgliedschaften, durch Komma getrennt"
+
+#: templates/my_practice/practice_form.html:210
+msgid "Memberships (English)"
+msgstr "Mitgliedschaften (English)"
+
+#: templates/my_practice/practice_form.html:218
+msgid "Files & images"
+msgstr "Dateien & Bilder"
+
+#: templates/my_practice/practice_form.html:221
+#: templates/my_practice/practice_form.html:226
+msgid "Logo"
+msgstr "Logo"
+
+#: templates/my_practice/practice_form.html:223
+msgid "Practice logo for invoices and documents"
+msgstr "Praxis-Logo für Rechnungen und Dokumente"
+
+#: templates/my_practice/practice_form.html:231
+#: templates/my_practice/practice_form.html:236
+msgid "Signature"
+msgstr "Unterschrift"
+
+#: templates/my_practice/practice_form.html:233
+msgid "Digital signature for invoices"
+msgstr "Digitale Unterschrift für Rechnungen"
+
+#: templates/my_practice/practice_form.html:244
+msgid "Travel costs — commute allowance"
+msgstr "Fahrtkosten — Entfernungspauschale"
+
+#: templates/my_practice/practice_form.html:247
+msgid "Distance to practice (km)"
+msgstr "Entfernung zur Praxis (km)"
+
+#: templates/my_practice/practice_form.html:249
+msgid "One-way distance in km."
+msgstr "Einfache Strecke in km."
+
+#: templates/my_practice/practice_form.html:252
+msgid "Practice days (weekdays)"
+msgstr "Praxistage (Wochentage)"
+
+#: templates/my_practice/practice_form.html:260
+msgid "Weekdays on which you commute to the practice."
+msgstr "Wochentage, an denen Sie zur Praxis fahren."
+
+#: templates/my_practice/practice_form.html:267
+msgid "Save changes"
+msgstr "Änderungen speichern"
+
+#: templates/my_practice/practice_form.html:267
+msgid "Create practice"
+msgstr "Praxis erstellen"
+
 #: templates/my_practice/practice_management.html:4
 #: templates/my_practice/practice_management.html:6
 msgid "Manage practices"
@@ -242,10 +577,6 @@ msgstr "Übersicht Ihrer Praxen"
 #, python-format
 msgid "My practices (%(count)s)"
 msgstr "Meine Praxen (%(count)s)"
-
-#: templates/my_practice/practice_management.html:14
-msgid "Create new practice"
-msgstr "Neue Praxis erstellen"
 
 #: templates/my_practice/practice_management.html:25
 msgid "Owner"

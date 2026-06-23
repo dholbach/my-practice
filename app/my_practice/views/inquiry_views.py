@@ -392,6 +392,7 @@ class InquiryUpdateView(PracticeScopedUpdateView):
             self.object.status != InquiryStatus.CONVERTED and self.object.converted_client is None
         )
         context["current_status"] = self.object.status
+        context["booking_url_missing"] = not bool(self.request.current_practice.booking_url)
         context["all_email_templates"] = [
             {
                 "status": status,
