@@ -2,6 +2,12 @@
 
 Major features and milestones in chronological order.
 
+## 2026-06-23 — v0.2.4 patch release
+
+- **Bug fix**: `+ Notiz` and `🔍 + Supervision` buttons on the client detail Protokoll tab did nothing — `.cn-collapsed-hidden { display: none }` in CSS permanently overrode Alpine's `x-show` toggle. Replaced the class with bare `x-show` directives; removed the now-dead CSS rule.
+- **i18n** (P-039): `client_detail_tabs.html` fully wrapped — all user-visible strings (tab labels, buttons, placeholders, confirm dialogs) covered. Alpine `confirm()` strings injected via pre-rendered template variables; `yesno` filter replaced with `{% if %}` for translatable supervision toggle labels. German empty-state uses gender-neutral "Klient:in".
+- **Deps**: actions/checkout v7, django-stubs 6.0.6, pypdf 6.14.0, pytest 9.1.1, nh3 0.3.6.
+
 ## 2026-06-23 — v0.2.3 patch release
 
 - **Invoice PDF redesign**: New typography (Newsreader serif for headings/totals, Hanken Grotesk for body); running multi-column footer on every page (VAT/Kleinunternehmer note, memberships, IBAN/BIC, contact, tax ID); practice address block removed from parties section (info is in the footer); invoice number/date bumped to 10pt for readability; logo and signature now composite onto paper background before JPEG encoding, fixing black fill for transparent PNGs.
