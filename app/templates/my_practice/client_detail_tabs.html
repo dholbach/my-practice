@@ -64,7 +64,7 @@
             </button>
         </div>
 
-        <div class="cn-collapsed-hidden" x-show="showNote">
+        <div x-show="showNote">
             <form method="post" action="{% url 'client_note_create' client.pk %}" class="cn-note-new-form">
                 {% csrf_token %}
                 <div class="cn-note-new-row">
@@ -77,7 +77,7 @@
             </form>
         </div>
 
-        <div class="cn-collapsed-hidden" x-show="showSupervision">
+        <div x-show="showSupervision">
             <form method="post" action="{% url 'client_note_create' client.pk %}" class="cn-note-new-form">
                 {% csrf_token %}
                 <input type="hidden" name="note_type" value="supervision">
