@@ -367,10 +367,8 @@ msgid "Language"
 msgstr "Sprache"
 
 #: templates/my_practice/client_detail.html:451
-#, fuzzy
-#| msgid "+ Session log"
 msgid "Session format"
-msgstr "+ Sitzungsprotokoll"
+msgstr "Sitzungsformat"
 
 #: templates/my_practice/client_detail.html:452
 msgid "💻 Online"
@@ -430,10 +428,8 @@ msgid "no email"
 msgstr "keine E-Mail"
 
 #: templates/my_practice/client_detail.html:508
-#, fuzzy
-#| msgid "Intake & Anamnesis"
 msgid "Anamnesis"
-msgstr "Aufnahme & Anamnese"
+msgstr "Anamnese"
 
 #: templates/my_practice/client_detail.html:509
 #, python-format
@@ -522,10 +518,8 @@ msgstr "Status"
 
 #: templates/my_practice/client_detail.html:575
 #: templates/my_practice/client_detail.html:619
-#, fuzzy
-#| msgid "Active"
 msgid "Actions"
-msgstr "Aktiv"
+msgstr "Aktionen"
 
 #: templates/my_practice/client_detail.html:583
 msgid "Pending"
@@ -546,10 +540,8 @@ msgid "+ Separate invoice"
 msgstr "+ Separate Rechnung"
 
 #: templates/my_practice/client_detail.html:593
-#, fuzzy
-#| msgid "🧾 To invoice"
 msgid "+ New invoice"
-msgstr "🧾 Zur Rechnung"
+msgstr "+ Neue Rechnung"
 
 #: templates/my_practice/client_detail.html:595
 msgid "Ignore"
@@ -590,10 +582,8 @@ msgid "View"
 msgstr "Ansehen"
 
 #: templates/my_practice/client_detail.html:635
-#, fuzzy
-#| msgid "No supervision topics for this client yet."
 msgid "No invoices for this client yet."
-msgstr "Noch keine Supervisionsthemen für diese Klient:in."
+msgstr "Noch keine Rechnungen für diese Klient:in."
 
 #: templates/my_practice/client_detail.html:641
 msgid "Session activity"
