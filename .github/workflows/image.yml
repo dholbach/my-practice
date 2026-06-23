@@ -19,7 +19,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # workflow_dispatch: check out the requested tag
           # push (tag): github.event.inputs.tag is empty, falls back to github.ref
