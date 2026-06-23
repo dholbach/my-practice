@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-22 23:01+0200\n"
+"POT-Creation-Date: 2026-06-23 12:34+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -13,6 +13,192 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/my_practice/client_detail_tabs.html:6
+msgid "Profile"
+msgstr ""
+
+#: templates/my_practice/client_detail_tabs.html:7
+msgid "Protocol"
+msgstr ""
+
+#: templates/my_practice/client_detail_tabs.html:10
+#: templates/my_practice/client_detail_tabs.html:220
+msgid "Supervision"
+msgstr ""
+
+#: templates/my_practice/client_detail_tabs.html:20
+msgid "Working diagnosis"
+msgstr "Arbeitsdiagnose"
+
+#: templates/my_practice/client_detail_tabs.html:25
+msgid "Intake & Anamnesis"
+msgstr "Aufnahme & Anamnese"
+
+#: templates/my_practice/client_detail_tabs.html:27
+msgid "Clinical initial assessment…"
+msgstr "Klinische Erstbewertung…"
+
+#: templates/my_practice/client_detail_tabs.html:30
+#: templates/my_practice/client_detail_tabs.html:41
+msgid "Preview"
+msgstr "Vorschau"
+
+#: templates/my_practice/client_detail_tabs.html:36
+msgid "Case notes"
+msgstr "Fallnotizen"
+
+#: templates/my_practice/client_detail_tabs.html:38
+msgid "Topics, dynamics, challenges…"
+msgstr "Themen, Dynamik, Herausforderungen…"
+
+#: templates/my_practice/client_detail_tabs.html:47
+msgid "Save profile"
+msgstr "Profil speichern"
+
+#: templates/my_practice/client_detail_tabs.html:56
+msgid "+ Session log"
+msgstr "+ Sitzungsprotokoll"
+
+#: templates/my_practice/client_detail_tabs.html:60
+msgid "+ Note"
+msgstr "+ Notiz"
+
+#: templates/my_practice/client_detail_tabs.html:64
+msgid "+ Supervision"
+msgstr "+ Supervision"
+
+#: templates/my_practice/client_detail_tabs.html:74
+#: templates/my_practice/client_detail_tabs.html:88
+#: templates/my_practice/client_detail_tabs.html:241
+msgid "Save"
+msgstr "Speichern"
+
+#: templates/my_practice/client_detail_tabs.html:77
+msgid "Note (Markdown supported)…"
+msgstr "Notiz (Markdown unterstützt)…"
+
+#: templates/my_practice/client_detail_tabs.html:91
+msgid "Supervision feedback and recommendations (Markdown)…"
+msgstr "Supervisionsfeedback und Empfehlungen (Markdown)…"
+
+#: templates/my_practice/client_detail_tabs.html:96
+msgid "▴ Collapse"
+msgstr "▴ Einklappen"
+
+#: templates/my_practice/client_detail_tabs.html:97
+msgid "▾ Show older entries"
+msgstr "▾ Ältere Einträge anzeigen"
+
+#: templates/my_practice/client_detail_tabs.html:98
+msgid "more"
+msgstr "mehr"
+
+#: templates/my_practice/client_detail_tabs.html:112
+msgid "🧾 To invoice"
+msgstr "🧾 Zur Rechnung"
+
+#: templates/my_practice/client_detail_tabs.html:113
+msgid "🚷 Non-billable"
+msgstr "🚷 Nicht abrechenbar"
+
+#: templates/my_practice/client_detail_tabs.html:114
+msgid "✅ Billable"
+msgstr "✅ Abrechenbar"
+
+#: templates/my_practice/client_detail_tabs.html:115
+msgid "🚫 No-show"
+msgstr "🚫 Ausfall"
+
+#: templates/my_practice/client_detail_tabs.html:116
+msgid "Delete session log?"
+msgstr "Sitzungsprotokoll löschen?"
+
+#: templates/my_practice/client_detail_tabs.html:117
+msgid "Delete session?"
+msgstr "Sitzung löschen?"
+
+#: templates/my_practice/client_detail_tabs.html:124
+#: templates/my_practice/client_detail_tabs.html:167
+msgid "min"
+msgstr "Min"
+
+#: templates/my_practice/client_detail_tabs.html:125
+#: templates/my_practice/client_detail_tabs.html:168
+msgid "Unbilled"
+msgstr "Unberechnet"
+
+#: templates/my_practice/client_detail_tabs.html:125
+#: templates/my_practice/client_detail_tabs.html:168
+msgid "Non-billable"
+msgstr "Nicht abrechenbar"
+
+#: templates/my_practice/client_detail_tabs.html:138
+msgid "Own reflection"
+msgstr "Eigene Reflexion"
+
+#: templates/my_practice/client_detail_tabs.html:145
+#: templates/my_practice/client_detail_tabs.html:179
+#: templates/my_practice/practice_management.html:44
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: templates/my_practice/client_detail_tabs.html:169
+msgid "Log missing"
+msgstr "Protokoll fehlt"
+
+#: templates/my_practice/client_detail_tabs.html:197
+msgid "+ Log"
+msgstr "+ Protokoll"
+
+#: templates/my_practice/client_detail_tabs.html:200
+msgid "Duration in minutes"
+msgstr "Dauer in Minuten"
+
+#: templates/my_practice/client_detail_tabs.html:201
+msgid "Save min."
+msgstr "Min. speichern"
+
+#: templates/my_practice/client_detail_tabs.html:216
+msgid "Delete supervision note?"
+msgstr "Supervisionsnotiz löschen?"
+
+#: templates/my_practice/client_detail_tabs.html:243
+#: templates/my_practice/inquiry_confirm_delete.html:39
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: templates/my_practice/client_detail_tabs.html:249
+msgid "Delete note?"
+msgstr "Notiz löschen?"
+
+#: templates/my_practice/client_detail_tabs.html:270
+msgid "No entries yet. Session logs are created when adding new entries."
+msgstr "Noch keine Einträge. Sitzungsprotokolle entstehen beim Erstellen neuer Einträge."
+
+#: templates/my_practice/client_detail_tabs.html:279
+msgid "Supervision topic or question…"
+msgstr "Supervisionsthema oder -frage…"
+
+#: templates/my_practice/client_detail_tabs.html:280
+msgid "Add"
+msgstr "Hinzufügen"
+
+#: templates/my_practice/client_detail_tabs.html:286
+msgid "Delete supervision topic?"
+msgstr "Supervisionsthema wirklich löschen?"
+
+#: templates/my_practice/client_detail_tabs.html:287
+msgid "↩ Reopen"
+msgstr "↩ Öffnen"
+
+#: templates/my_practice/client_detail_tabs.html:287
+msgid "✓ Discussed"
+msgstr "✓ Besprochen"
+
+#: templates/my_practice/client_detail_tabs.html:304
+msgid "No supervision topics for this client yet."
+msgstr "Noch keine Supervisionsthemen für diese Klient:in."
 
 #: templates/my_practice/inquiry_confirm_delete.html:4
 #: templates/my_practice/inquiry_confirm_delete.html:8
@@ -42,10 +228,6 @@ msgstr "Status"
 #: templates/my_practice/inquiry_confirm_delete.html:38
 msgid "Yes, delete"
 msgstr "Ja, löschen"
-
-#: templates/my_practice/inquiry_confirm_delete.html:39
-msgid "Cancel"
-msgstr "Abbrechen"
 
 #: templates/my_practice/practice_management.html:4
 #: templates/my_practice/practice_management.html:6
@@ -80,10 +262,6 @@ msgstr "Inaktiv"
 #: templates/my_practice/practice_management.html:39
 msgid "Switch"
 msgstr "Wechseln"
-
-#: templates/my_practice/practice_management.html:44
-msgid "Edit"
-msgstr "Bearbeiten"
 
 #: templates/my_practice/practice_management.html:48
 msgid "Deactivate"
