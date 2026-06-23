@@ -11,7 +11,7 @@
 <div class="form-container">
     {% if show_convert_button %}
     <div class="convert-hint">
-        <a href="{% url 'inquiry_convert' object.pk %}" class="btn-success">✅ {% trans "Add as client" %}</a>
+        <a href="{% url 'inquiry_convert' object.pk %}" class="btn btn-success">{% trans "Add as client" %}</a>
     </div>
     {% endif %}
 
@@ -61,6 +61,13 @@
                 <label for="{{ form.source.id_for_label }}">{{ form.source.label }}</label>
                 {{ form.source }}
             </div>
+            <div class="form-group">
+                <label for="{{ form.language.id_for_label }}">{{ form.language.label }}</label>
+                {{ form.language }}
+            </div>
+        </div>
+
+        <div class="form-row">
             <div class="form-group">
                 <label for="{{ form.inquiry_date.id_for_label }}">{{ form.inquiry_date.label }}</label>
                 {{ form.inquiry_date }}
@@ -180,7 +187,7 @@
 
         <div class="form-actions">
             <button type="submit" class="btn">{{ action }}</button>
-            <a href="{% url 'inquiry_list' %}" class="btn-secondary">{% trans "Cancel" %}</a>
+            <a href="{% url 'inquiry_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
         </div>
     </form>
 </div>
