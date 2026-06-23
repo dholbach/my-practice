@@ -1,18 +1,17 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Anfrage {{ action }}{% endblock %}
-
-
+{% block title %}{% trans "Inquiry" %} {{ action }}{% endblock %}
 
 {% block page_icon %}📬{% endblock %}
-{% block page_title %}Anfrage {{ action }}{% endblock %}
+{% block page_title %}{% trans "Inquiry" %} {{ action }}{% endblock %}
 
 {% block content %}
 <div class="form-container">
     {% if show_convert_button %}
     <div class="convert-hint">
-        <a href="{% url 'inquiry_convert' object.pk %}" class="btn-success">✅ Als Klient:in aufnehmen</a>
+        <a href="{% url 'inquiry_convert' object.pk %}" class="btn-success">✅ {% trans "Add as client" %}</a>
     </div>
     {% endif %}
 
@@ -21,7 +20,7 @@
 
         {% if form.errors %}
         <div class="alert alert-error">
-            <strong>Fehler beim Speichern:</strong>
+            <strong>{% trans "Error saving:" %}</strong>
             <ul>
                 {% for field in form %}
                     {% for error in field.errors %}
@@ -76,7 +75,7 @@
         </div>
 
         <fieldset class="milestone-dates-fieldset">
-            <legend>Meilensteine <span class="fieldset-hint">(werden beim Statuswechsel automatisch gesetzt)</span></legend>
+            <legend>{% trans "Milestones" %} <span class="fieldset-hint">{% trans "(set automatically on status change)" %}</span></legend>
             <div class="form-row">
                 <div class="form-group">
                     <label for="{{ form.contacted_date.id_for_label }}">{{ form.contacted_date.label }}</label>
@@ -114,45 +113,45 @@
 
         {% if object %}
         <details class="guide-details">
-            <summary>📋 Leitfaden: Erstgespräch</summary>
+            <summary>📋 {% trans "Guide: Initial consultation" %}</summary>
             <div class="guide-body">
                 <table class="guide-table">
                     <thead>
-                        <tr><th>Zeit</th><th>Schritt</th><th>Hinweis</th></tr>
+                        <tr><th>{% trans "Time" %}</th><th>{% trans "Step" %}</th><th>{% trans "Note" %}</th></tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>~1 min</td>
-                            <td><strong>Ankommen</strong></td>
-                            <td>Honorar nennen, Kanal-Frage — bevor sich die Person emotional einlässt</td>
+                            <td><strong>{% trans "Welcome" %}</strong></td>
+                            <td>{% trans "State the fee, ask about communication channel — before the person becomes emotionally engaged" %}</td>
                         </tr>
                         <tr>
                             <td>~5 min</td>
-                            <td><strong>Lebenssituation &amp; Ressourcen</strong></td>
-                            <td>Beschäftigung, soziales Umfeld, erste Einschätzung Regulationsfähigkeit</td>
+                            <td><strong>{% trans "Life situation & resources" %}</strong></td>
+                            <td>{% trans "Occupation, social environment, first assessment of regulation capacity" %}</td>
                         </tr>
                         <tr>
                             <td>~5 min</td>
-                            <td><strong>Anliegen &amp; Veränderungsziel</strong></td>
-                            <td>Vorige Therapieerfahrung, Erwartungen</td>
+                            <td><strong>{% trans "Concern & goal for change" %}</strong></td>
+                            <td>{% trans "Previous therapy experience, expectations" %}</td>
                         </tr>
                         <tr>
                             <td>~2 min</td>
-                            <td><strong>Akute Lage</strong></td>
-                            <td>Ein Satz — Krisen, Psychiatrie, Medikation; nicht wie ein Formular</td>
+                            <td><strong>{% trans "Current situation" %}</strong></td>
+                            <td>{% trans "One sentence — crises, psychiatry, medication; not like a form" %}</td>
                         </tr>
                         <tr>
                             <td>~4 min</td>
-                            <td><strong>Ansatz erklären</strong></td>
-                            <td>SE, körperorientiert; bei Neueinsteigern Fremdartigkeit normalisieren</td>
+                            <td><strong>{% trans "Explain approach" %}</strong></td>
+                            <td>{% trans "SE, body-oriented; normalise the unfamiliarity for newcomers" %}</td>
                         </tr>
                         <tr>
                             <td>~2 min</td>
-                            <td><strong>Abschluss &amp; nächster Schritt</strong></td>
-                            <td>Nächste Handlung klar benennen, keine offene Unklarheit über Kontaktweg</td>
+                            <td><strong>{% trans "Closing & next step" %}</strong></td>
+                            <td>{% trans "Name the next action clearly, leave no ambiguity about how to get in touch" %}</td>
                         </tr>
                         <tr>
-                            <td>Σ ~19 min + 1 Puffer</td>
+                            <td>Σ ~19 min + 1 {% trans "buffer" %}</td>
                             <td></td>
                             <td></td>
                         </tr>
@@ -164,8 +163,14 @@
 
         {% if all_email_templates %}
         <div class="stage-email-section" x-data="{ status: '{{ current_status }}' }">
+            {% if booking_url_missing %}
+            {% url 'practice_edit' slug=request.current_practice.slug as practice_settings_url %}
+            <div class="alert alert-warning">
+                {% blocktrans with url=practice_settings_url %}No booking URL configured — <a href="{{ url }}">set one in practice settings</a> so it is filled in automatically.{% endblocktrans %}
+            </div>
+            {% endif %}
             <div class="template-selector-row">
-                <label for="template-selector">Vorlage:</label>
+                <label for="template-selector">{% trans "Template:" %}</label>
                 <select id="template-selector" x-on:change="status = $el.value">
                     {% for tmpl in all_email_templates %}
                     <option value="{{ tmpl.status }}"{% if tmpl.status == current_status %} selected{% endif %}>{{ tmpl.label }}</option>
@@ -182,7 +187,7 @@
 
         <div class="form-actions">
             <button type="submit" class="btn">{{ action }}</button>
-            <a href="{% url 'inquiry_list' %}" class="btn-secondary">Abbrechen</a>
+            <a href="{% url 'inquiry_list' %}" class="btn-secondary">{% trans "Cancel" %}</a>
         </div>
     </form>
 </div>
