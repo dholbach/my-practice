@@ -40,8 +40,8 @@
                 {{ form.full_name }}
             </div>
             <div class="form-group">
-                <label for="{{ form.inquiry_date.id_for_label }}">{{ form.inquiry_date.label }}</label>
-                {{ form.inquiry_date }}
+                <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                {{ form.status }}
             </div>
         </div>
 
@@ -62,15 +62,8 @@
                 {{ form.source }}
             </div>
             <div class="form-group">
-                <label for="{{ form.language.id_for_label }}">{{ form.language.label }}</label>
-                {{ form.language }}
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
-                {{ form.status }}
+                <label for="{{ form.inquiry_date.id_for_label }}">{{ form.inquiry_date.label }}</label>
+                {{ form.inquiry_date }}
             </div>
         </div>
 
@@ -191,4 +184,28 @@
         </div>
     </form>
 </div>
+
+<script>
+(function () {
+    const statusMap = {
+        contacted:     "id_contacted_date",
+        intro_meeting: "id_intro_date",
+        in_intake:     "id_decision_date",
+        declined:      "id_decision_date",
+        not_suitable:  "id_decision_date",
+        unreachable:   "id_decision_date",
+    };
+    const today = new Date().toISOString().slice(0, 10);
+    const statusEl = document.getElementById("id_status");
+    if (!statusEl) return;
+    statusEl.addEventListener("change", function () {
+        const dateFieldId = statusMap[this.value];
+        if (!dateFieldId) return;
+        const dateEl = document.getElementById(dateFieldId);
+        if (dateEl && !dateEl.value) {
+            dateEl.value = today;
+        }
+    });
+}());
+</script>
 {% endblock %}
