@@ -101,6 +101,7 @@ def session_log_create(request, pk):
             session=session,
             session_type=request.POST.get("session_type", SessionLog.SessionType.STANDARD),
             mood_tags=mood_tags,
+            summary=request.POST.get("summary", ""),
             content=request.POST.get("content", ""),
             interventions=request.POST.get("interventions", ""),
             therapist_reflection=request.POST.get("therapist_reflection", ""),
@@ -148,6 +149,7 @@ def session_log_edit(request, client_pk, log_pk):
     if request.method == "POST":
         log.session_type = request.POST.get("session_type", log.session_type)
         log.mood_tags = request.POST.getlist("mood_tags")
+        log.summary = request.POST.get("summary", log.summary)
         log.content = request.POST.get("content", log.content)
         log.interventions = request.POST.get("interventions", log.interventions)
         log.therapist_reflection = request.POST.get(
