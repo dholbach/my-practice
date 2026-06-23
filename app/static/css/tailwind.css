@@ -770,7 +770,6 @@
   .cn-note-actions { flex-shrink: 0; }
   .cn-note-content .md-rendered { padding: 0; }
   .cn-note-new-form { background: var(--color-bg-muted); border: 1px solid var(--color-border); border-radius: 6px; padding: 1rem; margin-bottom: 1.25rem; }
-  .cn-collapsed-hidden { display: none; }
   .cn-old-toggle { display: block; margin: 0.25rem 0 0.5rem; font-size: 0.8rem; width: 100%; text-align: center; opacity: 0.75; border-style: dashed; }
   .cn-old-toggle:hover { opacity: 1; }
   .cn-note-new-form .cn-field:last-of-type { margin-bottom: 0; }
