@@ -190,6 +190,22 @@ class ClientDetailContextBuilder:
 
         profile, _ = ClientProfile.objects.get_or_create(client=self.client)
 
+        # Last 5 session logs for Überblick tab (unencrypted metadata only)
+        recent_session_logs = (
+            SessionLog.objects.filter(session__client=self.client, session__cancelled=False)
+            .select_related("session")
+            .order_by("-session__session_date")[:5]
+        )
+
+        # Intake progress: 4 steps tracked as date fields on Client
+        intake_steps = [
+            ("Aufnahme", self.client.intake_sent_date),
+            ("Vertrag", self.client.contract_signed_date),
+            ("Anamnese", self.client.questionnaire_sent_date),
+            ("Abschluss", self.client.onboarding_complete_date),
+        ]
+        intake_steps_done = sum(1 for _, d in intake_steps if d)
+
         sessions_qs = (
             self.client.sessions.filter(cancelled=False)
             .prefetch_related("log", "invoice_items__invoice")
@@ -225,6 +241,9 @@ class ClientDetailContextBuilder:
 
         return {
             "profile": profile,
+            "recent_session_logs": recent_session_logs,
+            "intake_steps": intake_steps,
+            "intake_steps_done": intake_steps_done,
             "log_entries": log_entries,
             "recent_sessions_needing_log": recent_sessions_needing_log,
             "no_log_needed_session_ids": no_log_needed_session_ids,

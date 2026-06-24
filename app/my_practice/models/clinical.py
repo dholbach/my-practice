@@ -229,6 +229,15 @@ class SessionLog(TimestampedModel):
         # NOT encrypted — enables emergency triage summary without Fernet key
     )
 
+    summary = models.CharField(
+        max_length=120,
+        blank=True,
+        default="",
+        verbose_name="Kurzzusammenfassung",
+        help_text="Einzeiler für den Überblick (unverschlüsselt, max. 120 Zeichen)",
+        # NOT encrypted — shown in Überblick cockpit without Fernet key
+    )
+
     content = EncryptedTextField(
         blank=True,
         verbose_name="Sitzungsnotiz",
