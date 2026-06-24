@@ -134,7 +134,8 @@
                     {% endfor %}
                 </div>
                 <div class="cockpit-intake-detail-link">
-                    <a href="{% url 'client_detail' client.pk %}#onboarding" class="cockpit-link">{% trans "Details in profile tab →" %}</a>
+                    <a href="#onboarding" class="cockpit-link"
+                       onclick="pageTab('profil', document.querySelector('[data-tab=profil]')); setTimeout(function(){ document.getElementById('onboarding').scrollIntoView({behavior:'smooth'}); }, 50); return false;">{% trans "Details in profile tab →" %}</a>
                 </div>
             </div>
         </div>
@@ -463,7 +464,7 @@
     </div>
 
     <!-- Onboarding widget (previously in sidebar) -->
-    <div class="section-card onboarding-widget-inline">
+    <div id="onboarding" class="section-card onboarding-widget-inline">
         <details class="onboarding-details" {% if not client.onboarding_complete_date %}open{% endif %}>
         <summary class="onboarding-summary">
             {% if client.onboarding_complete_date %}
