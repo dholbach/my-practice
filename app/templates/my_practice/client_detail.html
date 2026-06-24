@@ -9,7 +9,6 @@
 {% block page_title %}
 <span class="client-detail-title-code">{{ client.client_code }}</span>
 {% if client.active %}<span class="cd-status-pill cd-status-active">● {% trans "Active" %}</span>{% else %}<span class="cd-status-pill cd-status-inactive">● {% trans "Inactive" %}</span>{% endif %}
-{% for tag in client.tags.all %}<span class="status-badge tag-{{ tag.color }}">{{ tag.name }}</span>{% endfor %}
 {% endblock %}
 
 {% block page_subtitle %}
