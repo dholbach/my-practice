@@ -13,6 +13,11 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Chronological unified log view (sessions + notes + supervision notes, newest first, collapse >10)
 - ✅ Unbilled session delete (blocked if already invoiced)
 
+### Client Detail Cockpit (P-094)
+- ✅ Tabbed layout: Überblick / Protokoll / Profil / Abrechnung / Dokumente — replaces sidebar layout
+- ✅ Überblick tab: stat cards (diagnosis, last session, session hours, open balance), intake progress widget (4-step bar from existing date fields), recent session one-liners
+- ✅ `SessionLog.summary` — unencrypted one-liner field (max 120 chars) shown in Überblick without Fernet decryption; editable in session log form
+
 ### Client Management
 - ✅ Client database with full details
 - ✅ Online vs In-person tracking
