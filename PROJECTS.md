@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-06-20
+**Last Updated**: 2026-06-24
 
 ## 🔍 Recent Activity
 
+- **2026-06-24 — v0.2.5**: Client detail cockpit (P-094) — tabbed layout, Überblick tags strip, tag add/remove in Profil tab; inquiry UX (status at top, booking URL warning, milestone date auto-fill); seed data improvements.
 - **2026-06-24 — P-094**: Client detail cockpit — tabbed layout (Überblick / Protokoll / Profil / Abrechnung / Dokumente), intake progress widget, session one-liner summary field (`SessionLog.summary`), i18n-wrapped.
-- **2026-06-23 — v0.2.4**: `+ Notiz`/`+ Supervision` button fix (Alpine `x-show` vs CSS); `client_detail_tabs.html` fully i18n-wrapped; dep bumps (pypdf, pytest, nh3, django-stubs, actions/checkout).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

@@ -16,7 +16,7 @@ services:
       retries: 5
 
   django:
-    image: ghcr.io/dholbach/my-practice:v0.2.4
+    image: ghcr.io/dholbach/my-practice:v0.2.5
     container_name: my-practice-django
     restart: unless-stopped
     ports:

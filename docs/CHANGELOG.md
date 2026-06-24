@@ -2,6 +2,14 @@
 
 Major features and milestones in chronological order.
 
+## 2026-06-24 — v0.2.5 patch release
+
+- **Client detail cockpit** (P-094): New tabbed layout replaces the single-page client detail view — tabs for Überblick (overview), Profil, Protokoll, Rechnungen, Dokumente, and Abrechnung. Überblick shows the cockpit prep view with key stats and upcoming sessions at a glance.
+- **Client tags in cockpit**: Manual client tags now shown in the Überblick tab strip; tag add/remove UI restored in the Profil tab; duplicate tags removed from the page header.
+- **Bug fix**: "Details in Profil-Tab" onboarding link now correctly switches to the Profile tab and scrolls to the onboarding section.
+- **Inquiry improvements**: Status field moved to the top of the inquiry form; milestone date auto-fills when status changes; booking URL field added to practice settings with a warning shown in the inquiry form when it is missing; language field restored to inquiry form (had been accidentally omitted).
+- **Seed data**: Session log summaries added to demo sample data; demo practice `short_title` set to "Therapie (Demo)"; `seed --clear` now also removes the demo Practice record.
+
 ## 2026-06-23 — v0.2.4 patch release
 
 - **Bug fix**: `+ Notiz` and `🔍 + Supervision` buttons on the client detail Protokoll tab did nothing — `.cn-collapsed-hidden { display: none }` in CSS permanently overrode Alpine's `x-show` toggle. Replaced the class with bare `x-show` directives; removed the now-dead CSS rule.
