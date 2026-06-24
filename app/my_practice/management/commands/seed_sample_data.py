@@ -480,6 +480,11 @@ class Command(BaseCommand):
             self._clear(options["yes"])
             return  # clear-only; run without --clear to reseed
 
+        # Always ensure the demo practice has the correct display name (idempotent).
+        Practice.objects.filter(slug=DEMO_SLUG).exclude(short_title="Therapie (Demo)").update(
+            short_title="Therapie (Demo)"
+        )
+
         # Idempotency check: fictional names like "Frodo Baggins" won't appear in a real practice
         if Client.objects.filter(full_name__in=SEED_NAMES).exists():
             self.stdout.write("ℹ️  Demo data already exists. Use --clear to reset.")
@@ -519,7 +524,6 @@ class Command(BaseCommand):
     # ── Setup helpers ─────────────────────────────────────────────────────────
 
     def _get_or_create_practice(self) -> Practice:
-        # Use demo practice if it exists
         practice = Practice.objects.filter(slug=DEMO_SLUG).first()
         if practice:
             return practice
@@ -529,7 +533,7 @@ class Command(BaseCommand):
         practice = Practice.objects.create(
             slug=DEMO_SLUG,
             name="Anna Schmidt",
-            short_title="Therapie",
+            short_title="Therapie (Demo)",
             title="Heilpraktikerin für Psychotherapie",
         )
         self.stdout.write(f"  ✓ Created practice: {practice.name}")
