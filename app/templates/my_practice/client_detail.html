@@ -1,18 +1,22 @@
 {% extends 'base.html' %}
-
-{% block title %}{{ client.client_code }} - Client Details{% endblock %}
-
-{% block page_title %}👤 <span class="client-detail-title-code">{{ client.client_code }}</span>{% endblock %}
-{% block page_subtitle %}
-    <div class="client-detail-subtitle-row">
-        <span class="sensitive-data client-detail-name">{{ client.full_name }}</span>
-        {% include 'includes/client_tags.html' with client=client editable=True available_tags=available_tags %}
-    </div>
-{% endblock %}
-
 {% load static %}
 {% load payment_tags %}
 {% load markdown_filters %}
+{% load i18n %}
+
+{% block title %}{{ client.client_code }} - {% trans "Client" %}{% endblock %}
+
+{% block page_title %}
+<span class="client-detail-title-code">{{ client.client_code }}</span>
+{% if client.active %}<span class="cd-status-pill cd-status-active">● {% trans "Active" %}</span>{% else %}<span class="cd-status-pill cd-status-inactive">● {% trans "Inactive" %}</span>{% endif %}
+{% for tag in client.tags.all %}<span class="status-badge tag-{{ tag.color }}">{{ tag.name }}</span>{% endfor %}
+{% endblock %}
+
+{% block page_subtitle %}
+{% if stats.activity_period %}{{ stats.activity_period }}{% endif %}
+{% if stats.total_hours %} · {{ stats.total_hours|floatformat:1 }} h{% endif %}
+{% if profile.arbeitsdiagnose %} · <span class="sensitive-data">{{ profile.arbeitsdiagnose }}</span>{% endif %}
+{% endblock %}
 
 {% block extra_css %}
 <script src="{% static 'js/charts/chart_core.js' %}"></script>
@@ -20,215 +24,671 @@
 {% endblock %}
 
 {% block content %}
-
-<!-- CSRF Token for AJAX requests -->
 {% csrf_token %}
 
 {% if client.full_name|slice:":7" == "Klient " and "@example.com" in client.email %}
 <div class="placeholder-warning">
     <strong>📋 Imported client data - needs updating</strong><br>
     <span>This client was imported with placeholder data. Please update with real information:
-    <a href="{% url 'client_edit' client.pk %}">
-        ✏️ Edit client details →
-    </a>
+    <a href="{% url 'client_edit' client.pk %}">✏️ Edit client details →</a>
     </span>
 </div>
 {% endif %}
 
-<!-- Quick Actions -->
-<div class="client-actions">
-    <div class="client-actions-left">
-        <a href="{% url 'invoice_create' %}?client={{ client.id }}" class="btn btn-invoice-create">
-            ➕ Neue Rechnung
-        </a>
-        {% if client.email %}
-        {% if reminder_urgency == "high" %}
-        <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-urgent" title="Älteste offene Rechnung: über 30 Tage">
-            📧 Zahlungserinnerung
-        </a>
-        {% elif reminder_urgency == "medium" %}
-        <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-warning" title="Älteste offene Rechnung: 14–30 Tage">
-            📧 Zahlungserinnerung
-        </a>
-        {% elif reminder_urgency == "low" %}
-        <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-secondary"
-           title="Offene Rechnung vorhanden">
-            📧 Zahlungserinnerung
-        </a>
-        {% else %}
-        <span class="btn btn-secondary btn-disabled"
-              title="Keine gesendeten Rechnungen offen">
-            📧 Zahlungserinnerung
-        </span>
-        {% endif %}
-        <a href="{% url 'send_cancellation_email' client.pk %}" class="btn btn-secondary"
-           title="Absage-Mail wegen Krankheit vorbereiten">
-            🤒 Sitzung absagen
-        </a>
-        {% endif %}
-    </div>
-    <div class="client-actions-right">
-        <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">
-            ← Zurück zur Liste
-        </a>
-        <a href="{% url 'client_edit' client.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">
-            ✏️ Bearbeiten
-        </a>
-    </div>
+<!-- Header actions -->
+<div class="cd-header-actions">
+    <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">{% trans "← List" %}</a>
+    <a href="{% url 'client_edit' client.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">{% trans "✏️ Edit" %}</a>
 </div>
 
-<!-- ══ Two-column layout: main (clinical + billing) + sidebar (meta) ══════ -->
-<div class="cd-layout">
+<!-- Page-level tab bar -->
+<div class="page-tab-bar">
+    <button class="page-tab-btn page-tab-active" data-tab="ueberlick" onclick="pageTab('ueberlick', this)">{% trans "Overview" %}</button>
+    <button class="page-tab-btn" data-tab="protokoll" onclick="pageTab('protokoll', this)">📝 {% trans "Protocol" %}
+        {% if log_entries %}<span class="cn-badge">{{ log_entries|length }}</span>{% endif %}
+    </button>
+    <button class="page-tab-btn" data-tab="profil" onclick="pageTab('profil', this)">📋 {% trans "Profile" %}</button>
+    <button class="page-tab-btn" data-tab="abrechnung" onclick="pageTab('abrechnung', this)">💶 {% trans "Billing" %}
+        {% if stats.open_amount %}<span class="cn-badge cn-badge-warn">{{ stats.open_amount|floatformat:0 }} €</span>{% endif %}
+    </button>
+    <button class="page-tab-btn" data-tab="dokumente" onclick="pageTab('dokumente', this)">📎 {% trans "Documents" %}</button>
+</div>
 
-<!-- ══ MAIN COLUMN ═══════════════════════════════════════════════════════ -->
-<div class="cd-main">
+<!-- ══ Tab: Überblick ══════════════════════════════════════════════════════ -->
+<div id="ptab-ueberlick" class="page-tab-content page-tab-active">
 
-{% include 'my_practice/client_detail_tabs.html' %}
+    <!-- 4 stat cards -->
+    <div class="cockpit-stats">
+        <div class="info-card">
+            <h4>{% trans "Working diagnosis" %}</h4>
+            <div class="value sensitive-data">{% if profile.arbeitsdiagnose %}{{ profile.arbeitsdiagnose }}{% else %}–{% endif %}</div>
+        </div>
+        <div class="info-card">
+            <h4>{% trans "Last session" %}</h4>
+            <div class="value">{% if stats.last_session_date %}{{ stats.last_session_date|date:"d.m.Y" }}{% else %}–{% endif %}</div>
+            {% if stats.last_session_date %}<div class="sub-value">{% blocktrans with ago=stats.last_session_date|timesince %}{{ ago }} ago{% endblocktrans %}</div>{% endif %}
+        </div>
+        <div class="info-card">
+            <h4>{% trans "Session hours" %}</h4>
+            <div class="value">{{ stats.total_hours|floatformat:1 }} h</div>
+            <div class="sub-value">{% blocktrans count count=stats.session_count %}{{ count }} session{% plural %}{{ count }} sessions{% endblocktrans %}</div>
+        </div>
+        <div class="info-card {% if stats.open_amount %}info-card-warn{% endif %}">
+            <h4>{% trans "Open balance" %}</h4>
+            <div class="value">
+                {% if stats.open_amount %}{{ stats.open_amount|currency }}
+                    <a href="#" onclick="pageTab('abrechnung', document.querySelector('[data-tab=abrechnung]')); return false;" class="cockpit-stat-arrow">→</a>
+                {% else %}–{% endif %}
+            </div>
+        </div>
+    </div>
 
-{% if pending_sessions %}
-<!-- Upcoming Sessions -->
-<div class="section-card">
-    <h3>📅 Ausstehende Sitzungen</h3>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Datum</th>
-                <th>Uhrzeit</th>
-                <th>Dauer</th>
-                <th>Status</th>
-                <th>Aktionen</th>
-            </tr>
-        </thead>
-        <tbody>
+    <!-- Two-column split: recent sessions left, case notes + intake right -->
+    <div class="cockpit-split">
+
+        <!-- Recent sessions -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <h3>{% trans "Recent sessions" %}</h3>
+                <a href="#" onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); return false;" class="cockpit-link">{% trans "full protocol →" %}</a>
+            </div>
+            {% if recent_session_logs %}
+            <div class="cockpit-session-list">
+            {% for log in recent_session_logs %}
+            <div class="cockpit-session-row">
+                <span class="cockpit-session-date">{{ log.session.session_date|date:"d.m.Y" }}</span>
+                <span class="cockpit-session-summary">{% if log.summary %}{{ log.summary }}{% else %}<em class="text-muted">–</em>{% endif %}</span>
+                <span class="cockpit-session-badges">
+                    {% for tag in log.mood_tags %}
+                    <span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>
+                    {% endfor %}
+                </span>
+            </div>
+            {% endfor %}
+            </div>
+            {% else %}
+            <p class="cn-empty-state">{% trans "No sessions with log yet." %}</p>
+            {% endif %}
+        </div>
+
+        <!-- Right column: case notes + intake progress -->
+        <div class="cockpit-right-col">
+            {% if profile.case_notes %}
+            <div class="section-card">
+                <h3>{% trans "Case notes" %}</h3>
+                <div class="md-rendered sensitive-data">{{ profile.case_notes|render_markdown }}</div>
+            </div>
+            {% endif %}
+
+            <div class="section-card">
+                <div class="section-card-header">
+                    <h3>{% trans "Intake process" %}</h3>
+                    <span class="cockpit-progress-count">{{ intake_steps_done }} / 4</span>
+                </div>
+                <div class="cockpit-progress-bar">
+                    <div class="cockpit-progress-fill" style="width: {% widthratio intake_steps_done 4 100 %}%"></div>
+                </div>
+                <div class="cockpit-intake-steps">
+                    {% for name, step_date in intake_steps %}
+                    <span class="cockpit-intake-step {% if step_date %}step-done{% endif %}">{% if step_date %}✓ {% endif %}{{ name }}</span>
+                    {% endfor %}
+                </div>
+                <div class="cockpit-intake-detail-link">
+                    <a href="{% url 'client_detail' client.pk %}#onboarding" class="cockpit-link">{% trans "Details in profile tab →" %}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cockpit quick actions -->
+    <div class="cockpit-actions">
+        <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary">{% trans "+ Session log" %}</a>
+        <button type="button" class="btn btn-secondary"
+                onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); setTimeout(function(){ var el=document.querySelector('#ptab-protokoll [x-on\\:click*=showNote]'); if(el) el.click(); }, 100);">
+            {% trans "+ Note" %}
+        </button>
+        <button type="button" class="btn btn-secondary"
+                onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); setTimeout(function(){ var el=document.querySelector('#ptab-protokoll [x-on\\:click*=showSupervision]'); if(el) el.click(); }, 100);">
+            🔍 {% trans "+ Supervision" %}
+        </button>
+    </div>
+
+</div><!-- /ptab-ueberlick -->
+
+<!-- ══ Tab: Protokoll ══════════════════════════════════════════════════════ -->
+<div id="ptab-protokoll" class="page-tab-content" x-data="{ showNote: false, showSupervision: false }">
+    {% load markdown_filters %}
+    {% load i18n %}
+
+    <div class="cn-actions cn-actions-top">
+        <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary btn-sm">{% trans "+ Session log" %}</a>
+        <button type="button" class="btn btn-secondary btn-sm" x-on:click="showNote = !showNote">{% trans "+ Note" %}</button>
+        <button type="button" class="btn btn-secondary btn-sm" x-on:click="showSupervision = !showSupervision">🔍 {% trans "+ Supervision" %}</button>
+    </div>
+
+    <div x-show="showNote">
+        <form method="post" action="{% url 'client_note_create' client.pk %}" class="cn-note-new-form">
+            {% csrf_token %}
+            <div class="cn-note-new-row">
+                <input type="date" name="note_date" class="form-control" required value="{% now 'Y-m-d' %}">
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Save" %}</button>
+            </div>
+            <textarea name="content" class="form-control cn-textarea" placeholder="{% trans 'Note (Markdown supported)…' %}" rows="4" required></textarea>
+        </form>
+    </div>
+
+    <div x-show="showSupervision">
+        <form method="post" action="{% url 'client_note_create' client.pk %}" class="cn-note-new-form">
+            {% csrf_token %}
+            <input type="hidden" name="note_type" value="supervision">
+            <div class="cn-note-new-row">
+                <input type="date" name="note_date" class="form-control" required value="{% now 'Y-m-d' %}">
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Save" %}</button>
+            </div>
+            <textarea name="content" class="form-control cn-textarea" placeholder="{% trans 'Supervision feedback and recommendations (Markdown)…' %}" rows="4" required></textarea>
+        </form>
+    </div>
+
+    {% if log_entries %}
+    {% trans "▴ Collapse" as txt_collapse %}
+    {% trans "▾ Show older entries" as txt_show_older %}
+    {% trans "more" as txt_more %}
+    <div class="cn-session-list" x-data="{ showOld: false, oldCount: {{ log_entries|length|add:'-10' }} }">
+    {% for entry in log_entries %}
+    {% if forloop.counter == 11 %}
+    <button type="button" id="cn-old-entries-toggle" class="btn btn-secondary btn-sm cn-old-toggle"
+            x-on:click="showOld = !showOld"
+            x-text="showOld ? '{{ txt_collapse }}' : '{{ txt_show_older }} (' + oldCount + ' {{ txt_more }})'">
+        {{ txt_show_older }} ({{ log_entries|length|add:'-10' }} {{ txt_more }})
+    </button>
+    <div x-show="showOld">
+    {% endif %}
+
+    {% if entry.type == "session" %}
+    {% with session=entry.obj log=entry.obj.log %}
+    {% trans "🧾 To invoice" as lbl_to_invoice %}
+    {% trans "🚷 Non-billable" as lbl_non_billable %}
+    {% trans "✅ Billable" as lbl_billable %}
+    {% trans "🚫 No-show" as lbl_noshow %}
+    {% trans "Delete session log?" as confirm_delete_log %}
+    {% trans "Delete session?" as confirm_delete_session %}
+    <div class="cn-session-row {% if log %}cn-has-log{% endif %}{% if session.pk in recent_sessions_needing_log %} cn-needs-log{% endif %}">
+        {% if log and log.content %}
+        <div class="cn-session-grid">
+            <div class="cn-session-left">
+                <span class="cn-session-date">{{ session.session_date|date:"d.m.Y" }}</span>
+                <span class="cn-session-duration">{{ session.duration }} {% trans "min" %}</span>
+                {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">{% trans "Unbilled" %}</span>{% else %}<span class="cn-session-not-billable">{% trans "Non-billable" %}</span>{% endif %}{% endif %}
+                {% if log.session_type %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% endif %}
+                {% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>{% endfor %}
+            </div>
+            <div class="cn-session-content">
+                <div class="md-rendered">{{ log.content|render_markdown }}</div>
+                {% if log.interventions %}<div class="cn-session-interventions">{{ log.interventions }}</div>{% endif %}
+                {% if log.therapist_reflection %}
+                <details class="cn-reflection">
+                    <summary class="cn-reflection-label">{% trans "Own reflection" %}</summary>
+                    <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
+                </details>
+                {% endif %}
+            </div>
+        </div>
+        <div class="cn-session-actions cn-session-actions-bar">
+            <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ {% trans "Edit" %}</a>
+            {% if not session.invoice_items.all %}
+            {% url 'session_bill' client.pk session.pk as session_bill_url %}
+            {% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text=lbl_to_invoice %}
+            {% url 'session_toggle_billable' client.pk session.pk as session_toggle_billable_url %}
+            {% if session.billable %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_non_billable button_class='btn-secondary btn-sm' %}
+            {% else %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_billable button_class='btn-secondary btn-sm' %}{% endif %}
+            {% endif %}
+            {% if log.session_type != 'ausfall' %}
+            {% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
+            {% include 'includes/inline_post_button.html' with action_url=session_log_mark_noshow_url button_text=lbl_noshow %}
+            {% endif %}
+            {% url 'session_log_delete' client.pk log.pk as session_log_delete_url %}
+            {% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_log %}
+        </div>
+        {% else %}
+        <div class="cn-session-meta">
+            <span class="cn-session-date">{{ session.session_date|date:"d.m.Y" }}</span>
+            <span class="cn-session-duration">{{ session.duration }} {% trans "min" %}</span>
+            {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">{% trans "Unbilled" %}</span>{% else %}<span class="cn-session-not-billable">{% trans "Non-billable" %}</span>{% endif %}{% endif %}
+            {% if session.pk in recent_sessions_needing_log %}<span class="cn-session-missing-log">📝 {% trans "Log missing" %}</span>{% endif %}
+            {% if log %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>{% endfor %}{% endif %}
+        </div>
+        <div class="cn-session-actions">
+            {% if log %}
+            <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ {% trans "Edit" %}</a>
+            {% if log.session_type != 'ausfall' %}
+            {% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
+            {% include 'includes/inline_post_button.html' with action_url=session_log_mark_noshow_url button_text=lbl_noshow %}
+            {% endif %}
+            {% url 'session_log_delete' client.pk log.pk as session_log_delete_url %}
+            {% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_log %}
+            {% else %}
+            {% if not session.invoice_items.all %}
+            {% url 'session_bill' client.pk session.pk as session_bill_url %}
+            {% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text=lbl_to_invoice %}
+            {% url 'session_toggle_billable' client.pk session.pk as session_toggle_billable_url %}
+            {% if session.billable %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_non_billable button_class='btn-secondary btn-sm' %}
+            {% else %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_billable button_class='btn-secondary btn-sm' %}{% endif %}
+            {% endif %}
+            {% if session.pk not in no_log_needed_session_ids %}<a href="{% url 'session_log_create' client.pk %}?session_date={{ session.session_date|date:'Y-m-d' }}" class="btn btn-sm">{% trans "+ Log" %}</a>{% endif %}
+            <form method="post" action="{% url 'session_duration_edit' client.pk session.pk %}" class="form-inline cn-duration-edit-form">
+                {% csrf_token %}
+                <input type="number" name="duration" value="{{ session.duration }}" min="1" max="300" class="form-control cn-duration-input" title="{% trans 'Duration in minutes' %}">
+                <button type="submit" class="btn btn-secondary btn-sm">{% trans "Save min." %}</button>
+            </form>
+            {% if not session.invoice_items.all %}
+            {% url 'session_delete' client.pk session.pk as session_delete_url %}
+            {% include 'includes/inline_post_button.html' with action_url=session_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_session %}
+            {% endif %}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endwith %}
+
+    {% elif entry.type == "note" %}
+    {% with note=entry.obj %}
+    {% if note.note_type == "supervision" %}
+    {% trans "Delete supervision note?" as confirm_del_supervision_note %}
+    <div class="cn-note-item cn-supervision-inline" x-data="{ editing: false }">
+        <div class="cn-note-header">
+            <span class="cn-note-date">{{ note.note_date|date:"d.m.Y" }}</span>
+            <span class="cn-supervision-tag">🔍 {% trans "Supervision" %}</span>
+            <button type="button" class="btn btn-secondary btn-sm" x-on:click="editing = !editing">✏️</button>
+            <form method="post" action="{% url 'client_note_delete' client.pk note.pk %}" class="form-inline"
+                  x-on:submit="confirm('{{ confirm_del_supervision_note }}') || $event.preventDefault()">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+            </form>
+        </div>
+        <div class="cn-note-content md-rendered">{{ note.content|render_markdown }}</div>
+        <div class="cn-note-edit-form" x-show="editing">
+            <form method="post" action="{% url 'client_note_update' client.pk note.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}#ptab-protokoll">
+                <div class="cn-note-edit-date-row">
+                    <input type="date" name="note_date" value="{{ note.note_date|date:'Y-m-d' }}" class="form-control cn-note-edit-date">
+                </div>
+                <textarea name="content" class="form-control cn-textarea-small" rows="4">{{ note.content }}</textarea>
+                <div class="cn-note-edit-actions">
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Save" %}</button>
+                    <button type="button" class="btn btn-secondary btn-sm" x-on:click="editing = false">{% trans "Cancel" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    {% trans "Delete note?" as confirm_del_note %}
+    <div class="cn-note-item">
+        <div class="cn-note-header">
+            <span class="cn-note-date">{{ note.note_date|date:"d.m.Y" }}</span>
+            <form method="post" action="{% url 'client_note_delete' client.pk note.pk %}" class="form-inline"
+                  x-data x-on:submit="confirm('{{ confirm_del_note }}') || $event.preventDefault()">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+            </form>
+        </div>
+        <div class="cn-note-content md-rendered">{{ note.content|render_markdown }}</div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% endif %}
+
+    {% endfor %}
+    {% if log_entries|length > 10 %}</div>{% endif %}
+    </div>
+    {% else %}
+    <p class="cn-empty-state">{% trans "No entries yet. Session logs are created when adding new entries." %}</p>
+    {% endif %}
+
+    <!-- Supervision section at bottom of Protokoll tab -->
+    <div class="cn-supervision-section">
+        <h3 class="cn-supervision-heading">🔍 {% trans "Supervision" %}</h3>
+        <form method="post" action="{% url 'supervision_item_create' client.pk %}" class="cn-field cn-supervision-new-form">
+            {% csrf_token %}
+            <textarea name="content" class="form-control cn-textarea-small"
+                      placeholder="{% trans 'Supervision topic or question…' %}" rows="3"></textarea>
+            <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
+        </form>
+        {% if supervision_items %}
+        <div class="cn-supervision-list">
+        {% for item in supervision_items %}
+        {% trans "Delete supervision topic?" as confirm_del_supervision %}
+        {% if item.status %}{% trans "↩ Reopen" as lbl_toggle %}{% else %}{% trans "✓ Discussed" as lbl_toggle %}{% endif %}
+        <div class="cn-supervision-item cn-status-{{ item.status }}">
+            <div class="cn-supervision-content">{{ item.content }}</div>
+            <div class="cn-supervision-meta">
+                <span class="cn-status-badge cn-status-{{ item.status }}">{{ item.get_status_display }}</span>
+                <span class="cn-date-hint">{{ item.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <div class="cn-supervision-actions">
+            {% url 'supervision_item_toggle' client.pk item.pk as toggle_url %}
+            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=lbl_toggle button_class='btn btn-secondary btn-sm' %}
+            {% url 'supervision_item_delete' client.pk item.pk as delete_url %}
+            {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm=confirm_del_supervision %}
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+        {% else %}
+        <p class="cn-empty-state">{% trans "No supervision topics for this client yet." %}</p>
+        {% endif %}
+    </div>
+
+</div><!-- /ptab-protokoll -->
+
+<!-- ══ Tab: Profil ════════════════════════════════════════════════════════ -->
+<div id="ptab-profil" class="page-tab-content">
+    {% load markdown_filters %}
+    {% load i18n %}
+    <form method="post" action="{% url 'client_profile_save' client.pk %}">
+        {% csrf_token %}
+        <div class="section-card">
+            <div class="cn-field">
+                <label class="cn-label" for="id_arbeitsdiagnose">{% trans "Working diagnosis" %}</label>
+                <input type="text" id="id_arbeitsdiagnose" name="arbeitsdiagnose"
+                       class="form-control" value="{{ profile.arbeitsdiagnose }}">
+            </div>
+            <div class="cn-field">
+                <label class="cn-label" for="id_intake_notes">{% trans "Intake & Anamnesis" %}</label>
+                <textarea id="id_intake_notes" name="intake_notes" class="form-control cn-textarea-large"
+                          placeholder="{% trans 'Clinical initial assessment…' %}">{{ profile.intake_notes|default:intake_notes_template }}</textarea>
+                {% if profile.intake_notes %}
+                <details class="cn-notes-preview" open>
+                    <summary>📖 {% trans "Preview" %}</summary>
+                    <div class="md-rendered">{{ profile.intake_notes|render_markdown }}</div>
+                </details>
+                {% endif %}
+            </div>
+            <div class="cn-field">
+                <label class="cn-label" for="id_case_notes">{% trans "Case notes" %}</label>
+                <textarea id="id_case_notes" name="case_notes" class="form-control cn-textarea-large"
+                          placeholder="{% trans 'Topics, dynamics, challenges…' %}">{{ profile.case_notes|default:case_notes_template }}</textarea>
+                {% if profile.case_notes %}
+                <details class="cn-notes-preview" open>
+                    <summary>📖 {% trans "Preview" %}</summary>
+                    <div class="md-rendered">{{ profile.case_notes|render_markdown }}</div>
+                </details>
+                {% endif %}
+            </div>
+            <div class="cn-actions">
+                <button type="submit" class="btn btn-primary">{% trans "Save profile" %}</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Contact & conditions (previously in sidebar) -->
+    <div class="section-card">
+        <h3>📧 {% trans "Contact & Conditions" %}</h3>
+        <div class="contact-grid">
+            <div>
+                <div class="contact-label">{% trans "Email" %}</div>
+                <div class="contact-value"><span class="sensitive-data">{{ client.email }}</span></div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Phone" %}</div>
+                <div class="contact-value"><span class="sensitive-data">{{ client.phone|default:"–" }}</span></div>
+            </div>
+            {% if client.address %}
+            <div class="contact-grid-full">
+                <div class="contact-label">{% trans "Address" %}</div>
+                <div class="contact-value"><span class="sensitive-data">{{ client.address|linebreaksbr }}</span></div>
+            </div>
+            {% endif %}
+            <div>
+                <div class="contact-label">{% trans "Cost carrier" %}</div>
+                <div class="contact-value"><span class="sensitive-data">{{ client.cost_carrier|default:"–" }}</span></div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Language" %}</div>
+                <div class="contact-value">{{ client.get_language_display }}</div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Session format" %}</div>
+                <div class="contact-value">{% if client.is_online_client %}{% trans "💻 Online" %}{% else %}{% trans "🏢 In-person" %}{% endif %}</div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Hourly rate" %}</div>
+                <div class="stat-value-bold">{{ client.hourly_rate_60|floatformat:0 }}&nbsp;€</div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Total revenue" %}</div>
+                <div class="stat-value-bold">{{ stats.total_revenue|currency }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding widget (previously in sidebar) -->
+    <div class="section-card onboarding-widget-inline">
+        <details class="onboarding-details" {% if not client.onboarding_complete_date %}open{% endif %}>
+        <summary class="onboarding-summary">
+            {% if client.onboarding_complete_date %}
+            {% blocktrans with date=client.onboarding_complete_date|date:"d.m.Y" %}✅ Intake completed on {{ date }}{% endblocktrans %}
+            {% else %}
+            📋 {% trans "Intake process" %}
+            {% endif %}
+        </summary>
+        <ul class="onboarding-steps">
+            <li class="onboarding-step {% if client.intake_sent_date %}step-done{% else %}step-pending{% endif %}">
+                <span class="step-icon">{% if client.intake_sent_date %}✅{% else %}○{% endif %}</span>
+                <div class="step-body">
+                    <div class="step-title">{% trans "Intake" %}</div>
+                    {% if client.intake_sent_date %}<div class="step-date">{% blocktrans with date=client.intake_sent_date|date:"d.m.Y" %}Handed out on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Download PDF and hand it out, then mark as done" %}</div>{% endif %}
+                </div>
+                <div class="step-actions">
+                    <a href="{% url 'intake_form_pdf' client.pk %}" class="btn btn-secondary btn-sm">📄 PDF</a>
+                    {% url 'client_onboarding_step' client.pk as onboarding_url %}
+                    {% if client.intake_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='intake' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Erledigt' button_class='btn btn-sm btn-done' step='intake' %}{% endif %}
+                </div>
+            </li>
+            <li class="onboarding-step {% if client.contract_signed_date %}step-done{% else %}step-pending{% endif %}">
+                <span class="step-icon">{% if client.contract_signed_date %}✅{% else %}○{% endif %}</span>
+                <div class="step-body">
+                    <div class="step-title">{% trans "Contract" %}</div>
+                    {% if client.contract_signed_date %}<div class="step-date">{% blocktrans with date=client.contract_signed_date|date:"d.m.Y" %}Signed on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Send contract by email, receive signed copy back" %}</div>{% endif %}
+                </div>
+                <div class="step-actions">
+                    {% if client.email %}<a href="{% url 'send_contract_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>
+                    {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
+                    {% url 'client_onboarding_step' client.pk as onboarding_url %}
+                    {% if client.contract_signed_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='contract' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Erledigt' button_class='btn btn-sm btn-done' step='contract' %}{% endif %}
+                </div>
+            </li>
+            <li class="onboarding-step {% if client.questionnaire_sent_date %}step-done{% else %}step-pending{% endif %}">
+                <span class="step-icon">{% if client.questionnaire_sent_date %}✅{% else %}○{% endif %}</span>
+                <div class="step-body">
+                    <div class="step-title">{% trans "Anamnesis" %}</div>
+                    {% if client.questionnaire_sent_date %}<div class="step-date">{% blocktrans with date=client.questionnaire_sent_date|date:"d.m.Y" %}Sent on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Send questionnaire by email" %}</div>{% endif %}
+                </div>
+                <div class="step-actions">
+                    {% if client.email %}<a href="{% url 'send_questionnaire_docx' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>
+                    {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
+                    {% url 'client_onboarding_step' client.pk as onboarding_url %}
+                    {% if client.questionnaire_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='questionnaire' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Erledigt' button_class='btn btn-sm btn-done' step='questionnaire' %}{% endif %}
+                </div>
+            </li>
+            <li class="onboarding-step {% if client.onboarding_complete_date %}step-done{% else %}step-pending{% endif %}">
+                <span class="step-icon">{% if client.onboarding_complete_date %}🎉{% else %}○{% endif %}</span>
+                <div class="step-body">
+                    <div class="step-title">{% trans "Intake complete" %}</div>
+                    {% if client.onboarding_complete_date %}<div class="step-date">{% blocktrans with date=client.onboarding_complete_date|date:"d.m.Y" %}Completed on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "All documents complete — finalise intake" %}</div>{% endif %}
+                </div>
+                <div class="step-actions">
+                    {% url 'client_onboarding_step' client.pk as onboarding_url %}
+                    {% if client.onboarding_complete_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='complete' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Abschließen' button_class='btn btn-sm btn-complete' step='complete' %}{% endif %}
+                </div>
+            </li>
+        </ul>
+        </details>
+    </div>
+
+    {% if client.source_inquiry %}
+    <div class="section-card">
+        <div class="sidebar-section-label">📬 {% trans "Source inquiry" %}</div>
+        <a href="{% url 'inquiry_edit' client.source_inquiry.pk %}" class="sidebar-source-link">
+            {{ client.source_inquiry.get_source_display }} &mdash; {{ client.source_inquiry.inquiry_date|date:"d.m.Y" }}
+        </a>
+    </div>
+    {% endif %}
+
+</div><!-- /ptab-profil -->
+
+<!-- ══ Tab: Abrechnung ════════════════════════════════════════════════════ -->
+<div id="ptab-abrechnung" class="page-tab-content">
+
+    <!-- Billing quick actions -->
+    <div class="client-actions" style="margin-bottom: 1.5rem;">
+        <div class="client-actions-left">
+            <a href="{% url 'invoice_create' %}?client={{ client.id }}" class="btn btn-invoice-create">➕ {% trans "New invoice" %}</a>
+            {% if client.email %}
+            {% if reminder_urgency == "high" %}
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-urgent" title="{% trans 'Oldest open invoice: over 30 days' %}">📧 {% trans "Payment reminder" %}</a>
+            {% elif reminder_urgency == "medium" %}
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-warning" title="{% trans 'Oldest open invoice: 14–30 days' %}">📧 {% trans "Payment reminder" %}</a>
+            {% elif reminder_urgency == "low" %}
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-secondary" title="{% trans 'Open invoice exists' %}">📧 {% trans "Payment reminder" %}</a>
+            {% else %}
+            <span class="btn btn-secondary btn-disabled" title="{% trans 'No outstanding sent invoices' %}">📧 {% trans "Payment reminder" %}</span>
+            {% endif %}
+            <a href="{% url 'send_cancellation_email' client.pk %}" class="btn btn-secondary" title="{% trans 'Prepare cancellation email due to illness' %}">🤒 {% trans "Cancel session" %}</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if pending_sessions %}
+    <div class="section-card">
+        <h3>📅 {% trans "Pending sessions" %}</h3>
+        <table class="data-table">
+            <thead>
+                <tr><th>{% trans "Date" %}</th><th>{% trans "Time" %}</th><th>{% trans "Duration" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr>
+            </thead>
+            <tbody>
             {% for event in pending_sessions %}
             <tr>
                 <td>{{ event.event_date|date:"d.m.Y" }}</td>
                 <td>{{ event.event_time|time:"H:i"|default:"–" }}</td>
-                <td>{{ event.duration_minutes }} Min</td>
-                <td><span class="status-badge pending">Ausstehend</span></td>
+                <td>{{ event.duration_minutes }} {% trans "min" %}</td>
+                <td><span class="status-badge pending">{% trans "Pending" %}</span></td>
                 <td>
                     <form method="post" action="{% url 'calendar_event_quick_action' event.pk %}" class="pending-session-actions">
                         {% csrf_token %}
                         {% if current_draft_invoice %}
-                            <button type="submit" name="action" value="current_invoice" class="btn btn-sm" title="Zu Rechnung {{ current_draft_invoice.invoice_number }} hinzufügen">
-                                + Rechnung {{ current_draft_invoice.invoice_number }}
-                            </button>
-                            <button type="submit" name="action" value="new_invoice" class="btn btn-secondary btn-sm">
-                                + Separate Rechnung
-                            </button>
+                        {% blocktrans with num=current_draft_invoice.invoice_number asvar lbl_add_invoice %}+ Invoice {{ num }}{% endblocktrans %}
+                        {% blocktrans with num=current_draft_invoice.invoice_number asvar title_add_invoice %}Add to invoice {{ num }}{% endblocktrans %}
+                        <button type="submit" name="action" value="current_invoice" class="btn btn-sm" title="{{ title_add_invoice }}">{{ lbl_add_invoice }}</button>
+                        <button type="submit" name="action" value="new_invoice" class="btn btn-secondary btn-sm">{% trans "+ Separate invoice" %}</button>
                         {% else %}
-                            <button type="submit" name="action" value="current_invoice" class="btn btn-sm">
-                                + Neue Rechnung
-                            </button>
+                        <button type="submit" name="action" value="current_invoice" class="btn btn-sm">{% trans "+ New invoice" %}</button>
                         {% endif %}
-                        <button type="submit" name="action" value="ignore" class="btn btn-secondary btn-sm">
-                            Ignorieren
-                        </button>
+                        <button type="submit" name="action" value="ignore" class="btn btn-secondary btn-sm">{% trans "Ignore" %}</button>
                     </form>
                 </td>
             </tr>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
-
-<!-- Invoice History -->
-<div class="section-card">
-    <div class="section-card-header">
-        <h3>📄 Rechnungshistorie</h3>
-        {% if current_month_pending_count or current_month_unbilled_count %}
-        <a href="{% url 'monthly_billing_overview' month=current_month_str %}" class="current-month-alert">
-            {% if current_month_pending_count %}⚠️ {{ current_month_pending_count }} Termin{{ current_month_pending_count|pluralize:"e" }} ausstehend{% endif %}
-            {% if current_month_pending_count and current_month_unbilled_count %} · {% endif %}
-            {% if current_month_unbilled_count %}📝 {{ current_month_unbilled_count }} Sitzung{{ current_month_unbilled_count|pluralize:"en" }} offen{% endif %}
-        </a>
-        {% endif %}
+            </tbody>
+        </table>
     </div>
+    {% endif %}
 
-    {% if invoices %}
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Rechnungsnr.</th>
-                <th>Datum</th>
-                <th>Sitzungen</th>
-                <th>Status</th>
-                <th class="text-right">Betrag</th>
-                <th>Aktionen</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="section-card">
+        <div class="section-card-header">
+            <h3>📄 {% trans "Invoice history" %}</h3>
+            {% if current_month_pending_count or current_month_unbilled_count %}
+            <a href="{% url 'monthly_billing_overview' month=current_month_str %}" class="current-month-alert">
+                {% if current_month_pending_count %}{% blocktrans count count=current_month_pending_count %}⚠️ {{ count }} appointment pending{% plural %}⚠️ {{ count }} appointments pending{% endblocktrans %}{% endif %}
+                {% if current_month_pending_count and current_month_unbilled_count %} · {% endif %}
+                {% if current_month_unbilled_count %}{% blocktrans count count=current_month_unbilled_count %}📝 {{ count }} session open{% plural %}📝 {{ count }} sessions open{% endblocktrans %}{% endif %}
+            </a>
+            {% endif %}
+        </div>
+        {% if invoices %}
+        <table class="data-table">
+            <thead>
+                <tr><th>{% trans "Invoice no." %}</th><th>{% trans "Date" %}</th><th>{% trans "Sessions" %}</th><th>{% trans "Status" %}</th><th class="text-right">{% trans "Amount" %}</th><th>{% trans "Actions" %}</th></tr>
+            </thead>
+            <tbody>
             {% for invoice in invoices %}
             <tr>
-                <td>
-                    <a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-primary">
-                        <span class="invoice-number">{{ invoice.invoice_number }}</span>
-                    </a>
-                </td>
+                <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-primary"><span class="invoice-number">{{ invoice.invoice_number }}</span></a></td>
                 <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
                 <td>{{ invoice.items.count }}</td>
                 <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
                 <td class="text-right fw-700">{{ invoice.total|currency }}</td>
-                <td>
-                    <a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-secondary">
-                        👁️ Ansehen
-                    </a>
-                </td>
+                <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-secondary">👁️ {% trans "View" %}</a></td>
             </tr>
             {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p class="empty-state-msg">
-        Noch keine Rechnungen für diesen Klienten.
-    </p>
-    {% endif %}
-</div>
-
-{% if monthly_sessions %}
-<!-- Session Activity Timeline -->
-<div class="section-card">
-    <h3>📊 Sitzungsaktivität</h3>
-    <div class="chart-wrapper">
-        <canvas id="sessionTimeline" width="100%" height="100%"></canvas>
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state-msg">{% trans "No invoices for this client yet." %}</p>
+        {% endif %}
     </div>
-</div>
-{% endif %}
 
-{% include 'my_practice/client_detail_documents.html' %}
+    {% if monthly_sessions %}
+    <div class="section-card">
+        <h3>📊 {% trans "Session activity" %}</h3>
+        <div class="chart-wrapper">
+            <canvas id="sessionTimeline" width="100%" height="100%"></canvas>
+        </div>
+    </div>
+    {% endif %}
 
-</div><!-- /cd-main -->
+</div><!-- /ptab-abrechnung -->
 
-{% include 'my_practice/client_detail_sidebar.html' %}
-</div><!-- /cd-layout -->
+<!-- ══ Tab: Dokumente ═════════════════════════════════════════════════════ -->
+<div id="ptab-dokumente" class="page-tab-content">
+    {% include 'my_practice/client_detail_documents.html' %}
+
+    {% if documents %}
+    <div class="section-card" style="margin-top: 1rem;">
+        <h3>{% trans "Uploaded documents" %}</h3>
+        <ul class="sidebar-doc-list">
+            {% for doc in documents %}
+            <li id="doc-{{ doc.pk }}" class="sidebar-doc-item">
+                <span class="doc-type-badge sidebar-doc-badge">{{ doc.get_document_type_display }}</span>
+                <a href="{{ doc.file.url }}" target="_blank" class="sidebar-doc-name" title="{{ doc.filename }}">{% if doc.description %}{{ doc.description }}{% else %}{{ doc.filename }}{% endif %}</a>
+                <span class="sidebar-doc-date">{{ doc.document_date|date:"d.m.Y" }}</span>
+                <button class="btn btn-danger btn-sm" onclick="docDelete(this)"
+                        data-doc-id="{{ doc.pk }}"
+                        data-csrf="{{ csrf_token }}">🗑️</button>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div><!-- /ptab-dokumente -->
 
 <script>
-function cnSwitchTab(tabName, btn) {
-    document.querySelectorAll('#clinical-documentation .cn-tab-content').forEach(el => {
-        el.classList.remove('cn-tab-content-active');
-    });
-    document.querySelectorAll('#clinical-documentation .cn-tab-btn').forEach(el => {
-        el.classList.remove('cn-tab-active');
-    });
-    document.getElementById('tab-' + tabName).classList.add('cn-tab-content-active');
-    btn.classList.add('cn-tab-active');
+function pageTab(tabName, btn) {
+    document.querySelectorAll('.page-tab-content').forEach(el => el.classList.remove('page-tab-active'));
+    document.querySelectorAll('.page-tab-btn').forEach(el => el.classList.remove('page-tab-active'));
+    document.getElementById('ptab-' + tabName).classList.add('page-tab-active');
+    if (btn) btn.classList.add('page-tab-active');
 
-    // Restore hash for bookmark / redirect targets
-    if (history.replaceState) {
-        history.replaceState(null, '', '#tab-' + tabName);
-    }
+    if (history.replaceState) history.replaceState(null, '', '#ptab-' + tabName);
 }
 
-// Activate tab from URL hash on page load (default already Protokoll)
+// Restore tab from URL hash on load
 (function() {
     const hash = window.location.hash;
-    const valid = ['profil', 'protokoll', 'supervision'];
-    if (hash.startsWith('#tab-')) {
-        const tabName = hash.replace('#tab-', '');
+    const valid = ['ueberlick', 'protokoll', 'profil', 'abrechnung', 'dokumente'];
+    if (hash.startsWith('#ptab-')) {
+        const tabName = hash.replace('#ptab-', '');
         if (valid.includes(tabName)) {
             const btn = document.querySelector('[data-tab="' + tabName + '"]');
-            if (btn) cnSwitchTab(tabName, btn);
+            pageTab(tabName, btn);
         }
     }
 })();
@@ -241,50 +701,32 @@ initChart('sessionTimeline', function(canvas) {
     const hours = [{% for item in monthly_sessions %}{{ item.hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
     const maxHours = Math.max(...hours, 1);
 
-    // Setup canvas
     const setup = setupCanvas(canvas, { top: 15, right: 10, bottom: 35, left: 40 });
     if (!setup) return;
     const { ctx, padding, chartWidth, chartHeight, width, height } = setup;
 
-    // Draw grid and axes
     drawGrid(ctx, padding, chartWidth, chartHeight);
     drawAxes(ctx, padding, chartWidth, chartHeight);
     drawYAxisLabels(ctx, padding, chartHeight, maxHours, 'h');
 
-    // Calculate bar positions and store for tooltip
     const barData = [];
     const barWidth = chartWidth / (hours.length * 1.5);
     const barSpacing = barWidth * 0.5;
 
-    // Draw bars
     if (hours.length > 0) {
         hours.forEach((sessionHours, index) => {
             const barHeight = (sessionHours / maxHours) * chartHeight;
             const x = padding.left + (barWidth + barSpacing) * index + barSpacing;
             const y = padding.top + chartHeight - barHeight;
-
-            // Store bar info for hover detection
-            barData.push({
-                x: x,
-                y: y,
-                width: barWidth,
-                height: barHeight,
-                centerX: x + barWidth / 2,
-                centerY: y + barHeight / 2
-            });
-
-            // Draw gradient bar (green gradient for sessions)
+            barData.push({ x, y, width: barWidth, height: barHeight, centerX: x + barWidth / 2, centerY: y + barHeight / 2 });
             const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
             gradient.addColorStop(0, '#48bb78');
             gradient.addColorStop(1, '#38a169');
             ctx.fillStyle = gradient;
             ctx.fillRect(x, y, barWidth, barHeight);
-
-            // X-labels (every 3rd month or if few months)
             const labelInterval = hours.length > 12 ? 3 : 2;
             if (index % labelInterval === 0 || hours.length <= 6) {
-                const textPrimary = getCSSVariable('--text-primary');
-                ctx.fillStyle = textPrimary;
+                ctx.fillStyle = getCSSVariable('--text-primary');
                 ctx.font = 'bold 10px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(months[index], x + barWidth / 2, height - 8);
@@ -292,7 +734,6 @@ initChart('sessionTimeline', function(canvas) {
         });
     }
 
-    // Setup hover tooltip
     const tooltip = document.createElement('div');
     tooltip.style.cssText = 'position: fixed; background: rgba(0,0,0,0.9); color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 9999; white-space: nowrap;';
     document.body.appendChild(tooltip);
@@ -301,20 +742,12 @@ initChart('sessionTimeline', function(canvas) {
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
-
         let hoveredBar = null;
-
-        // Check if mouse is over any bar
         barData.forEach((bar, index) => {
-            if (mouseX >= bar.x && mouseX <= bar.x + bar.width &&
-                mouseY >= bar.y && mouseY <= bar.y + bar.height) {
-                hoveredBar = index;
-            }
+            if (mouseX >= bar.x && mouseX <= bar.x + bar.width && mouseY >= bar.y && mouseY <= bar.y + bar.height) hoveredBar = index;
         });
-
         if (hoveredBar !== null) {
-            const value = hours[hoveredBar];
-            tooltip.innerHTML = `<strong>${months[hoveredBar]}</strong><br>${value}h`;
+            tooltip.innerHTML = `<strong>${months[hoveredBar]}</strong><br>${hours[hoveredBar]}h`;
             tooltip.style.left = (e.clientX + 10) + 'px';
             tooltip.style.top = (e.clientY - 45) + 'px';
             tooltip.style.opacity = '1';
@@ -324,15 +757,9 @@ initChart('sessionTimeline', function(canvas) {
             canvas.style.cursor = 'default';
         }
     });
-
-    canvas.addEventListener('mouseleave', () => {
-        tooltip.style.opacity = '0';
-        canvas.style.cursor = 'default';
-    });
+    canvas.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; canvas.style.cursor = 'default'; });
 });
 </script>
 {% endif %}
 
 {% endblock %}
-
-

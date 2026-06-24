@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 {% load markdown_filters %}
 
-{% block title %}Sitzungsprotokoll – {{ client.client_code }}{% endblock %}
-{% block page_title %}📝 Sitzungsprotokoll{% endblock %}
+{% block title %}{% trans "Session log" %} – {{ client.client_code }}{% endblock %}
+{% block page_title %}📝 {% trans "Session log" %}{% endblock %}
 {% block page_subtitle %}{{ client.client_code }}{% endblock %}
 
 
@@ -18,25 +19,25 @@
 
     {% if not is_edit %}
     <div class="cn-field">
-        <label class="cn-label" for="id_session_date">Sitzungsdatum</label>
+        <label class="cn-label" for="id_session_date">{% trans "Session date" %}</label>
         <input type="date" id="id_session_date" name="session_date"
                class="form-control" value="{{ prefill_date }}" required>
     </div>
     <div class="cn-field">
-        <label class="cn-label" for="id_duration">Dauer (Minuten)</label>
+        <label class="cn-label" for="id_duration">{% trans "Duration (minutes)" %}</label>
         <input type="number" id="id_duration" name="duration"
                class="form-control" value="{{ prefill_duration }}" min="1" style="max-width: 120px;">
     </div>
     {% else %}
     <div class="cn-field" style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
         <div>
-            <label class="cn-label">Sitzungsdatum</label>
+            <label class="cn-label">{% trans "Session date" %}</label>
             <div class="text-secondary" style="padding: 0.5rem 0;">
                 {{ log.session.session_date|date:"d.m.Y" }}
             </div>
         </div>
         <div>
-            <label class="cn-label" for="id_duration">Dauer (Minuten)</label>
+            <label class="cn-label" for="id_duration">{% trans "Duration (minutes)" %}</label>
             <input type="number" id="id_duration" name="duration"
                    class="form-control" value="{{ log.session.duration }}" min="1" style="max-width: 120px;">
         </div>
@@ -44,7 +45,7 @@
     {% endif %}
 
     <div class="cn-field">
-        <label class="cn-label" for="id_session_type">Sitzungstyp</label>
+        <label class="cn-label" for="id_session_type">{% trans "Session type" %}</label>
         <select id="id_session_type" name="session_type" class="form-control">
             {% for value, label in session_type_choices %}
             <option value="{{ value }}"
@@ -56,7 +57,15 @@
     </div>
 
     <div class="cn-field">
-        <label class="cn-label">Stimmungs-Tags</label>
+        <label class="cn-label" for="id_summary">{% trans "One-liner summary" %} <span class="fieldset-hint">{% trans "(for overview, max. 120 characters)" %}</span></label>
+        <input type="text" id="id_summary" name="summary" maxlength="120"
+               class="form-control"
+               placeholder="{% trans "e.g. resource work, good contact, topic: boundaries" %}"
+               value="{% if is_edit %}{{ log.summary }}{% endif %}">
+    </div>
+
+    <div class="cn-field">
+        <label class="cn-label">{% trans "Mood tags" %}</label>
         <div class="cn-tag-grid">
             {% for value, label in mood_tag_choices %}
             <label class="cn-tag-check">
@@ -69,42 +78,42 @@
     </div>
 
     <div class="cn-field">
-        <label class="cn-label" for="id_content">Sitzungsnotiz</label>
+        <label class="cn-label" for="id_content">{% trans "Session note" %}</label>
         <textarea id="id_content" name="content" class="form-control cn-textarea-large"
-                  placeholder="Reflexion nach der Sitzung…">{% if is_edit %}{{ log.content }}{% else %}{{ content_template }}{% endif %}</textarea>
+                  placeholder="{% trans "Reflection after the session…" %}">{% if is_edit %}{{ log.content }}{% else %}{{ content_template }}{% endif %}</textarea>
         {% if is_edit and log.content %}
         <details class="cn-notes-preview">
-            <summary>📖 Vorschau (gespeicherter Stand)</summary>
+            <summary>📖 {% trans "Preview (saved state)" %}</summary>
             <div class="md-rendered">{{ log.content|render_markdown }}</div>
         </details>
         {% endif %}
     </div>
 
     <div class="cn-field">
-        <label class="cn-label" for="id_therapist_reflection">Eigene Reflexion</label>
+        <label class="cn-label" for="id_therapist_reflection">{% trans "Own reflection" %}</label>
         <textarea id="id_therapist_reflection" name="therapist_reflection"
                   class="form-control cn-textarea-medium"
-                  placeholder="Wie ging es mir dabei? Gegenübertragungsimpulse…">{% if is_edit %}{{ log.therapist_reflection }}{% endif %}</textarea>
+                  placeholder="{% trans "How did I feel? Countertransference impulses…" %}">{% if is_edit %}{{ log.therapist_reflection }}{% endif %}</textarea>
         {% if is_edit and log.therapist_reflection %}
         <details class="cn-notes-preview">
-            <summary>📖 Vorschau (gespeicherter Stand)</summary>
+            <summary>📖 {% trans "Preview (saved state)" %}</summary>
             <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
         </details>
         {% endif %}
     </div>
 
     <div class="cn-field">
-        <label class="cn-label" for="id_interventions">Interventionen</label>
+        <label class="cn-label" for="id_interventions">{% trans "Interventions" %}</label>
         <textarea id="id_interventions" name="interventions"
                   class="form-control cn-textarea-small"
-                  placeholder="Angewandte Techniken, Methoden…" rows="3">{% if is_edit %}{{ log.interventions }}{% endif %}</textarea>
+                  placeholder="{% trans "Applied techniques, methods…" %}" rows="3">{% if is_edit %}{{ log.interventions }}{% endif %}</textarea>
     </div>
 
     <div class="cn-actions">
         <button type="submit" class="btn btn-primary">
-            {% if is_edit %}Aktualisieren{% else %}Protokoll speichern{% endif %}
+            {% if is_edit %}{% trans "Update" %}{% else %}{% trans "Save protocol" %}{% endif %}
         </button>
-        <a href="{% url 'client_detail' client.pk %}#tab-sitzungen" class="btn btn-secondary">Abbrechen</a>
+        <a href="{% url 'client_detail' client.pk %}#tab-sitzungen" class="btn btn-secondary">{% trans "Cancel" %}</a>
     </div>
     </form>
 </div>
