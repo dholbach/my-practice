@@ -17,6 +17,8 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Tabbed layout: Überblick / Protokoll / Profil / Abrechnung / Dokumente — replaces sidebar layout
 - ✅ Überblick tab: stat cards (diagnosis, last session, session hours, open balance), intake progress widget (4-step bar from existing date fields), recent session one-liners
 - ✅ `SessionLog.summary` — unencrypted one-liner field (max 120 chars) shown in Überblick without Fernet decryption; editable in session log form
+- ✅ Client tags shown in Überblick tab strip; tag add/remove UI in Profil tab; duplicate tags removed from page header
+- ✅ "Details in Profil-Tab" onboarding link switches to the Profil tab and scrolls to the onboarding section
 
 ### Client Management
 - ✅ Client database with full details
@@ -123,6 +125,8 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Aufklappbarer Erstgespräch-Leitfaden im Anfragen-Formular (P-037 Ph-2)
   - ✅ Stage-aware Copy-Paste E-Mail-Vorlagen im Anfragen-Formular (P-037 Ph-3) — 8 Statuse, je Betreff + Text mit Kopieren-Button
 - ✅ Language field (DE/EN) on inquiries — propagates to Client on conversion; language breakdown in analytics panel; badge in inquiry list
+- ✅ Status field at the top of the inquiry form; milestone date auto-fills when status changes
+- ✅ Booking URL field on Practice settings; warning shown in inquiry form when not yet configured
 ---
 
 ## 💰 Financial Management
