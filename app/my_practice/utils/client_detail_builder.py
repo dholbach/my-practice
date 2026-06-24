@@ -96,6 +96,7 @@ class ClientDetailContextBuilder:
             item["hours"] = round(item["hours"], 1)
 
         available_tags = ClientTag.objects.filter(is_system=False).exclude(clients=self.client)
+        client_manual_tags = self.client.tags.filter(is_system=False)
 
         return {
             "stats": {
@@ -113,6 +114,7 @@ class ClientDetailContextBuilder:
             },
             "monthly_sessions": monthly_data,
             "available_tags": sort_tags_by_category(available_tags),
+            "client_manual_tags": client_manual_tags,
         }
 
     @staticmethod

@@ -9,7 +9,6 @@
 {% block page_title %}
 <span class="client-detail-title-code">{{ client.client_code }}</span>
 {% if client.active %}<span class="cd-status-pill cd-status-active">● {% trans "Active" %}</span>{% else %}<span class="cd-status-pill cd-status-inactive">● {% trans "Inactive" %}</span>{% endif %}
-{% for tag in client.tags.all %}<span class="status-badge tag-{{ tag.color }}">{{ tag.name }}</span>{% endfor %}
 {% endblock %}
 
 {% block page_subtitle %}
@@ -82,6 +81,14 @@
             </div>
         </div>
     </div>
+
+    {% if client_manual_tags %}
+    <div class="cockpit-tag-strip">
+        {% for tag in client_manual_tags %}
+        <span class="cockpit-tag {{ tag.color }}">{{ tag.name }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Two-column split: recent sessions left, case notes + intake right -->
     <div class="cockpit-split">
@@ -386,6 +393,12 @@
 <div id="ptab-profil" class="page-tab-content">
     {% load markdown_filters %}
     {% load i18n %}
+
+    <div class="section-card">
+        <h3>{% trans "Tags" %}</h3>
+        {% include 'includes/client_tags.html' with client=client editable=True %}
+    </div>
+
     <form method="post" action="{% url 'client_profile_save' client.pk %}">
         {% csrf_token %}
         <div class="section-card">
