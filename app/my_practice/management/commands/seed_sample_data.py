@@ -146,8 +146,9 @@ NOTE_TEMPLATES: dict[str, list[str]] = {
 }
 
 # ── Session-log templates per archetype ──────────────────────────────────────
-# Each tuple: (content, interventions, therapist_reflection, mood_tags)
-SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
+# Each tuple: (content, interventions, therapist_reflection, mood_tags, summary)
+# summary = Kurzzusammenfassung (one-liner, ≤120 chars, unencrypted — Überblick cockpit)
+SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str], str]]] = {
     "hero": [
         (
             "Klient berichtete von Erschöpfung nach einer besonders anstrengenden Woche. "
@@ -156,6 +157,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Psychoedukation zu Selbstfürsorge. Ressourcenaktivierung. Atemübung.",
             "Starke Resonanz mit dem Thema Aufopferung. Gegenübertragung beachten.",
             [MoodTag.MITTEL, MoodTag.GUTE_RESSOURCEN],
+            "Erschöpfung nach harter Woche – Verantwortung vs. Selbstfürsorge",
         ),
         (
             "Klient berichtete von einem Konflikt, den er nicht vermeiden konnte. "
@@ -164,6 +166,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Teilearbeit (Innerer Kritiker vs. Verletzliches Kind). Stuhlarbeit vorbereitet.",
             "Bewegt von der Offenheit des Klienten. Gute therapeutische Allianz spürbar.",
             [MoodTag.SCHWER, MoodTag.HOHE_AKTIVIERUNG],
+            "Konflikt & Ohnmacht; innerer Antreiber 'Sei stark' erkannt",
         ),
         (
             "Klient zeigte heute deutlichen Fortschritt beim Thema Grenzen setzen. "
@@ -172,6 +175,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Verhaltensexperiment ausgewertet. Positives Reinforcement. Nächste Schritte geplant.",
             "Freude über den Fortschritt. Achtsam bleiben, nicht zu früh zu feiern.",
             [MoodTag.LEICHT, MoodTag.FORTSCHRITT, MoodTag.GUTE_RESSOURCEN],
+            "Fortschritt: erstmals Nein gesagt, Grenzen gesetzt",
         ),
         (
             "Thema Trauma-Trigger durch äußere Ereignisse reaktiviert. Klient kam belastet. "
@@ -179,6 +183,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Stabilisierung: sicherer Ort, Atemarbeit. Kein Trauma-Processing heute.",
             "Sorge um den Klienten. Supervision besprechen. Ressourcen im Blick behalten.",
             [MoodTag.SCHWER, MoodTag.HOHE_AKTIVIERUNG, MoodTag.UNSICHER],
+            "Trauma-Trigger reaktiviert – Stabilisierung, sicherer Ort",
         ),
         (
             "Abschluss eines längeren Themenblocks rund um Autonomie. Klient fasst "
@@ -186,6 +191,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Bilanzierungsgespräch. Ziele für nächste Phase formuliert.",
             "Stolz auf die Entwicklung. Beziehung hat sich vertieft.",
             [MoodTag.LEICHT, MoodTag.FORTSCHRITT, MoodTag.DURCHBRUCH],
+            "Abschluss Themenblock Autonomie; nächste Phase geplant",
         ),
     ],
     "exile": [
@@ -195,6 +201,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Körperarbeit: Verortungsübung. Ressourcenbild entwickelt.",
             "Tief berührt. Eigene Themen von Zugehörigkeit kurz hochgekommen — achtgeben.",
             [MoodTag.SCHWER, MoodTag.NIEDRIG_AFFEKTIV],
+            "Thema Nicht-dazugehören; Heimat und innere Leere",
         ),
         (
             "Klientin berichtete von einem bedeutsamen Traum. Symbole der Verwandlung "
@@ -202,6 +209,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Traumarbeit (explorative Methode). Symbolik besprochen.",
             "Faszination für die Tiefe der Klientin. Gute Übertragungsdynamik.",
             [MoodTag.MITTEL, MoodTag.GUTE_RESSOURCEN],
+            "Traumarbeit: Symbole von Verwandlung und Verlust",
         ),
         (
             "Schamthema heute im Vordergrund. Klientin wagte es, über ein lange "
@@ -209,6 +217,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Psychoedukation Scham vs. Schuld. Externalisierung. Reframing.",
             "Bewegt von der Courage. Würde der Klientin im Blick behalten.",
             [MoodTag.SCHWER, MoodTag.HOHE_AKTIVIERUNG, MoodTag.DURCHBRUCH],
+            "Schamthema – lange verschwiegenes Erlebnis angesprochen",
         ),
         (
             "Ruhigere Sitzung. Klientin berichtet über Alltag und wie sie Erlerntes anwendet. "
@@ -216,6 +225,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Ressourcenstärkung. Beziehungsanalyse (Bindungsmuster).",
             "Sitzung wirkte etwas diffus. Nächste Mal klarer fokussieren.",
             [MoodTag.LEICHT, MoodTag.UPDATE_CHITCHAT],
+            "Ruhigere Sitzung: Alltag und Beziehungsmuster",
         ),
         (
             "Klientin in einer Krise: Trennungssituation hat alte Wunden aktiviert. "
@@ -223,6 +233,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Krisenintervention: Sicherheitsplanung besprochen, Ressourcen aktiviert.",
             "Sorge. Sicherheit der Klientin prüfen. Engmaschiger Kontakt planen.",
             [MoodTag.SCHWER, MoodTag.KRISE, MoodTag.HOHE_AKTIVIERUNG],
+            "Krise nach Trennung – Krisenintervention, stabilisiert entlassen",
         ),
     ],
     "ruler": [
@@ -233,6 +244,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Kognitive Umstrukturierung. Arbeit mit inneren Antreibern.",
             "Reibung in der Sitzung spürbar — heilsame Konfrontation. Gut.",
             [MoodTag.MITTEL, MoodTag.HOHE_AKTIVIERUNG],
+            "Kontrollverlust im Beruf; innerer Imperativ 'Funktioniere'",
         ),
         (
             "Klient sprach erstmals über seine Einsamkeit trotz vieler sozialer Kontakte. "
@@ -240,6 +252,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Spiegeln von Emotionen. Validierung. Psychoedukation zu emotionaler Bedürftigkeit.",
             "Gerührt von der Verletzlichkeit des Klienten. Schutz dieser Momente wichtig.",
             [MoodTag.MITTEL, MoodTag.DURCHBRUCH, MoodTag.GUTE_RESSOURCEN],
+            "Einsamkeit trotz vieler Kontakte – wichtiger Durchbruch",
         ),
         (
             "Thema Bindungsangst und Nähe. Klient zog sich in Sitzung etwas zurück. "
@@ -247,6 +260,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Beziehungsgestaltung als Intervention. Prozessarbeit.",
             "Spannungsfeld Nähe/Distanz gut gehalten. Supervision erwägen.",
             [MoodTag.SCHWER, MoodTag.UNSICHER, MoodTag.NIEDRIG_AFFEKTIV],
+            "Bindungsangst & Nähe; Rückzug als In-Vivo-Material bearbeitet",
         ),
         (
             "Gute Sitzung. Klient reflektiert Veränderungen in seinem Führungsstil. "
@@ -254,6 +268,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Transferarbeit (Therapie → Alltag). Bilanzierung.",
             "Freude über die Entwicklung. Klient wächst spürbar.",
             [MoodTag.LEICHT, MoodTag.FORTSCHRITT],
+            "Veränderter Führungsstil: mehr Vertrauen, weniger Kontrolle",
         ),
         (
             "Klient in einer Entscheidungssituation. Innerer Konflikt zwischen "
@@ -261,6 +276,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Werteklärungsübung. Szenarioarbeit (Was wäre wenn).",
             "Fühle mich als Begleiter in einem wichtigen Moment. Gute Arbeit.",
             [MoodTag.MITTEL, MoodTag.RICHTUNGSLOS],
+            "Entscheidung: Pflicht vs. eigener Wunsch, Werteklärung",
         ),
     ],
     "seeker": [
@@ -270,6 +286,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Existenzielle Gesprächsführung. Stille als therapeutisches Mittel.",
             "Berührt von der Tiefe der Suche. Eigene Reflexion über Sinn angestoßen.",
             [MoodTag.SCHWER, MoodTag.NIEDRIG_AFFEKTIV],
+            "Lebenssinn nach Verlust – existenzielle Themen, viel Stille",
         ),
         (
             "Klientin berichtet von neuer Energie und Lust auf Veränderung. "
@@ -277,6 +294,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Ressourcenaktivierung. Zukunftsvision erarbeitet. Ziele konkretisiert.",
             "Ansteckende Energie. Achtsam sein — nicht in Aktionismus verfallen.",
             [MoodTag.LEICHT, MoodTag.FORTSCHRITT, MoodTag.GUTE_RESSOURCEN],
+            "Neue Energie und Aufbruch; Zukunftspläne konkretisiert",
         ),
         (
             "Klientin hat eine wichtige Entscheidung getroffen. Wir reflektieren "
@@ -284,6 +302,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Entscheidungsanalyse. Stärken der Klientin herausgearbeitet.",
             "Stolz auf die Klientin. Beziehung endet bald — Abschied vorbereiten.",
             [MoodTag.LEICHT, MoodTag.DURCHBRUCH, MoodTag.FORTSCHRITT],
+            "Wichtige Entscheidung getroffen; Prozess reflektiert",
         ),
         (
             "Klientin kommt mit diffuser Unruhe. Sucht etwas, weiß nicht was. "
@@ -291,6 +310,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Imaginationsarbeit (Innere Reise). Symbolarbeit.",
             "Resonanz mit dem Thema Suchen. Reflexion meiner eigenen Suchbewegungen.",
             [MoodTag.MITTEL, MoodTag.RICHTUNGSLOS],
+            "Diffuse Unruhe – Arbeit mit dem Bild des 'Suchenden'",
         ),
         (
             "Klientin berichtete von Erfahrungen, die ihr Weltbild erschüttern. "
@@ -298,6 +318,7 @@ SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str]]]] = {
             "Psychoedukation zu Stress und Unsicherheit. Akzeptanzarbeit.",
             "Solidarität mit der Klientin in einer schwierigen Phase.",
             [MoodTag.SCHWER, MoodTag.HOHE_AKTIVIERUNG, MoodTag.UNSICHER],
+            "Weltbild erschüttert – Kontrollverlust und Urvertrauen",
         ),
     ],
 }
@@ -459,6 +480,11 @@ class Command(BaseCommand):
             self._clear(options["yes"])
             return  # clear-only; run without --clear to reseed
 
+        # Always ensure the demo practice has the correct display name (idempotent).
+        Practice.objects.filter(slug=DEMO_SLUG).exclude(short_title="Therapie (Demo)").update(
+            short_title="Therapie (Demo)"
+        )
+
         # Idempotency check: fictional names like "Frodo Baggins" won't appear in a real practice
         if Client.objects.filter(full_name__in=SEED_NAMES).exists():
             self.stdout.write("ℹ️  Demo data already exists. Use --clear to reset.")
@@ -498,7 +524,6 @@ class Command(BaseCommand):
     # ── Setup helpers ─────────────────────────────────────────────────────────
 
     def _get_or_create_practice(self) -> Practice:
-        # Use demo practice if it exists
         practice = Practice.objects.filter(slug=DEMO_SLUG).first()
         if practice:
             return practice
@@ -508,7 +533,7 @@ class Command(BaseCommand):
         practice = Practice.objects.create(
             slug=DEMO_SLUG,
             name="Anna Schmidt",
-            short_title="Therapie",
+            short_title="Therapie (Demo)",
             title="Heilpraktikerin für Psychotherapie",
         )
         self.stdout.write(f"  ✓ Created practice: {practice.name}")
@@ -762,7 +787,7 @@ class Command(BaseCommand):
                 # ~75% of sessions get a protocol — leaves some as "missing"
                 if rng.random() > 0.75:
                     continue
-                content, interventions, reflection, mood_tags = rng.choice(templates)
+                content, interventions, reflection, mood_tags, summary = rng.choice(templates)
                 # First session of each client is an intake
                 session_type = (
                     SessionLog.SessionType.ERSTGESPRAECH
@@ -777,6 +802,7 @@ class Command(BaseCommand):
                         "interventions": interventions,
                         "therapist_reflection": reflection,
                         "mood_tags": mood_tags,
+                        "summary": summary,
                     },
                 )
                 count += 1
