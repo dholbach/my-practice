@@ -386,6 +386,12 @@
 <div id="ptab-profil" class="page-tab-content">
     {% load markdown_filters %}
     {% load i18n %}
+
+    <div class="section-card">
+        <h3>{% trans "Tags" %}</h3>
+        {% include 'includes/client_tags.html' with client=client editable=True %}
+    </div>
+
     <form method="post" action="{% url 'client_profile_save' client.pk %}">
         {% csrf_token %}
         <div class="section-card">
