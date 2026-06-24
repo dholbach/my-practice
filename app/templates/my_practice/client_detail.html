@@ -83,6 +83,14 @@
         </div>
     </div>
 
+    {% if client_manual_tags %}
+    <div class="cockpit-tag-strip">
+        {% for tag in client_manual_tags %}
+        <span class="status-badge tag-{{ tag.color }}">{{ tag.name }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Two-column split: recent sessions left, case notes + intake right -->
     <div class="cockpit-split">
 
