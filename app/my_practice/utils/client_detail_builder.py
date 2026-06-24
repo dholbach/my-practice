@@ -192,9 +192,7 @@ class ClientDetailContextBuilder:
 
         # Last 5 session logs for Überblick tab (unencrypted metadata only)
         recent_session_logs = (
-            SessionLog.objects.filter(
-                session__client=self.client, session__cancelled=False
-            )
+            SessionLog.objects.filter(session__client=self.client, session__cancelled=False)
             .select_related("session")
             .order_by("-session__session_date")[:5]
         )
