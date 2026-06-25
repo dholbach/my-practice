@@ -64,15 +64,11 @@
     </div>
 
     <div class="cn-field">
-        <label class="cn-label" for="id_content">{% trans "Session note" %}</label>
-        <textarea id="id_content" name="content" class="form-control cn-textarea-large"
-                  placeholder="{% trans "Reflection after the session…" %}">{% if is_edit %}{{ log.content }}{% else %}{{ content_template }}{% endif %}</textarea>
-        {% if is_edit and log.content %}
-        <details class="cn-notes-preview">
-            <summary>📖 {% trans "Preview (saved state)" %}</summary>
-            <div class="md-rendered">{{ log.content|render_markdown }}</div>
-        </details>
-        {% endif %}
+        <label class="cn-label" for="id_summary">{% trans "One-liner summary" %} <span class="fieldset-hint">{% trans "(for overview, max. 120 characters)" %}</span></label>
+        <input type="text" id="id_summary" name="summary" maxlength="120"
+               class="form-control"
+               placeholder="{% trans "e.g. resource work, good contact, topic: boundaries" %}"
+               value="{% if is_edit %}{{ log.summary }}{% endif %}">
     </div>
 
     <div class="cn-field" style="display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -97,11 +93,15 @@
     </div>
 
     <div class="cn-field">
-        <label class="cn-label" for="id_summary">{% trans "Additional notes" %} <span class="fieldset-hint">{% trans "(anything not covered above, max. 120 characters — shown in overview)" %}</span></label>
-        <input type="text" id="id_summary" name="summary" maxlength="120"
-               class="form-control"
-               placeholder="{% trans "e.g. mentioned holiday plans, new topic emerged" %}"
-               value="{% if is_edit %}{{ log.summary }}{% endif %}">
+        <label class="cn-label" for="id_content">{% trans "Session note" %}</label>
+        <textarea id="id_content" name="content" class="form-control cn-textarea-large"
+                  placeholder="{% trans "Reflection after the session…" %}">{% if is_edit %}{{ log.content }}{% else %}{{ content_template }}{% endif %}</textarea>
+        {% if is_edit and log.content %}
+        <details class="cn-notes-preview">
+            <summary>📖 {% trans "Preview (saved state)" %}</summary>
+            <div class="md-rendered">{{ log.content|render_markdown }}</div>
+        </details>
+        {% endif %}
     </div>
 
     <div class="cn-actions">
