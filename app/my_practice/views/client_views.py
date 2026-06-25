@@ -361,8 +361,10 @@ def client_gdpr_delete_confirm(request: HttpRequest, pk: int) -> HttpResponse:
     if client.active or not last_session or last_session > _gdpr_cutoff():
         messages.error(
             request,
-            _("Client %(code)s does not meet the requirements for GDPR deletion "
-              "(inactive + last session more than %(years)s years ago).")
+            _(
+                "Client %(code)s does not meet the requirements for GDPR deletion "
+                "(inactive + last session more than %(years)s years ago)."
+            )
             % {"code": client.client_code, "years": GDPR_RETENTION_YEARS},
         )
         return redirect("client_list")
@@ -410,8 +412,11 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
             logger.exception("Failed to send GDPR deletion email for %s", client_code)
             messages.warning(
                 request,
-                _("Note: The notification email to %(email)s could not be sent. "
-                  "Please inform the client manually.") % {"email": client.email},
+                _(
+                    "Note: The notification email to %(email)s could not be sent. "
+                    "Please inform the client manually."
+                )
+                % {"email": client.email},
             )
 
     # Collect document file paths before deletion
