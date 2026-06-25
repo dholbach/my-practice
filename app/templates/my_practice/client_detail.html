@@ -27,9 +27,9 @@
 
 {% if client.full_name|slice:":7" == "Klient " and "@example.com" in client.email %}
 <div class="placeholder-warning">
-    <strong>📋 Imported client data - needs updating</strong><br>
-    <span>This client was imported with placeholder data. Please update with real information:
-    <a href="{% url 'client_edit' client.pk %}">✏️ Edit client details →</a>
+    <strong>{% trans "📋 Imported client data - needs updating" %}</strong><br>
+    <span>{% trans "This client was imported with placeholder data. Please update with real information:" %}
+    <a href="{% url 'client_edit' client.pk %}">{% trans "✏️ Edit client details →" %}</a>
     </span>
 </div>
 {% endif %}
@@ -496,9 +496,11 @@
                 </div>
                 <div class="step-actions">
                     <a href="{% url 'intake_form_pdf' client.pk %}" class="btn btn-secondary btn-sm">📄 PDF</a>
+                    {% trans "undo" as lbl_undo %}
+                    {% trans "✓ Done" as lbl_done %}
                     {% url 'client_onboarding_step' client.pk as onboarding_url %}
-                    {% if client.intake_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='intake' reset='1' %}
-                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Erledigt' button_class='btn btn-sm btn-done' step='intake' %}{% endif %}
+                    {% if client.intake_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_undo button_class='btn-undo' step='intake' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_done button_class='btn btn-sm btn-done' step='intake' %}{% endif %}
                 </div>
             </li>
             <li class="onboarding-step {% if client.contract_signed_date %}step-done{% else %}step-pending{% endif %}">
@@ -511,9 +513,11 @@
                 <div class="step-actions">
                     {% if client.email %}<a href="{% url 'send_contract_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>
                     {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
+                    {% trans "undo" as lbl_undo %}
+                    {% trans "✓ Done" as lbl_done %}
                     {% url 'client_onboarding_step' client.pk as onboarding_url %}
-                    {% if client.contract_signed_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='contract' reset='1' %}
-                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Erledigt' button_class='btn btn-sm btn-done' step='contract' %}{% endif %}
+                    {% if client.contract_signed_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_undo button_class='btn-undo' step='contract' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_done button_class='btn btn-sm btn-done' step='contract' %}{% endif %}
                 </div>
             </li>
             <li class="onboarding-step {% if client.questionnaire_sent_date %}step-done{% else %}step-pending{% endif %}">
@@ -526,9 +530,11 @@
                 <div class="step-actions">
                     {% if client.email %}<a href="{% url 'send_questionnaire_docx' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>
                     {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
+                    {% trans "undo" as lbl_undo %}
+                    {% trans "✓ Done" as lbl_done %}
                     {% url 'client_onboarding_step' client.pk as onboarding_url %}
-                    {% if client.questionnaire_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='questionnaire' reset='1' %}
-                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Erledigt' button_class='btn btn-sm btn-done' step='questionnaire' %}{% endif %}
+                    {% if client.questionnaire_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_undo button_class='btn-undo' step='questionnaire' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_done button_class='btn btn-sm btn-done' step='questionnaire' %}{% endif %}
                 </div>
             </li>
             <li class="onboarding-step {% if client.onboarding_complete_date %}step-done{% else %}step-pending{% endif %}">
@@ -539,9 +545,11 @@
                     {% else %}<div class="step-pending-hint">{% trans "All documents complete — finalise intake" %}</div>{% endif %}
                 </div>
                 <div class="step-actions">
+                    {% trans "undo" as lbl_undo %}
+                    {% trans "✓ Finalise" as lbl_complete %}
                     {% url 'client_onboarding_step' client.pk as onboarding_url %}
-                    {% if client.onboarding_complete_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='rückgängig' button_class='btn-undo' step='complete' reset='1' %}
-                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text='✓ Abschließen' button_class='btn btn-sm btn-complete' step='complete' %}{% endif %}
+                    {% if client.onboarding_complete_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_undo button_class='btn-undo' step='complete' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_complete button_class='btn btn-sm btn-complete' step='complete' %}{% endif %}
                 </div>
             </li>
         </ul>
