@@ -17,51 +17,37 @@
     {% endif %}
     {% csrf_token %}
 
-    {% if not is_edit %}
-    <div class="cn-field">
-        <label class="cn-label" for="id_session_date">{% trans "Session date" %}</label>
-        <input type="date" id="id_session_date" name="session_date"
-               class="form-control" value="{{ prefill_date }}" required>
-    </div>
-    <div class="cn-field">
-        <label class="cn-label" for="id_duration">{% trans "Duration (minutes)" %}</label>
-        <input type="number" id="id_duration" name="duration"
-               class="form-control" value="{{ prefill_duration }}" min="1" style="max-width: 120px;">
-    </div>
-    {% else %}
     <div class="cn-field" style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
+        {% if not is_edit %}
+        <div>
+            <label class="cn-label" for="id_session_date">{% trans "Session date" %}</label>
+            <input type="date" id="id_session_date" name="session_date"
+                   class="form-control" value="{{ prefill_date }}" required>
+        </div>
+        {% else %}
         <div>
             <label class="cn-label">{% trans "Session date" %}</label>
             <div class="text-secondary" style="padding: 0.5rem 0;">
                 {{ log.session.session_date|date:"d.m.Y" }}
             </div>
         </div>
+        {% endif %}
         <div>
             <label class="cn-label" for="id_duration">{% trans "Duration (minutes)" %}</label>
             <input type="number" id="id_duration" name="duration"
-                   class="form-control" value="{{ log.session.duration }}" min="1" style="max-width: 120px;">
+                   class="form-control" value="{% if is_edit %}{{ log.session.duration }}{% else %}{{ prefill_duration }}{% endif %}" min="1" style="max-width: 120px;">
         </div>
-    </div>
-    {% endif %}
-
-    <div class="cn-field">
-        <label class="cn-label" for="id_session_type">{% trans "Session type" %}</label>
-        <select id="id_session_type" name="session_type" class="form-control">
-            {% for value, label in session_type_choices %}
-            <option value="{{ value }}"
-                {% if is_edit and log.session_type == value %}selected
-                {% elif not is_edit and value == 'standard' %}selected
-                {% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div class="cn-field">
-        <label class="cn-label" for="id_summary">{% trans "One-liner summary" %} <span class="fieldset-hint">{% trans "(for overview, max. 120 characters)" %}</span></label>
-        <input type="text" id="id_summary" name="summary" maxlength="120"
-               class="form-control"
-               placeholder="{% trans "e.g. resource work, good contact, topic: boundaries" %}"
-               value="{% if is_edit %}{{ log.summary }}{% endif %}">
+        <div>
+            <label class="cn-label" for="id_session_type">{% trans "Session type" %}</label>
+            <select id="id_session_type" name="session_type" class="form-control" style="max-width: 200px;">
+                {% for value, label in session_type_choices %}
+                <option value="{{ value }}"
+                    {% if is_edit and log.session_type == value %}selected
+                    {% elif not is_edit and value == 'standard' %}selected
+                    {% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
 
     <div class="cn-field">
@@ -89,24 +75,33 @@
         {% endif %}
     </div>
 
-    <div class="cn-field">
-        <label class="cn-label" for="id_therapist_reflection">{% trans "Own reflection" %}</label>
-        <textarea id="id_therapist_reflection" name="therapist_reflection"
-                  class="form-control cn-textarea-medium"
-                  placeholder="{% trans "How did I feel? Countertransference impulses…" %}">{% if is_edit %}{{ log.therapist_reflection }}{% endif %}</textarea>
-        {% if is_edit and log.therapist_reflection %}
-        <details class="cn-notes-preview">
-            <summary>📖 {% trans "Preview (saved state)" %}</summary>
-            <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
-        </details>
-        {% endif %}
+    <div class="cn-field" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 260px;">
+            <label class="cn-label" for="id_therapist_reflection">{% trans "Own reflection" %}</label>
+            <textarea id="id_therapist_reflection" name="therapist_reflection"
+                      class="form-control cn-textarea-small"
+                      placeholder="{% trans "How did I feel? Countertransference impulses…" %}">{% if is_edit %}{{ log.therapist_reflection }}{% endif %}</textarea>
+            {% if is_edit and log.therapist_reflection %}
+            <details class="cn-notes-preview">
+                <summary>📖 {% trans "Preview (saved state)" %}</summary>
+                <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
+            </details>
+            {% endif %}
+        </div>
+        <div style="flex: 1; min-width: 260px;">
+            <label class="cn-label" for="id_interventions">{% trans "Interventions" %}</label>
+            <textarea id="id_interventions" name="interventions"
+                      class="form-control cn-textarea-small"
+                      placeholder="{% trans "Applied techniques, methods…" %}">{% if is_edit %}{{ log.interventions }}{% endif %}</textarea>
+        </div>
     </div>
 
     <div class="cn-field">
-        <label class="cn-label" for="id_interventions">{% trans "Interventions" %}</label>
-        <textarea id="id_interventions" name="interventions"
-                  class="form-control cn-textarea-small"
-                  placeholder="{% trans "Applied techniques, methods…" %}" rows="3">{% if is_edit %}{{ log.interventions }}{% endif %}</textarea>
+        <label class="cn-label" for="id_summary">{% trans "Additional notes" %} <span class="fieldset-hint">{% trans "(anything not covered above, max. 120 characters — shown in overview)" %}</span></label>
+        <input type="text" id="id_summary" name="summary" maxlength="120"
+               class="form-control"
+               placeholder="{% trans "e.g. mentioned holiday plans, new topic emerged" %}"
+               value="{% if is_edit %}{{ log.summary }}{% endif %}">
     </div>
 
     <div class="cn-actions">
