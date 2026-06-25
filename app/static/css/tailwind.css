@@ -734,6 +734,7 @@
   /* Session two-column grid */
   .cn-session-grid { display: grid; grid-template-columns: 90px 1fr; gap: 0.25rem 0.75rem; width: 100%; }
   .cn-session-left { display: flex; flex-direction: column; gap: 0.15rem; padding-top: 0.1rem; }
+  .cn-session-summary { font-size: 0.875rem; font-weight: 500; color: var(--color-text-primary); margin: 0 0 0.35rem 0; }
   .cn-session-interventions { font-size: 0.78rem; color: var(--color-text-secondary); font-style: italic; margin-top: 0.35rem; border-top: 1px solid var(--color-border); padding-top: 0.3rem; }
   .cn-session-actions-bar { display: flex; justify-content: flex-end; width: 100%; margin-top: 0.35rem; }
   /* Therapist reflection */

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-25 10:47+0200\n"
+"POT-Creation-Date: 2026-06-25 10:52+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -231,7 +231,7 @@ msgstr "Non-billable"
 
 #: templates/my_practice/client_detail.html:238
 #: templates/my_practice/client_detail_tabs.html:138
-#: templates/my_practice/session_log_form.html:80
+#: templates/my_practice/session_log_form.html:76
 msgid "Own reflection"
 msgstr "Own reflection"
 
@@ -1042,42 +1042,42 @@ msgid "Mood tags"
 msgstr ""
 
 #: templates/my_practice/session_log_form.html:67
+msgid "One-liner summary"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:67
+msgid "(for overview, max. 120 characters)"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:70
+msgid "e.g. resource work, good contact, topic: boundaries"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:79
+msgid "How did I feel? Countertransference impulses…"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:82
+#: templates/my_practice/session_log_form.html:101
+msgid "Preview (saved state)"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:88
+msgid "Interventions"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:91
+msgid "Applied techniques, methods…"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:96
 #, fuzzy
 #| msgid "+ Session log"
 msgid "Session note"
 msgstr "+ Session log"
 
-#: templates/my_practice/session_log_form.html:69
+#: templates/my_practice/session_log_form.html:98
 msgid "Reflection after the session…"
-msgstr ""
-
-#: templates/my_practice/session_log_form.html:72
-#: templates/my_practice/session_log_form.html:86
-msgid "Preview (saved state)"
-msgstr ""
-
-#: templates/my_practice/session_log_form.html:83
-msgid "How did I feel? Countertransference impulses…"
-msgstr ""
-
-#: templates/my_practice/session_log_form.html:92
-msgid "Interventions"
-msgstr ""
-
-#: templates/my_practice/session_log_form.html:95
-msgid "Applied techniques, methods…"
-msgstr ""
-
-#: templates/my_practice/session_log_form.html:100
-msgid "Additional notes"
-msgstr ""
-
-#: templates/my_practice/session_log_form.html:100
-msgid "(anything not covered above, max. 120 characters — shown in overview)"
-msgstr ""
-
-#: templates/my_practice/session_log_form.html:103
-msgid "e.g. mentioned holiday plans, new topic emerged"
 msgstr ""
 
 #: templates/my_practice/session_log_form.html:109
