@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from typing import cast
 
 from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.exceptions import PermissionDenied
 from django.core.mail import EmailMessage
@@ -97,18 +98,18 @@ class ClientListView(PracticeScopedListView):
 
         clients_inactive_by_year: dict[int | str, list] = {}
         for client in clients_inactive:
-            year = client.last_session_year if client.last_session_year else "Keine Sitzungen"
+            year = client.last_session_year if client.last_session_year else None
 
             if year not in clients_inactive_by_year:
                 clients_inactive_by_year[year] = []
             clients_inactive_by_year[year].append(client)
 
-        # Sort years descending (most recent first), with "Keine Sitzungen" last
+        # Sort years descending (most recent first), with None (no sessions) last
         context["clients_inactive_by_year"] = dict(
             sorted(
                 clients_inactive_by_year.items(),
                 key=lambda x: (
-                    x[0] == "Keine Sitzungen",
+                    x[0] is None,
                     -x[0] if isinstance(x[0], int) else 0,
                 ),
             )
@@ -168,7 +169,7 @@ class ClientIntakeView(PracticeScopedUpdateView):
     form_class = ClientIntakeForm
     template_name = "my_practice/client_intake.html"
     success_url = reverse_lazy("client_list")
-    success_message = "Klient {obj.full_name} erfolgreich gespeichert!"
+    success_message = _("Client {obj.full_name} saved successfully!")
 
     def get_success_url(self) -> str:
         return safe_next(self.request, fallback=str(self.success_url))
@@ -281,7 +282,7 @@ def client_document_upload(request: HttpRequest, pk: int) -> JsonResponse:
     client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
     raw_file = request.FILES.get("file")
     if not raw_file:
-        return JsonResponse({"error": "Keine Datei ausgewählt."}, status=400)
+        return JsonResponse({"error": str(_("No file selected."))}, status=400)
     try:
         doc_file = process_upload(raw_file)
     except ValueError as exc:
@@ -360,8 +361,11 @@ def client_gdpr_delete_confirm(request: HttpRequest, pk: int) -> HttpResponse:
     if client.active or not last_session or last_session > _gdpr_cutoff():
         messages.error(
             request,
-            f"Klient {client.client_code} erfüllt nicht die Voraussetzungen für die DSGVO-Löschung "
-            f"(inaktiv + letzte Sitzung vor mehr als {GDPR_RETENTION_YEARS} Jahren).",
+            _(
+                "Client %(code)s does not meet the requirements for GDPR deletion "
+                "(inactive + last session more than %(years)s years ago)."
+            )
+            % {"code": client.client_code, "years": GDPR_RETENTION_YEARS},
         )
         return redirect("client_list")
 
@@ -386,7 +390,7 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     last_session = client.sessions.aggregate(last=Max("session_date"))["last"]
 
     if client.active or not last_session or last_session > _gdpr_cutoff():
-        messages.error(request, "Voraussetzungen für die DSGVO-Löschung nicht erfüllt.")
+        messages.error(request, _("Requirements for GDPR deletion not met."))
         return redirect("client_list")
 
     practice = request.current_practice
@@ -408,8 +412,11 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
             logger.exception("Failed to send GDPR deletion email for %s", client_code)
             messages.warning(
                 request,
-                f"Hinweis: Die Benachrichtigungs-E-Mail an {client.email} konnte nicht gesendet werden. "
-                "Bitte informieren Sie den Klienten manuell.",
+                _(
+                    "Note: The notification email to %(email)s could not be sent. "
+                    "Please inform the client manually."
+                )
+                % {"email": client.email},
             )
 
     # Collect document file paths before deletion
@@ -437,6 +444,6 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
 
     messages.success(
         request,
-        f"Klient {client_code} wurde gemäß DSGVO Art. 17 gelöscht.",
+        _("Client %(code)s has been deleted pursuant to GDPR Art. 17.") % {"code": client_code},
     )
     return redirect("client_list")

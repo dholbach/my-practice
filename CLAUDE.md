@@ -33,6 +33,7 @@ Therapy practice payment/invoicing system built with Django, PostgreSQL, running
 ### i18n Conventions (P-039)
 - **English as msgids**: `{% trans "Switch" %}` not `{% trans "Wechseln" %}`. German text lives in `locale/de/django.po` as `msgstr`.
 - **Any template touched for any reason must be fully wrapped** with `{% load i18n %}` and `{% trans %}`/`{% blocktrans %}` in the same commit. PDF templates (`invoice_pdf_*.html`, `treatment_contract_pdf.html`, `intake_form_pdf.html`) are exempt — they handle language per-document, not via Django i18n.
+- **Any Python file touched for any reason must have its user-facing strings wrapped** with `gettext_lazy as _` (for module-level/class attributes) or `gettext as _` (for function-scope strings). User-facing means: `messages.*()` calls, `JsonResponse` error/success values, form error strings. Skip if the file has no user-facing strings at all. Skip if wrapping would require a large structural refactor (e.g. deeply nested f-strings across many functions) — note it in the PR instead.
 - After changing templates, run `./dev.py i18n` to extract + compile.
 
 See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TODO/WIP/DONE).
