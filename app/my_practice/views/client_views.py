@@ -257,6 +257,11 @@ def client_onboarding_step(request, pk):
         setattr(client, field_map[step], None if reset else date.today())
         client.save(update_fields=[field_map[step]])
 
+    if step == "complete" and not reset:
+        tag = ClientTag.objects.filter(slug="incomplete-intake").first()
+        if tag:
+            client.tags.remove(tag)
+
     return redirect("client_detail", pk=pk)
 
 
