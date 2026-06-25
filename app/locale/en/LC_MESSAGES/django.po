@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-25 13:16+0200\n"
+"POT-Creation-Date: 2026-06-25 13:21+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -23,21 +23,21 @@ msgstr ""
 msgid "No file selected."
 msgstr ""
 
-#: my_practice/views/client_views.py:364
+#: my_practice/views/client_views.py:365
 #, python-format
 msgid "Client %(code)s does not meet the requirements for GDPR deletion (inactive + last session more than %(years)s years ago)."
 msgstr ""
 
-#: my_practice/views/client_views.py:391
+#: my_practice/views/client_views.py:393
 msgid "Requirements for GDPR deletion not met."
 msgstr ""
 
-#: my_practice/views/client_views.py:413
+#: my_practice/views/client_views.py:416
 #, python-format
 msgid "Note: The notification email to %(email)s could not be sent. Please inform the client manually."
 msgstr ""
 
-#: my_practice/views/client_views.py:442
+#: my_practice/views/client_views.py:447
 #, python-format
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr ""
