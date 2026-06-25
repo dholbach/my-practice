@@ -221,7 +221,7 @@
     {% trans "Delete session log?" as confirm_delete_log %}
     {% trans "Delete session?" as confirm_delete_session %}
     <div class="cn-session-row {% if log %}cn-has-log{% endif %}{% if session.pk in recent_sessions_needing_log %} cn-needs-log{% endif %}">
-        {% if log and log.content %}
+        {% if log and log.content or log and log.summary or log and log.interventions or log and log.therapist_reflection %}
         <div class="cn-session-grid">
             <div class="cn-session-left">
                 <span class="cn-session-date">{{ session.session_date|date:"d.m.Y" }}</span>
@@ -231,7 +231,8 @@
                 {% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>{% endfor %}
             </div>
             <div class="cn-session-content">
-                <div class="md-rendered">{{ log.content|render_markdown }}</div>
+                {% if log.summary %}<p class="cn-session-summary">{{ log.summary }}</p>{% endif %}
+                {% if log.content %}<div class="md-rendered">{{ log.content|render_markdown }}</div>{% endif %}
                 {% if log.interventions %}<div class="cn-session-interventions">{{ log.interventions }}</div>{% endif %}
                 {% if log.therapist_reflection %}
                 <details class="cn-reflection">
