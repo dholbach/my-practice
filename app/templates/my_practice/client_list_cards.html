@@ -1,19 +1,20 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load payment_tags %}
+{% load i18n %}
 
-{% block title %}Klientenübersicht{% endblock %}
+{% block title %}{% trans "Client overview" %}{% endblock %}
 
-{% block page_title %}Klienten{% endblock %}
-{% block page_subtitle %}Workflow-Übersicht{% endblock %}
+{% block page_title %}{% trans "Clients" %}{% endblock %}
+{% block page_subtitle %}{% trans "Workflow overview" %}{% endblock %}
 
 {% block content %}
 
 <div class="workflow-header">
     <div class="workflow-filters">
-        <span class="filter-label">Tags:</span>
+        <span class="filter-label">{% trans "Tags:" %}</span>
         <a href="?filter={{ current_filter }}" class="btn btn-sm {% if not current_tag %}btn-primary{% else %}btn-secondary{% endif %}">
-            Alle
+            {% trans "All" %}
         </a>
         {% for tag in all_tags %}
             <a href="?filter={{ current_filter }}&tag={{ tag.slug }}"
@@ -22,23 +23,23 @@
             </a>
         {% endfor %}
         <a href="{% url 'tag_list' %}" class="btn btn-sm btn-secondary">
-            ⚙️ Tags
+            ⚙️ {% trans "Tags" %}
         </a>
     </div>
-    <a href="{% url 'client_intake' %}" class="btn">➕ Neuer Klient</a>
+    <a href="{% url 'client_intake' %}" class="btn">➕ {% trans "New client" %}</a>
 </div>
 
 <div class="client-workflow-stats">
     <div class="stat-card">
-        <div class="stat-label">Aktiv</div>
+        <div class="stat-label">{% trans "Active" %}</div>
         <div class="stat-value">{{ stats.active_ok }}</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Brauchen Aufmerksamkeit</div>
+        <div class="stat-label">{% trans "Need attention" %}</div>
         <div class="stat-value alert">{{ stats.needs_attention }}</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Inaktiv</div>
+        <div class="stat-label">{% trans "Inactive" %}</div>
         <div class="stat-value">{{ stats.inactive }}</div>
     </div>
 </div>
@@ -46,7 +47,7 @@
 <!-- Active Clients - Needs Attention -->
 {% if clients_needs_attention %}
 <div class="section-header">
-    ⚠️ Benötigen Aufmerksamkeit
+    ⚠️ {% trans "Need attention" %}
     <span class="count">{{ clients_needs_attention|length }}</span>
 </div>
 <div class="client-cards">
@@ -59,7 +60,7 @@
 <!-- Active Clients - All Good -->
 {% if clients_active_ok %}
 <div class="section-header">
-    ✅ Aktiv & OK
+    ✅ {% trans "Active & OK" %}
     <span class="count">{{ clients_active_ok|length }}</span>
 </div>
 <div class="client-cards">
@@ -72,12 +73,12 @@
 <!-- Inactive Clients -->
 {% if clients_inactive %}
 <div class="section-header">
-    💤 Inaktiv
+    💤 {% trans "Inactive" %}
     <span class="count">{{ clients_inactive|length }}</span>
 </div>
 {% for year, clients in clients_inactive_by_year.items %}
 <div class="section-subheader">
-    {{ year }}
+    {% if year %}{{ year }}{% else %}{% trans "No sessions" %}{% endif %}
 </div>
 <div class="client-cards">
     {% for client in clients %}
@@ -89,23 +90,23 @@
 
 {% if not clients_needs_attention and not clients_active_ok and not clients_inactive %}
 <div class="empty-state">
-    <h2>Keine Klienten</h2>
-    <p>Es wurden noch keine Klienten hinzugefügt.</p>
+    <h2>{% trans "No clients" %}</h2>
+    <p>{% trans "No clients have been added yet." %}</p>
 </div>
 {% endif %}
 
 {% if clients_deletion_eligible %}
 <div class="section-header section-header--gdpr">
-    Löschreife Klienten (DSGVO Art. 17)
+    {% trans "Clients eligible for deletion (GDPR Art. 17)" %}
     <span class="count">{{ clients_deletion_eligible|length }}</span>
 </div>
 <table class="table">
   <thead>
     <tr>
-      <th>Code</th>
-      <th>Name</th>
-      <th>Letzte Sitzung</th>
-      <th>E-Mail</th>
+      <th>{% trans "Code" %}</th>
+      <th>{% trans "Name" %}</th>
+      <th>{% trans "Last session" %}</th>
+      <th>{% trans "Email" %}</th>
       <th></th>
     </tr>
   </thead>
@@ -119,7 +120,7 @@
       <td>
         <a href="{% url 'client_gdpr_delete_confirm' client.pk %}"
            class="btn btn-sm btn-danger">
-          Löschen{% if client.email %} &amp; Benachrichtigen{% endif %}
+          {% if client.email %}{% trans "Delete & notify" %}{% else %}{% trans "Delete" %}{% endif %}
         </a>
       </td>
     </tr>
