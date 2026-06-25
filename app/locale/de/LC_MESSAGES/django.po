@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-25 13:16+0200\n"
+"POT-Creation-Date: 2026-06-25 13:21+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -17,30 +17,30 @@ msgstr ""
 #: my_practice/views/client_views.py:172
 #, python-brace-format
 msgid "Client {obj.full_name} saved successfully!"
-msgstr "Klient {obj.full_name} erfolgreich gespeichert!"
+msgstr "Klient:in {obj.full_name} erfolgreich gespeichert!"
 
 #: my_practice/views/client_views.py:285
 msgid "No file selected."
 msgstr "Keine Datei ausgewählt."
 
-#: my_practice/views/client_views.py:364
+#: my_practice/views/client_views.py:365
 #, python-format
 msgid "Client %(code)s does not meet the requirements for GDPR deletion (inactive + last session more than %(years)s years ago)."
-msgstr "Klient %(code)s erfüllt nicht die Voraussetzungen für die DSGVO-Löschung (inaktiv + letzte Sitzung vor mehr als %(years)s Jahren)."
+msgstr "Klient:in %(code)s erfüllt nicht die Voraussetzungen für die DSGVO-Löschung (inaktiv + letzte Sitzung vor mehr als %(years)s Jahren)."
 
-#: my_practice/views/client_views.py:391
+#: my_practice/views/client_views.py:393
 msgid "Requirements for GDPR deletion not met."
 msgstr "Voraussetzungen für die DSGVO-Löschung nicht erfüllt."
 
-#: my_practice/views/client_views.py:413
+#: my_practice/views/client_views.py:416
 #, python-format
 msgid "Note: The notification email to %(email)s could not be sent. Please inform the client manually."
-msgstr "Hinweis: Die Benachrichtigungs-E-Mail an %(email)s konnte nicht gesendet werden. Bitte informieren Sie den Klienten manuell."
+msgstr "Hinweis: Die Benachrichtigungs-E-Mail an %(email)s konnte nicht gesendet werden. Bitte informieren Sie die Klient:in manuell."
 
-#: my_practice/views/client_views.py:442
+#: my_practice/views/client_views.py:447
 #, python-format
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
-msgstr "Klient %(code)s wurde gemäß DSGVO Art. 17 gelöscht."
+msgstr "Klient:in %(code)s wurde gemäß DSGVO Art. 17 gelöscht."
 
 #: templates/my_practice/client_detail.html:7
 msgid "Client"
@@ -65,7 +65,7 @@ msgstr "📋 Importierte Klientendaten – bitte aktualisieren"
 
 #: templates/my_practice/client_detail.html:31
 msgid "This client was imported with placeholder data. Please update with real information:"
-msgstr "Dieser Klient wurde mit Platzhalterdaten importiert. Bitte mit echten Daten ergänzen:"
+msgstr "Diese Klient:in wurde mit Platzhalterdaten importiert. Bitte mit echten Daten ergänzen:"
 
 #: templates/my_practice/client_detail.html:32
 msgid "✏️ Edit client details →"
@@ -668,7 +668,7 @@ msgstr "Klientenübersicht"
 
 #: templates/my_practice/client_list_cards.html:8
 msgid "Clients"
-msgstr "Klienten"
+msgstr "Klient:innen"
 
 #: templates/my_practice/client_list_cards.html:9
 msgid "Workflow overview"
@@ -684,7 +684,7 @@ msgstr "Alle"
 
 #: templates/my_practice/client_list_cards.html:29
 msgid "New client"
-msgstr "Neuer Klient"
+msgstr "Neue Klient:in"
 
 #: templates/my_practice/client_list_cards.html:38
 #: templates/my_practice/client_list_cards.html:50
@@ -701,15 +701,15 @@ msgstr "Keine Sitzungen"
 
 #: templates/my_practice/client_list_cards.html:93
 msgid "No clients"
-msgstr "Keine Klienten"
+msgstr "Keine Klient:innen"
 
 #: templates/my_practice/client_list_cards.html:94
 msgid "No clients have been added yet."
-msgstr "Es wurden noch keine Klienten hinzugefügt."
+msgstr "Es wurden noch keine Klient:innen hinzugefügt."
 
 #: templates/my_practice/client_list_cards.html:100
 msgid "Clients eligible for deletion (GDPR Art. 17)"
-msgstr "Löschreife Klienten (DSGVO Art. 17)"
+msgstr "Löschreife Klient:innen (DSGVO Art. 17)"
 
 #: templates/my_practice/client_list_cards.html:106
 msgid "Code"
