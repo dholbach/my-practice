@@ -416,8 +416,10 @@ def session_delete(request, client_pk, session_pk):
     if session.invoice_items.exists():
         messages.error(
             request,
-            _("Session of %(date)s cannot be deleted: it has already been billed. "
-              "Remove the invoice item first.")
+            _(
+                "Session of %(date)s cannot be deleted: it has already been billed. "
+                "Remove the invoice item first."
+            )
             % {"date": session.session_date.strftime("%d.%m.%Y")},
         )
     else:
