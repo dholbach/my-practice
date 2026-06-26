@@ -15,6 +15,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from ..utils.view_helpers import safe_next
@@ -46,14 +47,14 @@ def _get_scoped_client(request, pk):
 def client_profile_save(request, pk):
     """Save ClientProfile fields for a client. Creates profile if it doesn't exist."""
     client = _get_scoped_client(request, pk)
-    profile, _ = ClientProfile.objects.get_or_create(client=client)
+    profile, _created = ClientProfile.objects.get_or_create(client=client)
 
     profile.intake_notes = request.POST.get("intake_notes", profile.intake_notes)
     profile.case_notes = request.POST.get("case_notes", profile.case_notes)
     profile.arbeitsdiagnose = request.POST.get("arbeitsdiagnose", profile.arbeitsdiagnose)
     profile.save()
 
-    messages.success(request, "Klientenprofil gespeichert.")
+    messages.success(request, _("Client profile saved."))
     return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-profil")
 
 
@@ -73,17 +74,17 @@ def session_log_create(request, pk):
     if request.method == "POST":
         session_date_str = request.POST.get("session_date")
         if not session_date_str:
-            messages.error(request, "Sitzungsdatum ist erforderlich.")
+            messages.error(request, _("Session date is required."))
             return redirect("client_detail", pk=pk)
 
         try:
             session_date = date.fromisoformat(session_date_str)
         except ValueError:
-            messages.error(request, "Ungültiges Datum.")
+            messages.error(request, _("Invalid date."))
             return redirect("client_detail", pk=pk)
 
         # Find or create Session for this client + date
-        session, _ = Session.objects.get_or_create(
+        session, _created = Session.objects.get_or_create(
             client=client,
             session_date=session_date,
             defaults={
@@ -93,7 +94,7 @@ def session_log_create(request, pk):
 
         # Prevent duplicate logs
         if hasattr(session, "log"):
-            messages.warning(request, "Für diese Sitzung existiert bereits ein Protokoll.")
+            messages.warning(request, _("A log already exists for this session."))
             return redirect("session_log_edit", client_pk=pk, log_pk=session.log.pk)
 
         mood_tags = request.POST.getlist("mood_tags")
@@ -105,11 +106,16 @@ def session_log_create(request, pk):
             content=request.POST.get("content", ""),
             interventions=request.POST.get("interventions", ""),
             therapist_reflection=request.POST.get("therapist_reflection", ""),
+            next_session_ideas=request.POST.get("next_session_ideas", ""),
         )
+
+        supervision_question = request.POST.get("supervision_question", "").strip()
+        if supervision_question:
+            SupervisionItem.objects.create(client=client, content=supervision_question)
 
         messages.success(
             request,
-            f"Sitzungsprotokoll für {session_date.strftime('%d.%m.%Y')} gespeichert.",
+            _("Session log for %(date)s saved.") % {"date": session_date.strftime("%d.%m.%Y")},
         )
         return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-sitzungen")
 
@@ -155,7 +161,12 @@ def session_log_edit(request, client_pk, log_pk):
         log.therapist_reflection = request.POST.get(
             "therapist_reflection", log.therapist_reflection
         )
+        log.next_session_ideas = request.POST.get("next_session_ideas", log.next_session_ideas)
         log.save()
+
+        supervision_question = request.POST.get("supervision_question", "").strip()
+        if supervision_question:
+            SupervisionItem.objects.create(client=client, content=supervision_question)
 
         # Update session duration if provided
         duration_str = request.POST.get("duration", "").strip()
@@ -168,7 +179,7 @@ def session_log_edit(request, client_pk, log_pk):
             except ValueError:
                 pass
 
-        messages.success(request, "Sitzungsprotokoll aktualisiert.")
+        messages.success(request, _("Session log updated."))
         return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
 
     context = {
@@ -190,11 +201,11 @@ def supervision_item_create(request, pk):
     client = _get_scoped_client(request, pk)
     content = request.POST.get("content", "").strip()
     if not content:
-        messages.error(request, "Inhalt darf nicht leer sein.")
+        messages.error(request, _("Content must not be empty."))
         return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-supervision")
 
     SupervisionItem.objects.create(client=client, content=content)
-    messages.success(request, "Supervisionsthema hinzugefügt.")
+    messages.success(request, _("Supervision topic added."))
     return redirect(
         safe_next(
             request,
@@ -209,7 +220,7 @@ def supervision_item_delete(request, pk, item_pk):
     client = _get_scoped_client(request, pk)
     item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
     item.delete()
-    messages.success(request, "Supervisionsthema gelöscht.")
+    messages.success(request, _("Supervision topic deleted."))
     return redirect(
         safe_next(
             request,
@@ -285,13 +296,13 @@ def client_note_create(request, pk):
     content = request.POST.get("content", "").strip()
 
     if not content or not note_date_str:
-        messages.error(request, "Datum und Inhalt sind erforderlich.")
+        messages.error(request, _("Date and content are required."))
         return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-notizen")
 
     try:
         note_date = date.fromisoformat(note_date_str)
     except ValueError:
-        messages.error(request, "Ungültiges Datum.")
+        messages.error(request, _("Invalid date."))
         return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-notizen")
 
     note_type = request.POST.get("note_type", ClientNote.NoteType.NOTE)
@@ -303,7 +314,7 @@ def client_note_create(request, pk):
     )
 
     if note_type == ClientNote.NoteType.SUPERVISION:
-        messages.success(request, "Supervisionsnotiz gespeichert.")
+        messages.success(request, _("Supervision note saved."))
         return redirect(
             safe_next(
                 request,
@@ -311,7 +322,7 @@ def client_note_create(request, pk):
             )
         )
 
-    messages.success(request, "Notiz gespeichert.")
+    messages.success(request, _("Note saved."))
     return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-notizen")
 
 
@@ -325,19 +336,19 @@ def client_note_update(request, pk, note_pk):
     note_date_str = request.POST.get("note_date", "").strip()
 
     if not content:
-        messages.error(request, "Inhalt darf nicht leer sein.")
+        messages.error(request, _("Content must not be empty."))
         return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-protokoll")
 
     if note_date_str:
         try:
             note.note_date = date.fromisoformat(note_date_str)
         except ValueError:
-            messages.error(request, "Ungültiges Datum.")
+            messages.error(request, _("Invalid date."))
             return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-protokoll")
 
     note.content = content
     note.save()
-    messages.success(request, "Notiz aktualisiert.")
+    messages.success(request, _("Note updated."))
     return redirect(
         safe_next(
             request,
@@ -352,7 +363,7 @@ def client_note_delete(request, pk, note_pk):
     client = _get_scoped_client(request, pk)
     note = get_object_or_404(ClientNote, pk=note_pk, client=client)
     note.delete()
-    messages.success(request, "Notiz gelöscht.")
+    messages.success(request, _("Note deleted."))
     return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-notizen")
 
 
@@ -367,7 +378,7 @@ def session_log_delete(request, client_pk, log_pk):
     # (i.e. no InvoiceItem is linked — not billed)
     if not session.invoice_items.exists():
         session.delete()
-    messages.success(request, "Sitzungsprotokoll gelöscht.")
+    messages.success(request, _("Session log deleted."))
     return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
 
 
@@ -381,11 +392,14 @@ def session_duration_edit(request, pk, session_pk):
         if new_duration > 0:
             session.duration = new_duration
             session.save(update_fields=["duration"])
-            messages.success(request, f"Sitzungsdauer auf {new_duration} Min. aktualisiert.")
+            messages.success(
+                request,
+                _("Session duration updated to %(min)s min.") % {"min": new_duration},
+            )
         else:
-            messages.error(request, "Ungültige Dauer.")
+            messages.error(request, _("Invalid duration."))
     except ValueError, TypeError:
-        messages.error(request, "Ungültige Dauer.")
+        messages.error(request, _("Invalid duration."))
     return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-sitzungen")
 
 
@@ -402,13 +416,14 @@ def session_delete(request, client_pk, session_pk):
     if session.invoice_items.exists():
         messages.error(
             request,
-            f"Sitzung vom {session.session_date.strftime('%d.%m.%Y')} kann nicht gelöscht werden: "
-            "sie ist bereits abgerechnet. Rechnungsposition zuerst entfernen.",
+            _("Session of %(date)s cannot be deleted: it has already been billed. "
+              "Remove the invoice item first.")
+            % {"date": session.session_date.strftime("%d.%m.%Y")},
         )
     else:
         date_str = session.session_date.strftime("%d.%m.%Y")
         session.delete()  # SessionLog cascades via OneToOne(on_delete=CASCADE)
-        messages.success(request, f"Sitzung vom {date_str} gelöscht.")
+        messages.success(request, _("Session of %(date)s deleted.") % {"date": date_str})
     return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
 
 
@@ -419,7 +434,7 @@ def session_log_mark_noshow(request, client_pk, log_pk):
     log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
     log.session_type = SessionLog.SessionType.AUSFALL
     log.save(update_fields=["session_type"])
-    messages.success(request, "Als Ausfall / Absage markiert.")
+    messages.success(request, _("Marked as no-show / cancellation."))
     return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
 
 
