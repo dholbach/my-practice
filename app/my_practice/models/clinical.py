@@ -256,6 +256,12 @@ class SessionLog(TimestampedModel):
         help_text="Wie ging es mir dabei — Gegenübertragung (verschlüsselt, separat)",
     )
 
+    next_session_ideas = EncryptedTextField(
+        blank=True,
+        verbose_name="Ideen für nächste Sitzung",
+        help_text="Themen, Interventionen, Hausaufgaben für die nächste Sitzung (verschlüsselt)",
+    )
+
     class Meta:
         verbose_name = "Sitzungsprotokoll"
         verbose_name_plural = "Sitzungsprotokolle"
