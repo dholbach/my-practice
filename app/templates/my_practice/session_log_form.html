@@ -104,6 +104,20 @@
         {% endif %}
     </div>
 
+    <div class="cn-field">
+        <label class="cn-label" for="id_next_session_ideas">{% trans "Ideas for next session" %}</label>
+        <textarea id="id_next_session_ideas" name="next_session_ideas"
+                  class="form-control cn-textarea-small"
+                  placeholder="{% trans "Topics, interventions, homework for next session…" %}">{% if is_edit %}{{ log.next_session_ideas }}{% endif %}</textarea>
+    </div>
+
+    <div class="cn-field">
+        <label class="cn-label" for="id_supervision_question">{% trans "Supervision question" %} <span class="fieldset-hint">{% trans "(saved to supervision queue)" %}</span></label>
+        <textarea id="id_supervision_question" name="supervision_question"
+                  class="form-control cn-textarea-small"
+                  placeholder="{% trans "What do I want to bring to supervision?…" %}"></textarea>
+    </div>
+
     <div class="cn-actions">
         <button type="submit" class="btn btn-primary">
             {% if is_edit %}{% trans "Update" %}{% else %}{% trans "Save protocol" %}{% endif %}
