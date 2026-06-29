@@ -2,6 +2,16 @@
 
 Major features and milestones in chronological order.
 
+## 2026-06-29 — v0.2.6 patch release
+
+- **Session log: ideas for next session**: New encrypted field on session logs to capture topics, planned interventions, or homework for the next session. Shown as a collapsible "💡 Ideen für nächste Sitzung" section in the Protokoll tab.
+- **Session log: supervision question quick-add**: Textarea in the session log form that creates a new open `SupervisionItem` on save, feeding directly into the existing supervision queue — capture questions while they're fresh without leaving the form.
+- **Session summary in Protokoll tab**: One-liner summary (Kurzzusammenfassung) now correctly rendered in the client detail Protokoll tab.
+- **Session log form layout**: Date/duration/session type inline on one row; mood tags; summary; reflection & interventions side-by-side; full session note last.
+- **`incomplete-intake` tag auto-removed** when the onboarding "complete" step is marked — no longer requires a nightly tag sync.
+- **Invoice notification link**: Success message after creating an invoice from the billing overview now shows the invoice number as a clickable link to open it immediately.
+- **i18n** (P-039): `client_views.py`, `clinical_views.py`, `invoice_views.py`, `client_list_cards.html`, `client_detail.html`, `session_log_form.html` fully wrapped; gender-neutral `Klient:in` / `Klient:innen` in all new German translations.
+
 ## 2026-06-24 — v0.2.5 patch release
 
 - **Client detail cockpit** (P-094): New tabbed layout replaces the single-page client detail view — tabs for Überblick (overview), Profil, Protokoll, Rechnungen, Dokumente, and Abrechnung. Überblick shows the cockpit prep view with key stats and upcoming sessions at a glance.
