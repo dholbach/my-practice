@@ -14,6 +14,8 @@ from django.db import transaction
 from django.db.models import Case, Count, DecimalField, F, Q, QuerySet, Sum, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _, ngettext
 from django.views.generic import DetailView
 
 from ..invoice_forms import InvoiceForm
@@ -202,7 +204,7 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
                             continue
                         session_date = form.cleaned_data["session_date"]
                         duration = form.cleaned_data.get("duration", 60)
-                        session, _ = Session.objects.get_or_create(
+                        session, _created = Session.objects.get_or_create(
                             client=client,
                             session_date=session_date,
                             defaults={"duration": duration},
@@ -213,21 +215,30 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
 
                     messages.success(
                         self.request,
-                        f"Invoice {self.object.invoice_number} created successfully! / "
-                        f"Rechnung {self.object.invoice_number} erfolgreich erstellt!",
+                        _("Invoice %(num)s created successfully!")
+                        % {"num": self.object.invoice_number},
                     )
                     return redirect(self.success_url)
                 else:
                     # Formset validation failed - show errors
                     for i, form_errors in enumerate(items.errors):
                         if form_errors:
-                            messages.error(self.request, f"Item {i + 1}: {form_errors}")
+                            messages.error(
+                                self.request,
+                                _("Item %(n)s: %(errors)s") % {"n": i + 1, "errors": form_errors},
+                            )
                     if items.non_form_errors():
-                        messages.error(self.request, f"Formset errors: {items.non_form_errors()}")
+                        messages.error(
+                            self.request,
+                            _("Formset errors: %(errors)s") % {"errors": items.non_form_errors()},
+                        )
                     return self.form_invalid(form)
         except Exception as e:
             logger.exception("Error creating invoice")
-            messages.error(self.request, f"Error creating invoice: {str(e)}")
+            messages.error(
+                self.request,
+                _("Error creating invoice: %(error)s") % {"error": str(e)},
+            )
             return self.form_invalid(form)
 
 
@@ -267,7 +278,7 @@ class InvoiceEditView(InvoiceFormsetMixin, PracticeScopedUpdateView):
     form_class = InvoiceForm
     template_name = "my_practice/invoice_edit.html"
     context_object_name = "invoice"
-    success_message = "Rechnung {obj.invoice_number} erfolgreich aktualisiert!"
+    success_message = _("Invoice {obj.invoice_number} updated successfully!")
 
     def get_queryset(self):
         """Optimize query with select_related/prefetch_related"""
@@ -313,7 +324,7 @@ class InvoiceEditView(InvoiceFormsetMixin, PracticeScopedUpdateView):
                         continue
                     session_date = f.cleaned_data["session_date"]
                     duration = f.cleaned_data.get("duration", 60)
-                    session, _ = Session.objects.get_or_create(
+                    session, _created = Session.objects.get_or_create(
                         client=invoice.client,
                         session_date=session_date,
                         defaults={"duration": duration},
@@ -342,10 +353,17 @@ class InvoiceEditView(InvoiceFormsetMixin, PracticeScopedUpdateView):
                     if form_errors:
                         for field, errors in form_errors.items():
                             for error in errors:
-                                messages.error(self.request, f"Item {i + 1} - {field}: {error}")
+                                messages.error(
+                                    self.request,
+                                    _("Item %(n)s - %(field)s: %(error)s")
+                                    % {"n": i + 1, "field": field, "error": error},
+                                )
                 if formset.non_form_errors():
                     for error in formset.non_form_errors():
-                        messages.error(self.request, f"Formset: {error}")
+                        messages.error(
+                            self.request,
+                            _("Formset: %(error)s") % {"error": error},
+                        )
                 return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -354,7 +372,10 @@ class InvoiceEditView(InvoiceFormsetMixin, PracticeScopedUpdateView):
             for field, errors in form.errors.items():
                 for error in errors:
                     field_label = form.fields.get(field).label if field in form.fields else field
-                    messages.error(self.request, f"{field_label}: {error}")
+                    messages.error(
+                        self.request,
+                        _("%(label)s: %(error)s") % {"label": field_label, "error": error},
+                    )
 
         # Also check formset errors (formset validation might happen even if form is invalid)
         context = self.get_context_data(form=form)
@@ -364,13 +385,20 @@ class InvoiceEditView(InvoiceFormsetMixin, PracticeScopedUpdateView):
                 if form_errors:
                     for field, errors in form_errors.items():
                         for error in errors:
-                            messages.error(self.request, f"Item {i + 1} - {field}: {error}")
+                            messages.error(
+                                self.request,
+                                _("Item %(n)s - %(field)s: %(error)s")
+                                % {"n": i + 1, "field": field, "error": error},
+                            )
             if hasattr(formset, "non_form_errors") and formset.non_form_errors():
                 for error in formset.non_form_errors():
-                    messages.error(self.request, f"Formset: {error}")
+                    messages.error(
+                        self.request,
+                        _("Formset: %(error)s") % {"error": error},
+                    )
 
         if not form.errors and (not formset or not formset.errors):
-            messages.error(self.request, "Bitte korrigieren Sie die Fehler im Formular.")
+            messages.error(self.request, _("Please correct the errors in the form."))
 
         return super().form_invalid(form)
 
@@ -390,7 +418,8 @@ def invoice_delete(request, pk):
 
         messages.success(
             request,
-            f"Rechnung {invoice_number} für {client_code} wurde erfolgreich gelöscht.",
+            _("Invoice %(num)s for %(code)s was deleted successfully.")
+            % {"num": invoice_number, "code": client_code},
         )
         return redirect(safe_next(request, fallback=reverse("invoice_list")))
 
@@ -414,7 +443,7 @@ def add_sessions_to_invoice(request, pk):
 
     session_ids = request.POST.getlist("session_ids")
     if not session_ids:
-        messages.warning(request, "Keine Sitzungen angegeben.")
+        messages.warning(request, _("No sessions specified."))
         return redirect("invoice_detail", pk=pk)
 
     sessions = Session.objects.filter(
@@ -467,10 +496,15 @@ def add_sessions_to_invoice(request, pk):
         recalculate_invoice_total(invoice)
         messages.success(
             request,
-            f"{added} Sitzung{'en' if added != 1 else ''} zu {invoice.invoice_number} hinzugefügt.",
+            ngettext(
+                "%(count)s session added to %(invoice)s.",
+                "%(count)s sessions added to %(invoice)s.",
+                added,
+            )
+            % {"count": added, "invoice": invoice.invoice_number},
         )
     else:
-        messages.warning(request, "Keine neuen Sitzungen hinzugefügt (bereits abgerechnet?).")
+        messages.warning(request, _("No new sessions added (already billed?)."))
 
     next_url = request.POST.get("next")
     return redirect(next_url or "invoice_detail", pk=pk)
@@ -484,7 +518,7 @@ def create_invoice_with_sessions(request):
 
     practice = getattr(request, "current_practice", None)
     if not practice:
-        messages.error(request, "Keine aktive Praxis gefunden.")
+        messages.error(request, _("No active practice found."))
         return redirect("dashboard")
 
     client_id = request.POST.get("client_id")
@@ -499,7 +533,7 @@ def create_invoice_with_sessions(request):
         ).order_by("session_date")
     )
     if not sessions:
-        messages.warning(request, "Keine Sitzungen angegeben.")
+        messages.warning(request, _("No sessions specified."))
         next_url = request.POST.get("next")
         return redirect(next_url or "invoice_list")
 
@@ -530,9 +564,19 @@ def create_invoice_with_sessions(request):
             )
         recalculate_invoice_total(invoice)
 
+    msg_template = ngettext(
+        'Invoice <a href="{}">{}</a> with {} session created.',
+        'Invoice <a href="{}">{}</a> with {} sessions created.',
+        len(sessions),
+    )
     messages.success(
         request,
-        f"Rechnung {invoice.invoice_number} mit {len(sessions)} Sitzung{'en' if len(sessions) != 1 else ''} erstellt.",
+        format_html(
+            msg_template,
+            reverse("invoice_detail", kwargs={"pk": invoice.pk}),
+            invoice.invoice_number,
+            len(sessions),
+        ),
     )
     next_url = request.POST.get("next")
     return redirect(next_url or "invoice_detail", pk=invoice.pk)
@@ -710,18 +754,18 @@ def _determine_client_billing_status(
 ) -> tuple[str, str, str]:
     """Return (status, label, icon) for a client row in the billing overview."""
     if cancelled_billed_count > 0:
-        return "warning", "Stornierte Sitzung abgerechnet", "🚫"
+        return "warning", _("Cancelled session billed"), "🚫"
     if pending_count > 0:
-        return "warning", "Termine ausstehend", "⚠️"
+        return "warning", _("Appointments pending"), "⚠️"
     if unbilled_count > 0:
-        return "warning", "Nicht abgerechnet", "📝"
+        return "warning", _("Not billed"), "📝"
     if client_invoices and all(i.status == Invoice.Status.DRAFT for i in client_invoices):
-        return "draft", "Entwurf", "📄"
+        return "draft", _("Draft"), "📄"
     if client_invoices and any(i.status == Invoice.Status.SENT for i in client_invoices):
-        return "sent", "Versendet", "📤"
+        return "sent", _("Sent"), "📤"
     if client_invoices and all(i.status == Invoice.Status.PAID for i in client_invoices):
-        return "ok", "Bezahlt", "✅"
-    return "ok", "OK", "✅"
+        return "ok", _("Paid"), "✅"
+    return "ok", _("OK"), "✅"
 
 
 @login_required
@@ -736,7 +780,7 @@ def billing_open_overview(request):
     """Cross-month view of all unresolved billing items (warning, draft, sent)."""
     practice = getattr(request, "current_practice", None)
     if not practice:
-        messages.error(request, "Keine aktive Praxis gefunden.")
+        messages.error(request, _("No active practice found."))
         return redirect("dashboard")
 
     # Find which months have open invoices (draft or sent)
@@ -850,7 +894,7 @@ def monthly_billing_overview(request, month):
 
     practice = getattr(request, "current_practice", None)
     if not practice:
-        messages.error(request, "Keine aktive Praxis gefunden.")
+        messages.error(request, _("No active practice found."))
         return redirect("dashboard")
 
     today = date.today()

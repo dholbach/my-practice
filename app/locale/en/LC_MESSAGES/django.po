@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-26 10:20+0200\n"
+"POT-Creation-Date: 2026-06-29 18:01+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -132,19 +132,134 @@ msgstr ""
 msgid "Invalid duration."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:419
+#: my_practice/views/clinical_views.py:420
 #, python-format
 msgid "Session of %(date)s cannot be deleted: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:426
+#: my_practice/views/clinical_views.py:428
 #, fuzzy, python-format
 #| msgid "+ Session log"
 msgid "Session of %(date)s deleted."
 msgstr "+ Session log"
 
-#: my_practice/views/clinical_views.py:437
+#: my_practice/views/clinical_views.py:439
 msgid "Marked as no-show / cancellation."
+msgstr ""
+
+#: my_practice/views/invoice_views.py:218
+#, python-format
+msgid "Invoice %(num)s created successfully!"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:228
+#, python-format
+msgid "Item %(n)s: %(errors)s"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:233
+#, python-format
+msgid "Formset errors: %(errors)s"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:240
+#, python-format
+msgid "Error creating invoice: %(error)s"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:281
+#, python-brace-format
+msgid "Invoice {obj.invoice_number} updated successfully!"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:358
+#: my_practice/views/invoice_views.py:390
+#, python-format
+msgid "Item %(n)s - %(field)s: %(error)s"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:365
+#: my_practice/views/invoice_views.py:397
+#, python-format
+msgid "Formset: %(error)s"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:377
+#, python-format
+msgid "%(label)s: %(error)s"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:401
+msgid "Please correct the errors in the form."
+msgstr ""
+
+#: my_practice/views/invoice_views.py:421
+#, python-format
+msgid "Invoice %(num)s for %(code)s was deleted successfully."
+msgstr ""
+
+#: my_practice/views/invoice_views.py:446
+#: my_practice/views/invoice_views.py:535
+#, fuzzy
+#| msgid "+ Session log"
+msgid "No sessions specified."
+msgstr "+ Session log"
+
+#: my_practice/views/invoice_views.py:500
+#, python-format
+msgid "%(count)s session added to %(invoice)s."
+msgid_plural "%(count)s sessions added to %(invoice)s."
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/views/invoice_views.py:506
+msgid "No new sessions added (already billed?)."
+msgstr ""
+
+#: my_practice/views/invoice_views.py:520
+#: my_practice/views/invoice_views.py:782
+#: my_practice/views/invoice_views.py:896
+#, fuzzy
+#| msgid "Create new practice"
+msgid "No active practice found."
+msgstr "Create new practice"
+
+#: my_practice/views/invoice_views.py:567
+msgid "Invoice <a href=\"{}\">{}</a> with {} session created."
+msgid_plural "Invoice <a href=\"{}\">{}</a> with {} sessions created."
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/views/invoice_views.py:756
+#, fuzzy
+#| msgid "Delete session?"
+msgid "Cancelled session billed"
+msgstr "Delete session?"
+
+#: my_practice/views/invoice_views.py:758
+msgid "Appointments pending"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:760
+#, fuzzy
+#| msgid "Unbilled"
+msgid "Not billed"
+msgstr "Unbilled"
+
+#: my_practice/views/invoice_views.py:762
+msgid "Draft"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:764
+msgid "Sent"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:766
+msgid "Paid"
+msgstr ""
+
+#: my_practice/views/invoice_views.py:767
+msgid "OK"
 msgstr ""
 
 #: templates/my_practice/client_detail.html:7
