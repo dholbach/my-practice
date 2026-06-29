@@ -91,7 +91,7 @@
         <div class="messages">
             {% for message in messages %}
             <div class="message {{ message.tags }}">
-                {{ message }}
+                {{ message|safe }}
             </div>
             {% endfor %}
         </div>
