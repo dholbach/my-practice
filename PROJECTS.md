@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-06-24
+**Last Updated**: 2026-06-29
 
 ## 🔍 Recent Activity
 
+- **2026-06-29 — v0.2.6**: Session log next-ideas + supervision quick-add fields; invoice notification link; `incomplete-intake` auto-removal on onboarding complete; i18n wrapping of client_views, clinical_views, invoice_views.
 - **2026-06-24 — v0.2.5**: Client detail cockpit (P-094) — tabbed layout, Überblick tags strip, tag add/remove in Profil tab; inquiry UX (status at top, booking URL warning, milestone date auto-fill); seed data improvements.
-- **2026-06-24 — P-094**: Client detail cockpit — tabbed layout (Überblick / Protokoll / Profil / Abrechnung / Dokumente), intake progress widget, session one-liner summary field (`SessionLog.summary`), i18n-wrapped.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
