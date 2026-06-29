@@ -500,7 +500,8 @@ def add_sessions_to_invoice(request, pk):
                 "%(count)s session added to %(invoice)s.",
                 "%(count)s sessions added to %(invoice)s.",
                 added,
-            ) % {"count": added, "invoice": invoice.invoice_number},
+            )
+            % {"count": added, "invoice": invoice.invoice_number},
         )
     else:
         messages.warning(request, _("No new sessions added (already billed?)."))
