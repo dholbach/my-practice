@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-06-30 — P-046 Phases 1–4**: GebüH billing complete — models + seed data, quick-entry UI (checkbox Ziffern per session, soft frequency/Alleinleistung warnings), invoice PDF integration (itemised Ziffer rows, Zwischensumme, Restbetrag, Diagnose line), Probatorik callout on Profil tab.
 - **2026-06-29 — v0.2.6**: Session log next-ideas + supervision quick-add fields; invoice notification link; `incomplete-intake` auto-removal on onboarding complete; i18n wrapping of client_views, clinical_views, invoice_views.
-- **2026-06-24 — v0.2.5**: Client detail cockpit (P-094) — tabbed layout, Überblick tags strip, tag add/remove in Profil tab; inquiry UX (status at top, booking URL warning, milestone date auto-fill); seed data improvements.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -30,7 +30,7 @@
 
 ### Concept / Mid-term
 
-- **P-046 GebüH-Abrechnung**: GebuhZiffer + Leistungserfassung models; quick-entry UI post-session; frequency/alleinleistung warnings; GebüH line items + Restbetrag on invoice PDF; diagnose field + probatory-phase reminder. ~7–8 days → [docs/projects/todo/P-046_GEBUEH_BILLING.md](docs/projects/todo/P-046_GEBUEH_BILLING.md)
+- **P-046 GebüH-Abrechnung** ✅ (PR #125 open): all 4 phases complete → [docs/projects/todo/P-046_GEBUEH_BILLING.md](docs/projects/todo/P-046_GEBUEH_BILLING.md)
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
 - **OSS follow-ups** (post P-024): extend CI beyond lint (pytest); GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
