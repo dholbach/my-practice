@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-30 16:16+0200\n"
+"POT-Creation-Date: 2026-06-30 17:20+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -375,16 +375,19 @@ msgid "Not billed"
 msgstr "Unbilled"
 
 #: my_practice/views/invoice_views.py:773
+#: templates/my_practice/dashboard.html:134
 #: templates/my_practice/invoice_detail.html:40
 msgid "Draft"
 msgstr ""
 
 #: my_practice/views/invoice_views.py:775
+#: templates/my_practice/dashboard.html:139
 #: templates/my_practice/invoice_detail.html:41
 msgid "Sent"
 msgstr ""
 
 #: my_practice/views/invoice_views.py:777
+#: templates/my_practice/dashboard.html:144
 #: templates/my_practice/invoice_detail.html:42
 msgid "Paid"
 msgstr ""
@@ -423,6 +426,7 @@ msgstr ""
 
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/client_list_cards.html:34
+#: templates/my_practice/dashboard.html:111
 #: templates/my_practice/practice_management.html:26
 msgid "Active"
 msgstr "Active"
@@ -1057,6 +1061,7 @@ msgid "+ Separate invoice"
 msgstr ""
 
 #: templates/my_practice/client_detail.html:644
+#: templates/my_practice/dashboard.html:41
 #, fuzzy
 #| msgid "🧾 To invoice"
 msgid "+ New invoice"
@@ -1236,6 +1241,109 @@ msgstr "Delete note?"
 #| msgid "Delete note?"
 msgid "Delete"
 msgstr "Delete note?"
+
+#: templates/my_practice/dashboard.html:7
+#: templates/my_practice/dashboard.html:10
+msgid "Dashboard"
+msgstr ""
+
+#: templates/my_practice/dashboard.html:11
+#, fuzzy
+#| msgid "Overview of your practices"
+msgid "Overview & Statistics"
+msgstr "Overview of your practices"
+
+#: templates/my_practice/dashboard.html:20
+#, python-format
+msgid "%(year)s Revenue"
+msgstr ""
+
+#: templates/my_practice/dashboard.html:24
+#, python-format
+msgid "%(year)s Profit"
+msgstr ""
+
+#: templates/my_practice/dashboard.html:28
+#, python-format
+msgid "Outstanding (%(n)s)"
+msgstr ""
+
+#: templates/my_practice/dashboard.html:31
+msgid "wks"
+msgstr ""
+
+#: templates/my_practice/dashboard.html:32
+#, python-format
+msgid "%(year)s Time off"
+msgstr ""
+
+#: templates/my_practice/dashboard.html:42
+#, fuzzy
+#| msgid "Manage practices"
+msgid "+ New client"
+msgstr "Manage practices"
+
+#: templates/my_practice/dashboard.html:60
+#, fuzzy
+#| msgid "Active"
+msgid "Needs Action"
+msgstr "Active"
+
+#: templates/my_practice/dashboard.html:81
+msgid "Nothing needs your attention right now."
+msgstr ""
+
+#: templates/my_practice/dashboard.html:99
+#, fuzzy, python-format
+#| msgid "My practices (%(count)s)"
+msgid "Practices %(year)s"
+msgstr "My practices (%(count)s)"
+
+#: templates/my_practice/dashboard.html:100
+msgid "Manage"
+msgstr ""
+
+#: templates/my_practice/dashboard.html:118
+#, fuzzy, python-format
+#| msgid "🧾 To invoice"
+msgid "%(n)s invoice"
+msgid_plural "%(n)s invoices"
+msgstr[0] "🧾 To invoice"
+msgstr[1] "🧾 To invoice"
+
+#: templates/my_practice/dashboard.html:121
+#: templates/my_practice/practice_management.html:39
+msgid "Switch"
+msgstr "Switch"
+
+#: templates/my_practice/dashboard.html:131
+#, fuzzy
+#| msgid "Preview"
+msgid "All-time Status Overview"
+msgstr "Preview"
+
+#: templates/my_practice/dashboard.html:149
+#: templates/my_practice/invoice_detail.html:43
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancelled"
+msgstr "Cancel"
+
+#: templates/my_practice/dashboard.html:158
+msgid "Monthly Revenue (last 12 months)"
+msgstr ""
+
+#: templates/my_practice/dashboard.html:183
+#, fuzzy
+#| msgid "🧾 To invoice"
+msgid "Recent Invoices"
+msgstr "🧾 To invoice"
+
+#: templates/my_practice/dashboard.html:197
+#, fuzzy
+#| msgid "No supervision topics for this client yet."
+msgid "No invoices yet."
+msgstr "No supervision topics for this client yet."
 
 #: templates/my_practice/gebueh_leistung_form.html:4
 #: templates/my_practice/gebueh_leistung_form.html:5
@@ -1499,12 +1607,6 @@ msgstr ""
 #: templates/my_practice/invoice_detail.html:39
 msgid "Change status…"
 msgstr ""
-
-#: templates/my_practice/invoice_detail.html:43
-#, fuzzy
-#| msgid "Cancel"
-msgid "Cancelled"
-msgstr "Cancel"
 
 #: templates/my_practice/invoice_detail.html:50
 msgid "Client:"
@@ -1848,10 +1950,6 @@ msgstr "My practices (%(count)s)"
 #: templates/my_practice/practice_management.html:25
 msgid "Owner"
 msgstr "Owner"
-
-#: templates/my_practice/practice_management.html:39
-msgid "Switch"
-msgstr "Switch"
 
 #: templates/my_practice/practice_management.html:48
 msgid "Deactivate"
