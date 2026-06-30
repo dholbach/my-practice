@@ -31,16 +31,18 @@ class PracticeAnalyzer:
     Provides insights into client activity, capacity usage, and planning metrics.
     """
 
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date, end_date, practice=None):
         """
         Initialize analyzer for a time period.
 
         Args:
             start_date (date): Start of analysis period
             end_date (date): End of analysis period
+            practice: Practice instance to scope queries; None means all practices
         """
         self.start_date = start_date
         self.end_date = end_date
+        self.practice = practice
         self.period_days = (end_date - start_date).days + 1
 
     def analyze(self):
@@ -50,9 +52,10 @@ class PracticeAnalyzer:
         Returns:
             dict: Comprehensive analysis data
         """
-        # Get all clients (intentionally all() - needed for complete analysis including dormant)
-        # Filtering by period would exclude dormant clients from classification
-        clients = Client.objects.all()
+        # Fetch all clients for this practice (including dormant — needed for full classification)
+        clients = (
+            Client.objects.filter(practice=self.practice) if self.practice else Client.objects.all()
+        )
 
         # Get session data for period
         period_sessions = self._get_period_sessions()
@@ -131,10 +134,12 @@ class PracticeAnalyzer:
         so group-session clients are counted individually).
         """
         hours_by_client: dict[int, float] = {}
+        practice_filter = {"client__practice": self.practice} if self.practice else {}
         qs = Session.objects.filter(
             session_date__gte=self.start_date,
             session_date__lte=self.end_date,
             cancelled=False,
+            **practice_filter,
         ).values("client_id", "duration")
         for row in qs:
             hours_by_client[row["client_id"]] = (
@@ -325,7 +330,7 @@ class PracticeAnalyzer:
         return []
 
 
-def calculate_quarter_trends(target_date):
+def calculate_quarter_trends(target_date, practice=None):
     """Calculate capacity and activity trends for last 4 quarters ending with target_date."""
     trends: list[dict] = []
 
@@ -351,7 +356,7 @@ def calculate_quarter_trends(target_date):
         q_start = q_end.replace(day=1) - relativedelta(months=2)
 
         # Run analyzer for this quarter
-        analyzer = PracticeAnalyzer(q_start, q_end)
+        analyzer = PracticeAnalyzer(q_start, q_end, practice=practice)
         analysis = analyzer.analyze()
 
         trends.insert(

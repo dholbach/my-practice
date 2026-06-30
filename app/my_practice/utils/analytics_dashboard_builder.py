@@ -313,6 +313,7 @@ class AnalyticsDashboardBuilder:
                 start_year=self.start_year,
                 start_date=self.start_date,
                 end_date=self.end_date,
+                practice=self.practice,
             ),
         }
 
