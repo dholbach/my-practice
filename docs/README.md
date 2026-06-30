@@ -42,7 +42,7 @@ Running this specific installation:
 P-XXX projects are used for larger efforts that need a design document before a PR makes sense: multi-session work, features with compliance implications, or things not yet ready for outside contribution. Well-scoped bugs and features go in [GitHub Issues](https://github.com/dholbach/my-practice/issues) instead. See [CONTRIBUTING.md](../CONTRIBUTING.md#issues-vs-projects) for the full distinction.
 
 - [../PROJECTS.md](../PROJECTS.md) — Numbered projects (TODO → WIP → DONE)
-- [../TODO.md](../TODO.md) — Active open backlog
+- [GitHub Issues](https://github.com/dholbach/my-practice/issues) — Bug reports, enhancements, operational tasks
 - [projects/todo/](projects/todo/) — Detailed project docs (upcoming)
 - [projects/wip/](projects/wip/) — In-progress project docs
 - [projects/done/](projects/done/) — Completed project docs

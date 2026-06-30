@@ -817,7 +817,7 @@ def cmd_review(args):
     monthly_items = [
         "git log: repeated fixes in same area? (design smell)",
         "German comments/identifiers in touched files? (P-038)",
-        "TODO.md: prune items inactive >2 months",
+        "GH issues: close stale items inactive >2 months",
         "New views bypassing mixins/builders? Consolidate",
     ]
     quarterly_items = [
