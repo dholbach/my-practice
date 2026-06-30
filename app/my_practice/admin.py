@@ -9,17 +9,18 @@ from .models import (
     BankTransaction,
     ChecklistItemPause,
     Client,
-    GebuhZiffer,
-    Leistungserfassung,
     ClientAlias,
     ClientDocument,
     ClientInquiry,
+    ClientNote,
     ClientProfile,
     ClientTag,
     CompanyExpense,
     CompanyWithdrawal,
+    GebuhZiffer,
     Invoice,
     InvoiceItem,
+    Leistungserfassung,
     MarketingPeriod,
     OperationalChecklistCompletion,
     PendingCalendarEvent,
@@ -565,6 +566,30 @@ class SupervisionItemAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Klient & Status", {"fields": ("client", "status")}),
+        ("Inhalt (Fernet-verschlüsselt)", {"fields": ("content",)}),
+        ("Zeitstempel", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+    )
+
+    @admin.display(description="Inhalt")
+    def content_preview(self, obj):
+        val = obj.content or ""
+        return val[:80] + "…" if len(val) > 80 else val or "—"
+
+
+@admin.register(ClientNote)
+class ClientNoteAdmin(admin.ModelAdmin):
+    """ClientNote admin — dated freeform notes per client (encrypted)."""
+
+    list_display = ["client", "note_date", "note_type", "content_preview", "updated_at"]
+    list_filter = ["note_type", "client__practice"]
+    search_fields = ["client__client_code", "client__full_name"]
+    ordering = ["-note_date", "-created_at"]
+    readonly_fields = ["created_at", "updated_at"]
+    autocomplete_fields = ["client"]
+
+    fieldsets = (
+        ("Klient", {"fields": ("client",)}),
+        ("Metadaten", {"fields": ("note_date", "note_type")}),
         ("Inhalt (Fernet-verschlüsselt)", {"fields": ("content",)}),
         ("Zeitstempel", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
