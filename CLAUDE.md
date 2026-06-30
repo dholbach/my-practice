@@ -48,7 +48,8 @@ See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TO
 ./dev.py run <script.py>    # Run script with Django environment
 ./dev.py logs -f            # Follow container logs
 ./dev.py restart --force    # Full restart (reloads .env)
-./dev.py quality            # Run ruff format, ruff lint, tests
+./dev.py lint               # Run ruff format + ruff lint only (fast, no tests)
+./dev.py quality            # Run lint + Tailwind CSS build + full test suite (pre-release)
 ./dev.py i18n               # Extract + compile translation strings
 ```
 
