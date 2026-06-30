@@ -3,12 +3,13 @@ ActionQueueBuilder — aggregates action items from all dashboard widget
 builders into a single ranked queue for the "Braucht Aktion" pane (P-117).
 
 Each item in the queue has the schema:
-    priority    int   1 = urgent (red), 2 = warning (amber), 3 = info (blue)
-    category    str   "RECHNUNG" | "ENTWURF" | "KLIENT" | "STEUER" | "BETRIEB"
-    summary     str   One-line description shown in the row
-    sub_text    str   Secondary line (client code, amount, date — optional)
-    action_url  str   URL for the primary action button
-    action_label str  Button label
+    priority        int  1 = urgent (red), 2 = warning (amber), 3 = info (blue)
+    category        str  English key: "INVOICE" | "DRAFT" | "CLIENT" | "TAX" | "OPS"
+    category_label  str  German display label (e.g. "Rechnung") — translate in P-039
+    summary         str  One-line description shown in the row
+    sub_text        str  Secondary line (client code, amount, date — optional)
+    action_url      str  URL for the primary action button
+    action_label    str  Button label
 
 Items are sorted by (priority, sort_key) — most urgent first.
 """
@@ -64,7 +65,8 @@ class ActionQueueBuilder:
             items.append(
                 {
                     "priority": 1,
-                    "category": "RECHNUNG",
+                    "category": "INVOICE",
+                    "category_label": "Rechnung",
                     "summary": f"{inv.invoice_number} · {age} Tage offen",
                     "sub_text": f"{inv.client.client_code} · {inv.total:,.2f} €".replace(",", "."),
                     "action_url": reverse("send_payment_reminder", kwargs={"pk": inv.client.pk}),
@@ -81,7 +83,8 @@ class ActionQueueBuilder:
             items.append(
                 {
                     "priority": 2,
-                    "category": "ENTWURF",
+                    "category": "DRAFT",
+                    "category_label": "Entwurf",
                     "summary": f"{inv.invoice_number} versandbereit",
                     "sub_text": sub,
                     "action_url": reverse("invoice_edit", kwargs={"pk": inv.pk}),
@@ -98,7 +101,8 @@ class ActionQueueBuilder:
             items.append(
                 {
                     "priority": 2,
-                    "category": "RECHNUNG",
+                    "category": "INVOICE",
+                    "category_label": "Rechnung",
                     "summary": f"{inv.invoice_number} · {age} Tage offen",
                     "sub_text": f"{inv.client.client_code} · {inv.total:,.2f} €".replace(",", "."),
                     "action_url": reverse("invoice_detail", kwargs={"pk": inv.pk}),
@@ -117,7 +121,8 @@ class ActionQueueBuilder:
         tagged = [
             {
                 "priority": 2,
-                "category": "KLIENT",
+                "category": "CLIENT",
+                "category_label": "Klient",
                 "summary": f"{client.client_code} — {tag_name}",
                 "sub_text": "",
                 "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
@@ -132,7 +137,8 @@ class ActionQueueBuilder:
         inactive = [
             {
                 "priority": 2,
-                "category": "KLIENT",
+                "category": "CLIENT",
+                "category_label": "Klient",
                 "summary": f"{client.client_code} — keine Sitzung seit 60+ Tagen",
                 "sub_text": "",
                 "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
@@ -155,7 +161,8 @@ class ActionQueueBuilder:
         return [
             {
                 "priority": 1,
-                "category": "STEUER",
+                "category": "TAX",
+                "category_label": "Steuer",
                 "summary": f"Q{ctx['current_quarter']} {self.today.year} · Vorauszahlung fehlt",
                 "sub_text": f"Umsatz: {revenue:,.2f} €".replace(",", "."),
                 "action_url": ctx["add_payment_url"],
@@ -171,7 +178,8 @@ class ActionQueueBuilder:
         return [
             {
                 "priority": 2,
-                "category": "BETRIEB",
+                "category": "OPS",
+                "category_label": "Betrieb",
                 "summary": entry["label"],
                 "sub_text": f"Fällig seit {entry['period_start'].strftime('%d.%m.%Y')}",
                 "action_url": reverse("checklist", kwargs={"checklist_type": entry["type"]}),
@@ -196,7 +204,8 @@ class ActionQueueBuilder:
         return [
             {
                 "priority": 3,
-                "category": "BETRIEB",
+                "category": "OPS",
+                "category_label": "Betrieb",
                 "summary": summary,
                 "sub_text": "",
                 "action_url": ctx["import_url"],

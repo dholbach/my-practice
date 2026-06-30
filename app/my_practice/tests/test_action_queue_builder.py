@@ -66,7 +66,7 @@ def _make_invoice(practice, client, status="sent", days_ago=35, number="INV-001"
 
 
 class ActionQueueBuilderOverdueTest(TestCase):
-    """Overdue invoices appear as priority-1 RECHNUNG items with Mahnen action."""
+    """Overdue invoices appear as priority-1 INVOICE items with Mahnen action."""
 
     def setUp(self):
         self.practice = _make_practice("aq-overdue")
@@ -77,20 +77,20 @@ class ActionQueueBuilderOverdueTest(TestCase):
 
     def test_overdue_invoice_in_queue(self):
         items = ActionQueueBuilder(self.practice).build()
-        overdue = [i for i in items if i["category"] == "RECHNUNG" and i["priority"] == 1]
+        overdue = [i for i in items if i["category"] == "INVOICE" and i["priority"] == 1]
         self.assertEqual(len(overdue), 1)
         self.assertIn("INV-040", overdue[0]["summary"])
 
     def test_overdue_action_is_payment_reminder(self):
         items = ActionQueueBuilder(self.practice).build()
-        overdue = [i for i in items if i["category"] == "RECHNUNG" and i["priority"] == 1]
+        overdue = [i for i in items if i["category"] == "INVOICE" and i["priority"] == 1]
         expected_url = reverse("send_payment_reminder", kwargs={"pk": self.client.pk})
         self.assertEqual(overdue[0]["action_url"], expected_url)
         self.assertEqual(overdue[0]["action_label"], "Mahnen")
 
     def test_overdue_sub_text_contains_client_code(self):
         items = ActionQueueBuilder(self.practice).build()
-        overdue = [i for i in items if i["category"] == "RECHNUNG" and i["priority"] == 1]
+        overdue = [i for i in items if i["category"] == "INVOICE" and i["priority"] == 1]
         self.assertIn("OD-1", overdue[0]["sub_text"])
 
     def test_non_overdue_sent_invoice_is_priority_2(self):
@@ -101,7 +101,7 @@ class ActionQueueBuilderOverdueTest(TestCase):
         non_overdue = [
             i
             for i in items
-            if i["category"] == "RECHNUNG" and i["priority"] == 2 and "INV-010" in i["summary"]
+            if i["category"] == "INVOICE" and i["priority"] == 2 and "INV-010" in i["summary"]
         ]
         self.assertEqual(len(non_overdue), 1)
 
@@ -114,7 +114,7 @@ class ActionQueueBuilderOverdueTest(TestCase):
 
 
 class ActionQueueBuilderDraftTest(TestCase):
-    """Draft invoices appear as priority-2 ENTWURF items."""
+    """Draft invoices appear as priority-2 DRAFT items."""
 
     def setUp(self):
         self.practice = _make_practice("aq-draft")
@@ -125,21 +125,21 @@ class ActionQueueBuilderDraftTest(TestCase):
 
     def test_draft_invoice_in_queue(self):
         items = ActionQueueBuilder(self.practice).build()
-        drafts = [i for i in items if i["category"] == "ENTWURF"]
+        drafts = [i for i in items if i["category"] == "DRAFT"]
         self.assertEqual(len(drafts), 1)
         self.assertEqual(drafts[0]["priority"], 2)
         self.assertIn("INV-DRF", drafts[0]["summary"])
 
     def test_draft_action_is_invoice_edit(self):
         items = ActionQueueBuilder(self.practice).build()
-        drafts = [i for i in items if i["category"] == "ENTWURF"]
+        drafts = [i for i in items if i["category"] == "DRAFT"]
         expected_url = reverse("invoice_edit", kwargs={"pk": self.invoice.pk})
         self.assertEqual(drafts[0]["action_url"], expected_url)
         self.assertEqual(drafts[0]["action_label"], "Fertigstellen")
 
 
 class ActionQueueBuilderClientTest(TestCase):
-    """Clients with attention tags appear as priority-2 KLIENT items."""
+    """Clients with attention tags appear as priority-2 CLIENT items."""
 
     def setUp(self):
         self.practice = _make_practice("aq-client")
@@ -149,14 +149,14 @@ class ActionQueueBuilderClientTest(TestCase):
 
     def test_follow_up_client_in_queue(self):
         items = ActionQueueBuilder(self.practice).build()
-        client_items = [i for i in items if i["category"] == "KLIENT"]
+        client_items = [i for i in items if i["category"] == "CLIENT"]
         self.assertTrue(len(client_items) >= 1)
         codes = [i["summary"].split(" — ")[0] for i in client_items]
         self.assertIn("FU-1", codes)
 
     def test_client_action_links_to_detail(self):
         items = ActionQueueBuilder(self.practice).build()
-        client_items = [i for i in items if i["category"] == "KLIENT" and "FU-1" in i["summary"]]
+        client_items = [i for i in items if i["category"] == "CLIENT" and "FU-1" in i["summary"]]
         self.assertTrue(client_items)
         expected_url = reverse("client_detail", kwargs={"pk": self.client.pk})
         self.assertEqual(client_items[0]["action_url"], expected_url)
@@ -179,7 +179,15 @@ class ActionQueueBuilderSortingTest(TestCase):
 
     def test_items_have_required_keys(self):
         items = ActionQueueBuilder(self.practice).build()
-        required = {"priority", "category", "summary", "sub_text", "action_url", "action_label"}
+        required = {
+            "priority",
+            "category",
+            "category_label",
+            "summary",
+            "sub_text",
+            "action_url",
+            "action_label",
+        }
         for item in items:
             self.assertEqual(required, set(item.keys()), msg=f"Missing keys in {item}")
 
@@ -195,5 +203,5 @@ class ActionQueueBuilderEmptyTest(TestCase):
     def test_no_invoice_or_client_items(self):
         practice = _make_practice("aq-empty")
         items = ActionQueueBuilder(practice).build()
-        billing_client = [i for i in items if i["category"] in ("RECHNUNG", "ENTWURF", "KLIENT")]
+        billing_client = [i for i in items if i["category"] in ("INVOICE", "DRAFT", "CLIENT")]
         self.assertEqual(billing_client, [])
