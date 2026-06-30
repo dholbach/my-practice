@@ -235,8 +235,8 @@ def cmd_setup(_args):
     print("     FERNET_KEY encrypts clinical notes (Art. 9 GDPR data).")
     print("     Losing it means losing access to that encrypted content.")
     print()
-    print(f"  .env controls much more than these three keys (email, calendar,")
-    print(f"  data directory, HTTPS, and more). Review the full reference:")
+    print("  .env controls much more than these three keys (email, calendar,")
+    print("  data directory, HTTPS, and more). Review the full reference:")
     print(f"  {ENV_DOCS}")
 
     # 4. Start the stack
@@ -327,7 +327,7 @@ def cmd_update(_args):
         if latest != VERSION:
             new_base = RAW_BASE.replace(VERSION, latest)
             print(f"  This script is {VERSION}. A newer version is available.")
-            print(f"  To update prod.py and docker-compose.prod.yml:")
+            print("  To update prod.py and docker-compose.prod.yml:")
             print(f"    curl -O {new_base}/prod.py")
             print(f"    curl -O {new_base}/docker-compose.prod.yml")
             print()
