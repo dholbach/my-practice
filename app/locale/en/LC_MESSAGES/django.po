@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-30 13:04+0200\n"
+"POT-Creation-Date: 2026-06-30 13:19+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -262,17 +262,17 @@ msgstr ""
 
 #: my_practice/views/clinical_views.py:585
 #, python-format
-msgid "Achtung: Ziffer %(nr)s ist nur als Alleinleistung erstattungsfähig und sollte nicht mit anderen Ziffern kombiniert werden."
+msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
 msgstr ""
 
 #: my_practice/views/clinical_views.py:610
 #, python-format
-msgid "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von %(days)s Tagen abgerechnet (Maximum: %(max)s×)."
+msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
 msgstr ""
 
 #: my_practice/views/clinical_views.py:634
 #, python-format
-msgid "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
+msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr ""
 
 #: my_practice/views/invoice_views.py:218
@@ -1049,16 +1049,18 @@ msgid "Uploaded documents"
 msgstr ""
 
 #: templates/my_practice/client_detail_tabs.html:20
-msgid "Diagnose noch nicht gesetzt — die probatorische Phase scheint abgeschlossen. Bitte Diagnose aktualisieren."
+msgid "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis."
 msgstr ""
 
 #: templates/my_practice/client_detail_tabs.html:22
-msgid "Diagnose noch nicht gesetzt — aktuell wird „Probatorik"
+msgid "Diagnosis not yet set — invoices currently show \"Probationary phase\". Please update once the probationary phase is complete."
 msgstr ""
 
 #: templates/my_practice/client_detail_tabs.html:24
-msgid "Bearbeiten →"
-msgstr ""
+#, fuzzy
+#| msgid "Edit"
+msgid "Edit →"
+msgstr "Edit"
 
 #: templates/my_practice/client_detail_tabs.html:161
 #: templates/my_practice/client_detail_tabs.html:201
@@ -1154,7 +1156,7 @@ msgid "Existing entries for this session will be replaced on save."
 msgstr ""
 
 #: templates/my_practice/gebueh_leistung_form.html:20
-msgid "Select all Ziffern that apply to this session. Satz max is billed automatically."
+msgid "Select all billing codes (Ziffern) that apply to this session. The maximum rate is billed automatically."
 msgstr ""
 
 #: templates/my_practice/inquiry_confirm_delete.html:4

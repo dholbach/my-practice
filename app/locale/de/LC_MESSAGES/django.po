@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-30 13:04+0200\n"
+"POT-Creation-Date: 2026-06-30 13:19+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -234,33 +234,31 @@ msgstr "Als Ausfall / Absage markiert."
 
 #: my_practice/views/clinical_views.py:548
 msgid "GebüH billing is not enabled for this client."
-msgstr ""
+msgstr "GebüH-Abrechnung ist für diesen Klienten nicht aktiviert."
 
 #: my_practice/views/clinical_views.py:561
-#, fuzzy
-#| msgid "Invalid date."
 msgid "Invalid input."
-msgstr "Ungültiges Datum."
+msgstr "Ungültige Eingabe."
 
 #: my_practice/views/clinical_views.py:571
 #, python-format
 msgid "GebüH entries for %(date)s cleared."
-msgstr ""
+msgstr "GebüH-Einträge für %(date)s gelöscht."
 
 #: my_practice/views/clinical_views.py:585
 #, python-format
-msgid "Achtung: Ziffer %(nr)s ist nur als Alleinleistung erstattungsfähig und sollte nicht mit anderen Ziffern kombiniert werden."
-msgstr ""
+msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
+msgstr "Achtung: Ziffer %(nr)s ist nur als Alleinleistung erstattungsfähig und sollte nicht mit anderen Ziffern kombiniert werden."
 
 #: my_practice/views/clinical_views.py:610
 #, python-format
-msgid "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von %(days)s Tagen abgerechnet (Maximum: %(max)s×)."
-msgstr ""
+msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
+msgstr "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von %(days)s Tagen abgerechnet (Maximum: %(max)s×)."
 
 #: my_practice/views/clinical_views.py:634
 #, python-format
-msgid "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
-msgstr ""
+msgid "%(count)s GebüH code(s) saved for %(date)s."
+msgstr "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
 
 #: my_practice/views/invoice_views.py:218
 #, python-format
@@ -998,22 +996,22 @@ msgid "Uploaded documents"
 msgstr "Hochgeladene Dokumente"
 
 #: templates/my_practice/client_detail_tabs.html:20
-msgid "Diagnose noch nicht gesetzt — die probatorische Phase scheint abgeschlossen. Bitte Diagnose aktualisieren."
-msgstr ""
+msgid "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis."
+msgstr "Diagnose noch nicht gesetzt — die probatorische Phase scheint abgeschlossen. Bitte Diagnose aktualisieren."
 
 #: templates/my_practice/client_detail_tabs.html:22
-msgid "Diagnose noch nicht gesetzt — aktuell wird „Probatorik"
-msgstr ""
+msgid "Diagnosis not yet set — invoices currently show \"Probationary phase\". Please update once the probationary phase is complete."
+msgstr "Diagnose noch nicht gesetzt — aktuell wird \"Probatorik\" auf der Rechnung verwendet. Nach Abschluss der probatorischen Phase bitte Diagnose aktualisieren."
 
 #: templates/my_practice/client_detail_tabs.html:24
-msgid "Bearbeiten →"
-msgstr ""
+msgid "Edit →"
+msgstr "Bearbeiten →"
 
 #: templates/my_practice/client_detail_tabs.html:161
 #: templates/my_practice/client_detail_tabs.html:201
 #: templates/my_practice/client_detail_tabs.html:211
 msgid "GebüH"
-msgstr ""
+msgstr "GebüH"
 
 #: templates/my_practice/client_list_cards.html:6
 msgid "Client overview"
@@ -1084,15 +1082,15 @@ msgstr "Löschen"
 #: templates/my_practice/gebueh_leistung_form.html:4
 #: templates/my_practice/gebueh_leistung_form.html:5
 msgid "GebüH record"
-msgstr ""
+msgstr "GebüH erfassen"
 
 #: templates/my_practice/gebueh_leistung_form.html:15
 msgid "Existing entries for this session will be replaced on save."
-msgstr ""
+msgstr "Bestehende Einträge für diese Sitzung werden beim Speichern ersetzt."
 
 #: templates/my_practice/gebueh_leistung_form.html:20
-msgid "Select all Ziffern that apply to this session. Satz max is billed automatically."
-msgstr ""
+msgid "Select all billing codes (Ziffern) that apply to this session. The maximum rate is billed automatically."
+msgstr "Alle zutreffenden Ziffern für diese Sitzung auswählen. Der Höchstsatz wird automatisch abgerechnet."
 
 #: templates/my_practice/inquiry_confirm_delete.html:4
 #: templates/my_practice/inquiry_confirm_delete.html:8

@@ -220,7 +220,7 @@ class GebuhLeistungViewTest(TestCase):
         resp = self.http.post(self._url(), {"ziffern": [self.ziffer.pk, ziffer4.pk]}, follow=True)
         messages_list = list(resp.context["messages"])
         warning_texts = [str(m) for m in messages_list if m.level_tag == "warning"]
-        self.assertTrue(any("Alleinleistung" in t for t in warning_texts))
+        self.assertTrue(any("Alleinleistung" in t or "standalone" in t for t in warning_texts))
 
 
 class GebuhPdfBlocksTest(TestCase):
