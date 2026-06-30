@@ -135,24 +135,6 @@ reusable — only the contract text needs to be replaced.
         }
 
         /* Header is not fixed on contract — renders once at top of page 1 only */
-        .header {
-            position: static;
-            height: auto;
-            margin-bottom: 0.4cm;
-        }
-        .header-space {
-            display: none;
-        }
-        .practice-info {
-            position: static;
-            text-align: right;
-        }
-        .logo {
-            position: static;
-            float: right;
-            margin-bottom: 0.3cm;
-        }
-
         .gdpr-section {
             page-break-before: always;
             margin-top: 0;
@@ -186,20 +168,25 @@ reusable — only the contract text needs to be replaced.
 </head>
 <body>
 
-    <!-- Fixed practice header (same pattern as invoices) -->
-    <div class="header">
-        {% if logo_data %}
-        <img src="data:image/png;base64,{{ logo_data }}" class="logo" alt="Logo">
-        {% endif %}
-        <div class="practice-info">
-            {{ practice.title }}<br>
-            {{ practice.name }}<br>
-            {% if lang == "en" %}{% if practice.subtitle_en %}{{ practice.subtitle_en }}<br>{% endif %}{% else %}{% if practice.subtitle_de %}{{ practice.subtitle_de }}<br>{% endif %}{% endif %}
-            {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
-            E-Mail: {{ practice.email }}
+    <!-- Practice header — same structure as invoice PDFs -->
+    <div class="head">
+        <div class="brand">
+            {% if logo_data %}
+            <img src="data:image/png;base64,{{ logo_data }}" class="logo-mark" alt="Logo">
+            {% endif %}
+            <div>
+                <div class="brand-text-name">{{ practice.name }}</div>
+                {% if lang == "en" %}{% if practice.subtitle_en %}<div class="brand-text-sub">{{ practice.subtitle_en }}</div>{% endif %}{% else %}{% if practice.subtitle_de %}<div class="brand-text-sub">{{ practice.subtitle_de }}</div>{% endif %}{% endif %}
+            </div>
+        </div>
+        <div class="invoice-title-block">
+            <div class="inv-meta">
+                {{ practice.title }}<br>
+                {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
+                {{ practice.email }}
+            </div>
         </div>
     </div>
-    <div class="header-space">&nbsp;</div>
 
     <!-- Title -->
     <div class="contract-title-block">
@@ -531,8 +518,6 @@ reusable — only the contract text needs to be replaced.
             </div>
         </div>
     </div>
-
-    <hr class="divider" style="margin-top:0.8cm;">
 
     <!-- § 9 DSGVO / GDPR -->
     <div class="gdpr-section">
