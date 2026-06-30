@@ -14,6 +14,16 @@
 
     <!-- ── Tab: Profil ──────────────────────────────────────────────────── -->
     <div id="tab-profil" class="cn-tab-content cn-tab-content-active">
+        {% if client.needs_gebueh_invoice and not profile.arbeitsdiagnose %}
+        <div class="callout {% if gebueh_diagnostic_count >= 5 %}callout-warning{% else %}callout-primary{% endif %}">
+            {% if gebueh_diagnostic_count >= 5 %}
+            ⚠️ {% trans "Diagnose noch nicht gesetzt — die probatorische Phase scheint abgeschlossen. Bitte Diagnose aktualisieren." %}
+            {% else %}
+            {% trans "Diagnose noch nicht gesetzt — aktuell wird „Probatorik" auf der Rechnung verwendet. Nach Abschluss der probatorischen Phase bitte Diagnose aktualisieren." %}
+            {% endif %}
+            <a href="#id_arbeitsdiagnose" style="margin-left: 0.5rem; white-space: nowrap;">{% trans "Bearbeiten →" %}</a>
+        </div>
+        {% endif %}
         <form method="post" action="{% url 'client_profile_save' client.pk %}">
             {% csrf_token %}
             <div class="cn-field">
