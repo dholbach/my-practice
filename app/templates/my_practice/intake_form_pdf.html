@@ -12,20 +12,14 @@
             line-height: 1.5;
         }
 
-        .doc-title {
-            text-align: center;
-            margin-top: 0.6cm;
-            margin-bottom: 0.8cm;
+        /* Scale down invoice-title-block h1 for document (not invoice) use */
+        .invoice-title-block h1 {
+            font-size: 16pt;
+            font-weight: 600;
         }
-        .doc-title h1 {
-            font-size: 13pt;
-            font-weight: bold;
-            margin: 0;
-        }
-        .doc-title .subtitle {
-            font-size: 9pt;
-            color: #555;
-            margin-top: 0.15cm;
+        .invoice-title-block .inv-meta {
+            font-size: 8pt;
+            line-height: 1.55;
         }
 
         .section {
@@ -130,26 +124,24 @@
 <body>
 
     <!-- Practice header -->
-    <div class="header">
-        {% if logo_data %}
-        <img src="data:image/png;base64,{{ logo_data }}" class="logo" alt="Logo">
-        {% endif %}
-        <div class="practice-info">
-            {{ practice.title }}<br>
-            {{ practice.name }}<br>
-            {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
-            E-Mail: {{ practice.email }}
+    <div class="head">
+        <div class="brand">
+            {% if logo_data %}
+            <img src="data:image/png;base64,{{ logo_data }}" class="logo-mark" alt="Logo">
+            {% endif %}
+            <div>
+                <div class="brand-text-name">{{ practice.name }}</div>
+                {% if lang == "en" %}{% if practice.subtitle_en %}<div class="brand-text-sub">{{ practice.subtitle_en }}</div>{% endif %}{% else %}{% if practice.subtitle_de %}<div class="brand-text-sub">{{ practice.subtitle_de }}</div>{% endif %}{% endif %}
+            </div>
         </div>
-    </div>
-    <div class="header-space">&nbsp;</div>
-
-    <!-- Title -->
-    <div class="doc-title">
-        {% if lang == "en" %}
-        <h1>Intake Form</h1>
-        {% else %}
-        <h1>Aufnahmebogen</h1>
-        {% endif %}
+        <div class="invoice-title-block">
+            {% if lang == "en" %}<h1>Intake Form</h1>{% else %}<h1>Aufnahmebogen</h1>{% endif %}
+            <div class="inv-meta">
+                {{ practice.title }}<br>
+                {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
+                {{ practice.email }}
+            </div>
+        </div>
     </div>
 
     <div class="section">
