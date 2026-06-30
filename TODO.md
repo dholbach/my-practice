@@ -17,8 +17,8 @@ Open backlog only. For completed work history: [docs/CHANGELOG.md](docs/CHANGELO
 
 ### OSS / Self-hosting (post P-024)
 
-- [ ] Extend CI beyond lint: run pytest suite
-- [ ] OSS governance: GitHub Discussions + responsible-disclosure policy
+- [ ] Extend CI beyond lint: run pytest suite → [#8](https://github.com/dholbach/my-practice/issues/8)
+- [ ] OSS governance: GitHub Discussions + responsible-disclosure policy → [#10](https://github.com/dholbach/my-practice/issues/10)
 
 ### Backup
 
@@ -28,7 +28,7 @@ Open backlog only. For completed work history: [docs/CHANGELOG.md](docs/CHANGELO
 
 Critical gaps (0–20%):
 
-- [ ] `calendar_views.py` 10%, `contract_form.py` 15% — highest-value targets remaining
+- [ ] `calendar_views.py` 10%, `contract_form.py` 15% — highest-value targets remaining → see [#16](https://github.com/dholbach/my-practice/issues/16)
 - [ ] Management commands at 0%: `fetch_calendar_events`, `prune_old_backups`
 - [ ] `calendar_event_processor.py` 23%, `calendar_preflight.py` 19% — new production code from P-100 with no tests yet; highest-value targets in utils
 - [ ] `email_backend.py` 0%, `csv_parser.py` 0%
@@ -40,12 +40,9 @@ Medium gaps (30–55%):
 
 ---
 
-## CSS Dedup Backlog (medium effort)
+## CSS Backlog
 
-Identified during P-045 follow-up (2026-06-18). No template changes needed unless noted.
-
-- [ ] **Left-accent box family** — `.callout`, `.inline-note`, `.status-box`, `.bank-import-status`, `.info-box`/`.alert-box` all share the same left-border-panel pattern; extract a shared base class and migrate templates to `.callout` (needs care: padding/margin semantics vary per variant)
-- [ ] **Hardcoded hex colors in CSS classes** — stat-card gradient variants (`.stat-card.secondary`, `.success`, `.warning`, etc.), tag/tag-mini color swatches, `.badge-active`/`.badge-inactive`, `.priority-badge.*`, `.cn-tag-*`, `.metric-card.*`, `.status-card.*`, `.agenda-item.*` — convert to `var(--color-*)` tokens (large surface, risk of dark-mode regressions if done carelessly)
+- [ ] **`stat-card` gradient variants** — `.secondary`, `.success`, `.warning`, `.total`, `.tax`, `.primary` use decorative hardcoded gradients; converting requires new design tokens and dark-mode decisions
 
 ---
 
