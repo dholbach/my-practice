@@ -305,7 +305,7 @@ class ClientCreateViewTest(TestCase):
         response = self.client_instance.get(reverse("client_intake"))
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
-        self.assertContains(response, "Klient Speichern")  # Create button text
+        self.assertContains(response, "Klient:in speichern")  # Create button text
 
     def test_client_create_form_submission(self):
         """Test creating a new client."""

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-30 13:19+0200\n"
+"POT-Creation-Date: 2026-06-30 13:48+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -678,6 +678,7 @@ msgstr "Supervision"
 
 #: templates/my_practice/client_detail.html:334
 #: templates/my_practice/client_detail_tabs.html:269
+#: templates/my_practice/client_intake.html:123
 #: templates/my_practice/gebueh_leistung_form.html:42
 #: templates/my_practice/inquiry_confirm_delete.html:39
 #: templates/my_practice/inquiry_form.html:190
@@ -1068,6 +1069,54 @@ msgstr "Edit"
 msgid "GebüH"
 msgstr ""
 
+#: templates/my_practice/client_intake.html:4
+#: templates/my_practice/client_intake.html:6
+#, fuzzy
+#| msgid "Manage practices"
+msgid "Edit client"
+msgstr "Manage practices"
+
+#: templates/my_practice/client_intake.html:4
+#: templates/my_practice/client_intake.html:6
+#: templates/my_practice/client_list_cards.html:29
+#, fuzzy
+#| msgid "Manage practices"
+msgid "New client"
+msgstr "Manage practices"
+
+#: templates/my_practice/client_intake.html:7
+msgid "Client intake form"
+msgstr ""
+
+#: templates/my_practice/client_intake.html:39
+msgid ""
+"💡 Personal greeting for invoice emails (e.g., \"Dear John\", \"Liebe Maria\").<br>\n"
+"            If left empty, a generic salutation will be used. <strong>Highly recommended for better client experience!</strong>"
+msgstr ""
+
+#: templates/my_practice/client_intake.html:49
+msgid "Inactive clients do not appear in the default views."
+msgstr ""
+
+#: templates/my_practice/client_intake.html:58
+msgid "💻 For clients whose sessions are primarily conducted online (video)."
+msgstr ""
+
+#: templates/my_practice/client_intake.html:67
+msgid "Enable GebüH billing (Gebührenverzeichnis für Heilpraktiker) for this client."
+msgstr ""
+
+#: templates/my_practice/client_intake.html:122
+#: templates/my_practice/practice_form.html:267
+msgid "Save changes"
+msgstr ""
+
+#: templates/my_practice/client_intake.html:122
+#, fuzzy
+#| msgid "Manage practices"
+msgid "Save client"
+msgstr "Manage practices"
+
 #: templates/my_practice/client_list_cards.html:6
 #, fuzzy
 #| msgid "Preview"
@@ -1089,12 +1138,6 @@ msgstr ""
 #: templates/my_practice/client_list_cards.html:17
 msgid "All"
 msgstr ""
-
-#: templates/my_practice/client_list_cards.html:29
-#, fuzzy
-#| msgid "Manage practices"
-msgid "New client"
-msgstr "Manage practices"
 
 #: templates/my_practice/client_list_cards.html:38
 #: templates/my_practice/client_list_cards.html:50
@@ -1493,10 +1536,6 @@ msgstr ""
 
 #: templates/my_practice/practice_form.html:260
 msgid "Weekdays on which you commute to the practice."
-msgstr ""
-
-#: templates/my_practice/practice_form.html:267
-msgid "Save changes"
 msgstr ""
 
 #: templates/my_practice/practice_form.html:267
