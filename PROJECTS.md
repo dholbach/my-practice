@@ -30,7 +30,7 @@
 
 ### Concept / Mid-term
 
-- **P-046 GebüH-Abrechnung** ✅ (PR #125 open): all 4 phases complete → [docs/projects/todo/P-046_GEBUEH_BILLING.md](docs/projects/todo/P-046_GEBUEH_BILLING.md)
+- **P-046 GebüH-Abrechnung** ✅ merged: all 4 phases complete → [docs/projects/done/P-046_GEBUEH_BILLING.md](docs/projects/done/P-046_GEBUEH_BILLING.md)
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
 - **OSS follow-ups** (post P-024): extend CI beyond lint (pytest); GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
