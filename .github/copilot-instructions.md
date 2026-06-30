@@ -473,15 +473,8 @@ At the end of each coding session, do a quick gardening pass before committing.
 - Older entries belong in CHANGELOG.md — delete them from PROJECTS.md after adding a new one
 - The Backlog section should contain only open/upcoming work; remove items once done
 
-### Keeping TODO.md Clean
-- TODO.md is the **active open backlog only** — no historical ✅ sections
-- When a task is done, delete it from TODO.md (don't replace it with a checkmark)
-- For history, point readers to CHANGELOG.md
-- **The `## 🌿 Gardening` section is permanent** — never delete the section or its header; only remove individual items when they are fixed
-
 ### Gardening Checklist (end of each session)
 - [ ] PROJECTS.md: add new "Recent Activity" entry, drop oldest if >2 exist
-- [ ] TODO.md: remove completed items
 - [ ] docs/FEATURES.md: add user-facing highlights
 - [ ] docs/projects/done/: create/update P-XXX doc for completed projects
 
@@ -501,7 +494,7 @@ Run `./dev.py review` for the automated parts, then work through the manual chec
 **Manual**:
 - [ ] Scan git log for repeated fixes in the same area — sign of a design problem
 - [ ] Check for German comments/identifiers in recently touched files (P-038)
-- [ ] TODO.md: prune items older than ~2 months with no activity
+- [ ] GH issues: close stale items older than ~2 months with no activity
 - [ ] Any new views bypassing mixins/builders? Consolidate if so
 
 ### Quarterly (~2-3h)
