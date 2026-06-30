@@ -52,9 +52,9 @@ def analytics_dashboard(request: HttpRequest) -> HttpResponse:
 
     # Run practice analysis if we have date range (for Clients/Capacity tabs)
     if start_date and end_date:
-        analyzer = PracticeAnalyzer(start_date, end_date)
+        analyzer = PracticeAnalyzer(start_date, end_date, practice=request.current_practice)
         analysis = analyzer.analyze_with_insights()
-        trends = calculate_quarter_trends(end_date)
+        trends = calculate_quarter_trends(end_date, practice=request.current_practice)
 
         context.update(
             {
