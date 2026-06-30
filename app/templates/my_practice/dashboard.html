@@ -1,110 +1,103 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load number_filters %}
 {% load payment_tags %}
 {% load static %}
 
-{% block title %}Übersicht{% endblock %}
+{% block title %}{% trans "Dashboard" %}{% endblock %}
 
 {% block page_icon %}📊{% endblock %}
-{% block page_title %}Übersicht{% endblock %}
-{% block page_subtitle %}Übersicht & Statistiken{% endblock %}
-
-
+{% block page_title %}{% trans "Dashboard" %}{% endblock %}
+{% block page_subtitle %}{% trans "Overview & Statistics" %}{% endblock %}
 
 {% block content %}
-<!-- Heute & Diese Woche 2-col grid (P-028) -->
-<div class="today-week-grid">
-{% with widget_content=agenda_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="agenda" widget_title="📅 Heute" widget_badge=agenda_badge_html %}
-{% endwith %}
-{% with widget_content=weekly_focus_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title="📆 Diese Woche" widget_badge=weekly_focus_badge %}
-{% endwith %}
+
+{# Stats strip + quick-action buttons #}
+<div class="dashboard-header-row">
+    <div class="stats-strip">
+        <div class="stats-strip-item">
+            <div class="stats-strip-value">{{ year_revenue|floatformat:0 }}&nbsp;€</div>
+            <div class="stats-strip-label">{% blocktrans with year=current_year %}{{ year }} Revenue{% endblocktrans %}</div>
+        </div>
+        <div class="stats-strip-item">
+            <div class="stats-strip-value">{{ year_profit|floatformat:0 }}&nbsp;€</div>
+            <div class="stats-strip-label">{% blocktrans with year=current_year %}{{ year }} Profit{% endblocktrans %}</div>
+        </div>
+        <div class="stats-strip-item {% if unpaid_count %}stats-strip-item--warning{% endif %}">
+            <div class="stats-strip-value">{{ unpaid_value|floatformat:0 }}&nbsp;€</div>
+            <div class="stats-strip-label">{% blocktrans with n=unpaid_count %}Outstanding ({{ n }}){% endblocktrans %}</div>
+        </div>
+        <div class="stats-strip-item">
+            <div class="stats-strip-value">{{ total_weeks_off|floatformat:1 }}&nbsp;{% trans "wks" %}</div>
+            <div class="stats-strip-label">{% blocktrans with year=current_year %}{{ year }} Time off{% endblocktrans %}</div>
+            {% if current_timeoff %}
+                <div class="stats-strip-hint stats-strip-hint--green">● {{ current_timeoff.title }}</div>
+            {% elif upcoming_timeoff %}
+                <div class="stats-strip-hint stats-strip-hint--purple">📅 {{ upcoming_timeoff.title }} ({{ upcoming_timeoff.start_date|date:"d.m." }})</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="dashboard-quick-actions">
+        <a href="{% url 'invoice_create' %}" class="btn btn-sm">{% trans "+ New invoice" %}</a>
+        <a href="{% url 'client_intake' %}" class="btn btn-sm btn-secondary">{% trans "+ New client" %}</a>
+    </div>
 </div>
 
-<!-- Bank Import Reminder Widget (P-012) -->
-{% if bank_import_show_reminder %}
-{% with widget_content=bank_import_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="bank_import" widget_title="🏦 Bank Import" widget_badge=bank_import_badge %}
-{% endwith %}
-{% endif %}
+{# Two-pane console: Heute (left) | Braucht Aktion (right) #}
+<div class="dashboard-console">
+    <div class="console-pane">
+        {% with widget_content=agenda_widget_html %}
+            {% include 'includes/widget_base.html' with widget_id="agenda" widget_title="📅 Heute" widget_badge=agenda_badge_html %}
+        {% endwith %}
+        {% with widget_content=weekly_focus_widget_html %}
+            {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title="📆 Diese Woche" widget_badge=weekly_focus_badge %}
+        {% endwith %}
+    </div>
 
-<!-- Operational Checklist Widget (P-012) -->
-{% with widget_content=checklist_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="checklist" widget_title="📋 Operative Checklisten" widget_badge=checklist_badge default_collapsed=True %}
-{% endwith %}
+    <div class="console-pane">
+        <div class="widget">
+            <div class="widget-header">
+                <h3>🎯 {% trans "Needs Action" %}</h3>
+                {% if action_queue_items %}
+                    <span class="stat-badge warning">{{ action_queue_items|length }}</span>
+                {% endif %}
+            </div>
+            <div class="widget-content">
+                {% if action_queue_items %}
+                    <div class="action-queue">
+                        {% for item in action_queue_items %}
+                            <div class="action-queue-row">
+                                <div class="action-queue-dot action-queue-dot--{{ item.priority }}"></div>
+                                <div class="action-queue-body">
+                                    <div class="action-queue-category">{{ item.category_label }}</div>
+                                    <div class="action-queue-summary">{{ item.summary }}</div>
+                                    {% if item.sub_text %}<div class="action-queue-sub">{{ item.sub_text }}</div>{% endif %}
+                                </div>
+                                <a href="{{ item.action_url }}" class="btn btn-xs">{{ item.action_label }}</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="action-queue-empty">{% trans "Nothing needs your attention right now." %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
-<!-- Client Attention Widget (P-003 Phase 4) -->
-{% with widget_content=client_attention_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="client_attention" widget_title="👥 Klienten Aufmerksamkeit" widget_badge=client_attention_badge default_collapsed=True %}
-{% endwith %}
-
-<!-- Invoice Actions Widget (P-003 Phase 4) -->
-{% with widget_content=invoice_actions_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="invoice_actions" widget_title="💰 Rechnungs-Aktionen" widget_badge=invoice_actions_badge %}
-{% endwith %}
-
-<!-- Tax Quarter Widget (P-013 Phase 2) -->
-{% with widget_content=tax_quarter_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="tax_quarter" widget_title="📊 Steuervorauszahlung" widget_badge=tax_quarter_badge default_collapsed=True %}
-{% endwith %}
-
-<!-- Capacity Monitoring Widget (P-013 Phase 3) -->
+{# Capacity monitoring (shown only when active) #}
 {% if capacity_show_widget %}
 {% with widget_content=capacity_widget_html %}
     {% include 'includes/widget_base.html' with widget_id="capacity_monitoring" widget_title="📈 Kapazitäts-Monitoring" widget_badge=capacity_badge %}
 {% endwith %}
 {% endif %}
 
-<div class="dashboard-grid">
-    <div class="stat-card">
-        <h3>💰 Gesamtumsatz</h3>
-        <div class="value">{{ total_revenue|floatformat:0 }}&nbsp;€</div>
-        <div class="label">{{ total_invoices }} Rechnungen (gesamt)</div>
-    </div>
-
-    <div class="stat-card secondary">
-        <h3>📅 {{ current_year }} Umsatz</h3>
-        <div class="value">{{ year_revenue|floatformat:0 }}&nbsp;€</div>
-        <div class="label">{{ year_count }} Rechnungen bezahlt</div>
-    </div>
-
-    <div class="stat-card success">
-        <h3>💚 {{ current_year }} Gewinn</h3>
-        <div class="value">{{ year_profit|floatformat:0 }}&nbsp;€</div>
-        <div class="label">Umsatz - Ausgaben</div>
-    </div>
-
-    <div class="stat-card warning">
-        <h3>⏳ Offen</h3>
-        <div class="value">{{ unpaid_value|floatformat:0 }}&nbsp;€</div>
-        <div class="label">{{ unpaid_count }} Rechnungen versendet</div>
-    </div>
-
-    <div class="stat-card neutral">
-        <h3>🏖️ Urlaub {{ current_year }}</h3>
-        <div class="value">{{ total_weeks_off|floatformat:1 }} Wochen</div>
-        <div class="label">{{ total_workdays_off }} Arbeitstage frei</div>
-        {% if current_timeoff %}
-            <div class="stat-hint stat-hint--green">
-                ● Aktuell: {{ current_timeoff.title }}
-            </div>
-        {% elif upcoming_timeoff %}
-            <div class="stat-hint stat-hint--purple">
-                📅 Nächster: {{ upcoming_timeoff.title }} ({{ upcoming_timeoff.start_date|date:"d.m." }})
-            </div>
-        {% endif %}
-    </div>
-</div>
-
+{# Multi-practice overview #}
 {% if practice_stats %}
-<!-- Multi-Practice Overview -->
 <div class="mp-overview">
     <h3 class="mp-overview-header">
-        <span>🏥 Praxen-Übersicht {{ current_year }}</span>
-        <a href="{% url 'practice_management' %}">
-            ⚙️ Verwalten
-        </a>
+        <span>🏥 {% blocktrans with year=current_year %}Practices {{ year }}{% endblocktrans %}</span>
+        <a href="{% url 'practice_management' %}">⚙️ {% trans "Manage" %}</a>
     </h3>
     <div class="mp-grid">
         {% for stat in practice_stats %}
@@ -115,23 +108,17 @@
         {% endif %}
             <div class="mp-card-header">
                 <strong>{{ stat.practice.name }}</strong>
-                {% if stat.is_current %}
-                <span class="mp-card-badge">✓ Aktiv</span>
-                {% endif %}
+                {% if stat.is_current %}<span class="mp-card-badge">✓ {% trans "Active" %}</span>{% endif %}
             </div>
-            <div class="mp-card-subtitle">
-                {{ stat.practice.title }}
-            </div>
+            <div class="mp-card-subtitle">{{ stat.practice.title }}</div>
             <div class="mp-card-stats">
                 <div>
                     <div class="mp-card-revenue">{{ stat.revenue|floatformat:0 }}&nbsp;€</div>
                     <div class="mp-card-invoice-count">
-                        {{ stat.invoice_count }} Rechnung{{ stat.invoice_count|pluralize:"en" }}
+                        {% blocktrans count n=stat.invoice_count %}{{ n }} invoice{% plural %}{{ n }} invoices{% endblocktrans %}
                     </div>
                 </div>
-                {% if not stat.is_current %}
-                <div class="mp-card-switch">Wechseln →</div>
-                {% endif %}
+                {% if not stat.is_current %}<div class="mp-card-switch">{% trans "Switch" %} →</div>{% endif %}
             </div>
         {% if stat.is_current %}</div>{% else %}</a>{% endif %}
         {% endfor %}
@@ -139,34 +126,36 @@
 </div>
 {% endif %}
 
+{# All-time status overview #}
 <div class="section">
-    <h2>📊 Status-Übersicht (All-Time)</h2>
+    <h2>📊 {% trans "All-time Status Overview" %}</h2>
     <div class="status-grid">
         <div class="status-card draft">
-            <h4>Entwurf</h4>
+            <h4>{% trans "Draft" %}</h4>
             <div class="count">{{ status_stats.draft.count|default:0 }}</div>
             <div class="amount">{{ status_stats.draft.total|default:0|currency }}</div>
         </div>
         <div class="status-card sent">
-            <h4>Versendet</h4>
+            <h4>{% trans "Sent" %}</h4>
             <div class="count">{{ status_stats.sent.count|default:0 }}</div>
             <div class="amount">{{ status_stats.sent.total|default:0|currency }}</div>
         </div>
         <div class="status-card paid">
-            <h4>Bezahlt</h4>
+            <h4>{% trans "Paid" %}</h4>
             <div class="count">{{ status_stats.paid.count|default:0 }}</div>
             <div class="amount">{{ status_stats.paid.total|default:0|currency }}</div>
         </div>
         <div class="status-card cancelled">
-            <h4>Storniert</h4>
+            <h4>{% trans "Cancelled" %}</h4>
             <div class="count">{{ status_stats.cancelled.count|default:0 }}</div>
             <div class="amount">{{ status_stats.cancelled.total|default:0|currency }}</div>
         </div>
     </div>
 </div>
 
+{# Monthly revenue chart — to be moved to Analytics in Chunk 4 #}
 <div class="section">
-    <h2>📈 Monatlicher Umsatz (letzte 12 Monate)</h2>
+    <h2>📈 {% trans "Monthly Revenue (last 12 months)" %}</h2>
     <div class="chart-container">
         <div class="chart">
             {% for month in monthly_data %}
@@ -186,10 +175,12 @@
     </div>
 </div>
 
+{# Session heatmap — to be moved to Analytics in Chunk 4 #}
 {% include 'my_practice/includes/heatmap.html' %}
 
+{# Recent invoices #}
 <div class="section">
-    <h2>📄 Aktuelle Rechnungen</h2>
+    <h2>📄 {% trans "Recent Invoices" %}</h2>
     <div class="recent-invoices">
         {% for invoice in recent_invoices %}
         <a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain">
@@ -203,13 +194,9 @@
             </div>
         </a>
         {% empty %}
-        <p class="text-muted">Noch keine Rechnungen vorhanden.</p>
+        <p class="text-muted">{% trans "No invoices yet." %}</p>
         {% endfor %}
     </div>
 </div>
 
-<div class="section text-center">
-    <a href="{% url 'invoice_create' %}" class="btn">➕ Neue Rechnung erstellen</a>
-    <a href="{% url 'client_intake' %}" class="btn btn-secondary ml-2">👤 Neuer Klient</a>
-</div>
 {% endblock %}
