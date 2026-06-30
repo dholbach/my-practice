@@ -25,7 +25,7 @@ def annotate_activity_status(clients, today=None):
 
     for client in clients:
         if hasattr(client, "last_session_date") and client.last_session_date:
-            client.days_since_session = (today - client.last_session_date).days
+            client.days_since_session = max(0, (today - client.last_session_date).days)
             client.last_session_year = client.last_session_date.year
         else:
             client.days_since_session = 9999  # No session
