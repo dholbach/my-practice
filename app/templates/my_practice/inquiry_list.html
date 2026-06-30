@@ -1,42 +1,43 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
+{% load payment_tags %}
 
-{% block title %}Anfragen{% endblock %}
-
+{% block title %}{% trans "Inquiries" %}{% endblock %}
 
 {% block page_icon %}📬{% endblock %}
-{% block page_title %}Anfragen{% endblock %}
-{% block page_subtitle %}Interessent:innen & Anfrageverwaltung{% endblock %}
+{% block page_title %}{% trans "Inquiries" %}{% endblock %}
+{% block page_subtitle %}{% trans "Prospective clients & inquiry management" %}{% endblock %}
 
 {% block content %}
 <div class="inquiry-container">
     <div class="page-header">
-        <h1>📬 Anfragen</h1>
-        <a href="{% url 'inquiry_create' %}" class="btn">+ Neue Anfrage</a>
+        <h1>📬 {% trans "Inquiries" %}</h1>
+        <a href="{% url 'inquiry_create' %}" class="btn">+ {% trans "New inquiry" %}</a>
     </div>
 
     {# Marketing periods #}
     <div class="marketing-periods">
-        <span class="marketing-periods-label">Marketing-Zeiträume:</span>
+        <span class="marketing-periods-label">{% trans "Marketing periods:" %}</span>
         {% for period in marketing_periods %}
         <span class="marketing-period-badge {% if period.is_active %}marketing-period-active{% endif %}">
             {{ period.start_date|date:"M y" }}{% if period.end_date %} – {{ period.end_date|date:"M y" }}{% endif %}:
             {{ period.description }}
-            <a href="{% url 'marketing_period_edit' period.pk %}" class="marketing-period-action" title="Bearbeiten">✎</a>
-            <a href="{% url 'marketing_period_delete' period.pk %}" class="marketing-period-action marketing-period-delete" title="Löschen">✕</a>
+            <a href="{% url 'marketing_period_edit' period.pk %}" class="marketing-period-action" title="{% trans "Edit" %}">✎</a>
+            <a href="{% url 'marketing_period_delete' period.pk %}" class="marketing-period-action marketing-period-delete" title="{% trans "Delete" %}">✕</a>
         </span>
         {% endfor %}
-        <a href="{% url 'marketing_period_create' %}" class="marketing-periods-manage">+ Hinzufügen</a>
+        <a href="{% url 'marketing_period_create' %}" class="marketing-periods-manage">+ {% trans "Add" %}</a>
     </div>
 
     {# Analytics panel #}
     <div class="analytics-panel" x-data="{ open: true }">
         <div class="analytics-toggle" x-on:click="open = !open" id="analytics-toggle">
-            <span class="analytics-toggle-label">Auswertung</span>
+            <span class="analytics-toggle-label">{% trans "Analytics" %}</span>
             <span class="analytics-toggle-counts">
-                {{ analytics.total_inquiries }} gesamt &middot;
+                {{ analytics.total_inquiries }} {% trans "total" %} &middot;
                 {% for status, label, count in analytics.funnel_stages %}{% if count %}<span class="status-badge status-{{ status }}">{{ count }} {{ label }}</span> {% endif %}{% endfor %}
-                {% if analytics.closed_count %}<span class="status-badge status-declined">{{ analytics.closed_count }} geschlossen</span>{% endif %}
+                {% if analytics.closed_count %}<span class="status-badge status-declined">{{ analytics.closed_count }} {% trans "closed" %}</span>{% endif %}
             </span>
             <span class="analytics-chevron" x-text="open ? '▲' : '▼'">▲</span>
         </div>
@@ -57,19 +58,19 @@
                         {% endfor %}
                     </div>
                     {% if analytics.closed_count %}
-                    <div class="funnel-closed">{{ analytics.closed_count }} geschlossen (Abgelehnt / Kein Match / Nicht erreichbar)</div>
+                    <div class="funnel-closed">{% blocktrans with n=analytics.closed_count %}{{ n }} closed (Declined / No match / Unreachable){% endblocktrans %}</div>
                     {% endif %}
                 </div>
 
                 {# Time in stage #}
                 <div class="analytics-section">
-                    <h4>Ø Wartezeit (Werktage)</h4>
+                    <h4>{% trans "Avg. wait (working days)" %}</h4>
                     <table class="time-table">
                         {% for label, avg, n in analytics.time_in_stage %}
                         <tr>
                             <td class="time-label">{{ label }}</td>
                             <td class="time-value">
-                                {% if avg is not None %}{{ avg }} Werktage <span class="time-n">(n={{ n }})</span>
+                                {% if avg is not None %}{% blocktrans with avg=avg n=n %}{{ avg }} working days (n={{ n }}){% endblocktrans %}
                                 {% else %}<span class="time-none">–</span>{% endif %}
                             </td>
                         </tr>
@@ -79,7 +80,7 @@
 
                 {# Source breakdown #}
                 <div class="analytics-section">
-                    <h4>Quellen</h4>
+                    <h4>{% trans "Sources" %}</h4>
                     <div class="source-breakdown">
                         {% for row in analytics.source_breakdown %}
                         <div class="source-row">
@@ -96,7 +97,7 @@
                 {# Language breakdown #}
                 {% if analytics.language_breakdown %}
                 <div class="analytics-section">
-                    <h4>Sprache</h4>
+                    <h4>{% trans "Language" %}</h4>
                     <div class="source-breakdown">
                         {% for row in analytics.language_breakdown %}
                         <div class="source-row">
@@ -114,7 +115,7 @@
                 {# Monthly trend #}
                 {% if analytics.monthly_trend %}
                 <div class="analytics-section analytics-section-wide">
-                    <h4>Anfragen pro Monat (letzte 12 Monate)</h4>
+                    <h4>{% trans "Inquiries per month (last 12 months)" %}</h4>
                     <div class="monthly-bars">
                         {% for row in analytics.monthly_trend %}
                         <div class="monthly-bar-col">
@@ -136,79 +137,134 @@
     {# Filter bar #}
     <form method="get" class="filter-bar">
         <select name="status" class="form-control filter-select" x-data x-on:change="$el.form.submit()">
-            <option value="">Alle Status</option>
+            <option value="">{% trans "All statuses" %}</option>
             {% for value, label in status_choices %}
             <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
         <select name="source" class="form-control filter-select" x-data x-on:change="$el.form.submit()">
-            <option value="">Alle Quellen</option>
+            <option value="">{% trans "All sources" %}</option>
             {% for value, label in source_choices %}
             <option value="{{ value }}" {% if source_filter == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
         {% if status_filter or source_filter %}
-        <a href="{% url 'inquiry_list' %}" class="btn-secondary">✕ Filter löschen</a>
+        <a href="{% url 'inquiry_list' %}" class="btn-secondary">✕ {% trans "Clear filters" %}</a>
         {% endif %}
     </form>
     {% if not status_filter %}
     <div class="closed-toggle">
         {% if show_closed %}
-        <a href="{% url 'inquiry_list' %}" class="btn-secondary">Geschlossene ausblenden</a>
+        <a href="{% url 'inquiry_list' %}" class="btn-secondary">{% trans "Hide closed" %}</a>
         {% elif closed_count %}
-        <a href="{% url 'inquiry_list' %}?show_closed=1" class="btn-secondary">Geschlossene anzeigen ({{ closed_count }})</a>
+        <a href="{% url 'inquiry_list' %}?show_closed=1" class="btn-secondary">{% blocktrans with n=closed_count %}Show closed ({{ n }}){% endblocktrans %}</a>
         {% endif %}
     </div>
     {% endif %}
 
-    {% if inquiries %}
-    <table class="inquiry-table">
-        <thead>
-            <tr>
-                <th>Datum</th>
-                <th>Name</th>
-                <th>Quelle</th>
-                <th>Sprache</th>
-                <th>Status</th>
-                <th>Kontakt</th>
-                <th>Aktionen</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for inquiry in inquiries %}
-            {% ifchanged inquiry.status_priority %}
-            {% if not forloop.first %}<tr class="inquiry-group-divider"><td colspan="7"></td></tr>{% endif %}
-            {% endifchanged %}
+    {# Grouped inquiry list #}
+    {% if inquiry_groups %}
+    {% for group in inquiry_groups %}
+    <div class="inquiry-section">
+        <div class="inquiry-section-header">
+            <span class="status-badge status-{{ group.status }}">{{ group.label }}</span>
+            <span class="inquiry-section-count">{{ group.total }}</span>
+        </div>
+
+        {% if group.fresh %}
+        <table class="inquiry-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Date" %}</th>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Source" %}</th>
+                    <th>{% trans "Language" %}</th>
+                    <th>{% trans "Contact" %}</th>
+                    <th>{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for inquiry in group.fresh %}
             <tr class="inquiry-row {% if inquiry.is_closed %}inquiry-closed{% endif %}">
                 <td class="inquiry-date">{{ inquiry.inquiry_date|date:"d.m.Y" }}</td>
                 <td class="inquiry-name">
-                    <a href="{% url 'inquiry_edit' inquiry.pk %}"><span class="sensitive-data">{{ inquiry.full_name }}</span></a>
+                    <a href="{% url 'inquiry_edit' inquiry.pk %}">{{ inquiry.full_name|privacy_name }}</a>
                     {% if inquiry.converted_client %}
-                    <a href="{% url 'client_detail' inquiry.converted_client.pk %}" class="converted-badge" title="Klient:in anzeigen">→ {{ inquiry.converted_client.client_code }}</a>
+                    <a href="{% url 'client_detail' inquiry.converted_client.pk %}" class="converted-badge" title="{% trans "View client" %}">→ {{ inquiry.converted_client.client_code }}</a>
                     {% endif %}
                 </td>
                 <td><span class="source-badge source-{{ inquiry.source }}">{{ inquiry.get_source_display }}</span></td>
                 <td><span class="lang-badge lang-{{ inquiry.language }}">{{ inquiry.get_language_display }}</span></td>
-                <td><span class="status-badge status-{{ inquiry.status }}">{{ inquiry.get_status_display }}</span></td>
                 <td class="inquiry-contact">
                     {% if inquiry.email %}<a href="mailto:{{ inquiry.email }}" class="contact-link">✉ <span class="sensitive-data">{{ inquiry.email }}</span></a>{% endif %}
                     {% if inquiry.phone %}<span class="contact-link">☎ <span class="sensitive-data">{{ inquiry.phone }}</span></span>{% endif %}
                 </td>
                 <td class="inquiry-actions">
-                    <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-sm">Bearbeiten</a>
+                    <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-sm">{% trans "Edit" %}</a>
                     {% if inquiry.status != 'converted' and not inquiry.converted_client %}
-                    <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn-sm btn-success">Aufnehmen</a>
+                    <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn-sm btn-success">{% trans "Admit" %}</a>
                     {% endif %}
-                    <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn-sm btn-danger">Löschen</a>
+                    <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn-sm btn-danger">{% trans "Delete" %}</a>
                 </td>
             </tr>
             {% endfor %}
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if group.stale %}
+        <div x-data="{ open: false }" class="inquiry-stale-section">
+            <button x-on:click="open = !open" class="inquiry-stale-toggle">
+                <span x-text="open ? '▲' : '▼'">▼</span>
+                {% blocktrans with n=group.stale|length %}{{ n }} older (inactive > 30 days){% endblocktrans %}
+            </button>
+            <table class="inquiry-table" x-show="open" x-cloak>
+                <thead>
+                    <tr>
+                        <th>{% trans "Date" %}</th>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Source" %}</th>
+                        <th>{% trans "Language" %}</th>
+                        <th>{% trans "Contact" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for inquiry in group.stale %}
+                <tr class="inquiry-row inquiry-stale {% if inquiry.is_closed %}inquiry-closed{% endif %}">
+                    <td class="inquiry-date">{{ inquiry.inquiry_date|date:"d.m.Y" }}</td>
+                    <td class="inquiry-name">
+                        <a href="{% url 'inquiry_edit' inquiry.pk %}">{{ inquiry.full_name|privacy_name }}</a>
+                        {% if inquiry.converted_client %}
+                        <a href="{% url 'client_detail' inquiry.converted_client.pk %}" class="converted-badge" title="{% trans "View client" %}">→ {{ inquiry.converted_client.client_code }}</a>
+                        {% endif %}
+                    </td>
+                    <td><span class="source-badge source-{{ inquiry.source }}">{{ inquiry.get_source_display }}</span></td>
+                    <td><span class="lang-badge lang-{{ inquiry.language }}">{{ inquiry.get_language_display }}</span></td>
+                    <td class="inquiry-contact">
+                        {% if inquiry.email %}<a href="mailto:{{ inquiry.email }}" class="contact-link">✉ <span class="sensitive-data">{{ inquiry.email }}</span></a>{% endif %}
+                        {% if inquiry.phone %}<span class="contact-link">☎ <span class="sensitive-data">{{ inquiry.phone }}</span></span>{% endif %}
+                    </td>
+                    <td class="inquiry-actions">
+                        <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-sm">{% trans "Edit" %}</a>
+                        {% if inquiry.status != 'converted' and not inquiry.converted_client %}
+                        <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn-sm btn-success">{% trans "Admit" %}</a>
+                        {% endif %}
+                        <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn-sm btn-danger">{% trans "Delete" %}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </div>
+    {% endfor %}
     {% else %}
     <div class="empty-state">
-        <p>Keine Anfragen gefunden.</p>
-        <a href="{% url 'inquiry_create' %}" class="btn">Erste Anfrage erfassen</a>
+        <p>{% trans "No inquiries found." %}</p>
+        <a href="{% url 'inquiry_create' %}" class="btn">{% trans "Record first inquiry" %}</a>
     </div>
     {% endif %}
 </div>
