@@ -110,6 +110,7 @@ addopts = "--tb=short"
 [tool.ruff]
 line-length = 100
 target-version = "py314"
+cache-dir = "~/.cache/ruff"
 exclude = [
     ".git",
     ".venv",

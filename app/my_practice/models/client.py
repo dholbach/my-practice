@@ -10,6 +10,7 @@ from django.core.validators import EmailValidator
 from django.db import models
 from django.db.models import Max, Prefetch
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 from .base import PracticeScopedQuerySet, TimestampedModel
 
@@ -179,8 +180,8 @@ class Client(TimestampedModel):
     active = models.BooleanField(default=True, verbose_name="Aktiv")
     needs_gebueh_invoice = models.BooleanField(
         default=False,
-        verbose_name="GebüH-Rechnung",
-        help_text="GebüH-Ziffern und Diagnose auf der Rechnung ausweisen (PKV / Beihilfe)",
+        verbose_name=_("GebüH-Rechnung"),
+        help_text=_("GebüH-Ziffern und Diagnose auf der Rechnung ausweisen (PKV / Beihilfe)"),
     )
     is_online_client = models.BooleanField(
         default=False,

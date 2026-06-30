@@ -8,9 +8,10 @@ requires itemised GebüH billing). Self-paying clients are unaffected.
 from decimal import Decimal
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-from .session import Session
 from .base import TimestampedModel
+from .session import Session
 
 
 class GebuhZiffer(models.Model):
@@ -22,47 +23,47 @@ class GebuhZiffer(models.Model):
     in the quick-entry UI but never hard-block saving.
     """
 
-    nummer = models.CharField(max_length=10, unique=True, verbose_name="Ziffer")
-    bezeichnung = models.CharField(max_length=300, verbose_name="Bezeichnung")
+    nummer = models.CharField(max_length=10, unique=True, verbose_name=_("Ziffer"))
+    bezeichnung = models.CharField(max_length=300, verbose_name=_("Bezeichnung"))
     satz_max = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        verbose_name="Höchstsatz (€)",
-        help_text="Wird für die Abrechnung verwendet",
+        verbose_name=_("Höchstsatz (€)"),
+        help_text=_("Wird für die Abrechnung verwendet"),
     )
     satz_min = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        verbose_name="Mindestsatz (€)",
-        help_text="Referenzwert, wird nicht abgerechnet",
+        verbose_name=_("Mindestsatz (€)"),
+        help_text=_("Referenzwert, wird nicht abgerechnet"),
     )
     anmerkung = models.TextField(
         blank=True,
-        verbose_name="Anmerkung",
-        help_text="Abrechnungshinweise (z.B. Alleinleistung, Häufigkeitsbeschränkung)",
+        verbose_name=_("Anmerkung"),
+        help_text=_("Abrechnungshinweise (z.B. Alleinleistung, Häufigkeitsbeschränkung)"),
     )
     max_haeufigkeit = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
-        verbose_name="Max. Häufigkeit",
-        help_text="Maximale Anzahl innerhalb des Bezugszeitraums",
+        verbose_name=_("Max. Häufigkeit"),
+        help_text=_("Maximale Anzahl innerhalb des Bezugszeitraums"),
     )
     bezugszeitraum_tage = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
-        verbose_name="Bezugszeitraum (Tage)",
-        help_text="Zeitraum in Tagen für die Häufigkeitsprüfung",
+        verbose_name=_("Bezugszeitraum (Tage)"),
+        help_text=_("Zeitraum in Tagen für die Häufigkeitsprüfung"),
     )
     sort_order = models.PositiveSmallIntegerField(
         default=0,
-        verbose_name="Reihenfolge",
-        help_text="Anzeigereihenfolge in der Schnellerfassung",
+        verbose_name=_("Reihenfolge"),
+        help_text=_("Anzeigereihenfolge in der Schnellerfassung"),
     )
 
     class Meta:
         ordering = ["sort_order", "nummer"]
-        verbose_name = "GebüH-Ziffer"
-        verbose_name_plural = "GebüH-Ziffern"
+        verbose_name = _("GebüH-Ziffer")
+        verbose_name_plural = _("GebüH-Ziffern")
 
     def __str__(self) -> str:
         return f"Ziffer {self.nummer} – {self.bezeichnung}"
@@ -83,31 +84,33 @@ class Leistungserfassung(TimestampedModel):
         Session,
         on_delete=models.PROTECT,
         related_name="gebueh_leistungen",
-        verbose_name="Sitzung",
+        verbose_name=_("Sitzung"),
     )
     ziffer = models.ForeignKey(
         GebuhZiffer,
         on_delete=models.PROTECT,
         related_name="leistungen",
-        verbose_name="GebüH-Ziffer",
+        verbose_name=_("GebüH-Ziffer"),
     )
     betrag = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        verbose_name="GebüH-Betrag (€)",
-        help_text="= Höchstsatz der Ziffer zum Zeitpunkt der Erfassung",
+        verbose_name=_("GebüH-Betrag (€)"),
+        help_text=_("= Höchstsatz der Ziffer zum Zeitpunkt der Erfassung"),
     )
     vereinbarter_betrag = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        verbose_name="Vereinbarter Betrag (€)",
-        help_text="Honorar für die Sitzung (hourly_rate × duration/60), eingefroren bei Erfassung",
+        verbose_name=_("Vereinbarter Betrag (€)"),
+        help_text=_(
+            "Honorar für die Sitzung (hourly_rate × duration/60), eingefroren bei Erfassung"
+        ),
     )
 
     class Meta:
         ordering = ["session__session_date", "ziffer__sort_order"]
-        verbose_name = "Leistungserfassung"
-        verbose_name_plural = "Leistungserfassungen"
+        verbose_name = _("Leistungserfassung")
+        verbose_name_plural = _("Leistungserfassungen")
         indexes = [
             models.Index(
                 fields=["session"],
