@@ -1,4 +1,4 @@
-"""Tests for GebüH billing — Phase 1 models and Phase 2 quick-entry UI."""
+"""Tests for GebüH billing — Phase 1 models, Phase 2 quick-entry UI, Phase 3 PDF blocks."""
 
 from datetime import date, timedelta
 from decimal import Decimal
@@ -8,7 +8,7 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import Client, Practice, Session, UserPractice
+from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
 
 
@@ -221,3 +221,101 @@ class GebuhLeistungViewTest(TestCase):
         messages_list = list(resp.context["messages"])
         warning_texts = [str(m) for m in messages_list if m.level_tag == "warning"]
         self.assertTrue(any("Alleinleistung" in t for t in warning_texts))
+
+
+class GebuhPdfBlocksTest(TestCase):
+    """Tests for _build_gebueh_blocks — the PDF context helper."""
+
+    def setUp(self):
+        from ..views.api_views import _build_gebueh_blocks, _get_arbeitsdiagnose
+
+        self._build = _build_gebueh_blocks
+        self._diagnose = _get_arbeitsdiagnose
+
+        self.practice = _make_practice(slug="gebueh-pdf-test")
+        self.client_obj = _make_client(self.practice, code="PDF")
+        self.session = Session.objects.create(
+            client=self.client_obj, session_date=date.today(), duration=60
+        )
+        self.ziffer, _ = GebuhZiffer.objects.get_or_create(
+            nummer="19.2",
+            defaults={
+                "bezeichnung": "Psychotherapie 50–90 Min",
+                "satz_max": Decimal("46.00"),
+                "satz_min": Decimal("26.00"),
+                "sort_order": 40,
+            },
+        )
+        self.service_type = ServiceType.objects.first() or ServiceType.objects.create(
+            name="Therapie", name_de="Therapiesitzung", name_en="Therapy session"
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.client_obj,
+            practice=self.practice,
+            invoice_number="INV-001",
+            status="draft",
+        )
+        self.item = InvoiceItem.objects.create(
+            invoice=self.invoice,
+            service_type=self.service_type,
+            session=self.session,
+            rate=Decimal("90.00"),
+            quantity=Decimal("1"),
+            total=Decimal("90.00"),
+        )
+
+    def _record_leistung(self, ziffer=None):
+        z = ziffer or self.ziffer
+        return Leistungserfassung.objects.create(
+            session=self.session,
+            ziffer=z,
+            betrag=z.satz_max,
+            vereinbarter_betrag=Decimal("90.00"),
+        )
+
+    def test_block_with_leistung(self):
+        self._record_leistung()
+        blocks = self._build(self.invoice)
+        self.assertEqual(len(blocks), 1)
+        b = blocks[0]
+        self.assertEqual(len(b["leistungen"]), 1)
+        self.assertEqual(b["gebueh_sum"], Decimal("46.00"))
+        self.assertEqual(b["vereinbarter_betrag"], Decimal("90.00"))
+        self.assertEqual(b["restbetrag"], Decimal("44.00"))
+
+    def test_block_without_leistung(self):
+        blocks = self._build(self.invoice)
+        b = blocks[0]
+        self.assertEqual(b["leistungen"], [])
+        self.assertEqual(b["gebueh_sum"], Decimal("0"))
+        self.assertEqual(b["vereinbarter_betrag"], Decimal("90.00"))  # falls back to item.rate
+
+    def test_restbetrag_clamped_to_zero(self):
+        # Two expensive Ziffern whose sum exceeds vereinbarter_betrag
+        z2, _ = GebuhZiffer.objects.get_or_create(
+            nummer="19.5",
+            defaults={
+                "bezeichnung": "Exploration",
+                "satz_max": Decimal("46.00"),
+                "satz_min": Decimal("15.50"),
+                "sort_order": 20,
+            },
+        )
+        self._record_leistung(self.ziffer)  # 46 €
+        self._record_leistung(z2)  # 46 € → total 92 € > 90 €
+        blocks = self._build(self.invoice)
+        self.assertEqual(blocks[0]["restbetrag"], Decimal("0"))
+
+    def test_get_arbeitsdiagnose_no_profile(self):
+        # No ClientProfile exists yet — should return empty string, not raise
+        result = self._diagnose(self.client_obj)
+        self.assertEqual(result, "")
+
+    def test_get_arbeitsdiagnose_with_profile(self):
+        from ..models import ClientProfile
+
+        # arbeitsdiagnose is Fernet-encrypted; just verify no exception is raised
+        # and the result is a string (decrypted value or empty if no key in test env)
+        ClientProfile.objects.create(client=self.client_obj, arbeitsdiagnose="F32.1")
+        result = self._diagnose(self.client_obj)
+        self.assertIsInstance(result, str)
