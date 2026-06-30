@@ -16,17 +16,15 @@ msgstr ""
 
 #: my_practice/models/client.py:183
 msgid "GebüH-Rechnung"
-msgstr ""
+msgstr "GebüH-Rechnung"
 
 #: my_practice/models/client.py:184
 msgid "GebüH-Ziffern und Diagnose auf der Rechnung ausweisen (PKV / Beihilfe)"
-msgstr ""
+msgstr "GebüH-Ziffern und Diagnose auf der Rechnung ausweisen (PKV / Beihilfe)"
 
 #: my_practice/models/gebueh.py:26
-#, fuzzy
-#| msgid "buffer"
 msgid "Ziffer"
-msgstr "Puffer"
+msgstr "Ziffer"
 
 #: my_practice/models/gebueh.py:27
 msgid "Bezeichnung"
