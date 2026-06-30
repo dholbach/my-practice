@@ -582,8 +582,8 @@ def gebueh_leistung_create(request, client_pk, session_pk):
             messages.warning(
                 request,
                 _(
-                    "Achtung: Ziffer %(nr)s ist nur als Alleinleistung erstattungsfähig "
-                    "und sollte nicht mit anderen Ziffern kombiniert werden."
+                    "Warning: Ziffer %(nr)s may only be billed as a standalone service "
+                    "and must not be combined with other Ziffern."
                 )
                 % {"nr": ", ".join(alleinleistung_nummern & selected_nummern)},
             )
@@ -607,8 +607,8 @@ def gebueh_leistung_create(request, client_pk, session_pk):
                     messages.warning(
                         request,
                         _(
-                            "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von "
-                            "%(days)s Tagen abgerechnet (Maximum: %(max)s×)."
+                            "Warning: Ziffer %(nr)s – already billed %(count)s× within "
+                            "%(days)s days (maximum: %(max)s×)."
                         )
                         % {
                             "nr": ziffer.nummer,
@@ -631,7 +631,7 @@ def gebueh_leistung_create(request, client_pk, session_pk):
 
         messages.success(
             request,
-            _("%(count)s GebüH-Ziffer(n) für %(date)s gespeichert.")
+            _("%(count)s GebüH code(s) saved for %(date)s.")
             % {
                 "count": len(selected_ziffern),
                 "date": session.session_date.strftime("%d.%m.%Y"),

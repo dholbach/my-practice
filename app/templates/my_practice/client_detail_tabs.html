@@ -17,11 +17,11 @@
         {% if client.needs_gebueh_invoice and not profile.arbeitsdiagnose %}
         <div class="callout {% if gebueh_diagnostic_count >= 5 %}callout-warning{% else %}callout-primary{% endif %}">
             {% if gebueh_diagnostic_count >= 5 %}
-            ⚠️ {% trans "Diagnose noch nicht gesetzt — die probatorische Phase scheint abgeschlossen. Bitte Diagnose aktualisieren." %}
+            ⚠️ {% trans "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis." %}
             {% else %}
-            {% trans "Diagnose noch nicht gesetzt — aktuell wird „Probatorik" auf der Rechnung verwendet. Nach Abschluss der probatorischen Phase bitte Diagnose aktualisieren." %}
+            {% blocktrans %}Diagnosis not yet set — invoices currently show "Probationary phase". Please update once the probationary phase is complete.{% endblocktrans %}
             {% endif %}
-            <a href="#id_arbeitsdiagnose" style="margin-left: 0.5rem; white-space: nowrap;">{% trans "Bearbeiten →" %}</a>
+            <a href="#id_arbeitsdiagnose" style="margin-left: 0.5rem; white-space: nowrap;">{% trans "Edit →" %}</a>
         </div>
         {% endif %}
         <form method="post" action="{% url 'client_profile_save' client.pk %}">
