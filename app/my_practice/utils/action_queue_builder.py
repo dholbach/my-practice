@@ -13,7 +13,7 @@ Each item in the queue has the schema:
 Items are sorted by (priority, sort_key) — most urgent first.
 """
 
-from datetime import date, timedelta
+from datetime import date
 
 from django.urls import reverse
 
