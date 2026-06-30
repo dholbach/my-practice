@@ -1,4 +1,5 @@
 {% load payment_tags %}
+{% load i18n %}
 {# Reusable client card component #}
 {# Required context: client, show_days_alert (optional) #}
 
@@ -7,7 +8,7 @@
         <div class="card-header">
             <div class="card-title">
                 <span class="client-code">{{ client.client_code }}</span>
-                {% if client.id in clients_needing_log %}<span class="card-missing-log" title="Protokoll fehlt">📝</span>{% endif %}
+                {% if client.id in clients_needing_log %}<span class="card-missing-log" title="{% trans "Log missing" %}">📝</span>{% endif %}
             </div>
         </div>
         <div class="client-name sensitive-data">{{ client.full_name }}</div>
@@ -15,7 +16,7 @@
         <div class="card-meta">
             {% if client.total_sessions %}
             <div class="meta-item">
-                📊 <strong>{{ client.total_sessions|floatformat:0 }}</strong> Sessions
+                📊 <strong>{{ client.total_sessions|floatformat:0 }}</strong> {% trans "Sessions" %}
             </div>
             {% endif %}
         </div>
@@ -30,8 +31,8 @@
 
         {% if client.last_session_date %}
         <div class="last-invoice {% if show_days_alert %}{% if client.days_since_session > 90 %}alert{% elif client.days_since_session > 60 %}warning{% endif %}{% endif %}">
-            Letzte Session: {{ client.last_session_date|format_month_year }}
-            {% if show_days_alert %}(vor {{ client.days_since_session }} Tagen){% endif %}
+            {% trans "Last session:" %} {{ client.last_session_date|format_month_year }}
+            {% if show_days_alert and client.days_since_session > 0 %}{% blocktrans with n=client.days_since_session %}({{ n }} days ago){% endblocktrans %}{% endif %}
         </div>
         {% endif %}
     </div>
