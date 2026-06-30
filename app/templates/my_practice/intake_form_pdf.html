@@ -137,6 +137,7 @@
         <div class="practice-info">
             {{ practice.title }}<br>
             {{ practice.name }}<br>
+            {% if lang == "en" %}{% if practice.subtitle_en %}{{ practice.subtitle_en }}<br>{% endif %}{% else %}{% if practice.subtitle_de %}{{ practice.subtitle_de }}<br>{% endif %}{% endif %}
             {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
             E-Mail: {{ practice.email }}
         </div>
