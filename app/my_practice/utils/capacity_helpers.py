@@ -235,7 +235,7 @@ def get_monthly_capacity_for_date(target_date: date) -> float:
     return float(result["usable_capacity_hours"])
 
 
-def get_capacity_trends(start_year=2020, end_date=None, start_date=None):
+def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practice=None):
     """
     Calculate capacity utilization trends over time (monthly).
 
@@ -271,12 +271,14 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None):
     # Query 1: Get all booked therapist hours grouped by month (single query).
     # Excludes cancelled sessions; divides by group_size so group sessions count
     # once for the therapist regardless of participant count.
+    practice_filter = {"client__practice": practice} if practice else {}
     booked_by_month = defaultdict(float)
     monthly_sessions = (
         Session.objects.filter(
             session_date__gte=start_date,
             session_date__lte=end_date,
             cancelled=False,
+            **practice_filter,
         )
         .annotate(month=TruncMonth("session_date"))
         .values("month")
