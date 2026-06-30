@@ -156,6 +156,20 @@ table.items tbody td .item-sub {
   margin-top: 2pt;
 }
 
+/* ── GebüH itemised sub-table ───────────────────────────────────────────────── */
+.gebueh-diagnose {
+  font-size: 9pt;
+  color: var(--body);
+  margin-bottom: 10pt;
+}
+.gebueh-diagnose strong { color: var(--ink); }
+table.items td.gebueh-ziffer    { font-size: 8.5pt; color: var(--muted); padding: 4pt 0; border-bottom: none; }
+table.items td.gebueh-ziffer-nr { font-weight: 600; width: 4rem; }
+table.items td.gebueh-sub       { font-size: 8.5pt; color: var(--body); padding: 5pt 0 5pt 1rem; border-bottom: none; }
+table.items td.gebueh-sub.bold  { font-weight: 600; color: var(--ink); }
+table.items tr.gebueh-total td  { border-top: 1pt solid var(--pine); padding-top: 6pt; font-weight: 700; color: var(--pine); font-size: 9.5pt; }
+table.items tr.gebueh-separator td { padding: 0; border: none; height: 6pt; }
+
 /* ── Totals ─────────────────────────────────────────────────────────────────── */
 .totals {
   margin-left: auto;
