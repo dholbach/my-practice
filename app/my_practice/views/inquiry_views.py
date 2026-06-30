@@ -1,6 +1,7 @@
 """Views for client inquiry / lead tracking (P-031)."""
 
 from datetime import date, timedelta
+from itertools import groupby
 from typing import cast
 
 from django.contrib import messages
@@ -358,6 +359,36 @@ class InquiryListView(PracticeScopedListView):
         analytics = _build_inquiry_analytics(self.request)
         context["analytics"] = analytics
         context["closed_count"] = analytics["closed_count"]
+
+        # Group inquiries by pipeline stage for the section-header layout.
+        # Items are already ordered by status_priority then -created_at.
+        thirty_days_ago = date.today() - timedelta(days=30)
+        _group_labels = {
+            0: "Neu",
+            1: "Kontaktiert",
+            2: "Vorgespräch",
+            3: "Warteliste / Aufnahme",
+            4: "Aufgenommen",
+            5: "Geschlossen",
+        }
+        inquiry_groups = []
+        for priority, group_iter in groupby(
+            list(context["inquiries"]), key=lambda x: x.status_priority
+        ):
+            items = list(group_iter)
+            fresh = [i for i in items if i.updated_at.date() >= thirty_days_ago]
+            stale = [i for i in items if i.updated_at.date() < thirty_days_ago]
+            inquiry_groups.append(
+                {
+                    "label": _group_labels.get(priority, "Sonstige"),
+                    "priority": priority,
+                    "status": items[0].status if items else "",
+                    "fresh": fresh,
+                    "stale": stale,
+                    "total": len(items),
+                }
+            )
+        context["inquiry_groups"] = inquiry_groups
         return context
 
 

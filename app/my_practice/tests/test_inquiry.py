@@ -116,30 +116,35 @@ class InquiryListViewTestCase(TestCase):
         _make_inquiry(self.practice, full_name="Max Mustermann")
         resp = self.client_obj.get(reverse("inquiry_list"))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "Max Mustermann")
+        # privacy_name filter splits names into initials + blurred spans; check context
+        names = [i.full_name for i in resp.context["inquiries"]]
+        self.assertIn("Max Mustermann", names)
 
     def test_list_isolates_other_practice(self):
         _, other_practice = _make_user_and_practice(username="other")
         _make_inquiry(other_practice, full_name="Anna Schmidt")
         resp = self.client_obj.get(reverse("inquiry_list"))
         self.assertEqual(resp.status_code, 200)
-        self.assertNotContains(resp, "Anna Schmidt")
+        names = [i.full_name for i in resp.context["inquiries"]]
+        self.assertNotIn("Anna Schmidt", names)
 
     def test_status_filter(self):
         _make_inquiry(self.practice, status=InquiryStatus.NEW, full_name="Neu Person")
         _make_inquiry(self.practice, status=InquiryStatus.WAITLIST, full_name="Warte Person")
         resp = self.client_obj.get(reverse("inquiry_list") + "?status=waitlist")
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "Warte Person")
-        self.assertNotContains(resp, "Neu Person")
+        names = [i.full_name for i in resp.context["inquiries"]]
+        self.assertIn("Warte Person", names)
+        self.assertNotIn("Neu Person", names)
 
     def test_source_filter(self):
         _make_inquiry(self.practice, source=InquirySource.GOOGLE_ADS, full_name="Ads Person")
         _make_inquiry(self.practice, source=InquirySource.REFERRAL, full_name="Empfehlung Person")
         resp = self.client_obj.get(reverse("inquiry_list") + "?source=referral")
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "Empfehlung Person")
-        self.assertNotContains(resp, "Ads Person")
+        names = [i.full_name for i in resp.context["inquiries"]]
+        self.assertIn("Empfehlung Person", names)
+        self.assertNotIn("Ads Person", names)
 
 
 class InquiryCRUDViewTestCase(TestCase):
