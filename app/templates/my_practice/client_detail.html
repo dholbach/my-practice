@@ -229,6 +229,7 @@
                 {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">{% trans "Unbilled" %}</span>{% else %}<span class="cn-session-not-billable">{% trans "Non-billable" %}</span>{% endif %}{% endif %}
                 {% if log.session_type %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% endif %}
                 {% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>{% endfor %}
+                {% if session.gebueh_leistungen.all %}<div class="cn-gebueh-ziffern">{% for le in session.gebueh_leistungen.all %}<span class="cn-gebueh-chip">{{ le.ziffer.nummer }}</span>{% endfor %}</div>{% endif %}
             </div>
             <div class="cn-session-content">
                 {% if log.summary %}<p class="cn-session-summary">{{ log.summary }}</p>{% endif %}
@@ -415,6 +416,17 @@
         <h3>{% trans "Tags" %}</h3>
         {% include 'includes/client_tags.html' with client=client editable=True %}
     </div>
+
+    {% if client.needs_gebueh_invoice and not profile.arbeitsdiagnose %}
+    <div class="callout {% if gebueh_diagnostic_count >= 5 %}callout-warning{% else %}callout-primary{% endif %}">
+        {% if gebueh_diagnostic_count >= 5 %}
+        ⚠️ {% trans "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis." %}
+        {% else %}
+        {% blocktrans %}Diagnosis not yet set — invoices currently show "Probationary phase". Please update once the probationary phase is complete.{% endblocktrans %}
+        {% endif %}
+        <a href="#id_arbeitsdiagnose" style="margin-left: 0.5rem; white-space: nowrap;">{% trans "Edit →" %}</a>
+    </div>
+    {% endif %}
 
     <form method="post" action="{% url 'client_profile_save' client.pk %}">
         {% csrf_token %}
