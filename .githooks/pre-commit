@@ -1,0 +1,16 @@
+#!/bin/bash
+# Format staged Python files with ruff before committing.
+# Install once with: ./dev.py install-hooks
+set -e
+
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^app/.*\.py$' || true)
+[ -z "$STAGED_PY" ] && exit 0
+
+echo "🎨 ruff format (pre-commit)..."
+
+# Run ruff from app/ so pyproject.toml is picked up automatically
+APP_FILES=$(echo "$STAGED_PY" | sed 's|^app/||')
+(cd app && echo "$APP_FILES" | tr '\n' '\0' | xargs -0 ruff format)
+
+# Re-stage any files that ruff changed
+echo "$STAGED_PY" | tr '\n' '\0' | xargs -0 git add

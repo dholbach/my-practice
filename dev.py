@@ -853,6 +853,22 @@ def cmd_format(args):
     return run_docker_command(["python", "-m", "ruff", "format", "."])
 
 
+def cmd_install_hooks(_args):
+    """Configure git to use the committed .githooks/ directory.
+
+    Run once after cloning. The pre-commit hook auto-formats staged Python
+    files with ruff before each commit (uses host ruff, no Docker needed).
+    """
+    result = subprocess.run(
+        ["git", "config", "core.hooksPath", ".githooks"],
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+    )
+    if result.returncode == 0:
+        print("✅ Git hooks installed — .githooks/pre-commit will run on every commit.")
+        print("   To skip the hook for one commit: git commit --no-verify")
+    return result
+
+
 def cmd_run(args):
     """Run a Python script in the container with Django environment loaded"""
     if not args:
@@ -960,6 +976,7 @@ COMMANDS = {
     "quality": cmd_quality,
     "review": cmd_review,
     "format": cmd_format,
+    "install-hooks": cmd_install_hooks,
     "run": cmd_run,
     "exec": cmd_exec,
     "sql": cmd_sql,
@@ -1010,6 +1027,7 @@ def print_help():
     print(
         "  format               - Auto-format code with ruff format + ruff check --fix"
     )
+    print("  install-hooks        - Configure git to use .githooks/ (run once after clone)")
     print("\nExamples:")
     print("  ./dev.py start                                # Start all containers")
     print("  ./dev.py start --build                        # Rebuild and start")
