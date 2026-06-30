@@ -153,31 +153,6 @@
     </div>
 </div>
 
-{# Monthly revenue chart — to be moved to Analytics in Chunk 4 #}
-<div class="section">
-    <h2>📈 {% trans "Monthly Revenue (last 12 months)" %}</h2>
-    <div class="chart-container">
-        <div class="chart">
-            {% for month in monthly_data %}
-            {% if max_monthly_revenue > 0 %}
-                {% widthratio month.revenue max_monthly_revenue 100 as bar_height %}
-            {% else %}
-                {% widthratio 0 1 0 as bar_height %}
-            {% endif %}
-            <div class="chart-bar" style="height: {% if bar_height < 10 %}10{% else %}{{ bar_height }}{% endif %}%;">
-                {% if month.revenue > 0 %}
-                <span class="value">{{ month.revenue|floatformat:0 }} €</span>
-                {% endif %}
-                <span class="label">{{ month.month }}</span>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-
-{# Session heatmap — to be moved to Analytics in Chunk 4 #}
-{% include 'my_practice/includes/heatmap.html' %}
-
 {# Recent invoices #}
 <div class="section">
     <h2>📄 {% trans "Recent Invoices" %}</h2>
