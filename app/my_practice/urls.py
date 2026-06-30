@@ -342,6 +342,11 @@ urlpatterns = [
         name="session_bill",
     ),
     path(
+        "clients/<int:client_pk>/sessions/<int:session_pk>/gebueh/",
+        views.gebueh_leistung_create,
+        name="gebueh_leistung_create",
+    ),
+    path(
         "clients/<int:pk>/supervision/new/",
         views.supervision_item_create,
         name="supervision_item_create",

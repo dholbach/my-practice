@@ -210,7 +210,11 @@ class ClientDetailContextBuilder:
 
         sessions_qs = (
             self.client.sessions.filter(cancelled=False)
-            .prefetch_related("log", "invoice_items__invoice")
+            .prefetch_related(
+                "log",
+                "invoice_items__invoice",
+                "gebueh_leistungen__ziffer",
+            )
             .order_by("-session_date")
         )
 
