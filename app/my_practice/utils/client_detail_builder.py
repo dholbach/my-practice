@@ -245,6 +245,15 @@ class ClientDetailContextBuilder:
             reverse=True,
         )
 
+        gebueh_diagnostic_count = 0
+        if self.client.needs_gebueh_invoice:
+            from ..models.gebueh import Leistungserfassung
+
+            gebueh_diagnostic_count = Leistungserfassung.objects.filter(
+                session__client=self.client,
+                ziffer__nummer__in=["1", "19.5", "19.6"],
+            ).count()
+
         return {
             "profile": profile,
             "recent_session_logs": recent_session_logs,
@@ -261,4 +270,5 @@ class ClientDetailContextBuilder:
             "session_log_template": SESSION_LOG_TEMPLATE,
             "documents": self.client.documents.order_by("-document_date", "-created_at"),
             "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,
+            "gebueh_diagnostic_count": gebueh_diagnostic_count,
         }
