@@ -250,7 +250,7 @@ class ClientAdmin(admin.ModelAdmin):
                 "description": "Tags for organizing and categorizing clients",
             },
         ),
-        ("Additional", {"fields": ("notes", "active", "is_online_client")}),
+        ("Additional", {"fields": ("notes", "active", "is_online_client", "needs_gebueh_invoice")}),
         (
             "Timestamps",
             {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
