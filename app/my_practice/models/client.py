@@ -177,6 +177,11 @@ class Client(TimestampedModel):
         "If empty, will use 'Dear {name}' (EN) or 'Liebe:r {name}' (DE).",
     )
     active = models.BooleanField(default=True, verbose_name="Aktiv")
+    needs_gebueh_invoice = models.BooleanField(
+        default=False,
+        verbose_name="GebüH-Rechnung",
+        help_text="GebüH-Ziffern und Diagnose auf der Rechnung ausweisen (PKV / Beihilfe)",
+    )
     is_online_client = models.BooleanField(
         default=False,
         verbose_name="Online Klient",
