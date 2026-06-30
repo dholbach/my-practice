@@ -54,9 +54,7 @@ class PracticeAnalyzer:
         """
         # Fetch all clients for this practice (including dormant — needed for full classification)
         clients = (
-            Client.objects.filter(practice=self.practice)
-            if self.practice
-            else Client.objects.all()
+            Client.objects.filter(practice=self.practice) if self.practice else Client.objects.all()
         )
 
         # Get session data for period
