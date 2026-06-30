@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-30 17:20+0200\n"
+"POT-Creation-Date: 2026-06-30 17:56+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -404,6 +404,7 @@ msgstr "Log missing"
 
 #: templates/includes/client_card.html:19
 #: templates/my_practice/client_detail.html:670
+#: templates/my_practice/includes/heatmap.html:13
 #, fuzzy
 #| msgid "+ Session log"
 msgid "Sessions"
@@ -420,16 +421,538 @@ msgstr "Delete session?"
 msgid "(%(n)s days ago)"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:7
-msgid "Client"
+#: templates/my_practice/analytics.html:6
+#: templates/my_practice/analytics.html:9
+#: templates/my_practice/inquiry_list.html:36
+msgid "Analytics"
 msgstr ""
 
+#: templates/my_practice/analytics.html:10
+msgid "Revenue, Clients, Capacity & Expenses"
+msgstr ""
+
+#: templates/my_practice/analytics.html:35
+msgid "Period"
+msgstr ""
+
+#: templates/my_practice/analytics.html:38
+#, python-format
+msgid "All years (%(year)s–today)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:39
+msgid "Last year"
+msgstr ""
+
+#: templates/my_practice/analytics.html:40
+msgid "Last quarter"
+msgstr ""
+
+#: templates/my_practice/analytics.html:41
+#, fuzzy
+#| msgid "Delete session?"
+msgid "Last month"
+msgstr "Delete session?"
+
+#: templates/my_practice/analytics.html:42
+msgid "Custom"
+msgstr ""
+
+#: templates/my_practice/analytics.html:49
+msgid "From"
+msgstr ""
+
+#: templates/my_practice/analytics.html:55
+msgid "To"
+msgstr ""
+
+#: templates/my_practice/analytics.html:62
+msgid "Apply"
+msgstr ""
+
+#: templates/my_practice/analytics.html:66
+msgid "Reset"
+msgstr ""
+
+#: templates/my_practice/analytics.html:94
+#: templates/my_practice/analytics.html:178
+msgid "Revenue"
+msgstr ""
+
+#: templates/my_practice/analytics.html:97
+#: templates/my_practice/analytics.html:574
+#: templates/my_practice/client_list_cards.html:8
+msgid "Clients"
+msgstr ""
+
+#: templates/my_practice/analytics.html:100
+#: templates/my_practice/analytics.html:706
+msgid "Capacity"
+msgstr ""
+
+#: templates/my_practice/analytics.html:103
+#: templates/my_practice/analytics.html:132
+#: templates/my_practice/analytics.html:179
+msgid "Expenses"
+msgstr ""
+
+#: templates/my_practice/analytics.html:110
+msgid "Revenue & Profit"
+msgstr ""
+
+#: templates/my_practice/analytics.html:115
+msgid "Detailed Revenue Report"
+msgstr ""
+
+#: templates/my_practice/analytics.html:121
+msgid "Profit (Revenue - Expenses)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:123
+#, python-format
+msgid "Business profit %(start_year)s–today · Cumulative development"
+msgstr ""
+
+#: templates/my_practice/analytics.html:130
+#: templates/my_practice/analytics.html:641
+msgid "Year"
+msgstr ""
+
+#: templates/my_practice/analytics.html:131
+msgid "Income"
+msgstr ""
+
+#: templates/my_practice/analytics.html:133
+#, fuzzy
+#| msgid "Profile"
+msgid "Profit"
+msgstr "Profile"
+
+#: templates/my_practice/analytics.html:134
+msgid "Cumulative"
+msgstr ""
+
+#: templates/my_practice/analytics.html:135
+#: templates/my_practice/analytics.html:180
+msgid "Withdrawals"
+msgstr ""
+
+#: templates/my_practice/analytics.html:160
+msgid "Revenue, Expenses & Withdrawals"
+msgstr ""
+
+#: templates/my_practice/analytics.html:162
+#, fuzzy
+#| msgid "Preview"
+msgid "Complete financial overview"
+msgstr "Preview"
+
+#: templates/my_practice/analytics.html:204
+msgid "Revenue Trend (Monthly)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:206
+msgid "Monthly revenue development · growth visualized"
+msgstr ""
+
+#: templates/my_practice/analytics.html:216
+#, python-format
+msgid "Monthly revenue · %(months)s months · Max: %(max)s€"
+msgstr ""
+
+#: templates/my_practice/analytics.html:246
+msgid "Peak Months"
+msgstr ""
+
+#: templates/my_practice/analytics.html:258
+msgid "No data available"
+msgstr ""
+
+#: templates/my_practice/analytics.html:278
+msgid "Payment Delay (last 24 months)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:280
+msgid "Average days from invoice date to payment received"
+msgstr ""
+
+#: templates/my_practice/analytics.html:310
+msgid "days"
+msgstr ""
+
+#: templates/my_practice/analytics.html:311
+#: templates/my_practice/analytics.html:332
+#: templates/my_practice/analytics.html:381
+#, fuzzy
+#| msgid "🧾 To invoice"
+msgid "Invoices"
+msgstr "🧾 To invoice"
+
+#: templates/my_practice/analytics.html:321
+#: templates/my_practice/client_list_cards.html:6
+#, fuzzy
+#| msgid "Preview"
+msgid "Client overview"
+msgstr "Preview"
+
+#: templates/my_practice/analytics.html:325
+msgid "Top 10 Clients by Revenue"
+msgstr ""
+
+#: templates/my_practice/analytics.html:330
+msgid "Rank"
+msgstr ""
+
+#: templates/my_practice/analytics.html:331
+#: templates/my_practice/analytics.html:375
+#: templates/my_practice/client_list_cards.html:106
+#: templates/my_practice/invoice_detail.html:117
+msgid "Code"
+msgstr ""
+
+#: templates/my_practice/analytics.html:333
+#: templates/my_practice/analytics.html:575
+msgid "Hours"
+msgstr ""
+
+#: templates/my_practice/analytics.html:334
+#: templates/my_practice/client_detail.html:502
+msgid "Total revenue"
+msgstr ""
+
+#: templates/my_practice/analytics.html:354
+msgid "No revenue data available"
+msgstr ""
+
+#: templates/my_practice/analytics.html:361
+#, python-format
+msgid "Client Details (%(label)s)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:367
+msgid "Show dormant clients"
+msgstr ""
+
+#: templates/my_practice/analytics.html:376
+#: templates/my_practice/client_list_cards.html:107
+#: templates/my_practice/inquiry_confirm_delete.html:18
+#: templates/my_practice/inquiry_list.html:179
+#: templates/my_practice/inquiry_list.html:225
+msgid "Name"
+msgstr "Name"
+
+#: templates/my_practice/analytics.html:377
+#: templates/my_practice/client_detail.html:626
+#: templates/my_practice/client_detail.html:670
+#: templates/my_practice/inquiry_confirm_delete.html:30
+#: templates/my_practice/invoice_detail.html:33
+msgid "Status"
+msgstr "Status"
+
+#: templates/my_practice/analytics.html:378
+#, fuzzy
+#| msgid "+ Session log"
+msgid "Sessions (period)"
+msgstr "+ Session log"
+
+#: templates/my_practice/analytics.html:379
+#, fuzzy
+#| msgid "+ Session log"
+msgid "Total Sessions"
+msgstr "+ Session log"
+
+#: templates/my_practice/analytics.html:380
+msgid "Type"
+msgstr ""
+
+#: templates/my_practice/analytics.html:395
+msgid "Probatoric"
+msgstr ""
+
+#: templates/my_practice/analytics.html:397
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/client_list_cards.html:34
 #: templates/my_practice/dashboard.html:111
 #: templates/my_practice/practice_management.html:26
 msgid "Active"
 msgstr "Active"
+
+#: templates/my_practice/analytics.html:399
+msgid "Established"
+msgstr ""
+
+#: templates/my_practice/analytics.html:401
+msgid "Dormant"
+msgstr ""
+
+#: templates/my_practice/analytics.html:408
+#: templates/my_practice/client_detail.html:495
+msgid "💻 Online"
+msgstr ""
+
+#: templates/my_practice/analytics.html:410
+msgid "In-person"
+msgstr ""
+
+#: templates/my_practice/analytics.html:420
+msgid "No client data for this period."
+msgstr ""
+
+#: templates/my_practice/analytics.html:449
+#, fuzzy
+#| msgid "+ Session log"
+msgid "Session Type Distribution"
+msgstr "+ Session log"
+
+#: templates/my_practice/analytics.html:456
+#, fuzzy
+#| msgid "+ Session log"
+msgid "Total sessions"
+msgstr "+ Session log"
+
+#: templates/my_practice/analytics.html:475
+msgid "No session data available"
+msgstr ""
+
+#: templates/my_practice/analytics.html:487
+msgid "Capacity & Utilisation"
+msgstr ""
+
+#: templates/my_practice/analytics.html:493
+msgid "Key Insights"
+msgstr ""
+
+#: templates/my_practice/analytics.html:506
+#, fuzzy
+#| msgid "Manage practices"
+msgid "Active Clients"
+msgstr "Manage practices"
+
+#: templates/my_practice/analytics.html:511
+#, fuzzy
+#| msgid "+ Session log"
+msgid "Booked Sessions"
+msgstr "+ Session log"
+
+#: templates/my_practice/analytics.html:516
+msgid "Capacity Used"
+msgstr ""
+
+#: templates/my_practice/analytics.html:524
+#, python-format
+msgid "Bookings until %(date)s"
+msgstr ""
+
+#: templates/my_practice/analytics.html:531
+msgid "Days Off"
+msgstr ""
+
+#: templates/my_practice/analytics.html:537
+msgid "Capacity Analysis"
+msgstr ""
+
+#: templates/my_practice/analytics.html:537
+#, python-format
+msgid "until %(date)s"
+msgstr ""
+
+#: templates/my_practice/analytics.html:540
+#, fuzzy
+#| msgid "+ Note"
+msgid "Note:"
+msgstr "+ Note"
+
+#: templates/my_practice/analytics.html:540
+#, python-format
+msgid "For future-oriented periods only the period until <strong>%(date)s</strong> (2 weeks from today) is considered, as most clients book at short notice."
+msgstr ""
+
+#: templates/my_practice/analytics.html:547
+msgid "Available Hours"
+msgstr ""
+
+#: templates/my_practice/analytics.html:551
+msgid "Booked Hours"
+msgstr ""
+
+#: templates/my_practice/analytics.html:555
+msgid "Free Capacity"
+msgstr ""
+
+#: templates/my_practice/analytics.html:559
+#, fuzzy
+#| msgid "Working diagnosis"
+msgid "Working Days"
+msgstr "Working diagnosis"
+
+#: templates/my_practice/analytics.html:567
+msgid "4-Quarter Trends"
+msgstr ""
+
+#: templates/my_practice/analytics.html:572
+msgid "Quarter"
+msgstr ""
+
+#: templates/my_practice/analytics.html:573
+#, python-format
+msgid "Capacity %%"
+msgstr ""
+
+#: templates/my_practice/analytics.html:596
+#, python-format
+msgid "Time off in %(label)s"
+msgstr ""
+
+#: templates/my_practice/analytics.html:602
+#: templates/my_practice/analytics.html:642
+msgid "Days"
+msgstr ""
+
+#: templates/my_practice/analytics.html:614
+#, python-format
+msgid "Time off %(label)s"
+msgstr ""
+
+#: templates/my_practice/analytics.html:616
+msgid "Days off in selected period"
+msgstr ""
+
+#: templates/my_practice/analytics.html:621
+msgid "Total days"
+msgstr ""
+
+#: templates/my_practice/analytics.html:625
+msgid "Weeks"
+msgstr ""
+
+#: templates/my_practice/analytics.html:629
+#, fuzzy
+#| msgid "Working diagnosis"
+msgid "Working days off"
+msgstr "Working diagnosis"
+
+#: templates/my_practice/analytics.html:637
+msgid "Time Off by Year"
+msgstr ""
+
+#: templates/my_practice/analytics.html:643
+msgid "Wk."
+msgstr ""
+
+#: templates/my_practice/analytics.html:644
+msgid "Time off"
+msgstr ""
+
+#: templates/my_practice/analytics.html:645
+msgid "Training"
+msgstr ""
+
+#: templates/my_practice/analytics.html:646
+msgid "Sick"
+msgstr ""
+
+#: templates/my_practice/analytics.html:667
+msgid "Capacity Utilisation Over Time"
+msgstr ""
+
+#: templates/my_practice/analytics.html:669
+#, python-format
+msgid "Monthly utilisation in %% (10h/week until Jul 2023, then 20h/week)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:704
+msgid "Utilisation"
+msgstr ""
+
+#: templates/my_practice/analytics.html:705
+msgid "Booked"
+msgstr ""
+
+#: templates/my_practice/analytics.html:716
+msgid "Year Comparison – Hours per Month"
+msgstr ""
+
+#: templates/my_practice/analytics.html:718
+msgid "Therapy hours per calendar month (last 4 years + average)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:820
+msgid "Seasonality"
+msgstr ""
+
+#: templates/my_practice/analytics.html:822
+msgid "Average utilisation per calendar month (Ø over all years, incl. time off)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:844
+msgid "Cancellation Rate (last 24 months)"
+msgstr ""
+
+#: templates/my_practice/analytics.html:846
+#, python-format
+msgid "Cancelled sessions in %% of all sessions per month"
+msgstr ""
+
+#: templates/my_practice/analytics.html:877
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancellation rate"
+msgstr "Cancel"
+
+#: templates/my_practice/analytics.html:878
+#: templates/my_practice/dashboard.html:149
+#: templates/my_practice/invoice_detail.html:43
+#, fuzzy
+#| msgid "Cancel"
+msgid "Cancelled"
+msgstr "Cancel"
+
+#: templates/my_practice/analytics.html:889
+#, fuzzy
+#| msgid "Preview"
+msgid "Expense Overview"
+msgstr "Preview"
+
+#: templates/my_practice/analytics.html:894
+#, fuzzy
+#| msgid "Manage practices"
+msgid "Manage Expenses"
+msgstr "Manage practices"
+
+#: templates/my_practice/analytics.html:897
+msgid "Manage Withdrawals"
+msgstr ""
+
+#: templates/my_practice/analytics.html:903
+msgid "Expenses by Category"
+msgstr ""
+
+#: templates/my_practice/analytics.html:910
+msgid "Total Expenses"
+msgstr ""
+
+#: templates/my_practice/analytics.html:929
+msgid "No expense data available"
+msgstr ""
+
+#: templates/my_practice/analytics.html:935
+msgid "Expense Trends"
+msgstr ""
+
+#: templates/my_practice/analytics.html:937
+#, python-format
+msgid "Annual operating expenses %(start_year)s–today"
+msgstr ""
+
+#: templates/my_practice/analytics.html:1064
+#, fuzzy
+#| msgid "Preview"
+msgid "Back to overview"
+msgstr "Preview"
+
+#: templates/my_practice/client_detail.html:7
+msgid "Client"
+msgstr ""
 
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/client_list_cards.html:42
@@ -857,19 +1380,11 @@ msgid "Session format"
 msgstr "+ Session log"
 
 #: templates/my_practice/client_detail.html:495
-msgid "💻 Online"
-msgstr ""
-
-#: templates/my_practice/client_detail.html:495
 msgid "🏢 In-person"
 msgstr ""
 
 #: templates/my_practice/client_detail.html:498
 msgid "Hourly rate"
-msgstr ""
-
-#: templates/my_practice/client_detail.html:502
-msgid "Total revenue"
 msgstr ""
 
 #: templates/my_practice/client_detail.html:513
@@ -1028,13 +1543,6 @@ msgstr ""
 
 #: templates/my_practice/client_detail.html:626
 #: templates/my_practice/client_detail.html:670
-#: templates/my_practice/inquiry_confirm_delete.html:30
-#: templates/my_practice/invoice_detail.html:33
-msgid "Status"
-msgstr "Status"
-
-#: templates/my_practice/client_detail.html:626
-#: templates/my_practice/client_detail.html:670
 #: templates/my_practice/inquiry_list.html:183
 #: templates/my_practice/inquiry_list.html:229
 #, fuzzy
@@ -1163,16 +1671,6 @@ msgstr ""
 msgid "Save client"
 msgstr "Manage practices"
 
-#: templates/my_practice/client_list_cards.html:6
-#, fuzzy
-#| msgid "Preview"
-msgid "Client overview"
-msgstr "Preview"
-
-#: templates/my_practice/client_list_cards.html:8
-msgid "Clients"
-msgstr ""
-
 #: templates/my_practice/client_list_cards.html:9
 msgid "Workflow overview"
 msgstr ""
@@ -1213,18 +1711,6 @@ msgstr ""
 #: templates/my_practice/client_list_cards.html:100
 msgid "Clients eligible for deletion (GDPR Art. 17)"
 msgstr ""
-
-#: templates/my_practice/client_list_cards.html:106
-#: templates/my_practice/invoice_detail.html:117
-msgid "Code"
-msgstr ""
-
-#: templates/my_practice/client_list_cards.html:107
-#: templates/my_practice/inquiry_confirm_delete.html:18
-#: templates/my_practice/inquiry_list.html:179
-#: templates/my_practice/inquiry_list.html:225
-msgid "Name"
-msgstr "Name"
 
 #: templates/my_practice/client_list_cards.html:123
 #, fuzzy
@@ -1322,24 +1808,13 @@ msgstr "Switch"
 msgid "All-time Status Overview"
 msgstr "Preview"
 
-#: templates/my_practice/dashboard.html:149
-#: templates/my_practice/invoice_detail.html:43
-#, fuzzy
-#| msgid "Cancel"
-msgid "Cancelled"
-msgstr "Cancel"
-
 #: templates/my_practice/dashboard.html:158
-msgid "Monthly Revenue (last 12 months)"
-msgstr ""
-
-#: templates/my_practice/dashboard.html:183
 #, fuzzy
 #| msgid "🧾 To invoice"
 msgid "Recent Invoices"
 msgstr "🧾 To invoice"
 
-#: templates/my_practice/dashboard.html:197
+#: templates/my_practice/dashboard.html:172
 #, fuzzy
 #| msgid "No supervision topics for this client yet."
 msgid "No invoices yet."
@@ -1356,6 +1831,33 @@ msgstr ""
 
 #: templates/my_practice/gebueh_leistung_form.html:20
 msgid "Select all billing codes (Ziffern) that apply to this session. The maximum rate is billed automatically."
+msgstr ""
+
+#: templates/my_practice/includes/heatmap.html:8
+#, python-format
+msgid "Activity Heatmap (%(n)s months)"
+msgstr ""
+
+#: templates/my_practice/includes/heatmap.html:10
+msgid "Sort:"
+msgstr ""
+
+#: templates/my_practice/includes/heatmap.html:17
+#, fuzzy
+#| msgid "Inactive"
+msgid "Last active"
+msgstr "Inactive"
+
+#: templates/my_practice/includes/heatmap.html:22
+msgid "Current"
+msgstr ""
+
+#: templates/my_practice/includes/heatmap.html:28
+msgid "← Earlier"
+msgstr ""
+
+#: templates/my_practice/includes/heatmap.html:34
+msgid "Later →"
 msgstr ""
 
 #: templates/my_practice/inquiry_confirm_delete.html:4
@@ -1496,10 +1998,6 @@ msgstr "Delete inquiry"
 
 #: templates/my_practice/inquiry_list.html:21
 msgid "Marketing periods:"
-msgstr ""
-
-#: templates/my_practice/inquiry_list.html:36
-msgid "Analytics"
 msgstr ""
 
 #: templates/my_practice/inquiry_list.html:38

@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load static %}
 {% load payment_tags %}
 
-{% block title %}Analysen{% endblock %}
+{% block title %}{% trans "Analytics" %}{% endblock %}
 
 {% block page_icon %}📊{% endblock %}
-{% block page_title %}Analysen{% endblock %}
-{% block page_subtitle %}Umsatz, Klienten, Kapazität & Ausgaben{% endblock %}
+{% block page_title %}{% trans "Analytics" %}{% endblock %}
+{% block page_subtitle %}{% trans "Revenue, Clients, Capacity & Expenses" %}{% endblock %}
 
 {% block extra_css %}
 <!-- Modular chart utilities -->
@@ -31,38 +32,38 @@
         <input type="hidden" name="tab" value="{{ active_tab }}">
         <div class="period-filter-form__field">
             <label for="period" class="filter-label">
-                📅 Zeitraum
+                📅 {% trans "Period" %}
             </label>
             <select name="period" id="period" class="form-control">
-                <option value="all" {% if selected_period == 'all' %}selected{% endif %}>Alle Jahre ({{ data_start_year }}-heute)</option>
-                <option value="year" {% if selected_period == 'year' %}selected{% endif %}>Letztes Jahr</option>
-                <option value="quarter" {% if selected_period == 'quarter' %}selected{% endif %}>Letztes Quartal</option>
-                <option value="month" {% if selected_period == 'month' %}selected{% endif %}>Letzter Monat</option>
-                <option value="custom" {% if selected_period == 'custom' %}selected{% endif %}>Benutzerdefiniert</option>
+                <option value="all" {% if selected_period == 'all' %}selected{% endif %}>{% blocktrans with year=data_start_year %}All years ({{ year }}–today){% endblocktrans %}</option>
+                <option value="year" {% if selected_period == 'year' %}selected{% endif %}>{% trans "Last year" %}</option>
+                <option value="quarter" {% if selected_period == 'quarter' %}selected{% endif %}>{% trans "Last quarter" %}</option>
+                <option value="month" {% if selected_period == 'month' %}selected{% endif %}>{% trans "Last month" %}</option>
+                <option value="custom" {% if selected_period == 'custom' %}selected{% endif %}>{% trans "Custom" %}</option>
             </select>
         </div>
 
         <div id="customDates" class="period-filter-form__custom-dates">
             <div class="period-filter-form__date-field">
                 <label for="start_date" class="filter-label">
-                    Von
+                    {% trans "From" %}
                 </label>
                 <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
             </div>
             <div class="period-filter-form__date-field">
                 <label for="end_date" class="filter-label">
-                    Bis
+                    {% trans "To" %}
                 </label>
                 <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
             </div>
         </div>
 
         <button type="submit" class="btn btn-primary">
-            🔍 Anwenden
+            🔍 {% trans "Apply" %}
         </button>
         {% if selected_period != 'all' %}
         <a href="{% url 'analytics' %}?tab={{ active_tab }}" class="btn btn-secondary">
-            ↺ Zurücksetzen
+            ↺ {% trans "Reset" %}
         </a>
         {% endif %}
     </form>
@@ -90,48 +91,48 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="tabs-container">
     <div class="tabs-nav">
         <button class="tab-button {% if active_tab == 'revenue' %}active{% endif %}" data-tab="revenue">
-            <span class="tab-icon">💰</span> Umsatz
+            <span class="tab-icon">💰</span> {% trans "Revenue" %}
         </button>
         <button class="tab-button {% if active_tab == 'clients' %}active{% endif %}" data-tab="clients">
-            <span class="tab-icon">👥</span> Klienten
+            <span class="tab-icon">👥</span> {% trans "Clients" %}
         </button>
         <button class="tab-button {% if active_tab == 'capacity' %}active{% endif %}" data-tab="capacity">
-            <span class="tab-icon">📊</span> Kapazität
+            <span class="tab-icon">📊</span> {% trans "Capacity" %}
         </button>
         <button class="tab-button {% if active_tab == 'expenses' %}active{% endif %}" data-tab="expenses">
-            <span class="tab-icon">💸</span> Ausgaben
+            <span class="tab-icon">💸</span> {% trans "Expenses" %}
         </button>
     </div>
 </div>
 
 <!-- Tab Content: Revenue -->
 <div id="revenue-tab" class="tab-content {% if active_tab == 'revenue' %}active{% endif %}">
-    <h2>💰 Umsatz & Gewinn</h2>
+    <h2>💰 {% trans "Revenue & Profit" %}</h2>
 
     <!-- Quick Actions -->
     <div class="tab-actions">
         <a href="{% url 'revenue_report' %}" class="btn btn-primary btn-sm">
-            📊 Detaillierter Umsatz-Report
+            📊 {% trans "Detailed Revenue Report" %}
         </a>
     </div>
 
     <!-- Profit Analysis -->
     <div class="analytics-card mb-4">
-        <h3>💰 Gewinn (Umsatz - Ausgaben)</h3>
+        <h3>💰 {% trans "Profit (Revenue - Expenses)" %}</h3>
         <p class="chart-subtitle">
-            Geschäftsgewinn {{ data_start_year }}-heute • Kumulative Entwicklung
+            {% blocktrans with start_year=data_start_year %}Business profit {{ start_year }}–today · Cumulative development{% endblocktrans %}
         </p>
 
         <div class="table-container">
             <table class="data-table data-table--wide">
                 <thead>
                     <tr>
-                        <th class="text-left">Jahr</th>
-                        <th class="text-right">Einnahmen</th>
-                        <th class="text-right">Ausgaben</th>
-                        <th class="text-right">Gewinn</th>
-                        <th class="text-right">Kumulativ</th>
-                        <th class="text-right">Entnahmen</th>
+                        <th class="text-left">{% trans "Year" %}</th>
+                        <th class="text-right">{% trans "Income" %}</th>
+                        <th class="text-right">{% trans "Expenses" %}</th>
+                        <th class="text-right">{% trans "Profit" %}</th>
+                        <th class="text-right">{% trans "Cumulative" %}</th>
+                        <th class="text-right">{% trans "Withdrawals" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -156,9 +157,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Revenue vs Expenses vs Withdrawals -->
     <div class="analytics-card mb-4">
-        <h3>💰 Umsatz, Ausgaben & Entnahmen</h3>
+        <h3>💰 {% trans "Revenue, Expenses & Withdrawals" %}</h3>
         <p class="chart-subtitle">
-            Vollständige Finanzübersicht
+            {% trans "Complete financial overview" %}
         </p>
 
         <div id="comparisonChartContainer" class="chart-wrapper chart-wrapper--xl">
@@ -174,9 +175,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const withdrawals = [{% for item in comparison_data %}{{ item.withdrawals|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
 
         const datasets = [
-            { data: revenues, color: '#48bb78', colorEnd: '#38a169', label: 'Umsatz' },
-            { data: expenses, color: '#f56565', colorEnd: '#e53e3e', label: 'Ausgaben' },
-            { data: withdrawals, color: '#9f7aea', colorEnd: '#805ad5', label: 'Entnahmen' }
+            { data: revenues, color: '#48bb78', colorEnd: '#38a169', label: '{% trans "Revenue" %}' },
+            { data: expenses, color: '#f56565', colorEnd: '#e53e3e', label: '{% trans "Expenses" %}' },
+            { data: withdrawals, color: '#9f7aea', colorEnd: '#805ad5', label: '{% trans "Withdrawals" %}' }
         ];
 
         new ChartBuilder(canvas)
@@ -200,9 +201,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Revenue Trends Line Chart -->
     <div class="analytics-card mb-4">
-        <h3>📈 Umsatz-Trend (Monatlich)</h3>
+        <h3>📈 {% trans "Revenue Trend (Monthly)" %}</h3>
         <p class="chart-subtitle">
-            Entwicklung der monatlichen Umsätze • Wachstum visualisiert
+            {% trans "Monthly revenue development · growth visualized" %}
         </p>
 
         <div class="chart-wrapper chart-wrapper--lg">
@@ -212,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="chart-legend mt-2">
             <div class="legend-item">
                 <div class="legend-line-swatch"></div>
-                <span>Monatlicher Umsatz • {{ revenue_trends|length }} Monate • Max: {{ max_revenue|floatformat:0 }}€</span>
+                <span>{% blocktrans with months=revenue_trends|length max=max_revenue|floatformat:0 %}Monthly revenue · {{ months }} months · Max: {{ max }}€{% endblocktrans %}</span>
             </div>
         </div>
     </div>
@@ -242,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Busiest Months -->
     <div class="analytics-card mt-4">
-        <h3>🔥 Stärkste Monate</h3>
+        <h3>🔥 {% trans "Peak Months" %}</h3>
         {% with max_month=busiest_months|dictsort:"revenue"|last %}
         <ul class="busiest-months">
             {% for month in busiest_months %}
@@ -254,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="month-revenue">{{ month.revenue|currency }}</span>
             </li>
             {% empty %}
-            <p class="text-muted">Keine Daten verfügbar</p>
+            <p class="text-muted">{% trans "No data available" %}</p>
             {% endfor %}
         </ul>
         {% endwith %}
@@ -274,9 +275,9 @@ document.addEventListener('DOMContentLoaded', function() {
     {% if days_to_payment %}
     {{ days_to_payment|json_script:"days-to-payment-data" }}
     <div class="analytics-card mt-4">
-        <h3>⏱️ Zahlungsverzug (letzte 24 Monate)</h3>
+        <h3>⏱️ {% trans "Payment Delay (last 24 months)" %}</h3>
         <p class="chart-subtitle">
-            Durchschnittliche Tage von Rechnungsdatum bis Zahlungseingang
+            {% trans "Average days from invoice date to payment received" %}
         </p>
         <div class="chart-wrapper chart-wrapper--sm">
             <canvas id="daysToPaymentChart" width="100%" height="100%"></canvas>
@@ -306,8 +307,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .tooltip((d) => {
                 const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
                 return `<strong>${d.label}</strong><br>` +
-                       `Ø ${d.value} Tage<br>` +
-                       `${counts[idx]} Rechnungen`;
+                       `Ø ${d.value} {% trans "days" %}<br>` +
+                       `${counts[idx]} {% trans "Invoices" %}`;
             })
             .build();
     });
@@ -317,20 +318,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Tab Content: Clients -->
 <div id="clients-tab" class="tab-content {% if active_tab == 'clients' %}active{% endif %}">
-    <h2>👥 Klienten-Übersicht</h2>
+    <h2>👥 {% trans "Client overview" %}</h2>
 
     <!-- Top Clients by Revenue -->
     <div class="analytics-card mb-4">
-        <h3>👑 Top 10 Klienten nach Umsatz</h3>
+        <h3>👑 {% trans "Top 10 Clients by Revenue" %}</h3>
         {% if top_clients %}
         <table class="client-table">
             <thead>
                 <tr>
-                    <th>Rang</th>
-                    <th>Code</th>
-                    <th>Rechnungen</th>
-                    <th>Stunden</th>
-                    <th class="text-right">Gesamtumsatz</th>
+                    <th>{% trans "Rank" %}</th>
+                    <th>{% trans "Code" %}</th>
+                    <th>{% trans "Invoices" %}</th>
+                    <th>{% trans "Hours" %}</th>
+                    <th class="text-right">{% trans "Total revenue" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -350,20 +351,20 @@ document.addEventListener('DOMContentLoaded', function() {
             </tbody>
         </table>
         {% else %}
-        <p class="text-muted">Keine Umsatzdaten verfügbar</p>
+        <p class="text-muted">{% trans "No revenue data available" %}</p>
         {% endif %}
     </div>
 
     {% if practice_analysis %}
     <!-- Client Classification Table -->
     <div class="analytics-card mb-4">
-        <h3>📋 Klienten-Details ({{ practice_analysis.period.label }})</h3>
+        <h3>📋 {% blocktrans with label=practice_analysis.period.label %}Client Details ({{ label }}){% endblocktrans %}</h3>
 
         {% if practice_analysis.clients.list %}
         <div class="toggle-section mb-2">
             <label class="toggle-label">
                 <input type="checkbox" id="toggle-dormant">
-                <span>Ruhende Klienten anzeigen</span>
+                <span>{% trans "Show dormant clients" %}</span>
             </label>
         </div>
 
@@ -371,13 +372,13 @@ document.addEventListener('DOMContentLoaded', function() {
             <table class="client-table">
                 <thead>
                     <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Sitzungen (Zeitraum)</th>
-                        <th>Gesamt-Sitzungen</th>
-                        <th>Typ</th>
-                        <th>Rechnungen</th>
+                        <th>{% trans "Code" %}</th>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Sessions (period)" %}</th>
+                        <th>{% trans "Total Sessions" %}</th>
+                        <th>{% trans "Type" %}</th>
+                        <th>{% trans "Invoices" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -391,22 +392,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         </td>
                         <td>
                             {% if client.classification == 'probatoric' %}
-                                <span class="badge badge-probatoric">Probatorik</span>
+                                <span class="badge badge-probatoric">{% trans "Probatoric" %}</span>
                             {% elif client.classification == 'active' %}
-                                <span class="badge badge-active">Aktiv</span>
+                                <span class="badge badge-active">{% trans "Active" %}</span>
                             {% elif client.classification == 'established' %}
-                                <span class="badge badge-established">Etabliert</span>
+                                <span class="badge badge-established">{% trans "Established" %}</span>
                             {% elif client.classification == 'dormant' %}
-                                <span class="badge badge-dormant">Ruhend</span>
+                                <span class="badge badge-dormant">{% trans "Dormant" %}</span>
                             {% endif %}
                         </td>
                         <td class="font-weight-600">{{ client.sessions_in_period|floatformat:1 }}h</td>
                         <td>{{ client.sessions_total|floatformat:1 }}h</td>
                         <td>
                             {% if client.is_online %}
-                                <span class="badge badge-online">Online</span>
+                                <span class="badge badge-online">{% trans "💻 Online" %}</span>
                             {% else %}
-                                <span class="text-muted">Präsenz</span>
+                                <span class="text-muted">{% trans "In-person" %}</span>
                             {% endif %}
                         </td>
                         <td>{{ client.invoices_count }}</td>
@@ -416,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </table>
         </div>
         {% else %}
-        <p class="text-muted">Keine Klientendaten für diesen Zeitraum.</p>
+        <p class="text-muted">{% trans "No client data for this period." %}</p>
         {% endif %}
     </div>
 
@@ -445,14 +446,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Session Type Distribution -->
     <div class="analytics-card">
-        <h3>🎯 Sitzungstypen-Verteilung</h3>
+        <h3>🎯 {% trans "Session Type Distribution" %}</h3>
         {% if session_distribution.total > 0 %}
         <div class="text-center mb-3">
             <div class="stat-display__value">
                 {{ session_distribution.total }}
             </div>
             <div class="stat-display__label">
-                Gesamt Sitzungen
+                {% trans "Total sessions" %}
             </div>
         </div>
 
@@ -471,20 +472,25 @@ document.addEventListener('DOMContentLoaded', function() {
             {% endfor %}
         </ul>
         {% else %}
-        <p class="text-muted">Keine Sitzungsdaten verfügbar</p>
+        <p class="text-muted">{% trans "No session data available" %}</p>
         {% endif %}
     </div>
+
+    <!-- Session activity heatmap -->
+    {% with extra_heatmap_query="tab=clients&period="|add:selected_period %}
+    {% include 'my_practice/includes/heatmap.html' with extra_heatmap_query=extra_heatmap_query %}
+    {% endwith %}
 </div>
 
 <!-- Tab Content: Capacity -->
 <div id="capacity-tab" class="tab-content {% if active_tab == 'capacity' %}active{% endif %}">
-    <h2>📊 Kapazität & Auslastung</h2>
+    <h2>📊 {% trans "Capacity & Utilisation" %}</h2>
 
     {% if practice_analysis %}
     <!-- Insights Section -->
     {% if practice_analysis.insights %}
     <div class="insights-section">
-        <h2>💡 Wichtige Erkenntnisse</h2>
+        <h2>💡 {% trans "Key Insights" %}</h2>
         <ul class="insights-list">
             {% for insight in practice_analysis.insights %}
             <li>{{ insight }}</li>
@@ -497,17 +503,17 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="analysis-header">
         <div class="metric-card primary">
             <div class="metric-value">{{ practice_analysis.clients.active_in_period }}</div>
-            <div class="metric-label">Aktive Klienten</div>
+            <div class="metric-label">{% trans "Active Clients" %}</div>
         </div>
 
         <div class="metric-card success">
             <div class="metric-value">{{ practice_analysis.summary.total_sessions_booked|floatformat:0 }}</div>
-            <div class="metric-label">Gebuchte Sitzungen</div>
+            <div class="metric-label">{% trans "Booked Sessions" %}</div>
         </div>
 
         <div class="metric-card warning">
             <div class="metric-value">{{ practice_analysis.capacity.capacity_percentage }}%</div>
-            <div class="metric-label">Kapazität genutzt</div>
+            <div class="metric-label">{% trans "Capacity Used" %}</div>
             <div class="capacity-bar">
                 <div class="capacity-fill" style="width: {{ practice_analysis.capacity.capacity_percentage }}%;">
                     {{ practice_analysis.capacity.capacity_percentage }}%
@@ -515,43 +521,42 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             {% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %}
             <div class="hint-text">
-                ℹ️ Buchungen bis {{ practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" }}
+                ℹ️ {% blocktrans with date=practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" %}Bookings until {{ date }}{% endblocktrans %}
             </div>
             {% endif %}
         </div>
 
         <div class="metric-card danger">
             <div class="metric-value">{{ practice_analysis.timeoff.total_workdays }}</div>
-            <div class="metric-label">Freie Tage</div>
+            <div class="metric-label">{% trans "Days Off" %}</div>
         </div>
     </div>
 
     <!-- Capacity Analysis -->
     <div class="analytics-card mb-4">
-        <h3>📊 Kapazitätsanalyse{% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %} (bis {{ practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" }}){% endif %}</h3>
+        <h3>📊 {% trans "Capacity Analysis" %}{% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %} ({% blocktrans with date=practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" %}until {{ date }}{% endblocktrans %}){% endif %}</h3>
         {% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %}
         <p class="hint-paragraph">
-            ℹ️ <strong>Hinweis:</strong> Für zukunftsgerichtete Zeiträume wird nur der Zeitraum bis <strong>{{ practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" }}</strong>
-            (2 Wochen ab heute) berücksichtigt, da die meisten Klienten kurzfristig buchen.
+            ℹ️ <strong>{% trans "Note:" %}</strong> {% blocktrans with date=practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" %}For future-oriented periods only the period until <strong>{{ date }}</strong> (2 weeks from today) is considered, as most clients book at short notice.{% endblocktrans %}
         </p>
         {% endif %}
 
         <div class="analysis-header">
             <div class="metric-card">
                 <div class="metric-value">{{ practice_analysis.capacity.available_hours|floatformat:0 }}h</div>
-                <div class="metric-label">Verfügbare Stunden</div>
+                <div class="metric-label">{% trans "Available Hours" %}</div>
             </div>
             <div class="metric-card">
                 <div class="metric-value">{{ practice_analysis.capacity.booked_hours|floatformat:1 }}h</div>
-                <div class="metric-label">Gebuchte Stunden</div>
+                <div class="metric-label">{% trans "Booked Hours" %}</div>
             </div>
             <div class="metric-card">
                 <div class="metric-value">{{ practice_analysis.capacity.remaining_hours|floatformat:0 }}h</div>
-                <div class="metric-label">Freie Kapazität</div>
+                <div class="metric-label">{% trans "Free Capacity" %}</div>
             </div>
             <div class="metric-card">
                 <div class="metric-value">{{ practice_analysis.capacity.working_days_available }}</div>
-                <div class="metric-label">Arbeitstage</div>
+                <div class="metric-label">{% trans "Working Days" %}</div>
             </div>
         </div>
     </div>
@@ -559,15 +564,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- 4-Quarter Trends -->
     {% if practice_trends %}
     <div class="analytics-card mb-4">
-        <h3>📈 4-Quartals-Trends</h3>
+        <h3>📈 {% trans "4-Quarter Trends" %}</h3>
         <div class="table-container">
             <table class="client-table">
                 <thead>
                     <tr>
-                        <th>Quartal</th>
-                        <th class="text-center">Kapazität %</th>
-                        <th class="text-center">Klienten</th>
-                        <th class="text-center">Stunden</th>
+                        <th>{% trans "Quarter" %}</th>
+                        <th class="text-center">{% trans "Capacity %" %}</th>
+                        <th class="text-center">{% trans "Clients" %}</th>
+                        <th class="text-center">{% trans "Hours" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -588,13 +593,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- TimeOff Overview -->
     {% if practice_analysis.timeoff.entries %}
     <div class="analytics-card">
-        <h3>🏖️ Urlaubszeiten in {{ practice_analysis.period.label }}</h3>
+        <h3>🏖️ {% blocktrans with label=practice_analysis.period.label %}Time off in {{ label }}{% endblocktrans %}</h3>
         <ul class="bare-list">
             {% for entry in practice_analysis.timeoff.entries %}
             <li class="timeoff-entry">
                 <span>
                     <strong class="text-primary">{{ entry.title }}</strong>
-                    <span class="text-muted"> ({{ entry.period_days|default:entry.full_days }} Tage)</span>
+                    <span class="text-muted"> ({{ entry.period_days|default:entry.full_days }} {% trans "Days" %})</span>
                 </span>
                 <span class="text-muted">{{ entry.period_start|date:"d.m." }} - {{ entry.period_end|date:"d.m.Y" }}</span>
             </li>
@@ -606,22 +611,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- TimeOff Statistics -->
     <div class="analytics-card mb-4 mt-4">
-        <h3>🏖️ Urlaub {{ timeoff_label }}</h3>
+        <h3>🏖️ {% blocktrans with label=timeoff_label %}Time off {{ label }}{% endblocktrans %}</h3>
         <p class="chart-subtitle">
-            Urlaubstage im ausgewählten Zeitraum
+            {% trans "Days off in selected period" %}
         </p>
         <div class="analysis-header">
             <div class="timeoff-stat">
                 <div class="timeoff-stat-value">{{ total_days_off }}</div>
-                <div class="timeoff-stat-label">Tage gesamt</div>
+                <div class="timeoff-stat-label">{% trans "Total days" %}</div>
             </div>
             <div class="timeoff-stat">
                 <div class="timeoff-stat-value">{{ total_weeks_off }}</div>
-                <div class="timeoff-stat-label">Wochen</div>
+                <div class="timeoff-stat-label">{% trans "Weeks" %}</div>
             </div>
             <div class="timeoff-stat">
                 <div class="timeoff-stat-value">{{ total_workdays_off }}</div>
-                <div class="timeoff-stat-label">Arbeitstage frei</div>
+                <div class="timeoff-stat-label">{% trans "Working days off" %}</div>
             </div>
         </div>
     </div>
@@ -629,16 +634,16 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Yearly TimeOff Breakdown -->
     {% if yearly_timeoff %}
     <div class="analytics-card mb-4">
-        <h3>📅 Urlaub nach Jahren</h3>
+        <h3>📅 {% trans "Time Off by Year" %}</h3>
         <table class="timeoff-table">
             <thead>
                 <tr>
-                    <th>Jahr</th>
-                    <th>Tage</th>
-                    <th>Wo.</th>
-                    <th title="Urlaub">🏖️</th>
-                    <th title="Fortbildung">📚</th>
-                    <th title="Krank">🤒</th>
+                    <th>{% trans "Year" %}</th>
+                    <th>{% trans "Days" %}</th>
+                    <th>{% trans "Wk." %}</th>
+                    <th title="{% trans "Time off" %}">🏖️</th>
+                    <th title="{% trans "Training" %}">📚</th>
+                    <th title="{% trans "Sick" %}">🤒</th>
                 </tr>
             </thead>
             <tbody>
@@ -659,9 +664,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Capacity Utilization Trends -->
     <div class="analytics-card mb-4 mt-4">
-        <h3>📈 Kapazitätsauslastung über Zeit</h3>
+        <h3>📈 {% trans "Capacity Utilisation Over Time" %}</h3>
         <p class="chart-subtitle">
-            Monatliche Auslastung in % (10h/Woche bis Jul 2023, danach 20h/Woche)
+            {% trans "Monthly utilisation in % (10h/week until Jul 2023, then 20h/week)" %}
         </p>
 
         <div class="chart-wrapper chart-wrapper--lg">
@@ -696,9 +701,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .tooltip((d) => {
                 const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
                 return `<strong>${d.label}</strong><br>` +
-                       `Auslastung: ${d.value}%<br>` +
-                       `Gebucht: ${bookedHours[idx]}h<br>` +
-                       `Kapazität: ${capacityHours[idx]}h`;
+                       `{% trans "Utilisation" %}: ${d.value}%<br>` +
+                       `{% trans "Booked" %}: ${bookedHours[idx]}h<br>` +
+                       `{% trans "Capacity" %}: ${capacityHours[idx]}h`;
             })
             .build();
     });
@@ -708,9 +713,9 @@ document.addEventListener('DOMContentLoaded', function() {
     {% if cumulative_year_data %}
     {{ cumulative_year_data|json_script:"cumulative-year-data" }}
     <div class="analytics-card mt-3">
-        <h3>📈 Jahresvergleich – Stunden pro Monat</h3>
+        <h3>📈 {% trans "Year Comparison – Hours per Month" %}</h3>
         <p class="chart-subtitle">
-            Therapeutenstunden pro Kalendermonat (letzte 4 Jahre + Durchschnitt)
+            {% trans "Therapy hours per calendar month (last 4 years + average)" %}
         </p>
         <div class="chart-wrapper chart-wrapper--xs">
             <canvas id="cumulativeYearsChart" width="100%" height="100%"></canvas>
@@ -812,9 +817,9 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Seasonality -->
     {% if seasonality_data %}
     <div class="analytics-card mt-3">
-        <h3>🗓️ Saisonalität</h3>
+        <h3>🗓️ {% trans "Seasonality" %}</h3>
         <p class="chart-subtitle">
-            Durchschnittliche Auslastung pro Kalendermonat (Ø über alle Jahre, inkl. Urlaub)
+            {% trans "Average utilisation per calendar month (Ø over all years, incl. time off)" %}
         </p>
         {% with max_pct=seasonality_data|dictsort:"avg_capacity_pct"|last %}
         <ul class="seasonality-bars">
@@ -836,9 +841,9 @@ document.addEventListener('DOMContentLoaded', function() {
     {% if cancellation_trends %}
     {{ cancellation_trends|json_script:"cancellation-trends-data" }}
     <div class="analytics-card mt-3">
-        <h3>❌ Ausfallquote (letzte 24 Monate)</h3>
+        <h3>❌ {% trans "Cancellation Rate (last 24 months)" %}</h3>
         <p class="chart-subtitle">
-            Abgesagte Sitzungen in % aller Sitzungen pro Monat
+            {% trans "Cancelled sessions in % of all sessions per month" %}
         </p>
         <div class="chart-wrapper chart-wrapper--sm">
             <canvas id="cancellationTrendsChart" width="100%" height="100%"></canvas>
@@ -869,8 +874,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .tooltip((d) => {
                 const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
                 return `<strong>${d.label}</strong><br>` +
-                       `Ausfallquote: ${d.value}%<br>` +
-                       `Abgesagt: ${cancelled[idx]} / ${totals[idx]}`;
+                       `{% trans "Cancellation rate" %}: ${d.value}%<br>` +
+                       `{% trans "Cancelled" %}: ${cancelled[idx]} / ${totals[idx]}`;
             })
             .build();
     });
@@ -881,28 +886,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Tab Content: Expenses -->
 <div id="expenses-tab" class="tab-content {% if active_tab == 'expenses' %}active{% endif %}">
-    <h2>💸 Ausgaben-Übersicht</h2>
+    <h2>💸 {% trans "Expense Overview" %}</h2>
 
     <!-- Quick Actions -->
     <div class="tab-actions">
         <a href="{% url 'expense_list' %}" class="btn btn-secondary btn-sm">
-            💸 Ausgaben verwalten
+            💸 {% trans "Manage Expenses" %}
         </a>
         <a href="{% url 'withdrawal_list' %}" class="btn btn-secondary btn-sm">
-            💰 Entnahmen verwalten
+            💰 {% trans "Manage Withdrawals" %}
         </a>
     </div>
 
     <!-- Expense Category Distribution -->
     <div class="analytics-card mb-4">
-        <h3>💸 Ausgaben nach Kategorie</h3>
+        <h3>💸 {% trans "Expenses by Category" %}</h3>
             {% if expense_distribution.total > 0 %}
             <div class="text-center mb-3">
                 <div class="stat-display__value">
                     {{ expense_distribution.total|floatformat:0 }}&nbsp;€
                 </div>
                 <div class="stat-display__label">
-                    Gesamtausgaben
+                    {% trans "Total Expenses" %}
                 </div>
             </div>
 
@@ -921,15 +926,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% endfor %}
             </ul>
             {% else %}
-            <p class="text-muted">Keine Ausgabendaten verfügbar</p>
+            <p class="text-muted">{% trans "No expense data available" %}</p>
             {% endif %}
         </div>
 
     <!-- Expense Trends -->
     <div class="analytics-card mb-4 mt-4">
-        <h3>💸 Ausgaben-Trends</h3>
+        <h3>💸 {% trans "Expense Trends" %}</h3>
         <p class="chart-subtitle">
-            Jährliche Betriebsausgaben {{ data_start_year }}-heute
+            {% blocktrans with start_year=data_start_year %}Annual operating expenses {{ start_year }}–today{% endblocktrans %}
         </p>
 
         <div class="chart-wrapper chart-wrapper--lg-alt">
@@ -1056,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <div class="text-center mt-4">
-    <a href="{% url 'dashboard' %}" class="btn btn-secondary">🏠 Zurück zur Übersicht</a>
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">🏠 {% trans "Back to overview" %}</a>
 </div>
 
 {% endblock %}

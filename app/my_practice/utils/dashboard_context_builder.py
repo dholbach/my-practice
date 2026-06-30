@@ -3,19 +3,16 @@ Context assembler for the main dashboard view.
 """
 
 from datetime import date
-from typing import cast
 
 from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils.safestring import SafeString, mark_safe
 
-from ..models import Client, CompanyExpense, Invoice, Session, TimeOff
+from ..models import Client, CompanyExpense, Invoice, TimeOff
 from .action_queue_builder import ActionQueueBuilder
 from .agenda_helpers import AgendaWidgetBuilder
-from .chart_helpers import format_month_key, format_month_label
 from .dashboard_widgets import CapacityMonitoringWidgetBuilder
 from .weekly_focus_widget import WeeklyFocusWidgetBuilder
-from .date_helpers import DateRangeHelper
 from .practice_helpers import get_user_practices
 from .revenue_helpers import RevenueCalculator
 
@@ -33,47 +30,17 @@ class DashboardContextAssembler:
         self.request = request
         self.today = today
         self.practice = request.current_practice
-        self._params = self._parse_params()
 
     # ── Public API ────────────────────────────────────────────────────────────
 
     def build(self) -> dict:
         context: dict = {}
-        context.update(self._params)
         context.update(self._build_statistics())
-        context.update(self._build_heatmap())
         context.update(self._build_timeoff())
         context.update(self._build_widgets())
         context.update(self._build_action_queue())
         context.update(self._build_multi_practice())
         return context
-
-    # ── Private builders ──────────────────────────────────────────────────────
-
-    def _parse_params(self) -> dict:
-        request = self.request
-        try:
-            months_to_show = int(request.GET.get("months", 12))
-        except ValueError, TypeError:
-            months_to_show = 12
-
-        try:
-            offset_str = request.GET.get("offset", "0").replace(",", "")
-            start_offset = int(float(offset_str))
-        except ValueError, TypeError:
-            start_offset = 0
-
-        heatmap_sort = (
-            request.GET.get("sort", "total")
-            if request.GET.get("sort") in ("total", "recent")
-            else "total"
-        )
-        return {
-            "months_to_show": months_to_show,
-            "start_offset": start_offset,
-            "heatmap_sort": heatmap_sort,
-            "next_offset": start_offset - months_to_show,
-        }
 
     def _build_statistics(self) -> dict:
         today = self.today
@@ -113,8 +80,6 @@ class DashboardContextAssembler:
             .count()
         )
 
-        monthly_data = self._build_monthly_trend(current_year, current_month)
-
         return {
             "total_invoices": total_invoices,
             "total_revenue": total_revenue,
@@ -129,58 +94,8 @@ class DashboardContextAssembler:
             "unpaid_count": status_stats["sent"]["count"] or 0,
             "recent_invoices": recent_invoices,
             "active_clients": active_clients,
-            "monthly_data": monthly_data,
-            "max_monthly_revenue": (
-                max(float(cast(float, m["revenue"])) for m in monthly_data) if monthly_data else 0.0
-            ),
             "current_year": current_year,
             "current_month": today.strftime("%B"),
-        }
-
-    def _build_monthly_trend(self, current_year: int, current_month: int) -> list[dict]:
-        monthly_data = []
-        cursor = DateRangeHelper.add_months(date(current_year, current_month, 1), -11)
-        for _ in range(12):
-            stats = RevenueCalculator.get_month_revenue(
-                cursor.year, cursor.month, practice=self.practice
-            )
-            month_key = format_month_key(cursor)
-            monthly_data.append(
-                {"month": format_month_label(month_key, "short"), "revenue": float(stats["total"])}
-            )
-            cursor = DateRangeHelper.add_months(cursor, 1)
-        return monthly_data
-
-    def _build_heatmap(self) -> dict:
-        from ..utils.heatmap_utils import get_heatmap_data
-
-        params = self._params
-        result = get_heatmap_data(
-            self.today.year,
-            self.today.month,
-            params["months_to_show"],
-            params["start_offset"],
-            practice=self.practice,
-            sort=params["heatmap_sort"],
-        )
-        range_start = result["range_start_date"]
-        range_end = result["range_end_date_full"]
-        start_offset = params["start_offset"]
-
-        return {
-            "heatmap_data": result["heatmap_data"],
-            "active_clients_with_totals": result["active_clients_with_totals"],
-            "can_go_back": Session.objects.filter(
-                client__practice=self.practice,
-                session_date__lt=range_start,
-            ).exists(),
-            "can_go_forward": (
-                start_offset > 0
-                or Session.objects.filter(
-                    client__practice=self.practice,
-                    session_date__gt=range_end,
-                ).exists()
-            ),
         }
 
     def _build_timeoff(self) -> dict:
