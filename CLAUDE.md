@@ -62,7 +62,7 @@ Full checklist: [docs/operations/RELEASE.md](docs/operations/RELEASE.md). Summar
    - `app/my_practice/version.py` — `VERSION = "vX.Y.Z"`
    - `prod.py` — `VERSION = "vX.Y.Z"`
    - `docker-compose.prod.yml` — `image: ghcr.io/dholbach/my-practice:vX.Y.Z`
-2. **Docs pass**: `docs/CHANGELOG.md`, `docs/FEATURES.md`, `PROJECTS.md`, `TODO.md`
+2. **Docs pass**: `docs/CHANGELOG.md`, `docs/FEATURES.md`, `PROJECTS.md`
 3. **Merge PR**, then tag and create GitHub release (required for `./prod.py update`):
    ```bash
    git tag vX.Y.Z && git push origin vX.Y.Z
@@ -497,15 +497,8 @@ At the end of each coding session, do a quick gardening pass before committing.
 - Older entries belong in CHANGELOG.md — delete them from PROJECTS.md after adding a new one
 - The Backlog section should contain only open/upcoming work; remove items once done
 
-### Keeping TODO.md Clean
-- TODO.md is the **active open backlog only** — no historical ✅ sections
-- When a task is done, delete it from TODO.md (don't replace it with a checkmark)
-- For history, point readers to CHANGELOG.md
-- **The `## 🌿 Gardening` section is permanent** — never delete the section or its header; only remove individual items when they are fixed
-
 ### Gardening Checklist (end of each session)
 - [ ] PROJECTS.md: add new "Recent Activity" entry, drop oldest if >2 exist
-- [ ] TODO.md: remove completed items
 - [ ] docs/FEATURES.md: add user-facing highlights
 - [ ] docs/projects/done/: create/update P-XXX doc for completed projects
 
@@ -526,7 +519,7 @@ Full scan checklist and canonical patterns: [docs/guides/CODEBASE_STANDARDS.md](
 **Manual**:
 - [ ] Scan git log for repeated fixes in the same area — sign of a design problem
 - [ ] Check for German comments/identifiers in recently touched files (P-038)
-- [ ] TODO.md: prune items older than ~2 months with no activity
+- [ ] GH issues: close stale items older than ~2 months with no activity
 - [ ] Any new views bypassing mixins/builders? Consolidate if so
 
 ### Quarterly (~2-3h)

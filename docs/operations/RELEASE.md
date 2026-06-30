@@ -15,7 +15,6 @@ All three must match. `prod.py` constructs download URLs and the image pull from
 - [ ] `docs/CHANGELOG.md` — add release section with highlights
 - [ ] `docs/FEATURES.md` — add user-facing additions under the right section
 - [ ] `PROJECTS.md` — update Recent Activity, cap at 2 entries
-- [ ] `TODO.md` — remove completed items
 
 ## Git
 

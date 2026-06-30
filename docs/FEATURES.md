@@ -270,7 +270,6 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ PERFORMANCE.md
 - ✅ IMPORT_VIEWS.md
 - ✅ SCRIPTS.md
-- ✅ TODO.md (this file)
 - ✅ FEATURES.md (this document)
 
 ### Code Documentation
