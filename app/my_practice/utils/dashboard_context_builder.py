@@ -10,16 +10,10 @@ from django.template.loader import render_to_string
 from django.utils.safestring import SafeString, mark_safe
 
 from ..models import Client, CompanyExpense, Invoice, Session, TimeOff
+from .action_queue_builder import ActionQueueBuilder
 from .agenda_helpers import AgendaWidgetBuilder
 from .chart_helpers import format_month_key, format_month_label
-from .dashboard_widgets import (
-    BankImportReminderWidgetBuilder,
-    CapacityMonitoringWidgetBuilder,
-    ChecklistWidgetBuilder,
-    ClientAttentionWidgetBuilder,
-    InvoiceActionsWidgetBuilder,
-    TaxQuarterWidgetBuilder,
-)
+from .dashboard_widgets import CapacityMonitoringWidgetBuilder
 from .weekly_focus_widget import WeeklyFocusWidgetBuilder
 from .date_helpers import DateRangeHelper
 from .practice_helpers import get_user_practices
@@ -47,10 +41,10 @@ class DashboardContextAssembler:
         context: dict = {}
         context.update(self._params)
         context.update(self._build_statistics())
-        heatmap_ctx = self._build_heatmap()
-        context.update(heatmap_ctx)
+        context.update(self._build_heatmap())
         context.update(self._build_timeoff())
         context.update(self._build_widgets())
+        context.update(self._build_action_queue())
         context.update(self._build_multi_practice())
         return context
 
@@ -223,25 +217,6 @@ class DashboardContextAssembler:
         if uc > 0:
             agenda_badge_parts.append(f'<span class="stat-badge warning">{uc} ohne Uhrzeit</span>')
 
-        ca_ctx = ClientAttentionWidgetBuilder(practice).build_context()
-        ia_ctx = InvoiceActionsWidgetBuilder(practice).build_context()
-        invoice_badge_parts = []
-        if ia_ctx["unpaid_count"] > 0:
-            invoice_badge_parts.append(
-                f'<span class="stat-badge">{ia_ctx["unpaid_count"]} unbezahlt</span>'
-            )
-        if ia_ctx["overdue_count"] > 0:
-            invoice_badge_parts.append(
-                f'<span class="stat-badge warning">{ia_ctx["overdue_count"]} überfällig</span>'
-            )
-        if ia_ctx["draft_count"] > 0:
-            invoice_badge_parts.append(
-                f'<span class="stat-badge">{ia_ctx["draft_count"]} Entwürfe</span>'
-            )
-
-        bi_ctx = BankImportReminderWidgetBuilder(practice).build_context()
-        cl_ctx = ChecklistWidgetBuilder().build_context()
-        tq_ctx = TaxQuarterWidgetBuilder(practice).build_context()
         cap_ctx = CapacityMonitoringWidgetBuilder(practice).build_context()
         wf_ctx = WeeklyFocusWidgetBuilder(practice).build_context()
         focus_count = wf_ctx["focus_count"]
@@ -263,49 +238,6 @@ class DashboardContextAssembler:
                 },
             ),
             "agenda_badge_html": mark_safe("".join(agenda_badge_parts)),
-            "client_attention_widget_html": _html(
-                "includes/client_attention_widget_content.html", ca_ctx
-            ),
-            "client_attention_badge": mark_safe(
-                f'<span class="stat-badge">{ca_ctx["total_attention_count"]} Klienten</span>'
-            ),
-            "invoice_actions_widget_html": _html(
-                "includes/invoice_actions_widget_content.html", ia_ctx
-            ),
-            "invoice_actions_badge": mark_safe("".join(invoice_badge_parts))
-            if invoice_badge_parts
-            else "",
-            "bank_import_widget_html": _html("includes/bank_import_widget_content.html", bi_ctx),
-            "bank_import_badge": (
-                mark_safe(
-                    '<span class="stat-badge warning">'
-                    + (
-                        f"{bi_ctx['days_since_import']} Tage"
-                        if bi_ctx["days_since_import"] is not None
-                        else "Kein Import"
-                    )
-                    + "</span>"
-                )
-                if bi_ctx["show_reminder"]
-                else ""
-            ),
-            "bank_import_show_reminder": bi_ctx["show_reminder"],
-            "checklist_widget_html": _html("includes/checklist_widget_content.html", cl_ctx),
-            "checklist_badge": (
-                mark_safe(
-                    f'<span class="stat-badge warning">{cl_ctx["pending_count"]} fällig</span>'
-                )
-                if cl_ctx["show_widget"]
-                else mark_safe('<span class="stat-badge">✅ Erledigt</span>')
-            ),
-            "checklist_show_widget": cl_ctx["show_widget"],
-            "tax_quarter_widget_html": _html("includes/tax_quarter_widget_content.html", tq_ctx),
-            "tax_quarter_badge": (
-                mark_safe('<span class="stat-badge warning">⚠️ Vorauszahlung?</span>')
-                if tq_ctx["show_warning"]
-                else ""
-            ),
-            "tax_quarter_show_warning": tq_ctx["show_warning"],
             "capacity_widget_html": _html(
                 "includes/capacity_monitoring_widget_content.html", cap_ctx
             ),
@@ -318,6 +250,9 @@ class DashboardContextAssembler:
             "weekly_focus_widget_html": _html("includes/weekly_focus_widget_content.html", wf_ctx),
             "weekly_focus_badge": mark_safe(" ".join(wf_badge_parts)),
         }
+
+    def _build_action_queue(self) -> dict:
+        return {"action_queue_items": ActionQueueBuilder(self.practice).build()}
 
     def _build_multi_practice(self) -> dict:
         request = self.request
