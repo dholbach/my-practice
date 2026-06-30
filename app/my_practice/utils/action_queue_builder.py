@@ -113,39 +113,37 @@ class ActionQueueBuilder:
 
     def _client_items(self) -> list[dict]:
         ctx = ClientAttentionWidgetBuilder(self.practice).build_context()
-        items: list[dict] = []
 
-        for tag_name, data in ctx["tagged_clients"].items():
-            for client in data["clients"]:
-                items.append(
-                    {
-                        "priority": 2,
-                        "category": "KLIENT",
-                        "summary": f"{client.client_code} — {tag_name}",
-                        "sub_text": "",
-                        "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-                        "action_label": "Anzeigen",
-                        "_sort_key": client.client_code,
-                    }
-                )
+        tagged = [
+            {
+                "priority": 2,
+                "category": "KLIENT",
+                "summary": f"{client.client_code} — {tag_name}",
+                "sub_text": "",
+                "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
+                "action_label": "Anzeigen",
+                "_sort_key": client.client_code,
+            }
+            for tag_name, data in ctx["tagged_clients"].items()
+            for client in data["clients"]
+        ]
 
         tagged_ids = {c.pk for data in ctx["tagged_clients"].values() for c in data["clients"]}
-        for client in ctx["no_recent_session_clients"]:
-            if client.pk in tagged_ids:
-                continue
-            items.append(
-                {
-                    "priority": 2,
-                    "category": "KLIENT",
-                    "summary": f"{client.client_code} — keine Sitzung seit 60+ Tagen",
-                    "sub_text": "",
-                    "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-                    "action_label": "Anzeigen",
-                    "_sort_key": client.client_code,
-                }
-            )
+        inactive = [
+            {
+                "priority": 2,
+                "category": "KLIENT",
+                "summary": f"{client.client_code} — keine Sitzung seit 60+ Tagen",
+                "sub_text": "",
+                "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
+                "action_label": "Anzeigen",
+                "_sort_key": client.client_code,
+            }
+            for client in ctx["no_recent_session_clients"]
+            if client.pk not in tagged_ids
+        ]
 
-        return items
+        return tagged + inactive
 
     # ── Tax prepayment ────────────────────────────────────────────────────────
 
@@ -170,20 +168,18 @@ class ActionQueueBuilder:
 
     def _checklist_items(self) -> list[dict]:
         ctx = ChecklistWidgetBuilder().build_context()
-        items: list[dict] = []
-        for entry in ctx["pending_checklists"]:
-            items.append(
-                {
-                    "priority": 2,
-                    "category": "BETRIEB",
-                    "summary": entry["label"],
-                    "sub_text": f"Fällig seit {entry['period_start'].strftime('%d.%m.%Y')}",
-                    "action_url": reverse("checklist", kwargs={"checklist_type": entry["type"]}),
-                    "action_label": "Erledigen",
-                    "_sort_key": str(entry["period_start"]),
-                }
-            )
-        return items
+        return [
+            {
+                "priority": 2,
+                "category": "BETRIEB",
+                "summary": entry["label"],
+                "sub_text": f"Fällig seit {entry['period_start'].strftime('%d.%m.%Y')}",
+                "action_url": reverse("checklist", kwargs={"checklist_type": entry["type"]}),
+                "action_label": "Erledigen",
+                "_sort_key": str(entry["period_start"]),
+            }
+            for entry in ctx["pending_checklists"]
+        ]
 
     # ── Bank import reminder ──────────────────────────────────────────────────
 
