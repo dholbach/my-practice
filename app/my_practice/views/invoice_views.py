@@ -251,8 +251,13 @@ class InvoiceDetailView(DetailView):
 
     def get_queryset(self):
         """Ensure invoice belongs to current practice"""
-        return Invoice.objects.for_current_practice(self.request).prefetch_related(
-            "items__service_type", "items__session"
+        return (
+            Invoice.objects.for_current_practice(self.request)
+            .select_related("client")
+            .prefetch_related(
+                "items__service_type",
+                "items__session__gebueh_leistungen__ziffer",
+            )
         )
 
     def get_object(self, queryset=None):
@@ -268,6 +273,11 @@ class InvoiceDetailView(DetailView):
             checker = CalendarPreflightChecker(invoice)
             if checker.has_calendar_events():
                 context["calendar_preflight"] = checker.check()
+        if invoice.client.needs_gebueh_invoice:
+            from .api_views import _build_gebueh_blocks, _get_arbeitsdiagnose
+
+            context["gebueh_blocks"] = _build_gebueh_blocks(invoice)
+            context["arbeitsdiagnose"] = _get_arbeitsdiagnose(invoice.client)
         return context
 
 
