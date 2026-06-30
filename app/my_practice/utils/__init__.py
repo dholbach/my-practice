@@ -4,6 +4,7 @@ Utility functions for the payments app.
 
 from .agenda_helpers import AgendaItem, AgendaWidgetBuilder
 from .analytics_dashboard_builder import AnalyticsDashboardBuilder
+from .action_queue_builder import ActionQueueBuilder
 from .client_detail_builder import ClientDetailContextBuilder
 from .dashboard_context_builder import DashboardContextAssembler
 from .tax_context_builder import TaxYearContextBuilder
@@ -85,6 +86,7 @@ __all__ = [
     "build_client_map",
     "BankStatementImporter",
     "AnalyticsDashboardBuilder",
+    "ActionQueueBuilder",
     "ClientDetailContextBuilder",
     "DashboardContextAssembler",
     "TaxYearContextBuilder",
