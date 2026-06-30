@@ -853,6 +853,22 @@ def cmd_format(args):
     return run_docker_command(["python", "-m", "ruff", "format", "."])
 
 
+def cmd_calendar_auth(_args):
+    """Open the Google Calendar authorization URL in the default browser.
+
+    Use this when the calendar token has expired (invalid_grant error).
+    The browser handles the full OAuth2/PKCE flow and saves the new token.
+    The app must be running (./dev.py start) before calling this.
+    """
+    url = "http://localhost:8000/calendar/authorize/"
+    print(f"Opening {url} in your browser...")
+    print("Complete the Google sign-in to refresh the calendar token.")
+    result = run_host_command(["xdg-open", url])
+    if result.returncode != 0:
+        print(f"xdg-open failed. Open this URL manually in your browser:\n  {url}")
+    return result
+
+
 def cmd_install_hooks(_args):
     """Configure git to use the committed .githooks/ directory.
 
@@ -976,6 +992,7 @@ COMMANDS = {
     "quality": cmd_quality,
     "review": cmd_review,
     "format": cmd_format,
+    "calendar-auth": cmd_calendar_auth,
     "install-hooks": cmd_install_hooks,
     "run": cmd_run,
     "exec": cmd_exec,
@@ -1027,6 +1044,7 @@ def print_help():
     print(
         "  format               - Auto-format code with ruff format + ruff check --fix"
     )
+    print("  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)")
     print("  install-hooks        - Configure git to use .githooks/ (run once after clone)")
     print("\nExamples:")
     print("  ./dev.py start                                # Start all containers")
