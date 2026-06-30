@@ -925,6 +925,36 @@
   .inquiry-row.inquiry-closed { opacity: 0.6; }
   .inquiry-group-divider td { padding: 0; height: 0; border-bottom: 2px solid var(--color-border); }
   .inquiry-row:hover { background: var(--color-bg-secondary); }
+  .inquiry-row.inquiry-stale td { opacity: 0.7; }
+
+  .inquiry-section { margin-bottom: 1.75rem; }
+  .inquiry-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    margin-bottom: 0.4rem;
+    border-bottom: 2px solid var(--color-border);
+  }
+  .inquiry-section-count {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  .inquiry-stale-section { margin-top: 0.4rem; }
+  .inquiry-stale-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+    padding: 0.25rem 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .inquiry-stale-toggle:hover { color: var(--color-text-primary); }
+  .pn-rest { display: inline; }
   .inquiry-date { white-space: nowrap; font-size: 0.9rem; color: var(--color-text-muted); }
   .inquiry-name a { font-weight: 500; color: var(--color-link); text-decoration: none; }
   .inquiry-name a:hover { text-decoration: underline; }

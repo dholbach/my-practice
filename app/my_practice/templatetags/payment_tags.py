@@ -2,7 +2,10 @@
 Custom template tags and filters for the payments app.
 """
 
+import html as _html
+
 from django import template
+from django.utils.safestring import mark_safe
 
 from ..utils.chart_helpers import GERMAN_MONTHS_SHORT
 
@@ -250,3 +253,29 @@ def weekday_name(value):
         return _WEEKDAY_NAMES[int(value)]
     except ValueError, TypeError, IndexError:
         return str(value)
+
+
+@register.filter(name="privacy_name")
+def privacy_name(value):
+    """
+    Render a name so initials are always visible and the rest is blurred in privacy mode.
+
+    Each word becomes: first_char + <span class="sensitive-data pn-rest">remainder</span>.
+    In normal mode the full name reads naturally; in privacy mode (body.privacy-mode)
+    .sensitive-data gets blurred, leaving only the initials legible.
+
+    Usage: {{ inquiry.full_name|privacy_name }}
+    Output must be used with |safe or autoescape off is not needed — mark_safe is applied.
+    """
+    if not value:
+        return ""
+    parts = []
+    for word in str(value).strip().split():
+        if len(word) > 1:
+            parts.append(
+                f"{_html.escape(word[0])}"
+                f'<span class="sensitive-data pn-rest">{_html.escape(word[1:])}</span>'
+            )
+        else:
+            parts.append(_html.escape(word))
+    return mark_safe(" ".join(parts))
