@@ -17,6 +17,7 @@ from .inquiry import (
 from .client_alias import ClientAlias
 from .clinical import ClientNote, ClientProfile, MoodTag, SessionLog, SupervisionItem
 from .financial import CompanyExpense, CompanyWithdrawal, ExpenseReceipt, TaxYearNote
+from .gebueh import GebuhZiffer, Leistungserfassung
 from .invoice import Invoice, InvoiceItem, InvoiceQuerySet
 from .operational import ChecklistItemPause, OperationalChecklistCompletion
 from .practice import Practice, UserPractice
@@ -60,4 +61,6 @@ __all__ = [
     "OperationalChecklistCompletion",
     "ChecklistItemPause",
     "TimestampedModel",
+    "GebuhZiffer",
+    "Leistungserfassung",
 ]
