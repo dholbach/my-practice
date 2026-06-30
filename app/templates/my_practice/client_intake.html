@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}{% if object.pk %}Klient bearbeiten{% else %}Neuer Klient{% endif %}{% endblock %}
+{% block title %}{% if object.pk %}{% trans "Edit client" %}{% else %}{% trans "New client" %}{% endif %}{% endblock %}
 
-{% block page_title %}{% if object.pk %}Klient bearbeiten{% else %}Neuer Klient{% endif %}{% endblock %}
-{% block page_subtitle %}{% if object.pk %}{{ object.full_name }} ({{ object.client_code }}){% else %}Klienten-Aufnahmeformular{% endif %}{% endblock %}
+{% block page_title %}{% if object.pk %}{% trans "Edit client" %}{% else %}{% trans "New client" %}{% endif %}{% endblock %}
+{% block page_subtitle %}{% if object.pk %}{{ object.full_name }} ({{ object.client_code }}){% else %}{% trans "Client intake form" %}{% endif %}{% endblock %}
 
 
 {% block content %}
@@ -35,8 +36,8 @@
         {{ form.salutation }}
         {{ form.salutation.errors }}
         <div class="helptext">
-            💡 Personal greeting for invoice emails (e.g., "Dear John", "Liebe Maria").<br>
-            If left empty, a generic salutation will be used. <strong>Highly recommended for better client experience!</strong>
+            {% blocktrans %}💡 Personal greeting for invoice emails (e.g., "Dear John", "Liebe Maria").<br>
+            If left empty, a generic salutation will be used. <strong>Highly recommended for better client experience!</strong>{% endblocktrans %}
         </div>
     </div>
 
@@ -45,7 +46,7 @@
         {{ form.active }}
         {{ form.active.errors }}
         <div class="helptext">
-            Inaktive Klienten erscheinen nicht in den Standard-Ansichten.
+            {% trans "Inactive clients do not appear in the default views." %}
         </div>
     </div>
 
@@ -54,7 +55,16 @@
         {{ form.is_online_client }}
         {{ form.is_online_client.errors }}
         <div class="helptext">
-            💻 Für Klienten, die hauptsächlich Online-Sitzungen haben.
+            {% trans "💻 For clients whose sessions are primarily conducted online (video)." %}
+        </div>
+    </div>
+
+    <div class="form-group">
+        {{ form.needs_gebueh_invoice.label_tag }}
+        {{ form.needs_gebueh_invoice }}
+        {{ form.needs_gebueh_invoice.errors }}
+        <div class="helptext">
+            {% trans "Enable GebüH billing (Gebührenverzeichnis für Heilpraktiker) for this client." %}
         </div>
     </div>
 
@@ -109,8 +119,8 @@
     </div>
 
     <div class="form-actions">
-        <button type="submit" class="btn">💾 {% if object.pk %}Änderungen Speichern{% else %}Klient Speichern{% endif %}</button>
-        <a href="{% if next %}{{ next }}{% elif object.pk %}{% url 'client_detail' object.pk %}{% else %}{% url 'client_list' %}{% endif %}" class="btn btn-secondary">❌ Abbrechen</a>
+        <button type="submit" class="btn">💾 {% if object.pk %}{% trans "Save changes" %}{% else %}{% trans "Save client" %}{% endif %}</button>
+        <a href="{% if next %}{{ next }}{% elif object.pk %}{% url 'client_detail' object.pk %}{% else %}{% url 'client_list' %}{% endif %}" class="btn btn-secondary">❌ {% trans "Cancel" %}</a>
     </div>
 </form>
 {% endblock %}

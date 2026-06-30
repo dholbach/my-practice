@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "GebüH record" %} – {{ client.client_code }}{% endblock %}
+{% block page_title %}{% trans "GebüH record" %}{% endblock %}
+{% block page_subtitle %}{{ client.client_code }} – {{ session.session_date|date:"d.m.Y" }} ({{ session.duration }} {% trans "min" %}){% endblock %}
+
+{% block content %}
+<div class="section-card">
+    <form method="post">
+        {% csrf_token %}
+
+        {% if existing %}
+        <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+            {% trans "Existing entries for this session will be replaced on save." %}
+        </div>
+        {% endif %}
+
+        <p class="text-secondary" style="margin-bottom: 1.5rem;">
+            {% trans "Select all billing codes (Ziffern) that apply to this session. The maximum rate is billed automatically." %}
+        </p>
+
+        <div class="gebueh-ziffer-list">
+            {% for ziffer in ziffern %}
+            <label class="gebueh-ziffer-row {% if ziffer.pk in existing_ziffer_ids %}gebueh-ziffer-row--selected{% endif %}">
+                <input type="checkbox"
+                       name="ziffern"
+                       value="{{ ziffer.pk }}"
+                       {% if ziffer.pk in existing_ziffer_ids %}checked{% endif %}>
+                <span class="gebueh-ziffer-nummer">{{ ziffer.nummer }}</span>
+                <span class="gebueh-ziffer-bezeichnung">{{ ziffer.bezeichnung }}</span>
+                <span class="gebueh-ziffer-betrag">{{ ziffer.satz_max }} €</span>
+                {% if ziffer.anmerkung %}
+                <span class="gebueh-ziffer-hint" title="{{ ziffer.anmerkung }}">ⓘ</span>
+                {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+            <a href="{% url 'client_detail' client.pk %}#tab-sitzungen" class="btn btn-secondary">{% trans "Cancel" %}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

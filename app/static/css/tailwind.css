@@ -736,7 +736,19 @@
   .cn-session-left { display: flex; flex-direction: column; gap: 0.15rem; padding-top: 0.1rem; }
   .cn-session-summary { font-size: 0.875rem; font-weight: 500; color: var(--color-text-primary); margin: 0 0 0.35rem 0; }
   .cn-session-interventions { font-size: 0.78rem; color: var(--color-text-secondary); font-style: italic; margin-top: 0.35rem; border-top: 1px solid var(--color-border); padding-top: 0.3rem; }
-  .cn-session-actions-bar { display: flex; justify-content: flex-end; width: 100%; margin-top: 0.35rem; }
+  .cn-session-actions-bar { display: flex; justify-content: flex-end; width: 100%; margin-top: 0.35rem; flex-wrap: wrap; gap: 0.35rem; }
+  /* GebüH Ziffer chips shown inline on session rows */
+  .cn-gebueh-ziffern { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.2rem; }
+  .cn-gebueh-chip { font-size: 0.7rem; font-weight: 600; background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: 3px; padding: 0.05rem 0.4rem; color: var(--color-text-secondary); }
+  /* GebüH quick-entry form */
+  .gebueh-ziffer-list { display: flex; flex-direction: column; gap: 0.25rem; }
+  .gebueh-ziffer-row { display: grid; grid-template-columns: 1.5rem 4rem 1fr 5rem auto; align-items: center; gap: 0.5rem 0.75rem; padding: 0.6rem 0.75rem; border: 1px solid var(--color-border); border-radius: 6px; cursor: pointer; background: var(--color-surface); transition: background 0.1s; }
+  .gebueh-ziffer-row:hover { background: var(--color-surface-alt); }
+  .gebueh-ziffer-row--selected { background: var(--color-primary-soft, color-mix(in srgb, var(--color-primary) 10%, transparent)); border-color: var(--color-primary); }
+  .gebueh-ziffer-nummer { font-weight: 700; font-size: 0.875rem; color: var(--color-text-primary); }
+  .gebueh-ziffer-bezeichnung { font-size: 0.875rem; color: var(--color-text-primary); }
+  .gebueh-ziffer-betrag { font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); text-align: right; }
+  .gebueh-ziffer-hint { font-size: 0.8rem; color: var(--color-text-secondary); cursor: help; }
   /* Therapist reflection */
   .cn-reflection { margin-top: 0.5rem; border-top: 1px solid var(--color-border); padding-top: 0.35rem; }
   .cn-reflection-label { font-size: 0.75rem; color: var(--color-text-secondary); cursor: pointer; user-select: none; list-style: none; }

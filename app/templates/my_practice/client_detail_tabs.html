@@ -14,6 +14,16 @@
 
     <!-- ── Tab: Profil ──────────────────────────────────────────────────── -->
     <div id="tab-profil" class="cn-tab-content cn-tab-content-active">
+        {% if client.needs_gebueh_invoice and not profile.arbeitsdiagnose %}
+        <div class="callout {% if gebueh_diagnostic_count >= 5 %}callout-warning{% else %}callout-primary{% endif %}">
+            {% if gebueh_diagnostic_count >= 5 %}
+            ⚠️ {% trans "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis." %}
+            {% else %}
+            {% blocktrans %}Diagnosis not yet set — invoices currently show "Probationary phase". Please update once the probationary phase is complete.{% endblocktrans %}
+            {% endif %}
+            <a href="#id_arbeitsdiagnose" style="margin-left: 0.5rem; white-space: nowrap;">{% trans "Edit →" %}</a>
+        </div>
+        {% endif %}
         <form method="post" action="{% url 'client_profile_save' client.pk %}">
             {% csrf_token %}
             <div class="cn-field">
@@ -127,6 +137,9 @@
                     {% for tag in log.mood_tags %}
                     <span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>
                     {% endfor %}
+                    {% if session.gebueh_leistungen.all %}
+                    <div class="cn-gebueh-ziffern">{% for le in session.gebueh_leistungen.all %}<span class="cn-gebueh-chip">{{ le.ziffer.nummer }}</span>{% endfor %}</div>
+                    {% endif %}
                 </div>
                 <div class="cn-session-content">
                     {% if log.summary %}<p class="cn-session-summary">{{ log.summary }}</p>{% endif %}
@@ -144,6 +157,9 @@
             </div>
             <div class="cn-session-actions cn-session-actions-bar">
                 <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ {% trans "Edit" %}</a>
+                {% if client.needs_gebueh_invoice %}
+                <a href="{% url 'gebueh_leistung_create' client.pk session.pk %}" class="btn btn-secondary btn-sm">{% trans "GebüH" %}</a>
+                {% endif %}
                 {% if not session.invoice_items.all %}
                 {% url 'session_bill' client.pk session.pk as session_bill_url %}
                 {% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text=lbl_to_invoice %}
@@ -174,10 +190,16 @@
                 <span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>
                 {% endfor %}
                 {% endif %}
+                {% if session.gebueh_leistungen.all %}
+                <div class="cn-gebueh-ziffern" style="display:inline-flex;">{% for le in session.gebueh_leistungen.all %}<span class="cn-gebueh-chip">{{ le.ziffer.nummer }}</span>{% endfor %}</div>
+                {% endif %}
             </div>
             <div class="cn-session-actions">
                 {% if log %}
                 <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ {% trans "Edit" %}</a>
+                {% if client.needs_gebueh_invoice %}
+                <a href="{% url 'gebueh_leistung_create' client.pk session.pk %}" class="btn btn-secondary btn-sm">{% trans "GebüH" %}</a>
+                {% endif %}
                 {% if log.session_type != 'ausfall' %}
                 {% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
                 {% include 'includes/inline_post_button.html' with action_url=session_log_mark_noshow_url button_text=lbl_noshow %}
@@ -185,6 +207,9 @@
                 {% url 'session_log_delete' client.pk log.pk as session_log_delete_url %}
                 {% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_log %}
                 {% else %}
+                {% if client.needs_gebueh_invoice %}
+                <a href="{% url 'gebueh_leistung_create' client.pk session.pk %}" class="btn btn-secondary btn-sm">{% trans "GebüH" %}</a>
+                {% endif %}
                 {% if not session.invoice_items.all %}
                 {% url 'session_bill' client.pk session.pk as session_bill_url %}
                 {% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text=lbl_to_invoice %}

@@ -51,6 +51,15 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Monthly Billing Overview (`/billing/`) — single page showing all clients with activity for a given month: pending calendar events, session count, billed/unbilled split, invoice status, and contextual quick actions; replaces the multi-step clients → client detail → protocol → invoice navigation chain; shows combined `billed/total` count when unbilled sessions exist alongside an invoice; 🚫 badge flags cancelled sessions on invoices; ✏️ edit shortcut appears when cleanup or additions are needed
 - ✅ Open Billing Overview (`/billing/open/`) — cross-month view of every unresolved item (warning, draft, sent) grouped by month; identical quick-actions as monthly view; "⚠️ Alle offen" button in monthly nav bar; "Stornierte Sitzung" warning suppressed for paid invoices (not actionable)
 
+### GebüH Billing (P-046)
+- ✅ `GebuhZiffer` catalogue — 9 seeded Ziffern (1, 4, 19.1–19.6, 19.8) with Höchstsatz/Mindestsatz, frequency constraints, and Alleinleistung notes
+- ✅ `Leistungserfassung` model — per-session GebüH service lines; `betrag` and `vereinbarter_betrag` frozen at entry time
+- ✅ `Client.needs_gebueh_invoice` flag — gates all GebüH features per client (PKV/Beihilfe clients only)
+- ✅ Quick-entry form (`/gebueh/`) — checkbox list per session, <30 seconds to record; soft warnings for frequency overruns and Alleinleistung conflicts (Ziffer 4)
+- ✅ Session row chips — recorded Ziffer numbers shown inline in the Sitzungen tab
+- ✅ Invoice PDF — conditional GebüH block: Diagnose line, per-Ziffer rows, Zwischensumme, Restbetrag, Sitzung-gesamt; unchanged layout for non-GebüH clients
+- ✅ Probatorik callout — Profil tab hint when diagnosis not yet set; escalates to warning badge after 5+ diagnostic Ziffern recorded
+
 ### Session Tracking
 - ✅ Historical session data import
 - ✅ Monthly session aggregation
