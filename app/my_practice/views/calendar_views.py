@@ -228,13 +228,24 @@ def calendar_approval_queue(request: HttpRequest) -> HttpResponse:
         session__duration__lte=OuterRef("duration_minutes") + 5,
     )
 
+    # Stale count: already-billed events still sitting as pending (shown separately, not in list)
+    stale_count = (
+        PendingCalendarEvent.objects.filter(
+            practice=practice,
+            status=PendingCalendarEvent.Status.PENDING,
+        )
+        .annotate(is_duplicate=Exists(duplicate_subquery))
+        .filter(is_duplicate=True)
+        .count()
+    )
+
     pending_events = (
         PendingCalendarEvent.objects.filter(
             practice=practice,
             status=PendingCalendarEvent.Status.PENDING,
         )
         .select_related("matched_client", "suggested_service_type")
-        .annotate(is_duplicate=Exists(duplicate_subquery))
+        .exclude(Exists(duplicate_subquery))
         .order_by("matched_client__client_code", "event_date")
     )
 
@@ -251,7 +262,6 @@ def calendar_approval_queue(request: HttpRequest) -> HttpResponse:
                 "month": month,
                 "events": events,
                 "count": len(events),
-                "duplicate_count": sum(1 for e in events if e.is_duplicate),
             }
         )
 
@@ -271,7 +281,6 @@ def calendar_approval_queue(request: HttpRequest) -> HttpResponse:
         group["invoices"] = draft_invoice_map.get(group["client"].pk, []) if group["client"] else []
 
     total_pending = pending_events.count()
-    total_duplicates = sum(1 for e in pending_events if e.is_duplicate)
 
     return render(
         request,
@@ -279,7 +288,7 @@ def calendar_approval_queue(request: HttpRequest) -> HttpResponse:
         {
             "grouped": grouped,
             "total_pending": total_pending,
-            "total_duplicates": total_duplicates,
+            "stale_count": stale_count,
         },
     )
 
