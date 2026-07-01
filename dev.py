@@ -846,11 +846,20 @@ def cmd_format(args):
 
     Note: does NOT run ruff check --fix. Auto-fixing lint rules can silently
     introduce syntax regressions (e.g. UP034 stripping parens from
-    `except (A, B):` → Python 2 syntax). Use `./dev.py quality` to review
+    `except (A, B):` → Python 2 syntax). Use `./dev.py lint` to review
     lint issues and fix them manually.
     """
     print("🎨 Formatting code with ruff...")
     return run_docker_command(["python", "-m", "ruff", "format", "."])
+
+
+def cmd_lint(args):
+    """Run ruff format check + ruff lint only (fast, no tests).
+
+    Use this during development for quick feedback.
+    Use ./dev.py quality to run the full suite before a release.
+    """
+    return cmd_quality(["--only-format"] + args)
 
 
 def cmd_calendar_auth(_args):
@@ -990,6 +999,7 @@ COMMANDS = {
     "i18n": cmd_i18n,
     "runserver": cmd_runserver,
     "quality": cmd_quality,
+    "lint": cmd_lint,
     "review": cmd_review,
     "format": cmd_format,
     "calendar-auth": cmd_calendar_auth,
@@ -1033,9 +1043,10 @@ def print_help():
     print("  makemigrations [args]- Create new migrations")
     print("  i18n [sub]           - Extract/compile translations (makemessages + compilemessages)")
     print("  runserver            - Info about development server")
-    print("  quality              - Run code quality checks (ruff format, ruff lint, Tailwind CSS, tests)")
+    print("  lint                 - Fast lint check: ruff format + ruff check (no tests, ~seconds)")
+    print("  lint --verbose       - Lint with full output")
+    print("  quality              - Full pre-release check: lint + full test suite (~minutes)")
     print("  quality --no-tests   - Run quality checks without tests")
-    print("  quality --only-format - Run only formatting checks (ruff format + ruff lint)")
     print("  quality --only-tests - Run only tests")
     print("  quality --verbose    - Show full output from all tools")
     print("  review               - Monthly codebase health check (dead code, CVEs, coverage)")
