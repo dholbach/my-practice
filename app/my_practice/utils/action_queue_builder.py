@@ -15,6 +15,7 @@ Items are sorted by (priority, sort_key) — most urgent first.
 """
 
 from datetime import date
+from decimal import Decimal
 
 from django.urls import reverse
 
@@ -25,6 +26,12 @@ from .dashboard_widgets import (
     InvoiceActionsWidgetBuilder,
     TaxQuarterWidgetBuilder,
 )
+
+
+def _fmt_eur(amount: Decimal) -> str:
+    """Format amount in German currency style: 1.234,56 €"""
+    formatted = f"{float(amount):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"{formatted} €"
 
 
 class ActionQueueBuilder:
@@ -43,44 +50,67 @@ class ActionQueueBuilder:
 
     def build(self) -> list[dict]:
         """Return all action items sorted by (priority, sort_key)."""
-        items: list[dict] = []
-        items.extend(self._invoice_items())
-        items.extend(self._client_items())
-        items.extend(self._tax_items())
-        items.extend(self._checklist_items())
-        items.extend(self._bank_items())
-        items.sort(key=lambda x: (x["priority"], x.get("_sort_key", "")))
-        for item in items:
-            item.pop("_sort_key", None)
-        return items
+        all_items: list[dict] = [
+            *self._invoice_items(),
+            *self._client_items(),
+            *self._tax_items(),
+            *self._checklist_items(),
+            *self._bank_items(),
+        ]
+        return [
+            {k: v for k, v in item.items() if k != "_sort_key"}
+            for item in sorted(all_items, key=lambda x: (x["priority"], x.get("_sort_key", "")))
+        ]
+
+    # ── Item factories ────────────────────────────────────────────────────────
+
+    def _make_invoice_item(self, inv, priority: int, action_url: str, action_label: str) -> dict:
+        age = (self.today - inv.invoice_date).days
+        return {
+            "priority": priority,
+            "category": "INVOICE",
+            "category_label": "Rechnung",
+            "summary": f"{inv.invoice_number} · {age} Tage offen",
+            "sub_text": f"{inv.client.client_code} · {_fmt_eur(inv.total)}",
+            "action_url": action_url,
+            "action_label": action_label,
+            "_sort_key": str(inv.invoice_date),
+        }
+
+    def _make_client_item(self, client, summary: str) -> dict:
+        return {
+            "priority": 2,
+            "category": "CLIENT",
+            "category_label": "Klient",
+            "summary": summary,
+            "sub_text": "",
+            "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
+            "action_label": "Anzeigen",
+            "_sort_key": client.client_code,
+        }
 
     # ── Invoice sources ───────────────────────────────────────────────────────
 
     def _invoice_items(self) -> list[dict]:
         ctx = InvoiceActionsWidgetBuilder(self.practice).build_context()
-        items: list[dict] = []
 
-        for inv in ctx["overdue_invoices"]:
-            age = (self.today - inv.invoice_date).days
-            items.append(
-                {
-                    "priority": 1,
-                    "category": "INVOICE",
-                    "category_label": "Rechnung",
-                    "summary": f"{inv.invoice_number} · {age} Tage offen",
-                    "sub_text": f"{inv.client.client_code} · {inv.total:,.2f} €".replace(",", "."),
-                    "action_url": reverse("send_payment_reminder", kwargs={"pk": inv.client.pk}),
-                    "action_label": "Mahnen",
-                    "_sort_key": str(inv.invoice_date),
-                }
+        overdue = [
+            self._make_invoice_item(
+                inv,
+                1,
+                reverse("send_payment_reminder", kwargs={"pk": inv.client.pk}),
+                "Mahnen",
             )
+            for inv in ctx["overdue_invoices"]
+        ]
 
+        drafts: list[dict] = []
         for inv in ctx["draft_invoices"]:
             last_session = getattr(inv, "last_session_date", None)
             sub = inv.client.client_code
             if last_session:
                 sub += f" · letzte Sitzung {last_session.strftime('%d.%m.%Y')}"
-            items.append(
+            drafts.append(
                 {
                     "priority": 2,
                     "category": "DRAFT",
@@ -94,24 +124,18 @@ class ActionQueueBuilder:
             )
 
         overdue_ids = {inv.pk for inv in ctx["overdue_invoices"]}
-        for inv in ctx["unpaid_invoices"]:
-            if inv.pk in overdue_ids:
-                continue
-            age = (self.today - inv.invoice_date).days
-            items.append(
-                {
-                    "priority": 2,
-                    "category": "INVOICE",
-                    "category_label": "Rechnung",
-                    "summary": f"{inv.invoice_number} · {age} Tage offen",
-                    "sub_text": f"{inv.client.client_code} · {inv.total:,.2f} €".replace(",", "."),
-                    "action_url": reverse("invoice_detail", kwargs={"pk": inv.pk}),
-                    "action_label": "Anzeigen",
-                    "_sort_key": str(inv.invoice_date),
-                }
+        unpaid = [
+            self._make_invoice_item(
+                inv,
+                2,
+                reverse("invoice_detail", kwargs={"pk": inv.pk}),
+                "Anzeigen",
             )
+            for inv in ctx["unpaid_invoices"]
+            if inv.pk not in overdue_ids
+        ]
 
-        return items
+        return [*overdue, *drafts, *unpaid]
 
     # ── Client attention sources ───────────────────────────────────────────────
 
@@ -119,32 +143,14 @@ class ActionQueueBuilder:
         ctx = ClientAttentionWidgetBuilder(self.practice).build_context()
 
         tagged = [
-            {
-                "priority": 2,
-                "category": "CLIENT",
-                "category_label": "Klient",
-                "summary": f"{client.client_code} — {tag_name}",
-                "sub_text": "",
-                "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-                "action_label": "Anzeigen",
-                "_sort_key": client.client_code,
-            }
+            self._make_client_item(client, f"{client.client_code} — {tag_name}")
             for tag_name, data in ctx["tagged_clients"].items()
             for client in data["clients"]
         ]
 
         tagged_ids = {c.pk for data in ctx["tagged_clients"].values() for c in data["clients"]}
         inactive = [
-            {
-                "priority": 2,
-                "category": "CLIENT",
-                "category_label": "Klient",
-                "summary": f"{client.client_code} — keine Sitzung seit 60+ Tagen",
-                "sub_text": "",
-                "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-                "action_label": "Anzeigen",
-                "_sort_key": client.client_code,
-            }
+            self._make_client_item(client, f"{client.client_code} — keine Sitzung seit 60+ Tagen")
             for client in ctx["no_recent_session_clients"]
             if client.pk not in tagged_ids
         ]
@@ -164,7 +170,7 @@ class ActionQueueBuilder:
                 "category": "TAX",
                 "category_label": "Steuer",
                 "summary": f"Q{ctx['current_quarter']} {self.today.year} · Vorauszahlung fehlt",
-                "sub_text": f"Umsatz: {revenue:,.2f} €".replace(",", "."),
+                "sub_text": f"Umsatz: {_fmt_eur(revenue)}",
                 "action_url": ctx["add_payment_url"],
                 "action_label": "Eintragen",
                 "_sort_key": "",

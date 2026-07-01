@@ -67,52 +67,50 @@ def analytics_dashboard(request: HttpRequest) -> HttpResponse:
             }
         )
 
-    # Heatmap data for the clients tab
-    today = date.today()
-    try:
-        months_to_show = int(request.GET.get("months", 12))
-    except ValueError, TypeError:
-        months_to_show = 12
-    try:
-        start_offset = int(float(request.GET.get("offset", "0").replace(",", "")))
-    except ValueError, TypeError:
-        start_offset = 0
-    heatmap_sort = (
-        request.GET.get("sort", "total")
-        if request.GET.get("sort") in ("total", "recent")
-        else "total"
-    )
-    heatmap_result = get_heatmap_data(
-        today.year,
-        today.month,
-        months_to_show,
-        start_offset,
-        practice=request.current_practice,
-        sort=heatmap_sort,
-    )
-    range_start = heatmap_result["range_start_date"]
-    range_end = heatmap_result["range_end_date_full"]
-    context.update(
-        {
-            "heatmap_data": heatmap_result["heatmap_data"],
-            "active_clients_with_totals": heatmap_result["active_clients_with_totals"],
-            "months_to_show": months_to_show,
-            "start_offset": start_offset,
-            "heatmap_sort": heatmap_sort,
-            "next_offset": start_offset - months_to_show,
-            "can_go_back": Session.objects.filter(
-                client__practice=request.current_practice,
-                session_date__lt=range_start,
-            ).exists(),
-            "can_go_forward": (
-                start_offset > 0
-                or Session.objects.filter(
+    # Heatmap data — only built when the clients tab is active
+    if active_tab == "clients":
+        today = date.today()
+        try:
+            months_to_show = int(request.GET.get("months", 12))
+        except ValueError, TypeError:
+            months_to_show = 12
+        try:
+            start_offset = int(float(request.GET.get("offset", "0").replace(",", "")))
+        except ValueError, TypeError:
+            start_offset = 0
+        _sort = request.GET.get("sort")
+        heatmap_sort = _sort if _sort in ("total", "recent") else "total"
+        heatmap_result = get_heatmap_data(
+            today.year,
+            today.month,
+            months_to_show,
+            start_offset,
+            practice=request.current_practice,
+            sort=heatmap_sort,
+        )
+        range_start = heatmap_result["range_start_date"]
+        range_end = heatmap_result["range_end_date_full"]
+        context.update(
+            {
+                "heatmap_data": heatmap_result["heatmap_data"],
+                "active_clients_with_totals": heatmap_result["active_clients_with_totals"],
+                "months_to_show": months_to_show,
+                "start_offset": start_offset,
+                "heatmap_sort": heatmap_sort,
+                "next_offset": start_offset - months_to_show,
+                "can_go_back": Session.objects.filter(
                     client__practice=request.current_practice,
-                    session_date__gt=range_end,
-                ).exists()
-            ),
-        }
-    )
+                    session_date__lt=range_start,
+                ).exists(),
+                "can_go_forward": (
+                    start_offset > 0
+                    or Session.objects.filter(
+                        client__practice=request.current_practice,
+                        session_date__gt=range_end,
+                    ).exists()
+                ),
+            }
+        )
 
     return render(request, "my_practice/analytics.html", context)
 
