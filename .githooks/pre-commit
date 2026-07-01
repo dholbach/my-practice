@@ -12,5 +12,8 @@ echo "🎨 ruff format (pre-commit)..."
 APP_FILES=$(echo "$STAGED_PY" | sed 's|^app/||')
 (cd app && echo "$APP_FILES" | tr '\n' '\0' | xargs -0 ruff format)
 
+echo "🔍 ruff check --fix (pre-commit)..."
+(cd app && echo "$APP_FILES" | tr '\n' '\0' | xargs -0 ruff check --fix)
+
 # Re-stage any files that ruff changed
 echo "$STAGED_PY" | tr '\n' '\0' | xargs -0 git add

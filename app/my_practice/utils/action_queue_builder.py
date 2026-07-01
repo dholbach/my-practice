@@ -93,24 +93,24 @@ class ActionQueueBuilder:
 
     def _invoice_items(self) -> list[dict]:
         ctx = InvoiceActionsWidgetBuilder(self.practice).build_context()
-        items: list[dict] = []
 
-        for inv in ctx["overdue_invoices"]:
-            items.append(
-                self._make_invoice_item(
-                    inv,
-                    1,
-                    reverse("send_payment_reminder", kwargs={"pk": inv.client.pk}),
-                    "Mahnen",
-                )
+        overdue = [
+            self._make_invoice_item(
+                inv,
+                1,
+                reverse("send_payment_reminder", kwargs={"pk": inv.client.pk}),
+                "Mahnen",
             )
+            for inv in ctx["overdue_invoices"]
+        ]
 
+        drafts: list[dict] = []
         for inv in ctx["draft_invoices"]:
             last_session = getattr(inv, "last_session_date", None)
             sub = inv.client.client_code
             if last_session:
                 sub += f" · letzte Sitzung {last_session.strftime('%d.%m.%Y')}"
-            items.append(
+            drafts.append(
                 {
                     "priority": 2,
                     "category": "DRAFT",
@@ -124,19 +124,18 @@ class ActionQueueBuilder:
             )
 
         overdue_ids = {inv.pk for inv in ctx["overdue_invoices"]}
-        for inv in ctx["unpaid_invoices"]:
-            if inv.pk in overdue_ids:
-                continue
-            items.append(
-                self._make_invoice_item(
-                    inv,
-                    2,
-                    reverse("invoice_detail", kwargs={"pk": inv.pk}),
-                    "Anzeigen",
-                )
+        unpaid = [
+            self._make_invoice_item(
+                inv,
+                2,
+                reverse("invoice_detail", kwargs={"pk": inv.pk}),
+                "Anzeigen",
             )
+            for inv in ctx["unpaid_invoices"]
+            if inv.pk not in overdue_ids
+        ]
 
-        return items
+        return [*overdue, *drafts, *unpaid]
 
     # ── Client attention sources ───────────────────────────────────────────────
 
