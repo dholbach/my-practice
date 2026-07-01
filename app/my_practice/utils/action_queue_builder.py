@@ -12,13 +12,16 @@ Each item in the queue has the schema:
     action_label    str  Button label
 
 Items are sorted by (priority, sort_key) — most urgent first.
+Multiple items of the same category/type are grouped into a single row.
 """
 
 from datetime import date
 from decimal import Decimal
 
+from django.db.models import Max
 from django.urls import reverse
 
+from ..models import Session
 from .dashboard_widgets import (
     BankImportReminderWidgetBuilder,
     ChecklistWidgetBuilder,
@@ -27,17 +30,33 @@ from .dashboard_widgets import (
     TaxQuarterWidgetBuilder,
 )
 
+_TAG_LABELS: dict[str, str] = {
+    "follow-up": "Follow-up",
+    "pause": "Pause",
+    "ending": "Abschluss",
+    "missing-session-log": "Protokoll fehlt",
+}
+
 
 def _fmt_eur(amount: Decimal) -> str:
     """Format amount in German currency style: 1.234,56 €"""
     formatted = f"{float(amount):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return f"{formatted} €"
+    return f"{formatted} €"
+
+
+def _join_truncated(items: list[str], total: int, sep: str = ", ", max_shown: int = 4) -> str:
+    """Join up to max_shown items; append ' …' if total exceeds that."""
+    shown = items[:max_shown]
+    result = sep.join(shown)
+    if total > len(shown):
+        result += " …"
+    return result
 
 
 class ActionQueueBuilder:
     """
     Aggregates action items from five existing widget builders into one
-    ranked queue.
+    ranked queue. Items of the same type are grouped into a single row.
 
     Usage:
         builder = ActionQueueBuilder(practice)
@@ -64,20 +83,7 @@ class ActionQueueBuilder:
 
     # ── Item factories ────────────────────────────────────────────────────────
 
-    def _make_invoice_item(self, inv, priority: int, action_url: str, action_label: str) -> dict:
-        age = (self.today - inv.invoice_date).days
-        return {
-            "priority": priority,
-            "category": "INVOICE",
-            "category_label": "Rechnung",
-            "summary": f"{inv.invoice_number} · {age} Tage offen",
-            "sub_text": f"{inv.client.client_code} · {_fmt_eur(inv.total)}",
-            "action_url": action_url,
-            "action_label": action_label,
-            "_sort_key": str(inv.invoice_date),
-        }
-
-    def _make_client_item(self, client, summary: str) -> dict:
+    def _make_client_item(self, client, summary: str, action_label: str = "Anzeigen") -> dict:
         return {
             "priority": 2,
             "category": "CLIENT",
@@ -85,7 +91,7 @@ class ActionQueueBuilder:
             "summary": summary,
             "sub_text": "",
             "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-            "action_label": "Anzeigen",
+            "action_label": action_label,
             "_sort_key": client.client_code,
         }
 
@@ -93,49 +99,51 @@ class ActionQueueBuilder:
 
     def _invoice_items(self) -> list[dict]:
         ctx = InvoiceActionsWidgetBuilder(self.practice).build_context()
+        items: list[dict] = []
 
-        overdue = [
-            self._make_invoice_item(
-                inv,
-                1,
-                reverse("send_payment_reminder", kwargs={"pk": inv.client.pk}),
-                "Mahnen",
+        # Overdue — group into one priority-1 row
+        n_overdue = ctx["overdue_count"]
+        if n_overdue > 0:
+            invoices = list(ctx["overdue_invoices"])
+            total = ctx["overdue_total"]
+            codes = _join_truncated(
+                list(dict.fromkeys(inv.client.client_code for inv in invoices)),
+                n_overdue,
             )
-            for inv in ctx["overdue_invoices"]
-        ]
+            oldest_age = max((self.today - inv.invoice_date).days for inv in invoices)
+            items.append(
+                {
+                    "priority": 1,
+                    "category": "INVOICE",
+                    "category_label": "Rechnung",
+                    "summary": f"{n_overdue} überfällig · {_fmt_eur(total)}",
+                    "sub_text": f"{codes} · >{oldest_age} Tage",
+                    "action_url": reverse("invoice_list") + "?status=sent",
+                    "action_label": "Mahnen",
+                    "_sort_key": "0_overdue",
+                }
+            )
 
-        drafts: list[dict] = []
-        for inv in ctx["draft_invoices"]:
-            last_session = getattr(inv, "last_session_date", None)
-            sub = inv.client.client_code
-            if last_session:
-                sub += f" · letzte Sitzung {last_session.strftime('%d.%m.%Y')}"
-            drafts.append(
+        # Drafts — group into one row
+        n_drafts = ctx["draft_count"]
+        if n_drafts > 0:
+            invoices = list(ctx["draft_invoices"])
+            nums = _join_truncated([inv.invoice_number for inv in invoices], n_drafts, sep=" · ")
+            label = "Rechnung bereit" if n_drafts == 1 else "Rechnungen bereit"
+            items.append(
                 {
                     "priority": 2,
                     "category": "DRAFT",
                     "category_label": "Entwurf",
-                    "summary": f"{inv.invoice_number} versandbereit",
-                    "sub_text": sub,
-                    "action_url": reverse("invoice_edit", kwargs={"pk": inv.pk}),
+                    "summary": f"{n_drafts} {label} zum Senden",
+                    "sub_text": nums,
+                    "action_url": reverse("invoice_list") + "?status=draft",
                     "action_label": "Fertigstellen",
-                    "_sort_key": str(last_session or inv.invoice_date),
+                    "_sort_key": "1_drafts",
                 }
             )
 
-        overdue_ids = {inv.pk for inv in ctx["overdue_invoices"]}
-        unpaid = [
-            self._make_invoice_item(
-                inv,
-                2,
-                reverse("invoice_detail", kwargs={"pk": inv.pk}),
-                "Anzeigen",
-            )
-            for inv in ctx["unpaid_invoices"]
-            if inv.pk not in overdue_ids
-        ]
-
-        return [*overdue, *drafts, *unpaid]
+        return items
 
     # ── Client attention sources ───────────────────────────────────────────────
 
@@ -143,19 +151,57 @@ class ActionQueueBuilder:
         ctx = ClientAttentionWidgetBuilder(self.practice).build_context()
 
         tagged = [
-            self._make_client_item(client, f"{client.client_code} — {tag_name}")
+            {
+                **self._make_client_item(
+                    client,
+                    f"{client.client_code} · {_TAG_LABELS.get(tag_name, tag_name)}",
+                    action_label="Öffnen",
+                ),
+            }
             for tag_name, data in ctx["tagged_clients"].items()
             for client in data["clients"]
         ]
 
         tagged_ids = {c.pk for data in ctx["tagged_clients"].values() for c in data["clients"]}
-        inactive = [
-            self._make_client_item(client, f"{client.client_code} — keine Sitzung seit 60+ Tagen")
-            for client in ctx["no_recent_session_clients"]
-            if client.pk not in tagged_ids
-        ]
+        inactive_clients = [c for c in ctx["no_recent_session_clients"] if c.pk not in tagged_ids]
+
+        inactive = self._build_inactive_items(inactive_clients)
 
         return tagged + inactive
+
+    def _build_inactive_items(self, clients: list) -> list[dict]:
+        """Build action items for inactive clients, annotated with last session date."""
+        if not clients:
+            return []
+
+        client_ids = [c.pk for c in clients]
+        last_sessions: dict = dict(
+            Session.objects.filter(client_id__in=client_ids, cancelled=False)
+            .values("client_id")
+            .annotate(last=Max("session_date"))
+            .values_list("client_id", "last")
+        )
+
+        items = []
+        for client in clients:
+            last_date = last_sessions.get(client.pk)
+            if last_date:
+                days = (self.today - last_date).days
+                summary = f"{client.client_code} · keine Sitzung seit {days} T"
+                sub = f"zuletzt {last_date.strftime('%d.%m.%Y')}"
+                sort_key = f"inactive_{999 - days:04d}"
+            else:
+                summary = f"{client.client_code} · noch keine Sitzung"
+                sub = ""
+                sort_key = "inactive_9999"
+            items.append(
+                {
+                    **self._make_client_item(client, summary, action_label="Kontakt"),
+                    "sub_text": sub,
+                    "_sort_key": sort_key,
+                }
+            )
+        return items
 
     # ── Tax prepayment ────────────────────────────────────────────────────────
 
@@ -173,7 +219,7 @@ class ActionQueueBuilder:
                 "sub_text": f"Umsatz: {_fmt_eur(revenue)}",
                 "action_url": ctx["add_payment_url"],
                 "action_label": "Eintragen",
-                "_sort_key": "",
+                "_sort_key": "0_tax",
             }
         ]
 
@@ -181,18 +227,23 @@ class ActionQueueBuilder:
 
     def _checklist_items(self) -> list[dict]:
         ctx = ChecklistWidgetBuilder().build_context()
+        entries = ctx["pending_checklists"]
+        if not entries:
+            return []
+        n = len(entries)
+        label = "Checkliste fällig" if n == 1 else "Checklisten fällig"
+        sub = _join_truncated([e["label"] for e in entries], n, sep=" · ", max_shown=3)
         return [
             {
                 "priority": 2,
                 "category": "OPS",
                 "category_label": "Betrieb",
-                "summary": entry["label"],
-                "sub_text": f"Fällig seit {entry['period_start'].strftime('%d.%m.%Y')}",
-                "action_url": reverse("checklist", kwargs={"checklist_type": entry["type"]}),
-                "action_label": "Erledigen",
-                "_sort_key": str(entry["period_start"]),
+                "summary": f"{n} {label}",
+                "sub_text": sub,
+                "action_url": reverse("checklist", kwargs={"checklist_type": entries[0]["type"]}),
+                "action_label": "Ansehen",
+                "_sort_key": str(entries[0]["period_start"]),
             }
-            for entry in ctx["pending_checklists"]
         ]
 
     # ── Bank import reminder ──────────────────────────────────────────────────

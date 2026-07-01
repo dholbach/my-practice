@@ -57,10 +57,12 @@
     <div class="console-pane">
         <div class="widget">
             <div class="widget-header">
-                <h3>🎯 {% trans "Needs Action" %}</h3>
-                {% if action_queue_items %}
-                    <span class="stat-badge warning">{{ action_queue_items|length }}</span>
-                {% endif %}
+                <h3>🎯 {% trans "Needs Action" %}
+                    {% if action_queue_items %}
+                        <span class="stat-badge warning">{{ action_queue_items|length }}</span>
+                    {% endif %}
+                </h3>
+                <span class="action-queue-sort-hint">{% trans "by urgency" %}</span>
             </div>
             <div class="widget-content">
                 {% if action_queue_items %}

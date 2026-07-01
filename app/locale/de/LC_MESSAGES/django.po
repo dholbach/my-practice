@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-30 17:56+0200\n"
+"POT-Creation-Date: 2026-07-01 10:07+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -258,116 +258,116 @@ msgstr "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von %(days)s Ta
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
 
-#: my_practice/views/invoice_views.py:218
+#: my_practice/views/invoice_views.py:219
 #, python-format
 msgid "Invoice %(num)s created successfully!"
 msgstr "Rechnung %(num)s erfolgreich erstellt!"
 
-#: my_practice/views/invoice_views.py:228
+#: my_practice/views/invoice_views.py:229
 #, python-format
 msgid "Item %(n)s: %(errors)s"
 msgstr "Position %(n)s: %(errors)s"
 
-#: my_practice/views/invoice_views.py:233
+#: my_practice/views/invoice_views.py:234
 #, python-format
 msgid "Formset errors: %(errors)s"
 msgstr "Fehler im Formset: %(errors)s"
 
-#: my_practice/views/invoice_views.py:240
+#: my_practice/views/invoice_views.py:241
 #, python-format
 msgid "Error creating invoice: %(error)s"
 msgstr "Fehler beim Erstellen der Rechnung: %(error)s"
 
-#: my_practice/views/invoice_views.py:291
+#: my_practice/views/invoice_views.py:290
 #, python-brace-format
 msgid "Invoice {obj.invoice_number} updated successfully!"
 msgstr "Rechnung {obj.invoice_number} erfolgreich aktualisiert!"
 
-#: my_practice/views/invoice_views.py:368
-#: my_practice/views/invoice_views.py:400
+#: my_practice/views/invoice_views.py:367
+#: my_practice/views/invoice_views.py:399
 #, python-format
 msgid "Item %(n)s - %(field)s: %(error)s"
 msgstr "Position %(n)s – %(field)s: %(error)s"
 
-#: my_practice/views/invoice_views.py:375
-#: my_practice/views/invoice_views.py:407
+#: my_practice/views/invoice_views.py:374
+#: my_practice/views/invoice_views.py:406
 #, python-format
 msgid "Formset: %(error)s"
 msgstr "Formset: %(error)s"
 
-#: my_practice/views/invoice_views.py:387
+#: my_practice/views/invoice_views.py:386
 #, python-format
 msgid "%(label)s: %(error)s"
 msgstr "%(label)s: %(error)s"
 
-#: my_practice/views/invoice_views.py:411
+#: my_practice/views/invoice_views.py:410
 msgid "Please correct the errors in the form."
 msgstr "Bitte korrigieren Sie die Fehler im Formular."
 
-#: my_practice/views/invoice_views.py:431
+#: my_practice/views/invoice_views.py:430
 #, python-format
 msgid "Invoice %(num)s for %(code)s was deleted successfully."
 msgstr "Rechnung %(num)s für %(code)s wurde erfolgreich gelöscht."
 
-#: my_practice/views/invoice_views.py:456
-#: my_practice/views/invoice_views.py:546
+#: my_practice/views/invoice_views.py:455
+#: my_practice/views/invoice_views.py:545
 msgid "No sessions specified."
 msgstr "Keine Sitzungen angegeben."
 
-#: my_practice/views/invoice_views.py:510
+#: my_practice/views/invoice_views.py:509
 #, python-format
 msgid "%(count)s session added to %(invoice)s."
 msgid_plural "%(count)s sessions added to %(invoice)s."
 msgstr[0] "%(count)s Sitzung zu %(invoice)s hinzugefügt."
 msgstr[1] "%(count)s Sitzungen zu %(invoice)s hinzugefügt."
 
-#: my_practice/views/invoice_views.py:517
+#: my_practice/views/invoice_views.py:516
 msgid "No new sessions added (already billed?)."
 msgstr "Keine neuen Sitzungen hinzugefügt (bereits abgerechnet?)."
 
-#: my_practice/views/invoice_views.py:531
-#: my_practice/views/invoice_views.py:793
-#: my_practice/views/invoice_views.py:907
+#: my_practice/views/invoice_views.py:530
+#: my_practice/views/invoice_views.py:792
+#: my_practice/views/invoice_views.py:906
 msgid "No active practice found."
 msgstr "Keine aktive Praxis gefunden."
 
-#: my_practice/views/invoice_views.py:578
+#: my_practice/views/invoice_views.py:577
 msgid "Invoice <a href=\"{}\">{}</a> with {} session created."
 msgid_plural "Invoice <a href=\"{}\">{}</a> with {} sessions created."
 msgstr[0] "Rechnung <a href=\"{}\">{}</a> mit {} Sitzung erstellt."
 msgstr[1] "Rechnung <a href=\"{}\">{}</a> mit {} Sitzungen erstellt."
 
-#: my_practice/views/invoice_views.py:767
+#: my_practice/views/invoice_views.py:766
 msgid "Cancelled session billed"
 msgstr "Stornierte Sitzung abgerechnet"
 
-#: my_practice/views/invoice_views.py:769
+#: my_practice/views/invoice_views.py:768
 msgid "Appointments pending"
 msgstr "Termine ausstehend"
 
-#: my_practice/views/invoice_views.py:771
+#: my_practice/views/invoice_views.py:770
 msgid "Not billed"
 msgstr "Nicht abgerechnet"
 
-#: my_practice/views/invoice_views.py:773
-#: templates/my_practice/dashboard.html:134
+#: my_practice/views/invoice_views.py:772
+#: templates/my_practice/dashboard.html:136
 #: templates/my_practice/invoice_detail.html:40
 msgid "Draft"
 msgstr "Entwurf"
 
-#: my_practice/views/invoice_views.py:775
-#: templates/my_practice/dashboard.html:139
+#: my_practice/views/invoice_views.py:774
+#: templates/my_practice/dashboard.html:141
 #: templates/my_practice/invoice_detail.html:41
 msgid "Sent"
 msgstr "Versendet"
 
-#: my_practice/views/invoice_views.py:777
-#: templates/my_practice/dashboard.html:144
+#: my_practice/views/invoice_views.py:776
+#: templates/my_practice/dashboard.html:146
 #: templates/my_practice/invoice_detail.html:42
 msgid "Paid"
 msgstr "Bezahlt"
 
-#: my_practice/views/invoice_views.py:778
+#: my_practice/views/invoice_views.py:777
 msgid "OK"
 msgstr "OK"
 
@@ -629,7 +629,7 @@ msgstr "Probatorik"
 #: templates/my_practice/analytics.html:397
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/client_list_cards.html:34
-#: templates/my_practice/dashboard.html:111
+#: templates/my_practice/dashboard.html:113
 #: templates/my_practice/practice_management.html:26
 msgid "Active"
 msgstr "Aktiv"
@@ -841,7 +841,7 @@ msgid "Cancellation rate"
 msgstr "Ausfallquote"
 
 #: templates/my_practice/analytics.html:878
-#: templates/my_practice/dashboard.html:149
+#: templates/my_practice/dashboard.html:151
 #: templates/my_practice/invoice_detail.html:43
 msgid "Cancelled"
 msgstr "Storniert"
@@ -1660,40 +1660,44 @@ msgstr "+ Neue Klient:in"
 msgid "Needs Action"
 msgstr "Braucht Aktion"
 
-#: templates/my_practice/dashboard.html:81
+#: templates/my_practice/dashboard.html:65
+msgid "by urgency"
+msgstr "nach Dringlichkeit"
+
+#: templates/my_practice/dashboard.html:83
 msgid "Nothing needs your attention right now."
 msgstr "Aktuell gibt es nichts zu tun."
 
-#: templates/my_practice/dashboard.html:99
+#: templates/my_practice/dashboard.html:101
 #, python-format
 msgid "Practices %(year)s"
 msgstr "Praxen %(year)s"
 
-#: templates/my_practice/dashboard.html:100
+#: templates/my_practice/dashboard.html:102
 msgid "Manage"
 msgstr "Verwalten"
 
-#: templates/my_practice/dashboard.html:118
+#: templates/my_practice/dashboard.html:120
 #, python-format
 msgid "%(n)s invoice"
 msgid_plural "%(n)s invoices"
 msgstr[0] "%(n)s Rechnung"
 msgstr[1] "%(n)s Rechnungen"
 
-#: templates/my_practice/dashboard.html:121
+#: templates/my_practice/dashboard.html:123
 #: templates/my_practice/practice_management.html:39
 msgid "Switch"
 msgstr "Wechseln"
 
-#: templates/my_practice/dashboard.html:131
+#: templates/my_practice/dashboard.html:133
 msgid "All-time Status Overview"
 msgstr "Status-Übersicht (All-Zeit)"
 
-#: templates/my_practice/dashboard.html:158
+#: templates/my_practice/dashboard.html:160
 msgid "Recent Invoices"
 msgstr "Aktuelle Rechnungen"
 
-#: templates/my_practice/dashboard.html:172
+#: templates/my_practice/dashboard.html:174
 msgid "No invoices yet."
 msgstr "Noch keine Rechnungen vorhanden."
 
