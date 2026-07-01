@@ -11,7 +11,7 @@ from dateutil.relativedelta import relativedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Case, Count, DecimalField, F, Q, QuerySet, Sum, When
+from django.db.models import Case, Count, DecimalField, Exists, F, OuterRef, Q, QuerySet, Sum, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.html import format_html
@@ -720,14 +720,25 @@ def _gather_billing_data(practice, year, month_num):
     ):
         unbilled_sessions_by_client.setdefault(session.client_id, []).append(session)
 
+    already_billed_subquery = InvoiceItem.objects.filter(
+        invoice__client=OuterRef("matched_client"),
+        session__session_date=OuterRef("event_date"),
+        session__duration__gte=OuterRef("duration_minutes") - 5,
+        session__duration__lte=OuterRef("duration_minutes") + 5,
+    ).exclude(invoice__status=Invoice.Status.CANCELLED)
+
     pending_by_client: dict[int, int] = {}
-    for row in PendingCalendarEvent.objects.filter(
-        practice=practice,
-        event_date__year=year,
-        event_date__month=month_num,
-        status=PendingCalendarEvent.Status.PENDING,
-        matched_client__isnull=False,
-    ).values("matched_client_id"):
+    for row in (
+        PendingCalendarEvent.objects.filter(
+            practice=practice,
+            event_date__year=year,
+            event_date__month=month_num,
+            status=PendingCalendarEvent.Status.PENDING,
+            matched_client__isnull=False,
+        )
+        .exclude(Exists(already_billed_subquery))
+        .values("matched_client_id")
+    ):
         cid = row["matched_client_id"]
         pending_by_client[cid] = pending_by_client.get(cid, 0) + 1
 
