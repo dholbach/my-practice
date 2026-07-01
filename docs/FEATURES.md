@@ -76,15 +76,15 @@ Complete feature list for the Therapy Practice Management System.
 
 ## 📊 Analytics & Reporting
 
-### Dashboard
-- ✅ Real-time statistics (revenue, clients, sessions)
-- ✅ Monthly revenue chart (last 12 months)
-- ✅ Status breakdown (Draft/Sent/Paid/Cancelled)
+### Dashboard (P-117)
+- ✅ Stats strip — year revenue, year profit, outstanding invoices (count + total, highlights in red), time off with current/upcoming holiday hint
+- ✅ Quick-action buttons — "+ Neue Rechnung" / "+ Neue Klient:in" top-right of stats strip
+- ✅ Two-pane console — left: Heute (agenda) + Diese Woche (weekly focus); right: Braucht Aktion queue
+- ✅ **Braucht Aktion queue** — ranked by urgency; grouped rows: overdue invoices (N · total · client codes · age), drafts ready to send, checklists due; individual rows for each client needing attention (with days-since + last-session date)
+- ✅ Capacity monitoring widget — conditional, only shown when a capacity warning is active
+- ✅ Status breakdown (Draft/Sent/Paid/Cancelled) — all-time overview
 - ✅ Recent invoices overview
-- ✅ Session heatmap with configurable range
-- ✅ Time-off summary
 - ✅ Dark mode + Privacy mode
-- ✅ **2-col "Heute & Diese Woche" grid** — Agenda + weekly sessions side-by-side (P-028)
 - ✅ **Fokus-Aufgaben Widget** — ⭐ toggle on todos, `WeeklyFocusWidgetBuilder` shows focus tasks in dashboard (P-028)
 
 ### Analytics Dashboard

@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-07-01 — P-117 Dashboard Redesign**: Stats strip, two-pane console (Heute / Braucht Aktion), ActionQueueBuilder with grouped rows (overdue, drafts, checklists), inactive client days + last-session date, charts moved to Analytics, heatmap moved to Analytics Clients tab, full i18n wrap of analytics.html. → [docs/projects/done/P-117_DASHBOARD_REDESIGN.md](docs/projects/done/P-117_DASHBOARD_REDESIGN.md)
 - **2026-06-30 — P-046 Phases 1–4**: GebüH billing complete — models + seed data, quick-entry UI (checkbox Ziffern per session, soft frequency/Alleinleistung warnings), invoice PDF integration (itemised Ziffer rows, Zwischensumme, Restbetrag, Diagnose line), Probatorik callout on Profil tab.
-- **2026-06-29 — v0.2.6**: Session log next-ideas + supervision quick-add fields; invoice notification link; `incomplete-intake` auto-removal on onboarding complete; i18n wrapping of client_views, clinical_views, invoice_views.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -41,6 +41,7 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 
 | Projekt | Beschreibung | Abgeschlossen |
 | ------- | ------------ | ------------- |
+| P-117 | Dashboard Redesign: stats strip, two-pane console (Heute / Braucht Aktion), ActionQueueBuilder with grouped rows, charts → Analytics, heatmap → Analytics Clients tab | Jul 2026 |
 | P-024 | OSS Release: repo public (AGPL-3.0, `v0.1.0`), orphan push without private history, topics/description set; post-release onramp (CONTRIBUTING, CoC, issue/PR templates, lint CI, compliance prominence) | Jun 2026 |
 | P-045 | Tailwind CSS: full migration — 29 per-page CSS files deleted, `common.css` merged, `@theme` token system, zero hardcoded hex in templates, dark mode everywhere | Jun 2026 |
 | P-044 | Alpine.js: CDN drop-in, `inline-handlers.js` + `email_card.js` deleted, all inline event handlers migrated across 16 templates | Jun 2026 |
