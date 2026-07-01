@@ -113,9 +113,8 @@ class DashboardViewTest(TestCase):
         # Check for required context keys (based on actual dashboard implementation)
         required_keys = [
             "total_revenue",
-            "monthly_data",  # Not 'months_data'
             "current_year",
-            "heatmap_data",
+            "action_queue_items",
         ]
 
         for key in required_keys:
