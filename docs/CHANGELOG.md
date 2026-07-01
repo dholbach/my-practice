@@ -2,6 +2,20 @@
 
 Major features and milestones in chronological order.
 
+## 2026-07-01 — v0.2.7 patch release
+
+- **Dashboard redesign** (P-117): Replaced chart-heavy dashboard with an operational cockpit — stats strip (year revenue, profit, outstanding, time off), two-pane console (Heute agenda + Diese Woche focus on the left; Braucht Aktion queue on the right), quick-action buttons (+ Neue Rechnung / + Neue Klient:in).
+- **Action queue — grouped rows**: Overdue invoices collapse into one row showing count, total amount, client codes, and oldest age; draft invoices into one row; checklists into one row. Inactive clients show exact days since last session with a "Kontakt" button.
+- **Charts moved to Analytics**: Monthly bar chart removed from dashboard (Analytics already has a line chart); session heatmap moved to Analytics → Clients tab. Heatmap pagination now preserves the active tab via `heatmap_url_prefix`.
+- **GebüH breakdown on invoice detail**: GebüH Ziffer rows, Zwischensumme, Restbetrag, and Diagnose line now shown on the invoice detail page.
+- **Inquiries list improvements**: Sortable columns, better status display, milestone date quick-glance.
+- **`./dev.py lint`**: New fast ruff-only check command (format + lint, no tests) for quick iteration.
+- **`./dev.py calendar-auth`**: Re-authorise an expired Google Calendar OAuth token without restarting the stack.
+- **Pre-commit hook**: Auto-formats staged Python files with `ruff format` and auto-fixes lint issues with `ruff check --fix` on every commit.
+- **Bug fixes**: Analytics Clients/Capacity tabs scoped to current practice; `days_since_session` clamped to 0 for future-dated sessions; treatment contract and Aufnahmebogen PDF headers harmonised with invoice brand layout; session activity chart height restored; stray `<hr>` causing blank PDF page removed; `ClientNote` registered in Django admin.
+- **i18n** (P-039): `analytics.html` fully wrapped (~80 new msgids); gebueh views/templates switched to English msgids.
+- **Deps**: `@tailwindcss/cli` 4.3.2, `tailwindcss` 4.3.2.
+
 ## 2026-06-29 — v0.2.6 patch release
 
 - **Session log: ideas for next session**: New encrypted field on session logs to capture topics, planned interventions, or homework for the next session. Shown as a collapsible "💡 Ideen für nächste Sitzung" section in the Protokoll tab.
