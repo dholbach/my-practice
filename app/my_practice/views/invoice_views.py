@@ -23,6 +23,7 @@ from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, Service
 from ..signals import recalculate_invoice_total
 from ..utils import RevenueCalculator, get_next_invoice_number
 from ..utils.calendar_preflight import CalendarPreflightChecker
+from ..utils.gebueh_helpers import build_gebueh_blocks, get_arbeitsdiagnose
 from ..utils.invoice_filter_helper import InvoiceFilterHelper
 from ..utils.view_helpers import get_year_from_request, safe_next
 from .crud_mixins import (
@@ -274,10 +275,8 @@ class InvoiceDetailView(DetailView):
             if checker.has_calendar_events():
                 context["calendar_preflight"] = checker.check()
         if invoice.client.needs_gebueh_invoice:
-            from .api_views import _build_gebueh_blocks, _get_arbeitsdiagnose
-
-            context["gebueh_blocks"] = _build_gebueh_blocks(invoice)
-            context["arbeitsdiagnose"] = _get_arbeitsdiagnose(invoice.client)
+            context["gebueh_blocks"] = build_gebueh_blocks(invoice)
+            context["arbeitsdiagnose"] = get_arbeitsdiagnose(invoice.client)
         return context
 
 
