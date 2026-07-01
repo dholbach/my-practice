@@ -76,16 +76,17 @@ class ActionQueueBuilderOverdueTest(TestCase):
         )
 
     def test_overdue_invoice_in_queue(self):
+        """Overdue invoices are grouped into a single summary row."""
         items = ActionQueueBuilder(self.practice).build()
         overdue = [i for i in items if i["category"] == "INVOICE" and i["priority"] == 1]
         self.assertEqual(len(overdue), 1)
-        self.assertIn("INV-040", overdue[0]["summary"])
+        self.assertIn("überfällig", overdue[0]["summary"])
 
-    def test_overdue_action_is_payment_reminder(self):
+    def test_overdue_action_links_to_invoice_list(self):
+        """Grouped overdue row links to filtered invoice list, not individual client."""
         items = ActionQueueBuilder(self.practice).build()
         overdue = [i for i in items if i["category"] == "INVOICE" and i["priority"] == 1]
-        expected_url = reverse("send_payment_reminder", kwargs={"pk": self.client.pk})
-        self.assertEqual(overdue[0]["action_url"], expected_url)
+        self.assertIn("/invoices/", overdue[0]["action_url"])
         self.assertEqual(overdue[0]["action_label"], "Mahnen")
 
     def test_overdue_sub_text_contains_client_code(self):
@@ -93,17 +94,15 @@ class ActionQueueBuilderOverdueTest(TestCase):
         overdue = [i for i in items if i["category"] == "INVOICE" and i["priority"] == 1]
         self.assertIn("OD-1", overdue[0]["sub_text"])
 
-    def test_non_overdue_sent_invoice_is_priority_2(self):
-        """Invoice sent 10 days ago is unpaid but not overdue — priority 2."""
+    def test_non_overdue_sent_invoice_not_in_queue(self):
+        """Invoice sent 10 days ago is awaiting payment — no action needed, excluded."""
         client2 = _make_client(self.practice, "ND-2")
         _make_invoice(self.practice, client2, status="sent", days_ago=10, number="INV-010")
         items = ActionQueueBuilder(self.practice).build()
-        non_overdue = [
-            i
-            for i in items
-            if i["category"] == "INVOICE" and i["priority"] == 2 and "INV-010" in i["summary"]
-        ]
-        self.assertEqual(len(non_overdue), 1)
+        # Only the overdue row should be present for INVOICE category priority 1
+        # Non-overdue sent invoices are excluded (no action needed)
+        invoice_items = [i for i in items if i["category"] == "INVOICE"]
+        self.assertFalse(any("INV-010" in i["summary"] for i in invoice_items))
 
     def test_paid_invoice_not_in_queue(self):
         client3 = _make_client(self.practice, "PD-3")
@@ -124,17 +123,20 @@ class ActionQueueBuilderDraftTest(TestCase):
         )
 
     def test_draft_invoice_in_queue(self):
+        """Draft invoices are grouped into a single summary row."""
         items = ActionQueueBuilder(self.practice).build()
         drafts = [i for i in items if i["category"] == "DRAFT"]
         self.assertEqual(len(drafts), 1)
         self.assertEqual(drafts[0]["priority"], 2)
-        self.assertIn("INV-DRF", drafts[0]["summary"])
+        self.assertIn("bereit zum Senden", drafts[0]["summary"])
+        self.assertIn("INV-DRF", drafts[0]["sub_text"])
 
-    def test_draft_action_is_invoice_edit(self):
+    def test_draft_action_links_to_invoice_list(self):
+        """Grouped draft row links to filtered invoice list."""
         items = ActionQueueBuilder(self.practice).build()
         drafts = [i for i in items if i["category"] == "DRAFT"]
-        expected_url = reverse("invoice_edit", kwargs={"pk": self.invoice.pk})
-        self.assertEqual(drafts[0]["action_url"], expected_url)
+        self.assertIn("/invoices/", drafts[0]["action_url"])
+        self.assertIn("draft", drafts[0]["action_url"])
         self.assertEqual(drafts[0]["action_label"], "Fertigstellen")
 
 
@@ -151,8 +153,8 @@ class ActionQueueBuilderClientTest(TestCase):
         items = ActionQueueBuilder(self.practice).build()
         client_items = [i for i in items if i["category"] == "CLIENT"]
         self.assertTrue(len(client_items) >= 1)
-        codes = [i["summary"].split(" — ")[0] for i in client_items]
-        self.assertIn("FU-1", codes)
+        # Summary now uses "·" separator: "FU-1 · Follow-up"
+        self.assertTrue(any("FU-1" in i["summary"] for i in client_items))
 
     def test_client_action_links_to_detail(self):
         items = ActionQueueBuilder(self.practice).build()

@@ -233,8 +233,9 @@ class InvoiceActionsWidgetBuilder:
         overdue = self._get_overdue_invoices()
         drafts = self._get_draft_invoices()
 
-        # Calculate totals
+        # Calculate totals from full querysets before slicing
         unpaid_total = sum(inv.calculate_total() for inv in unpaid)
+        overdue_total = sum(inv.calculate_total() for inv in overdue)
 
         return {
             "unpaid_invoices": unpaid[:5],
@@ -242,6 +243,7 @@ class InvoiceActionsWidgetBuilder:
             "unpaid_total": unpaid_total,
             "overdue_invoices": overdue[:5],
             "overdue_count": overdue.count(),
+            "overdue_total": overdue_total,
             "draft_invoices": drafts[:5],
             "draft_count": drafts.count(),
         }
