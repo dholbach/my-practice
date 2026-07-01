@@ -231,7 +231,7 @@ class AnalyticsTimeFilterTest(TestCase):
         self.assertContains(response, 'id="period"')
         self.assertContains(response, "Zeitraum")
         self.assertContains(response, "Alle Jahre (")
-        self.assertContains(response, "-heute)")
+        self.assertContains(response, "–heute)")
         self.assertContains(response, "Letztes Jahr")
         self.assertContains(response, "Letzter Monat")
 
