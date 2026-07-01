@@ -450,6 +450,16 @@ SEED_INQUIRY_NAMES: frozenset[str] = frozenset(i[0] for i in INQUIRIES)
 SEED_TAG_NAMES: frozenset[str] = frozenset(
     ["Einzeltherapie", "Langzeitklient", "Kurzzeitintervention", "Gruppentherapie"]
 )
+SEED_TIMEOFF_TITLES: frozenset[str] = frozenset(
+    [
+        "Osterurlaub",
+        "Fortbildung Traumatherapie",
+        "Sommerurlaub",
+        "Herbstpause",
+        "Weihnachtsurlaub",
+        "Supervision-Intensivtag",
+    ]
+)
 
 
 class Command(BaseCommand):
@@ -1107,12 +1117,14 @@ class Command(BaseCommand):
             demo_practice and CompanyExpense.objects.filter(practice=demo_practice).exists()
         )
         has_inquiries = ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).exists()
+        has_timeoff = TimeOff.objects.filter(title__in=SEED_TIMEOFF_TITLES).exists()
 
         if (
             not seeded.exists()
             and not has_todos
             and not has_expenses
             and not has_inquiries
+            and not has_timeoff
             and not demo_practice
         ):
             self.stdout.write("  Nothing to clear.")
@@ -1143,6 +1155,7 @@ class Command(BaseCommand):
         seeded.delete()
         ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).delete()
         PracticeTodo.objects.filter(title__in=SEED_TODO_TITLES).delete()
+        TimeOff.objects.filter(title__in=SEED_TIMEOFF_TITLES).delete()
         if demo_practice:
             CompanyExpense.objects.filter(practice=demo_practice).delete()
             UserPractice.objects.filter(practice=demo_practice).delete()
@@ -1163,6 +1176,8 @@ class Command(BaseCommand):
             parts.append("todos")
         if has_inquiries:
             parts.append("inquiries")
+        if has_timeoff:
+            parts.append("time-off entries")
         if has_expenses:
             parts.append("expenses")
         if n_tags:
