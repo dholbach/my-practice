@@ -1316,6 +1316,7 @@
   .action-queue-summary { font-size: 0.875rem; color: var(--color-text-primary); word-break: break-word; }
   .action-queue-sub { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.125rem; }
   .action-queue-empty { color: var(--color-text-secondary); font-style: italic; padding: 1.5rem 0; text-align: center; margin: 0; }
+  .action-queue-sort-hint { font-size: 0.7rem; color: var(--color-text-secondary); white-space: nowrap; }
 
   /* Extra-small button for action queue rows */
   .btn-xs { padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
