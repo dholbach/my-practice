@@ -227,10 +227,10 @@ class GebuhPdfBlocksTest(TestCase):
     """Tests for _build_gebueh_blocks — the PDF context helper."""
 
     def setUp(self):
-        from ..views.api_views import _build_gebueh_blocks, _get_arbeitsdiagnose
+        from ..utils.gebueh_helpers import build_gebueh_blocks, get_arbeitsdiagnose
 
-        self._build = _build_gebueh_blocks
-        self._diagnose = _get_arbeitsdiagnose
+        self._build = build_gebueh_blocks
+        self._diagnose = get_arbeitsdiagnose
 
         self.practice = _make_practice(slug="gebueh-pdf-test")
         self.client_obj = _make_client(self.practice, code="PDF")
