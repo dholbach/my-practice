@@ -477,8 +477,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <!-- Session activity heatmap -->
-    {% with extra_heatmap_query="tab=clients&period="|add:selected_period %}
-    {% include 'my_practice/includes/heatmap.html' with extra_heatmap_query=extra_heatmap_query %}
+    {% with heatmap_url_prefix="tab=clients&period="|add:selected_period|add:"&" %}
+    {% include 'my_practice/includes/heatmap.html' with heatmap_url_prefix=heatmap_url_prefix %}
     {% endwith %}
 </div>
 
