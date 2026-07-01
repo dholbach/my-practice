@@ -27,16 +27,16 @@
     </span>
 </div>
 
-{% if total_duplicates > 0 %}
-<div class="alert-box warning alert-box--flex mb-3">
+{% if stale_count > 0 %}
+<div class="alert-box info alert-box--flex mb-3">
     <span>
-        <strong>⚠️ {{ total_duplicates }} bereits importiert</strong><br>
+        <strong>ℹ️ {{ stale_count }} Termin{{ stale_count|pluralize:"e" }} ausgeblendet</strong><br>
         <span class="alert-box__hint">
-            Diese Termine haben bereits passende Rechnungspositionen und können übersprungen werden.
+            Diese Termine haben bereits passende Rechnungspositionen und werden nicht angezeigt.
         </span>
     </span>
-    <button type="button" class="btn btn-danger-solid" id="skip-duplicates-btn">
-        🚫 Alle Duplikate überspringen
+    <button type="button" class="btn btn-secondary btn-sm" id="skip-duplicates-btn">
+        🚫 Als erledigt markieren
     </button>
 </div>
 {% endif %}
@@ -117,9 +117,6 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if event.is_duplicate %}
-                    <span class="badge-duplicate">✓ vorhanden</span>
-                    {% endif %}
                     <button type="button" class="btn btn-skip skip-event-btn"
                             data-event-id="{{ event.pk }}"
                             title="Termin überspringen">
