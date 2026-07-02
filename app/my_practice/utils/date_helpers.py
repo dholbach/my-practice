@@ -262,6 +262,51 @@ class DateRangeHelper:
         return month_date.strftime("%B %Y")
 
     @staticmethod
+    def get_quarter_range(year: int, quarter: int) -> Tuple[date, date]:
+        """
+        Get start and end dates for a calendar quarter.
+
+        Args:
+            year: int year
+            quarter: int quarter (1-4)
+
+        Returns:
+            tuple: (quarter_start, quarter_end) as date objects
+
+        Example:
+            >>> DateRangeHelper.get_quarter_range(2026, 1)
+            (date(2026, 1, 1), date(2026, 3, 31))
+            >>> DateRangeHelper.get_quarter_range(2026, 2)
+            (date(2026, 4, 1), date(2026, 6, 30))
+        """
+        if not 1 <= quarter <= 4:
+            raise ValueError(f"quarter must be 1-4, got {quarter}")
+        start_month = (quarter - 1) * 3 + 1
+        end_month = start_month + 2
+        start = date(year, start_month, 1)
+        end = date(year, end_month, calendar.monthrange(year, end_month)[1])
+        return start, end
+
+    @staticmethod
+    def get_quarter_for_date(target_date: date) -> Tuple[int, date, date]:
+        """
+        Get the quarter number and boundaries for the quarter containing a date.
+
+        Args:
+            target_date: date object
+
+        Returns:
+            tuple: (quarter_number, quarter_start, quarter_end)
+
+        Example:
+            >>> DateRangeHelper.get_quarter_for_date(date(2026, 7, 2))
+            (3, date(2026, 7, 1), date(2026, 9, 30))
+        """
+        quarter = (target_date.month - 1) // 3 + 1
+        start, end = DateRangeHelper.get_quarter_range(target_date.year, quarter)
+        return quarter, start, end
+
+    @staticmethod
     def calculate_year_overlap_days(
         period_start: date, period_end: date, target_year: int | date
     ) -> int:
@@ -332,7 +377,7 @@ class DateRangeHelper:
             5
             >>> # Single day (Friday)
             >>> DateRangeHelper.count_working_days(
-            ...     date(2025, 11, 15), date(2025, 11, 15)
+            ...     date(2025, 11, 14), date(2025, 11, 14)
             ... )
             1
             >>> # Weekend only

@@ -305,9 +305,41 @@ class TestDateRangeHelper(TestCase):
         result = DateRangeHelper.count_working_days(start, end)
         self.assertEqual(result, 7)  # Tue-Fri + Mon-Wed
 
+    def test_get_quarter_range_all_quarters(self):
+        """Test get_quarter_range boundaries for all four quarters."""
+        self.assertEqual(
+            DateRangeHelper.get_quarter_range(2026, 1), (date(2026, 1, 1), date(2026, 3, 31))
+        )
+        self.assertEqual(
+            DateRangeHelper.get_quarter_range(2026, 2), (date(2026, 4, 1), date(2026, 6, 30))
+        )
+        self.assertEqual(
+            DateRangeHelper.get_quarter_range(2026, 3), (date(2026, 7, 1), date(2026, 9, 30))
+        )
+        self.assertEqual(
+            DateRangeHelper.get_quarter_range(2026, 4), (date(2026, 10, 1), date(2026, 12, 31))
+        )
+
+    def test_get_quarter_range_invalid_quarter(self):
+        """Test get_quarter_range rejects quarters outside 1-4."""
+        with self.assertRaises(ValueError):
+            DateRangeHelper.get_quarter_range(2026, 0)
+        with self.assertRaises(ValueError):
+            DateRangeHelper.get_quarter_range(2026, 5)
+
+    def test_get_quarter_for_date(self):
+        """Test get_quarter_for_date returns quarter number and boundaries."""
+        q, start, end = DateRangeHelper.get_quarter_for_date(date(2026, 7, 2))
+        self.assertEqual(q, 3)
+        self.assertEqual(start, date(2026, 7, 1))
+        self.assertEqual(end, date(2026, 9, 30))
+
+        # First and last day of a quarter belong to that quarter
+        self.assertEqual(DateRangeHelper.get_quarter_for_date(date(2026, 1, 1))[0], 1)
+        self.assertEqual(DateRangeHelper.get_quarter_for_date(date(2026, 12, 31))[0], 4)
+
     # Note: The following methods are not yet implemented in DateRangeHelper
     # They can be added in the future if needed:
     # - is_same_month()
     # - is_same_year()
-    # - get_quarter_range()
     # - datetime_to_date()

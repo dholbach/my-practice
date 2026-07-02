@@ -369,21 +369,11 @@ class PracticeAnalyzer:
 
 def calculate_quarter_trends(target_date, practice=None):
     """Calculate capacity and activity trends for last 4 quarters ending with target_date."""
+    from .date_helpers import DateRangeHelper
+
     trends: list[dict] = []
 
-    # Get current quarter boundaries for target_date
-    quarter = (target_date.month - 1) // 3
-    quarter_end_month = quarter * 3 + 3
-
-    # Determine last day of quarter end month
-    if quarter_end_month in [4, 6, 9, 11]:
-        last_day = 30
-    elif quarter_end_month == 2:
-        last_day = 29 if target_date.year % 4 == 0 else 28
-    else:
-        last_day = 31
-
-    current_q_end = target_date.replace(month=quarter_end_month, day=last_day)
+    current_q_end = DateRangeHelper.get_quarter_for_date(target_date)[2]
 
     # Go back 4 quarters
     for i in range(4):
