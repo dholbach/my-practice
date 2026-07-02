@@ -10,6 +10,14 @@
 {% block page_subtitle %}{% trans "Revenue, Clients, Capacity & Expenses" %}{% endblock %}
 
 {% block extra_css %}
+<script>
+const CHART_MESSAGES = {
+    noData:     "{% trans 'No data available' %}",
+    allZero:    "{% trans 'No data in selected period' %}",
+    invalidMax: "{% trans 'No valid data available' %}"
+};
+const LOCALE = (navigator.language || 'de-DE').replace('_', '-');
+</script>
 <!-- Modular chart utilities -->
 <script src="{% static 'js/charts/chart_core.js' %}"></script>
 <script src="{% static 'js/charts/chart_config.js' %}"></script>
@@ -18,7 +26,6 @@
 <script src="{% static 'js/charts/chart_primitives.js' %}"></script>
 <script src="{% static 'js/charts/chart_bar.js' %}"></script>
 <script src="{% static 'js/charts/chart_line.js' %}"></script>
-<script src="{% static 'js/charts/chart_tooltip.js' %}"></script>
 <script src="{% static 'js/charts/chart_tooltip_enhanced.js' %}"></script>
 <script src="{% static 'js/charts/chart_math.js' %}"></script>
 <script src="{% static 'js/charts/chart_builder.js' %}"></script>
@@ -191,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .tooltip((d) => {
                 const lines = [`<strong>${d.label}</strong>`];
                 d.values.forEach(v => {
-                    lines.push(`${v.label}: ${Math.round(v.value).toLocaleString('de-DE')}€`);
+                    lines.push(`${v.label}: ${Math.round(v.value).toLocaleString(LOCALE)}€`);
                 });
                 return lines.join('<br>');
             })
@@ -220,12 +227,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script>
     initChart('revenueLineChart', function(canvas) {
-        const rawData = [{% for month in revenue_trends %}{{ month.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        const rawLabels = [{% for month in revenue_trends %}'{{ month.month|slice:":3" }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+        const rawData   = [{% for month in revenue_trends %}{{ month.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
+        const rawLabels = [{% for month in revenue_trends %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+        const rawYears  = [{% for month in revenue_trends %}{{ month.year }}{% if not forloop.last %},{% endif %}{% endfor %}];
 
         const startIndex = findFirstNonZeroIndex(rawData);
-        const data = rawData.slice(startIndex);
+        const data   = rawData.slice(startIndex);
         const labels = rawLabels.slice(startIndex);
+
+        const startParsed = parseMonthString(labels[0]);
+        const chartStartYear  = startParsed ? startParsed.year  : (rawYears[startIndex] || 2020);
+        const chartStartMonth = startParsed ? startParsed.month : 1;
 
         new ChartBuilder(canvas)
             .type('line')
@@ -234,7 +246,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .preset('revenue')
             .options({
                 padding: { top: 20, right: 20, bottom: 60, left: 50 },
-                showYearSeparators: true
+                showYearSeparators: true,
+                startYear: chartStartYear,
+                startMonth: chartStartMonth,
             })
             .tooltip((d) => `<strong>${d.label}</strong><br>${Math.round(d.value)} €`)
             .build();
@@ -289,9 +303,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!raw || raw.length === 0) return;
 
         const labels = raw.map(d => d.month);
-        const days = raw.map(d => d.avg_days);
+        const days   = raw.map(d => d.avg_days);
         const counts = raw.map(d => d.count);
-        const startYear = raw[0].year;
+
+        const startParsed     = parseMonthString(labels[0]);
+        const chartStartYear  = startParsed ? startParsed.year  : raw[0].year;
+        const chartStartMonth = startParsed ? startParsed.month : 1;
 
         new ChartBuilder(canvas)
             .type('line')
@@ -300,7 +317,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .options({
                 padding: { top: 20, right: 20, bottom: 60, left: 50 },
                 showYearSeparators: true,
-                startYear: startYear,
+                startYear: chartStartYear,
+                startMonth: chartStartMonth,
                 yAxisSuffix: 'd',
                 maxValue: Math.max(60, Math.ceil(Math.max(...days) * 1.3))
             })
@@ -687,6 +705,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const bookedHours = rawBookedHours.slice(startIndex);
         const capacityHours = rawCapacityHours.slice(startIndex);
 
+        // Parse actual start year/month so year separators align correctly after slicing
+        const startParsed = parseMonthString(labels[0]);
+        const chartStartYear = startParsed ? startParsed.year : 2020;
+        const chartStartMonth = startParsed ? startParsed.month : 1;
+
         new ChartBuilder(canvas)
             .type('line')
             .data(data)
@@ -696,7 +719,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 padding: { top: 20, right: 20, bottom: 60, left: 50 },
                 showYearSeparators: true,
                 yAxisSuffix: '%',
-                maxValue: 120
+                maxValue: 120,
+                startYear: chartStartYear,
+                startMonth: chartStartMonth,
             })
             .tooltip((d) => {
                 const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
@@ -726,7 +751,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const cyd = JSON.parse(document.getElementById('cumulative-year-data').textContent);
         if (!cyd || !cyd.years || cyd.years.length === 0) return;
 
-        const MONTH_LABELS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+        const MONTH_LABELS = [
+            '{% trans "Jan" %}','{% trans "Feb" %}','{% trans "Mar" %}',
+            '{% trans "Apr" %}','{% trans "May" %}','{% trans "Jun" %}',
+            '{% trans "Jul" %}','{% trans "Aug" %}','{% trans "Sep" %}',
+            '{% trans "Oct" %}','{% trans "Nov" %}','{% trans "Dec" %}'
+        ];
         const YEAR_COLORS = {
             2020: '#374151', 2021: '#64748b', 2022: '#14b8a6',
             2023: '#8b5cf6', 2024: '#0ea5e9', 2025: '#22c55e', 2026: '#f59e0b'
@@ -794,7 +824,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Legend
         const allSeries = cyd.years.map(y => ({ label: String(y), color: YEAR_COLORS[y] || '#888', dashed: false }));
-        allSeries.push({ label: 'Ø', color: 'rgba(200,200,200,0.6)', dashed: true });
+        allSeries.push({ label: '{% trans "Avg" %}', color: 'rgba(200,200,200,0.6)', dashed: true });
         const slotW = 58;
         const legendTotalW = allSeries.length * slotW;
         let lx = padding.left + (chartWidth - legendTotalW) / 2;
@@ -854,11 +884,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const raw = JSON.parse(document.getElementById('cancellation-trends-data').textContent);
         if (!raw || raw.length === 0) return;
 
-        const labels = raw.map(d => d.month);
-        const rates = raw.map(d => d.rate);
-        const totals = raw.map(d => d.total);
+        const labels    = raw.map(d => d.month);
+        const rates     = raw.map(d => d.rate);
+        const totals    = raw.map(d => d.total);
         const cancelled = raw.map(d => d.cancelled);
-        const startYear = raw[0].year;
+
+        const startParsed     = parseMonthString(labels[0]);
+        const chartStartYear  = startParsed ? startParsed.year  : raw[0].year;
+        const chartStartMonth = startParsed ? startParsed.month : 1;
 
         new ChartBuilder(canvas)
             .type('line')
@@ -867,7 +900,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .options({
                 padding: { top: 20, right: 20, bottom: 60, left: 50 },
                 showYearSeparators: true,
-                startYear: startYear,
+                startYear: chartStartYear,
+                startMonth: chartStartMonth,
                 yAxisSuffix: '%',
                 maxValue: Math.max(20, Math.ceil(Math.max(...rates) * 1.3))
             })
@@ -955,7 +989,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .data(data)
             .labels(years)
             .preset('expense')
-            .tooltip((d) => `<strong>${d.label}</strong><br>${Math.round(d.value).toLocaleString('de-DE')} €`)
+            .tooltip((d) => `<strong>${d.label}</strong><br>${Math.round(d.value).toLocaleString(LOCALE)} €`)
             .build();
     });
     </script>

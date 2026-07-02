@@ -4,22 +4,6 @@
  */
 
 /**
- * Draw X-axis labels (years for bar charts)
- */
-function drawXAxisLabels(ctx, padding, chartWidth, chartHeight, labels, barWidth, barSpacing) {
-    const textPrimary = getCSSVariable('--text-primary', '#1a202c');
-    ctx.fillStyle = textPrimary;
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-
-    labels.forEach((label, index) => {
-        const x = padding.left + (barWidth + barSpacing) * index + barSpacing + barWidth / 2;
-        // Position labels within bottom padding area
-        ctx.fillText(label, x, chartHeight + padding.top + padding.bottom - 35);
-    });
-}
-
-/**
  * Draw a bar with gradient
  */
 function drawBarWithGradient(ctx, x, y, width, height, color1, color2) {
@@ -84,7 +68,6 @@ function drawPoints(ctx, points, color = '#667eea', radius = 5) {
 // Export functions
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-        drawXAxisLabels,
         drawBarWithGradient,
         drawYearLabel,
         drawLegend,

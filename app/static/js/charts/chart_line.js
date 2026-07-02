@@ -5,16 +5,18 @@
 
 /**
  * Draw year separators
+ * @param {number} startMonth - 1-indexed month of the first data point (default 1 = January)
  */
-function drawYearSeparators(ctx, padding, chartHeight, chartWidth, dataLength, startYear = 2020, color = 'rgba(102, 126, 234, 0.3)') {
+function drawYearSeparators(ctx, padding, chartHeight, chartWidth, dataLength, startYear = 2020, color = 'rgba(102, 126, 234, 0.3)', startMonth = 1) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.setLineDash([]);
 
+    const monthOffset = startMonth - 1;
     const currentYear = new Date().getFullYear();
     for (let year = startYear + 1; year <= currentYear; year++) {
-        const monthIndex = (year - startYear) * 12;
-        if (monthIndex < dataLength) {
+        const monthIndex = (year - startYear) * 12 - monthOffset;
+        if (monthIndex > 0 && monthIndex < dataLength) {
             const x = padding.left + (chartWidth / (dataLength - 1)) * monthIndex;
             ctx.beginPath();
             ctx.moveTo(x, padding.top);
@@ -26,17 +28,20 @@ function drawYearSeparators(ctx, padding, chartHeight, chartWidth, dataLength, s
 
 /**
  * Draw year labels on X-axis
+ * @param {number} startMonth - 1-indexed month of the first data point (default 1 = January)
  */
-function drawYearLabels(ctx, height, points, startYear = 2020) {
+function drawYearLabels(ctx, height, points, startYear = 2020, startMonth = 1) {
     const textSecondary = getCSSVariable('--text-secondary', '#718096');
     ctx.fillStyle = textSecondary;
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
 
+    const monthOffset = startMonth - 1;
     const currentYear = new Date().getFullYear();
     for (let year = startYear; year <= currentYear; year++) {
-        const monthIndex = (year - startYear) * 12;
-        if (monthIndex < points.length) {
+        // For startYear itself, always label at index 0 (first visible data point)
+        const monthIndex = year === startYear ? 0 : (year - startYear) * 12 - monthOffset;
+        if (monthIndex >= 0 && monthIndex < points.length) {
             ctx.fillText(year, points[monthIndex].x, height - 10);
         }
     }

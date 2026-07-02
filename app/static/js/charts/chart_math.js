@@ -14,30 +14,6 @@ function calculatePoints(data, padding, chartWidth, chartHeight, maxValue) {
 }
 
 /**
- * Calculate year label positions for time series data
- * @param {number} dataLength - Number of data points
- * @param {number} startYear - Starting year (default 2020)
- * @param {number} intervalMonths - Months between labels (default 12)
- * @returns {Array<{index: number, year: number}>} Array of label positions
- */
-function calculateYearLabels(dataLength, startYear = 2020, intervalMonths = 12) {
-    const labels = [];
-    const numLabels = Math.ceil(dataLength / intervalMonths) + 1;
-
-    for (let i = 0; i < numLabels; i++) {
-        const monthIndex = i * intervalMonths;
-        if (monthIndex < dataLength) {
-            labels.push({
-                index: monthIndex,
-                year: startYear + i
-            });
-        }
-    }
-
-    return labels;
-}
-
-/**
  * Parse date string in various formats
  * @param {string} dateStr - Date string (e.g., "2020-10", "Oct 20")
  * @returns {{year: number, month: number}|null} Parsed date or null
@@ -173,7 +149,6 @@ function calculateLinearTrendline(data) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         calculatePoints,
-        calculateYearLabels,
         parseMonthString,
         findFirstNonZeroIndex,
         aggregateMonthlyToYearly,

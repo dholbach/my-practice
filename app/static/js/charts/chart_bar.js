@@ -77,35 +77,11 @@ function drawSimpleBarChart(ctx, padding, chartWidth, chartHeight, height, label
             ctx.fillText(text, textX, textY);
         }
 
-        // Draw x-axis label directly
-        ctx.fillStyle = getCSSVariable('--text-primary');
-        ctx.font = 'bold 13px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(String(labels[index]), x + barWidth / 2, height - padding.bottom + 25);
+        // Draw x-axis label
+        drawYearLabel(ctx, labels[index], x + barWidth / 2, height, padding);
     });
 
     return positions;
-}
-
-/**
- * Setup basic bar chart infrastructure
- */
-function setupBarChart(canvasOrId, options = {}) {
-    // Handle both canvas element and ID
-    const canvas = typeof canvasOrId === 'string' ? document.getElementById(canvasOrId) : canvasOrId;
-    if (!canvas) return null;
-
-    const padding = options.padding || { top: 35, right: 20, bottom: 60, left: 60 };
-    const setup = setupCanvas(canvas, padding);
-    if (!setup) return null;
-
-    const { ctx, chartWidth, chartHeight } = setup;
-
-    // Draw grid, axes
-    drawGrid(ctx, setup.padding, chartWidth, chartHeight);
-    drawAxes(ctx, setup.padding, chartWidth, chartHeight);
-
-    return setup;
 }
 
 // Export functions
@@ -113,6 +89,5 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         drawGroupedBars,
         drawSimpleBarChart,
-        setupBarChart
     };
 }
