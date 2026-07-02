@@ -275,3 +275,76 @@ class TaxYearSummaryViewTest(TestCase):
         # All expenses shown should be tax-deductible
         self.assertIn("total_expenses", response.context)
         self.assertGreater(float(response.context["total_expenses"]), 0)
+
+
+class TaxQuarterOverviewConsistencyTest(TestCase):
+    """Quarterly revenue must follow the same paid-date rule as the year summary,
+    so the four quarters always sum to the yearly total."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="quarteruser", password="12345")
+        self.client_instance = TestClient()
+        self.client_instance.login(username="quarteruser", password="12345")
+
+        self.practice = Practice.objects.create(
+            name="Quarter Practice",
+            slug="views_tax-quarter",
+            title="Test Practitioner",
+            email="quarter@practice.example",
+            city="Berlin",
+        )
+        self.practice.users.add(self.user)
+        session = self.client_instance.session
+        session["current_practice_slug"] = self.practice.slug
+        session.save()
+
+        self.client_obj = Client.objects.create(
+            client_code="TQ1",
+            full_name="Max Mustermann",
+            email="mail@example.com",
+            hourly_rate_60=Decimal("100.00"),
+            practice=self.practice,
+        )
+
+        # Paid in Q1 via paid_date
+        Invoice.objects.create(
+            client=self.client_obj,
+            invoice_number="TQ1-1",
+            invoice_date=date(2024, 1, 15),
+            paid_date=date(2024, 2, 10),
+            status="paid",
+            total=Decimal("120.00"),
+            practice=self.practice,
+        )
+        # Paid but no paid_date recorded — must fall back to invoice_date (Q2)
+        Invoice.objects.create(
+            client=self.client_obj,
+            invoice_number="TQ1-2",
+            invoice_date=date(2024, 5, 15),
+            paid_date=None,
+            status="paid",
+            total=Decimal("200.00"),
+            practice=self.practice,
+        )
+
+    def test_quarters_sum_to_year_total(self):
+        """The sum of quarterly revenue equals the year summary total."""
+        quarter_response = self.client_instance.get(reverse("tax_quarter_overview") + "?year=2024")
+        year_response = self.client_instance.get(reverse("tax_year_summary") + "?year=2024")
+
+        self.assertEqual(quarter_response.status_code, 200)
+        self.assertEqual(
+            quarter_response.context["total_revenue"],
+            year_response.context["total_revenue"],
+        )
+        self.assertEqual(quarter_response.context["total_revenue"], Decimal("320.00"))
+
+    def test_null_paid_date_lands_in_invoice_date_quarter(self):
+        """A paid invoice without paid_date counts in the quarter of its invoice_date."""
+        response = self.client_instance.get(reverse("tax_quarter_overview") + "?year=2024")
+        quarters = {q["number"]: q["revenue"] for q in response.context["quarters"]}
+
+        self.assertEqual(quarters[1], Decimal("120.00"))
+        self.assertEqual(quarters[2], Decimal("200.00"))
+        self.assertEqual(quarters[3], Decimal("0"))
+        self.assertEqual(quarters[4], Decimal("0"))

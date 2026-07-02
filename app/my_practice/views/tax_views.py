@@ -2,7 +2,6 @@
 Tax year summary view - provides comprehensive financial overview for tax purposes.
 """
 
-import calendar
 from datetime import date
 from decimal import Decimal
 from typing import cast
@@ -11,21 +10,13 @@ from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from ..models import CompanyExpense, CompanyWithdrawal, Invoice, TaxYearNote
-from ..utils import TaxYearContextBuilder
+from ..utils import DateRangeHelper, RevenueCalculator, TaxYearContextBuilder
 from ..utils.practice_days import WorkdayAuditCalculator
 from ..utils.view_helpers import get_year_from_request
-
-
-def _quarter_date_range(year: int, quarter: int) -> tuple[date, date]:
-    """Return (start, end) dates for the given year and quarter (1–4)."""
-    start_month = (quarter - 1) * 3 + 1
-    end_month = start_month + 2
-    start = date(year, start_month, 1)
-    end = date(year, end_month, calendar.monthrange(year, end_month)[1])
-    return start, end
 
 
 def tax_year_summary(request: HttpRequest) -> HttpResponse:
@@ -50,19 +41,19 @@ def save_tax_year_note(request: HttpRequest) -> JsonResponse:
     """
     practice = request.current_practice
     if not practice:
-        return JsonResponse({"error": "no practice"}, status=400)
+        return JsonResponse({"error": _("No practice selected")}, status=400)
 
     try:
         year = int(request.POST.get("year", 0))
     except TypeError, ValueError:
-        return JsonResponse({"error": "invalid year"}, status=400)
+        return JsonResponse({"error": _("Invalid year")}, status=400)
 
     if not (1900 <= year <= 2100):
-        return JsonResponse({"error": "invalid year"}, status=400)
+        return JsonResponse({"error": _("Invalid year")}, status=400)
 
     note_text = request.POST.get("note", "").strip()
 
-    obj, _ = TaxYearNote.objects.update_or_create(
+    obj, _created = TaxYearNote.objects.update_or_create(
         practice=practice,
         year=year,
         defaults={"allocation_note": note_text},
@@ -116,16 +107,18 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
     year = get_year_from_request(request, "year", date.today().year) or date.today().year
     practice = request.current_practice
     today = date.today()
-    current_quarter = (today.month - 1) // 3 + 1
+    current_quarter = DateRangeHelper.get_quarter_for_date(today)[0]
 
     quarters = []
     for q in range(1, 5):
-        start, end = _quarter_date_range(year, q)
+        start, end = DateRangeHelper.get_quarter_range(year, q)
 
+        # Paid-date filter with invoice_date fallback for null paid_date —
+        # same rule as the year summary, so quarters sum to the year total
         revenue = Invoice.objects.filter(
+            RevenueCalculator.build_paid_date_range_filter(start, end),
             practice=practice,
             status="paid",
-            paid_date__range=(start, end),
         ).aggregate(total=Sum("total"))["total"] or Decimal("0")
 
         expenses = CompanyExpense.objects.filter(

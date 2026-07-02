@@ -447,18 +447,6 @@ class TaxQuarterWidgetBuilder:
     def __init__(self, practice):
         self.practice = practice
 
-    @staticmethod
-    def _quarter_of(d: date) -> tuple[int, date, date]:
-        """Return (quarter_number, start, end) for the given date."""
-        import calendar as cal
-
-        q = (d.month - 1) // 3 + 1
-        start_month = (q - 1) * 3 + 1
-        end_month = start_month + 2
-        start = date(d.year, start_month, 1)
-        end = date(d.year, end_month, cal.monthrange(d.year, end_month)[1])
-        return q, start, end
-
     def build_context(self) -> dict:
         """
         Build context for the tax quarter widget.
@@ -473,15 +461,18 @@ class TaxQuarterWidgetBuilder:
                 - add_payment_url: URL (pre-fills category=tax)
         """
         from ..models import CompanyWithdrawal, Invoice
+        from .date_helpers import DateRangeHelper
+        from .revenue_helpers import RevenueCalculator
 
         today = date.today()
-        q, start, end = self._quarter_of(today)
+        q, start, end = DateRangeHelper.get_quarter_for_date(today)
 
+        # Same paid-date rule (with invoice_date fallback) as the tax views
         revenue = (
             Invoice.objects.filter(
+                RevenueCalculator.build_paid_date_range_filter(start, end),
                 practice=self.practice,
                 status="paid",
-                paid_date__range=(start, end),
             ).aggregate(total=Sum("total"))["total"]
             or 0
         )
@@ -520,23 +511,20 @@ class CapacityMonitoringWidgetBuilder:
 
     def _get_month_stats(self, year: int, month: int) -> dict:
         """Return session hours and paid revenue for the given calendar month."""
+        from .calculations import count_session_hours
+        from .revenue_helpers import RevenueCalculator
+
         sessions = Session.objects.filter(
             client__practice=self.practice,
             session_date__year=year,
             session_date__month=month,
             cancelled=False,
         )
-        hours = sum(s.duration / 60.0 / s.group_size for s in sessions)
+        hours = count_session_hours(sessions)
 
-        revenue = (
-            Invoice.objects.filter(
-                practice=self.practice,
-                status="paid",
-                paid_date__year=year,
-                paid_date__month=month,
-            ).aggregate(total=Sum("total"))["total"]
-            or 0
-        )
+        revenue = RevenueCalculator.get_month_revenue(
+            year, month, use_paid_date=True, practice=self.practice
+        )["total"]
 
         return {"hours": round(hours, 1), "revenue": float(revenue)}
 

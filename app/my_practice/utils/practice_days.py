@@ -91,6 +91,26 @@ def berlin_public_holidays(year: int) -> set[date]:
     return holidays
 
 
+def _timeoff_dates_for_year(year: int) -> set[date]:
+    """Return all dates within TimeOff entries that fall inside the given year."""
+    from ..models import TimeOff
+
+    entries = TimeOff.objects.filter(
+        start_date__year__lte=year,
+        end_date__year__gte=year,
+    )
+    off_dates: set[date] = set()
+    year_start = date(year, 1, 1)
+    year_end = date(year, 12, 31)
+    for entry in entries:
+        current = max(entry.start_date, year_start)
+        end = min(entry.end_date, year_end)
+        while current <= end:
+            off_dates.add(current)
+            current += timedelta(days=1)
+    return off_dates
+
+
 @dataclass
 class FahrtkostenResult:
     """Result of a Fahrtkosten calculation."""
@@ -155,25 +175,6 @@ class PracticeDayCalculator:
             )
         )
 
-    def _timeoff_dates(self) -> set[date]:
-        """Return all dates within TimeOff entries for this practice's year."""
-        from ..models import TimeOff
-
-        entries = TimeOff.objects.filter(
-            start_date__year__lte=self.year,
-            end_date__year__gte=self.year,
-        )
-        off_dates: set[date] = set()
-        year_start = date(self.year, 1, 1)
-        year_end = date(self.year, 12, 31)
-        for entry in entries:
-            current = max(entry.start_date, year_start)
-            end = min(entry.end_date, year_end)
-            while current <= end:
-                off_dates.add(current)
-                current += timedelta(days=1)
-        return off_dates
-
     def calculate(self) -> FahrtkostenResult:
         """
         Calculate practice days and Entfernungspauschale.
@@ -199,7 +200,7 @@ class PracticeDayCalculator:
             )
 
         holidays = berlin_public_holidays(self.year)
-        timeoff = self._timeoff_dates()
+        timeoff = _timeoff_dates_for_year(self.year)
         sessions = self._session_dates()
 
         year_start = date(self.year, 1, 1)
@@ -255,25 +256,6 @@ class HomeOfficeDayCalculator:
         self.practice = practice
         self.year = year
 
-    def _timeoff_dates(self) -> set[date]:
-        """Return all dates within TimeOff entries for this year."""
-        from ..models import TimeOff
-
-        entries = TimeOff.objects.filter(
-            start_date__year__lte=self.year,
-            end_date__year__gte=self.year,
-        )
-        off_dates: set[date] = set()
-        year_start = date(self.year, 1, 1)
-        year_end = date(self.year, 12, 31)
-        for entry in entries:
-            current = max(entry.start_date, year_start)
-            end = min(entry.end_date, year_end)
-            while current <= end:
-                off_dates.add(current)
-                current += timedelta(days=1)
-        return off_dates
-
     def calculate(self) -> HomeOfficeResult:
         """Calculate home-office weekdays and deductible pauschale."""
         practice_weekdays = sorted(
@@ -294,7 +276,7 @@ class HomeOfficeDayCalculator:
             )
 
         holidays = berlin_public_holidays(self.year)
-        timeoff = self._timeoff_dates()
+        timeoff = _timeoff_dates_for_year(self.year)
 
         total_possible = 0
         timeoff_excluded = 0
@@ -404,25 +386,6 @@ class WorkdayAuditCalculator:
             counts[d] = counts.get(d, 0) + 1
         return counts
 
-    def _timeoff_dates(self) -> set[date]:
-        """Return all dates within TimeOff entries for this year."""
-        from ..models import TimeOff
-
-        entries = TimeOff.objects.filter(
-            start_date__year__lte=self.year,
-            end_date__year__gte=self.year,
-        )
-        off: set[date] = set()
-        year_start = date(self.year, 1, 1)
-        year_end = date(self.year, 12, 31)
-        for entry in entries:
-            cur = max(entry.start_date, year_start)
-            end = min(entry.end_date, year_end)
-            while cur <= end:
-                off.add(cur)
-                cur += timedelta(days=1)
-        return off
-
     def calculate(self) -> WorkdayAuditResult:
         """Build the audit list for the full year."""
         practice_weekdays = set(
@@ -430,7 +393,7 @@ class WorkdayAuditCalculator:
         )
         holidays = berlin_public_holidays(self.year)
         holiday_names = _berlin_holiday_names(self.year)
-        timeoff = self._timeoff_dates()
+        timeoff = _timeoff_dates_for_year(self.year)
         session_counts = self._session_counts()
 
         entries: list[DayAuditEntry] = []
