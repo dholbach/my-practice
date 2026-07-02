@@ -147,7 +147,7 @@ NOTE_TEMPLATES: dict[str, list[str]] = {
 
 # ── Session-log templates per archetype ──────────────────────────────────────
 # Each tuple: (content, interventions, therapist_reflection, mood_tags, summary)
-# summary = Kurzzusammenfassung (one-liner, ≤120 chars, unencrypted — Überblick cockpit)
+# summary = short one-liner ≤120 chars, stored unencrypted — visible in session cockpit
 SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str], str]]] = {
     "hero": [
         (
