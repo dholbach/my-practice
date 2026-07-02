@@ -3,6 +3,8 @@ Tag management views for clients.
 """
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -14,7 +16,7 @@ from ..models import Client, ClientTag
 from ..utils import sort_tags_by_category
 
 
-class TagListView(ListView):
+class TagListView(LoginRequiredMixin, ListView):
     """List all available tags"""
 
     model = ClientTag
@@ -26,7 +28,7 @@ class TagListView(ListView):
         return ClientTag.objects.annotate(client_count=Count("clients")).order_by("name")
 
 
-class TagCreateView(CreateView):
+class TagCreateView(LoginRequiredMixin, CreateView):
     """Create a new tag"""
 
     model = ClientTag
@@ -39,7 +41,7 @@ class TagCreateView(CreateView):
         return super().form_valid(form)
 
 
-class TagUpdateView(UpdateView):
+class TagUpdateView(LoginRequiredMixin, UpdateView):
     """Edit an existing tag"""
 
     model = ClientTag
@@ -52,7 +54,7 @@ class TagUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class TagDeleteView(DeleteView):
+class TagDeleteView(LoginRequiredMixin, DeleteView):
     """Delete a tag"""
 
     model = ClientTag
@@ -65,6 +67,7 @@ class TagDeleteView(DeleteView):
         return super().form_valid(form)
 
 
+@login_required
 @require_POST
 def client_add_tag(request, client_id):
     """Add a tag to a client (AJAX endpoint)"""
@@ -86,6 +89,7 @@ def client_add_tag(request, client_id):
     )
 
 
+@login_required
 @require_POST
 def client_remove_tag(request, client_id, tag_id):
     """Remove a tag from a client (AJAX endpoint)"""
@@ -102,6 +106,7 @@ def client_remove_tag(request, client_id, tag_id):
     )
 
 
+@login_required
 @require_http_methods(["GET"])
 def get_available_tags(request):
     """Get all available tags (AJAX endpoint for autocomplete/dropdown)"""
