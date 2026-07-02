@@ -50,6 +50,14 @@ def _get_monthly_aggregation(
     if end_date is None:
         end_date = date.today()
 
+    # Only show complete months — exclude the current partial month so the last
+    # data point isn't anomalously low (same guard as get_capacity_trends).
+    from datetime import timedelta
+
+    first_of_current_month = date.today().replace(day=1)
+    if end_date >= first_of_current_month:
+        end_date = first_of_current_month - timedelta(days=1)
+
     if start_date is None:
         start_date = date(start_year, 1, 1)
 

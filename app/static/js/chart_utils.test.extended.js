@@ -5,7 +5,6 @@
 
 // Load the functions from refactored chart_math module
 const {
-    calculateYearLabels,
     parseMonthString,
     findFirstNonZeroIndex,
     calculatePoints,
@@ -34,16 +33,6 @@ function assertEquals(actual, expected, message) {
 console.log('\n📊 Additional Chart Utils Tests\n');
 
 // Edge case tests
-test('calculateYearLabels - empty data returns empty array', () => {
-    const labels = calculateYearLabels(0, 2020, 12);
-    assertEquals(labels.length, 0, 'Should have 0 labels for 0 months');
-});
-
-test('calculateYearLabels - single month', () => {
-    const labels = calculateYearLabels(1, 2020, 12);
-    assertEquals(labels, [{ index: 0, year: 2020 }], 'Should have single label');
-});
-
 test('parseMonthString - handles all month names', () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     months.forEach((month, idx) => {

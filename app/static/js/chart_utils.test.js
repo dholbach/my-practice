@@ -10,7 +10,6 @@ if (typeof module === 'undefined') {
 
 // Load the functions from refactored chart_math module
 const {
-    calculateYearLabels,
     parseMonthString,
     findFirstNonZeroIndex,
     calculatePoints,
@@ -44,21 +43,6 @@ function assertNotNull(value, message) {
 
 // Tests
 console.log('\n📊 Running Chart Utils Tests\n');
-
-test('calculateYearLabels - basic case with 24 months', () => {
-    // 24 data points = indices 0-23, so labels at index 0 (2020) and 12 (2021)
-    const labels = calculateYearLabels(24, 2020, 12);
-    assertEquals(labels.length, 2, 'Should have 2 labels');
-    assertEquals(labels[0], { index: 0, year: 2020 }, 'First label');
-    assertEquals(labels[1], { index: 12, year: 2021 }, 'Second label');
-});
-
-test('calculateYearLabels - 63 months starting 2020', () => {
-    const labels = calculateYearLabels(63, 2020, 12);
-    assertEquals(labels.length, 6, 'Should have 6 labels');
-    assertEquals(labels[0].year, 2020, 'First year');
-    assertEquals(labels[5].year, 2025, 'Last year');
-});
 
 test('parseMonthString - YYYY-MM format', () => {
     const result = parseMonthString('2020-10');

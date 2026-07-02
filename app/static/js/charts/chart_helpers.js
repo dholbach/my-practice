@@ -6,9 +6,12 @@
 /**
  * Display empty state message on canvas
  * @param {HTMLCanvasElement} canvas - Canvas element
- * @param {string} message - Message to display
+ * @param {string} [message] - Message to display; defaults to CHART_MESSAGES.noData if set
  */
-function showChartEmptyState(canvas, message = 'Keine Daten vorhanden') {
+function showChartEmptyState(canvas, message) {
+    if (message === undefined) {
+        message = (typeof CHART_MESSAGES !== 'undefined') ? CHART_MESSAGES.noData : 'Keine Daten vorhanden';
+    }
     // Size the canvas before drawing so coordinates match the displayed area.
     setupCanvas(canvas);
     const ctx = canvas.getContext('2d');
@@ -80,12 +83,13 @@ function validateChartData(data, options = {}) {
  * @returns {string} User-friendly message
  */
 function getValidationMessage(reason) {
+    const cm = (typeof CHART_MESSAGES !== 'undefined') ? CHART_MESSAGES : null;
     const messages = {
-        'empty': 'Keine Daten vorhanden',
-        'all_zeros': 'Keine Daten im ausgewählten Zeitraum',
-        'invalid_max': 'Keine gültigen Daten vorhanden'
+        'empty':       cm ? cm.noData    : 'Keine Daten vorhanden',
+        'all_zeros':   cm ? cm.allZero   : 'Keine Daten im ausgewählten Zeitraum',
+        'invalid_max': cm ? cm.invalidMax : 'Keine gültigen Daten vorhanden',
     };
-    return messages[reason] || 'Keine Daten vorhanden';
+    return messages[reason] || (cm ? cm.noData : 'Keine Daten vorhanden');
 }
 
 // Export functions

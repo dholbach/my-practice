@@ -245,8 +245,9 @@ class ChartBuilder {
         // Draw year separators and labels if needed
         if (this.config.options.showYearSeparators) {
             const startYear = this.config.options.startYear || 2020;
-            drawYearSeparators(ctx, padding, chartHeight, chartWidth, this.config.data.length, startYear);
-            drawYearLabels(ctx, canvas.height, points, startYear);
+            const startMonth = this.config.options.startMonth || 1;
+            drawYearSeparators(ctx, padding, chartHeight, chartWidth, this.config.data.length, startYear, undefined, startMonth);
+            drawYearLabels(ctx, canvas.height, points, startYear, startMonth);
         }
 
         // Draw trendline if requested
