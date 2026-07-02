@@ -305,7 +305,7 @@ reusable — only the contract text needs to be replaced.
             billed. Any significant extension of a session is agreed upon jointly in advance.
         </p>
         <p class="paragraph-sub checkbox-row">( x ) The fee is due immediately and must be paid without deduction upon receipt of the invoice.</p>
-        <p class="paragraph-sub checkbox-row">( x ) The non-binding fee schedule for alternative practitioners (Geb&uuml;H) from 1985 is not applied.</p>
+        <p class="paragraph-sub checkbox-row">{% if client.needs_gebueh_invoice %}( ){% else %}( x ){% endif %} The non-binding fee schedule for alternative practitioners (Geb&uuml;H) from 1985 is not applied.</p>
         {% else %}
         <p class="paragraph-text">
             Das Honorar berechnet sich nach dem jeweiligen Zeitaufwand der Behandlung. Vereinbart wird
@@ -316,7 +316,7 @@ reusable — only the contract text needs to be replaced.
             Eine wesentliche Verl&auml;ngerung einer Sitzung wird stets gemeinsam und im Voraus vereinbart.
         </p>
         <p class="paragraph-sub checkbox-row">( x ) Das Honorar ist unmittelbar zu Zahlung f&auml;llig und ist ohne Abzug nach Erhalt der Rechnung zu begleichen.</p>
-        <p class="paragraph-sub checkbox-row">( x ) Das unverbindliche Geb&uuml;hrenverzeichnis der Heilpraktiker (Geb&uuml;H) aus dem Jahr 1985 wird nicht angewendet.</p>
+        <p class="paragraph-sub checkbox-row">{% if client.needs_gebueh_invoice %}( ){% else %}( x ){% endif %} Das unverbindliche Geb&uuml;hrenverzeichnis der Heilpraktiker (Geb&uuml;H) aus dem Jahr 1985 wird nicht angewendet.</p>
         {% endif %}
     </div>
 
