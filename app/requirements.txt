@@ -7,7 +7,7 @@ gunicorn==26.0.0
 python-dotenv==1.2.2
 weasyprint==69.0
 pydyf==0.12.1
-pillow==12.2.0
+pillow==12.3.0
 whitenoise==6.12.0
 python-dateutil==2.9.0.post0
 pdfplumber==0.11.10
