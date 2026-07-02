@@ -16,7 +16,7 @@ from django.db import models, transaction
 from django.db.models import Max, QuerySet
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
 
 from ..forms import ClientIntakeForm
@@ -263,7 +263,7 @@ def client_onboarding_step(request, pk):
         if tag:
             client.tags.remove(tag)
 
-    return redirect("client_detail", pk=pk)
+    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-profil")
 
 
 @require_POST
