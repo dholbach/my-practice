@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-07-02 — Computation review & centralisation**: Fixed weighted-capacity calc ignoring time off across the 2023-08 capacity change; quarterly tax revenue now uses the same paid-date rule (invoice-date fallback) as the year summary so quarters sum to the year total. Centralised quarter boundaries in `DateRangeHelper.get_quarter_range`/`get_quarter_for_date` (3 duplicate implementations removed), deduplicated TimeOff date expansion in practice_days, capacity widget now reuses `count_session_hours` + `RevenueCalculator`. New tests: capacity helpers, quarter helpers, quarter/year consistency.
 - **2026-07-01 — P-117 Dashboard Redesign**: Stats strip, two-pane console (Heute / Braucht Aktion), ActionQueueBuilder with grouped rows (overdue, drafts, checklists), inactive client days + last-session date, charts moved to Analytics, heatmap moved to Analytics Clients tab, full i18n wrap of analytics.html. → [docs/projects/done/P-117_DASHBOARD_REDESIGN.md](docs/projects/done/P-117_DASHBOARD_REDESIGN.md)
-- **2026-06-30 — P-046 Phases 1–4**: GebüH billing complete — models + seed data, quick-entry UI (checkbox Ziffern per session, soft frequency/Alleinleistung warnings), invoice PDF integration (itemised Ziffer rows, Zwischensumme, Restbetrag, Diagnose line), Probatorik callout on Profil tab.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

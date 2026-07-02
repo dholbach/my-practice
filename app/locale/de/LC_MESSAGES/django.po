@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-02 15:54+0200\n"
+"POT-Creation-Date: 2026-07-02 21:25+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -121,22 +121,22 @@ msgid_plural "%(n)s working days"
 msgstr[0] "%(n)s Arbeitstag"
 msgstr[1] "%(n)s Arbeitstage"
 
-#: my_practice/utils/practice_analysis.py:267
+#: my_practice/utils/practice_analysis.py:268
 #, python-format
 msgid "📅 Analyzing %(label)s (%(days)s days)"
 msgstr "📅 Analyse %(label)s (%(days)s Tage)"
 
-#: my_practice/utils/practice_analysis.py:277
+#: my_practice/utils/practice_analysis.py:279
 #, python-format
 msgid "👥 %(active)s of %(total)s clients active (%(pct)s%%)"
 msgstr "👥 %(active)s von %(total)s Klient:innen aktiv (%(pct)s%%)"
 
-#: my_practice/utils/practice_analysis.py:296
+#: my_practice/utils/practice_analysis.py:299
 #, python-format
 msgid "⚠️ High concentration: Top 3 clients = %(pct)s%% of sessions"
 msgstr "⚠️ Hohe Konzentration: Top 3 Klient:innen = %(pct)s%% der Sitzungen"
 
-#: my_practice/utils/practice_analysis.py:302
+#: my_practice/utils/practice_analysis.py:304
 #, python-format
 msgid "📊 Top 3 clients account for %(pct)s%% of sessions"
 msgstr "📊 Top 3 Klient:innen: %(pct)s%% der Sitzungen"
@@ -153,37 +153,37 @@ msgid_plural "🌱 %(n)s new probatoric clients (%(h)sh)"
 msgstr[0] "🌱 %(n)s neue probatorische Klient:in (%(h)sh)"
 msgstr[1] "🌱 %(n)s neue probatorische Klient:innen (%(h)sh)"
 
-#: my_practice/utils/practice_analysis.py:329
+#: my_practice/utils/practice_analysis.py:331
 #, python-format
 msgid "💤 %(n)s dormant clients (no activity this period)"
 msgstr "💤 %(n)s ruhende Klient:innen (keine Aktivität in diesem Zeitraum)"
 
-#: my_practice/utils/practice_analysis.py:339
+#: my_practice/utils/practice_analysis.py:342
 #, python-format
 msgid "📉 Low utilization: Only %(pct)s%% capacity used (%(rem)sh available)"
 msgstr "📉 Geringe Auslastung: Nur %(pct)s%% Kapazität genutzt (%(rem)sh verfügbar)"
 
-#: my_practice/utils/practice_analysis.py:341
+#: my_practice/utils/practice_analysis.py:346
 #, python-format
 msgid "📊 Moderate utilization: %(pct)s%% capacity used (%(rem)sh available)"
 msgstr "📊 Mittlere Auslastung: %(pct)s%% Kapazität genutzt (%(rem)sh verfügbar)"
 
-#: my_practice/utils/practice_analysis.py:343
+#: my_practice/utils/practice_analysis.py:349
 #, python-format
 msgid "✅ Good utilization: %(pct)s%% capacity used (%(rem)sh available)"
 msgstr "✅ Gute Auslastung: %(pct)s%% Kapazität genutzt (%(rem)sh verfügbar)"
 
-#: my_practice/utils/practice_analysis.py:345
+#: my_practice/utils/practice_analysis.py:352
 #, python-format
 msgid "⚠️ High utilization: %(pct)s%% capacity used (only %(rem)sh remaining)"
 msgstr "⚠️ Hohe Auslastung: %(pct)s%% Kapazität genutzt (nur %(rem)sh verbleibend)"
 
-#: my_practice/utils/practice_analysis.py:346
+#: my_practice/utils/practice_analysis.py:354
 #, python-format
 msgid "🔴 At/over capacity: %(pct)s%% utilized"
 msgstr "🔴 An/über Kapazität: %(pct)s%% ausgelastet"
 
-#: my_practice/utils/practice_analysis.py:352
+#: my_practice/utils/practice_analysis.py:361
 #, python-format
 msgid "💰 Revenue opportunity: %(n)s client with sessions but no invoices"
 msgid_plural "💰 Revenue opportunity: %(n)s clients with sessions but no invoices"
@@ -446,6 +446,14 @@ msgstr "Bezahlt"
 #: my_practice/views/invoice_views.py:788
 msgid "OK"
 msgstr "OK"
+
+#: my_practice/views/tax_views.py:44
+msgid "No practice selected"
+msgstr "Keine Praxis ausgewählt"
+
+#: my_practice/views/tax_views.py:49 my_practice/views/tax_views.py:52
+msgid "Invalid year"
+msgstr "Ungültiges Jahr"
 
 #: templates/includes/client_card.html:11
 #: templates/my_practice/client_detail.html:276

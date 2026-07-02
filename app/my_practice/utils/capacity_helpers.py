@@ -144,16 +144,10 @@ def _calculate_weighted_capacity(
     Calculate weighted capacity for a period that may span multiple capacity configurations.
 
     For periods entirely within one capacity config, uses that config's hours/week.
-    For periods spanning multiple configs, calculates weighted average based on
-    the proportion of working days in each config period.
+    For periods spanning multiple configs, weights each config's hours/week by the
+    proportion of working days in its segment. The result is always applied to
+    available_working_days, so time off reduces capacity in both cases.
     """
-    # Simple case: single month or short period
-    if start_date.year == end_date.year and start_date.month == end_date.month:
-        # Use capacity for start of period
-        hours_per_week = get_weekly_capacity_for_date(start_date)
-        available_weeks = available_working_days / 5
-        return available_weeks * hours_per_week
-
     # Check if period spans a capacity change
     capacity_changes_in_period = [
         (period_start, hours)
@@ -167,30 +161,27 @@ def _calculate_weighted_capacity(
         available_weeks = available_working_days / 5
         return available_weeks * hours_per_week
 
-    # Period spans capacity changes - calculate weighted capacity
-    total_capacity: float = 0.0
+    # Period spans capacity changes - weight hours/week by working days per segment
+    segments: list[tuple[int, float]] = []  # (working_days, hours_per_week)
     current_start = start_date
 
-    for change_date, new_hours in capacity_changes_in_period:
-        # Calculate days before this change
+    for change_date, _new_hours in capacity_changes_in_period:
         period_end = change_date - timedelta(days=1)
         days_in_segment = DateRangeHelper.count_working_days(current_start, period_end, holidays)
-        hours_per_week = get_weekly_capacity_for_date(current_start)
-
-        # Add capacity for this segment (proportional)
-        weeks_in_segment: float = days_in_segment / 5
-        total_capacity += weeks_in_segment * hours_per_week
-
+        segments.append((days_in_segment, get_weekly_capacity_for_date(current_start)))
         current_start = change_date
 
-    # Add remaining days after last change
+    # Remaining days after last change
     if current_start <= end_date:
         days_remaining = DateRangeHelper.count_working_days(current_start, end_date, holidays)
-        hours_per_week = get_weekly_capacity_for_date(current_start)
-        weeks_remaining: float = days_remaining / 5
-        total_capacity += weeks_remaining * hours_per_week
+        segments.append((days_remaining, get_weekly_capacity_for_date(current_start)))
 
-    return total_capacity
+    total_working_days = sum(days for days, _ in segments)
+    if total_working_days == 0:
+        return 0.0
+
+    weighted_hours_per_week = sum(days * hours for days, hours in segments) / total_working_days
+    return (available_working_days / 5) * weighted_hours_per_week
 
 
 def _get_booked_hours(start_date: date, end_date: date) -> float:
