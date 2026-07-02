@@ -13,6 +13,7 @@ import logging
 import os
 import subprocess
 import tempfile
+import warnings
 from pathlib import Path
 
 import pypdf
@@ -64,8 +65,10 @@ def _read_page_rotations(data: bytes) -> list[int]:
     before compression and restore them afterwards.
     """
     try:
-        reader = pypdf.PdfReader(io.BytesIO(data))
-        return [int(page.get("/Rotate", 0) or 0) for page in reader.pages]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            reader = pypdf.PdfReader(io.BytesIO(data))
+            return [int(page.get("/Rotate", 0) or 0) for page in reader.pages]
     except Exception:
         return []
 
@@ -79,7 +82,9 @@ def _restore_page_rotations(data: bytes, rotations: list[int]) -> bytes:
     if not rotations or all(r == 0 for r in rotations):
         return data
     try:
-        reader = pypdf.PdfReader(io.BytesIO(data))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            reader = pypdf.PdfReader(io.BytesIO(data))
         writer = pypdf.PdfWriter()
         writer.append(reader)
         for i, page in enumerate(writer.pages):
