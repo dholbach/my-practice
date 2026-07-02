@@ -8,10 +8,14 @@ Usage:
     ./dev.py manage compress_media
     ./dev.py manage compress_media --path taxes/2025
     ./dev.py manage compress_media --dry-run
+    ./dev.py manage compress_media --force                  # bypass size threshold for images
+    ./dev.py manage compress_media --rotate-pages 180 --path clients/ml  # fix upside-down PDFs
 """
 
+import io
 from pathlib import Path
 
+import pypdf
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
@@ -25,6 +29,26 @@ from ...utils.file_processing import (
 )
 
 _PROCESSABLE = _IMAGE_EXTENSIONS | _PDF_EXTENSIONS
+
+
+def _rotate_pdf_pages(path: Path, degrees: int) -> bool:
+    """
+    Set /Rotate on every page of the PDF to the given degrees.
+    Writes the file in-place. Returns True if the file was modified.
+    """
+    data = path.read_bytes()
+    reader = pypdf.PdfReader(io.BytesIO(data))
+    writer = pypdf.PdfWriter()
+    writer.append(reader)
+    for page in writer.pages:
+        page[pypdf.generic.NameObject("/Rotate")] = pypdf.generic.NumberObject(degrees)
+    buf = io.BytesIO()
+    writer.write(buf)
+    result = buf.getvalue()
+    if result != data:
+        path.write_bytes(result)
+        return True
+    return False
 
 
 class Command(BaseCommand):
@@ -41,6 +65,21 @@ class Command(BaseCommand):
             action="store_true",
             help="List files that would be processed without modifying them",
         )
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Process all images regardless of size (use to fix EXIF orientation on already-compressed files)",
+        )
+        parser.add_argument(
+            "--rotate-pages",
+            type=int,
+            metavar="DEGREES",
+            help=(
+                "Set /Rotate on every page of all PDFs under --path to DEGREES "
+                "(e.g. 180 to fix upside-down scans whose rotation metadata was stripped). "
+                "Skips compression; only modifies PDFs."
+            ),
+        )
 
     def handle(self, *args, **options):
         media_root = Path(settings.MEDIA_ROOT)
@@ -50,9 +89,20 @@ class Command(BaseCommand):
         if not root.exists():
             raise CommandError(f"Path not found: {root}")
 
+        rotate_degrees = options.get("rotate_pages")
+
+        if rotate_degrees is not None:
+            self._handle_rotate(root, media_root, rotate_degrees, options["dry_run"])
+            return
+
         dry_run = options["dry_run"]
+        force = options["force"]
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY RUN — no files will be modified\n"))
+        if force:
+            self.stdout.write(
+                self.style.WARNING("FORCE mode — size threshold bypassed for images\n")
+            )
 
         total_files = 0
         total_compressed = 0
@@ -82,7 +132,7 @@ class Command(BaseCommand):
 
             try:
                 if ext in _IMAGE_EXTENSIONS:
-                    saved = compress_image_inplace(str(filepath))
+                    saved = compress_image_inplace(str(filepath), force=force)
                 else:
                     saved = compress_pdf_inplace(str(filepath))
 
@@ -113,6 +163,9 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(f"\n{total_files} processable files found.")
             self.stdout.write("Re-run without --dry-run to compress them.")
+            self.stdout.write(
+                "Add --force to also reprocess small images (e.g. to fix EXIF orientation)."
+            )
             return
 
         saved_kb = total_saved / 1024
@@ -130,3 +183,53 @@ class Command(BaseCommand):
 
         if total_errors:
             self.stdout.write(self.style.WARNING("Check logs above for error details."))
+
+    def _handle_rotate(self, root: Path, media_root: Path, degrees: int, dry_run: bool) -> None:
+        if dry_run:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"DRY RUN — would set /Rotate {degrees} on all PDF pages under {root.relative_to(media_root)}\n"
+                )
+            )
+        else:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Setting /Rotate {degrees} on all PDF pages under {root.relative_to(media_root)}\n"
+                )
+            )
+
+        modified = 0
+        skipped = 0
+        errors = 0
+
+        candidates = [root] if root.is_file() else sorted(root.rglob("*"))
+        for filepath in candidates:
+            if not filepath.is_file() or filepath.suffix.lower() not in _PDF_EXTENSIONS:
+                continue
+            rel = filepath.relative_to(media_root)
+            if dry_run:
+                self.stdout.write(f"  [pdf] {rel}")
+                skipped += 1
+                continue
+            try:
+                changed = _rotate_pdf_pages(filepath, degrees)
+                if changed:
+                    modified += 1
+                    self.stdout.write(f"  ✓ {rel}")
+                else:
+                    skipped += 1
+                    self.stdout.write(f"  – {rel}  (already correct)")
+            except Exception as exc:
+                errors += 1
+                self.stdout.write(self.style.ERROR(f"  ✗ {rel}: {exc}"))
+
+        if dry_run:
+            self.stdout.write(
+                f"\n{skipped} PDF(s) found. Re-run without --dry-run to apply /Rotate {degrees}."
+            )
+        else:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"\nDone: {modified} modified, {skipped} unchanged, {errors} errors"
+                )
+            )
