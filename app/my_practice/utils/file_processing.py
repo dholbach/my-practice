@@ -15,8 +15,9 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+import pypdf
 from django.core.files.base import ContentFile
-from PIL import Image
+from PIL import Image, ImageOps
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ def compress_image_upload(upload) -> ContentFile:
     Returns a ContentFile with a .jpg filename.
     """
     img = Image.open(upload)
+    img = ImageOps.exif_transpose(img)  # honour scanner EXIF orientation before stripping EXIF
     if img.mode != "RGB":
         img = img.convert("RGB")
     if max(img.size) > MAX_IMAGE_PX:
@@ -55,11 +57,52 @@ def compress_image_upload(upload) -> ContentFile:
     return ContentFile(buf.getvalue(), name=f"{stem}.jpg")
 
 
+def _read_page_rotations(data: bytes) -> list[int]:
+    """
+    Return the /Rotate value for each page in the given PDF bytes.
+    Ghostscript's pdfwrite device strips /Rotate entries, so we read them
+    before compression and restore them afterwards.
+    """
+    try:
+        reader = pypdf.PdfReader(io.BytesIO(data))
+        return [int(page.get("/Rotate", 0) or 0) for page in reader.pages]
+    except Exception:
+        return []
+
+
+def _restore_page_rotations(data: bytes, rotations: list[int]) -> bytes:
+    """
+    Write /Rotate back onto each page of the PDF. Used to undo Ghostscript's
+    rotation-stripping after compression.
+    Returns unmodified data if rotations are all 0, empty, or pypdf fails.
+    """
+    if not rotations or all(r == 0 for r in rotations):
+        return data
+    try:
+        reader = pypdf.PdfReader(io.BytesIO(data))
+        writer = pypdf.PdfWriter()
+        writer.append(reader)
+        for i, page in enumerate(writer.pages):
+            rot = rotations[i] if i < len(rotations) else 0
+            if rot:
+                page[pypdf.generic.NameObject("/Rotate")] = pypdf.generic.NumberObject(rot)
+        buf = io.BytesIO()
+        writer.write(buf)
+        return buf.getvalue()
+    except Exception:
+        logger.warning("Could not restore PDF page rotations; returning as-is")
+        return data
+
+
 def _compress_pdf_bytes(data: bytes) -> bytes:
     """
     Compress PDF bytes via Ghostscript. Returns compressed bytes, or the
     original bytes if gs is unavailable, fails, or makes the file larger.
+    Page /Rotate attributes are preserved — Ghostscript strips them, so we
+    read them beforehand and restore them after compression.
     """
+    rotations = _read_page_rotations(data)
+
     with (
         tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f_in,
         tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f_out,
@@ -97,7 +140,7 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
             logger.warning("gs failed (upload): %s", result.stderr.strip())
             return data
 
-        compressed = Path(tmp_out).read_bytes()
+        compressed = _restore_page_rotations(Path(tmp_out).read_bytes(), rotations)
         return compressed if len(compressed) < len(data) else data
     except FileNotFoundError:
         logger.warning("ghostscript not found; storing PDF uncompressed")
@@ -162,20 +205,31 @@ def process_upload(upload) -> ContentFile:
 # ---------------------------------------------------------------------------
 
 
-def compress_image_inplace(path: str) -> int:
+def compress_image_inplace(path: str, force: bool = False) -> int:
     """
     Compress an image file in-place.
-    Resizes to MAX_IMAGE_PX on the longest side and re-encodes.
+    Resizes to MAX_IMAGE_PX on the longest side, fixes EXIF orientation, and re-encodes.
     Preserves the original format (no extension rename, so DB paths stay valid).
     Returns bytes saved (0 if skipped or no improvement).
+    Pass force=True to bypass the size threshold (e.g. to fix orientation on small files).
     """
     original_size = os.path.getsize(path)
     ext = Path(path).suffix.lower()
 
     img = Image.open(path)
+    # Physically rotate pixels to match EXIF orientation before stripping EXIF.
+    # Without this, re-saving strips the Orientation tag and viewers see raw scanner pixels.
+    img_transposed = ImageOps.exif_transpose(img)
+    needs_orientation_fix = img_transposed is not img
+    img = img_transposed
     needs_resize = max(img.size) > MAX_IMAGE_PX
 
-    if original_size <= IMAGE_SKIP_BYTES and not needs_resize:
+    if (
+        not force
+        and original_size <= IMAGE_SKIP_BYTES
+        and not needs_resize
+        and not needs_orientation_fix
+    ):
         return 0
 
     if img.mode not in ("RGB", "RGBA", "L"):
@@ -206,6 +260,8 @@ def compress_pdf_inplace(path: str) -> int:
     original_size = os.path.getsize(path)
     if original_size <= PDF_SKIP_BYTES:
         return 0
+
+    rotations = _read_page_rotations(Path(path).read_bytes())
 
     parent = Path(path).parent
     tmp_path: str | None = None
@@ -242,6 +298,10 @@ def compress_pdf_inplace(path: str) -> int:
             logger.warning("gs failed on %s: %s", path, result.stderr.strip())
             return 0
 
+        compressed = Path(tmp_path).read_bytes()
+        fixed = _restore_page_rotations(compressed, rotations)
+        if fixed is not compressed:  # _restore_page_rotations returns same object if no-op
+            Path(tmp_path).write_bytes(fixed)
         compressed_size = os.path.getsize(tmp_path)
         saved = original_size - compressed_size
         if saved > 0:
