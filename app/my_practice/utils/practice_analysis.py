@@ -10,6 +10,7 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.db.models import FloatField, Sum
 from django.db.models.functions import Cast
+from django.utils.translation import gettext as _, ngettext
 
 from ..models import Client, Invoice
 from ..models.session import Session
@@ -224,7 +225,12 @@ class PracticeAnalyzer:
             "total_weeks": result["total_weeks"],
             "workdays": result["total_workdays"],
             "entries": result["entries"],
-            "capacity_impact": f"{result['total_workdays']} Arbeitstage",
+            "capacity_impact": ngettext(
+                "%(n)s working day",
+                "%(n)s working days",
+                result["total_workdays"],
+            )
+            % {"n": result["total_workdays"]},
         }
 
     def _calculate_capacity(self, period_sessions):
@@ -259,14 +265,23 @@ class PracticeAnalyzer:
 
     def _period_insights(self, analysis) -> list[str]:
         insights = [
-            f"📅 Analyzing {analysis['period']['label']} ({analysis['period']['days']} days)"
+            _("📅 Analyzing %(label)s (%(days)s days)")
+            % {
+                "label": analysis["period"]["label"],
+                "days": analysis["period"]["days"],
+            }
         ]
         active_count = analysis["clients"]["active_in_period"]
         total_count = analysis["clients"]["total"]
         if active_count > 0:
             active_pct = (active_count / total_count * 100) if total_count > 0 else 0
             insights.append(
-                f"👥 {active_count} of {total_count} clients active ({active_pct:.0f}%)"
+                _("👥 %(active)s of %(total)s clients active (%(pct)s%%)")
+                % {
+                    "active": active_count,
+                    "total": total_count,
+                    "pct": f"{active_pct:.0f}",
+                }
             )
         return insights
 
@@ -281,51 +296,73 @@ class PracticeAnalyzer:
                 concentration = (top_3 / total_sessions) * 100
                 if concentration > 60:
                     insights.append(
-                        f"⚠️ High concentration: Top 3 clients = {concentration:.0f}% of sessions"
+                        _("⚠️ High concentration: Top 3 clients = %(pct)s%% of sessions")
+                        % {"pct": f"{concentration:.0f}"}
                     )
                 elif concentration > 40:
                     insights.append(
-                        f"📊 Top 3 clients account for {concentration:.0f}% of sessions"
+                        _("📊 Top 3 clients account for %(pct)s%% of sessions")
+                        % {"pct": f"{concentration:.0f}"}
                     )
 
         # Average per active client
         active = [c for c in clients if c["classification"] in ["established", "probatoric"]]
         if active:
             avg = sum(c["sessions_in_period"] for c in active) / len(active)
-            insights.append(f"📈 Average: {avg:.1f}h per active client")
+            insights.append(_("📈 Average: %(avg)sh per active client") % {"avg": f"{avg:.1f}"})
 
         # Probatoric
         probatoric = [c for c in clients if c["classification"] == "probatoric"]
         if probatoric:
             ph = sum(c["sessions_in_period"] for c in probatoric)
-            s = "s" if len(probatoric) != 1 else ""
-            insights.append(f"🌱 {len(probatoric)} new probatoric client{s} ({ph:.1f}h)")
+            insights.append(
+                ngettext(
+                    "🌱 %(n)s new probatoric client (%(h)sh)",
+                    "🌱 %(n)s new probatoric clients (%(h)sh)",
+                    len(probatoric),
+                )
+                % {"n": len(probatoric), "h": f"{ph:.1f}"}
+            )
 
         # Dormant
         dormant = [c for c in clients if c["classification"] == "dormant"]
         if len(dormant) > 5:
-            insights.append(f"💤 {len(dormant)} dormant clients (no activity this period)")
+            insights.append(
+                _("💤 %(n)s dormant clients (no activity this period)") % {"n": len(dormant)}
+            )
 
         return insights
 
     def _capacity_insights(self, capacity) -> list[str]:
         cap_pct = capacity["capacity_percentage"]
         rem = capacity["remaining_hours"]
+        vals = {"pct": cap_pct, "rem": f"{rem:.0f}"}
         if cap_pct < 30:
-            return [f"📉 Low utilization: Only {cap_pct}% capacity used ({rem:.0f}h available)"]
+            return [
+                _("📉 Low utilization: Only %(pct)s%% capacity used (%(rem)sh available)") % vals
+            ]
         if cap_pct < 60:
-            return [f"📊 Moderate utilization: {cap_pct}% capacity used ({rem:.0f}h available)"]
+            return [
+                _("📊 Moderate utilization: %(pct)s%% capacity used (%(rem)sh available)") % vals
+            ]
         if cap_pct < 80:
-            return [f"✅ Good utilization: {cap_pct}% capacity used ({rem:.0f}h available)"]
+            return [_("✅ Good utilization: %(pct)s%% capacity used (%(rem)sh available)") % vals]
         if cap_pct < 100:
-            return [f"⚠️ High utilization: {cap_pct}% capacity used (only {rem:.0f}h remaining)"]
-        return [f"🔴 At/over capacity: {cap_pct}% utilized"]
+            return [
+                _("⚠️ High utilization: %(pct)s%% capacity used (only %(rem)sh remaining)") % vals
+            ]
+        return [_("🔴 At/over capacity: %(pct)s%% utilized") % vals]
 
     def _revenue_insights(self, clients) -> list[str]:
         unbilled = [c for c in clients if c["invoices_count"] == 0 and c["sessions_in_period"] > 0]
         if unbilled:
             return [
-                f"💰 Revenue opportunity: {len(unbilled)} client(s) with sessions but no invoices"
+                ngettext(
+                    "💰 Revenue opportunity: %(n)s client with sessions but no invoices",
+                    "💰 Revenue opportunity: %(n)s clients with sessions but no invoices",
+                    len(unbilled),
+                )
+                % {"n": len(unbilled)}
             ]
         return []
 

@@ -25,6 +25,14 @@ CAPACITY_PERIODS = [
 ]
 
 
+def _build_holiday_set(start_year: int, end_year: int) -> set[date]:
+    """Build the set of Berlin public holidays covering all years in [start_year, end_year]."""
+    holidays: set[date] = set()
+    for yr in range(start_year, end_year + 1):
+        holidays |= berlin_public_holidays(yr)
+    return holidays
+
+
 def get_weekly_capacity_for_date(target_date: date) -> float:
     """
     Get the weekly capacity (hours) for a specific date.
@@ -86,9 +94,7 @@ def calculate_period_capacity(
         effective_end_date = end_date
 
     # Build holiday set once for the effective date range
-    _holidays: set[date] = set()
-    for yr in range(start_date.year, effective_end_date.year + 1):
-        _holidays |= berlin_public_holidays(yr)
+    _holidays = _build_holiday_set(start_date.year, effective_end_date.year)
 
     # Working days in effective period, excluding public holidays
     working_days = DateRangeHelper.count_working_days(start_date, effective_end_date, _holidays)
@@ -265,6 +271,12 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
     if end_date is None:
         end_date = date.today()
 
+    # Only show complete months — exclude the current partial month so the last
+    # data point isn't anomalously low (e.g. 2 working days = 8h capacity).
+    first_of_current_month = date.today().replace(day=1)
+    if end_date >= first_of_current_month:
+        end_date = first_of_current_month - timedelta(days=1)
+
     if start_date is None:
         start_date = date(start_year, 1, 1)
 
@@ -297,9 +309,7 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
     )
 
     # Pre-build holiday set covering all years in the range (used in the loop below)
-    _holidays: set[date] = set()
-    for yr in range(start_date.year, end_date.year + 1):
-        _holidays |= berlin_public_holidays(yr)
+    _holidays = _build_holiday_set(start_date.year, end_date.year)
 
     # Build capacity data iterating through months (no DB queries in loop)
     capacity_data = []
@@ -308,15 +318,7 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
     while current_date <= end_date:
         # Calculate month boundaries
         month_start = current_date.replace(day=1)
-        if current_date.month == 12:
-            next_month = current_date.replace(year=current_date.year + 1, month=1, day=1)
-        else:
-            next_month = current_date.replace(month=current_date.month + 1, day=1)
-        month_end = next_month - timedelta(days=1)
-
-        # Don't go beyond end_date
-        if month_end > end_date:
-            month_end = end_date
+        month_end = DateRangeHelper.get_last_of_month(current_date)
 
         # Working days in the month, excluding public holidays
         working_days = DateRangeHelper.count_working_days(month_start, month_end, _holidays)
@@ -333,10 +335,10 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
 
         available_working_days = max(0, working_days - timeoff_days)
 
-        # Calculate capacity based on period configuration
-        hours_per_week = get_weekly_capacity_for_date(month_start)
-        available_weeks = available_working_days / 5
-        usable_capacity = available_weeks * hours_per_week
+        # Delegate to the same weighted formula used by calculate_period_capacity
+        usable_capacity = _calculate_weighted_capacity(
+            month_start, month_end, available_working_days, _holidays
+        )
 
         # Get booked hours from cached data
         month_key = format_month_key(current_date)
