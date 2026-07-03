@@ -105,7 +105,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Period-based analysis (Month/Quarter/Half-Year/Year/Custom)
 - ✅ Client classification and activity tracking
 - ✅ Capacity planning with working days calculation
-- ✅ Time-off integration and capacity impact — correctly applied across the 2023-08 capacity change (10h → 20h/week)
+- ✅ Time-off integration and capacity impact
 - ✅ Smart insights generation (8 insight types)
 - ✅ 4-quarter historical trends
 - ✅ Active client ratio tracking
