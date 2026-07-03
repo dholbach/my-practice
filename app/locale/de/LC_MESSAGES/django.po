@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-02 21:25+0200\n"
+"POT-Creation-Date: 2026-07-03 18:47+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -692,6 +692,7 @@ msgstr "Ruhende Klienten anzeigen"
 #: templates/my_practice/analytics.html:394
 #: templates/my_practice/client_list_cards.html:107
 #: templates/my_practice/inquiry_confirm_delete.html:18
+#: templates/my_practice/inquiry_convert_confirm.html:16
 #: templates/my_practice/inquiry_list.html:179
 #: templates/my_practice/inquiry_list.html:225
 msgid "Name"
@@ -1314,7 +1315,8 @@ msgstr "Supervision"
 #: templates/my_practice/client_intake.html:123
 #: templates/my_practice/gebueh_leistung_form.html:42
 #: templates/my_practice/inquiry_confirm_delete.html:39
-#: templates/my_practice/inquiry_form.html:190
+#: templates/my_practice/inquiry_convert_confirm.html:80
+#: templates/my_practice/inquiry_form.html:191
 #: templates/my_practice/practice_form.html:269
 #: templates/my_practice/session_log_form.html:125
 msgid "Cancel"
@@ -1414,11 +1416,13 @@ msgstr "Kontakt & Konditionen"
 
 #: templates/my_practice/client_detail.html:472
 #: templates/my_practice/client_list_cards.html:109
+#: templates/my_practice/inquiry_convert_confirm.html:20
 #: templates/my_practice/practice_form.html:94
 msgid "Email"
 msgstr "E-Mail"
 
 #: templates/my_practice/client_detail.html:476
+#: templates/my_practice/inquiry_convert_confirm.html:24
 #: templates/my_practice/practice_form.html:111
 msgid "Phone"
 msgstr "Telefon"
@@ -1588,7 +1592,7 @@ msgid "Date"
 msgstr "Datum"
 
 #: templates/my_practice/client_detail.html:626
-#: templates/my_practice/inquiry_form.html:120
+#: templates/my_practice/inquiry_form.html:121
 msgid "Time"
 msgstr "Zeit"
 
@@ -1900,6 +1904,7 @@ msgid "Date received"
 msgstr "Eingangsdatum"
 
 #: templates/my_practice/inquiry_confirm_delete.html:26
+#: templates/my_practice/inquiry_convert_confirm.html:28
 #: templates/my_practice/inquiry_list.html:180
 #: templates/my_practice/inquiry_list.html:226
 msgid "Source"
@@ -1909,10 +1914,41 @@ msgstr "Quelle"
 msgid "Yes, delete"
 msgstr "Ja, löschen"
 
+#: templates/my_practice/inquiry_convert_confirm.html:5
+#: templates/my_practice/inquiry_convert_confirm.html:9
+#: templates/my_practice/inquiry_convert_confirm.html:79
+msgid "Add client"
+msgstr "Als Klient:in aufnehmen"
+
+#: templates/my_practice/inquiry_convert_confirm.html:14
 #: templates/my_practice/inquiry_form.html:5
 #: templates/my_practice/inquiry_form.html:8
 msgid "Inquiry"
 msgstr "Anfrage"
+
+#: templates/my_practice/inquiry_convert_confirm.html:32
+msgid "Inquiry date"
+msgstr "Eingangsdatum"
+
+#: templates/my_practice/inquiry_convert_confirm.html:39
+msgid "Client data"
+msgstr "Klientendaten"
+
+#: templates/my_practice/inquiry_convert_confirm.html:40
+msgid "Name, email, and phone are taken from the inquiry. Please complete the fields below:"
+msgstr "Name, E-Mail und Telefon werden aus der Anfrage übernommen. Bitte ergänzen Sie die folgenden Felder:"
+
+#: templates/my_practice/inquiry_convert_confirm.html:44
+msgid "Error:"
+msgstr "Fehler:"
+
+#: templates/my_practice/inquiry_convert_confirm.html:94
+msgid "Suggestions:"
+msgstr "Vorschläge:"
+
+#: templates/my_practice/inquiry_convert_confirm.html:96
+msgid "Click to use"
+msgstr "Zum Übernehmen klicken"
 
 #: templates/my_practice/inquiry_form.html:14
 msgid "Add as client"
@@ -1923,86 +1959,90 @@ msgstr "Als Klient:in aufnehmen"
 msgid "Error saving:"
 msgstr "Fehler beim Speichern:"
 
-#: templates/my_practice/inquiry_form.html:78
+#: templates/my_practice/inquiry_form.html:79
 msgid "Milestones"
 msgstr "Meilensteine"
 
-#: templates/my_practice/inquiry_form.html:78
+#: templates/my_practice/inquiry_form.html:79
 msgid "(set automatically on status change)"
 msgstr "(werden beim Statuswechsel automatisch gesetzt)"
 
-#: templates/my_practice/inquiry_form.html:116
+#: templates/my_practice/inquiry_form.html:117
 msgid "Guide: Initial consultation"
 msgstr "Leitfaden: Erstgespräch"
 
-#: templates/my_practice/inquiry_form.html:120
+#: templates/my_practice/inquiry_form.html:121
 msgid "Step"
 msgstr "Schritt"
 
-#: templates/my_practice/inquiry_form.html:120
+#: templates/my_practice/inquiry_form.html:121
 msgid "Note"
 msgstr "Hinweis"
 
-#: templates/my_practice/inquiry_form.html:125
+#: templates/my_practice/inquiry_form.html:126
 msgid "Welcome"
 msgstr "Ankommen"
 
-#: templates/my_practice/inquiry_form.html:126
+#: templates/my_practice/inquiry_form.html:127
 msgid "State the fee, ask about communication channel — before the person becomes emotionally engaged"
 msgstr "Honorar nennen, Kanal-Frage — bevor sich die Person emotional einlässt"
 
-#: templates/my_practice/inquiry_form.html:130
+#: templates/my_practice/inquiry_form.html:131
 msgid "Life situation & resources"
 msgstr "Lebenssituation & Ressourcen"
 
-#: templates/my_practice/inquiry_form.html:131
+#: templates/my_practice/inquiry_form.html:132
 msgid "Occupation, social environment, first assessment of regulation capacity"
 msgstr "Beschäftigung, soziales Umfeld, erste Einschätzung Regulationsfähigkeit"
 
-#: templates/my_practice/inquiry_form.html:135
+#: templates/my_practice/inquiry_form.html:136
 msgid "Concern & goal for change"
 msgstr "Anliegen & Veränderungsziel"
 
-#: templates/my_practice/inquiry_form.html:136
+#: templates/my_practice/inquiry_form.html:137
 msgid "Previous therapy experience, expectations"
 msgstr "Vorige Therapieerfahrung, Erwartungen"
 
-#: templates/my_practice/inquiry_form.html:140
+#: templates/my_practice/inquiry_form.html:141
 msgid "Current situation"
 msgstr "Akute Lage"
 
-#: templates/my_practice/inquiry_form.html:141
+#: templates/my_practice/inquiry_form.html:142
 msgid "One sentence — crises, psychiatry, medication; not like a form"
 msgstr "Ein Satz — Krisen, Psychiatrie, Medikation; nicht wie ein Formular"
 
-#: templates/my_practice/inquiry_form.html:145
+#: templates/my_practice/inquiry_form.html:146
 msgid "Explain approach"
 msgstr "Ansatz erklären"
 
-#: templates/my_practice/inquiry_form.html:146
+#: templates/my_practice/inquiry_form.html:147
 msgid "SE, body-oriented; normalise the unfamiliarity for newcomers"
 msgstr "SE, körperorientiert; bei Neueinsteigern Fremdartigkeit normalisieren"
 
-#: templates/my_practice/inquiry_form.html:150
+#: templates/my_practice/inquiry_form.html:151
 msgid "Closing & next step"
 msgstr "Abschluss & nächster Schritt"
 
-#: templates/my_practice/inquiry_form.html:151
+#: templates/my_practice/inquiry_form.html:152
 msgid "Name the next action clearly, leave no ambiguity about how to get in touch"
 msgstr "Nächste Handlung klar benennen, keine offene Unklarheit über Kontaktweg"
 
-#: templates/my_practice/inquiry_form.html:154
+#: templates/my_practice/inquiry_form.html:155
 msgid "buffer"
 msgstr "Puffer"
 
-#: templates/my_practice/inquiry_form.html:169
+#: templates/my_practice/inquiry_form.html:170
 #, python-format
 msgid "No booking URL configured — <a href=\"%(url)s\">set one in practice settings</a> so it is filled in automatically."
 msgstr "Keine Buchungs-URL konfiguriert — <a href=\"%(url)s\">eine in den Praxiseinstellungen hinterlegen</a>, damit sie automatisch eingefügt wird."
 
-#: templates/my_practice/inquiry_form.html:173
+#: templates/my_practice/inquiry_form.html:174
 msgid "Template:"
 msgstr "Vorlage:"
+
+#: templates/my_practice/inquiry_form.html:235
+msgid "Available codes:"
+msgstr "Verfügbare Kürzel:"
 
 #: templates/my_practice/inquiry_list.html:6
 #: templates/my_practice/inquiry_list.html:9
