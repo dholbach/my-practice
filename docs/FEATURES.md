@@ -105,7 +105,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Period-based analysis (Month/Quarter/Half-Year/Year/Custom)
 - ✅ Client classification and activity tracking
 - ✅ Capacity planning with working days calculation
-- ✅ Time-off integration and capacity impact
+- ✅ Time-off integration and capacity impact — correctly applied across the 2023-08 capacity change (10h → 20h/week)
 - ✅ Smart insights generation (8 insight types)
 - ✅ 4-quarter historical trends
 - ✅ Active client ratio tracking
@@ -116,6 +116,7 @@ Complete feature list for the Therapy Practice Management System.
 ### Reports
 - ✅ Tax Year Summary (Steuererklärung)
 - ✅ Tax Year Summary: Home-Office-Pauschale (calendar-based non-practice weekdays minus holidays/time off), deduction row in Gewinn, improved link contrast
+- ✅ Tax quarter overview: all four quarters now sum exactly to the year total — invoices with no `paid_date` fall into their `invoice_date` quarter (same fallback rule as the year summary)
 - ✅ Revenue Report with filters
 - ✅ Client detail reports
 - ✅ Session reconciliation report
