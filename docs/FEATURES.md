@@ -116,6 +116,7 @@ Complete feature list for the Therapy Practice Management System.
 ### Reports
 - ✅ Tax Year Summary (Steuererklärung)
 - ✅ Tax Year Summary: Home-Office-Pauschale (calendar-based non-practice weekdays minus holidays/time off), deduction row in Gewinn, improved link contrast
+- ✅ Tax quarter overview: all four quarters now sum exactly to the year total — invoices with no `paid_date` fall into their `invoice_date` quarter (same fallback rule as the year summary)
 - ✅ Revenue Report with filters
 - ✅ Client detail reports
 - ✅ Session reconciliation report
