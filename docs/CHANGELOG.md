@@ -2,6 +2,16 @@
 
 Major features and milestones in chronological order.
 
+## 2026-07-03 — v0.2.8 patch release
+
+- **Bug fix — capacity calculation**: Weighted capacity now correctly applies time off for periods spanning the 2023-08-01 capacity change (10h/week → 20h/week). Previously the `available_working_days` argument was silently ignored in that branch, causing time-off periods to have no effect on capacity for spanning periods; utilisation figures in quarter-trend and annual views were overstated.
+- **Bug fix — quarterly tax revenue**: `tax_quarter_overview` and the dashboard tax widget now use the same paid-date rule as the year summary (`RevenueCalculator.build_paid_date_range_filter` — invoice-date fallback when `paid_date` is NULL). Previously invoices with no `paid_date` appeared in the year total but in no quarter. All four quarters now sum exactly to the year total; regression test added.
+- **Centralisation**: Quarter boundaries (`DateRangeHelper.get_quarter_range` / `get_quarter_for_date`) replace three separate hand-rolled implementations across tax_views, dashboard_widgets, and practice_analysis.
+- **Centralisation**: `_timeoff_dates_for_year()` module function in `practice_days.py` replaces three identical private methods across `PracticeDayCalculator`, `HomeOfficeDayCalculator`, and `WorkdayAuditCalculator`.
+- **Centralisation**: Capacity monitoring widget now delegates month session-hours and revenue to `count_session_hours` / `RevenueCalculator.get_month_revenue`, ensuring paid-date consistency across all views.
+- **Tests**: New `test_capacity_helpers.py`; expanded `test_date_helpers.py` (quarter helpers); `TaxQuarterOverviewConsistencyTest` in `test_views_tax.py`.
+- **Docstring fix**: `DateRangeHelper.count_working_days` example corrected (had referenced a Saturday as a Friday).
+
 ## 2026-07-01 — v0.2.7 patch release
 
 - **Dashboard redesign** (P-117): Replaced chart-heavy dashboard with an operational cockpit — stats strip (year revenue, profit, outstanding, time off), two-pane console (Heute agenda + Diese Woche focus on the left; Braucht Aktion queue on the right), quick-action buttons (+ Neue Rechnung / + Neue Klient:in).
