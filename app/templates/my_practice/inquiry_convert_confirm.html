@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
 {% block title %}Klient:in aufnehmen{% endblock %}
 
@@ -58,6 +59,7 @@
             <div class="form-group">
                 <label for="{{ form.client_code.id_for_label }}">{{ form.client_code.label }}</label>
                 {{ form.client_code }}
+                <div class="code-suggestion-strip" id="convert-code-suggestions" aria-live="polite"></div>
                 {% if form.client_code.help_text %}
                 <small class="help-text">{{ form.client_code.help_text }}</small>
                 {% endif %}
@@ -79,4 +81,43 @@
         </div>
     </form>
 </div>
+
+<script>
+(function () {
+    const codeEl = document.getElementById("id_client_code");
+    const strip = document.getElementById("convert-code-suggestions");
+    if (!codeEl || !strip) return;
+
+    function renderSuggestions(suggestions) {
+        if (!suggestions.length) { strip.innerHTML = ""; return; }
+        strip.innerHTML =
+            '<span class="hint-label">{% trans "Suggestions:" %}</span>' +
+            suggestions.map(c =>
+                `<span class="code-chip clickable" title="{% trans "Click to use" %}"
+                       onclick="document.getElementById('id_client_code').value='${c}';renderStrip([]);">${c}</span>`
+            ).join("");
+    }
+    function renderStrip(s) { renderSuggestions(s); }
+
+    // Pre-load suggestions for the inquiry name on page load
+    const inquiryName = "{{ inquiry.full_name|escapejs }}";
+    if (inquiryName) {
+        fetch("{% url 'suggest_client_code' %}?name=" + encodeURIComponent(inquiryName))
+            .then(r => r.json())
+            .then(data => renderSuggestions(data.suggestions || []));
+    }
+
+    // Also refresh if the code field is cleared
+    let debounce;
+    codeEl.addEventListener("input", function () {
+        if (this.value.trim()) { strip.innerHTML = ""; return; }
+        clearTimeout(debounce);
+        debounce = setTimeout(function () {
+            fetch("{% url 'suggest_client_code' %}?name=" + encodeURIComponent(inquiryName))
+                .then(r => r.json())
+                .then(data => renderSuggestions(data.suggestions || []));
+        }, 200);
+    });
+}());
+</script>
 {% endblock %}
