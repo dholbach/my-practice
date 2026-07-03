@@ -1,46 +1,47 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Klient:in aufnehmen{% endblock %}
+{% block title %}{% trans "Add client" %}{% endblock %}
 
 
 {% block page_icon %}✅{% endblock %}
-{% block page_title %}Klient:in aufnehmen{% endblock %}
+{% block page_title %}{% trans "Add client" %}{% endblock %}
 
 {% block content %}
 <div class="form-container">
     <div class="card inquiry-convert-summary">
-        <h2>Anfrage</h2>
+        <h2>{% trans "Inquiry" %}</h2>
         <div class="detail-row">
-            <span class="label">Name:</span>
+            <span class="label">{% trans "Name" %}:</span>
             <span class="value">{{ inquiry.full_name }}</span>
         </div>
         <div class="detail-row">
-            <span class="label">E-Mail:</span>
+            <span class="label">{% trans "Email" %}:</span>
             <span class="value">{{ inquiry.email|default:"—" }}</span>
         </div>
         <div class="detail-row">
-            <span class="label">Telefon:</span>
+            <span class="label">{% trans "Phone" %}:</span>
             <span class="value">{{ inquiry.phone|default:"—" }}</span>
         </div>
         <div class="detail-row">
-            <span class="label">Quelle:</span>
+            <span class="label">{% trans "Source" %}:</span>
             <span class="value">{{ inquiry.get_source_display }}</span>
         </div>
         <div class="detail-row">
-            <span class="label">Eingangsdatum:</span>
+            <span class="label">{% trans "Inquiry date" %}:</span>
             <span class="value">{{ inquiry.inquiry_date|date:"d.m.Y" }}</span>
         </div>
     </div>
 
     <form method="post" class="card">
         {% csrf_token %}
-        <h2>Klientendaten</h2>
-        <p class="form-hint">Name, E-Mail und Telefon werden aus der Anfrage übernommen. Bitte ergänzen Sie die folgenden Felder:</p>
+        <h2>{% trans "Client data" %}</h2>
+        <p class="form-hint">{% trans "Name, email, and phone are taken from the inquiry. Please complete the fields below:" %}</p>
 
         {% if form.errors %}
         <div class="alert alert-error">
-            <strong>Fehler:</strong>
+            <strong>{% trans "Error:" %}</strong>
             <ul>
                 {% for field in form %}
                     {% for error in field.errors %}
@@ -58,6 +59,7 @@
             <div class="form-group">
                 <label for="{{ form.client_code.id_for_label }}">{{ form.client_code.label }}</label>
                 {{ form.client_code }}
+                <div class="code-suggestion-strip" id="convert-code-suggestions" aria-live="polite"></div>
                 {% if form.client_code.help_text %}
                 <small class="help-text">{{ form.client_code.help_text }}</small>
                 {% endif %}
@@ -74,9 +76,48 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn-success">✅ Klient:in anlegen</button>
-            <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn-success">✅ {% trans "Add client" %}</button>
+            <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-secondary">{% trans "Cancel" %}</a>
         </div>
     </form>
 </div>
+
+<script>
+(function () {
+    const codeEl = document.getElementById("id_client_code");
+    const strip = document.getElementById("convert-code-suggestions");
+    if (!codeEl || !strip) return;
+
+    function renderSuggestions(suggestions) {
+        if (!suggestions.length) { strip.innerHTML = ""; return; }
+        strip.innerHTML =
+            '<span class="hint-label">{% trans "Suggestions:" %}</span>' +
+            suggestions.map(c =>
+                `<span class="code-chip clickable" title="{% trans "Click to use" %}"
+                       onclick="document.getElementById('id_client_code').value='${c}';renderStrip([]);">${c}</span>`
+            ).join("");
+    }
+    function renderStrip(s) { renderSuggestions(s); }
+
+    // Pre-load suggestions for the inquiry name on page load
+    const inquiryName = "{{ inquiry.full_name|escapejs }}";
+    if (inquiryName) {
+        fetch("{% url 'suggest_client_code' %}?name=" + encodeURIComponent(inquiryName))
+            .then(r => r.json())
+            .then(data => renderSuggestions(data.suggestions || []));
+    }
+
+    // Also refresh if the code field is cleared
+    let debounce;
+    codeEl.addEventListener("input", function () {
+        if (this.value.trim()) { strip.innerHTML = ""; return; }
+        clearTimeout(debounce);
+        debounce = setTimeout(function () {
+            fetch("{% url 'suggest_client_code' %}?name=" + encodeURIComponent(inquiryName))
+                .then(r => r.json())
+                .then(data => renderSuggestions(data.suggestions || []));
+        }, 200);
+    });
+}());
+</script>
 {% endblock %}

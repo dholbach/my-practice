@@ -51,6 +51,7 @@ from .client_views import (
     client_gdpr_delete,
     client_gdpr_delete_confirm,
     client_onboarding_step,
+    suggest_client_code,
 )
 
 # Clinical documentation views (P-009)
@@ -189,6 +190,7 @@ __all__ = [
     "client_gdpr_delete_confirm",
     "client_gdpr_delete",
     "client_onboarding_step",
+    "suggest_client_code",
     # Invoice views
     "InvoiceListView",
     "InvoiceCreateView",
