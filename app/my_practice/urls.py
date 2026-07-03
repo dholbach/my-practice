@@ -30,6 +30,7 @@ urlpatterns = [
     ),
     path("clients/", views.ClientListView.as_view(), name="client_list"),
     path("clients/new/", views.ClientIntakeView.as_view(), name="client_intake"),
+    path("clients/suggest-code/", views.suggest_client_code, name="suggest_client_code"),
     path("clients/<int:pk>/detail/", views.client_detail, name="client_detail"),
     path("clients/<int:pk>/edit/", views.ClientIntakeView.as_view(), name="client_edit"),
     # Inquiry / lead tracking (P-031)

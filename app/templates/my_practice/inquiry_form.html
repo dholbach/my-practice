@@ -38,6 +38,7 @@
             <div class="form-group">
                 <label for="{{ form.full_name.id_for_label }}">{{ form.full_name.label }}</label>
                 {{ form.full_name }}
+                <div class="code-suggestion-strip" id="inquiry-code-suggestions" aria-live="polite"></div>
             </div>
             <div class="form-group">
                 <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
@@ -204,14 +205,37 @@
     };
     const today = new Date().toISOString().slice(0, 10);
     const statusEl = document.getElementById("id_status");
-    if (!statusEl) return;
-    statusEl.addEventListener("change", function () {
-        const dateFieldId = statusMap[this.value];
-        if (!dateFieldId) return;
-        const dateEl = document.getElementById(dateFieldId);
-        if (dateEl && !dateEl.value) {
-            dateEl.value = today;
-        }
+    if (statusEl) {
+        statusEl.addEventListener("change", function () {
+            const dateFieldId = statusMap[this.value];
+            if (!dateFieldId) return;
+            const dateEl = document.getElementById(dateFieldId);
+            if (dateEl && !dateEl.value) {
+                dateEl.value = today;
+            }
+        });
+    }
+
+    // Client code suggester — show available codes as name is typed
+    const nameEl = document.getElementById("id_full_name");
+    const strip = document.getElementById("inquiry-code-suggestions");
+    if (!nameEl || !strip) return;
+
+    let debounce;
+    nameEl.addEventListener("input", function () {
+        clearTimeout(debounce);
+        const name = this.value.trim();
+        if (!name) { strip.innerHTML = ""; return; }
+        debounce = setTimeout(function () {
+            fetch("{% url 'suggest_client_code' %}?name=" + encodeURIComponent(name))
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.suggestions.length) { strip.innerHTML = ""; return; }
+                    strip.innerHTML =
+                        '<span class="hint-label">{% trans "Available codes:" %}</span>' +
+                        data.suggestions.map(c => `<span class="code-chip">${c}</span>`).join("");
+                });
+        }, 400);
     });
 }());
 </script>

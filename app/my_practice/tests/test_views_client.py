@@ -427,3 +427,66 @@ class SessionLogDurationThresholdTest(TestCase):
             cancelled=False,
         )
         self.assertNotIn(self.pat.pk, self._clients_needing_log())
+
+
+class SuggestClientCodeTest(TestCase):
+    """Tests for the suggest_client_code endpoint."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Suggest Test Practice",
+            slug="suggest-test",
+            title="Test",
+            email="suggest@test.example",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user("suggest_user", password="pw")
+        UserPractice.objects.create(user=self.user, practice=self.practice)
+        self.client_browser = TestClient()
+        self.client_browser.login(username="suggest_user", password="pw")
+        session = self.client_browser.session
+        session["current_practice_slug"] = self.practice.slug
+        session.save()
+
+    def _get(self, name=""):
+        return self.client_browser.get(reverse("suggest_client_code"), {"name": name})
+
+    def test_empty_name_returns_empty(self):
+        resp = self._get("")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["suggestions"], [])
+
+    def test_two_part_name_suggests_initials_first(self):
+        resp = self._get("Anna Schmidt")
+        suggestions = resp.json()["suggestions"]
+        self.assertIn("AS", suggestions)
+        self.assertEqual(suggestions[0], "AS")
+
+    def test_two_part_name_includes_two_letter_variants(self):
+        resp = self._get("Anna Schmidt")
+        suggestions = resp.json()["suggestions"]
+        self.assertIn("AN", suggestions)
+        self.assertIn("SC", suggestions)
+
+    def test_taken_codes_are_excluded(self):
+        Client.objects.create(
+            practice=self.practice,
+            full_name="Max Mustermann",
+            client_code="AS",
+        )
+        suggestions = self._get("Anna Schmidt").json()["suggestions"]
+        self.assertNotIn("AS", suggestions)
+        self.assertIn("AN", suggestions)
+
+    def test_three_letter_variants_included(self):
+        suggestions = self._get("Anna Schmidt").json()["suggestions"]
+        self.assertTrue(any(len(s) == 3 for s in suggestions))
+
+    def test_single_word_name(self):
+        resp = self._get("Anna")
+        suggestions = resp.json()["suggestions"]
+        self.assertIn("AN", suggestions)
+
+    def test_max_six_suggestions_returned(self):
+        suggestions = self._get("Anna Schmidt").json()["suggestions"]
+        self.assertLessEqual(len(suggestions), 6)
