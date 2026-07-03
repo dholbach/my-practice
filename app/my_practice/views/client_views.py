@@ -447,3 +447,73 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
         _("Client %(code)s has been deleted pursuant to GDPR Art. 17.") % {"code": client_code},
     )
     return redirect("client_list")
+
+
+def _generate_code_candidates(full_name: str) -> list[str]:
+    """
+    Generate candidate client codes from a full name, in priority order.
+
+    Returns uppercase 2- and 3-letter strings derived from initials,
+    first-N-of-first-name, first-N-of-last-name, and combinations.
+    Only alpha characters are considered; digits and punctuation are stripped.
+    """
+    parts = [p for p in full_name.upper().split() if any(c.isalpha() for c in p)]
+    parts = ["".join(c for c in p if c.isalpha()) for p in parts]
+    parts = [p for p in parts if p]
+    if not parts:
+        return []
+
+    first = parts[0]
+    last = parts[-1] if len(parts) > 1 else ""
+
+    candidates: list[str] = []
+
+    # 2-letter: initials, first-2-of-first, first-2-of-last
+    if last:
+        candidates.append(first[0] + last[0])
+    if len(first) >= 2:
+        candidates.append(first[:2])
+    if len(last) >= 2:
+        candidates.append(last[:2])
+
+    # 3-letter combinations
+    if last:
+        if len(first) >= 2:
+            candidates.append(first[:2] + last[0])
+        if len(last) >= 2:
+            candidates.append(first[0] + last[:2])
+    if len(parts) >= 3:
+        candidates.append("".join(p[0] for p in parts[:3]))
+    if len(first) >= 3:
+        candidates.append(first[:3])
+    if len(last) >= 3:
+        candidates.append(last[:3])
+
+    # Deduplicate preserving order
+    seen: set[str] = set()
+    result: list[str] = []
+    for c in candidates:
+        if c not in seen:
+            seen.add(c)
+            result.append(c)
+    return result
+
+
+def suggest_client_code(request: HttpRequest) -> JsonResponse:
+    """
+    Return available client code suggestions for a given name.
+
+    GET /clients/suggest-code/?name=Anna+Schmidt
+    → {"suggestions": ["AS", "AN", "SC", "ANS", "ASC"]}
+
+    Checks all existing client codes across all practices so the suggestions
+    are globally unique (since calendar entries are not practice-scoped).
+    """
+    name = request.GET.get("name", "").strip()
+    if not name:
+        return JsonResponse({"suggestions": []})
+
+    candidates = _generate_code_candidates(name)
+    taken = set(Client.objects.values_list("client_code", flat=True))
+    available = [c for c in candidates if c not in taken]
+    return JsonResponse({"suggestions": available[:6]})
