@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-07-03
+**Last Updated**: 2026-07-04
 
 ## 🔍 Recent Activity
 
+- **2026-07-04 — Configurable capacity periods + i18n progress**: Replaced hardcoded `CAPACITY_PERIODS` constant with a `CapacityPeriod` model editable via practice settings UI (closes #160, PR #162). Client code suggester on inquiry/convert forms (#161). i18n: `inquiry_convert_confirm.html` fully wrapped, `practice_views.py` and `forms.py` wrapped; P-039 now at 18/87 templates (~21%).
 - **2026-07-02 — Computation review & centralisation**: Fixed weighted-capacity calc ignoring time off across the 2023-08 capacity change; quarterly tax revenue now uses the same paid-date rule (invoice-date fallback) as the year summary so quarters sum to the year total. Centralised quarter boundaries in `DateRangeHelper.get_quarter_range`/`get_quarter_for_date` (3 duplicate implementations removed), deduplicated TimeOff date expansion in practice_days, capacity widget now reuses `count_session_hours` + `RevenueCalculator`. New tests: capacity helpers, quarter helpers, quarter/year consistency.
-- **2026-07-01 — P-117 Dashboard Redesign**: Stats strip, two-pane console (Heute / Braucht Aktion), ActionQueueBuilder with grouped rows (overdue, drafts, checklists), inactive client days + last-session date, charts moved to Analytics, heatmap moved to Analytics Clients tab, full i18n wrap of analytics.html. → [docs/projects/done/P-117_DASHBOARD_REDESIGN.md](docs/projects/done/P-117_DASHBOARD_REDESIGN.md)
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
