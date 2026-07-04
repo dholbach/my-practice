@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-04 12:36+0200\n"
+"POT-Creation-Date: 2026-07-04 16:35+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -476,29 +476,29 @@ msgstr ""
 msgid "Praxis nicht gefunden oder kein Zugriff."
 msgstr ""
 
-#: my_practice/views/practice_views.py:55
+#: my_practice/views/practice_views.py:56
 msgid "Sie haben keinen Zugriff auf eine Praxis. Bitte kontaktieren Sie den Administrator."
 msgstr ""
 
-#: my_practice/views/practice_views.py:144
+#: my_practice/views/practice_views.py:147
 #, python-format
 msgid "Praxis '%(name)s' erfolgreich erstellt."
 msgstr ""
 
-#: my_practice/views/practice_views.py:165
+#: my_practice/views/practice_views.py:169
 msgid "Sie haben keine Berechtigung, diese Praxis zu bearbeiten."
 msgstr ""
 
-#: my_practice/views/practice_views.py:195
+#: my_practice/views/practice_views.py:201
 #, python-format
 msgid "Praxis '%(name)s' erfolgreich aktualisiert."
 msgstr ""
 
-#: my_practice/views/practice_views.py:215
+#: my_practice/views/practice_views.py:222
 msgid "Sie haben keine Berechtigung, diese Praxis zu löschen."
 msgstr ""
 
-#: my_practice/views/practice_views.py:225
+#: my_practice/views/practice_views.py:233
 #, python-format
 msgid "Praxis '%(name)s' deaktiviert."
 msgstr ""
@@ -729,6 +729,7 @@ msgstr "Stunden"
 
 #: templates/my_practice/analytics.html:352
 #: templates/my_practice/client_detail.html:502
+#: templates/my_practice/revenue_report.html:28
 msgid "Total revenue"
 msgstr "Gesamtumsatz"
 
@@ -759,6 +760,7 @@ msgstr "Name"
 #: templates/my_practice/client_detail.html:670
 #: templates/my_practice/inquiry_confirm_delete.html:30
 #: templates/my_practice/invoice_detail.html:33
+#: templates/my_practice/revenue_report.html:55
 msgid "Status"
 msgstr "Status"
 
@@ -1088,6 +1090,7 @@ msgid "Back to overview"
 msgstr "Zurück zur Übersicht"
 
 #: templates/my_practice/client_detail.html:7
+#: templates/my_practice/revenue_report.html:51
 msgid "Client"
 msgstr "Klient:in"
 
@@ -1714,6 +1717,7 @@ msgid "Invoice no."
 msgstr "Rechnungsnr."
 
 #: templates/my_practice/client_detail.html:670
+#: templates/my_practice/revenue_report.html:56
 msgid "Amount"
 msgstr "Betrag"
 
@@ -2283,6 +2287,7 @@ msgid "Kleinunternehmerregelung § 19 UStG — no tax"
 msgstr "Kleinunternehmerregelung § 19 UStG – keine Steuer"
 
 #: templates/my_practice/invoice_detail.html:184
+#: templates/my_practice/revenue_report.html:93
 msgid "Total:"
 msgstr "Gesamt:"
 
@@ -2577,6 +2582,82 @@ msgstr "Sie haben noch keine Praxen erstellt."
 #: templates/my_practice/practice_management.html:60
 msgid "Create your first practice to get started."
 msgstr "Erstellen Sie Ihre erste Praxis, um zu beginnen."
+
+#: templates/my_practice/revenue_report.html:6
+#: templates/my_practice/revenue_report.html:8
+msgid "Revenue Report"
+msgstr "Umsatzbericht"
+
+#: templates/my_practice/revenue_report.html:9
+msgid "Detailed revenue overview by payment year"
+msgstr "Detaillierte Umsatzübersicht nach Zahlungsjahr"
+
+#: templates/my_practice/revenue_report.html:14
+msgid "Select year:"
+msgstr "Jahr auswählen:"
+
+#: templates/my_practice/revenue_report.html:16
+msgid "All years"
+msgstr "Alle Jahre"
+
+#: templates/my_practice/revenue_report.html:25
+#, python-format
+msgid "Summary %(year)s"
+msgstr "Zusammenfassung %(year)s"
+
+#: templates/my_practice/revenue_report.html:32
+msgid "Number of invoices"
+msgstr "Anzahl Rechnungen"
+
+#: templates/my_practice/revenue_report.html:36
+#, python-format
+msgid "Invoices from %(year)s"
+msgstr "Rechnungen aus %(year)s"
+
+#: templates/my_practice/revenue_report.html:40
+msgid "Invoices from prior years"
+msgstr "Rechnungen aus Vorjahren"
+
+#: templates/my_practice/revenue_report.html:46
+msgid "Detailed invoice list"
+msgstr "Detaillierte Rechnungsliste"
+
+#: templates/my_practice/revenue_report.html:50
+msgid "Invoice No."
+msgstr "Rechnungs-Nr."
+
+#: templates/my_practice/revenue_report.html:52
+msgid "Invoice date"
+msgstr "Rechnungsdatum"
+
+#: templates/my_practice/revenue_report.html:53
+msgid "Payment date"
+msgstr "Zahlungsdatum"
+
+#: templates/my_practice/revenue_report.html:54
+msgid "Year difference"
+msgstr "Jahr Differenz"
+
+#: templates/my_practice/revenue_report.html:68
+msgid "Prior year"
+msgstr "Vorjahr"
+
+#: templates/my_practice/revenue_report.html:70
+msgid "No date"
+msgstr "Kein Datum"
+
+#: templates/my_practice/revenue_report.html:86
+#, python-format
+msgid "No invoices found for %(year)s"
+msgstr "Keine Rechnungen gefunden für %(year)s"
+
+#: templates/my_practice/revenue_report.html:101
+msgid "Please select a year to display the report."
+msgstr "Bitte wählen Sie ein Jahr aus, um den Report anzuzeigen."
+
+#: templates/my_practice/revenue_report.html:106
+msgid "Back to Analytics"
+msgstr "Zurück zu Analytics"
 
 #: templates/my_practice/session_log_form.html:6
 #: templates/my_practice/session_log_form.html:7
