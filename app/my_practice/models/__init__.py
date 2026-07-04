@@ -20,7 +20,7 @@ from .financial import CompanyExpense, CompanyWithdrawal, ExpenseReceipt, TaxYea
 from .gebueh import GebuhZiffer, Leistungserfassung
 from .invoice import Invoice, InvoiceItem, InvoiceQuerySet
 from .operational import ChecklistItemPause, OperationalChecklistCompletion
-from .practice import Practice, UserPractice
+from .practice import CapacityPeriod, Practice, UserPractice
 from .service import ServiceType
 from .session import Session
 from .tag import ClientTag
@@ -28,6 +28,7 @@ from .timeoff import TimeOff
 from .todo import PracticeTodo
 
 __all__ = [
+    "CapacityPeriod",
     "Practice",
     "UserPractice",
     "Client",

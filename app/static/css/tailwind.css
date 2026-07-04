@@ -996,6 +996,9 @@
   .code-chip { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; font-family: monospace; letter-spacing: 0.04em; background: var(--color-badge-blue-bg); color: var(--color-badge-blue-text); border: 1px solid var(--color-badge-blue-border); cursor: default; }
   .code-chip.clickable { cursor: pointer; }
   .code-chip.clickable:hover { background: var(--color-badge-indigo-bg); color: var(--color-badge-indigo-text); border-color: var(--color-badge-indigo-border); }
+  .capacity-period-row { padding: 0.5rem 0; border-bottom: 1px solid var(--color-border); }
+  .capacity-period-row:last-child { border-bottom: none; }
+  .capacity-delete-col { display: flex; align-items: center; max-width: 80px; }
   .analytics-panel { margin-bottom: 1.25rem; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); overflow: hidden; }
   .analytics-toggle { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 1rem; cursor: pointer; background: var(--color-bg-muted); user-select: none; flex-wrap: wrap; }
   .analytics-toggle:hover { background: var(--color-bg-secondary); }

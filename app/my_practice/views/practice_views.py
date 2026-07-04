@@ -13,7 +13,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
-from ..forms import PracticeEditForm
+from ..forms import CapacityPeriodFormSet, PracticeEditForm
 from ..models import Practice, UserPractice
 from ..utils import get_user_practices, is_practice_owner, switch_practice
 from ..utils.file_processing import compress_image_inplace
@@ -165,8 +165,24 @@ class PracticeUpdateView(UpdateView):
             return redirect("practice_management")
         return super().dispatch(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context["capacity_formset"] = CapacityPeriodFormSet(
+                self.request.POST, instance=self.object
+            )
+        else:
+            context["capacity_formset"] = CapacityPeriodFormSet(instance=self.object)
+        return context
+
     def form_valid(self, form):
+        context = self.get_context_data()
+        capacity_formset = context["capacity_formset"]
+        if not capacity_formset.is_valid():
+            return self.form_invalid(form)
         response = super().form_valid(form)
+        capacity_formset.instance = self.object
+        capacity_formset.save()
         for field_name in ("logo", "signature"):
             if field_name in self.request.FILES:
                 field = getattr(self.object, field_name)
