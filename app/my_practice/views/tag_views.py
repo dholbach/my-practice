@@ -71,7 +71,7 @@ class TagDeleteView(LoginRequiredMixin, DeleteView):
 @require_POST
 def client_add_tag(request, client_id):
     """Add a tag to a client (AJAX endpoint)"""
-    client = get_object_or_404(Client, pk=client_id)
+    client = get_object_or_404(Client.objects.for_current_practice(request), pk=client_id)
     tag_id = request.POST.get("tag_id")
 
     if not tag_id:
@@ -93,7 +93,7 @@ def client_add_tag(request, client_id):
 @require_POST
 def client_remove_tag(request, client_id, tag_id):
     """Remove a tag from a client (AJAX endpoint)"""
-    client = get_object_or_404(Client, pk=client_id)
+    client = get_object_or_404(Client.objects.for_current_practice(request), pk=client_id)
     tag = get_object_or_404(ClientTag, pk=tag_id)
 
     client.tags.remove(tag)

@@ -127,7 +127,7 @@ def _render_invoice_pdf_bytes(
 def invoice_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     """Generate and download PDF for a single invoice."""
     invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=pk)
-    practice = request.current_practice or Practice.objects.first() or Practice.objects.create()
+    practice = invoice.practice
 
     logo_data, signature_data = _prepare_practice_images(practice)
     pdf_bytes, filename = _render_invoice_pdf_bytes(invoice, practice, logo_data, signature_data)
@@ -166,7 +166,7 @@ def contract_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     otherwise falls back to ``client.language``.
     """
     client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
-    practice = request.current_practice or Practice.objects.first() or Practice.objects.create()
+    practice = client.practice
     lang = request.GET.get("lang") or client.language or "de"
     pdf_bytes, filename = generate_contract_pdf_bytes(client, practice, lang)
     response = HttpResponse(pdf_bytes, content_type="application/pdf")
@@ -181,7 +181,7 @@ def intake_form_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     otherwise falls back to ``client.language``.
     """
     client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
-    practice = request.current_practice or Practice.objects.first() or Practice.objects.create()
+    practice = client.practice
     lang = request.GET.get("lang") or client.language or "de"
 
     logo_data, _ = _prepare_practice_images(practice)
@@ -233,7 +233,7 @@ def invoice_batch_download(request: HttpRequest) -> HttpResponse:
         messages.warning(request, f"Keine Rechnungen für {year} mit Status '{status}' gefunden.")
         return HttpResponse(status=204)
 
-    practice = request.current_practice or Practice.objects.first() or Practice.objects.create()
+    practice = request.current_practice
     logo_data, signature_data = _prepare_practice_images(practice)
 
     # Share FontConfiguration across all renders to avoid repeated font loading from disk.

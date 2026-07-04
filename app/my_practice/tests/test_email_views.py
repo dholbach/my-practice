@@ -95,38 +95,16 @@ class SendInvoiceEmailViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("invoice_detail", kwargs={"pk": self.invoice.pk}))
 
-    def test_send_email_no_practice(self):
-        """Test error when no practice configured"""
-        # Delete invoice and client first to avoid ProtectedError
-        Invoice.objects.all().delete()
-        Client.objects.all().delete()
-        Practice.objects.all().delete()
-
-        # Create invoice without practice defaults (should fail gracefully)
-        practice = Practice.objects.create(
-            name="Test Practice",
-            slug="email-test",
-            title="Practitioner",
-            email="",  # Empty email to trigger error
-            city="Berlin",
-        )
-        client = Client.objects.create(
-            client_code="TEST",
-            full_name="Test Client",
-            practice=practice,
-        )
-        invoice = Invoice.objects.create(
-            client=client,
-            invoice_number="TEST-1",
-            practice=practice,
-        )
+    def test_send_email_minimal_practice(self):
+        """Form loads even when practice has minimal configuration (e.g. no email set)."""
+        self.practice.email = ""
+        self.practice.save()
 
         response = self.client_http.get(
-            reverse("send_invoice_email", kwargs={"invoice_id": invoice.pk})
+            reverse("send_invoice_email", kwargs={"invoice_id": self.invoice.pk})
         )
 
-        # Should still show form (200) but with empty/default values
-        # View doesn't prevent sending, just uses minimal defaults
+        # Invoice is scoped to current practice — form loads regardless of practice config
         self.assertEqual(response.status_code, 200)
 
     def test_send_email_404(self):
