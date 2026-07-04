@@ -3,6 +3,7 @@ Revenue calculation utilities.
 Centralized logic for revenue aggregations and statistics.
 """
 
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -357,13 +358,20 @@ class RevenueCalculator:
         }
 
     @staticmethod
-    def get_client_revenue(client: "Client", include_unpaid: bool = False) -> dict[str, Any]:
+    def get_client_revenue(
+        client: "Client",
+        include_unpaid: bool = False,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> dict[str, Any]:
         """
         Get revenue statistics for a specific client.
 
         Args:
             client: Client object
             include_unpaid: if True, include all invoice statuses
+            start_date: optional lower bound on invoice_date (inclusive)
+            end_date: optional upper bound on invoice_date (inclusive)
 
         Returns:
             dict: {
@@ -377,25 +385,28 @@ class RevenueCalculator:
             >>> RevenueCalculator.get_client_revenue(client)
             {'total': Decimal('2800.00'), 'count': 14, 'avg': Decimal('200.00')}
         """
-        filters = {"client": client}
+        filters: dict[str, Any] = {"client": client}
+        if start_date:
+            filters["invoice_date__gte"] = start_date
+        if end_date:
+            filters["invoice_date__lte"] = end_date
+
         if not include_unpaid:
-            # Default: only paid invoices
             return RevenueCalculator.get_revenue_stats(filters)
-        else:
-            # Include all statuses
-            qs = Invoice.objects.filter(**filters)
-            stats = qs.aggregate(
-                revenue_total=Sum("total"),
-                invoice_count=Count("id"),
-                revenue_avg=Avg("total"),
-            )
-            return {
-                "total": (
-                    stats["revenue_total"] if stats["revenue_total"] is not None else Decimal("0")
-                ),
-                "count": stats["invoice_count"] or 0,
-                "avg": (stats["revenue_avg"] if stats["revenue_avg"] is not None else Decimal("0")),
-            }
+
+        qs = Invoice.objects.filter(**filters)
+        stats = qs.aggregate(
+            revenue_total=Sum("total"),
+            invoice_count=Count("id"),
+            revenue_avg=Avg("total"),
+        )
+        return {
+            "total": (
+                stats["revenue_total"] if stats["revenue_total"] is not None else Decimal("0")
+            ),
+            "count": stats["invoice_count"] or 0,
+            "avg": (stats["revenue_avg"] if stats["revenue_avg"] is not None else Decimal("0")),
+        }
 
     @staticmethod
     def get_status_breakdown(
