@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-04 12:27+0200\n"
+"POT-Creation-Date: 2026-07-04 12:36+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -13,6 +13,26 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: my_practice/forms.py:57
+msgid "Geburtsdatum"
+msgstr ""
+
+#: my_practice/forms.py:115 my_practice/forms.py:139
+msgid "Datum"
+msgstr ""
+
+#: my_practice/forms.py:185
+msgid "Praxistage (Wochentage)"
+msgstr ""
+
+#: my_practice/forms.py:186
+msgid "Wochentage, an denen Sie zur Praxis fahren."
+msgstr ""
+
+#: my_practice/forms.py:240
+msgid "Gültig ab"
+msgstr ""
 
 #: my_practice/models/client.py:183
 msgid "GebüH-Rechnung"
@@ -471,6 +491,42 @@ msgstr ""
 
 #: my_practice/views/invoice_views.py:788
 msgid "OK"
+msgstr ""
+
+#: my_practice/views/practice_views.py:31
+#, python-format
+msgid "Zur Praxis '%(name)s' gewechselt."
+msgstr ""
+
+#: my_practice/views/practice_views.py:33
+msgid "Praxis nicht gefunden oder kein Zugriff."
+msgstr ""
+
+#: my_practice/views/practice_views.py:55
+msgid "Sie haben keinen Zugriff auf eine Praxis. Bitte kontaktieren Sie den Administrator."
+msgstr ""
+
+#: my_practice/views/practice_views.py:144
+#, python-format
+msgid "Praxis '%(name)s' erfolgreich erstellt."
+msgstr ""
+
+#: my_practice/views/practice_views.py:165
+msgid "Sie haben keine Berechtigung, diese Praxis zu bearbeiten."
+msgstr ""
+
+#: my_practice/views/practice_views.py:195
+#, python-format
+msgid "Praxis '%(name)s' erfolgreich aktualisiert."
+msgstr ""
+
+#: my_practice/views/practice_views.py:215
+msgid "Sie haben keine Berechtigung, diese Praxis zu löschen."
+msgstr ""
+
+#: my_practice/views/practice_views.py:225
+#, python-format
+msgid "Praxis '%(name)s' deaktiviert."
 msgstr ""
 
 #: my_practice/views/tax_views.py:44
