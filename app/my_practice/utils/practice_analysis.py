@@ -239,7 +239,7 @@ class PracticeAnalyzer:
 
         # Use centralized capacity calculation
         # (Accounts for varying capacity over time and time off)
-        return calculate_period_capacity(self.start_date, self.end_date)
+        return calculate_period_capacity(self.start_date, self.end_date, practice=self.practice)
 
     def _format_period_label(self):
         """Format a human-readable period label."""

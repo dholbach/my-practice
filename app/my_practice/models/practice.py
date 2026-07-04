@@ -235,6 +235,36 @@ class Practice(models.Model):
         super().save(*args, **kwargs)
 
 
+class CapacityPeriod(models.Model):
+    """
+    Defines available therapy hours per week for a given practice, from a start date onward.
+
+    Periods are ordered by start_date. Each period is in effect from its start_date
+    until the next period's start_date (or indefinitely if it is the last one).
+    """
+
+    practice = models.ForeignKey(
+        Practice,
+        on_delete=models.CASCADE,
+        related_name="capacity_periods",
+        verbose_name="Praxis",
+    )
+    start_date = models.DateField(verbose_name="Gültig ab")
+    hours_per_week = models.PositiveSmallIntegerField(
+        verbose_name="Stunden/Woche",
+        help_text="Verfügbare Therapiestunden pro Woche ab diesem Datum",
+    )
+
+    class Meta:
+        verbose_name = "Kapazitätszeitraum"
+        verbose_name_plural = "Kapazitätszeiträume"
+        ordering = ["start_date"]
+        unique_together = [["practice", "start_date"]]
+
+    def __str__(self) -> str:
+        return f"{self.start_date}: {self.hours_per_week}h/Woche"
+
+
 class UserPractice(models.Model):
     """
     Many-to-Many through table linking users to practices.
