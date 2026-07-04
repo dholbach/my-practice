@@ -139,19 +139,19 @@ class ExtractInvoiceNumberTest(TestCase):
         self.importer = _make_importer(self.practice, [])
 
     def test_direct_code(self):
-        self.assertEqual(self.importer.extract_invoice_number("LI-3"), "LI-3")
+        self.assertEqual(self.importer.extract_invoice_number("XX-1"), "XX-1")
 
     def test_direct_code_longer(self):
         self.assertEqual(self.importer.extract_invoice_number("ABCD-123"), "ABCD-123")
 
     def test_rechnung_keyword(self):
-        self.assertEqual(self.importer.extract_invoice_number("Rechnung Nr. OW-1"), "OW-1")
+        self.assertEqual(self.importer.extract_invoice_number("Rechnung Nr. YY-2"), "YY-2")
 
     def test_invoice_keyword(self):
-        self.assertEqual(self.importer.extract_invoice_number("Invoice No. EC-9"), "EC-9")
+        self.assertEqual(self.importer.extract_invoice_number("Invoice No. AB-3"), "AB-3")
 
     def test_therapie_context(self):
-        self.assertEqual(self.importer.extract_invoice_number("3x Therapie JL-3"), "JL-3")
+        self.assertEqual(self.importer.extract_invoice_number("3x Therapie CD-4"), "CD-4")
 
     def test_uppercase_normalised(self):
         self.assertEqual(self.importer.extract_invoice_number("ab-12"), "AB-12")

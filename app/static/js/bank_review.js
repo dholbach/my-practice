@@ -6,14 +6,14 @@
  * the transaction amount.
  *
  * Option label format (from TransactionMatchForm._invoice_label):
- *   "LI-3 (2025-12-15): 90.00 €"  (thousands separated by space, decimal by dot)
+ *   "XX-1 (2025-12-15): 90.00 €"  (thousands separated by space, decimal by dot)
  */
 
 (function () {
     "use strict";
 
     function parseOptionAmount(optionText) {
-        // Extract the amount from "LI-3 (2025-12-15): 1 234.56 €"
+        // Extract the amount from "XX-1 (2025-12-15): 1 234.56 €"
         const match = optionText.match(/:\s*([\d\s]+\.?\d*)\s*€\s*$/);
         if (!match) return NaN;
         // Spaces are used as thousands separators – remove them before parsing

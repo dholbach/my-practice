@@ -373,7 +373,7 @@ class RevenueCalculator:
             }
 
         Example:
-            >>> client = Client.objects.get(client_code="BK")
+            >>> client = Client.objects.get(client_code="XX")
             >>> RevenueCalculator.get_client_revenue(client)
             {'total': Decimal('2800.00'), 'count': 14, 'avg': Decimal('200.00')}
         """

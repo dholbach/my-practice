@@ -13,9 +13,9 @@ SessionHistory-Einträge aus 2026 und später wurden gelöscht, um einen klaren 
 
 **Ergebnis der Analyse:**
 - **96 von 103 Clients:** Perfekte 100% Übereinstimmung zwischen SessionHistory und InvoiceItems
-- **7 Clients mit Differenzen:** Ausschließlich Gruppensessions (MM, SIL-G, CHE-G, IR, JB, PR, LH)
-  - Diese Clients haben je 10h in historischen Daten (Mai+Juni 2024)
-  - Entsprechende Rechnungen haben `-G1`/`-G2` Suffixe (z.B. `MM-G1`, `EC-G1`)
+- **7 Clients mit Differenzen:** Ausschließlich Gruppensessions
+  - Diese Clients haben je 10h in historischen Daten
+  - Entsprechende Rechnungen haben `-G1`/`-G2` Suffixe (z.B. `XX-G1`, `YY-G1`)
   - Werden absichtlich von Reconciliation ausgeschlossen (separate Sammelrechnungen)
 
 **Fazit:** 🎯 **Datenqualität erreicht!** Alle Einzelsessions pro Client/Monat sind perfekt aligniert.
@@ -83,8 +83,8 @@ Alle SessionHistory-Abfragen wurden gefiltert, um nur Daten vor 2026 zu berücks
 - ✅ `deep_reconcile.py` - Detaillierte Diskrepanz-Analyse
 - ✅ `reconcile_old_vs_new.py` - Monat-für-Monat Vergleich mit OLD_TABLE
 - ✅ `comprehensive_reconciliation.py` - Umfassende Reconciliation-Übersicht
-- ✅ `bk_monthly_breakdown.py` - BK-Client-spezifischer Breakdown
-- ✅ `debug_bk_sessions.py` - Debug für BK Gruppensitzungs-Differenz
+- ✅ `client_monthly_breakdown.py` - Klient-spezifischer Breakdown
+- ✅ `debug_client_sessions.py` - Debug für Gruppensitzungs-Differenz eines Klienten
 
 **ARCHIVIERT in `scripts/archive/completed/` (4 Scripts):**
 - ✅ `delete_sessionhistory_2026.py` - Einmalige Aufgabe abgeschlossen
@@ -103,8 +103,8 @@ Alle SessionHistory-Abfragen wurden gefiltert, um nur Daten vor 2026 zu berücks
    - `quick_reconcile.py`
    - `deep_reconcile.py`
    - `reconcile_old_vs_new.py`
-   - `bk_monthly_breakdown.py`
-   - `debug_bk_sessions.py`
+   - `client_monthly_breakdown.py`
+   - `debug_client_sessions.py`
    - `reconciliation_overview_2025.py`
 
 2. **Reconciliation Tests** (können zu Archiv-Tests werden):

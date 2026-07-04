@@ -15,9 +15,9 @@ def global_search(request):
     Global search endpoint supporting prefix-based filtering.
 
     Query formats:
-    - "c:BK" or "client:BK" -> clients + open inquiries (active/direct matches first)
+    - "c:XX" or "client:XX" -> clients + open inquiries (active/direct matches first)
     - "i:2024" or "invoice:2024" -> search only invoices
-    - "BK" -> search clients, inquiries, and invoices
+    - "XX" -> search clients, inquiries, and invoices
 
     Returns JSON with results sorted by relevance priority.
     """

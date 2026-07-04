@@ -16,7 +16,7 @@ def get_next_invoice_number(client: "Client") -> str:
     Calculate the next invoice number for a client.
 
     Invoice numbers follow the pattern: {CLIENT_CODE}-{NUMBER}
-    Examples: BK-1, BK-2, GM-42, etc.
+    Examples: XX-1, XX-2, YY-42, etc.
 
     This function finds the highest existing number for the client
     and returns the next sequential number.
@@ -25,12 +25,12 @@ def get_next_invoice_number(client: "Client") -> str:
         client: Client object
 
     Returns:
-        str: Next invoice number (e.g., "BK-17")
+        str: Next invoice number (e.g., "XX-17")
 
     Examples:
-        >>> client = Client.objects.get(client_code="BK")
+        >>> client = Client.objects.get(client_code="XX")
         >>> get_next_invoice_number(client)
-        "BK-5"  # if BK-4 is the highest invoice number
+        "XX-5"  # if XX-4 is the highest invoice number
     """
     # Find all invoices for this client
     existing_invoices = Invoice.objects.filter(

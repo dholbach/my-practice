@@ -226,8 +226,8 @@ class RealWorldScenariosTest(TestCase):
         result = count_sessions_rounded(items)
         self.assertEqual(result, 4)  # 1 + 1 + 1.5 = 3.5, rounds to 4
 
-    def test_february_2022_bk_example(self):
-        """Test the BK February 2022 example from user query."""
+    def test_mixed_durations_month_example(self):
+        """Test a month mixing 60- and 90-minute sessions."""
         items = [
             MockItem(duration=60, quantity=1),  # therapy_60
             MockItem(duration=60, quantity=1),  # therapy_60

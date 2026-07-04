@@ -26,7 +26,7 @@ def build_client_map() -> dict[str, "Client"]:
 
     Example:
         >>> client_map = build_client_map()
-        >>> client = client_map.get('BK')  # Get client with code 'BK'
+        >>> client = client_map.get('XX')  # Get client with code 'XX'
     """
     from ..models import Client
 

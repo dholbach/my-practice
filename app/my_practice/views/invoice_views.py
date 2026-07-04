@@ -670,7 +670,7 @@ def _gather_billing_data(practice, year, month_num):
     """Run all DB queries needed for the monthly billing overview.
 
     Grouping strategy:
-    - Billed work    → invoice_date month (so GM-20 dated Feb shows in Feb, not Jan)
+    - Billed work    → invoice_date month (so XX-20 dated Feb shows in Feb, not Jan)
     - Unbilled work  → session_date month (genuinely outstanding work)
     - Pending events → event_date month
 

@@ -44,11 +44,11 @@ class BankStatementImporter:
 
     # Invoice number extraction patterns (priority order)
     INVOICE_PATTERNS = [
-        # Pattern 1: Direct codes (LI-3, PC-19, JC-18)
+        # Pattern 1: Direct codes (XX-1, YY-2, AB-3)
         r"\b([A-Z]{2,4}-\d+)\b",
-        # Pattern 2: With keywords (Rechnung Nr. OW-1, Invoice No. EC-9)
+        # Pattern 2: With keywords (Rechnung Nr. YY-2, Invoice No. AB-3)
         r"(?:Rechnung|Invoice|ReNr|Re)\s*(?:Nr\.?|No\.?)?\s*([A-Z]{2,4}-\d+)",
-        # Pattern 3: In context (3x Therapie JL-3)
+        # Pattern 3: In context (3x Therapie CD-4)
         r"Therapie\s+([A-Z]{2,4}-\d+)",
     ]
 
@@ -145,9 +145,9 @@ class BankStatementImporter:
             Extracted invoice number (uppercase) or None
 
         Examples:
-            "LI-3" → "LI-3"
-            "Rechnung Nr. OW-1" → "OW-1"
-            "3x Therapie JL-3" → "JL-3"
+            "XX-1" → "XX-1"
+            "Rechnung Nr. YY-2" → "YY-2"
+            "3x Therapie CD-4" → "CD-4"
             "Mi 9-10" → None
         """
         for pattern in self.INVOICE_PATTERNS:

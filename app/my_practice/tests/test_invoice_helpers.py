@@ -24,18 +24,18 @@ class GetNextInvoiceNumberTests(TestCase):
         )
 
         # Create test clients
-        self.client_bk = Client.objects.create(
-            client_code="BK",
-            full_name="Test Client BK",
-            email="bk@test.com",
+        self.client_xx = Client.objects.create(
+            client_code="XX",
+            full_name="Test Client XX",
+            email="xx@test.com",
             hourly_rate_60=Decimal("100.00"),
             hourly_rate_90=Decimal("150.00"),
             practice=self.practice,
         )
-        self.client_gm = Client.objects.create(
-            client_code="GM",
-            full_name="Test Client GM",
-            email="gm@test.com",
+        self.client_yy = Client.objects.create(
+            client_code="YY",
+            full_name="Test Client YY",
+            email="yy@test.com",
             hourly_rate_60=Decimal("120.00"),
             hourly_rate_90=Decimal("180.00"),
             practice=self.practice,
@@ -60,157 +60,157 @@ class GetNextInvoiceNumberTests(TestCase):
             city="Berlin",
         )
 
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-1")
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-1")
 
     def test_sequential_numbering(self):
         """Test that invoice numbers increment sequentially."""
         # Create first invoice
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-1",
+            client=self.client_xx,
+            invoice_number="XX-1",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
 
-        # Next should be BK-2
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-2")
+        # Next should be XX-2
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-2")
 
         # Create second invoice
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-2",
+            client=self.client_xx,
+            invoice_number="XX-2",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
 
-        # Next should be BK-3
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-3")
+        # Next should be XX-3
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-3")
 
     def test_multiple_clients_independent(self):
         """Test that different clients have independent numbering."""
-        # Create invoices for BK
+        # Create invoices for XX
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-1",
+            client=self.client_xx,
+            invoice_number="XX-1",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-2",
+            client=self.client_xx,
+            invoice_number="XX-2",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
 
-        # Create invoice for GM
+        # Create invoice for YY
         Invoice.objects.create(
-            client=self.client_gm,
-            invoice_number="GM-1",
+            client=self.client_yy,
+            invoice_number="YY-1",
             total=Decimal("120.00"),
             status="draft",
             practice=self.practice,
         )
 
-        # BK should get BK-3
-        result_bk = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result_bk, "BK-3")
+        # XX should get XX-3
+        result_xx = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result_xx, "XX-3")
 
-        # GM should get GM-2
-        result_gm = get_next_invoice_number(self.client_gm)
-        self.assertEqual(result_gm, "GM-2")
+        # YY should get YY-2
+        result_yy = get_next_invoice_number(self.client_yy)
+        self.assertEqual(result_yy, "YY-2")
 
     def test_gaps_in_numbering(self):
         """Test that gaps in numbering are handled (uses highest + 1)."""
-        # Create invoices with gaps (BK-1, BK-5, BK-3)
+        # Create invoices with gaps (XX-1, XX-5, XX-3)
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-1",
+            client=self.client_xx,
+            invoice_number="XX-1",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-5",
+            client=self.client_xx,
+            invoice_number="XX-5",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-3",
+            client=self.client_xx,
+            invoice_number="XX-3",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
 
-        # Should return BK-6 (highest is 5)
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-6")
+        # Should return XX-6 (highest is 5)
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-6")
 
     def test_malformed_invoice_numbers(self):
         """Test handling of malformed invoice numbers."""
         # Create invoice with malformed number
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-invalid",
+            client=self.client_xx,
+            invoice_number="XX-invalid",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
 
         # Should fall back to 1
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-1")
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-1")
 
         # Create another with no dash
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK1",
+            client=self.client_xx,
+            invoice_number="XX1",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
 
         # Should still fall back to 1 since no valid numbers found
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-1")
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-1")
 
     def test_mixed_valid_and_invalid_numbers(self):
         """Test that valid numbers are used even with some invalid ones present."""
         # Create mix of valid and invalid
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-3",
+            client=self.client_xx,
+            invoice_number="XX-3",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-invalid",
+            client=self.client_xx,
+            invoice_number="XX-invalid",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-7",
+            client=self.client_xx,
+            invoice_number="XX-7",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
 
-        # Should return BK-8 (highest valid is 7)
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-8")
+        # Should return XX-8 (highest valid is 7)
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-8")
 
     def test_three_letter_client_code(self):
         """Test with 3-letter client code."""
@@ -243,70 +243,70 @@ class GetNextInvoiceNumberTests(TestCase):
         """Test with high invoice numbers."""
         # Create invoice with high number
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-999",
+            client=self.client_xx,
+            invoice_number="XX-999",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
 
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-1000")
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-1000")
 
     def test_only_other_client_invoices_exist(self):
         """Test that only invoices for the specific client are considered."""
-        # Create invoices for GM only
+        # Create invoices for YY only
         Invoice.objects.create(
-            client=self.client_gm,
-            invoice_number="GM-5",
+            client=self.client_yy,
+            invoice_number="YY-5",
             total=Decimal("120.00"),
             status="draft",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_gm,
-            invoice_number="GM-10",
+            client=self.client_yy,
+            invoice_number="YY-10",
             total=Decimal("120.00"),
             status="draft",
             practice=self.practice,
         )
 
-        # BK should still get BK-1 (not affected by GM invoices)
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-1")
+        # XX should still get XX-1 (not affected by YY invoices)
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-1")
 
     def test_different_invoice_statuses(self):
         """Test that all invoices are counted regardless of status."""
         # Create invoices with different statuses
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-1",
+            client=self.client_xx,
+            invoice_number="XX-1",
             total=Decimal("100.00"),
             status="draft",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-2",
+            client=self.client_xx,
+            invoice_number="XX-2",
             total=Decimal("100.00"),
             status="sent",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-3",
+            client=self.client_xx,
+            invoice_number="XX-3",
             total=Decimal("100.00"),
             status="paid",
             practice=self.practice,
         )
         Invoice.objects.create(
-            client=self.client_bk,
-            invoice_number="BK-4",
+            client=self.client_xx,
+            invoice_number="XX-4",
             total=Decimal("100.00"),
             status="cancelled",
             practice=self.practice,
         )
 
-        # Should return BK-5 (all statuses counted)
-        result = get_next_invoice_number(self.client_bk)
-        self.assertEqual(result, "BK-5")
+        # Should return XX-5 (all statuses counted)
+        result = get_next_invoice_number(self.client_xx)
+        self.assertEqual(result, "XX-5")

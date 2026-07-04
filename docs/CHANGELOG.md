@@ -723,7 +723,7 @@ Major features and milestones in chronological order.
 - Session counts are now normalized to 60-minute base, matching `count_sessions()` utility function
 
 **Impact:**
-- Client list view now shows correct session counts (e.g., BK: 85.0→85.5, GM: 64.0→79.0)
+- Client list view now shows correct session counts (e.g., XX: 85.0→85.5, YY: 64.0→79.0)
 - Capacity analysis and practice statistics now use accurate data
 - All aggregated client session metrics are now consistent across the application
 
@@ -886,7 +886,7 @@ Major features and milestones in chronological order.
 **Root Cause:**
 - Aggregating over `InvoiceItem → invoice__total` multiplies invoice totals by item count
 - Multiple annotations over different relations (`invoices` and `invoices__items`) cause JOIN multiplication
-- Example: Client PB showed 7840 € instead of correct 2560 €
+- Example: a client showed 7840 € instead of the correct 2560 €
 
 **Solutions Applied:**
 1. **Client List**: Used Subqueries with `OuterRef()` for separate aggregations

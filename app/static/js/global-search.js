@@ -2,9 +2,9 @@
  * Global Search Component
  *
  * Unified search box for clients and invoices with prefix support:
- * - "c:BK" or "client:BK" -> search clients only
+ * - "c:XX" or "client:XX" -> search clients only
  * - "i:2024" or "in:2024" -> search invoices only
- * - "BK" -> search both
+ * - "XX" -> search both
  */
 
 (function() {

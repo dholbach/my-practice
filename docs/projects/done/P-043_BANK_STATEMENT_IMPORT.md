@@ -38,9 +38,9 @@
    - Filter positive amounts only (income transactions)
 
 2. **Invoice Number Extraction** (2-3h)
-   - Pattern 1: Direct codes `LI-3`, `PC-19`, `JC-18`
-   - Pattern 2: With keywords `Rechnung Nr. OW-1`, `Invoice No. EC-9`
-   - Pattern 3: In context `3x Therapie JL-3`, `ReNr CG-25`
+   - Pattern 1: Direct codes `XX-1`, `YY-2`, `AB-3`
+   - Pattern 2: With keywords `Rechnung Nr. YY-2`, `Invoice No. AB-3`
+   - Pattern 3: In context `3x Therapie CD-4`, `ReNr XX-12`
    - Regex patterns:
      ```python
      r'\b([A-Z]{2,4}-\d+)\b'  # Direct
@@ -91,7 +91,7 @@
    - Auto-ignore self-payments (Einlagen from practice.name)
 
 2. **Smart Matching System**
-   - 3 regex patterns: direct (`LI-3`), keyword (`Rechnung Nr. OW-1`), context (`3x Therapie JL-3`)
+   - 3 regex patterns: direct (`XX-1`), keyword (`Rechnung Nr. YY-2`), context (`3x Therapie CD-4`)
    - ±5€ tolerance for amount matching
    - Confidence levels: exact, fuzzy, manual, ignored, unmatched
    - ClientAlias model for name variations
@@ -102,7 +102,7 @@
      - **Confirm-paid** (orange): Already-paid invoice, verify duplicate payment
      - **Manual** (dropdown): Select from all unpaid invoices
    - Multi-select support for bulk payments (Sammelzahlungen)
-   - Invoice dropdown: `LI-3 (2025-12-15): 90,00 €` format
+   - Invoice dropdown: `XX-1 (2025-12-15): 90,00 €` format
    - Auto-scroll to next transaction after action
    - ClientAlias checkbox (auto-create for future matches)
 
@@ -117,7 +117,7 @@
 ### Key Features
 
 - **Bulk Payments**: Select multiple invoices for single transaction
-  - Notes: "Sammelzahlung für: LI-3, OW-1, JL-2"
+  - Notes: "Sammelzahlung für: XX-1, YY-2, CD-2"
   - All invoices marked as paid with same date
 
 - **Auto-Ignore**: Self-payments automatically set to `ignored`
@@ -239,7 +239,7 @@ class BankStatementImporter:
     """Import and match GLS Bank CSV statements"""
 
     INVOICE_PATTERNS = [
-        r'\b([A-Z]{2,4}-\d+)\b',  # Direct: LI-3
+        r'\b([A-Z]{2,4}-\d+)\b',  # Direct: XX-1
         r'(?:Rechnung|Invoice|ReNr|Re)\s*(?:Nr\.?|No\.?)?\s*([A-Z]{2,4}-\d+)',
         r'Therapie\s+([A-Z]{2,4}-\d+)',
     ]
@@ -325,11 +325,11 @@ class BankImportTestCase(TestCase):
         pass
 
     def test_extract_invoice_number_direct(self):
-        """Test pattern: LI-3"""
+        """Test pattern: XX-1"""
         pass
 
     def test_extract_invoice_number_keyword(self):
-        """Test pattern: Rechnung Nr. OW-1"""
+        """Test pattern: Rechnung Nr. YY-2"""
         pass
 
     def test_match_exact_amount(self):
@@ -351,23 +351,23 @@ class BankImportTestCase(TestCase):
 
 ---
 
-## 📊 Sample Data (from provided CSV)
+## 📊 Sample Data (anonymized examples)
 
 **Perfect Matches:**
-- `LI-3` → 90,00€ → "Adam Smith"
-- `OW-1` → 180,00€ → "Rechnung Nr. OW-1"
-- `EC-9` → 160,00€ → "Invoice No. EC-9"
+- `XX-1` → 90,00€ → "Max Mustermann"
+- `YY-2` → 180,00€ → "Rechnung Nr. YY-2"
+- `AB-3` → 160,00€ → "Invoice No. AB-3"
 
 **Fuzzy Matches:**
-- `JL-3` → 270,00€ → "3x Therapie JL-3" (context pattern)
-- `PB-12` → 80,00€ → "Re Nr PB-12 vom 21.12.25" (keyword variant)
+- `CD-4` → 270,00€ → "3x Therapie CD-4" (context pattern)
+- `XX-12` → 80,00€ → "Re Nr XX-12 vom 21.12.25" (keyword variant)
 
 **Problematic Cases:**
 - `Mi 9-10` → 400,00€ → "Maria Musterfrau" (no invoice number)
-- Multiple invoices: "For invoices 29 and 30" (Benjamin Kahn)
+- Multiple invoices: "For invoices 29 and 30" (Max Mustermann)
 
 **To Ignore:**
-- `-300,00€` → "Miete Lenbach 16" (expense - negative)
+- `-300,00€` → "Miete Praxisraum" (expense - negative)
 - `-350,00€` → "Entnahme / Unternehmerlohn" (withdrawal - negative)
 - `-4,99€` → "klarmobil GmbH" (expense - negative)
 

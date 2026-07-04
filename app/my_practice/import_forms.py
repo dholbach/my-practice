@@ -80,7 +80,7 @@ class TransactionMatchForm(StyledFormMixin, forms.Form):
     def _invoice_label(self, invoice):
         """Generate custom label for invoice dropdown"""
         total = invoice.calculate_total()
-        # Format: LI-3 (2025-12-15): 90,00 €
+        # Format: XX-1 (2025-12-15): 90,00 €
         return f"{invoice.invoice_number} ({invoice.invoice_date}): {total:,.2f} €".replace(
             ",", " "
         )
