@@ -85,6 +85,17 @@ When `DEBUG=False`, the following are automatically enabled:
 
 ### Additional Security Measures
 
+#### PII Commit Guard (pre-commit)
+- `scripts/check_pii.py` runs in the pre-commit hook and blocks commits whose
+  staged changes contain terms from a **local, untracked denylist**
+- Denylist location: `.git/pii-denylist` (one term per line, `#` comments,
+  case-insensitive substring match) — it holds the sensitive strings themselves,
+  so it must never be committed; keeping it inside `.git/` makes that impossible
+- No denylist present → the check passes silently (contributors are unaffected)
+- Full-tree audit: `python3 scripts/check_pii.py --all`
+- Populate it with real client names, payer names, addresses, and distinctive
+  client codes for your own installation
+
 #### Static Files
 - Production uses WhiteNoise with `CompressedManifestStaticFilesStorage`
 - Development uses simple storage (no caching)
