@@ -11,9 +11,10 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
-from ..forms import PracticeEditForm
+from ..forms import CapacityPeriodFormSet, PracticeEditForm
 from ..models import Practice, UserPractice
 from ..utils import get_user_practices, is_practice_owner, switch_practice
 from ..utils.file_processing import compress_image_inplace
@@ -27,9 +28,9 @@ def practice_switch(request, slug):
     """
     if switch_practice(request, slug):
         practice = Practice.objects.get(slug=slug)
-        messages.success(request, f"Zur Praxis '{practice.name}' gewechselt.")
+        messages.success(request, _("Zur Praxis '%(name)s' gewechselt.") % {"name": practice.name})
     else:
-        messages.error(request, "Praxis nicht gefunden oder kein Zugriff.")
+        messages.error(request, _("Praxis nicht gefunden oder kein Zugriff."))
 
     # Smart redirect: If on a practice-specific URL, redirect to the same page for new practice
     referer = request.META.get("HTTP_REFERER", "")
@@ -51,7 +52,9 @@ def practice_select(request):
     if not practices:
         messages.error(
             request,
-            "Sie haben keinen Zugriff auf eine Praxis. Bitte kontaktieren Sie den Administrator.",
+            _(
+                "Sie haben keinen Zugriff auf eine Praxis. Bitte kontaktieren Sie den Administrator."
+            ),
         )
         return redirect("dashboard")
 
@@ -140,7 +143,9 @@ class PracticeCreateView(CreateView):
         # Switch to new practice
         switch_practice(self.request, self.object.slug)
 
-        messages.success(self.request, f"Praxis '{self.object.name}' erfolgreich erstellt.")
+        messages.success(
+            self.request, _("Praxis '%(name)s' erfolgreich erstellt.") % {"name": self.object.name}
+        )
         return response
 
 
@@ -161,12 +166,28 @@ class PracticeUpdateView(UpdateView):
         """Check if user is owner before allowing edit."""
         practice = self.get_object()
         if not is_practice_owner(request.user, practice):
-            messages.error(request, "Sie haben keine Berechtigung, diese Praxis zu bearbeiten.")
+            messages.error(request, _("Sie haben keine Berechtigung, diese Praxis zu bearbeiten."))
             return redirect("practice_management")
         return super().dispatch(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context["capacity_formset"] = CapacityPeriodFormSet(
+                self.request.POST, instance=self.object
+            )
+        else:
+            context["capacity_formset"] = CapacityPeriodFormSet(instance=self.object)
+        return context
+
     def form_valid(self, form):
+        context = self.get_context_data()
+        capacity_formset = context["capacity_formset"]
+        if not capacity_formset.is_valid():
+            return self.form_invalid(form)
         response = super().form_valid(form)
+        capacity_formset.instance = self.object
+        capacity_formset.save()
         for field_name in ("logo", "signature"):
             if field_name in self.request.FILES:
                 field = getattr(self.object, field_name)
@@ -175,7 +196,10 @@ class PracticeUpdateView(UpdateView):
                         compress_image_inplace(field.path)
                     except Exception:
                         logger.exception("Failed to compress practice %s", field_name)
-        messages.success(self.request, f"Praxis '{self.object.name}' erfolgreich aktualisiert.")
+        messages.success(
+            self.request,
+            _("Praxis '%(name)s' erfolgreich aktualisiert.") % {"name": self.object.name},
+        )
         return response
 
 
@@ -195,7 +219,7 @@ class PracticeDeleteView(DeleteView):
         """Check if user is owner before allowing delete."""
         practice = self.get_object()
         if not is_practice_owner(request.user, practice):
-            messages.error(request, "Sie haben keine Berechtigung, diese Praxis zu löschen.")
+            messages.error(request, _("Sie haben keine Berechtigung, diese Praxis zu löschen."))
             return redirect("practice_management")
         return super().dispatch(request, *args, **kwargs)
 
@@ -205,7 +229,9 @@ class PracticeDeleteView(DeleteView):
         practice.is_active = False
         practice.save()
 
-        messages.success(self.request, f"Praxis '{practice.name}' deaktiviert.")
+        messages.success(
+            self.request, _("Praxis '%(name)s' deaktiviert.") % {"name": practice.name}
+        )
 
         # If this was current practice, clear session
         if self.request.session.get("current_practice_slug") == practice.slug:

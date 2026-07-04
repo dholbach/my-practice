@@ -3,8 +3,9 @@ Forms for the payments application.
 """
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
-from .models import Client, CompanyExpense, CompanyWithdrawal, Practice
+from .models import CapacityPeriod, Client, CompanyExpense, CompanyWithdrawal, Practice
 
 
 class DateFormField(forms.DateField):
@@ -53,7 +54,7 @@ class StyledFormMixin:
 class ClientIntakeForm(StyledFormMixin, forms.ModelForm):
     """Client intake form"""
 
-    date_of_birth = DateFormField(required=False, label="Geburtsdatum")
+    date_of_birth = DateFormField(required=False, label=_("Geburtsdatum"))
 
     class Meta:
         model = Client
@@ -111,7 +112,7 @@ class ClientIntakeForm(StyledFormMixin, forms.ModelForm):
 class CompanyWithdrawalForm(StyledFormMixin, forms.ModelForm):
     """Form for creating and editing company withdrawals"""
 
-    date = DateFormField(label="Datum")
+    date = DateFormField(label=_("Datum"))
 
     class Meta:
         model = CompanyWithdrawal
@@ -135,7 +136,7 @@ class CompanyWithdrawalForm(StyledFormMixin, forms.ModelForm):
 class CompanyExpenseForm(StyledFormMixin, forms.ModelForm):
     """Form for creating and editing company expenses"""
 
-    date = DateFormField(label="Datum")
+    date = DateFormField(label=_("Datum"))
 
     class Meta:
         model = CompanyExpense
@@ -181,8 +182,8 @@ class PracticeEditForm(StyledFormMixin, forms.ModelForm):
         choices=_WEEKDAY_CHOICES,
         widget=forms.CheckboxSelectMultiple,
         required=False,
-        label="Praxistage (Wochentage)",
-        help_text="Wochentage, an denen Sie zur Praxis fahren.",
+        label=_("Praxistage (Wochentage)"),
+        help_text=_("Wochentage, an denen Sie zur Praxis fahren."),
     )
 
     class Meta:
@@ -233,3 +234,20 @@ class PracticeEditForm(StyledFormMixin, forms.ModelForm):
 
     def clean_practice_weekdays(self) -> list[int]:
         return [int(v) for v in self.cleaned_data.get("practice_weekdays") or []]
+
+
+class CapacityPeriodForm(StyledFormMixin, forms.ModelForm):
+    start_date = DateFormField(label=_("Gültig ab"))
+
+    class Meta:
+        model = CapacityPeriod
+        fields = ["start_date", "hours_per_week"]
+
+
+CapacityPeriodFormSet = forms.inlineformset_factory(
+    Practice,
+    CapacityPeriod,
+    form=CapacityPeriodForm,
+    extra=1,
+    can_delete=True,
+)

@@ -3,6 +3,9 @@ Capacity calculation utilities.
 
 Provides centralized capacity configuration and calculation for different time periods.
 Accounts for changes in available working hours over time as the practice evolved.
+
+Capacity periods are stored in the CapacityPeriod model (one row per start_date/practice).
+Use the practice edit page to add or change capacity periods.
 """
 
 from datetime import date, timedelta
@@ -10,19 +13,10 @@ from datetime import date, timedelta
 from django.db.models import FloatField, Sum
 from django.db.models.functions import Cast
 
-from ..models import Session
+from ..models import CapacityPeriod, Session
 from .date_helpers import DateRangeHelper
 from .practice_days import berlin_public_holidays
 from .timeoff_helpers import calculate_timeoff_for_period
-
-# Capacity configuration: list of (start_date, hours_per_week)
-# Each entry defines capacity from that date onwards until the next entry
-CAPACITY_PERIODS = [
-    # 2020-2023 Jul: Building practice, ~10 sessions/week capacity
-    (date(2020, 1, 1), 10),
-    # 2023 Aug onwards: Full capacity, 20 hours/week for therapy sessions
-    (date(2023, 8, 1), 20),
-]
 
 
 def _build_holiday_set(start_year: int, end_year: int) -> set[date]:
@@ -33,29 +27,44 @@ def _build_holiday_set(start_year: int, end_year: int) -> set[date]:
     return holidays
 
 
-def get_weekly_capacity_for_date(target_date: date) -> float:
+def _get_capacity_periods(practice=None) -> list[tuple[date, int]]:
+    """
+    Return capacity periods as a list of (start_date, hours_per_week) tuples, ascending.
+
+    Queries CapacityPeriod for the given practice. When practice is None, returns
+    periods across all practices (used by standalone scripts without a request context).
+    """
+    qs = CapacityPeriod.objects.order_by("start_date")
+    if practice is not None:
+        qs = qs.filter(practice=practice)
+    return [(cp.start_date, cp.hours_per_week) for cp in qs]
+
+
+def get_weekly_capacity_for_date(target_date: date, practice=None) -> float:
     """
     Get the weekly capacity (hours) for a specific date.
 
     Args:
         target_date: The date to get capacity for
+        practice: Optional Practice instance to scope periods to
 
     Returns:
         Hours per week available for client sessions
     """
-    capacity = CAPACITY_PERIODS[0][1]  # Default to first period
-
-    for period_start, hours_per_week in CAPACITY_PERIODS:
+    periods = _get_capacity_periods(practice)
+    if not periods:
+        return 0.0
+    capacity = periods[0][1]
+    for period_start, hours_per_week in periods:
         if target_date >= period_start:
             capacity = hours_per_week
         else:
             break
-
     return capacity
 
 
 def calculate_period_capacity(
-    start_date: date, end_date: date, include_timeoff: bool = True
+    start_date: date, end_date: date, include_timeoff: bool = True, practice=None
 ) -> dict:
     """
     Calculate capacity metrics for a date range.
@@ -112,7 +121,7 @@ def calculate_period_capacity(
 
     # Calculate weighted capacity based on effective period
     usable_capacity = _calculate_weighted_capacity(
-        start_date, effective_end_date, available_working_days, _holidays
+        start_date, effective_end_date, available_working_days, _holidays, practice=practice
     )
 
     # Calculate booked hours (uses same horizon)
@@ -139,6 +148,7 @@ def _calculate_weighted_capacity(
     end_date: date,
     available_working_days: int,
     holidays: set[date] | frozenset[date] = frozenset(),
+    practice=None,
 ) -> float:
     """
     Calculate weighted capacity for a period that may span multiple capacity configurations.
@@ -148,16 +158,18 @@ def _calculate_weighted_capacity(
     proportion of working days in its segment. The result is always applied to
     available_working_days, so time off reduces capacity in both cases.
     """
+    periods = _get_capacity_periods(practice)
+
     # Check if period spans a capacity change
     capacity_changes_in_period = [
         (period_start, hours)
-        for period_start, hours in CAPACITY_PERIODS
+        for period_start, hours in periods
         if start_date < period_start <= end_date
     ]
 
     if not capacity_changes_in_period:
         # No capacity change within period - use capacity at start
-        hours_per_week = get_weekly_capacity_for_date(start_date)
+        hours_per_week = get_weekly_capacity_for_date(start_date, practice=practice)
         available_weeks = available_working_days / 5
         return available_weeks * hours_per_week
 
@@ -168,13 +180,17 @@ def _calculate_weighted_capacity(
     for change_date, _new_hours in capacity_changes_in_period:
         period_end = change_date - timedelta(days=1)
         days_in_segment = DateRangeHelper.count_working_days(current_start, period_end, holidays)
-        segments.append((days_in_segment, get_weekly_capacity_for_date(current_start)))
+        segments.append(
+            (days_in_segment, get_weekly_capacity_for_date(current_start, practice=practice))
+        )
         current_start = change_date
 
     # Remaining days after last change
     if current_start <= end_date:
         days_remaining = DateRangeHelper.count_working_days(current_start, end_date, holidays)
-        segments.append((days_remaining, get_weekly_capacity_for_date(current_start)))
+        segments.append(
+            (days_remaining, get_weekly_capacity_for_date(current_start, practice=practice))
+        )
 
     total_working_days = sum(days for days, _ in segments)
     if total_working_days == 0:
@@ -328,7 +344,7 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
 
         # Delegate to the same weighted formula used by calculate_period_capacity
         usable_capacity = _calculate_weighted_capacity(
-            month_start, month_end, available_working_days, _holidays
+            month_start, month_end, available_working_days, _holidays, practice=practice
         )
 
         # Get booked hours from cached data
