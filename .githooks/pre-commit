@@ -3,6 +3,10 @@
 # Install once with: ./dev.py install-hooks
 set -e
 
+# PII guard: blocks commits containing terms from the local, untracked
+# denylist (.git/pii-denylist). No-op if the denylist doesn't exist.
+python3 scripts/check_pii.py
+
 STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^app/.*\.py$' || true)
 [ -z "$STAGED_PY" ] && exit 0
 
