@@ -118,7 +118,7 @@ class BaseClientEmailView(View):
         self, request: HttpRequest, pk: int
     ) -> tuple[Client, Practice | None]:
         client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
-        practice = request.current_practice or Practice.objects.first()
+        practice = request.current_practice
         return client, practice
 
     def _redirect_to_detail(self, pk: int) -> HttpResponse:
@@ -203,12 +203,8 @@ class SendInvoiceEmailView(View):
 
     def get(self, request: HttpRequest, invoice_id: int) -> HttpResponse:
         """Show email customization form"""
-        invoice = get_object_or_404(Invoice, pk=invoice_id)
-        practice = Practice.objects.first()
-
-        if not practice:
-            messages.error(request, "Praxis-Einstellungen nicht konfiguriert.")
-            return redirect("invoice_detail", pk=invoice_id)
+        invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=invoice_id)
+        practice = invoice.practice
 
         # Prevent sending if already sent
         if invoice.status == "sent":
@@ -242,12 +238,8 @@ class SendInvoiceEmailView(View):
 
     def post(self, request: HttpRequest, invoice_id: int) -> HttpResponse:
         """Send email - either quick or custom"""
-        invoice = get_object_or_404(Invoice, pk=invoice_id)
-        practice = Practice.objects.first()
-
-        if not practice:
-            messages.error(request, "Praxis-Einstellungen nicht konfiguriert.")
-            return redirect("invoice_detail", pk=invoice_id)
+        invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=invoice_id)
+        practice = invoice.practice
 
         # Prevent sending if already sent
         if invoice.status == "sent":

@@ -522,7 +522,7 @@ def client_triage_summary(request):
 @require_POST
 def session_toggle_billable(request, client_pk, session_pk):
     """Toggle Session.billable — marks intro calls / non-billable sessions as excluded."""
-    client = get_object_or_404(Client, pk=client_pk)
+    client = _get_scoped_client(request, client_pk)
     session = get_object_or_404(Session, pk=session_pk, client=client)
     session.billable = not session.billable
     session.save(update_fields=["billable"])

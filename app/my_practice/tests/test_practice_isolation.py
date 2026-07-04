@@ -4,12 +4,15 @@ Tests for practice isolation - ensuring data is properly scoped by practice.
 
 from django.contrib.auth.models import User
 from django.test import RequestFactory, TestCase
+from django.test import Client as TestClient
+from django.urls import reverse
 from my_practice.models import (
     Client,
     CompanyExpense,
     CompanyWithdrawal,
     Invoice,
     Practice,
+    UserPractice,
 )
 
 
@@ -214,3 +217,83 @@ class PracticeIsolationTestCase(TestCase):
                 active=True,
                 # practice=None — should be rejected by DB constraint
             )
+
+
+class TagEndpointIsolationTestCase(TestCase):
+    """Tag AJAX endpoints must enforce practice isolation."""
+
+    def setUp(self):
+        from my_practice.models import ClientTag
+
+        self.http = TestClient()
+        self.user = User.objects.create_user(username="taguser", password="pw")
+
+        self.practice_a = Practice.objects.create(
+            name="Practice A", slug="tag-iso-a", email="a@example.com"
+        )
+        self.practice_b = Practice.objects.create(
+            name="Practice B", slug="tag-iso-b", email="b@example.com"
+        )
+        UserPractice.objects.create(user=self.user, practice=self.practice_a, is_owner=True)
+        self.http.login(username="taguser", password="pw")
+
+        self.client_a = Client.objects.create(
+            practice=self.practice_a, client_code="TA", full_name="Client A"
+        )
+        self.client_b = Client.objects.create(
+            practice=self.practice_b, client_code="TB", full_name="Client B"
+        )
+        self.tag = ClientTag.objects.create(name="test-tag", slug="test-tag", color="#aaaaaa")
+
+    def test_add_tag_to_own_client_succeeds(self):
+        """Adding a tag to the current practice's client returns 200."""
+        resp = self.http.post(
+            reverse("client_add_tag", kwargs={"client_id": self.client_a.pk}),
+            {"tag_id": self.tag.pk},
+        )
+        self.assertEqual(resp.status_code, 200)
+
+    def test_add_tag_to_other_practice_client_returns_404(self):
+        """Adding a tag to another practice's client returns 404."""
+        resp = self.http.post(
+            reverse("client_add_tag", kwargs={"client_id": self.client_b.pk}),
+            {"tag_id": self.tag.pk},
+        )
+        self.assertEqual(resp.status_code, 404)
+
+    def test_remove_tag_from_other_practice_client_returns_404(self):
+        """Removing a tag from another practice's client returns 404."""
+        self.client_b.tags.add(self.tag)
+        resp = self.http.post(
+            reverse(
+                "client_remove_tag", kwargs={"client_id": self.client_b.pk, "tag_id": self.tag.pk}
+            ),
+        )
+        self.assertEqual(resp.status_code, 404)
+
+
+class AnonymousAccessTestCase(TestCase):
+    """LoginRequiredMiddleware must redirect unauthenticated requests to login."""
+
+    def setUp(self):
+        self.http = TestClient()
+
+    def test_analytics_requires_login(self):
+        resp = self.http.get("/analytics/", HTTP_HOST="localhost")
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("/accounts/login/", resp["Location"])
+
+    def test_dashboard_requires_login(self):
+        resp = self.http.get("/dashboard/", HTTP_HOST="localhost")
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("/accounts/login/", resp["Location"])
+
+    def test_clients_requires_login(self):
+        resp = self.http.get("/clients/", HTTP_HOST="localhost")
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("/accounts/login/", resp["Location"])
+
+    def test_bank_import_requires_login(self):
+        resp = self.http.get("/bank/import/", HTTP_HOST="localhost")
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("/accounts/login/", resp["Location"])
