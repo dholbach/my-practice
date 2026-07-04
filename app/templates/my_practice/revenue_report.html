@@ -1,20 +1,19 @@
 {% extends 'base.html' %}
 {% load payment_tags %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Umsatzbericht{% endblock %}
+{% block title %}{% trans "Revenue Report" %}{% endblock %}
 
-{% block page_title %}Umsatzbericht{% endblock %}
-{% block page_subtitle %}Detaillierte Umsatzübersicht nach Zahlungsjahr{% endblock %}
-
-{% endblock %}
+{% block page_title %}{% trans "Revenue Report" %}{% endblock %}
+{% block page_subtitle %}{% trans "Detailed revenue overview by payment year" %}{% endblock %}
 
 {% block content %}
 
 <div class="bg-surface border border-border rounded-lg p-6 mb-8 flex gap-4 items-center">
-    <label for="year-select" style="font-weight: 600;">Jahr auswählen:</label>
-    <select id="year-select" class="form-control" style="width: auto;" x-data x-on:change="window.location.href = '{% url 'revenue_report' %}?year=' + $el.value">
-        <option value="">Alle Jahre</option>
+    <label for="year-select" class="font-semibold">{% trans "Select year:" %}</label>
+    <select id="year-select" class="form-control w-auto" x-data x-on:change="window.location.href = '{% url 'revenue_report' %}?year=' + $el.value">
+        <option value="">{% trans "All years" %}</option>
         {% for y in available_years %}
         <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
@@ -23,38 +22,38 @@
 
 {% if selected_year %}
 <div class="bg-surface rounded-lg p-6 mb-8">
-    <h3 style="margin: 0 0 1rem 0;">📊 Zusammenfassung {{ selected_year }}</h3>
-    <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+    <h3 class="mb-4">📊 {% blocktrans with year=selected_year %}Summary {{ year }}{% endblocktrans %}</h3>
+    <div class="stats-grid">
         <div class="bg-surface border border-border rounded-lg p-4 text-center">
-            <div class="text-sm text-text-secondary mb-2">Gesamtumsatz</div>
+            <div class="text-sm text-text-secondary mb-2">{% trans "Total revenue" %}</div>
             <div class="text-2xl font-bold">{{ summary.total|currency }}</div>
         </div>
         <div class="bg-surface border border-border rounded-lg p-4 text-center">
-            <div class="text-sm text-text-secondary mb-2">Anzahl Rechnungen</div>
+            <div class="text-sm text-text-secondary mb-2">{% trans "Number of invoices" %}</div>
             <div class="text-2xl font-bold">{{ summary.count }}</div>
         </div>
         <div class="bg-surface border border-border rounded-lg p-4 text-center">
-            <div class="text-sm text-text-secondary mb-2">Rechnungen aus {{ selected_year }}</div>
+            <div class="text-sm text-text-secondary mb-2">{% blocktrans with year=selected_year %}Invoices from {{ year }}{% endblocktrans %}</div>
             <div class="text-2xl font-bold">{{ summary.same_year_count }} ({{ summary.same_year_total|currency }})</div>
         </div>
         <div class="bg-surface border border-border rounded-lg p-4 text-center">
-            <div class="text-sm text-text-secondary mb-2">Rechnungen aus Vorjahren</div>
+            <div class="text-sm text-text-secondary mb-2">{% trans "Invoices from prior years" %}</div>
             <div class="text-2xl font-bold">{{ summary.prev_year_count }} ({{ summary.prev_year_total|currency }})</div>
         </div>
     </div>
 </div>
 
-<h3 style="margin-bottom: 1rem;">📋 Detaillierte Rechnungsliste</h3>
+<h3 class="mb-4">📋 {% trans "Detailed invoice list" %}</h3>
 <table class="invoice-table">
     <thead>
         <tr>
-            <th>Rechnungs-Nr.</th>
-            <th>Klient</th>
-            <th>Rechnungsdatum</th>
-            <th>Zahlungsdatum</th>
-            <th>Jahr Differenz</th>
-            <th>Status</th>
-            <th style="text-align: right;">Betrag</th>
+            <th>{% trans "Invoice No." %}</th>
+            <th>{% trans "Client" %}</th>
+            <th>{% trans "Invoice date" %}</th>
+            <th>{% trans "Payment date" %}</th>
+            <th>{% trans "Year difference" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th class="text-right">{% trans "Amount" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -66,9 +65,9 @@
             <td>
                 {% if invoice.paid_date %}
                     {{ invoice.paid_date|date:"d.m.Y" }}
-                    {% if invoice.year_diff %}<span class="font-semibold text-red-500"> (Vorjahr)</span>{% endif %}
+                    {% if invoice.year_diff %}<span class="font-semibold text-red-500"> ({% trans "Prior year" %})</span>{% endif %}
                 {% else %}
-                    <em class="text-muted">Kein Datum</em>
+                    <em class="text-muted">{% trans "No date" %}</em>
                 {% endif %}
             </td>
             <td>
@@ -79,32 +78,32 @@
                 {% endif %}
             </td>
             <td><span class="status-badge status-{{ invoice.status }}">{{ invoice.get_status_display }}</span></td>
-            <td style="text-align: right; font-weight: 600;">{{ invoice.total|currency }}</td>
+            <td class="text-right font-semibold">{{ invoice.total|currency }}</td>
         </tr>
         {% empty %}
         <tr>
             <td colspan="7" class="empty-state-msg">
-                Keine Rechnungen gefunden für {{ selected_year }}
+                {% blocktrans with year=selected_year %}No invoices found for {{ year }}{% endblocktrans %}
             </td>
         </tr>
         {% endfor %}
     </tbody>
     <tfoot>
         <tr class="tr-summary">
-            <td colspan="6" style="text-align: right;">Gesamt:</td>
-            <td style="text-align: right;">{{ summary.total|currency }}</td>
+            <td colspan="6" class="text-right">{% trans "Total:" %}</td>
+            <td class="text-right">{{ summary.total|currency }}</td>
         </tr>
     </tfoot>
 </table>
 
 {% else %}
 <div class="empty-state">
-    <p>Bitte wählen Sie ein Jahr aus, um den Report anzuzeigen.</p>
+    <p>{% trans "Please select a year to display the report." %}</p>
 </div>
 {% endif %}
 
-<div style="text-align: center; margin-top: 2rem;">
-    <a href="{% url 'analytics' %}" class="btn btn-secondary">← Zurück zu Analytics</a>
+<div class="text-center mt-8">
+    <a href="{% url 'analytics' %}" class="btn btn-secondary">← {% trans "Back to Analytics" %}</a>
 </div>
 
 {% endblock %}
