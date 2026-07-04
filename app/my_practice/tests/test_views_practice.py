@@ -170,6 +170,11 @@ class PracticeUpdateViewTest(TestCase):
 
     def test_owner_can_post_update(self):
         data = {
+            # Capacity formset management form (empty — no periods being edited)
+            "capacity_periods-TOTAL_FORMS": "0",
+            "capacity_periods-INITIAL_FORMS": "0",
+            "capacity_periods-MIN_NUM_FORMS": "0",
+            "capacity_periods-MAX_NUM_FORMS": "1000",
             "name": "Renamed Practice",
             "short_title": "Therapie",
             "title": "Dr. Mustermann",

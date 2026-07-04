@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
+from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
@@ -18,6 +19,7 @@ from ..models import (
     Practice,
     ServiceType,
     Session,
+    UserPractice,
 )
 
 
@@ -37,6 +39,11 @@ class AnalyticsTimeFilterTest(TestCase):
             email="test@practice.com",
             city="Berlin",
         )
+
+        # Create and log in user — required by LoginRequiredMiddleware
+        self.user = User.objects.create_user(username="analyticsuser", password="testpass")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_http.login(username="analyticsuser", password="testpass")
 
         # Create client and service type
         self.client_obj = Client.objects.create(

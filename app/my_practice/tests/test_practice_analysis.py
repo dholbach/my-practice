@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django.test import TestCase
 from my_practice.models import (
+    CapacityPeriod,
     Client,
     Invoice,
     InvoiceItem,
@@ -32,6 +33,11 @@ class PracticeAnalyzerTestCase(TestCase):
             title="Test Practitioner",
             email="test@practice.com",
             city="Berlin",
+        )
+
+        # Capacity periods required by _calculate_weighted_capacity / get_weekly_capacity_for_date
+        CapacityPeriod.objects.create(
+            practice=self.practice, start_date=date(2015, 1, 1), hours_per_week=20
         )
 
         # Create service type
