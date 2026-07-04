@@ -3,7 +3,7 @@
 from datetime import date
 
 from django.test import TestCase
-from my_practice.models import TimeOff
+from my_practice.models import CapacityPeriod, Practice, TimeOff
 from my_practice.utils.capacity_helpers import (
     _calculate_weighted_capacity,
     calculate_period_capacity,
@@ -11,8 +11,24 @@ from my_practice.utils.capacity_helpers import (
 )
 
 
+def _make_capacity_periods():
+    """Create a Practice and the two standard capacity periods used across all tests.
+
+    Period 1: 10 h/week from 2015-01-01 (covers all pre-2023-08-01 dates)
+    Period 2: 20 h/week from 2023-08-01 (covers all post-2023-07-31 dates)
+    """
+    practice = Practice.objects.create(name="Cap Test", slug="cap-test-helper", email="c@t.com")
+    CapacityPeriod.objects.create(practice=practice, start_date=date(2015, 1, 1), hours_per_week=10)
+    CapacityPeriod.objects.create(practice=practice, start_date=date(2023, 8, 1), hours_per_week=20)
+    return practice
+
+
 class GetWeeklyCapacityTests(TestCase):
     """Test capacity period lookup boundaries."""
+
+    @classmethod
+    def setUpTestData(cls):
+        _make_capacity_periods()
 
     def test_before_first_period_uses_first_config(self):
         self.assertEqual(get_weekly_capacity_for_date(date(2019, 6, 1)), 10)
@@ -36,6 +52,10 @@ class WeightedCapacityTests(TestCase):
     July 2023 has 21 weekdays (10h/week config), August 2023 has 23 weekdays
     (20h/week config); no Berlin public holidays fall in either month.
     """
+
+    @classmethod
+    def setUpTestData(cls):
+        _make_capacity_periods()
 
     START = date(2023, 7, 1)
     END = date(2023, 8, 31)
@@ -74,6 +94,10 @@ class WeightedCapacityTests(TestCase):
 class PeriodCapacityWithTimeoffTests(TestCase):
     """Integration test: calculate_period_capacity subtracts time off for
     periods spanning a capacity change."""
+
+    @classmethod
+    def setUpTestData(cls):
+        _make_capacity_periods()
 
     def test_timeoff_reduces_capacity_across_capacity_change(self):
         start, end = date(2023, 7, 1), date(2023, 8, 31)
