@@ -5,15 +5,14 @@ Provides analysis tools for practice planning, capacity management,
 and client overview for a given time period.
 """
 
-from decimal import Decimal
-
 from dateutil.relativedelta import relativedelta
 from django.db.models import FloatField, Sum
 from django.db.models.functions import Cast
 from django.utils.translation import gettext as _, ngettext
 
-from ..models import Client, Invoice
+from ..models import Client
 from ..models.session import Session
+from .revenue_helpers import RevenueCalculator
 
 
 class ClientClassification:
@@ -161,8 +160,12 @@ class PracticeAnalyzer:
 
         # Classify and gather data
         classification = self._classify_client(sessions_in_period, total_sessions_ever)
-        revenue_in_period = self._get_revenue_for_client(client)
-        invoices_count = self._get_invoices_count_for_client(client)
+        revenue_in_period = RevenueCalculator.get_client_revenue(
+            client, start_date=self.start_date, end_date=self.end_date
+        )["total"]
+        invoices_count = RevenueCalculator.get_client_revenue(
+            client, include_unpaid=True, start_date=self.start_date, end_date=self.end_date
+        )["count"]
 
         return {
             "client": client,
@@ -197,23 +200,6 @@ class PracticeAnalyzer:
         else:
             # >= 5 sessions total AND active in period
             return ClientClassification.ESTABLISHED
-
-    def _get_revenue_for_client(self, client) -> Decimal:
-        """Get paid revenue for client in analysis period."""
-        return Invoice.objects.filter(
-            client=client,
-            status="paid",
-            invoice_date__gte=self.start_date,
-            invoice_date__lte=self.end_date,
-        ).aggregate(total=Sum("total"))["total"] or Decimal("0.00")
-
-    def _get_invoices_count_for_client(self, client) -> int:
-        """Get count of invoices for client in analysis period."""
-        return Invoice.objects.filter(
-            client=client,
-            invoice_date__gte=self.start_date,
-            invoice_date__lte=self.end_date,
-        ).count()
 
     def _get_timeoff_data(self):
         """Get time off periods that overlap with analysis period."""
