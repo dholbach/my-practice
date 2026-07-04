@@ -4,7 +4,7 @@ Forms for the payments application.
 
 from django import forms
 
-from .models import Client, CompanyExpense, CompanyWithdrawal, Practice
+from .models import CapacityPeriod, Client, CompanyExpense, CompanyWithdrawal, Practice
 
 
 class DateFormField(forms.DateField):
@@ -233,3 +233,20 @@ class PracticeEditForm(StyledFormMixin, forms.ModelForm):
 
     def clean_practice_weekdays(self) -> list[int]:
         return [int(v) for v in self.cleaned_data.get("practice_weekdays") or []]
+
+
+class CapacityPeriodForm(StyledFormMixin, forms.ModelForm):
+    start_date = DateFormField(label="Gültig ab")
+
+    class Meta:
+        model = CapacityPeriod
+        fields = ["start_date", "hours_per_week"]
+
+
+CapacityPeriodFormSet = forms.inlineformset_factory(
+    Practice,
+    CapacityPeriod,
+    form=CapacityPeriodForm,
+    extra=1,
+    can_delete=True,
+)

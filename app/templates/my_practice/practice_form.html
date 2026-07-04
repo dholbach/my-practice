@@ -262,6 +262,35 @@
         </div>
     </div>
 
+    {% if object and capacity_formset %}
+    <div class="form-section">
+        <h3>📅 {% trans "Capacity periods" %}</h3>
+        <p class="form-hint">{% trans "Define available therapy hours per week. Each entry is in effect from its start date until the next one." %}</p>
+        {{ capacity_formset.management_form }}
+        {% for period_form in capacity_formset %}
+        <div class="capacity-period-row">
+            {{ period_form.id }}
+            <div class="form-grid">
+                <div class="form-group">
+                    {% if forloop.first %}<label>{% trans "Valid from" %}</label>{% endif %}
+                    {{ period_form.start_date }}
+                    {% if period_form.start_date.errors %}<div class="form-error">{{ period_form.start_date.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    {% if forloop.first %}<label>{% trans "Hours per week" %}</label>{% endif %}
+                    {{ period_form.hours_per_week }}
+                    {% if period_form.hours_per_week.errors %}<div class="form-error">{{ period_form.hours_per_week.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group capacity-delete-col">
+                    {% if forloop.first %}<label>{% trans "Delete" %}</label>{% endif %}
+                    {{ period_form.DELETE }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="form-actions">
         <button type="submit" class="btn">
             💾 {% if object %}{% trans "Save changes" %}{% else %}{% trans "Create practice" %}{% endif %}
