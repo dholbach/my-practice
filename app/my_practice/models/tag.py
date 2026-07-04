@@ -9,7 +9,14 @@ from .base import TimestampedModel
 
 
 class ClientTag(TimestampedModel):
-    """Tag that can be assigned to clients for organization and filtering"""
+    """Tag that can be assigned to clients for organization and filtering.
+
+    Tags are deliberately global (no practice FK) because this app targets a
+    single-operator scenario where one person owns all practices. A global tag
+    vocabulary keeps the UI simple and avoids duplicate tag management per
+    practice. Tag names can therefore be seen by any practice — do not encode
+    client-identifying information in tag names.
+    """
 
     class Color(StrEnum):
         RED = "red"

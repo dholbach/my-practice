@@ -272,6 +272,87 @@ class TagEndpointIsolationTestCase(TestCase):
         self.assertEqual(resp.status_code, 404)
 
 
+class SessionToggleIsolationTestCase(TestCase):
+    """session_toggle_billable must enforce practice isolation."""
+
+    def setUp(self):
+        from datetime import date
+
+        from my_practice.models import Session
+
+        self.http = TestClient()
+        self.user = User.objects.create_user(username="toggleuser", password="pw")
+
+        self.practice_a = Practice.objects.create(
+            name="Practice A", slug="tog-iso-a", email="a@example.com"
+        )
+        self.practice_b = Practice.objects.create(
+            name="Practice B", slug="tog-iso-b", email="b@example.com"
+        )
+        UserPractice.objects.create(user=self.user, practice=self.practice_a, is_owner=True)
+        self.http.login(username="toggleuser", password="pw")
+
+        self.client_b = Client.objects.create(
+            practice=self.practice_b, client_code="SB", full_name="Client B"
+        )
+        self.session_b = Session.objects.create(client=self.client_b, session_date=date.today())
+
+    def test_toggle_other_practice_session_returns_404(self):
+        """Toggling a session on another practice's client returns 404."""
+        resp = self.http.post(
+            reverse(
+                "session_toggle_billable",
+                kwargs={"client_pk": self.client_b.pk, "session_pk": self.session_b.pk},
+            )
+        )
+        self.assertEqual(resp.status_code, 404)
+
+
+class InvoiceEmailIsolationTestCase(TestCase):
+    """SendInvoiceEmailView must enforce practice isolation."""
+
+    def setUp(self):
+        from datetime import date
+
+        self.http = TestClient()
+        self.user = User.objects.create_user(username="emailisouser", password="pw")
+
+        self.practice_a = Practice.objects.create(
+            name="Practice A", slug="email-iso-a", email="a@example.com"
+        )
+        self.practice_b = Practice.objects.create(
+            name="Practice B", slug="email-iso-b", email="b@example.com"
+        )
+        UserPractice.objects.create(user=self.user, practice=self.practice_a, is_owner=True)
+        self.http.login(username="emailisouser", password="pw")
+
+        client_b = Client.objects.create(
+            practice=self.practice_b, client_code="EB", full_name="Client B"
+        )
+        self.invoice_b = Invoice.objects.create(
+            practice=self.practice_b,
+            client=client_b,
+            invoice_number="EB-1",
+            invoice_date=date.today(),
+            status="draft",
+        )
+
+    def test_get_other_practice_invoice_email_returns_404(self):
+        """GET send_invoice_email for another practice's invoice returns 404."""
+        resp = self.http.get(
+            reverse("send_invoice_email", kwargs={"invoice_id": self.invoice_b.pk})
+        )
+        self.assertEqual(resp.status_code, 404)
+
+    def test_post_other_practice_invoice_email_returns_404(self):
+        """POST send_invoice_email for another practice's invoice returns 404."""
+        resp = self.http.post(
+            reverse("send_invoice_email", kwargs={"invoice_id": self.invoice_b.pk}),
+            {"quick_send": "true"},
+        )
+        self.assertEqual(resp.status_code, 404)
+
+
 class AnonymousAccessTestCase(TestCase):
     """LoginRequiredMiddleware must redirect unauthenticated requests to login."""
 
