@@ -4,6 +4,7 @@ Additional widgets: Session Import, Client Attention, Invoice Actions, Bank Impo
 """
 
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.db.models import Max, QuerySet, Sum
 from django.urls import reverse
@@ -19,6 +20,27 @@ from ..models import (
     OperationalChecklistCompletion,
     Session,
 )
+
+# Tag labels for action-queue display — kept here alongside the tag logic
+_TAG_LABELS: dict[str, str] = {
+    "follow-up": "Follow-up",
+    "pause": "Pause",
+    "ending": "Abschluss",
+    "missing-session-log": "Protokoll fehlt",
+}
+
+
+def _fmt_eur(amount: Decimal) -> str:
+    formatted = f"{float(amount):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"{formatted} €"
+
+
+def _join_truncated(items: list[str], total: int, sep: str = ", ", max_shown: int = 4) -> str:
+    shown = [str(item) for item in items[:max_shown]]
+    result = sep.join(shown)
+    if total > len(shown):
+        result += " …"
+    return result
 
 
 class SessionImportWidgetBuilder:
@@ -175,6 +197,67 @@ class ClientAttentionWidgetBuilder:
             "total_attention_count": no_recent_count + tagged_count,
         }
 
+    def get_action_items(self, today: date | None = None) -> list[dict]:
+        """Return ActionQueueItem-shaped dicts for tagged and inactive clients."""
+        today = today or date.today()
+        items: list[dict] = []
+
+        tagged_clients = self._get_tagged_clients()
+
+        items.extend(
+            {
+                "priority": 2,
+                "category": "CLIENT",
+                "category_label": "Klient",
+                "summary": f"{client.client_code} · {_TAG_LABELS.get(tag_name, tag_name)}",
+                "sub_text": "",
+                "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
+                "action_label": "Öffnen",
+                "_sort_key": client.client_code,
+            }
+            for tag_name, data in tagged_clients.items()
+            for client in data["clients"]
+        )
+
+        tagged_ids = {c.pk for data in tagged_clients.values() for c in data["clients"]}
+        inactive = [
+            c for c in self._get_clients_without_next_session()[:5] if c.pk not in tagged_ids
+        ]
+
+        if inactive:
+            client_ids = [c.pk for c in inactive]
+            last_sessions: dict = dict(
+                Session.objects.filter(client_id__in=client_ids, cancelled=False)
+                .values("client_id")
+                .annotate(last=Max("session_date"))
+                .values_list("client_id", "last")
+            )
+            for client in inactive:
+                last_date = last_sessions.get(client.pk)
+                if last_date:
+                    days = (today - last_date).days
+                    summary = f"{client.client_code} · keine Sitzung seit {days} T"
+                    sub = f"zuletzt {last_date.strftime('%d.%m.%Y')}"
+                    sort_key = f"inactive_{999 - days:04d}"
+                else:
+                    summary = f"{client.client_code} · noch keine Sitzung"
+                    sub = ""
+                    sort_key = "inactive_9999"
+                items.append(
+                    {
+                        "priority": 2,
+                        "category": "CLIENT",
+                        "category_label": "Klient",
+                        "summary": summary,
+                        "sub_text": sub,
+                        "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
+                        "action_label": "Kontakt",
+                        "_sort_key": sort_key,
+                    }
+                )
+
+        return items
+
 
 class InvoiceActionsWidgetBuilder:
     """
@@ -246,6 +329,56 @@ class InvoiceActionsWidgetBuilder:
             "draft_count": len(drafts),
         }
 
+    def get_action_items(self, today: date | None = None) -> list[dict]:
+        """Return ActionQueueItem-shaped dicts for overdue and draft invoices."""
+        today = today or date.today()
+        items: list[dict] = []
+
+        unpaid = list(self._get_unpaid_invoices())
+        cutoff_date = today - timedelta(days=30)
+        overdue = [inv for inv in unpaid if inv.invoice_date < cutoff_date]
+
+        n_overdue = len(overdue)
+        if n_overdue > 0:
+            total = sum(inv.calculate_total() for inv in overdue)
+            codes = _join_truncated(
+                list(dict.fromkeys(inv.client.client_code for inv in overdue)),
+                n_overdue,
+            )
+            oldest_age = max((today - inv.invoice_date).days for inv in overdue)
+            items.append(
+                {
+                    "priority": 1,
+                    "category": "INVOICE",
+                    "category_label": "Rechnung",
+                    "summary": f"{n_overdue} überfällig · {_fmt_eur(total)}",
+                    "sub_text": f"{codes} · >{oldest_age} Tage",
+                    "action_url": reverse("invoice_list") + "?status=sent",
+                    "action_label": "Mahnen",
+                    "_sort_key": "0_overdue",
+                }
+            )
+
+        drafts = list(self._get_draft_invoices())
+        n_drafts = len(drafts)
+        if n_drafts > 0:
+            nums = _join_truncated([inv.invoice_number for inv in drafts], n_drafts, sep=" · ")
+            label = "Rechnung bereit" if n_drafts == 1 else "Rechnungen bereit"
+            items.append(
+                {
+                    "priority": 2,
+                    "category": "DRAFT",
+                    "category_label": "Entwurf",
+                    "summary": f"{n_drafts} {label} zum Senden",
+                    "sub_text": nums,
+                    "action_url": reverse("invoice_list") + "?status=draft",
+                    "action_label": "Fertigstellen",
+                    "_sort_key": "1_drafts",
+                }
+            )
+
+        return items
+
 
 class BankImportReminderWidgetBuilder:
     """
@@ -305,6 +438,30 @@ class BankImportReminderWidgetBuilder:
                 else None
             ),
         }
+
+    def get_action_items(self, today: date | None = None) -> list[dict]:
+        """Return an ActionQueueItem-shaped dict if a bank import reminder is due."""
+        ctx = self.build_context()
+        if not ctx["show_reminder"]:
+            return []
+        days = ctx["days_since_import"]
+        summary = (
+            f"Letzter Bank-Import vor {days} Tagen"
+            if days is not None
+            else "Noch keine Kontoauszüge importiert"
+        )
+        return [
+            {
+                "priority": 3,
+                "category": "OPS",
+                "category_label": "Betrieb",
+                "summary": summary,
+                "sub_text": "",
+                "action_url": ctx["import_url"],
+                "action_label": "Importieren",
+                "_sort_key": "",
+            }
+        ]
 
 
 class ChecklistWidgetBuilder:
@@ -390,6 +547,28 @@ class ChecklistWidgetBuilder:
             "pending_count": len(pending),
             "show_widget": len(pending) > 0,
         }
+
+    def get_action_items(self, today: date | None = None) -> list[dict]:
+        """Return an ActionQueueItem-shaped dict if any checklists are pending."""
+        ctx = self.build_context()
+        entries = ctx["pending_checklists"]
+        if not entries:
+            return []
+        n = len(entries)
+        label = "Checkliste fällig" if n == 1 else "Checklisten fällig"
+        sub = _join_truncated([e["label"] for e in entries], n, sep=" · ", max_shown=3)
+        return [
+            {
+                "priority": 2,
+                "category": "OPS",
+                "category_label": "Betrieb",
+                "summary": f"{n} {label}",
+                "sub_text": sub,
+                "action_url": reverse("checklist", kwargs={"checklist_type": entries[0]["type"]}),
+                "action_label": "Ansehen",
+                "_sort_key": str(entries[0]["period_start"]),
+            }
+        ]
 
 
 class PendingCalendarWidgetBuilder:
@@ -497,6 +676,26 @@ class TaxQuarterWidgetBuilder:
             "quarter_overview_url": reverse("tax_quarter_overview"),
             "add_payment_url": reverse("withdrawal_create") + "?category=tax",
         }
+
+    def get_action_items(self, today: date | None = None) -> list[dict]:
+        """Return an ActionQueueItem-shaped dict if a tax prepayment warning is active."""
+        ctx = self.build_context()
+        if not ctx["show_warning"]:
+            return []
+        revenue = ctx["quarter_revenue"]
+        current_year = (today or date.today()).year
+        return [
+            {
+                "priority": 1,
+                "category": "TAX",
+                "category_label": "Steuer",
+                "summary": f"Q{ctx['current_quarter']} {current_year} · Vorauszahlung fehlt",
+                "sub_text": f"Umsatz: {_fmt_eur(revenue)}",
+                "action_url": ctx["add_payment_url"],
+                "action_label": "Eintragen",
+                "_sort_key": "0_tax",
+            }
+        ]
 
 
 class CapacityMonitoringWidgetBuilder:
