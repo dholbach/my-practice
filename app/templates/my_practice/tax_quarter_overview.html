@@ -1,27 +1,28 @@
 {% extends "base.html" %}
 {% load payment_tags %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Steuer-Quartalsübersicht {{ year }}{% endblock %}
+{% block title %}{% trans "Quarterly Tax Overview" %} {{ year }}{% endblock %}
 
-{% block page_title %}Steuer-Quartalsübersicht{% endblock %}
-{% block page_subtitle %}Vorauszahlungen & Umsatz je Quartal{% endblock %}
+{% block page_title %}{% trans "Quarterly Tax Overview" %}{% endblock %}
+{% block page_subtitle %}{% trans "Advance payments & revenue per quarter" %}{% endblock %}
 
 {% block content %}
 <div class="tax-summary-container">
 
     <!-- Cross-link -->
-    <div style="margin-bottom: 1rem;">
+    <div class="mb-4">
         <a href="{% url 'tax_year_summary' %}?year={{ year }}"
            class="text-sm text-secondary link-plain">
-            📋 → Steuer-Jahresübersicht (für Steuererklärung)
+            📋 → {% trans "Tax Year Summary (for tax return)" %}
         </a>
     </div>
 
     <!-- Year Selector -->
-    <div class="year-selector" style="margin-bottom: 1.5rem;">
+    <div class="year-selector mb-6">
         <form method="get">
-            <label for="year">Jahr:</label>
+            <label for="year">{% trans "Year:" %}</label>
             <select name="year" id="year" x-data x-on:change="$el.form.submit()">
                 {% for y in available_years %}
                     <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
@@ -31,19 +32,19 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="summary-cards" style="margin-bottom: 1.5rem;">
+    <div class="summary-cards mb-6">
         <div class="stat-card success">
-            <h3>Gesamtumsatz</h3>
+            <h3>{% trans "Total Revenue" %}</h3>
             <div class="value">{{ total_revenue|currency }}</div>
             <div class="label">{{ year }}</div>
         </div>
         <div class="stat-card warning">
-            <h3>Absetzbare Ausgaben</h3>
+            <h3>{% trans "Deductible Expenses" %}</h3>
             <div class="value">{{ total_expenses|currency }}</div>
             <div class="label">{{ year }}</div>
         </div>
         <div class="stat-card primary">
-            <h3>Steuervorauszahlungen</h3>
+            <h3>{% trans "Tax Advance Payments" %}</h3>
             <div class="value">{{ total_tax_paid|currency }}</div>
             <div class="label">{{ year }}</div>
         </div>
@@ -55,29 +56,29 @@
         <input type="hidden" name="year" value="{{ year }}">
         <input type="hidden" name="status" value="paid">
         <button type="submit" class="btn btn-secondary">
-            📥 Bezahlte Rechnungen {{ year }} herunterladen (ZIP)
+            📥 {% blocktrans %}Download paid invoices {{ year }} (ZIP){% endblocktrans %}
         </button>
     </form>
 
     <!-- Add Payment CTA -->
     <a href="{{ add_payment_url }}" class="add-payment-btn">
-        + Neue Steuervorauszahlung erfassen
+        + {% trans "Record new tax advance payment" %}
     </a>
 
     <!-- Quarterly Table -->
     <div class="section-card">
-        <h2>📊 Quartalszahlen {{ year }}</h2>
+        <h2>📊 {% blocktrans %}Quarterly figures {{ year }}{% endblocktrans %}</h2>
 
         <table class="quarter-table">
             <thead>
                 <tr>
-                    <th>Quartal</th>
-                    <th>Zeitraum</th>
-                    <th class="text-right">Umsatz</th>
-                    <th class="text-right">Ausgaben</th>
-                    <th class="text-right">Nettogewinn</th>
-                    <th class="text-right">Vorauszahlung</th>
-                    <th>Status</th>
+                    <th>{% trans "Quarter" %}</th>
+                    <th>{% trans "Period" %}</th>
+                    <th class="text-right">{% trans "Revenue" %}</th>
+                    <th class="text-right">{% trans "Expenses" %}</th>
+                    <th class="text-right">{% trans "Net profit" %}</th>
+                    <th class="text-right">{% trans "Advance payment" %}</th>
+                    <th>{% trans "Status" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -85,7 +86,7 @@
                 <tr class="{% if q.needs_attention %}quarter-row--attention{% elif q.is_current %}quarter-row--current{% endif %}">
                     <td>
                         <strong>{{ q.label }}</strong>
-                        {% if q.is_current %}<span class="text-xs text-secondary"> (aktuell)</span>{% endif %}
+                        {% if q.is_current %}<span class="text-xs text-secondary"> ({% trans "current" %})</span>{% endif %}
                     </td>
                     <td class="text-sm text-secondary">
                         {{ q.start|date:"d.m." }} – {{ q.end|date:"d.m.Y" }}
@@ -107,13 +108,13 @@
                     </td>
                     <td>
                         {% if q.needs_attention %}
-                            <span class="badge--warn">⚠️ Fehlt</span>
+                            <span class="badge--warn">⚠️ {% trans "Missing" %}</span>
                         {% elif q.tax_paid %}
-                            <span class="badge--ok">✅ Erfasst</span>
+                            <span class="badge--ok">✅ {% trans "Recorded" %}</span>
                         {% elif q.revenue == 0 %}
-                            <span class="badge--neutral">kein Umsatz</span>
+                            <span class="badge--neutral">{% trans "no revenue" %}</span>
                         {% else %}
-                            <span class="badge--neutral">ausstehend</span>
+                            <span class="badge--neutral">{% trans "pending" %}</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -121,7 +122,7 @@
             </tbody>
             <tfoot>
                 <tr class="totals-row">
-                    <td colspan="2"><strong>Gesamt {{ year }}</strong></td>
+                    <td colspan="2"><strong>{% blocktrans %}Total {{ year }}{% endblocktrans %}</strong></td>
                     <td class="text-right">{{ total_revenue|currency }}</td>
                     <td class="text-right">{{ total_expenses|currency }}</td>
                     <td class="text-right">{{ total_net_profit|currency }}</td>
@@ -132,5 +133,123 @@
         </table>
     </div>
 
+    <!-- Annual Tax Settlement (Steuerbescheid) -->
+    <div class="section-card mt-6" x-data="taxSettlement()" x-init="init()">
+        <h2>📄 {% trans "Tax Assessment (Steuerbescheid)" %}</h2>
+        <p class="text-sm text-secondary mb-4">
+            {% trans "Record the outcome of your annual tax return once the assessment notice arrives." %}
+        </p>
+
+        <div x-show="!editing" class="settlement-display">
+            {% if settlement_amount is not None %}
+                <div class="settlement-result {% if settlement_amount >= 0 %}settlement-result--owe{% else %}settlement-result--refund{% endif %}">
+                    <span class="settlement-label">
+                        {% if settlement_amount >= 0 %}
+                            {% trans "Additional payment (Nachzahlung)" %}
+                        {% else %}
+                            {% trans "Refund (Erstattung)" %}
+                        {% endif %}
+                    </span>
+                    <span class="settlement-amount">{{ settlement_amount|currency }}</span>
+                    {% if settlement_date %}
+                        <span class="text-sm text-secondary ml-4">
+                            {% trans "Assessment date:" %} {{ settlement_date|date:"d.m.Y" }}
+                        </span>
+                    {% endif %}
+                </div>
+                {% if net_tax_position is not None %}
+                <div class="settlement-net mt-3 text-sm">
+                    {% trans "Net tax paid (advance payments + settlement):" %}
+                    <strong>{{ net_tax_position|currency }}</strong>
+                </div>
+                {% endif %}
+            {% else %}
+                <p class="text-secondary text-sm">{% trans "No assessment recorded yet." %}</p>
+            {% endif %}
+            <button class="btn btn-secondary btn-sm mt-3" x-on:click="startEdit()">
+                {% if settlement_amount is not None %}{% trans "Edit" %}{% else %}{% trans "Record assessment" %}{% endif %}
+            </button>
+        </div>
+
+        <div x-show="editing" class="settlement-form">
+            <div class="form-row mb-3">
+                <label class="form-label">
+                    {% trans "Amount (positive = you owe, negative = refund)" %}
+                </label>
+                <input type="number" step="0.01" class="form-control"
+                       x-model="amount"
+                       placeholder="z. B. 320.00 oder -150.00">
+            </div>
+            <div class="form-row mb-4">
+                <label class="form-label">{% trans "Assessment date" %}</label>
+                <input type="date" class="form-control" x-model="settlementDate">
+            </div>
+            <div class="flex gap-2">
+                <button class="btn btn-primary btn-sm" x-on:click="save()" :disabled="saving">
+                    <span x-text="saving ? '{% trans "Saving…" %}' : '{% trans "Save" %}'"></span>
+                </button>
+                <button class="btn btn-secondary btn-sm" x-on:click="cancel()">{% trans "Cancel" %}</button>
+                {% if settlement_amount is not None %}
+                <button class="btn btn-danger btn-sm" x-on:click="clear()">{% trans "Remove" %}</button>
+                {% endif %}
+            </div>
+            <p x-show="error" class="text-danger text-sm mt-2" x-text="error"></p>
+        </div>
+    </div>
+
 </div>
+
+<script>
+function taxSettlement() {
+    return {
+        editing: false,
+        saving: false,
+        error: "",
+        amount: "{{ settlement_amount|default:'' }}",
+        settlementDate: "{{ settlement_date|date:'Y-m-d'|default:'' }}",
+
+        init() {},
+
+        startEdit() {
+            this.error = "";
+            this.editing = true;
+        },
+
+        cancel() {
+            this.editing = false;
+            this.error = "";
+        },
+
+        async save() {
+            this.saving = true;
+            this.error = "";
+            const data = new FormData();
+            data.append("year", "{{ year }}");
+            data.append("note", "");
+            data.append("settlement_amount", this.amount);
+            data.append("settlement_date", this.settlementDate);
+            data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+            try {
+                const resp = await fetch("{{ save_note_url }}", {method: "POST", body: data});
+                const json = await resp.json();
+                if (json.saved) {
+                    window.location.reload();
+                } else {
+                    this.error = json.error || "{% trans "Save failed." %}";
+                }
+            } catch {
+                this.error = "{% trans "Network error." %}";
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async clear() {
+            this.amount = "";
+            this.settlementDate = "";
+            await this.save();
+        },
+    };
+}
+</script>
 {% endblock %}
