@@ -15,6 +15,7 @@ from django.views.decorators.http import require_POST
 
 from ..models import CompanyExpense, CompanyWithdrawal, Invoice, TaxYearNote
 from ..utils import DateRangeHelper, RevenueCalculator, TaxYearContextBuilder
+from ..utils.tax_context_builder import available_data_years
 from ..utils.practice_days import WorkdayAuditCalculator
 from ..utils.view_helpers import get_year_from_request
 
@@ -73,21 +74,7 @@ def tax_workday_audit(request: HttpRequest) -> HttpResponse:
 
     audit = WorkdayAuditCalculator(practice, year).calculate() if practice else None
 
-    available_years = (
-        sorted(
-            {
-                d.year
-                for d in Invoice.objects.filter(practice=practice).dates("invoice_date", "year")
-            }
-            | {
-                d.year
-                for d in CompanyExpense.objects.filter(practice=practice).dates("date", "year")
-            },
-            reverse=True,
-        )
-        if practice
-        else []
-    )
+    available_years = available_data_years(practice) if practice else []
 
     return render(
         request,
@@ -163,12 +150,7 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
     total_expenses: Decimal = sum((cast(Decimal, q["expenses"]) for q in quarters), Decimal("0"))
     total_tax_paid: Decimal = sum((cast(Decimal, q["tax_paid"]) for q in quarters), Decimal("0"))
 
-    available_years = sorted(
-        {d.year for d in Invoice.objects.filter(practice=practice).dates("invoice_date", "year")},
-        reverse=True,
-    )
-    if not available_years:
-        available_years = [today.year]
+    available_years = available_data_years(practice, include_expenses=False) or [today.year]
 
     return render(
         request,

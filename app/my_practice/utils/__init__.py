@@ -7,7 +7,7 @@ from .analytics_dashboard_builder import AnalyticsDashboardBuilder
 from .action_queue_builder import ActionQueueBuilder
 from .client_detail_builder import ClientDetailContextBuilder
 from .dashboard_context_builder import DashboardContextAssembler
-from .tax_context_builder import TaxYearContextBuilder
+from .tax_context_builder import TaxYearContextBuilder, available_data_years
 from .bank_import import BankStatementImporter
 from .calculations import (
     apply_remainder_distribution,
@@ -100,6 +100,7 @@ __all__ = [
     "ClientDetailContextBuilder",
     "DashboardContextAssembler",
     "TaxYearContextBuilder",
+    "available_data_years",
     "FinancialListContextBuilder",
     "InvoiceFilterHelper",
     "AgendaWidgetBuilder",
