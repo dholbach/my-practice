@@ -21,7 +21,6 @@ def get_sessions_for_month(month_date, practice=None):
     result = {}
     month_start, month_end = DateRangeHelper.get_month_range(month_date)
 
-    # Get all invoice items for this month, grouped by client
     invoice_items = InvoiceItem.objects.filter(
         session__session_date__gte=month_start,
         session__session_date__lte=month_end,
@@ -33,7 +32,6 @@ def get_sessions_for_month(month_date, practice=None):
 
     invoice_items = invoice_items.select_related("invoice__client", "session")
 
-    # Group items by client code
     client_items: dict[str, list] = {}
     for item in invoice_items:
         client_code = item.invoice.client.client_code
@@ -41,7 +39,6 @@ def get_sessions_for_month(month_date, practice=None):
             client_items[client_code] = []
         client_items[client_code].append(item)
 
-    # Calculate hours using centralized session counting
     for client_code, items in client_items.items():
         hours = count_sessions(items, exclude_cancellations=True)
         if hours > 0:
@@ -70,31 +67,7 @@ def get_heatmap_data(
             - range_start_date: Start of date range
             - range_end_date_full: End of date range
     """
-    heatmap_data = []
-
-    # Get data for requested time range
-    for i in range(months_to_show - 1 + start_offset, start_offset - 1, -1):
-        # Calculate year and month correctly for any offset
-        total_months = current_year * 12 + current_month - 1 - i
-        year = total_months // 12
-        month = (total_months % 12) + 1
-        month_date = date(year, month, 1)
-
-        month_data = {
-            "month": month_date.strftime("%b %y"),
-            "month_date": month_date,
-            "clients": {},
-            "total": 0,
-        }
-
-        # Get session data from InvoiceItems (filtered by practice)
-        session_data = get_sessions_for_month(month_date, practice=practice)
-        month_data["clients"] = session_data
-        month_data["total"] = sum(session_data.values())
-
-        heatmap_data.append(month_data)
-
-    # Calculate date range for client totals
+    # Compute the date range once
     total_months_start = current_year * 12 + current_month - 1 - (months_to_show - 1 + start_offset)
     range_start_year = total_months_start // 12
     range_start_month = (total_months_start % 12) + 1
@@ -103,39 +76,70 @@ def get_heatmap_data(
     total_months_end = current_year * 12 + current_month - 1 - start_offset
     range_end_year = total_months_end // 12
     range_end_month = (total_months_end % 12) + 1
-
-    # Get end date of the last month
-    _, last_day_end = DateRangeHelper.get_month_range(date(range_end_year, range_end_month, 1))
-    range_end_date_full = last_day_end
-
-    # Get InvoiceItem totals for the entire range (filtered by practice)
-    invoice_items = InvoiceItem.objects.filter(
-        session__session_date__gte=range_start_date,
-        session__session_date__lte=range_end_date_full,
-        invoice__client__isnull=False,
+    _, range_end_date_full = DateRangeHelper.get_month_range(
+        date(range_end_year, range_end_month, 1)
     )
 
+    # Single query covering the full range; partition by month in Python
+    qs = InvoiceItem.objects.filter(
+        session__session_date__range=(range_start_date, range_end_date_full),
+        invoice__client__isnull=False,
+    ).select_related("invoice__client", "session")
+
     if practice:
-        invoice_items = invoice_items.filter(invoice__practice=practice)
+        qs = qs.filter(invoice__practice=practice)
 
-    invoice_items = invoice_items.select_related("invoice__client", "session")
+    # Build per-month and per-client buckets in one pass
+    month_buckets: dict[tuple, dict[str, list]] = {}  # (year, month) -> {client_code: [items]}
+    client_buckets: dict[str, list] = {}  # client_code -> [items] for totals
 
-    # Group items by client code
-    client_items: dict[str, list] = {}
-    for item in invoice_items:
+    for item in qs:
+        session_date = item.session.session_date
+        key = (session_date.year, session_date.month)
         code = item.invoice.client.client_code
-        if code not in client_items:
-            client_items[code] = []
-        client_items[code].append(item)
 
-    # Calculate hours and last activity using centralized session counting
-    client_totals = {}
-    for code, items in client_items.items():
+        if key not in month_buckets:
+            month_buckets[key] = {}
+        bucket = month_buckets[key]
+        if code not in bucket:
+            bucket[code] = []
+        bucket[code].append(item)
+
+        if code not in client_buckets:
+            client_buckets[code] = []
+        client_buckets[code].append(item)
+
+    # Build heatmap_data in display order (newest first)
+    heatmap_data = []
+    for i in range(months_to_show - 1 + start_offset, start_offset - 1, -1):
+        total_months = current_year * 12 + current_month - 1 - i
+        year = total_months // 12
+        month = (total_months % 12) + 1
+        month_date = date(year, month, 1)
+
+        session_data: dict[str, float] = {}
+        for code, items in month_buckets.get((year, month), {}).items():
+            hours = count_sessions(items, exclude_cancellations=True)
+            if hours > 0:
+                session_data[code] = hours
+
+        heatmap_data.append(
+            {
+                "month": month_date.strftime("%b %y"),
+                "month_date": month_date,
+                "clients": session_data,
+                "total": sum(session_data.values()),
+            }
+        )
+
+    # Client totals: by-product of the same fetch
+    client_totals: dict[str, dict] = {}
+    for code, items in client_buckets.items():
         hours = count_sessions(items, exclude_cancellations=True)
-        last_date = max(item.session.session_date for item in items)
-        client_totals[code] = {"total": hours, "last_activity": last_date}
+        if hours > 0:
+            last_date = max(item.session.session_date for item in items)
+            client_totals[code] = {"total": hours, "last_activity": last_date}
 
-    # Sort by total hours or by most-recent activity, take top 30
     if sort == "recent":
         sort_key = lambda x: x[1]["last_activity"]  # noqa: E731
     else:
@@ -143,11 +147,7 @@ def get_heatmap_data(
 
     active_clients_with_totals = [
         {"code": code, "total": data["total"]}
-        for code, data in sorted(
-            client_totals.items(),
-            key=sort_key,
-            reverse=True,
-        )[:30]
+        for code, data in sorted(client_totals.items(), key=sort_key, reverse=True)[:30]
     ]
 
     return {

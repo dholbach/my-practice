@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-06 08:19+0200\n"
+"POT-Creation-Date: 2026-07-06 09:13+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -134,29 +134,180 @@ msgstr ""
 msgid "Leistungserfassungen"
 msgstr ""
 
-#: my_practice/utils/dashboard_widgets.py:287
+#: my_practice/utils/dashboard_widgets.py:26
+msgid "Follow-up"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:27
+msgid "Pause"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:28
+msgid "Completion"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:29
+#: templates/includes/client_card.html:11
+#: templates/my_practice/client_detail.html:276
+#: templates/my_practice/client_detail_tabs.html:186
+msgid "Log missing"
+msgstr "Log missing"
+
+#: my_practice/utils/dashboard_widgets.py:211
+#: my_practice/utils/dashboard_widgets.py:252
+#: templates/my_practice/client_detail.html:7
+#: templates/my_practice/revenue_report.html:51
+msgid "Client"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:215
+msgid "Open"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:239
+#, fuzzy, python-format
+#| msgid "+ Session log"
+msgid "no session for %(days)s d"
+msgstr "+ Session log"
+
+#: my_practice/utils/dashboard_widgets.py:242
+#, python-format
+msgid "last %(date)s"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:245
+#, fuzzy
+#| msgid "+ Session log"
+msgid "no session yet"
+msgstr "+ Session log"
+
+#: my_practice/utils/dashboard_widgets.py:256
+#: templates/my_practice/inquiry_list.html:182
+#: templates/my_practice/inquiry_list.html:228
+#: templates/my_practice/practice_form.html:91
+msgid "Contact"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:355
+#, fuzzy
+#| msgid "🧾 To invoice"
+msgctxt "action category"
+msgid "Invoice"
+msgstr "🧾 To invoice"
+
+#: my_practice/utils/dashboard_widgets.py:356
+#, python-format
+msgid "%(n)s overdue · %(total)s"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:358
+#, python-format
+msgid "%(codes)s · >%(days)s d"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:361
+msgid "Chase"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:370
+#, fuzzy
+#| msgid "🧾 To invoice"
+msgid "invoice ready"
+msgid_plural "invoices ready"
+msgstr[0] "🧾 To invoice"
+msgstr[1] "🧾 To invoice"
+
+#: my_practice/utils/dashboard_widgets.py:375
+#: my_practice/views/invoice_views.py:783
+#: templates/my_practice/dashboard.html:136
+#: templates/my_practice/invoice_detail.html:40
+msgid "Draft"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:376
+#, python-format
+msgid "%(n)s %(label)s to send"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:379
+msgctxt "action label"
+msgid "Complete"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:424
+#: my_practice/utils/dashboard_widgets.py:455
 msgid "No bank statements imported yet"
 msgstr ""
 
-#: my_practice/utils/dashboard_widgets.py:303
+#: my_practice/utils/dashboard_widgets.py:440
 #, python-format
 msgid "Last import %(days)s days ago"
 msgstr ""
 
-#: my_practice/utils/dashboard_widgets.py:324
+#: my_practice/utils/dashboard_widgets.py:453
+#, python-format
+msgid "Last bank import %(days)s days ago"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:461
+#: my_practice/utils/dashboard_widgets.py:568
+msgctxt "action category"
+msgid "Operations"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:465
+msgid "Import"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:485
 msgid "Monthly restore test"
 msgstr ""
 
-#: my_practice/utils/dashboard_widgets.py:325
+#: my_practice/utils/dashboard_widgets.py:486
 msgid "Weekly backup"
 msgstr ""
 
-#: my_practice/utils/dashboard_widgets.py:326
+#: my_practice/utils/dashboard_widgets.py:487
 msgid "MicroSD offsite backup (card A/B alternating, every 2 weeks)"
 msgstr ""
 
-#: my_practice/utils/dashboard_widgets.py:327
+#: my_practice/utils/dashboard_widgets.py:488
 msgid "Annual security review"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:562
+msgid "checklist due"
+msgid_plural "checklists due"
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/utils/dashboard_widgets.py:569
+#, python-format
+msgid "%(n)s %(label)s"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:572
+#: templates/my_practice/client_detail.html:680
+msgid "View"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:695
+msgctxt "action category"
+msgid "Tax"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:696
+#, python-format
+msgid "Q%(q)s %(year)s · prepayment missing"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:698
+#, python-format
+msgid "Revenue: %(amount)s"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:700
+msgid "Record"
 msgstr ""
 
 #: my_practice/utils/practice_analysis.py:215
@@ -496,12 +647,6 @@ msgstr ""
 msgid "Not billed"
 msgstr "Unbilled"
 
-#: my_practice/views/invoice_views.py:783
-#: templates/my_practice/dashboard.html:136
-#: templates/my_practice/invoice_detail.html:40
-msgid "Draft"
-msgstr ""
-
 #: my_practice/views/invoice_views.py:785
 #: templates/my_practice/dashboard.html:141
 #: templates/my_practice/invoice_detail.html:41
@@ -561,12 +706,6 @@ msgstr ""
 #: my_practice/views/tax_views.py:49 my_practice/views/tax_views.py:52
 msgid "Invalid year"
 msgstr ""
-
-#: templates/includes/client_card.html:11
-#: templates/my_practice/client_detail.html:276
-#: templates/my_practice/client_detail_tabs.html:186
-msgid "Log missing"
-msgstr "Log missing"
 
 #: templates/includes/client_card.html:19
 #: templates/my_practice/client_detail.html:670
@@ -1179,11 +1318,6 @@ msgstr ""
 #| msgid "Preview"
 msgid "Back to overview"
 msgstr "Preview"
-
-#: templates/my_practice/client_detail.html:7
-#: templates/my_practice/revenue_report.html:51
-msgid "Client"
-msgstr ""
 
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/client_list_cards.html:42
@@ -1840,10 +1974,6 @@ msgstr ""
 msgid "Amount"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:680
-msgid "View"
-msgstr ""
-
 #: templates/my_practice/client_detail.html:686
 #, fuzzy
 #| msgid "No supervision topics for this client yet."
@@ -2327,12 +2457,6 @@ msgstr ""
 #: templates/my_practice/inquiry_list.html:160
 #, python-format
 msgid "Show closed (%(n)s)"
-msgstr ""
-
-#: templates/my_practice/inquiry_list.html:182
-#: templates/my_practice/inquiry_list.html:228
-#: templates/my_practice/practice_form.html:91
-msgid "Contact"
 msgstr ""
 
 #: templates/my_practice/inquiry_list.html:193
