@@ -6,6 +6,12 @@ Thanks for your interest. This is a small solo project but PRs and issues are ge
 
 Read the [status and limitations](README.md#status-and-limitations) section of the README. The code reflects one specific setup (Berlin, Germany, GLS Bank, single practitioner). Contributions that make it more adaptable without adding complexity for the existing use case are the sweet spot.
 
+## Security vulnerabilities
+
+If you find a security issue, **please do not open a public GitHub issue.** This app handles personal health data — a public disclosure before a fix is ready puts real people at risk.
+
+See [SECURITY.md](SECURITY.md) for the full responsible-disclosure policy, including the private contact address and expected response times.
+
 ## Privacy — non-negotiable
 
 This app handles personal health data. That sensitivity extends to contributions:

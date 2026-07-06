@@ -201,7 +201,8 @@ Reference: `./dev.py --help` or [docs/operations/SCRIPTS.md](docs/operations/SCR
 | [BACKUP_SETUP.md](docs/guides/BACKUP_SETUP.md) | Backup and restore |
 | [EMERGENCY_ACCESS_PLANNING.md](docs/guides/EMERGENCY_ACCESS_PLANNING.md) | What happens to the data if you're unavailable |
 | [CLINICAL_DATA_SECURITY.md](docs/guides/CLINICAL_DATA_SECURITY.md) | How sensitive data is encrypted at rest |
-| [SECURITY.md](docs/operations/SECURITY.md) | Security model and deployment notes |
+| [SECURITY.md](SECURITY.md) | Responsible-disclosure policy — how to report a vulnerability privately |
+| [docs/operations/SECURITY.md](docs/operations/SECURITY.md) | Security model and deployment notes |
 | [DPIA-template.md](docs/operations/DPIA-template.md) | Data protection impact assessment template |
 | [CODE_STRUCTURE.md](docs/architecture/CODE_STRUCTURE.md) | Codebase patterns |
 | [CLAUDE.md](CLAUDE.md) | Builder classes, view mixins, query helpers — AI instructions that double as an architecture reference |
