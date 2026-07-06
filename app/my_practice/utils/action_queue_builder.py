@@ -46,7 +46,8 @@ def _fmt_eur(amount: Decimal) -> str:
 
 def _join_truncated(items: list[str], total: int, sep: str = ", ", max_shown: int = 4) -> str:
     """Join up to max_shown items; append ' …' if total exceeds that."""
-    shown = items[:max_shown]
+    # str() coerces lazy translation proxies, which join() rejects
+    shown = [str(item) for item in items[:max_shown]]
     result = sep.join(shown)
     if total > len(shown):
         result += " …"
