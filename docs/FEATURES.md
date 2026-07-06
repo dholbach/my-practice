@@ -106,6 +106,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Client classification and activity tracking
 - ✅ Capacity planning with working days calculation
 - ✅ Time-off integration and capacity impact
+- ✅ Configurable capacity periods in Practice Settings — multiple periods with different weekly hours; replaces hard-coded 2023-08-01 split
 - ✅ Smart insights generation (8 insight types)
 - ✅ 4-quarter historical trends
 - ✅ Active client ratio tracking
@@ -137,6 +138,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Language field (DE/EN) on inquiries — propagates to Client on conversion; language breakdown in analytics panel; badge in inquiry list
 - ✅ Status field at the top of the inquiry form; milestone date auto-fills when status changes
 - ✅ Booking URL field on Practice settings; warning shown in inquiry form when not yet configured
+- ✅ Client code suggester on inquiry and convert forms — auto-suggests next available code
 ---
 
 ## 💰 Financial Management
@@ -243,6 +245,10 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Secure password hashing
 - ✅ Admin authentication
 - ✅ UniqueConstraints on critical fields
+- ✅ Global login enforcement — all views require authentication via `LoginRequiredMiddleware`
+- ✅ Practice isolation enforced on all endpoints including `session_toggle` and email views
+- ✅ Pre-commit PII guard — staged content checked against a local denylist before every commit
+- ✅ Responsible-disclosure policy (`SECURITY.md`)
 
 ### Testing
 - ✅ 200+ automated tests

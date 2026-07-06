@@ -2,6 +2,22 @@
 
 Major features and milestones in chronological order.
 
+## 2026-07-06 — v0.2.9 patch release
+
+- **Security — login enforcement**: All views now require authentication via a global `LoginRequiredMiddleware`; previously some paths were reachable without a session (issues #164, #165).
+- **Security — practice isolation**: Cross-practice access via `session_toggle` and the email view endpoints is now blocked; new isolation tests cover these paths.
+- **Feature — configurable capacity periods**: Multiple capacity periods can be defined in Practice Settings, replacing the hard-coded 2023-08-01 split. All weighted-capacity calculations (utilisation, quarter-trend, annual) consume the new model.
+- **Feature — client code suggester**: Inquiry and convert forms auto-suggest the next available client code, reducing manual look-up.
+- **Feature — pre-commit PII guard**: A new git pre-commit hook compares staged content against a local (untracked) denylist, blocking accidental commits of real client names or contact details.
+- **Bug fix — `revenue_report` 500**: Fixed a server error in the revenue report view; removed dead codemod scripts.
+- **Bug fix — per-client revenue in Practice Analysis**: Now delegates to `RevenueCalculator` (M-PAT-02), aligning paid-date filtering with all other revenue views.
+- **Bug fix — test suite**: 20 failing tests repaired across four test files.
+- **Refactor — dashboard queries**: Double-query patterns reduced in `dashboard_widgets`; `ActionQueueBuilder` decoupled from the widget-builder context dict.
+- **Refactor — heatmap query**: Per-month query loop replaced with a single date-range query (N → 1).
+- **i18n** (P-039): Action-queue strings, dashboard widget strings, `forms.py`, `practice_views.py`, and `inquiry_convert_confirm.html` fully wrapped; fuzzy translations corrected.
+- **Governance**: Responsible-disclosure policy added (`SECURITY.md`, closes issue #10).
+- **Deps**: `uvicorn` 0.50.0.
+
 ## 2026-07-03 — v0.2.8 patch release
 
 - **Bug fix — capacity calculation**: Weighted capacity now correctly applies time off for periods spanning the 2023-08-01 capacity change (10h/week → 20h/week). Previously the `available_working_days` argument was silently ignored in that branch, causing time-off periods to have no effect on capacity for spanning periods; utilisation figures in quarter-trend and annual views were overstated.
