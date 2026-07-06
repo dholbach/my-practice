@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-06 13:27+0200\n"
+"POT-Creation-Date: 2026-07-06 13:43+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -386,6 +386,235 @@ msgid_plural "💰 Revenue opportunity: %(n)s clients with sessions but no invoi
 msgstr[0] "💰 Abrechnungspotenzial: %(n)s Klient:in mit Sitzungen aber ohne Rechnung"
 msgstr[1] "💰 Abrechnungspotenzial: %(n)s Klient:innen mit Sitzungen aber ohne Rechnung"
 
+#: my_practice/views/bank_import_views.py:72
+#, python-format
+msgid "%(count)s automatically matched"
+msgstr "%(count)s automatisch zugeordnet"
+
+#: my_practice/views/bank_import_views.py:73
+#, python-format
+msgid "%(count)s require manual review"
+msgstr "%(count)s benötigen manuelle Prüfung"
+
+#: my_practice/views/bank_import_views.py:77
+#, python-format
+msgid "%(count)s expenses detected automatically"
+msgstr "%(count)s Ausgaben automatisch erkannt"
+
+#: my_practice/views/bank_import_views.py:79
+#, python-format
+msgid "%(count)s ignored"
+msgstr "%(count)s ignoriert"
+
+#: my_practice/views/bank_import_views.py:82
+#, python-format
+msgid "Import complete: %(details)s."
+msgstr "Import abgeschlossen: %(details)s."
+
+#: my_practice/views/bank_import_views.py:220
+msgid "No transaction selected."
+msgstr "Keine Transaktion ausgewählt."
+
+#: my_practice/views/bank_import_views.py:309
+#, python-format
+msgid "Auto-ignored: invoice %(number)s already paid"
+msgstr "Auto-ignoriert: Rechnung %(number)s bereits bezahlt"
+
+#: my_practice/views/bank_import_views.py:319
+#, python-format
+msgid "✅ %(count)s transaction with already-paid invoice ignored."
+msgid_plural "✅ %(count)s transactions with already-paid invoices ignored."
+msgstr[0] "✅ %(count)s Transaktion mit bereits bezahlter Rechnung ignoriert."
+msgstr[1] "✅ %(count)s Transaktionen mit bereits bezahlten Rechnungen ignoriert."
+
+#: my_practice/views/bank_import_views.py:326
+msgid "No matching transactions to ignore."
+msgstr "Keine passenden Transaktionen zum Ignorieren gefunden."
+
+#: my_practice/views/bank_import_views.py:339
+#, python-format
+msgid "%(count)s expense ignored."
+msgid_plural "%(count)s expenses ignored."
+msgstr[0] "%(count)s Ausgabe ignoriert."
+msgstr[1] "%(count)s Ausgaben ignoriert."
+
+#: my_practice/views/bank_import_views.py:356
+#: my_practice/views/bank_import_views.py:669
+#: my_practice/views/bank_import_views.py:817
+#, python-format
+msgid "%(count)s transaction ignored."
+msgid_plural "%(count)s transactions ignored."
+msgstr[0] "%(count)s Transaktion ignoriert."
+msgstr[1] "%(count)s Transaktionen ignoriert."
+
+#: my_practice/views/bank_import_views.py:370
+msgid "Transaction ignored."
+msgstr "Transaktion ignoriert."
+
+#: my_practice/views/bank_import_views.py:394
+#, python-format
+msgid "Transaction linked to %(number)s (already paid)."
+msgstr "Transaktion mit %(number)s verknüpft (bereits bezahlt)."
+
+#: my_practice/views/bank_import_views.py:399
+msgid "Transaction confirmed (invoice already paid)."
+msgstr "Transaktion bestätigt (Rechnung bereits bezahlt)."
+
+#: my_practice/views/bank_import_views.py:406
+msgid "No invoice specified."
+msgstr "Keine Rechnung angegeben."
+
+#: my_practice/views/bank_import_views.py:426
+#, python-format
+msgid "Transaction automatically linked to %(number)s and marked as paid."
+msgstr "Transaktion automatisch mit %(number)s verknüpft und als bezahlt markiert."
+
+#: my_practice/views/bank_import_views.py:435
+msgid "Error processing form."
+msgstr "Fehler beim Verarbeiten des Formulars."
+
+#: my_practice/views/bank_import_views.py:440
+msgid "Please select at least one invoice."
+msgstr "Bitte wählen Sie mindestens eine Rechnung aus."
+
+#: my_practice/views/bank_import_views.py:471
+#, python-format
+msgid "Payment successfully assigned to invoice %(number)s."
+msgstr "Zahlung erfolgreich der Rechnung %(number)s zugeordnet."
+
+#: my_practice/views/bank_import_views.py:478
+#, python-format
+msgid "Payment successfully assigned to %(count)s invoices: %(numbers)s"
+msgstr "Zahlung erfolgreich %(count)s Rechnungen zugeordnet: %(numbers)s"
+
+#: my_practice/views/bank_import_views.py:499
+#, python-format
+msgid "📌 Alias '%(name)s' for %(code)s saved."
+msgstr "📌 Alias '%(name)s' für %(code)s gespeichert."
+
+#: my_practice/views/bank_import_views.py:506
+#, python-format
+msgid "Alias '%(name)s' for %(code)s saved."
+msgstr "Alias '%(name)s' für %(code)s gespeichert."
+
+#: my_practice/views/bank_import_views.py:573
+#: my_practice/views/bank_import_views.py:654
+#: my_practice/views/bank_import_views.py:717
+#: my_practice/views/bank_import_views.py:790
+msgid "Please select at least one transaction."
+msgstr "Bitte wähle mindestens eine Transaktion aus."
+
+#: my_practice/views/bank_import_views.py:582
+#: my_practice/views/bank_import_views.py:726
+msgid "No transactions found."
+msgstr "Keine Transaktionen gefunden."
+
+#: my_practice/views/bank_import_views.py:643
+#, python-format
+msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
+msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
+msgstr[0] "%(count)s Transaktion erfolgreich zu Ausgabe zusammengefasst: %(amount)s €"
+msgstr[1] "%(count)s Transaktionen erfolgreich zu Ausgabe zusammengefasst: %(amount)s €"
+
+#: my_practice/views/bank_import_views.py:780
+#, python-format
+msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
+msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
+msgstr[0] "%(count)s Transaktion erfolgreich zu Entnahme zusammengefasst: %(amount)s €"
+msgstr[1] "%(count)s Transaktionen erfolgreich zu Entnahme zusammengefasst: %(amount)s €"
+
+#: my_practice/views/calendar_views.py:76
+msgid "✅ Google Calendar connected successfully!"
+msgstr "✅ Google Calendar erfolgreich verbunden!"
+
+#: my_practice/views/calendar_views.py:80
+#, python-format
+msgid "Authorization error: %(error)s"
+msgstr "Fehler bei der Autorisierung: %(error)s"
+
+#: my_practice/views/calendar_views.py:88
+msgid "Please connect your Google Calendar first."
+msgstr "Bitte verbinde zuerst deinen Google Calendar."
+
+#: my_practice/views/calendar_views.py:96
+msgid "No calendar named 'Praxis' found."
+msgstr "Kein Kalender mit dem Namen 'Praxis' gefunden."
+
+#: my_practice/views/calendar_views.py:146
+#, python-format
+msgid "Error loading calendar events: %(error)s"
+msgstr "Fehler beim Laden der Kalender-Einträge: %(error)s"
+
+#: my_practice/views/calendar_views.py:160
+msgid "No events selected"
+msgstr "Keine Events ausgewählt"
+
+#: my_practice/views/calendar_views.py:175
+msgid "Google Calendar not connected"
+msgstr "Google Calendar nicht verbunden"
+
+#: my_practice/views/calendar_views.py:180
+msgid "Calendar 'Praxis' not found"
+msgstr "Kalender 'Praxis' nicht gefunden"
+
+#: my_practice/views/calendar_views.py:188
+#, python-format
+msgid "Error loading events: %(error)s"
+msgstr "Fehler beim Laden der Events: %(error)s"
+
+#: my_practice/views/calendar_views.py:223
+#: my_practice/views/invoice_views.py:500
+#: my_practice/views/invoice_views.py:766
+#: my_practice/views/invoice_views.py:880
+msgid "No active practice found."
+msgstr "Keine aktive Praxis gefunden."
+
+#: my_practice/views/calendar_views.py:316
+msgid "No events selected."
+msgstr "Keine Termine ausgewählt."
+
+#: my_practice/views/calendar_views.py:413
+#: my_practice/views/calendar_views.py:446
+msgid "Event not found."
+msgstr "Termin nicht gefunden."
+
+#: my_practice/views/calendar_views.py:459
+#, python-format
+msgid "Event on %(date)s skipped."
+msgstr "Termin am %(date)s übersprungen."
+
+#: my_practice/views/calendar_views.py:464
+msgid "Unknown action."
+msgstr "Unbekannte Aktion."
+
+#: my_practice/views/calendar_views.py:468
+msgid "No client assigned to this event."
+msgstr "Kein Klient für diesen Termin zugeordnet."
+
+#: my_practice/views/calendar_views.py:482
+msgid "No matching service type found."
+msgstr "Kein passender Leistungstyp gefunden."
+
+#: my_practice/views/calendar_views.py:490
+#, python-format
+msgid "No hourly rate set for %(code)s."
+msgstr "Kein Stundensatz für %(code)s hinterlegt."
+
+#: my_practice/views/calendar_views.py:507
+#, python-format
+msgid "Session on %(date)s is already billed."
+msgstr "Sitzung am %(date)s ist bereits abgerechnet."
+
+#: my_practice/views/calendar_views.py:551
+#, python-format
+msgid "Event on %(date)s added to invoice %(number)s."
+msgstr "Termin am %(date)s zu Rechnung %(number)s hinzugefügt."
+
+#: my_practice/views/calendar_views.py:555
+#, python-format
+msgid "Import error: %(error)s"
+msgstr "Fehler beim Import: %(error)s"
+
 #: my_practice/views/client_views.py:172
 #, python-brace-format
 msgid "Client {obj.full_name} saved successfully!"
@@ -596,12 +825,6 @@ msgstr[1] "%(count)s Sitzungen zu %(invoice)s hinzugefügt."
 #: my_practice/views/invoice_views.py:486
 msgid "No new sessions added (already billed?)."
 msgstr "Keine neuen Sitzungen hinzugefügt (bereits abgerechnet?)."
-
-#: my_practice/views/invoice_views.py:500
-#: my_practice/views/invoice_views.py:766
-#: my_practice/views/invoice_views.py:880
-msgid "No active practice found."
-msgstr "Keine aktive Praxis gefunden."
 
 #: my_practice/views/invoice_views.py:540
 msgid "Invoice <a href=\"{}\">{}</a> with {} session created."

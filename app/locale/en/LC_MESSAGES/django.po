@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-06 13:27+0200\n"
+"POT-Creation-Date: 2026-07-06 13:43+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -386,6 +386,235 @@ msgid_plural "💰 Revenue opportunity: %(n)s clients with sessions but no invoi
 msgstr[0] ""
 msgstr[1] ""
 
+#: my_practice/views/bank_import_views.py:72
+#, python-format
+msgid "%(count)s automatically matched"
+msgstr "%(count)s automatically matched"
+
+#: my_practice/views/bank_import_views.py:73
+#, python-format
+msgid "%(count)s require manual review"
+msgstr "%(count)s require manual review"
+
+#: my_practice/views/bank_import_views.py:77
+#, python-format
+msgid "%(count)s expenses detected automatically"
+msgstr "%(count)s expenses detected automatically"
+
+#: my_practice/views/bank_import_views.py:79
+#, python-format
+msgid "%(count)s ignored"
+msgstr "%(count)s ignored"
+
+#: my_practice/views/bank_import_views.py:82
+#, python-format
+msgid "Import complete: %(details)s."
+msgstr "Import complete: %(details)s."
+
+#: my_practice/views/bank_import_views.py:220
+msgid "No transaction selected."
+msgstr "No transaction selected."
+
+#: my_practice/views/bank_import_views.py:309
+#, python-format
+msgid "Auto-ignored: invoice %(number)s already paid"
+msgstr "Auto-ignored: invoice %(number)s already paid"
+
+#: my_practice/views/bank_import_views.py:319
+#, python-format
+msgid "✅ %(count)s transaction with already-paid invoice ignored."
+msgid_plural "✅ %(count)s transactions with already-paid invoices ignored."
+msgstr[0] "✅ %(count)s transaction with already-paid invoice ignored."
+msgstr[1] "✅ %(count)s transactions with already-paid invoices ignored."
+
+#: my_practice/views/bank_import_views.py:326
+msgid "No matching transactions to ignore."
+msgstr "No matching transactions to ignore."
+
+#: my_practice/views/bank_import_views.py:339
+#, python-format
+msgid "%(count)s expense ignored."
+msgid_plural "%(count)s expenses ignored."
+msgstr[0] "%(count)s expense ignored."
+msgstr[1] "%(count)s expenses ignored."
+
+#: my_practice/views/bank_import_views.py:356
+#: my_practice/views/bank_import_views.py:669
+#: my_practice/views/bank_import_views.py:817
+#, python-format
+msgid "%(count)s transaction ignored."
+msgid_plural "%(count)s transactions ignored."
+msgstr[0] "%(count)s transaction ignored."
+msgstr[1] "%(count)s transactions ignored."
+
+#: my_practice/views/bank_import_views.py:370
+msgid "Transaction ignored."
+msgstr "Transaction ignored."
+
+#: my_practice/views/bank_import_views.py:394
+#, python-format
+msgid "Transaction linked to %(number)s (already paid)."
+msgstr "Transaction linked to %(number)s (already paid)."
+
+#: my_practice/views/bank_import_views.py:399
+msgid "Transaction confirmed (invoice already paid)."
+msgstr "Transaction confirmed (invoice already paid)."
+
+#: my_practice/views/bank_import_views.py:406
+msgid "No invoice specified."
+msgstr "No invoice specified."
+
+#: my_practice/views/bank_import_views.py:426
+#, python-format
+msgid "Transaction automatically linked to %(number)s and marked as paid."
+msgstr "Transaction automatically linked to %(number)s and marked as paid."
+
+#: my_practice/views/bank_import_views.py:435
+msgid "Error processing form."
+msgstr "Error processing form."
+
+#: my_practice/views/bank_import_views.py:440
+msgid "Please select at least one invoice."
+msgstr "Please select at least one invoice."
+
+#: my_practice/views/bank_import_views.py:471
+#, python-format
+msgid "Payment successfully assigned to invoice %(number)s."
+msgstr "Payment successfully assigned to invoice %(number)s."
+
+#: my_practice/views/bank_import_views.py:478
+#, python-format
+msgid "Payment successfully assigned to %(count)s invoices: %(numbers)s"
+msgstr "Payment successfully assigned to %(count)s invoices: %(numbers)s"
+
+#: my_practice/views/bank_import_views.py:499
+#, python-format
+msgid "📌 Alias '%(name)s' for %(code)s saved."
+msgstr "📌 Alias '%(name)s' for %(code)s saved."
+
+#: my_practice/views/bank_import_views.py:506
+#, python-format
+msgid "Alias '%(name)s' for %(code)s saved."
+msgstr "Alias '%(name)s' for %(code)s saved."
+
+#: my_practice/views/bank_import_views.py:573
+#: my_practice/views/bank_import_views.py:654
+#: my_practice/views/bank_import_views.py:717
+#: my_practice/views/bank_import_views.py:790
+msgid "Please select at least one transaction."
+msgstr "Please select at least one transaction."
+
+#: my_practice/views/bank_import_views.py:582
+#: my_practice/views/bank_import_views.py:726
+msgid "No transactions found."
+msgstr "No transactions found."
+
+#: my_practice/views/bank_import_views.py:643
+#, python-format
+msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
+msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
+msgstr[0] "%(count)s transaction successfully grouped into expense: %(amount)s €"
+msgstr[1] "%(count)s transactions successfully grouped into expense: %(amount)s €"
+
+#: my_practice/views/bank_import_views.py:780
+#, python-format
+msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
+msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
+msgstr[0] "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
+msgstr[1] "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
+
+#: my_practice/views/calendar_views.py:76
+msgid "✅ Google Calendar connected successfully!"
+msgstr "✅ Google Calendar connected successfully!"
+
+#: my_practice/views/calendar_views.py:80
+#, python-format
+msgid "Authorization error: %(error)s"
+msgstr "Authorization error: %(error)s"
+
+#: my_practice/views/calendar_views.py:88
+msgid "Please connect your Google Calendar first."
+msgstr "Please connect your Google Calendar first."
+
+#: my_practice/views/calendar_views.py:96
+msgid "No calendar named 'Praxis' found."
+msgstr "No calendar named 'Praxis' found."
+
+#: my_practice/views/calendar_views.py:146
+#, python-format
+msgid "Error loading calendar events: %(error)s"
+msgstr "Error loading calendar events: %(error)s"
+
+#: my_practice/views/calendar_views.py:160
+msgid "No events selected"
+msgstr "No events selected"
+
+#: my_practice/views/calendar_views.py:175
+msgid "Google Calendar not connected"
+msgstr "Google Calendar not connected"
+
+#: my_practice/views/calendar_views.py:180
+msgid "Calendar 'Praxis' not found"
+msgstr "Calendar 'Praxis' not found"
+
+#: my_practice/views/calendar_views.py:188
+#, python-format
+msgid "Error loading events: %(error)s"
+msgstr "Error loading events: %(error)s"
+
+#: my_practice/views/calendar_views.py:223
+#: my_practice/views/invoice_views.py:500
+#: my_practice/views/invoice_views.py:766
+#: my_practice/views/invoice_views.py:880
+msgid "No active practice found."
+msgstr "No active practice found."
+
+#: my_practice/views/calendar_views.py:316
+msgid "No events selected."
+msgstr "No events selected."
+
+#: my_practice/views/calendar_views.py:413
+#: my_practice/views/calendar_views.py:446
+msgid "Event not found."
+msgstr "Event not found."
+
+#: my_practice/views/calendar_views.py:459
+#, python-format
+msgid "Event on %(date)s skipped."
+msgstr "Event on %(date)s skipped."
+
+#: my_practice/views/calendar_views.py:464
+msgid "Unknown action."
+msgstr "Unknown action."
+
+#: my_practice/views/calendar_views.py:468
+msgid "No client assigned to this event."
+msgstr "No client assigned to this event."
+
+#: my_practice/views/calendar_views.py:482
+msgid "No matching service type found."
+msgstr "No matching service type found."
+
+#: my_practice/views/calendar_views.py:490
+#, python-format
+msgid "No hourly rate set for %(code)s."
+msgstr "No hourly rate set for %(code)s."
+
+#: my_practice/views/calendar_views.py:507
+#, python-format
+msgid "Session on %(date)s is already billed."
+msgstr "Session on %(date)s is already billed."
+
+#: my_practice/views/calendar_views.py:551
+#, python-format
+msgid "Event on %(date)s added to invoice %(number)s."
+msgstr "Event on %(date)s added to invoice %(number)s."
+
+#: my_practice/views/calendar_views.py:555
+#, python-format
+msgid "Import error: %(error)s"
+msgstr "Import error: %(error)s"
+
 #: my_practice/views/client_views.py:172
 #, python-brace-format
 msgid "Client {obj.full_name} saved successfully!"
@@ -615,14 +844,6 @@ msgstr[1] ""
 #: my_practice/views/invoice_views.py:486
 msgid "No new sessions added (already billed?)."
 msgstr ""
-
-#: my_practice/views/invoice_views.py:500
-#: my_practice/views/invoice_views.py:766
-#: my_practice/views/invoice_views.py:880
-#, fuzzy
-#| msgid "Create new practice"
-msgid "No active practice found."
-msgstr "Create new practice"
 
 #: my_practice/views/invoice_views.py:540
 msgid "Invoice <a href=\"{}\">{}</a> with {} session created."
