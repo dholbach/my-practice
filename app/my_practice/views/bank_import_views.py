@@ -4,6 +4,8 @@ Bank statement import views.
 Handles CSV upload, automatic matching, and manual review of unmatched transactions.
 """
 
+from decimal import Decimal
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -108,23 +110,14 @@ class BankReviewView(FormMixin, ListView):
 
         transactions_list = list(transactions)
 
-        # Batch-fetch all potentially matching invoices in two queries instead of 2N
         invoice_numbers = {
             t.extracted_invoice_number for t in transactions_list if t.extracted_invoice_number
         }
-        paid_map: dict[str, Invoice] = {}
-        sent_map: dict[str, Invoice] = {}
-        if invoice_numbers:
-            practice = self.request.current_practice
-            for inv in Invoice.objects.filter(
-                practice=practice,
-                invoice_number__in=invoice_numbers,
-                status__in=["paid", "sent"],
-            ):
-                if inv.status == "paid":
-                    paid_map[inv.invoice_number] = inv
-                else:
-                    sent_map[inv.invoice_number] = inv
+        maps = self._fetch_invoice_maps(
+            self.request.current_practice, invoice_numbers, ["paid", "sent"]
+        )
+        paid_map = maps["paid"]
+        sent_map = maps["sent"]
 
         for trans in transactions_list:
             trans.matching_paid_invoice = None
@@ -132,10 +125,10 @@ class BankReviewView(FormMixin, ListView):
             num = trans.extracted_invoice_number
             if num:
                 paid = paid_map.get(num)
-                if paid and abs(paid.calculate_total() - trans.amount) < 0.01:
+                if paid and abs(paid.total - trans.amount) < Decimal("0.01"):
                     trans.matching_paid_invoice = paid
                 sent = sent_map.get(num)
-                if sent and abs(sent.calculate_total() - trans.amount) < 0.01:
+                if sent and abs(sent.total - trans.amount) < Decimal("0.01"):
                     trans.matching_unpaid_invoice = sent
 
         return transactions_list
@@ -245,6 +238,28 @@ class BankReviewView(FormMixin, ListView):
 
     # ── helpers ───────────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _fetch_invoice_maps(
+        practice, invoice_numbers: set[str], statuses: list[str]
+    ) -> dict[str, dict[str, Invoice]]:
+        """
+        Batch-fetch invoices by number and split by status.
+
+        Returns {status_string: {invoice_number: Invoice}} for each requested
+        status. Replaces the duplicated per-status query loops in get_queryset
+        and _handle_bulk_ignore_paid.
+        """
+        result: dict[str, dict[str, Invoice]] = {s: {} for s in statuses}
+        if invoice_numbers:
+            for inv in Invoice.objects.filter(
+                practice=practice,
+                invoice_number__in=invoice_numbers,
+                status__in=statuses,
+            ):
+                if inv.status in result:
+                    result[inv.status][inv.invoice_number] = inv
+        return result
+
     def _next_redirect_url(self, request, exclude_transaction) -> str:
         """Build review URL anchored to the next unmatched transaction."""
         next_transaction = (
@@ -273,25 +288,19 @@ class BankReviewView(FormMixin, ListView):
             ).select_related("matched_invoice")
         )
 
-        # Batch-fetch paid invoices for all extracted numbers in one query
         invoice_numbers = {
             t.extracted_invoice_number for t in transactions if t.extracted_invoice_number
         }
-        paid_map: dict[str, Invoice] = {}
-        if invoice_numbers:
-            for inv in Invoice.objects.filter(
-                practice=request.current_practice,
-                invoice_number__in=invoice_numbers,
-                status="paid",
-            ):
-                paid_map[inv.invoice_number] = inv
+        paid_map = self._fetch_invoice_maps(request.current_practice, invoice_numbers, ["paid"])[
+            "paid"
+        ]
 
         ignored_count = 0
         for trans in transactions:
             if not trans.extracted_invoice_number:
                 continue
             paid_invoice = paid_map.get(trans.extracted_invoice_number)
-            if paid_invoice and abs(paid_invoice.calculate_total() - trans.amount) < 0.01:
+            if paid_invoice and abs(paid_invoice.total - trans.amount) < Decimal("0.01"):
                 trans.match_confidence = "ignored"
                 trans.processed = True
                 trans.notes = (
