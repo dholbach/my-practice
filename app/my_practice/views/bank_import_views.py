@@ -4,9 +4,13 @@ Bank statement import views.
 Handles CSV upload, automatic matching, and manual review of unmatched transactions.
 """
 
+from decimal import Decimal
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 from django.views.generic import FormView, ListView
 from django.views.generic.edit import FormMixin
 
@@ -64,18 +68,18 @@ class BankImportView(FormView):
             "errors": results["errors"],
         }
 
-        # Show summary message
         msg_parts = [
-            f"{results['matched']} automatisch zugeordnet",
-            f"{results['unmatched']} benötigen manuelle Prüfung",
+            _("%(count)s automatically matched") % {"count": results["matched"]},
+            _("%(count)s require manual review") % {"count": results["unmatched"]},
         ]
         if results["needs_review"] > 0:
-            msg_parts.append(f"{results['needs_review']} Ausgaben automatisch erkannt")
-        msg_parts.append(f"{results['ignored']} ignoriert")
-
+            msg_parts.append(
+                _("%(count)s expenses detected automatically") % {"count": results["needs_review"]}
+            )
+        msg_parts.append(_("%(count)s ignored") % {"count": results["ignored"]})
         messages.success(
             self.request,
-            f"Import abgeschlossen: {', '.join(msg_parts)}.",
+            _("Import complete: %(details)s.") % {"details": ", ".join(msg_parts)},
         )
 
         # Redirect to review page
@@ -108,23 +112,14 @@ class BankReviewView(FormMixin, ListView):
 
         transactions_list = list(transactions)
 
-        # Batch-fetch all potentially matching invoices in two queries instead of 2N
         invoice_numbers = {
             t.extracted_invoice_number for t in transactions_list if t.extracted_invoice_number
         }
-        paid_map: dict[str, Invoice] = {}
-        sent_map: dict[str, Invoice] = {}
-        if invoice_numbers:
-            practice = self.request.current_practice
-            for inv in Invoice.objects.filter(
-                practice=practice,
-                invoice_number__in=invoice_numbers,
-                status__in=["paid", "sent"],
-            ):
-                if inv.status == "paid":
-                    paid_map[inv.invoice_number] = inv
-                else:
-                    sent_map[inv.invoice_number] = inv
+        maps = self._fetch_invoice_maps(
+            self.request.current_practice, invoice_numbers, ["paid", "sent"]
+        )
+        paid_map = maps["paid"]
+        sent_map = maps["sent"]
 
         for trans in transactions_list:
             trans.matching_paid_invoice = None
@@ -132,10 +127,10 @@ class BankReviewView(FormMixin, ListView):
             num = trans.extracted_invoice_number
             if num:
                 paid = paid_map.get(num)
-                if paid and abs(paid.calculate_total() - trans.amount) < 0.01:
+                if paid and abs(paid.total - trans.amount) < Decimal("0.01"):
                     trans.matching_paid_invoice = paid
                 sent = sent_map.get(num)
-                if sent and abs(sent.calculate_total() - trans.amount) < 0.01:
+                if sent and abs(sent.total - trans.amount) < Decimal("0.01"):
                     trans.matching_unpaid_invoice = sent
 
         return transactions_list
@@ -222,7 +217,7 @@ class BankReviewView(FormMixin, ListView):
         # Single-transaction actions
         transaction_id = request.POST.get("transaction_id")
         if not transaction_id:
-            messages.error(request, "Keine Transaktion ausgewählt.")
+            messages.error(request, _("No transaction selected."))
             return redirect("bank_review")
 
         transaction = get_object_or_404(
@@ -244,6 +239,28 @@ class BankReviewView(FormMixin, ListView):
         return redirect(redirect_url)
 
     # ── helpers ───────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _fetch_invoice_maps(
+        practice, invoice_numbers: set[str], statuses: list[str]
+    ) -> dict[str, dict[str, Invoice]]:
+        """
+        Batch-fetch invoices by number and split by status.
+
+        Returns {status_string: {invoice_number: Invoice}} for each requested
+        status. Replaces the duplicated per-status query loops in get_queryset
+        and _handle_bulk_ignore_paid.
+        """
+        result: dict[str, dict[str, Invoice]] = {s: {} for s in statuses}
+        if invoice_numbers:
+            for inv in Invoice.objects.filter(
+                practice=practice,
+                invoice_number__in=invoice_numbers,
+                status__in=statuses,
+            ):
+                if inv.status in result:
+                    result[inv.status][inv.invoice_number] = inv
+        return result
 
     def _next_redirect_url(self, request, exclude_transaction) -> str:
         """Build review URL anchored to the next unmatched transaction."""
@@ -273,41 +290,39 @@ class BankReviewView(FormMixin, ListView):
             ).select_related("matched_invoice")
         )
 
-        # Batch-fetch paid invoices for all extracted numbers in one query
         invoice_numbers = {
             t.extracted_invoice_number for t in transactions if t.extracted_invoice_number
         }
-        paid_map: dict[str, Invoice] = {}
-        if invoice_numbers:
-            for inv in Invoice.objects.filter(
-                practice=request.current_practice,
-                invoice_number__in=invoice_numbers,
-                status="paid",
-            ):
-                paid_map[inv.invoice_number] = inv
+        paid_map = self._fetch_invoice_maps(request.current_practice, invoice_numbers, ["paid"])[
+            "paid"
+        ]
 
         ignored_count = 0
         for trans in transactions:
             if not trans.extracted_invoice_number:
                 continue
             paid_invoice = paid_map.get(trans.extracted_invoice_number)
-            if paid_invoice and abs(paid_invoice.calculate_total() - trans.amount) < 0.01:
+            if paid_invoice and abs(paid_invoice.total - trans.amount) < Decimal("0.01"):
                 trans.match_confidence = "ignored"
                 trans.processed = True
-                trans.notes = (
-                    f"Auto-ignoriert: Rechnung {paid_invoice.invoice_number} bereits bezahlt"
-                )
+                trans.notes = _("Auto-ignored: invoice %(number)s already paid") % {
+                    "number": paid_invoice.invoice_number
+                }
                 trans.save()
                 ignored_count += 1
 
         if ignored_count > 0:
             messages.success(
                 request,
-                f"✅ {ignored_count} Transaktion{'en' if ignored_count != 1 else ''} "
-                "mit bereits bezahlten Rechnungen ignoriert.",
+                ngettext(
+                    "✅ %(count)s transaction with already-paid invoice ignored.",
+                    "✅ %(count)s transactions with already-paid invoices ignored.",
+                    ignored_count,
+                )
+                % {"count": ignored_count},
             )
         else:
-            messages.info(request, "Keine passenden Transaktionen zum Ignorieren gefunden.")
+            messages.info(request, _("No matching transactions to ignore."))
         return redirect("bank_review")
 
     def _handle_ignore_all_expenses(self, request):
@@ -317,7 +332,15 @@ class BankReviewView(FormMixin, ListView):
             processed=False,
             amount__lt=0,
         ).update(match_confidence="ignored")
-        messages.success(request, f"{updated} Ausgaben ignoriert.")
+        messages.success(
+            request,
+            ngettext(
+                "%(count)s expense ignored.",
+                "%(count)s expenses ignored.",
+                updated,
+            )
+            % {"count": updated},
+        )
         return redirect("bank_review")
 
     def _handle_ignore_all_unmatched(self, request):
@@ -326,7 +349,15 @@ class BankReviewView(FormMixin, ListView):
             match_confidence="unmatched",
             processed=False,
         ).update(match_confidence="ignored")
-        messages.success(request, f"{updated} Transaktionen ignoriert.")
+        messages.success(
+            request,
+            ngettext(
+                "%(count)s transaction ignored.",
+                "%(count)s transactions ignored.",
+                updated,
+            )
+            % {"count": updated},
+        )
         return redirect("bank_review")
 
     # ── single-transaction action handlers ───────────────────────────────────
@@ -335,7 +366,7 @@ class BankReviewView(FormMixin, ListView):
         transaction.match_confidence = "ignored"
         transaction.processed = True
         transaction.save()
-        messages.success(request, "Transaktion wurde ignoriert.")
+        messages.success(request, _("Transaction ignored."))
         return redirect(redirect_url)
 
     def _handle_confirm_paid(self, request, transaction, redirect_url):
@@ -359,18 +390,17 @@ class BankReviewView(FormMixin, ListView):
         if invoice_id and invoice:
             messages.success(
                 request,
-                f"Transaktion mit {invoice.invoice_number} verknüpft (bereits bezahlt).",
+                _("Transaction linked to %(number)s (already paid).")
+                % {"number": invoice.invoice_number},
             )
         else:
-            messages.success(
-                request, "Transaktion als bestätigt markiert (Rechnung bereits bezahlt)."
-            )
+            messages.success(request, _("Transaction confirmed (invoice already paid)."))
         return redirect(redirect_url)
 
     def _handle_auto_match(self, request, transaction, redirect_url):
         invoice_id = request.POST.get("suggested_invoice_id")
         if not invoice_id:
-            messages.error(request, "Keine Rechnung angegeben.")
+            messages.error(request, _("No invoice specified."))
             return redirect(redirect_url)
 
         invoice = get_object_or_404(
@@ -390,7 +420,8 @@ class BankReviewView(FormMixin, ListView):
 
         messages.success(
             request,
-            f"Transaktion automatisch mit {invoice.invoice_number} verknüpft und als bezahlt markiert.",
+            _("Transaction automatically linked to %(number)s and marked as paid.")
+            % {"number": invoice.invoice_number},
         )
         return redirect(redirect_url)
 
@@ -398,12 +429,12 @@ class BankReviewView(FormMixin, ListView):
 
         form = self.get_form()
         if not form.is_valid():
-            messages.error(request, "Fehler beim Verarbeiten des Formulars.")
+            messages.error(request, _("Error processing form."))
             return redirect(redirect_url)
 
         invoices = form.cleaned_data["invoice"]
         if not invoices:
-            messages.error(request, "Bitte wählen Sie mindestens eine Rechnung aus.")
+            messages.error(request, _("Please select at least one invoice."))
             return redirect(redirect_url)
 
         notes = form.cleaned_data.get("notes", "")
@@ -434,13 +465,15 @@ class BankReviewView(FormMixin, ListView):
         if len(invoice_list) == 1 and first_invoice:
             messages.success(
                 request,
-                f"Zahlung erfolgreich der Rechnung {first_invoice.invoice_number} zugeordnet.",
+                _("Payment successfully assigned to invoice %(number)s.")
+                % {"number": first_invoice.invoice_number},
             )
         else:
             invoice_numbers = ", ".join(inv.invoice_number for inv in invoice_list)
             messages.success(
                 request,
-                f"Zahlung erfolgreich {len(invoice_list)} Rechnungen zugeordnet: {invoice_numbers}",
+                _("Payment successfully assigned to %(count)s invoices: %(numbers)s")
+                % {"count": len(invoice_list), "numbers": invoice_numbers},
             )
         return redirect(redirect_url)
 
@@ -458,14 +491,18 @@ class BankReviewView(FormMixin, ListView):
 
         if context == "confirm":
             notes = f"Auto-erstellt beim Bestätigen am {transaction.transaction_date}"
-            msg = (
-                f"📌 Alias '{transaction.payer_name}' für {invoice.client.client_code} gespeichert."
+            messages.info(
+                request,
+                _("📌 Alias '%(name)s' for %(code)s saved.")
+                % {"name": transaction.payer_name, "code": invoice.client.client_code},
             )
-            messages.info(request, msg)
         else:
             notes = f"Erstellt beim Bank Import am {transaction.transaction_date}"
-            msg = f"Alias '{transaction.payer_name}' für {invoice.client.client_code} gespeichert."
-            messages.success(request, msg)
+            messages.success(
+                request,
+                _("Alias '%(name)s' for %(code)s saved.")
+                % {"name": transaction.payer_name, "code": invoice.client.client_code},
+            )
 
         ClientAlias.objects.create(
             client=invoice.client,
@@ -530,7 +567,7 @@ class BankExpenseReviewView(ListView):
             # Get selected transaction IDs
             transaction_ids = request.POST.getlist("transactions")
             if not transaction_ids:
-                messages.error(request, "Bitte wähle mindestens eine Transaktion aus.")
+                messages.error(request, _("Please select at least one transaction."))
                 return redirect("bank_expense_review")
 
             transactions = BankTransaction.objects.filter(
@@ -539,7 +576,7 @@ class BankExpenseReviewView(ListView):
             )
 
             if not transactions.exists():
-                messages.error(request, "Keine Transaktionen gefunden.")
+                messages.error(request, _("No transactions found."))
                 return redirect("bank_expense_review")
 
             # Get form data
@@ -599,7 +636,12 @@ class BankExpenseReviewView(ListView):
             # Success message
             messages.success(
                 request,
-                f"{len(transaction_ids)} Transaktion(en) erfolgreich zu Ausgabe zusammengefasst: {total_amount:.2f} €",
+                ngettext(
+                    "%(count)s transaction successfully grouped into expense: %(amount)s €",
+                    "%(count)s transactions successfully grouped into expense: %(amount)s €",
+                    len(transaction_ids),
+                )
+                % {"count": len(transaction_ids), "amount": f"{total_amount:.2f}"},
             )
             return redirect("bank_expense_review")
 
@@ -607,7 +649,7 @@ class BankExpenseReviewView(ListView):
             # Mark selected transactions as ignored
             transaction_ids = request.POST.getlist("transactions")
             if not transaction_ids:
-                messages.error(request, "Bitte wähle mindestens eine Transaktion aus.")
+                messages.error(request, _("Please select at least one transaction."))
                 return redirect("bank_expense_review")
 
             count = BankTransaction.objects.filter(
@@ -619,7 +661,15 @@ class BankExpenseReviewView(ListView):
                 processed=True,
             )
 
-            messages.success(request, f"{count} Transaktion(en) ignoriert.")
+            messages.success(
+                request,
+                ngettext(
+                    "%(count)s transaction ignored.",
+                    "%(count)s transactions ignored.",
+                    count,
+                )
+                % {"count": count},
+            )
             return redirect("bank_expense_review")
 
         return redirect("bank_expense_review")
@@ -663,7 +713,7 @@ class BankWithdrawalReviewView(ListView):
         if action == "group":
             transaction_ids = request.POST.getlist("transactions")
             if not transaction_ids:
-                messages.error(request, "Bitte wähle mindestens eine Transaktion aus.")
+                messages.error(request, _("Please select at least one transaction."))
                 return redirect("bank_withdrawal_review")
 
             transactions = BankTransaction.objects.filter(
@@ -672,7 +722,7 @@ class BankWithdrawalReviewView(ListView):
             )
 
             if not transactions.exists():
-                messages.error(request, "Keine Transaktionen gefunden.")
+                messages.error(request, _("No transactions found."))
                 return redirect("bank_withdrawal_review")
 
             category = request.POST.get("category", "salary")
@@ -725,14 +775,19 @@ class BankWithdrawalReviewView(ListView):
 
             messages.success(
                 request,
-                f"{len(transaction_ids)} Transaktion(en) erfolgreich zu Entnahme zusammengefasst: {total_amount:.2f} €",
+                ngettext(
+                    "%(count)s transaction successfully grouped into withdrawal: %(amount)s €",
+                    "%(count)s transactions successfully grouped into withdrawal: %(amount)s €",
+                    len(transaction_ids),
+                )
+                % {"count": len(transaction_ids), "amount": f"{total_amount:.2f}"},
             )
             return redirect("bank_withdrawal_review")
 
         elif action == "ignore":
             transaction_ids = request.POST.getlist("transactions")
             if not transaction_ids:
-                messages.error(request, "Bitte wähle mindestens eine Transaktion aus.")
+                messages.error(request, _("Please select at least one transaction."))
                 return redirect("bank_withdrawal_review")
 
             transactions_qs = BankTransaction.objects.filter(
@@ -756,7 +811,15 @@ class BankWithdrawalReviewView(ListView):
                 linked_withdrawal=None,
             )
 
-            messages.success(request, f"{count} Transaktion(en) ignoriert.")
+            messages.success(
+                request,
+                ngettext(
+                    "%(count)s transaction ignored.",
+                    "%(count)s transactions ignored.",
+                    count,
+                )
+                % {"count": count},
+            )
             return redirect("bank_withdrawal_review")
 
         return redirect("bank_withdrawal_review")

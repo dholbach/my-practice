@@ -13,6 +13,23 @@ from .practice_days import HomeOfficeDayCalculator, PracticeDayCalculator
 from .revenue_helpers import RevenueCalculator
 
 
+def available_data_years(practice, include_expenses: bool = True) -> list[int]:
+    """
+    Return a descending list of years that have Invoice data for the practice.
+
+    If include_expenses is True (the default), years from CompanyExpense records
+    are merged in too — useful for tax views that cover both income and expenses.
+    """
+    years = {
+        d.year for d in Invoice.objects.filter(practice=practice).dates("invoice_date", "year")
+    }
+    if include_expenses:
+        years |= {
+            d.year for d in CompanyExpense.objects.filter(practice=practice).dates("date", "year")
+        }
+    return sorted(years, reverse=True)
+
+
 @dataclass
 class PracticeSplitCalc:
     """Revenue and session-day split ratios for this practice in a multi-practice context."""
@@ -148,20 +165,7 @@ class TaxYearContextBuilder:
         }
 
     def _build_available_years(self) -> dict:
-        years = sorted(
-            {
-                d.year
-                for d in Invoice.objects.filter(practice=self.practice).dates(
-                    "invoice_date", "year"
-                )
-            }
-            | {
-                d.year
-                for d in CompanyExpense.objects.filter(practice=self.practice).dates("date", "year")
-            },
-            reverse=True,
-        )
-        return {"available_years": years}
+        return {"available_years": available_data_years(self.practice)}
 
     def _build_split_context(self) -> dict:
         ps = self._practice_split

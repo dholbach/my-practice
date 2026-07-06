@@ -5,6 +5,7 @@ Includes OAuth2 flow and event approval/import functionality.
 
 import json
 from datetime import datetime
+from decimal import Decimal
 
 from django.contrib import messages
 from django.db.models import Count, Exists, OuterRef
@@ -12,9 +13,11 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, ServiceType
+from ..utils.billing_helpers import resolve_session_rate
 from ..utils.calendar_event_processor import (
     CalendarImportProcessor,
     build_user_overrides,
@@ -70,11 +73,11 @@ def calendar_oauth2callback(request: HttpRequest) -> HttpResponse:
         practice = getattr(request, "current_practice", None)
         GoogleCalendarOAuth.save_token(flow.credentials, practice=practice)
 
-        messages.success(request, "✅ Google Calendar erfolgreich verbunden!")
+        messages.success(request, _("✅ Google Calendar connected successfully!"))
         return redirect("calendar_import")
 
     except Exception as e:
-        messages.error(request, f"Fehler bei der Autorisierung: {str(e)}")
+        messages.error(request, _("Authorization error: %(error)s") % {"error": str(e)})
         return redirect("dashboard")
 
 
@@ -82,7 +85,7 @@ def calendar_import(request: HttpRequest) -> HttpResponse:
     """Show calendar import interface — list events from Google Calendar and allow import."""
     service = GoogleCalendarOAuth.get_service()
     if not service:
-        messages.warning(request, "Bitte verbinde zuerst deinen Google Calendar.")
+        messages.warning(request, _("Please connect your Google Calendar first."))
         return render(request, "my_practice/calendar_connect.html")
 
     start_date, end_date = parse_date_range(request)
@@ -90,7 +93,7 @@ def calendar_import(request: HttpRequest) -> HttpResponse:
     try:
         praxis_calendar_id = find_calendar_by_name(service, "Praxis")
         if not praxis_calendar_id:
-            messages.warning(request, "Kein Kalender mit dem Namen 'Praxis' gefunden.")
+            messages.warning(request, _("No calendar named 'Praxis' found."))
             return render(
                 request,
                 "my_practice/calendar_import.html",
@@ -140,7 +143,7 @@ def calendar_import(request: HttpRequest) -> HttpResponse:
         return render(request, "my_practice/calendar_import.html", context)
 
     except Exception as e:
-        messages.error(request, f"Fehler beim Laden der Kalender-Einträge: {str(e)}")
+        messages.error(request, _("Error loading calendar events: %(error)s") % {"error": str(e)})
         return redirect("dashboard")
 
 
@@ -154,7 +157,7 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
         data = json.loads(request.body)
         events_to_process = data.get("events", [])
         if not events_to_process:
-            return JsonResponse({"success": False, "error": "Keine Events ausgewählt"}, status=400)
+            return JsonResponse({"success": False, "error": _("No events selected")}, status=400)
 
         user_overrides = build_user_overrides(events_to_process)
         processor = CalendarImportProcessor(request)
@@ -169,12 +172,12 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
             service = GoogleCalendarOAuth.get_service()
             if not service:
                 return JsonResponse(
-                    {"success": False, "error": "Google Calendar nicht verbunden"}, status=401
+                    {"success": False, "error": _("Google Calendar not connected")}, status=401
                 )
             praxis_calendar_id = find_calendar_by_name(service, "Praxis")
             if not praxis_calendar_id:
                 return JsonResponse(
-                    {"success": False, "error": "Kalender 'Praxis' nicht gefunden"}, status=404
+                    {"success": False, "error": _("Calendar 'Praxis' not found")}, status=404
                 )
             try:
                 parsed_events = processor.fetch_specific_events(
@@ -182,7 +185,10 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
                 )
             except Exception as e:
                 return JsonResponse(
-                    {"success": False, "error": f"Fehler beim Laden der Events: {str(e)}"},
+                    {
+                        "success": False,
+                        "error": _("Error loading events: %(error)s") % {"error": str(e)},
+                    },
                     status=500,
                 )
 
@@ -217,7 +223,7 @@ def calendar_approval_queue(request: HttpRequest) -> HttpResponse:
 
     practice = getattr(request, "current_practice", None)
     if not practice:
-        messages.error(request, "Keine aktive Praxis gefunden.")
+        messages.error(request, _("No active practice found."))
         return redirect("dashboard")
 
     # Subquery: does an InvoiceItem already exist for this client/date/duration?
@@ -309,9 +315,7 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
         invoice_id = data.get("invoice_id")
 
         if not event_ids:
-            return JsonResponse(
-                {"success": False, "error": "Keine Termine ausgewählt."}, status=400
-            )
+            return JsonResponse({"success": False, "error": _("No events selected.")}, status=400)
 
         practice = getattr(request, "current_practice", None)
         events = PendingCalendarEvent.objects.filter(
@@ -407,7 +411,7 @@ def calendar_queue_skip(request: HttpRequest, pk: int) -> JsonResponse:
         event.save(update_fields=["status"])
         return JsonResponse({"success": True, "event_id": pk})
     except PendingCalendarEvent.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Termin nicht gefunden."}, status=404)
+        return JsonResponse({"success": False, "error": _("Event not found.")}, status=404)
 
 
 @require_POST
@@ -422,7 +426,6 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
     For "ignore", marks the event as SKIPPED.
     Redirects back to the client detail page.
     """
-    from decimal import Decimal
     from datetime import datetime as dt
 
     from django.contrib import messages
@@ -441,7 +444,7 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
             "matched_client", "suggested_service_type"
         ).get(pk=pk, practice=practice, status=PendingCalendarEvent.Status.PENDING)
     except PendingCalendarEvent.DoesNotExist:
-        messages.error(request, "Termin nicht gefunden.")
+        messages.error(request, _("Event not found."))
         return redirect("client_list")
 
     client = event.matched_client
@@ -453,16 +456,17 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
         event.status = PendingCalendarEvent.Status.SKIPPED
         event.save(update_fields=["status"])
         messages.success(
-            request, f"Termin am {event.event_date.strftime('%d.%m.%Y')} übersprungen."
+            request,
+            _("Event on %(date)s skipped.") % {"date": event.event_date.strftime("%d.%m.%Y")},
         )
         return redirect_target
 
     if action not in ("current_invoice", "new_invoice"):
-        messages.error(request, "Unbekannte Aktion.")
+        messages.error(request, _("Unknown action."))
         return redirect_target
 
     if not client:
-        messages.error(request, "Kein Klient für diesen Termin zugeordnet.")
+        messages.error(request, _("No client assigned to this event."))
         return redirect("calendar_approval_queue")
 
     # Resolve service type — prefer calendar match, fall back to default 60min
@@ -476,29 +480,33 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
         ).first()
 
     if service_type is None:
-        messages.error(request, "Kein passender Leistungstyp gefunden.")
+        messages.error(request, _("No matching service type found."))
         return redirect_target
 
-    # Determine rate
-    if service_type.code == "therapy_free":
-        rate = Decimal("0")
-    elif service_type.default_duration >= 90:
-        rate = Decimal(str(client.hourly_rate_90 or client.hourly_rate_60 or 0))
-    else:
-        rate = Decimal(str(client.hourly_rate_60 or 0))
+    rate = resolve_session_rate(client, service_type)
 
     if rate == Decimal("0") and service_type.code != "therapy_free":
-        messages.error(request, f"Kein Stundensatz für {client.client_code} hinterlegt.")
+        messages.error(
+            request,
+            _("No hourly rate set for %(code)s.") % {"code": client.client_code},
+        )
         return redirect_target
 
-    # Guard against duplicates
-    if InvoiceItem.objects.filter(
-        invoice__client=client,
-        session__session_date=event.event_date,
-        service_type=service_type,
-    ).exists():
+    # Guard against duplicates — exclude cancelled invoices so re-import after
+    # cancellation works correctly.
+    if (
+        InvoiceItem.objects.filter(
+            invoice__client=client,
+            session__session_date=event.event_date,
+            service_type=service_type,
+        )
+        .exclude(invoice__status=Invoice.Status.CANCELLED)
+        .exists()
+    ):
         messages.warning(
-            request, f"Sitzung am {event.event_date.strftime('%d.%m.%Y')} ist bereits abgerechnet."
+            request,
+            _("Session on %(date)s is already billed.")
+            % {"date": event.event_date.strftime("%d.%m.%Y")},
         )
         return redirect_target
 
@@ -517,7 +525,7 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
 
     try:
         with transaction.atomic():
-            session, _ = Session.objects.get_or_create(
+            session, _created = Session.objects.get_or_create(
                 client=client,
                 session_date=event.event_date,
                 session_time=event.event_time,
@@ -529,8 +537,9 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
             InvoiceItem.objects.create(
                 invoice=invoice,
                 service_type=service_type,
-                quantity=1,
+                quantity=Decimal("1.00"),
                 rate=rate,
+                total=rate,
                 session=session,
             )
             event.status = PendingCalendarEvent.Status.IMPORTED
@@ -540,9 +549,10 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
 
         messages.success(
             request,
-            f"Termin am {event.event_date.strftime('%d.%m.%Y')} zu Rechnung {invoice.invoice_number} hinzugefügt.",
+            _("Event on %(date)s added to invoice %(number)s.")
+            % {"date": event.event_date.strftime("%d.%m.%Y"), "number": invoice.invoice_number},
         )
     except Exception as e:
-        messages.error(request, f"Fehler beim Import: {e}")
+        messages.error(request, _("Import error: %(error)s") % {"error": e})
 
     return redirect_target
