@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from django.db.models import Max, QuerySet, Sum
 from django.urls import reverse
-from django.utils.translation import gettext
+from django.utils.translation import gettext, ngettext, pgettext
 from django.utils.translation import gettext_lazy as _
 
 from ..models import (
@@ -22,11 +22,11 @@ from ..models import (
 )
 
 # Tag labels for action-queue display — kept here alongside the tag logic
-_TAG_LABELS: dict[str, str] = {
-    "follow-up": "Follow-up",
-    "pause": "Pause",
-    "ending": "Abschluss",
-    "missing-session-log": "Protokoll fehlt",
+_TAG_LABELS: dict[str, object] = {
+    "follow-up": _("Follow-up"),
+    "pause": _("Pause"),
+    "ending": _("Completion"),
+    "missing-session-log": _("Log missing"),
 }
 
 
@@ -208,11 +208,11 @@ class ClientAttentionWidgetBuilder:
             {
                 "priority": 2,
                 "category": "CLIENT",
-                "category_label": "Klient",
+                "category_label": gettext("Client"),
                 "summary": f"{client.client_code} · {_TAG_LABELS.get(tag_name, tag_name)}",
                 "sub_text": "",
                 "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-                "action_label": "Öffnen",
+                "action_label": gettext("Open"),
                 "_sort_key": client.client_code,
             }
             for tag_name, data in tagged_clients.items()
@@ -236,22 +236,24 @@ class ClientAttentionWidgetBuilder:
                 last_date = last_sessions.get(client.pk)
                 if last_date:
                     days = (today - last_date).days
-                    summary = f"{client.client_code} · keine Sitzung seit {days} T"
-                    sub = f"zuletzt {last_date.strftime('%d.%m.%Y')}"
+                    summary = f"{client.client_code} · " + gettext("no session for %(days)s d") % {
+                        "days": days
+                    }
+                    sub = gettext("last %(date)s") % {"date": last_date.strftime("%d.%m.%Y")}
                     sort_key = f"inactive_{999 - days:04d}"
                 else:
-                    summary = f"{client.client_code} · noch keine Sitzung"
+                    summary = f"{client.client_code} · " + gettext("no session yet")
                     sub = ""
                     sort_key = "inactive_9999"
                 items.append(
                     {
                         "priority": 2,
                         "category": "CLIENT",
-                        "category_label": "Klient",
+                        "category_label": gettext("Client"),
                         "summary": summary,
                         "sub_text": sub,
                         "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-                        "action_label": "Kontakt",
+                        "action_label": gettext("Contact"),
                         "_sort_key": sort_key,
                     }
                 )
@@ -350,11 +352,13 @@ class InvoiceActionsWidgetBuilder:
                 {
                     "priority": 1,
                     "category": "INVOICE",
-                    "category_label": "Rechnung",
-                    "summary": f"{n_overdue} überfällig · {_fmt_eur(total)}",
-                    "sub_text": f"{codes} · >{oldest_age} Tage",
+                    "category_label": pgettext("action category", "Invoice"),
+                    "summary": gettext("%(n)s overdue · %(total)s")
+                    % {"n": n_overdue, "total": _fmt_eur(total)},
+                    "sub_text": gettext("%(codes)s · >%(days)s d")
+                    % {"codes": codes, "days": oldest_age},
                     "action_url": reverse("invoice_list") + "?status=sent",
-                    "action_label": "Mahnen",
+                    "action_label": gettext("Chase"),
                     "_sort_key": "0_overdue",
                 }
             )
@@ -363,16 +367,16 @@ class InvoiceActionsWidgetBuilder:
         n_drafts = len(drafts)
         if n_drafts > 0:
             nums = _join_truncated([inv.invoice_number for inv in drafts], n_drafts, sep=" · ")
-            label = "Rechnung bereit" if n_drafts == 1 else "Rechnungen bereit"
+            label = ngettext("invoice ready", "invoices ready", n_drafts)
             items.append(
                 {
                     "priority": 2,
                     "category": "DRAFT",
-                    "category_label": "Entwurf",
-                    "summary": f"{n_drafts} {label} zum Senden",
+                    "category_label": gettext("Draft"),
+                    "summary": gettext("%(n)s %(label)s to send") % {"n": n_drafts, "label": label},
                     "sub_text": nums,
                     "action_url": reverse("invoice_list") + "?status=draft",
-                    "action_label": "Fertigstellen",
+                    "action_label": pgettext("action label", "Complete"),
                     "_sort_key": "1_drafts",
                 }
             )
@@ -446,19 +450,19 @@ class BankImportReminderWidgetBuilder:
             return []
         days = ctx["days_since_import"]
         summary = (
-            f"Letzter Bank-Import vor {days} Tagen"
+            gettext("Last bank import %(days)s days ago") % {"days": days}
             if days is not None
-            else "Noch keine Kontoauszüge importiert"
+            else gettext("No bank statements imported yet")
         )
         return [
             {
                 "priority": 3,
                 "category": "OPS",
-                "category_label": "Betrieb",
+                "category_label": pgettext("action category", "Operations"),
                 "summary": summary,
                 "sub_text": "",
                 "action_url": ctx["import_url"],
-                "action_label": "Importieren",
+                "action_label": gettext("Import"),
                 "_sort_key": "",
             }
         ]
@@ -555,17 +559,17 @@ class ChecklistWidgetBuilder:
         if not entries:
             return []
         n = len(entries)
-        label = "Checkliste fällig" if n == 1 else "Checklisten fällig"
+        label = ngettext("checklist due", "checklists due", n)
         sub = _join_truncated([e["label"] for e in entries], n, sep=" · ", max_shown=3)
         return [
             {
                 "priority": 2,
                 "category": "OPS",
-                "category_label": "Betrieb",
-                "summary": f"{n} {label}",
+                "category_label": pgettext("action category", "Operations"),
+                "summary": gettext("%(n)s %(label)s") % {"n": n, "label": label},
                 "sub_text": sub,
                 "action_url": reverse("checklist", kwargs={"checklist_type": entries[0]["type"]}),
-                "action_label": "Ansehen",
+                "action_label": gettext("View"),
                 "_sort_key": str(entries[0]["period_start"]),
             }
         ]
@@ -688,11 +692,12 @@ class TaxQuarterWidgetBuilder:
             {
                 "priority": 1,
                 "category": "TAX",
-                "category_label": "Steuer",
-                "summary": f"Q{ctx['current_quarter']} {current_year} · Vorauszahlung fehlt",
-                "sub_text": f"Umsatz: {_fmt_eur(revenue)}",
+                "category_label": pgettext("action category", "Tax"),
+                "summary": gettext("Q%(q)s %(year)s · prepayment missing")
+                % {"q": ctx["current_quarter"], "year": current_year},
+                "sub_text": gettext("Revenue: %(amount)s") % {"amount": _fmt_eur(revenue)},
                 "action_url": ctx["add_payment_url"],
-                "action_label": "Eintragen",
+                "action_label": gettext("Record"),
                 "_sort_key": "0_tax",
             }
         ]
