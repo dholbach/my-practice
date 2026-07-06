@@ -4,7 +4,10 @@
       "Bash(git -C * status)",
       "Bash(git -C * diff *)",
       "Bash(git -C * log *)",
-      "Bash(./dev.py logs *)"
+      "Bash(./dev.py logs *)",
+      "Bash(./dev.py test *)",
+      "Bash(./dev.py test)",
+      "Bash(./dev.py lint)"
     ]
   }
 }
