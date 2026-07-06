@@ -124,23 +124,30 @@ class ClientAttentionWidgetBuilder:
             "missing-session-log",
         ]
 
-        tagged_clients = {}
-        for tag_name in attention_tags:
-            try:
-                tag = ClientTag.objects.get(name=tag_name)
-                clients = Client.objects.filter(practice=self.practice, tags=tag).prefetch_related(
-                    "tags"
-                )
-                if clients.exists():
-                    tagged_clients[tag_name] = {
-                        "tag": tag,
-                        "clients": clients,
-                        "count": clients.count(),
-                    }
-            except ClientTag.DoesNotExist:
-                continue
+        tags_by_name = {tag.name: tag for tag in ClientTag.objects.filter(name__in=attention_tags)}
+        clients_by_tag: dict[str, list[Client]] = {
+            name: [] for name in attention_tags if name in tags_by_name
+        }
 
-        return tagged_clients
+        clients = (
+            Client.objects.filter(practice=self.practice, tags__name__in=attention_tags)
+            .prefetch_related("tags")
+            .distinct()
+        )
+        for client in clients:
+            for tag in client.tags.all():
+                if tag.name in clients_by_tag:
+                    clients_by_tag[tag.name].append(client)
+
+        return {
+            name: {
+                "tag": tags_by_name[name],
+                "clients": members,
+                "count": len(members),
+            }
+            for name, members in clients_by_tag.items()
+            if members
+        }
 
     def build_context(self) -> dict:
         """
@@ -193,19 +200,6 @@ class InvoiceActionsWidgetBuilder:
             .order_by("invoice_date")  # Oldest first to prioritize overdue
         )
 
-    def _get_overdue_invoices(self) -> QuerySet:
-        """Get invoices overdue (sent > 30 days ago, not paid)"""
-        cutoff_date = date.today() - timedelta(days=30)
-        return (
-            Invoice.objects.filter(
-                practice=self.practice,
-                status="sent",
-                invoice_date__lt=cutoff_date,
-            )
-            .select_related("client")
-            .order_by("invoice_date")
-        )
-
     def _get_draft_invoices(self) -> QuerySet:
         """Get draft invoices ready to send, annotated with last session date"""
         return (
@@ -221,31 +215,33 @@ class InvoiceActionsWidgetBuilder:
 
         Returns:
             dict with:
-                - unpaid_invoices: QuerySet (limited to 5)
+                - unpaid_invoices: list (limited to 5)
                 - unpaid_count: int
                 - unpaid_total: Decimal
-                - overdue_invoices: QuerySet (limited to 5)
+                - overdue_invoices: list (limited to 5)
                 - overdue_count: int
-                - draft_invoices: QuerySet (limited to 5)
+                - draft_invoices: list (limited to 5)
                 - draft_count: int
         """
-        unpaid = self._get_unpaid_invoices()
-        overdue = self._get_overdue_invoices()
-        drafts = self._get_draft_invoices()
+        # Evaluate each queryset once; overdue is a subset of unpaid, so it is
+        # derived in Python instead of hitting the DB again
+        unpaid = list(self._get_unpaid_invoices())
+        cutoff_date = date.today() - timedelta(days=30)
+        overdue = [inv for inv in unpaid if inv.invoice_date < cutoff_date]
+        drafts = list(self._get_draft_invoices())
 
-        # Calculate totals from full querysets before slicing
         unpaid_total = sum(inv.calculate_total() for inv in unpaid)
         overdue_total = sum(inv.calculate_total() for inv in overdue)
 
         return {
             "unpaid_invoices": unpaid[:5],
-            "unpaid_count": unpaid.count(),
+            "unpaid_count": len(unpaid),
             "unpaid_total": unpaid_total,
             "overdue_invoices": overdue[:5],
-            "overdue_count": overdue.count(),
+            "overdue_count": len(overdue),
             "overdue_total": overdue_total,
             "draft_invoices": drafts[:5],
-            "draft_count": drafts.count(),
+            "draft_count": len(drafts),
         }
 
 
