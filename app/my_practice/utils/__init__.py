@@ -43,6 +43,12 @@ from .date_helpers import DateRangeHelper
 from .financial_list_context_builder import FinancialListContextBuilder
 from .import_helpers import build_client_map
 from .invoice_filter_helper import InvoiceFilterHelper
+from .billing_helpers import (
+    build_service_type_map,
+    create_invoice_item_for_session,
+    is_session_already_billed,
+    resolve_session_rate,
+)
 from .invoice_helpers import get_next_invoice_number
 from .practice_days import FahrtkostenResult, PracticeDayCalculator
 from .practice_helpers import (
@@ -67,6 +73,10 @@ __all__ = [
     "count_sessions_rounded",
     "apply_remainder_distribution",
     "get_next_invoice_number",
+    "build_service_type_map",
+    "create_invoice_item_for_session",
+    "is_session_already_billed",
+    "resolve_session_rate",
     "RevenueCalculator",
     "DateRangeHelper",
     "format_month_key",

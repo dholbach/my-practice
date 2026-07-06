@@ -4,14 +4,13 @@ Invoice-related views (CRUD operations).
 
 import logging
 from datetime import date
-from decimal import Decimal
 from typing import Any
 
 from dateutil.relativedelta import relativedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Case, Count, DecimalField, Exists, F, OuterRef, Q, QuerySet, Sum, When
+from django.db.models import Case, Count, DecimalField, Exists, F, OuterRef, QuerySet, Sum, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.html import format_html
@@ -19,9 +18,10 @@ from django.utils.translation import gettext_lazy as _, ngettext
 from django.views.generic import DetailView
 
 from ..invoice_forms import InvoiceForm
-from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, ServiceType, Session
+from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, Session
 from ..signals import recalculate_invoice_total
 from ..utils import RevenueCalculator, get_next_invoice_number
+from ..utils.billing_helpers import build_service_type_map, create_invoice_item_for_session
 from ..utils.calendar_preflight import CalendarPreflightChecker
 from ..utils.gebueh_helpers import build_gebueh_blocks, get_arbeitsdiagnose
 from ..utils.invoice_filter_helper import InvoiceFilterHelper
@@ -461,45 +461,15 @@ def add_sessions_to_invoice(request, pk):
         cancelled=False,
     )
 
-    # Pick service type by duration: prefer exact match on default_duration, fall back
-    # to the first available type for the practice.
-    service_types = {
-        st.default_duration: st
-        for st in ServiceType.objects.filter(Q(practice=practice) | Q(practice__isnull=True))
-    }
-    fallback_service_type = next(iter(service_types.values())) if service_types else None
+    service_type_map = build_service_type_map(practice)
+    fallback_service_type = next(iter(service_type_map.values()), None)
 
     added = 0
     for session in sessions:
-        # Skip if already on a non-cancelled invoice (race condition guard).
-        already_billed = (
-            InvoiceItem.objects.filter(
-                session=session,
-            )
-            .exclude(invoice__status=Invoice.Status.CANCELLED)
-            .exists()
-        )
-        if already_billed:
-            continue
-
-        service_type = service_types.get(session.duration, fallback_service_type)
-        if service_type is None:
-            continue
-
-        rate = (
-            invoice.client.hourly_rate_90
-            if session.duration >= 90
-            else invoice.client.hourly_rate_60
-        )
-        InvoiceItem.objects.create(
-            invoice=invoice,
-            session=session,
-            service_type=service_type,
-            rate=rate,
-            quantity=Decimal("1.00"),
-            total=rate,
-        )
-        added += 1
+        if create_invoice_item_for_session(
+            invoice, session, service_type_map, fallback_service_type
+        ):
+            added += 1
 
     if added:
         recalculate_invoice_total(invoice)
@@ -546,11 +516,8 @@ def create_invoice_with_sessions(request):
         next_url = request.POST.get("next")
         return redirect(next_url or "invoice_list")
 
-    service_types = {
-        st.default_duration: st
-        for st in ServiceType.objects.filter(Q(practice=practice) | Q(practice__isnull=True))
-    }
-    fallback_service_type = next(iter(service_types.values())) if service_types else None
+    service_type_map = build_service_type_map(practice)
+    fallback_service_type = next(iter(service_type_map.values()), None)
 
     with transaction.atomic():
         invoice = Invoice.objects.create(
@@ -560,23 +527,19 @@ def create_invoice_with_sessions(request):
             status=Invoice.Status.DRAFT,
             invoice_date=date.today(),
         )
-        for session in sessions:
-            service_type = service_types.get(session.duration, fallback_service_type)
-            rate = client.hourly_rate_90 if session.duration >= 90 else client.hourly_rate_60
-            InvoiceItem.objects.create(
-                invoice=invoice,
-                session=session,
-                service_type=service_type,
-                rate=rate,
-                quantity=Decimal("1.00"),
-                total=rate,
+        added = sum(
+            1
+            for session in sessions
+            if create_invoice_item_for_session(
+                invoice, session, service_type_map, fallback_service_type
             )
+        )
         recalculate_invoice_total(invoice)
 
     msg_template = ngettext(
         'Invoice <a href="{}">{}</a> with {} session created.',
         'Invoice <a href="{}">{}</a> with {} sessions created.',
-        len(sessions),
+        added,
     )
     messages.success(
         request,
@@ -584,7 +547,7 @@ def create_invoice_with_sessions(request):
             msg_template,
             reverse("invoice_detail", kwargs={"pk": invoice.pk}),
             invoice.invoice_number,
-            len(sessions),
+            added,
         ),
     )
     next_url = request.POST.get("next")

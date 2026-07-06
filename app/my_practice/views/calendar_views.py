@@ -5,6 +5,7 @@ Includes OAuth2 flow and event approval/import functionality.
 
 import json
 from datetime import datetime
+from decimal import Decimal
 
 from django.contrib import messages
 from django.db.models import Count, Exists, OuterRef
@@ -15,6 +16,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, ServiceType
+from ..utils.billing_helpers import resolve_session_rate
 from ..utils.calendar_event_processor import (
     CalendarImportProcessor,
     build_user_overrides,
@@ -422,7 +424,6 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
     For "ignore", marks the event as SKIPPED.
     Redirects back to the client detail page.
     """
-    from decimal import Decimal
     from datetime import datetime as dt
 
     from django.contrib import messages
@@ -479,24 +480,23 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
         messages.error(request, "Kein passender Leistungstyp gefunden.")
         return redirect_target
 
-    # Determine rate
-    if service_type.code == "therapy_free":
-        rate = Decimal("0")
-    elif service_type.default_duration >= 90:
-        rate = Decimal(str(client.hourly_rate_90 or client.hourly_rate_60 or 0))
-    else:
-        rate = Decimal(str(client.hourly_rate_60 or 0))
+    rate = resolve_session_rate(client, service_type)
 
     if rate == Decimal("0") and service_type.code != "therapy_free":
         messages.error(request, f"Kein Stundensatz für {client.client_code} hinterlegt.")
         return redirect_target
 
-    # Guard against duplicates
-    if InvoiceItem.objects.filter(
-        invoice__client=client,
-        session__session_date=event.event_date,
-        service_type=service_type,
-    ).exists():
+    # Guard against duplicates — exclude cancelled invoices so re-import after
+    # cancellation works correctly.
+    if (
+        InvoiceItem.objects.filter(
+            invoice__client=client,
+            session__session_date=event.event_date,
+            service_type=service_type,
+        )
+        .exclude(invoice__status=Invoice.Status.CANCELLED)
+        .exists()
+    ):
         messages.warning(
             request, f"Sitzung am {event.event_date.strftime('%d.%m.%Y')} ist bereits abgerechnet."
         )
@@ -529,8 +529,9 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
             InvoiceItem.objects.create(
                 invoice=invoice,
                 service_type=service_type,
-                quantity=1,
+                quantity=Decimal("1.00"),
                 rate=rate,
+                total=rate,
                 session=session,
             )
             event.status = PendingCalendarEvent.Status.IMPORTED
