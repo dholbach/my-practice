@@ -54,10 +54,34 @@ def save_tax_year_note(request: HttpRequest) -> JsonResponse:
 
     note_text = request.POST.get("note", "").strip()
 
+    defaults: dict = {"allocation_note": note_text}
+
+    raw_amount = request.POST.get("settlement_amount", "").strip()
+    if raw_amount != "":
+        try:
+            from decimal import Decimal, InvalidOperation
+
+            defaults["settlement_amount"] = Decimal(raw_amount.replace(",", "."))
+        except InvalidOperation:
+            return JsonResponse({"error": _("Invalid amount")}, status=400)
+    elif "settlement_amount" in request.POST:
+        defaults["settlement_amount"] = None
+
+    raw_date = request.POST.get("settlement_date", "").strip()
+    if raw_date != "":
+        from datetime import date as _date
+
+        try:
+            defaults["settlement_date"] = _date.fromisoformat(raw_date)
+        except ValueError:
+            return JsonResponse({"error": _("Invalid date")}, status=400)
+    elif "settlement_date" in request.POST:
+        defaults["settlement_date"] = None
+
     obj, _created = TaxYearNote.objects.update_or_create(
         practice=practice,
         year=year,
-        defaults={"allocation_note": note_text},
+        defaults=defaults,
     )
     return JsonResponse({"saved": True, "updated_at": obj.updated_at.strftime("%d.%m.%Y %H:%M")})
 
@@ -152,6 +176,13 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
 
     available_years = available_data_years(practice, include_expenses=False) or [today.year]
 
+    tax_note = (
+        TaxYearNote.objects.filter(practice=practice, year=year).first() if practice else None
+    )
+    settlement_amount = tax_note.settlement_amount if tax_note else None
+    settlement_date = tax_note.settlement_date if tax_note else None
+    net_tax_position = total_tax_paid + settlement_amount if settlement_amount is not None else None
+
     return render(
         request,
         "my_practice/tax_quarter_overview.html",
@@ -165,5 +196,9 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
             "total_net_profit": total_revenue - total_expenses,
             "current_quarter": current_quarter,
             "add_payment_url": reverse("withdrawal_create") + "?category=tax",
+            "settlement_amount": settlement_amount,
+            "settlement_date": settlement_date,
+            "net_tax_position": net_tax_position,
+            "save_note_url": reverse("save_tax_year_note"),
         },
     )

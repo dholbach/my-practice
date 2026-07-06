@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-06 15:13+0200\n"
+"POT-Creation-Date: 2026-07-06 16:56+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -888,13 +888,21 @@ msgstr ""
 msgid "Praxis '%(name)s' deaktiviert."
 msgstr ""
 
-#: my_practice/views/tax_views.py:45
+#: my_practice/views/tax_views.py:47
 msgid "No practice selected"
 msgstr "Keine Praxis ausgewählt"
 
-#: my_practice/views/tax_views.py:50 my_practice/views/tax_views.py:53
+#: my_practice/views/tax_views.py:52 my_practice/views/tax_views.py:55
 msgid "Invalid year"
 msgstr "Ungültiges Jahr"
+
+#: my_practice/views/tax_views.py:67
+msgid "Invalid amount"
+msgstr "Ungültiger Betrag."
+
+#: my_practice/views/tax_views.py:77
+msgid "Invalid date"
+msgstr "Ungültiges Datum"
 
 #: templates/includes/client_card.html:19
 #: templates/my_practice/client_detail.html:670
@@ -935,6 +943,7 @@ msgid "No valid data available"
 msgstr "Keine gültigen Daten verfügbar"
 
 #: templates/my_practice/analytics.html:42
+#: templates/my_practice/tax_quarter_overview.html:76
 msgid "Period"
 msgstr "Zeitraum"
 
@@ -977,6 +986,7 @@ msgstr "Zurücksetzen"
 
 #: templates/my_practice/analytics.html:101
 #: templates/my_practice/analytics.html:185
+#: templates/my_practice/tax_quarter_overview.html:77
 msgid "Revenue"
 msgstr "Umsatz"
 
@@ -994,6 +1004,7 @@ msgstr "Kapazität"
 #: templates/my_practice/analytics.html:110
 #: templates/my_practice/analytics.html:139
 #: templates/my_practice/analytics.html:186
+#: templates/my_practice/tax_quarter_overview.html:78
 msgid "Expenses"
 msgstr "Ausgaben"
 
@@ -1138,6 +1149,7 @@ msgstr "Name"
 #: templates/my_practice/inquiry_confirm_delete.html:30
 #: templates/my_practice/invoice_detail.html:33
 #: templates/my_practice/revenue_report.html:55
+#: templates/my_practice/tax_quarter_overview.html:81
 msgid "Status"
 msgstr "Status"
 
@@ -1266,6 +1278,7 @@ msgid "4-Quarter Trends"
 msgstr "4-Quartals-Trends"
 
 #: templates/my_practice/analytics.html:590
+#: templates/my_practice/tax_quarter_overview.html:75
 msgid "Quarter"
 msgstr "Quartal"
 
@@ -1589,6 +1602,7 @@ msgstr "+ Supervision"
 #: templates/my_practice/client_detail.html:194
 #: templates/my_practice/client_detail.html:344
 #: templates/my_practice/gebueh_leistung_form.html:41
+#: templates/my_practice/tax_quarter_overview.html:189
 msgid "Save"
 msgstr "Speichern"
 
@@ -1672,6 +1686,7 @@ msgstr "Ideen für nächste Sitzung"
 #: templates/my_practice/inquiry_list.html:249
 #: templates/my_practice/invoice_detail.html:200
 #: templates/my_practice/practice_management.html:44
+#: templates/my_practice/tax_quarter_overview.html:170
 msgid "Edit"
 msgstr "Bearbeiten"
 
@@ -1710,6 +1725,7 @@ msgstr "Supervision"
 #: templates/my_practice/inquiry_form.html:191
 #: templates/my_practice/practice_form.html:298
 #: templates/my_practice/session_log_form.html:125
+#: templates/my_practice/tax_quarter_overview.html:191
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -3042,6 +3058,138 @@ msgstr "Aktualisieren"
 #: templates/my_practice/session_log_form.html:123
 msgid "Save protocol"
 msgstr "Protokoll speichern"
+
+#: templates/my_practice/tax_quarter_overview.html:6
+#: templates/my_practice/tax_quarter_overview.html:8
+msgid "Quarterly Tax Overview"
+msgstr "Steuer-Quartalsübersicht"
+
+#: templates/my_practice/tax_quarter_overview.html:9
+msgid "Advance payments & revenue per quarter"
+msgstr "Vorauszahlungen & Umsatz je Quartal"
+
+#: templates/my_practice/tax_quarter_overview.html:18
+msgid "Tax Year Summary (for tax return)"
+msgstr "Steuer-Jahresübersicht (für Steuererklärung)"
+
+#: templates/my_practice/tax_quarter_overview.html:25
+msgid "Year:"
+msgstr "Jahr:"
+
+#: templates/my_practice/tax_quarter_overview.html:37
+msgid "Total Revenue"
+msgstr "Gesamtumsatz"
+
+#: templates/my_practice/tax_quarter_overview.html:42
+msgid "Deductible Expenses"
+msgstr "Absetzbare Ausgaben"
+
+#: templates/my_practice/tax_quarter_overview.html:47
+msgid "Tax Advance Payments"
+msgstr "Steuervorauszahlungen"
+
+#: templates/my_practice/tax_quarter_overview.html:59
+#, python-format
+msgid "Download paid invoices %(year)s (ZIP)"
+msgstr "Bezahlte Rechnungen %(year)s herunterladen (ZIP)"
+
+#: templates/my_practice/tax_quarter_overview.html:65
+msgid "Record new tax advance payment"
+msgstr "Neue Steuervorauszahlung erfassen"
+
+#: templates/my_practice/tax_quarter_overview.html:70
+#, python-format
+msgid "Quarterly figures %(year)s"
+msgstr "Quartalszahlen %(year)s"
+
+#: templates/my_practice/tax_quarter_overview.html:79
+msgid "Net profit"
+msgstr "Nettogewinn"
+
+#: templates/my_practice/tax_quarter_overview.html:80
+msgid "Advance payment"
+msgstr "Vorauszahlung"
+
+#: templates/my_practice/tax_quarter_overview.html:89
+msgid "current"
+msgstr "aktuell"
+
+#: templates/my_practice/tax_quarter_overview.html:111
+msgid "Missing"
+msgstr "Fehlt"
+
+#: templates/my_practice/tax_quarter_overview.html:113
+msgid "Recorded"
+msgstr "Erfasst"
+
+#: templates/my_practice/tax_quarter_overview.html:115
+msgid "no revenue"
+msgstr "kein Umsatz"
+
+#: templates/my_practice/tax_quarter_overview.html:117
+msgid "pending"
+msgstr "ausstehend"
+
+#: templates/my_practice/tax_quarter_overview.html:125
+#, python-format
+msgid "Total %(year)s"
+msgstr "Gesamt %(year)s"
+
+#: templates/my_practice/tax_quarter_overview.html:138
+msgid "Tax Assessment (Steuerbescheid)"
+msgstr "Steuerbescheid"
+
+#: templates/my_practice/tax_quarter_overview.html:140
+msgid "Record the outcome of your annual tax return once the assessment notice arrives."
+msgstr "Erfassen Sie das Ergebnis Ihrer Steuererklärung, sobald der Bescheid vorliegt."
+
+#: templates/my_practice/tax_quarter_overview.html:148
+msgid "Additional payment (Nachzahlung)"
+msgstr "Nachzahlung ans Finanzamt"
+
+#: templates/my_practice/tax_quarter_overview.html:150
+msgid "Refund (Erstattung)"
+msgstr "Erstattung vom Finanzamt"
+
+#: templates/my_practice/tax_quarter_overview.html:156
+msgid "Assessment date:"
+msgstr "Bescheiddatum:"
+
+#: templates/my_practice/tax_quarter_overview.html:162
+msgid "Net tax paid (advance payments + settlement):"
+msgstr "Tatsächlich gezahlte Steuer (Vorauszahlungen + Bescheid):"
+
+#: templates/my_practice/tax_quarter_overview.html:167
+msgid "No assessment recorded yet."
+msgstr "Noch kein Steuerbescheid erfasst."
+
+#: templates/my_practice/tax_quarter_overview.html:170
+msgid "Record assessment"
+msgstr "Bescheid erfassen"
+
+#: templates/my_practice/tax_quarter_overview.html:177
+msgid "Amount (positive = you owe, negative = refund)"
+msgstr "Betrag (positiv = Nachzahlung, negativ = Erstattung)"
+
+#: templates/my_practice/tax_quarter_overview.html:184
+msgid "Assessment date"
+msgstr "Bescheiddatum"
+
+#: templates/my_practice/tax_quarter_overview.html:189
+msgid "Saving…"
+msgstr "Wird gespeichert …"
+
+#: templates/my_practice/tax_quarter_overview.html:193
+msgid "Remove"
+msgstr "Entfernen"
+
+#: templates/my_practice/tax_quarter_overview.html:238
+msgid "Save failed."
+msgstr "Speichern fehlgeschlagen."
+
+#: templates/my_practice/tax_quarter_overview.html:241
+msgid "Network error."
+msgstr "Netzwerkfehler."
 
 #~ msgid "Monthly Revenue (last 12 months)"
 #~ msgstr "Monatlicher Umsatz (letzte 12 Monate)"

@@ -1424,6 +1424,13 @@
   .totals-row td { font-weight: 600; border-top: 2px solid var(--color-border); }
   .add-payment-btn { display: inline-block; margin-bottom: 1.5rem; padding: 0.5rem 1.25rem; background: var(--color-primary); color: white; text-decoration: none; border-radius: 6px; font-size: 0.9rem; font-weight: 500; }
   .add-payment-btn:hover { opacity: 0.9; }
+  .settlement-display { display: flex; flex-direction: column; gap: 0.5rem; }
+  .settlement-result { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; padding: 0.75rem 1rem; border-radius: 8px; border-left: 4px solid; }
+  .settlement-result--owe    { background: rgba(230, 126, 34, 0.08); border-color: var(--color-warning); }
+  .settlement-result--refund { background: rgba(39, 174, 96, 0.08);  border-color: var(--color-success); }
+  .settlement-label  { font-size: 0.875rem; color: var(--color-text-secondary); }
+  .settlement-amount { font-size: 1.25rem; font-weight: 700; color: var(--color-text-primary); }
+  .settlement-net    { color: var(--color-text-secondary); }
 
   /* ── Checklist page ── */
   .checklist-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }

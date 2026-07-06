@@ -248,10 +248,11 @@ class ExpenseReceipt(models.Model):
 
 class TaxYearNote(models.Model):
     """
-    A short practitioner note recording the chosen allocation key for a tax year.
+    Per-year tax record: allocation note, and the annual settlement result.
 
     Stores things like "Revenue ratio 95/5 for 2025 — HO and commute split accordingly."
-    One note per practice per year; used as audit documentation.
+    Also records the Steuerbescheid outcome (Nachzahlung or Erstattung) once known.
+    One record per practice per year; used as audit documentation.
     """
 
     practice = models.ForeignKey(
@@ -268,6 +269,20 @@ class TaxYearNote(models.Model):
             "Dokumentierter Aufteilungsschluessel, z. B. "
             '"Einnahmenanteil 95/5 fuer 2025 - HO-Pauschale und Pendlerpauschale anteilig."'
         ),
+    )
+    settlement_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Steuernachzahlung / -erstattung",
+        help_text="Positiv = Nachzahlung ans Finanzamt, negativ = Erstattung vom Finanzamt",
+    )
+    settlement_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Bescheiddatum",
+        help_text="Datum des Steuerbescheids",
     )
     updated_at = models.DateTimeField(auto_now=True)
 
