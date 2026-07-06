@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-04 16:35+0200\n"
+"POT-Creation-Date: 2026-07-06 08:19+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -134,7 +134,32 @@ msgstr ""
 msgid "Leistungserfassungen"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:229
+#: my_practice/utils/dashboard_widgets.py:287
+msgid "No bank statements imported yet"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:303
+#, python-format
+msgid "Last import %(days)s days ago"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:324
+msgid "Monthly restore test"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:325
+msgid "Weekly backup"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:326
+msgid "MicroSD offsite backup (card A/B alternating, every 2 weeks)"
+msgstr ""
+
+#: my_practice/utils/dashboard_widgets.py:327
+msgid "Annual security review"
+msgstr ""
+
+#: my_practice/utils/practice_analysis.py:215
 #, fuzzy, python-format
 #| msgid "Working diagnosis"
 msgid "%(n)s working day"
@@ -142,69 +167,69 @@ msgid_plural "%(n)s working days"
 msgstr[0] "Working diagnosis"
 msgstr[1] "Working diagnosis"
 
-#: my_practice/utils/practice_analysis.py:268
+#: my_practice/utils/practice_analysis.py:254
 #, python-format
 msgid "📅 Analyzing %(label)s (%(days)s days)"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:279
+#: my_practice/utils/practice_analysis.py:265
 #, python-format
 msgid "👥 %(active)s of %(total)s clients active (%(pct)s%%)"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:299
+#: my_practice/utils/practice_analysis.py:285
 #, python-format
 msgid "⚠️ High concentration: Top 3 clients = %(pct)s%% of sessions"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:304
+#: my_practice/utils/practice_analysis.py:290
 #, python-format
 msgid "📊 Top 3 clients account for %(pct)s%% of sessions"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:312
+#: my_practice/utils/practice_analysis.py:298
 #, python-format
 msgid "📈 Average: %(avg)sh per active client"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:320
+#: my_practice/utils/practice_analysis.py:306
 #, python-format
 msgid "🌱 %(n)s new probatoric client (%(h)sh)"
 msgid_plural "🌱 %(n)s new probatoric clients (%(h)sh)"
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/utils/practice_analysis.py:331
+#: my_practice/utils/practice_analysis.py:317
 #, python-format
 msgid "💤 %(n)s dormant clients (no activity this period)"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:342
+#: my_practice/utils/practice_analysis.py:328
 #, python-format
 msgid "📉 Low utilization: Only %(pct)s%% capacity used (%(rem)sh available)"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:346
+#: my_practice/utils/practice_analysis.py:332
 #, python-format
 msgid "📊 Moderate utilization: %(pct)s%% capacity used (%(rem)sh available)"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:349
+#: my_practice/utils/practice_analysis.py:335
 #, python-format
 msgid "✅ Good utilization: %(pct)s%% capacity used (%(rem)sh available)"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:352
+#: my_practice/utils/practice_analysis.py:338
 #, python-format
 msgid "⚠️ High utilization: %(pct)s%% capacity used (only %(rem)sh remaining)"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:354
+#: my_practice/utils/practice_analysis.py:340
 #, python-format
 msgid "🔴 At/over capacity: %(pct)s%% utilized"
 msgstr ""
 
-#: my_practice/utils/practice_analysis.py:361
+#: my_practice/utils/practice_analysis.py:347
 #, python-format
 msgid "💰 Revenue opportunity: %(n)s client with sessions but no invoices"
 msgid_plural "💰 Revenue opportunity: %(n)s clients with sessions but no invoices"

@@ -7,6 +7,8 @@ from datetime import date, timedelta
 
 from django.db.models import Max, QuerySet, Sum
 from django.urls import reverse
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 
 from ..models import (
     BankTransaction,
@@ -282,7 +284,7 @@ class BankImportReminderWidgetBuilder:
                 "days_since_import": None,
                 "last_import_date": None,
                 "import_url": reverse("bank_import"),
-                "message": "Noch keine Kontoauszüge importiert",
+                "message": gettext("No bank statements imported yet"),
             }
 
         # Calculate days since last import
@@ -297,7 +299,11 @@ class BankImportReminderWidgetBuilder:
             "days_since_import": days_since,
             "last_import_date": last_transaction.imported_at.date(),
             "import_url": reverse("bank_import"),
-            "message": (f"Letzter Import vor {days_since} Tagen" if show_reminder else None),
+            "message": (
+                gettext("Last import %(days)s days ago") % {"days": days_since}
+                if show_reminder
+                else None
+            ),
         }
 
 
@@ -315,10 +321,10 @@ class ChecklistWidgetBuilder:
 
     # Ordered by display priority
     CHECKLIST_CADENCES = [
-        ("monthly", "Monatlicher Restore-Test"),
-        ("weekly", "W\u00f6chentliche Sicherung"),
-        ("quarterly", "MicroSD-Offsite-Backup (Karte A/B im Wechsel, alle 2 Wochen)"),
-        ("annual", "J\u00e4hrliche Sicherheitsüberprüfung"),
+        ("monthly", _("Monthly restore test")),
+        ("weekly", _("Weekly backup")),
+        ("quarterly", _("MicroSD offsite backup (card A/B alternating, every 2 weeks)")),
+        ("annual", _("Annual security review")),
     ]
 
     def _get_period_start(self, checklist_type: str) -> date:
