@@ -87,7 +87,8 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.ERROR(
                     f"  ✗ Calendar token for practice '{practice.name}' is expired or invalid.\n"
-                    "    → Re-authorise at /calendar/authorize/.\n"
+                    "    → Re-authorise: ./dev.py calendar-auth "
+                    "(or open /calendar/authorize/ in the app).\n"
                     "    ℹ️  Note: Google revokes refresh tokens after 7 days for unverified apps.\n"
                     "       Add your e-mail address as a test user in the Google Cloud Console\n"
                     "       (OAuth consent screen) to bypass this limit."
