@@ -51,6 +51,7 @@ See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TO
 ./dev.py lint               # Run ruff format + ruff lint only (fast, no tests)
 ./dev.py quality            # Run lint + Tailwind CSS build + full test suite (pre-release)
 ./dev.py i18n               # Extract + compile translation strings
+./dev.py smoke [vX.Y.Z]     # Boot a released GHCR image with throwaway DB, verify, tear down
 ```
 
 ### Git workflow
