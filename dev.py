@@ -891,11 +891,13 @@ def cmd_smoke(args):
 
     Usage:
         ./dev.py smoke [vX.Y.Z] [--keep] [--no-pull]
+        ./dev.py smoke --down
 
     Options:
         vX.Y.Z      Image tag to test (default: version.py of this checkout)
         --keep      Leave the stack running for manual inspection
         --no-pull   Skip the explicit pull (use a locally cached image)
+        --down      Tear down a stack left running by a previous --keep run
     """
     import base64
     import re
@@ -904,6 +906,7 @@ def cmd_smoke(args):
 
     keep = "--keep" in args
     no_pull = "--no-pull" in args
+    down_only = "--down" in args
     positional = [a for a in args if not a.startswith("-")]
 
     repo_dir = os.path.dirname(os.path.abspath(__file__))
@@ -944,6 +947,15 @@ def cmd_smoke(args):
         fh.write(f"DJANGO_SECRET_KEY={pysecrets.token_urlsafe(50)}\n")
         fh.write(f"FERNET_KEY={base64.urlsafe_b64encode(os.urandom(32)).decode()}\n")
 
+    if down_only:
+        print("Tearing down the smoke stack...")
+        try:
+            result = compose("down", "-v", "--remove-orphans")
+        finally:
+            os.remove(env_file)
+            os.rmdir(tmp_dir)
+        return result
+
     print(f"🔥 Smoke-testing ghcr.io/dholbach/my-practice:{version}")
     try:
         if not no_pull:
@@ -980,10 +992,7 @@ def cmd_smoke(args):
         print(f"\n✅ {version} passed the smoke test.")
         if keep:
             print(f"   Stack left running at http://{port}")
-            print(
-                f"   Tear down with: SMOKE_VERSION={version} "
-                f"docker compose -p {project} -f docker-compose.smoke.yml down -v"
-            )
+            print("   Tear down with: ./dev.py smoke --down")
         return subprocess.CompletedProcess(args=[], returncode=0)
     finally:
         if not keep:
@@ -1176,6 +1185,7 @@ def print_help():
     print("  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)")
     print("  smoke [vX.Y.Z]       - Boot a released GHCR image with a throwaway DB and verify it serves")
     print("  smoke --keep         - Leave the smoke stack running for manual inspection")
+    print("  smoke --down         - Tear down a smoke stack left running by --keep")
     print("  install-hooks        - Configure git to use .githooks/ (run once after clone)")
     print("\nExamples:")
     print("  ./dev.py start                                # Start all containers")
