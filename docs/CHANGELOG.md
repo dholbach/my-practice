@@ -2,6 +2,18 @@
 
 Major features and milestones in chronological order.
 
+## 2026-07-08 — v0.2.10 patch release
+
+- **Feature — fillable intake form** (#200): The Aufnahmebogen PDF now contains real form fields (AcroForm via WeasyPrint `pdf_forms=True`), pre-filled from client data; blank fields and signature lines can be typed into with any PDF viewer.
+- **Feature — send intake form by email** (#200): New 📧 Send action on the intake onboarding step emails the fillable PDF to the client (same flow as contract/questionnaire) and sets `intake_sent_date` automatically.
+- **Feature — tax settlement tracking** (#196): Annual tax settlement (Steuerbescheid) can be recorded on the quarterly tax page.
+- **Feature — instant no-next-session tag sync** (#199): The calendar fetch now updates the `no-next-session` tag for affected clients immediately after creating/cancelling/rescheduling sessions, instead of waiting for the hourly `update_client_tags` run. Shared `RECENT_ACTIVITY_WINDOW_DAYS` constant.
+- **Bug fix — billing guards** (#188): `bill_session` already-billed guard corrected; cancelled invoices excluded from duplicate detection; billing logic extracted to `billing_helpers`.
+- **Bug fix — dashboard labels in English** (#189): Resolved fuzzy entries in the German catalog that made dashboard action labels fall back to English.
+- **UX — expired Google token hint** (#197): The calendar fetch error now points at `./dev.py calendar-auth` for re-authorisation.
+- **Refactor** (#188): `available_data_years()` helper replaces three hand-rolled copies; bank import uses stored totals, a shared invoice-map helper, and Decimal tolerance; dead client-detail sidebar/tabs templates deleted; CODE_STRUCTURE.md rewritten.
+- **i18n** (P-039): `bank_import_views.py`, `calendar_views.py`, `calendar_import_helpers.py`, `email_views.py`, `api_views.py` fully wrapped with English msgids; German catalog kept fuzzy-free.
+
 ## 2026-07-06 — v0.2.9 patch release
 
 - **Security — login enforcement**: All views now require authentication via a global `LoginRequiredMiddleware`; previously some paths were reachable without a session (issues #164, #165).
