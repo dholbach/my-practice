@@ -37,6 +37,9 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ "Sammelrechnung" quick-action button on client detail when unbilled sessions exist — links to batch invoice pre-filtered to the relevant month
 - ✅ Workflow client list — cards grouped into ⚠️ Needs Attention / ✅ Active / 💤 Inactive based on activity and attention-category tags
 - ✅ Live 📝 indicator on client cards for sessions in the last 14 days missing a session log
+- ✅ Fillable intake form (Aufnahmebogen) PDF — real form fields pre-filled from client data, remaining fields typable in any PDF viewer
+- ✅ Send intake form by email from the onboarding widget — attaches the fillable PDF and marks the step done (`intake_sent_date`)
+- ✅ `no-next-session` tag updated immediately by the calendar fetch for affected clients (no wait for the hourly tag run)
 
 ### Invoice Management
 - ✅ Invoice creation with line items
@@ -118,6 +121,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Tax Year Summary (Steuererklärung)
 - ✅ Tax Year Summary: Home-Office-Pauschale (calendar-based non-practice weekdays minus holidays/time off), deduction row in Gewinn, improved link contrast
 - ✅ Tax quarter overview: all four quarters now sum exactly to the year total — invoices with no `paid_date` fall into their `invoice_date` quarter (same fallback rule as the year summary)
+- ✅ Annual tax settlement (Steuerbescheid) tracking on the quarterly tax page
 - ✅ Revenue Report with filters
 - ✅ Client detail reports
 - ✅ Session reconciliation report

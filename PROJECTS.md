@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-07-08 — v0.2.10 release**: Fillable Aufnahmebogen PDF + send-by-email from the onboarding widget (#200). Instant `no-next-session` tag sync from calendar fetch (#199). Tax settlement (Steuerbescheid) tracking (#196). Billing-guard fixes + `billing_helpers` extraction (#188); dashboard labels no longer fall back to English (#189); expired-token hint points at `./dev.py calendar-auth` (#197). i18n: `email_views.py`, `api_views.py`, `calendar_import_helpers.py`, `bank_import_views.py`, `calendar_views.py` wrapped.
 - **2026-07-06 — v0.2.9 release**: Security: global login enforcement + practice isolation fixes (issues #164, #165); isolation tests extended. Dashboard optimisations: double-query patterns reduced, `ActionQueueBuilder` decoupled, heatmap N→1 query. i18n: action-queue, dashboard widgets, `forms.py`, `practice_views.py`, `inquiry_convert_confirm.html` wrapped. Governance: responsible-disclosure policy (`SECURITY.md`). Bug fixes: `revenue_report` 500, per-client revenue via `RevenueCalculator`, 20 failing tests repaired.
-- **2026-07-04 — Configurable capacity periods + i18n progress**: Replaced hardcoded `CAPACITY_PERIODS` constant with a `CapacityPeriod` model editable via practice settings UI (closes #160, PR #162). Client code suggester on inquiry/convert forms (#161). i18n: `inquiry_convert_confirm.html` fully wrapped, `practice_views.py` and `forms.py` wrapped; P-039 now at 18/87 templates (~21%).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
