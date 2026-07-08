@@ -87,6 +87,11 @@ urlpatterns = [
     ),
     path("clients/<int:pk>/intake-form-pdf/", views.intake_form_pdf, name="intake_form_pdf"),
     path(
+        "clients/<int:pk>/send-intake-form/",
+        views.SendIntakeFormEmailView.as_view(),
+        name="send_intake_form_email",
+    ),
+    path(
         "clients/<int:pk>/send-questionnaire/",
         views.SendQuestionnaireEmailView.as_view(),
         name="send_questionnaire_docx",

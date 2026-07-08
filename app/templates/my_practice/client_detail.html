@@ -521,9 +521,10 @@
                 <div class="step-body">
                     <div class="step-title">{% trans "Intake" %}</div>
                     {% if client.intake_sent_date %}<div class="step-date">{% blocktrans with date=client.intake_sent_date|date:"d.m.Y" %}Handed out on {{ date }}{% endblocktrans %}</div>
-                    {% else %}<div class="step-pending-hint">{% trans "Download PDF and hand it out, then mark as done" %}</div>{% endif %}
+                    {% else %}<div class="step-pending-hint">{% trans "Send by email or download the PDF and hand it out" %}</div>{% endif %}
                 </div>
                 <div class="step-actions">
+                    {% if client.email %}<a href="{% url 'send_intake_form_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>{% endif %}
                     <a href="{% url 'intake_form_pdf' client.pk %}" class="btn btn-secondary btn-sm">📄 PDF</a>
                     {% trans "undo" as lbl_undo %}
                     {% trans "✓ Done" as lbl_done %}

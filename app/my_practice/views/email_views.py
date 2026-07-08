@@ -10,12 +10,14 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext as _
 from django.views import View
 
 from ..email_forms import InvoiceEmailForm
 from ..models import Client, Invoice, Practice
 from ..utils.email_utils import (
     get_contract_email_content,
+    get_intake_email_content,
     get_invoice_email_content,
     get_questionnaire_email_content,
 )
@@ -23,6 +25,7 @@ from .api_views import (
     _prepare_practice_images,
     _render_invoice_pdf_bytes,
     generate_contract_pdf_bytes,
+    generate_intake_form_pdf_bytes,
 )
 
 logger = logging.getLogger("my_practice.email")
@@ -56,10 +59,12 @@ def _dispatch_email(
         if result == 1:
             messages.success(request, mark_safe(success_html))
         else:
-            messages.error(request, f"E-Mail-Versand fehlgeschlagen (Ergebnis: {result}).")
+            messages.error(
+                request, _("Email sending failed (result: %(result)s).") % {"result": result}
+            )
     except Exception as e:
         logger.exception(f"Failed to send email: {e}")
-        messages.error(request, f"Fehler beim Senden: {e}")
+        messages.error(request, _("Error while sending: %(error)s") % {"error": e})
     return redirect(redirect_url)
 
 
@@ -128,13 +133,13 @@ class BaseClientEmailView(View):
         client, practice = self._get_client_and_practice(request, pk)
 
         if not practice:
-            messages.error(request, "Praxis-Einstellungen nicht konfiguriert.")
+            messages.error(request, _("Practice settings not configured."))
             return self._redirect_to_detail(pk)
 
         if not client.email:
             messages.error(
                 request,
-                f"Klient {client.client_code} hat keine E-Mail-Adresse hinterlegt.",
+                _("Client %(code)s has no email address on file.") % {"code": client.client_code},
             )
             return self._redirect_to_detail(pk)
 
@@ -152,7 +157,7 @@ class BaseClientEmailView(View):
         client, practice = self._get_client_and_practice(request, pk)
 
         if not practice:
-            messages.error(request, "Praxis-Einstellungen nicht konfiguriert.")
+            messages.error(request, _("Practice settings not configured."))
             return self._redirect_to_detail(pk)
 
         form = InvoiceEmailForm(request.POST)
@@ -168,7 +173,7 @@ class BaseClientEmailView(View):
             attachment = self.get_attachment(client, practice)
         except Exception as e:
             logger.exception(f"Attachment generation failed: {e}")
-            messages.error(request, f"Fehler beim Erstellen des Anhangs: {e}")
+            messages.error(request, _("Error creating attachment: %(error)s") % {"error": e})
             return self._redirect_to_detail(pk)
 
         msg = EmailMessage(
@@ -210,8 +215,8 @@ class SendInvoiceEmailView(View):
         if invoice.status == "sent":
             messages.warning(
                 request,
-                f"Rechnung {invoice.invoice_number} wurde bereits versendet. "
-                "Status ändern, um erneut zu senden.",
+                _("Invoice %(number)s has already been sent. Change the status to send it again.")
+                % {"number": invoice.invoice_number},
             )
             return redirect("invoice_detail", pk=invoice_id)
 
@@ -245,8 +250,8 @@ class SendInvoiceEmailView(View):
         if invoice.status == "sent":
             messages.warning(
                 request,
-                f"Rechnung {invoice.invoice_number} wurde bereits versendet. "
-                "Status ändern, um erneut zu senden.",
+                _("Invoice %(number)s has already been sent. Change the status to send it again.")
+                % {"number": invoice.invoice_number},
             )
             return redirect("invoice_detail", pk=invoice_id)
 
@@ -302,7 +307,8 @@ class SendInvoiceEmailView(View):
             logger.info(f"Updated invoice date to {invoice.invoice_date}")
             messages.info(
                 request,
-                f"Rechnungsdatum wurde auf {invoice.invoice_date.strftime('%d.%m.%Y')} aktualisiert",
+                _("Invoice date was updated to %(date)s")
+                % {"date": invoice.invoice_date.strftime("%d.%m.%Y")},
             )
 
         try:
@@ -310,7 +316,7 @@ class SendInvoiceEmailView(View):
             logger.info(f"PDF generated ({len(pdf_content)} bytes)")
         except Exception as e:
             logger.exception(f"PDF generation failed: {e}")
-            messages.error(request, f"Fehler beim Erstellen der PDF: {e}")
+            messages.error(request, _("Error creating the PDF: %(error)s") % {"error": e})
             return redirect("invoice_detail", pk=invoice.id)
 
         filename = (
@@ -334,7 +340,7 @@ class SendInvoiceEmailView(View):
             logger.info(f"Email send result: {result}")
         except Exception as e:
             logger.exception(f"Exception while sending invoice email: {e}")
-            messages.error(request, f"Fehler beim Senden der E-Mail: {e}")
+            messages.error(request, _("Error sending the email: %(error)s") % {"error": e})
             return redirect("invoice_detail", pk=invoice.id)
 
         if result == 1:
@@ -345,19 +351,24 @@ class SendInvoiceEmailView(View):
             messages.success(
                 request,
                 mark_safe(
-                    f'✅ Rechnung erfolgreich gesendet an <span class="sensitive-data">{recipient}</span>'
+                    _("✅ Invoice successfully sent to %(recipient)s")
+                    % {"recipient": f'<span class="sensitive-data">{recipient}</span>'}
                 ),
             )
         else:
             logger.error(f"Email send failed with result: {result}")
-            messages.error(request, f"E-Mail-Versand fehlgeschlagen (Ergebnis: {result}).")
+            messages.error(
+                request, _("Email sending failed (result: %(result)s).") % {"result": result}
+            )
 
         return redirect("invoice_detail", pk=invoice.id)
 
     def _generate_pdf(self, invoice: Invoice, practice: Practice) -> bytes:
         """Generate PDF bytes for invoice via shared api_views helpers."""
         logo_data, signature_data = _prepare_practice_images(practice)
-        pdf_bytes, _ = _render_invoice_pdf_bytes(invoice, practice, logo_data, signature_data)
+        pdf_bytes, _filename = _render_invoice_pdf_bytes(
+            invoice, practice, logo_data, signature_data
+        )
         return pdf_bytes
 
 
@@ -383,7 +394,10 @@ class SendPaymentReminderView(BaseClientEmailView):
         self, request: HttpRequest, client: Client, practice: Practice, pk: int
     ) -> HttpResponse | None:
         if not self._get_open_invoices(client, practice):
-            messages.warning(request, f"Keine offenen Rechnungen für {client.client_code}.")
+            messages.warning(
+                request,
+                _("No open invoices for %(code)s.") % {"code": client.client_code},
+            )
             return self._redirect_to_detail(pk)
         return None
 
@@ -400,7 +414,9 @@ class SendPaymentReminderView(BaseClientEmailView):
         }
 
     def get_success_html(self, recipient: str) -> str:
-        return f'✅ Zahlungserinnerung gesendet an <span class="sensitive-data">{recipient}</span>'
+        return _("✅ Payment reminder sent to %(recipient)s") % {
+            "recipient": f'<span class="sensitive-data">{recipient}</span>'
+        }
 
     def _build_email_content(
         self, client: Client, practice: Practice, open_invoices: list[Invoice]
@@ -525,7 +541,9 @@ class SendCancellationEmailView(BaseClientEmailView):
         return subject, "\n".join(lines)
 
     def get_success_html(self, recipient: str) -> str:
-        return f'✅ Absage gesendet an <span class="sensitive-data">{recipient}</span>'
+        return _("✅ Cancellation sent to %(recipient)s") % {
+            "recipient": f'<span class="sensitive-data">{recipient}</span>'
+        }
 
 
 class SendQuestionnaireEmailView(BaseClientEmailView):
@@ -549,8 +567,11 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
             docx_name = "Anamnesebogen.docx" if lang == "de" else "Anamnesebogen (eng).docx"
             messages.error(
                 request,
-                f"Datei nicht gefunden: {settings.PAYMENTS_DATA_DIR / 'documents' / docx_name}. "
-                "Bitte die .docx-Datei unter PAYMENTS_DATA_DIR/documents/ ablegen.",
+                _(
+                    "File not found: %(path)s. "
+                    "Please place the .docx file under PAYMENTS_DATA_DIR/documents/."
+                )
+                % {"path": settings.PAYMENTS_DATA_DIR / "documents" / docx_name},
             )
             return self._redirect_to_detail(pk)
         return None
@@ -568,7 +589,8 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
         if result is None:
             docx_name = "Anamnesebogen.docx" if lang == "de" else "Anamnesebogen (eng).docx"
             raise FileNotFoundError(
-                f"Datei nicht gefunden: {settings.PAYMENTS_DATA_DIR / 'documents' / docx_name}."
+                _("File not found: %(path)s.")
+                % {"path": settings.PAYMENTS_DATA_DIR / "documents" / docx_name}
             )
         docx_name, docx_bytes = result
         return (
@@ -582,7 +604,9 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
         client.save(update_fields=["questionnaire_sent_date"])
 
     def get_success_html(self, recipient: str) -> str:
-        return f'✅ Anamnesebogen gesendet an <span class="sensitive-data">{recipient}</span>'
+        return _("✅ Questionnaire sent to %(recipient)s") % {
+            "recipient": f'<span class="sensitive-data">{recipient}</span>'
+        }
 
 
 class SendContractEmailView(BaseClientEmailView):
@@ -607,8 +631,41 @@ class SendContractEmailView(BaseClientEmailView):
 
     def get_attachment(self, client: Client, practice: Practice) -> tuple[str, bytes, str] | None:
         lang = client.language or "de"
-        pdf_bytes, _ = generate_contract_pdf_bytes(client, practice, lang)
+        pdf_bytes, _filename = generate_contract_pdf_bytes(client, practice, lang)
         return (self._get_filename(client), pdf_bytes, "application/pdf")
 
     def get_success_html(self, recipient: str) -> str:
-        return f'✅ Behandlungsvertrag gesendet an <span class="sensitive-data">{recipient}</span>'
+        return _("✅ Treatment contract sent to %(recipient)s") % {
+            "recipient": f'<span class="sensitive-data">{recipient}</span>'
+        }
+
+
+class SendIntakeFormEmailView(BaseClientEmailView):
+    """Email the pre-filled, fillable Aufnahmebogen PDF to the client."""
+
+    template_name = "my_practice/send_intake_form_email.html"
+
+    def _get_filename(self, client: Client) -> str:
+        lang = client.language or "de"
+        safe_code = client.client_code.replace("/", "-")
+        return f"Aufnahmebogen_{safe_code}.pdf" if lang == "de" else f"IntakeForm_{safe_code}.pdf"
+
+    def get_default_content(self, client: Client, practice: Practice) -> tuple[str, str]:
+        return get_intake_email_content(client, practice)
+
+    def get_extra_context(self, client: Client, practice: Practice) -> dict:
+        return {"filename": self._get_filename(client)}
+
+    def get_attachment(self, client: Client, practice: Practice) -> tuple[str, bytes, str] | None:
+        lang = client.language or "de"
+        pdf_bytes, _filename = generate_intake_form_pdf_bytes(client, practice, lang)
+        return (self._get_filename(client), pdf_bytes, "application/pdf")
+
+    def after_send(self, client: Client) -> None:
+        client.intake_sent_date = date.today()
+        client.save(update_fields=["intake_sent_date"])
+
+    def get_success_html(self, recipient: str) -> str:
+        return _("✅ Intake form sent to %(recipient)s") % {
+            "recipient": f'<span class="sensitive-data">{recipient}</span>'
+        }

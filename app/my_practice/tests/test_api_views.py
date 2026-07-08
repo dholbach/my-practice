@@ -48,7 +48,7 @@ class NextInvoiceNumberAPITest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json())
-        self.assertEqual(response.json()["error"], "Client ID required")
+        self.assertEqual(response.json()["error"], "Klienten-ID erforderlich")
 
     def test_next_invoice_number_invalid_client(self):
         """Test API returns 404 for non-existent client"""
@@ -56,7 +56,7 @@ class NextInvoiceNumberAPITest(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertIn("error", response.json())
-        self.assertEqual(response.json()["error"], "Client not found")
+        self.assertEqual(response.json()["error"], "Klient nicht gefunden")
 
     def test_next_invoice_number_first_invoice(self):
         """Test API returns correct number for first invoice"""
@@ -222,3 +222,81 @@ class InvoicePDFViewTest(TestCase):
         # Should work with configured practice
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
+
+
+class IntakeFormPdfTest(TestCase):
+    """Tests for the fillable Aufnahmebogen PDF."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="intake-pdf-test",
+            title="Test Practitioner",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="intakepdfuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_http = TestClient()
+        self.client_http.login(username="intakepdfuser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            email="max@example.com",
+            phone="+49 123 456789",
+            date_of_birth=date(1990, 1, 15),
+            practice=self.practice,
+        )
+
+    def _get_form_fields(self, pdf_bytes: bytes) -> dict:
+        import io
+
+        from pypdf import PdfReader
+
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        return reader.get_fields() or {}
+
+    def test_intake_form_pdf_download(self):
+        """View returns a PDF with the expected filename."""
+        response = self.client_http.get(
+            reverse("intake_form_pdf", kwargs={"pk": self.test_client.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("Aufnahmebogen_TC.pdf", response["Content-Disposition"])
+
+    def test_intake_form_pdf_has_fillable_fields(self):
+        """The PDF contains AcroForm fields, pre-filled from client data."""
+        response = self.client_http.get(
+            reverse("intake_form_pdf", kwargs={"pk": self.test_client.pk})
+        )
+        fields = self._get_form_fields(response.content)
+
+        expected = {
+            "full_name",
+            "date_of_birth",
+            "address",
+            "postal_code_city",
+            "email",
+            "phone",
+            "cost_carrier",
+            "place_date",
+            "signature_patient",
+        }
+        self.assertEqual(set(fields), expected)
+        self.assertEqual(fields["full_name"].get("/V"), "Max Mustermann")
+        self.assertEqual(fields["date_of_birth"].get("/V"), "15.01.1990")
+        self.assertEqual(fields["email"].get("/V"), "max@example.com")
+        # Blank fields are present but empty
+        self.assertEqual(fields["postal_code_city"].get("/V"), "")
+        self.assertEqual(fields["signature_patient"].get("/V"), "")
+
+    def test_intake_form_pdf_english(self):
+        """?lang=en switches the filename to the English variant."""
+        response = self.client_http.get(
+            reverse("intake_form_pdf", kwargs={"pk": self.test_client.pk}) + "?lang=en"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("IntakeForm_TC.pdf", response["Content-Disposition"])
+        self.assertTrue(self._get_form_fields(response.content))

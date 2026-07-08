@@ -83,6 +83,7 @@ from .dashboard_views import dashboard, home
 from .email_views import (
     SendCancellationEmailView,
     SendContractEmailView,
+    SendIntakeFormEmailView,
     SendInvoiceEmailView,
     SendPaymentReminderView,
     SendQuestionnaireEmailView,
@@ -235,6 +236,7 @@ __all__ = [
     # Email views
     "SendCancellationEmailView",
     "SendContractEmailView",
+    "SendIntakeFormEmailView",
     "SendInvoiceEmailView",
     "SendPaymentReminderView",
     "SendQuestionnaireEmailView",
