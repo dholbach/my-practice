@@ -59,7 +59,7 @@ def calendar_oauth2callback(request: HttpRequest) -> HttpResponse:
     # Verify state to prevent CSRF
     state = request.session.get("oauth_state")
     if not state or state != request.GET.get("state"):
-        messages.error(request, "OAuth state mismatch. Please try again.")
+        messages.error(request, _("OAuth state mismatch. Please try again."))
         return redirect("dashboard")
 
     # Create flow and exchange code for tokens
@@ -202,7 +202,7 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
         )
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
+        return JsonResponse({"success": False, "error": _("Invalid JSON")}, status=400)
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
@@ -361,7 +361,7 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
         )
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
+        return JsonResponse({"success": False, "error": _("Invalid JSON")}, status=400)
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
@@ -433,7 +433,7 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
     from django.shortcuts import redirect
 
     from ..models import InvoiceItem, Session
-    from ..utils import get_next_invoice_number, remove_no_next_session_tag
+    from ..utils import get_next_invoice_number, sync_no_next_session_tag
     from ..utils.calendar_import_helpers import get_or_create_invoice_for_month
 
     practice = getattr(request, "current_practice", None)
@@ -545,7 +545,7 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
             event.status = PendingCalendarEvent.Status.IMPORTED
             event.session = session
             event.save(update_fields=["status", "session"])
-            remove_no_next_session_tag(client)
+            sync_no_next_session_tag(client)
 
         messages.success(
             request,

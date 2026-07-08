@@ -7,10 +7,11 @@ from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
+from django.utils.translation import gettext as _
 
 from ..models import Client, Invoice, InvoiceItem, ServiceType
 from ..models import Session
-from ..utils import get_next_invoice_number, remove_no_next_session_tag
+from ..utils import get_next_invoice_number, sync_no_next_session_tag
 
 
 # ── Private resolution helpers ────────────────────────────────────────────────
@@ -23,10 +24,13 @@ def _resolve_client(event: dict, overrides: dict) -> tuple[Client | None, str | 
         try:
             return Client.objects.get(id=client_id), None
         except Client.DoesNotExist:
-            return None, f"Client ID {client_id} not found for event {event.get('summary')}"
+            return None, _("Client ID %(id)s not found for event %(summary)s") % {
+                "id": client_id,
+                "summary": event.get("summary"),
+            }
     if event.get("matched_client"):
         return event["matched_client"], None
-    return None, f"No client for event: {event.get('summary')}"
+    return None, _("No client for event: %(summary)s") % {"summary": event.get("summary")}
 
 
 def _resolve_service_type(
@@ -38,14 +42,16 @@ def _resolve_service_type(
         try:
             return ServiceType.objects.get(id=service_type_id), None
         except ServiceType.DoesNotExist:
-            return None, f"ServiceType ID {service_type_id} not found"
+            return None, _("Service type ID %(id)s not found") % {"id": service_type_id}
     if event.get("suggested_service_type_obj"):
         return event["suggested_service_type_obj"], None
     default = ServiceType.objects.filter(
         Q(practice=practice) | Q(practice__isnull=True), code="therapy_60"
     ).first()
     if not default:
-        return None, f"No default ServiceType found for event: {event.get('summary')}"
+        return None, _("No default service type found for event: %(summary)s") % {
+            "summary": event.get("summary")
+        }
     return default, None
 
 
@@ -65,7 +71,9 @@ def _resolve_rate(client: Client, service_type: ServiceType) -> tuple[Decimal | 
         )
     )
     if rate == Decimal("0"):
-        return None, (f"Client {client.client_code} has no hourly rate — set it in client settings")
+        return None, _("Client %(code)s has no hourly rate — set it in client settings") % {
+            "code": client.client_code
+        }
     return rate, None
 
 
@@ -119,7 +127,7 @@ def create_invoice_items_from_events(
 
         event_date = event.get("start")
         if not event_date:
-            errors.append(f"No date for event: {event.get('summary')}")
+            errors.append(_("No date for event: %(summary)s") % {"summary": event.get("summary")})
             continue
 
         invoice = get_or_create_invoice_for_month(client, event_date)
@@ -129,7 +137,10 @@ def create_invoice_items_from_events(
             session__session_date=event_date.date(),
             service_type=service_type,
         ).exists():
-            errors.append(f"Duplikat: {event.get('summary')} am {event_date.date()}")
+            errors.append(
+                _("Duplicate: %(summary)s on %(date)s")
+                % {"summary": event.get("summary"), "date": event_date.date()}
+            )
             skipped += 1
             continue
 
@@ -146,7 +157,7 @@ def create_invoice_items_from_events(
                     client.save(update_fields=["first_seen_date"])
 
                 session_time = event_date.time() if isinstance(event_date, datetime) else None
-                session, _ = Session.objects.get_or_create(
+                session, _created = Session.objects.get_or_create(
                     client=client,
                     session_date=event_date.date(),
                     session_time=session_time,
@@ -162,10 +173,13 @@ def create_invoice_items_from_events(
                     rate=rate,
                     session=session,
                 )
-                remove_no_next_session_tag(client)
+                sync_no_next_session_tag(client)
                 created += 1
         except Exception as e:
-            errors.append(f"Fehler beim Erstellen von {event.get('summary')}: {str(e)}")
+            errors.append(
+                _("Error creating %(summary)s: %(error)s")
+                % {"summary": event.get("summary"), "error": str(e)}
+            )
 
     return created, skipped, errors
 
@@ -230,15 +244,15 @@ def bill_session(session: "Session", practice) -> tuple[bool, str]:
         ).first()
 
     if service_type is None:
-        return False, "Kein passender Leistungstyp gefunden."
+        return False, _("No matching service type found.")
 
     rate, err = _resolve_rate(client, service_type)
     if err:
-        return False, f"Kein Stundensatz für {client.client_code} hinterlegt."
+        return False, _("No hourly rate set for %(code)s.") % {"code": client.client_code}
 
     # Guard: already billed
     if InvoiceItem.objects.filter(session=session).exists():
-        return False, "Sitzung ist bereits abgerechnet."
+        return False, _("Session is already billed.")
 
     from datetime import datetime as dt
 
@@ -261,8 +275,10 @@ def bill_session(session: "Session", practice) -> tuple[bool, str]:
                 rate=rate,
                 session=session,
             )
-            remove_no_next_session_tag(client)
+            sync_no_next_session_tag(client)
     except Exception as e:
-        return False, f"Fehler: {e}"
+        return False, _("Error: %(error)s") % {"error": e}
 
-    return True, f"Sitzung am {session.session_date.strftime('%d.%m.%Y')} wurde abgerechnet."
+    return True, _("Session on %(date)s was billed.") % {
+        "date": session.session_date.strftime("%d.%m.%Y")
+    }

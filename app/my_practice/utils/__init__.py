@@ -60,10 +60,11 @@ from .practice_helpers import (
 )
 from .revenue_helpers import RevenueCalculator
 from .tag_helpers import (
+    RECENT_ACTIVITY_WINDOW_DAYS,
     SESSION_LOG_MIN_DURATION,
     SESSION_LOG_WINDOW_DAYS,
-    remove_no_next_session_tag,
     sort_tags_by_category,
+    sync_no_next_session_tag,
 )
 from .weekly_focus_widget import WeeklyFocusWidgetBuilder
 
@@ -90,7 +91,8 @@ __all__ = [
     "group_clients_by_activity",
     "group_clients_by_year",
     "sort_tags_by_category",
-    "remove_no_next_session_tag",
+    "sync_no_next_session_tag",
+    "RECENT_ACTIVITY_WINDOW_DAYS",
     "SESSION_LOG_WINDOW_DAYS",
     "SESSION_LOG_MIN_DURATION",
     "build_client_map",

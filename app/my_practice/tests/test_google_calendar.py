@@ -2,7 +2,7 @@
 Tests for Google Calendar utilities.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from datetime import timezone as dt_timezone
 from io import StringIO
 from unittest.mock import Mock, patch
@@ -554,3 +554,146 @@ class UpsertEventReinstatementTest(TestCase):
         self.session.refresh_from_db()
         self.assertEqual(self.pce.status, PendingCalendarEvent.Status.CANCELLED)
         self.assertTrue(self.session.cancelled)
+
+
+class FetchTagSyncTest(TestCase):
+    """The fetch command re-syncs the no-next-session tag for clients whose
+    sessions it created or cancelled, instead of waiting for the next
+    update_client_tags run."""
+
+    def setUp(self):
+        from my_practice.models import ClientTag
+
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="fetch-tag-sync-test",
+            title="Test Practitioner",
+            email="test@example.com",
+            city="Berlin",
+        )
+        self.client_obj = Client.objects.create(
+            practice=self.practice,
+            client_code="XX-1",
+            full_name="Max Mustermann",
+            email="max@example.com",
+        )
+        self.tag = ClientTag.objects.create(
+            slug="no-next-session",
+            name="no-next-session",
+            color="orange",
+            category="attention",
+            is_system=True,
+        )
+        self.today = timezone.now().date()
+        # Recent past session so the client counts as "recently active"
+        Session.objects.create(
+            client=self.client_obj,
+            session_date=self.today - timedelta(days=5),
+            duration=60,
+            cancelled=False,
+        )
+        self.future_date = self.today + timedelta(days=7)
+
+    def _get_command(self):
+        from my_practice.management.commands.fetch_calendar_events import Command
+
+        cmd = Command()
+        cmd.stdout = StringIO()
+        cmd.style = type("S", (), {"SUCCESS": lambda s, x: x, "WARNING": lambda s, x: x})()
+        return cmd
+
+    def _make_event(self, event_id, is_cancelled=False):
+        return {
+            "id": event_id,
+            "start": self.future_date,
+            "summary": "XX-1 60min",
+            "duration_minutes": 60,
+            "matched_client": self.client_obj,
+            "suggested_service_type_obj": None,
+            "is_cancelled": is_cancelled,
+        }
+
+    def test_auto_created_future_session_removes_tag(self):
+        """A new future event auto-creates a Session → tag is removed."""
+        self.client_obj.tags.add(self.tag)
+        cmd = self._get_command()
+        affected: set = set()
+
+        result = cmd._upsert_event(
+            self._make_event("new-event-1"), self.practice, dry_run=False, affected_clients=affected
+        )
+
+        self.assertEqual(result, "created")
+        self.assertIn(self.client_obj, affected)
+        cmd._sync_no_next_session_tags(affected)
+        self.assertFalse(self.client_obj.tags.filter(slug="no-next-session").exists())
+
+    def test_cancelling_only_future_session_adds_tag(self):
+        """Cancelling the client's only future session → tag is added."""
+        session = Session.objects.create(
+            client=self.client_obj,
+            session_date=self.future_date,
+            duration=60,
+            cancelled=False,
+        )
+        PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="event-to-cancel",
+            summary="XX-1 60min",
+            event_date=self.future_date,
+            duration_minutes=60,
+            matched_client=self.client_obj,
+            status=PendingCalendarEvent.Status.PENDING,
+            session=session,
+        )
+        cmd = self._get_command()
+        affected: set = set()
+
+        result = cmd._upsert_event(
+            self._make_event("event-to-cancel", is_cancelled=True),
+            self.practice,
+            dry_run=False,
+            affected_clients=affected,
+        )
+
+        self.assertEqual(result, "skipped")
+        self.assertIn(self.client_obj, affected)
+        cmd._sync_no_next_session_tags(affected)
+        self.assertTrue(self.client_obj.tags.filter(slug="no-next-session").exists())
+
+    def test_stale_event_cancellation_collects_client(self):
+        """_cancel_stale_future_events collects the client when its session is cancelled."""
+        session = Session.objects.create(
+            client=self.client_obj,
+            session_date=self.future_date,
+            duration=60,
+            cancelled=False,
+        )
+        PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="vanished-event",
+            summary="XX-1 60min",
+            event_date=self.future_date,
+            duration_minutes=60,
+            matched_client=self.client_obj,
+            status=PendingCalendarEvent.Status.PENDING,
+            session=session,
+        )
+        cmd = self._get_command()
+        affected: set = set()
+
+        start_dt = timezone.now()
+        end_dt = start_dt + timedelta(days=14)
+        count = cmd._cancel_stale_future_events(
+            self.practice,
+            start_dt,
+            end_dt,
+            live_ids=set(),
+            dry_run=False,
+            affected_clients=affected,
+        )
+
+        self.assertEqual(count, 1)
+        self.assertIn(self.client_obj, affected)
+        session.refresh_from_db()
+        self.assertTrue(session.cancelled)
