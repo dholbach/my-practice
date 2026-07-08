@@ -1,0 +1,50 @@
+# Release smoke test: boots a released GHCR image against a throwaway
+# database. Used by `./dev.py smoke [vX.Y.Z]` — not for real deployments.
+#
+# Differences from docker-compose.prod.yml, on purpose:
+# - image tag comes from ${SMOKE_VERSION} (set by dev.py)
+# - no container_name / no named volumes → runs alongside the dev stack;
+#   `down -v` under the smoke project name removes every trace
+# - no host bind mounts (backups/media/documents) — nothing touches real data
+# - ephemeral localhost port instead of 8000
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_DB=my_practice
+      - POSTGRES_USER=my_practice
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U my_practice -d my_practice']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  django:
+    image: ghcr.io/dholbach/my-practice:${SMOKE_VERSION}
+    ports:
+      - "127.0.0.1::8000"
+    environment:
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=False
+      - SECURE_SSL_REDIRECT=false
+      - POSTGRES_DB=my_practice
+      - POSTGRES_USER=my_practice
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - FERNET_KEY=${FERNET_KEY}
+      - UPDATE_CHECK_DISABLED=true
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/admin/login/"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput --ignore tailwind.css &&
+             gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 300 config.wsgi:application"

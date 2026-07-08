@@ -878,6 +878,123 @@ def cmd_calendar_auth(_args):
     return result
 
 
+def cmd_smoke(args):
+    """Smoke-test a released GHCR image in a contained fashion (issue #202).
+
+    Pulls ghcr.io/dholbach/my-practice:<version>, boots it against a throwaway
+    postgres under an isolated compose project (my-practice-smoke), waits for
+    migrations + gunicorn via the healthcheck, verifies the image reports the
+    expected version and serves the login page, then tears everything down.
+
+    Runs safely alongside the dev stack: no shared container names, volumes,
+    ports, or bind mounts.
+
+    Usage:
+        ./dev.py smoke [vX.Y.Z] [--keep] [--no-pull]
+
+    Options:
+        vX.Y.Z      Image tag to test (default: version.py of this checkout)
+        --keep      Leave the stack running for manual inspection
+        --no-pull   Skip the explicit pull (use a locally cached image)
+    """
+    import base64
+    import re
+    import secrets as pysecrets
+    import tempfile
+
+    keep = "--keep" in args
+    no_pull = "--no-pull" in args
+    positional = [a for a in args if not a.startswith("-")]
+
+    repo_dir = os.path.dirname(os.path.abspath(__file__))
+    if positional:
+        version = positional[0]
+    else:
+        version_py = os.path.join(repo_dir, "app", "my_practice", "version.py")
+        with open(version_py) as fh:
+            version = re.search(r'VERSION\s*=\s*"([^"]+)"', fh.read()).group(1)
+
+    project = "my-practice-smoke"
+    compose_file = os.path.join(repo_dir, "docker-compose.smoke.yml")
+
+    def compose(*extra, capture=False):
+        cmd = []
+        if needs_flatpak():
+            cmd.extend(["flatpak-spawn", "--host"])
+        cmd.extend(compose_base_cmd())
+        cmd.extend(["-p", project, "-f", compose_file, "--env-file", env_file])
+        cmd.extend(extra)
+        return subprocess.run(cmd, capture_output=capture, text=capture)
+
+    def fail(result, message):
+        print(f"\n❌ {message}")
+        print("── last 50 log lines ──")
+        compose("logs", "--tail", "50")
+        if not keep:
+            compose("down", "-v", "--remove-orphans")
+        result.returncode = result.returncode or 1
+        return result
+
+    # Throwaway secrets, passed via a private --env-file (never written to .env)
+    tmp_dir = tempfile.mkdtemp(prefix="my-practice-smoke-")
+    env_file = os.path.join(tmp_dir, "smoke.env")
+    with open(env_file, "w") as fh:
+        fh.write(f"SMOKE_VERSION={version}\n")
+        fh.write(f"POSTGRES_PASSWORD={pysecrets.token_urlsafe(32)}\n")
+        fh.write(f"DJANGO_SECRET_KEY={pysecrets.token_urlsafe(50)}\n")
+        fh.write(f"FERNET_KEY={base64.urlsafe_b64encode(os.urandom(32)).decode()}\n")
+
+    print(f"🔥 Smoke-testing ghcr.io/dholbach/my-practice:{version}")
+    try:
+        if not no_pull:
+            print("── pulling image ──")
+            result = compose("pull", "django")
+            if result.returncode != 0:
+                return fail(result, f"Could not pull image for {version}.")
+
+        print("── booting stack (migrate + collectstatic + gunicorn) ──")
+        result = compose("up", "-d", "--wait", "--quiet-pull")
+        if result.returncode != 0:
+            return fail(result, "Stack did not become healthy.")
+
+        print("── verifying ──")
+        result = compose(
+            "exec", "-T", "django", "python", "-c",
+            "from my_practice.version import VERSION; print(VERSION)",
+            capture=True,
+        )
+        reported = result.stdout.strip()
+        if result.returncode != 0 or reported != version:
+            return fail(result, f"Image reports version {reported!r}, expected {version!r}.")
+        print(f"  ✓ image reports {reported}")
+
+        result = compose(
+            "exec", "-T", "django", "curl", "-sf", "http://localhost:8000/admin/login/",
+            capture=True,
+        )
+        if result.returncode != 0 or "csrfmiddlewaretoken" not in result.stdout:
+            return fail(result, "Login page did not render.")
+        print("  ✓ login page renders (migrations ran, gunicorn serving)")
+
+        port = compose("port", "django", "8000", capture=True).stdout.strip()
+        print(f"\n✅ {version} passed the smoke test.")
+        if keep:
+            print(f"   Stack left running at http://{port}")
+            print(
+                f"   Tear down with: SMOKE_VERSION={version} "
+                f"docker compose -p {project} -f docker-compose.smoke.yml down -v"
+            )
+        return subprocess.CompletedProcess(args=[], returncode=0)
+    finally:
+        if not keep:
+            compose("down", "-v", "--remove-orphans", capture=True)
+        try:
+            os.remove(env_file)
+            os.rmdir(tmp_dir)
+        except OSError:
+            pass
+
+
 def cmd_install_hooks(_args):
     """Configure git to use the committed .githooks/ directory.
 
@@ -1003,6 +1120,7 @@ COMMANDS = {
     "review": cmd_review,
     "format": cmd_format,
     "calendar-auth": cmd_calendar_auth,
+    "smoke": cmd_smoke,
     "install-hooks": cmd_install_hooks,
     "run": cmd_run,
     "exec": cmd_exec,
@@ -1056,6 +1174,8 @@ def print_help():
         "  format               - Auto-format code with ruff format + ruff check --fix"
     )
     print("  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)")
+    print("  smoke [vX.Y.Z]       - Boot a released GHCR image with a throwaway DB and verify it serves")
+    print("  smoke --keep         - Leave the smoke stack running for manual inspection")
     print("  install-hooks        - Configure git to use .githooks/ (run once after clone)")
     print("\nExamples:")
     print("  ./dev.py start                                # Start all containers")

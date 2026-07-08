@@ -272,6 +272,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Backup/Restore scripts
 - ✅ Development scripts
 - ✅ Management commands
+- ✅ Release smoke test (`./dev.py smoke [vX.Y.Z]`) — boots a released GHCR image with a throwaway DB in an isolated compose project, verifies version + login page, tears down without a trace
 
 ---
 

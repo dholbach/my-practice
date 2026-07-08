@@ -47,5 +47,6 @@ gh release create vX.Y.Z --title "vX.Y.Z" --notes "See docs/CHANGELOG.md"
 ## Verify
 
 - [ ] Image appears at `ghcr.io/dholbach/my-practice:vX.Y.Z` (check Actions tab)
+- [ ] `./dev.py smoke vX.Y.Z` — boots the released image with a throwaway DB and verifies migrations + login page (runs safely alongside the dev stack)
 - [ ] `./prod.py update` on an older install reports the new version
 - [ ] `./prod.py setup` on a clean directory pulls the correct versioned image
