@@ -433,7 +433,7 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
     from django.shortcuts import redirect
 
     from ..models import InvoiceItem, Session
-    from ..utils import get_next_invoice_number, remove_no_next_session_tag
+    from ..utils import get_next_invoice_number, sync_no_next_session_tag
     from ..utils.calendar_import_helpers import get_or_create_invoice_for_month
 
     practice = getattr(request, "current_practice", None)
@@ -545,7 +545,7 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
             event.status = PendingCalendarEvent.Status.IMPORTED
             event.session = session
             event.save(update_fields=["status", "session"])
-            remove_no_next_session_tag(client)
+            sync_no_next_session_tag(client)
 
         messages.success(
             request,

@@ -10,7 +10,11 @@ from django.db.models import Max
 from django.utils import timezone
 from ...models import Client, ClientTag, InvoiceItem
 from ...models.session import Session
-from ...utils.tag_helpers import SESSION_LOG_MIN_DURATION, SESSION_LOG_WINDOW_DAYS
+from ...utils.tag_helpers import (
+    RECENT_ACTIVITY_WINDOW_DAYS,
+    SESSION_LOG_MIN_DURATION,
+    SESSION_LOG_WINDOW_DAYS,
+)
 
 
 class Command(BaseCommand):
@@ -69,7 +73,11 @@ class Command(BaseCommand):
             .annotate(last_date=Max("session_date"))
             .values_list("client_id", "last_date")
         )
-        recently_active = {cid for cid, d in last_session_dates.items() if (today - d).days <= 90}
+        recently_active = {
+            cid
+            for cid, d in last_session_dates.items()
+            if (today - d).days <= RECENT_ACTIVITY_WINDOW_DAYS
+        }
         has_any_session = set(last_session_dates.keys())
 
         # Sessions billed as a cancellation fee don't need a log (same rule as the UI).

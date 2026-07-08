@@ -18,6 +18,7 @@ from ...utils.google_calendar import (
     GoogleCalendarOAuth,
     find_calendar_by_name,
 )
+from ...utils.tag_helpers import sync_no_next_session_tag
 
 logger = logging.getLogger(__name__)
 
@@ -115,12 +116,17 @@ class Command(BaseCommand):
         live_ids = {e.get("id") for e in raw_events if e.get("id")}
         parsed = CalendarEventParser.parse_events(raw_events)
 
+        # Clients whose Session rows changed in this run — their
+        # no-next-session tag is re-synced at the end instead of waiting
+        # for the next update_client_tags timer run.
+        affected_clients: set = set()
+
         updated_cancelled = self._cancel_stale_future_events(
-            practice, start_dt, end_dt, live_ids, dry_run
+            practice, start_dt, end_dt, live_ids, dry_run, affected_clients
         )
         created = skipped_dup = rescheduled = reinstated = 0
         for event in parsed:
-            result = self._upsert_event(event, practice, dry_run)
+            result = self._upsert_event(event, practice, dry_run, affected_clients)
             if result == "created":
                 created += 1
             elif result == "rescheduled":
@@ -141,6 +147,21 @@ class Command(BaseCommand):
         if reinstated:
             parts.append(f"{reinstated} reinstated")
         self.stdout.write(self.style.SUCCESS(f"  ✅ {action}: {', '.join(parts)}"))
+
+        if not dry_run:
+            self._sync_no_next_session_tags(affected_clients)
+
+    def _sync_no_next_session_tags(self, clients: set) -> None:
+        for client in clients:
+            changed = sync_no_next_session_tag(client)
+            if changed is True:
+                self.stdout.write(
+                    self.style.WARNING(f"  🏷  +no-next-session: {client.client_code}")
+                )
+            elif changed is False:
+                self.stdout.write(
+                    self.style.SUCCESS(f"  🏷  -no-next-session: {client.client_code}")
+                )
 
     def _determine_fetch_window(self, practice, forced_days, future_days):
         now = timezone.now()
@@ -184,7 +205,13 @@ class Command(BaseCommand):
         return raw_events
 
     def _cancel_stale_future_events(
-        self, practice, start_dt, end_dt, live_ids: set, dry_run: bool
+        self,
+        practice,
+        start_dt,
+        end_dt,
+        live_ids: set,
+        dry_run: bool,
+        affected_clients: set | None = None,
     ) -> int:
         count = 0
         existing = PendingCalendarEvent.objects.filter(
@@ -200,12 +227,16 @@ class Command(BaseCommand):
                     db_event.save(update_fields=["status"])
                     if db_event.session_id:
                         Session.objects.filter(pk=db_event.session_id).update(cancelled=True)
+                        if db_event.matched_client and affected_clients is not None:
+                            affected_clients.add(db_event.matched_client)
                 count += 1
                 code = db_event.matched_client.client_code if db_event.matched_client else "?"
                 self.stdout.write(f"  🚫 Cancelled: {code} on {db_event.event_date}")
         return count
 
-    def _upsert_event(self, event, practice, dry_run) -> str | None:
+    def _upsert_event(
+        self, event, practice, dry_run, affected_clients: set | None = None
+    ) -> str | None:
         """Return 'created', 'skipped', or None (invalid/no-id/no-start)."""
         event_id = event.get("id")
         start = event.get("start")
@@ -240,7 +271,11 @@ class Command(BaseCommand):
             },
         )
         if was_created:
-            self._auto_create_session(event, event_id, event_date, event_time, status)
+            session_client = self._auto_create_session(
+                event, event_id, event_date, event_time, status
+            )
+            if session_client and affected_clients is not None:
+                affected_clients.add(session_client)
             return "created"
 
         if status == PendingCalendarEvent.Status.CANCELLED:
@@ -250,6 +285,8 @@ class Command(BaseCommand):
             ).update(status=PendingCalendarEvent.Status.CANCELLED)
             if obj.session_id:
                 Session.objects.filter(pk=obj.session_id).update(cancelled=True)
+                if obj.matched_client and affected_clients is not None:
+                    affected_clients.add(obj.matched_client)
             return "skipped"
 
         # Reinstate a previously-cancelled event (e.g. un-cancelled in Google Calendar)
@@ -259,6 +296,8 @@ class Command(BaseCommand):
             )
             if obj.session_id:
                 Session.objects.filter(pk=obj.session_id).update(cancelled=False)
+                if obj.matched_client and affected_clients is not None:
+                    affected_clients.add(obj.matched_client)
             code = event.get("matched_client")
             code = code.client_code if code else "?"
             self.stdout.write(self.style.SUCCESS(f"  ✅ Reinstated: {code} on {event_date}"))
@@ -288,6 +327,10 @@ class Command(BaseCommand):
                 if date_changed:
                     session_updates["session_date"] = event_date
                     session_updates["session_time"] = event_time
+                    # A date change can move the session across the
+                    # past/future boundary the tag depends on
+                    if obj.matched_client and affected_clients is not None:
+                        affected_clients.add(obj.matched_client)
                 if session_updates:
                     Session.objects.filter(pk=obj.session_id).update(**session_updates)
 
@@ -320,14 +363,15 @@ class Command(BaseCommand):
         return PendingCalendarEvent.Status.PENDING
 
     def _auto_create_session(self, event, event_id, event_date, event_time, status):
+        """Create a Session for a matched event; return its client (or None)."""
         matched_client = event.get("matched_client")
         if not matched_client:
-            return
+            return None
         if status not in (
             PendingCalendarEvent.Status.PENDING,
             PendingCalendarEvent.Status.SKIPPED,
         ):
-            return
+            return None
         session, _ = Session.objects.get_or_create(
             client=matched_client,
             session_date=event_date,
@@ -339,3 +383,4 @@ class Command(BaseCommand):
         )
         if not PendingCalendarEvent.objects.filter(session=session).exists():
             PendingCalendarEvent.objects.filter(google_event_id=event_id).update(session=session)
+        return matched_client

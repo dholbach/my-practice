@@ -10,7 +10,7 @@ from django.db.models import Q
 
 from ..models import Client, Invoice, InvoiceItem, ServiceType
 from ..models import Session
-from ..utils import get_next_invoice_number, remove_no_next_session_tag
+from ..utils import get_next_invoice_number, sync_no_next_session_tag
 
 
 # ── Private resolution helpers ────────────────────────────────────────────────
@@ -162,7 +162,7 @@ def create_invoice_items_from_events(
                     rate=rate,
                     session=session,
                 )
-                remove_no_next_session_tag(client)
+                sync_no_next_session_tag(client)
                 created += 1
         except Exception as e:
             errors.append(f"Fehler beim Erstellen von {event.get('summary')}: {str(e)}")
@@ -261,7 +261,7 @@ def bill_session(session: "Session", practice) -> tuple[bool, str]:
                 rate=rate,
                 session=session,
             )
-            remove_no_next_session_tag(client)
+            sync_no_next_session_tag(client)
     except Exception as e:
         return False, f"Fehler: {e}"
 
