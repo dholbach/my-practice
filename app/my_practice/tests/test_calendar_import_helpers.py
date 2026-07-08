@@ -194,7 +194,7 @@ class CreateInvoiceItemsFromEventsTest(TestCase):
 
         self.assertEqual(created, 0)
         self.assertEqual(skipped, 1)
-        self.assertIn("hourly rate", errors[0])
+        self.assertIn("Stundensatz", errors[0])
 
     def test_session_record_created(self):
         create_invoice_items_from_events([self._make_event()], {}, self.request)

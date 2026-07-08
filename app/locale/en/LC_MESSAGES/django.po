@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-06 16:56+0200\n"
+"POT-Creation-Date: 2026-07-08 08:54+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -133,6 +133,71 @@ msgstr ""
 #: my_practice/models/gebueh.py:113
 msgid "Leistungserfassungen"
 msgstr ""
+
+#: my_practice/utils/calendar_import_helpers.py:27
+#, python-format
+msgid "Client ID %(id)s not found for event %(summary)s"
+msgstr "Client ID %(id)s not found for event %(summary)s"
+
+#: my_practice/utils/calendar_import_helpers.py:33
+#, python-format
+msgid "No client for event: %(summary)s"
+msgstr "No client for event: %(summary)s"
+
+#: my_practice/utils/calendar_import_helpers.py:45
+#, python-format
+msgid "Service type ID %(id)s not found"
+msgstr "Service type ID %(id)s not found"
+
+#: my_practice/utils/calendar_import_helpers.py:52
+#, python-format
+msgid "No default service type found for event: %(summary)s"
+msgstr "No default service type found for event: %(summary)s"
+
+#: my_practice/utils/calendar_import_helpers.py:74
+#, python-format
+msgid "Client %(code)s has no hourly rate — set it in client settings"
+msgstr "Client %(code)s has no hourly rate — set it in client settings"
+
+#: my_practice/utils/calendar_import_helpers.py:130
+#, python-format
+msgid "No date for event: %(summary)s"
+msgstr "No date for event: %(summary)s"
+
+#: my_practice/utils/calendar_import_helpers.py:141
+#, python-format
+msgid "Duplicate: %(summary)s on %(date)s"
+msgstr "Duplicate: %(summary)s on %(date)s"
+
+#: my_practice/utils/calendar_import_helpers.py:180
+#, python-format
+msgid "Error creating %(summary)s: %(error)s"
+msgstr "Error creating %(summary)s: %(error)s"
+
+#: my_practice/utils/calendar_import_helpers.py:247
+#: my_practice/views/calendar_views.py:483
+msgid "No matching service type found."
+msgstr "No matching service type found."
+
+#: my_practice/utils/calendar_import_helpers.py:251
+#: my_practice/views/calendar_views.py:491
+#, python-format
+msgid "No hourly rate set for %(code)s."
+msgstr "No hourly rate set for %(code)s."
+
+#: my_practice/utils/calendar_import_helpers.py:255
+msgid "Session is already billed."
+msgstr "Session is already billed."
+
+#: my_practice/utils/calendar_import_helpers.py:280
+#, python-format
+msgid "Error: %(error)s"
+msgstr "Error: %(error)s"
+
+#: my_practice/utils/calendar_import_helpers.py:282
+#, python-format
+msgid "Session on %(date)s was billed."
+msgstr "Session on %(date)s was billed."
 
 #: my_practice/utils/dashboard_widgets.py:26
 msgid "Follow-up"
@@ -523,6 +588,10 @@ msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amo
 msgstr[0] "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
 msgstr[1] "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
 
+#: my_practice/views/calendar_views.py:62
+msgid "OAuth state mismatch. Please try again."
+msgstr "OAuth state mismatch. Please try again."
+
 #: my_practice/views/calendar_views.py:76
 msgid "✅ Google Calendar connected successfully!"
 msgstr "✅ Google Calendar connected successfully!"
@@ -562,6 +631,11 @@ msgstr "Calendar 'Praxis' not found"
 msgid "Error loading events: %(error)s"
 msgstr "Error loading events: %(error)s"
 
+#: my_practice/views/calendar_views.py:205
+#: my_practice/views/calendar_views.py:364
+msgid "Invalid JSON"
+msgstr "Invalid JSON"
+
 #: my_practice/views/calendar_views.py:226
 #: my_practice/views/invoice_views.py:500
 #: my_practice/views/invoice_views.py:766
@@ -590,15 +664,6 @@ msgstr "Unknown action."
 #: my_practice/views/calendar_views.py:469
 msgid "No client assigned to this event."
 msgstr "No client assigned to this event."
-
-#: my_practice/views/calendar_views.py:483
-msgid "No matching service type found."
-msgstr "No matching service type found."
-
-#: my_practice/views/calendar_views.py:491
-#, python-format
-msgid "No hourly rate set for %(code)s."
-msgstr "No hourly rate set for %(code)s."
 
 #: my_practice/views/calendar_views.py:508
 #, python-format
@@ -919,15 +984,15 @@ msgstr ""
 msgid "Praxis '%(name)s' deaktiviert."
 msgstr ""
 
-#: my_practice/views/tax_views.py:47
+#: my_practice/views/tax_views.py:45
 msgid "No practice selected"
 msgstr ""
 
-#: my_practice/views/tax_views.py:52 my_practice/views/tax_views.py:55
+#: my_practice/views/tax_views.py:50 my_practice/views/tax_views.py:53
 msgid "Invalid year"
 msgstr ""
 
-#: my_practice/views/tax_views.py:67
+#: my_practice/views/tax_views.py:66
 msgid "Invalid amount"
 msgstr "Invalid amount"
 

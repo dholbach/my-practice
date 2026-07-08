@@ -59,7 +59,7 @@ def calendar_oauth2callback(request: HttpRequest) -> HttpResponse:
     # Verify state to prevent CSRF
     state = request.session.get("oauth_state")
     if not state or state != request.GET.get("state"):
-        messages.error(request, "OAuth state mismatch. Please try again.")
+        messages.error(request, _("OAuth state mismatch. Please try again."))
         return redirect("dashboard")
 
     # Create flow and exchange code for tokens
@@ -202,7 +202,7 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
         )
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
+        return JsonResponse({"success": False, "error": _("Invalid JSON")}, status=400)
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
@@ -361,7 +361,7 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
         )
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
+        return JsonResponse({"success": False, "error": _("Invalid JSON")}, status=400)
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
