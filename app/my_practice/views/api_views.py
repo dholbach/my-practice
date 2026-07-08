@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from PIL import Image
 from weasyprint import HTML
@@ -28,14 +29,14 @@ def next_invoice_number(request: HttpRequest) -> JsonResponse:
     """API endpoint to get next invoice number for a client"""
     client_id = request.GET.get("client")
     if not client_id:
-        return JsonResponse({"error": "Client ID required"}, status=400)
+        return JsonResponse({"error": _("Client ID required")}, status=400)
 
     try:
         client = Client.objects.for_current_practice(request).get(pk=client_id)
         suggested_number = get_next_invoice_number(client)
         return JsonResponse({"suggested_number": suggested_number})
     except Client.DoesNotExist:
-        return JsonResponse({"error": "Client not found"}, status=404)
+        return JsonResponse({"error": _("Client not found")}, status=404)
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +144,7 @@ def generate_contract_pdf_bytes(client: Client, practice: Practice, lang: str) -
     Returns:
         (pdf_bytes, filename) — filename is suitable for download or attachment.
     """
-    logo_data, _ = _prepare_practice_images(practice)
+    logo_data, _signature = _prepare_practice_images(practice)
     html_string = render_to_string(
         "my_practice/treatment_contract_pdf.html",
         {"client": client, "practice": practice, "logo_data": logo_data, "lang": lang},
@@ -174,6 +175,25 @@ def contract_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     return response
 
 
+def generate_intake_form_pdf_bytes(
+    client: Client, practice: Practice, lang: str
+) -> tuple[bytes, str]:
+    """Render the pre-filled Aufnahmebogen as PDF bytes with fillable form fields.
+
+    Returns:
+        (pdf_bytes, filename) — filename is suitable for download or attachment.
+    """
+    logo_data, _signature = _prepare_practice_images(practice)
+    html_string = render_to_string(
+        "my_practice/intake_form_pdf.html",
+        {"client": client, "practice": practice, "logo_data": logo_data, "lang": lang},
+    )
+    pdf_bytes = HTML(string=html_string).write_pdf(pdf_forms=True)
+    safe_code = client.client_code.replace("/", "-")
+    filename = f"Aufnahmebogen_{safe_code}.pdf" if lang == "de" else f"IntakeForm_{safe_code}.pdf"
+    return pdf_bytes, filename
+
+
 def intake_form_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     """Generate pre-filled Aufnahmebogen (intake form) PDF for a client.
 
@@ -183,22 +203,7 @@ def intake_form_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
     practice = client.practice
     lang = request.GET.get("lang") or client.language or "de"
-
-    logo_data, _ = _prepare_practice_images(practice)
-
-    html_string = render_to_string(
-        "my_practice/intake_form_pdf.html",
-        {
-            "client": client,
-            "practice": practice,
-            "logo_data": logo_data,
-            "lang": lang,
-        },
-    )
-    pdf_bytes = HTML(string=html_string).write_pdf()
-
-    safe_code = client.client_code.replace("/", "-")
-    filename = f"Aufnahmebogen_{safe_code}.pdf" if lang == "de" else f"IntakeForm_{safe_code}.pdf"
+    pdf_bytes, filename = generate_intake_form_pdf_bytes(client, practice, lang)
     response = HttpResponse(pdf_bytes, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
@@ -217,7 +222,7 @@ def invoice_batch_download(request: HttpRequest) -> HttpResponse:
     status = request.POST.get("status", Invoice.Status.PAID)
 
     if not year_raw or not year_raw.isdigit():
-        messages.error(request, "Ungültiges Jahr für Sammeldownload.")
+        messages.error(request, _("Invalid year for batch download."))
         return HttpResponse(status=400)
 
     year = int(year_raw)
@@ -230,7 +235,11 @@ def invoice_batch_download(request: HttpRequest) -> HttpResponse:
     )
 
     if not invoices.exists():
-        messages.warning(request, f"Keine Rechnungen für {year} mit Status '{status}' gefunden.")
+        messages.warning(
+            request,
+            _("No invoices found for %(year)s with status '%(status)s'.")
+            % {"year": year, "status": status},
+        )
         return HttpResponse(status=204)
 
     practice = request.current_practice
@@ -259,7 +268,7 @@ def invoice_batch_download(request: HttpRequest) -> HttpResponse:
 def update_invoice_status(request, pk):
     """Update invoice status via POST"""
     if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=405)
+        return JsonResponse({"error": _("POST required")}, status=405)
 
     invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=pk)
     new_status = request.POST.get("status")
@@ -272,7 +281,7 @@ def update_invoice_status(request, pk):
         Invoice.Status.WRITTEN_OFF,
     }
     if new_status not in valid_statuses:
-        return JsonResponse({"error": "Invalid status"}, status=400)
+        return JsonResponse({"error": _("Invalid status")}, status=400)
 
     invoice.status = new_status
 
@@ -296,7 +305,7 @@ def update_invoice_status(request, pk):
 
     messages.success(
         request,
-        f"Status geändert zu: {invoice.get_status_display()}",
+        _("Status changed to: %(status)s") % {"status": invoice.get_status_display()},
     )
 
     next_url = request.POST.get("next")

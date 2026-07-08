@@ -48,17 +48,21 @@
         }
         .field-value {
             display: table-cell;
-            font-size: 12pt;
-            border-bottom: 1px solid #000;
             vertical-align: bottom;
-            padding-bottom: 1pt;
             min-width: 8cm;
         }
-        .field-value.blank {
-            color: transparent;  /* keep the underline but show blank */
-        }
-        .field-value.filled {
-            font-weight: normal;
+        /* Fillable PDF form fields (rendered as AcroForm fields via pdf_forms=True) */
+        .field-input {
+            appearance: auto;
+            display: block;
+            width: 100%;
+            height: 0.55cm;
+            border: none;
+            border-bottom: 1px solid #000;
+            background: transparent;
+            font-size: 12pt;
+            font-family: inherit;
+            padding: 0 0 1pt 0;
         }
 
         .two-col {
@@ -105,8 +109,15 @@
             padding-left: 2%;
         }
         .sig-line {
-            border-bottom: 1px solid #000;
+            appearance: auto;
+            display: block;
+            width: 100%;
             height: 0.8cm;
+            border: none;
+            border-bottom: 1px solid #000;
+            background: transparent;
+            font-size: 12pt;
+            font-family: inherit;
             margin-bottom: 0.1cm;
         }
         .sig-label {
@@ -147,37 +158,37 @@
     <div class="section">
         <div class="field-row">
             <div class="field-label">{% if lang == "en" %}Surname, first name{% else %}Name, Vorname{% endif %}</div>
-            <div class="field-value filled">{{ client.full_name }}</div>
+            <div class="field-value"><input type="text" name="full_name" class="field-input" value="{{ client.full_name }}"></div>
         </div>
 
         <div class="field-row">
             <div class="field-label">{% if lang == "en" %}Date of Birth{% else %}Geburtsdatum{% endif %}</div>
-            <div class="field-value filled">{% if client.date_of_birth %}{{ client.date_of_birth|date:"d.m.Y" }}{% else %}&nbsp;{% endif %}</div>
+            <div class="field-value"><input type="text" name="date_of_birth" class="field-input" value="{% if client.date_of_birth %}{{ client.date_of_birth|date:"d.m.Y" }}{% endif %}"></div>
         </div>
 
         <div class="field-row">
             <div class="field-label">{% if lang == "en" %}Address{% else %}Anschrift{% endif %}</div>
-            <div class="field-value filled">{% if client.address %}{{ client.address }}{% else %}&nbsp;{% endif %}</div>
+            <div class="field-value"><input type="text" name="address" class="field-input" value="{{ client.address|default:'' }}"></div>
         </div>
 
         <div class="field-row">
             <div class="field-label">{% if lang == "en" %}Zip Code, City{% else %}PLZ, Wohnort{% endif %}</div>
-            <div class="field-value blank">&nbsp;</div>
+            <div class="field-value"><input type="text" name="postal_code_city" class="field-input" value=""></div>
         </div>
 
         <div class="field-row">
             <div class="field-label">E-Mail</div>
-            <div class="field-value filled">{% if client.email %}{{ client.email }}{% else %}&nbsp;{% endif %}</div>
+            <div class="field-value"><input type="text" name="email" class="field-input" value="{{ client.email|default:'' }}"></div>
         </div>
 
         <div class="field-row">
             <div class="field-label">{% if lang == "en" %}Telephone number{% else %}Telefonnummer{% endif %}</div>
-            <div class="field-value filled">{% if client.phone %}{{ client.phone }}{% else %}&nbsp;{% endif %}</div>
+            <div class="field-value"><input type="text" name="phone" class="field-input" value="{{ client.phone|default:'' }}"></div>
         </div>
 
         <div class="field-row">
             <div class="field-label">{% if lang == "en" %}Cost carrier{% else %}Kostenträger{% endif %}</div>
-            <div class="field-value filled">{% if client.cost_carrier %}{{ client.cost_carrier }}{% else %}&nbsp;{% endif %}</div>
+            <div class="field-value"><input type="text" name="cost_carrier" class="field-input" value="{{ client.cost_carrier|default:'' }}"></div>
         </div>
     </div>
 
@@ -185,14 +196,14 @@
     <div class="signature-block" style="margin-top: 2cm;">
         <div class="sig-row">
             <div class="sig-cell">
-                <div class="sig-line"></div>
+                <input type="text" name="place_date" class="sig-line">
                 <div class="sig-label">{% if lang == "en" %}(Place, Date){% else %}(Ort, Datum){% endif %}</div>
             </div>
             <div class="sig-cell">&nbsp;</div>
         </div>
         <div class="sig-row" style="margin-top: 1cm;">
             <div class="sig-cell">
-                <div class="sig-line"></div>
+                <input type="text" name="signature_patient" class="sig-line">
                 <div class="sig-label">{% if lang == "en" %}(Signature Patient){% else %}(Unterschrift Patient/in){% endif %}</div>
             </div>
             <div class="sig-cell">&nbsp;</div>

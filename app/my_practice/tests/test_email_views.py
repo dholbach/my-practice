@@ -221,3 +221,82 @@ class SendInvoiceEmailViewTest(TestCase):
 
         # Invoice date should still be today
         self.assertEqual(self.invoice.invoice_date, date.today())
+
+
+class SendIntakeFormEmailViewTest(TestCase):
+    """Tests for SendIntakeFormEmailView"""
+
+    def setUp(self):
+        logging.getLogger("my_practice.email").setLevel(logging.ERROR)
+
+        self.client_http = TestClient()
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="intake-email-test-practice",
+            title="Test Practitioner",
+            email="practice@test.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="intakeemailuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_http.login(username="intakeemailuser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            email="max@example.com",
+            practice=self.practice,
+        )
+
+    def test_form_loads_prefilled(self):
+        """GET renders the form with default subject/body and recipient."""
+        response = self.client_http.get(
+            reverse("send_intake_form_email", kwargs={"pk": self.test_client.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "my_practice/send_intake_form_email.html")
+        form = response.context["form"]
+        self.assertEqual(form.initial["recipient"], "max@example.com")
+        self.assertEqual(form.initial["subject"], "Aufnahmebogen")
+        self.assertEqual(response.context["filename"], "Aufnahmebogen_TC.pdf")
+
+    def test_redirects_without_client_email(self):
+        """Client without email → redirect to client detail with error."""
+        self.test_client.email = ""
+        self.test_client.save()
+
+        response = self.client_http.get(
+            reverse("send_intake_form_email", kwargs={"pk": self.test_client.pk})
+        )
+        self.assertRedirects(response, reverse("client_detail", kwargs={"pk": self.test_client.pk}))
+
+    @patch("my_practice.views.email_views.EmailMessage")
+    def test_send_attaches_pdf_and_sets_intake_sent_date(self, mock_email):
+        """POST sends the email with the fillable PDF attached and marks the step done."""
+        mock_instance = MagicMock()
+        mock_email.return_value = mock_instance
+        mock_instance.send.return_value = 1
+
+        self.assertIsNone(self.test_client.intake_sent_date)
+
+        response = self.client_http.post(
+            reverse("send_intake_form_email", kwargs={"pk": self.test_client.pk}),
+            {
+                "recipient": "max@example.com",
+                "subject": "Aufnahmebogen",
+                "body": "Hallo",
+            },
+        )
+        self.assertRedirects(response, reverse("client_detail", kwargs={"pk": self.test_client.pk}))
+        mock_instance.send.assert_called_once()
+
+        # PDF attachment
+        mock_instance.attach.assert_called_once()
+        fname, fbytes, fmime = mock_instance.attach.call_args.args
+        self.assertEqual(fname, "Aufnahmebogen_TC.pdf")
+        self.assertEqual(fmime, "application/pdf")
+        self.assertTrue(fbytes.startswith(b"%PDF"))
+
+        # Onboarding step marked as done
+        self.test_client.refresh_from_db()
+        self.assertEqual(self.test_client.intake_sent_date, date.today())
