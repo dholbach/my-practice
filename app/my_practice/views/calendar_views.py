@@ -126,25 +126,37 @@ def calendar_import(request: HttpRequest) -> HttpResponse:
             "start_date": start_date,
             "end_date": end_date,
             "total_events": len(parsed_events),
-            "ready_count": sum(
-                1
-                for e in parsed_events
-                if e["matched_client"] and not e["is_cancelled"] and not e.get("is_duplicate")
-            ),
-            "duplicate_count": sum(1 for e in parsed_events if e.get("is_duplicate")),
-            "cancelled_count": sum(1 for e in parsed_events if e["is_cancelled"]),
-            "unknown_count": sum(
-                1
-                for e in parsed_events
-                if not e["matched_client"] and not e["is_cancelled"] and not e.get("is_duplicate")
-            ),
             "already_imported_count": already_imported_count,
+            **_event_category_counts(parsed_events),
         }
         return render(request, "my_practice/calendar_import.html", context)
 
     except Exception as e:
         messages.error(request, _("Error loading calendar events: %(error)s") % {"error": str(e)})
         return redirect("dashboard")
+
+
+def _is_ready_event(e: dict) -> bool:
+    return bool(e["matched_client"]) and not e["is_cancelled"] and not e.get("is_duplicate")
+
+
+def _is_unknown_event(e: dict) -> bool:
+    return not e["matched_client"] and not e["is_cancelled"] and not e.get("is_duplicate")
+
+
+def _event_category_counts(parsed_events: list[dict]) -> dict:
+    """Summary counts for the calendar-import event list, by category.
+
+    Note: categories are not mutually exclusive — an event can be both
+    cancelled and a duplicate, so ready/unknown counts explicitly exclude
+    both, while duplicate/cancelled counts don't exclude each other.
+    """
+    return {
+        "ready_count": sum(1 for e in parsed_events if _is_ready_event(e)),
+        "duplicate_count": sum(1 for e in parsed_events if e.get("is_duplicate")),
+        "cancelled_count": sum(1 for e in parsed_events if e["is_cancelled"]),
+        "unknown_count": sum(1 for e in parsed_events if _is_unknown_event(e)),
+    }
 
 
 @require_POST
@@ -414,6 +426,127 @@ def calendar_queue_skip(request: HttpRequest, pk: int) -> JsonResponse:
         return JsonResponse({"success": False, "error": _("Event not found.")}, status=404)
 
 
+def _fetch_pending_event(pk: int, practice) -> "PendingCalendarEvent | None":
+    try:
+        return PendingCalendarEvent.objects.select_related(
+            "matched_client", "suggested_service_type"
+        ).get(pk=pk, practice=practice, status=PendingCalendarEvent.Status.PENDING)
+    except PendingCalendarEvent.DoesNotExist:
+        return None
+
+
+def _skip_pending_event(request: HttpRequest, event: "PendingCalendarEvent", redirect_target):
+    event.status = PendingCalendarEvent.Status.SKIPPED
+    event.save(update_fields=["status"])
+    messages.success(
+        request,
+        _("Event on %(date)s skipped.") % {"date": event.event_date.strftime("%d.%m.%Y")},
+    )
+    return redirect_target
+
+
+def _resolve_quick_action_service_type(
+    event: "PendingCalendarEvent", practice
+) -> "ServiceType | None":
+    """Prefer the calendar-matched service type, fall back to the default 60min type."""
+    if event.suggested_service_type is not None:
+        return event.suggested_service_type
+
+    from django.db.models import Q
+
+    return ServiceType.objects.filter(
+        Q(practice=practice) | Q(practice__isnull=True),
+        code="therapy_60",
+    ).first()
+
+
+def _resolve_billing_inputs(
+    request: HttpRequest, event: "PendingCalendarEvent", client, practice
+) -> tuple | None:
+    """Resolve (service_type, rate) for a quick-action import.
+
+    Emits its own error message and returns None if either can't be resolved.
+    """
+    service_type = _resolve_quick_action_service_type(event, practice)
+    if service_type is None:
+        messages.error(request, _("No matching service type found."))
+        return None
+
+    rate = resolve_session_rate(client, service_type)
+    if rate == Decimal("0") and service_type.code != "therapy_free":
+        messages.error(
+            request,
+            _("No hourly rate set for %(code)s.") % {"code": client.client_code},
+        )
+        return None
+
+    return service_type, rate
+
+
+def _session_already_billed(client, event: "PendingCalendarEvent", service_type) -> bool:
+    """Guard against duplicates — exclude cancelled invoices so re-import after
+    cancellation works correctly."""
+    return (
+        InvoiceItem.objects.filter(
+            invoice__client=client,
+            session__session_date=event.event_date,
+            service_type=service_type,
+        )
+        .exclude(invoice__status=Invoice.Status.CANCELLED)
+        .exists()
+    )
+
+
+def _resolve_quick_action_invoice(action: str, client, event: "PendingCalendarEvent") -> Invoice:
+    from datetime import datetime as dt
+
+    from ..utils import get_next_invoice_number
+    from ..utils.calendar_import_helpers import get_or_create_invoice_for_month
+
+    if action == "new_invoice":
+        return Invoice.objects.create(
+            client=client,
+            invoice_date=event.event_date.replace(day=1),
+            invoice_number=get_next_invoice_number(client),
+            status="draft",
+            practice=client.practice,
+        )
+    event_dt = dt.combine(event.event_date, event.event_time or dt.min.time())
+    return get_or_create_invoice_for_month(client, event_dt)
+
+
+def _create_session_and_invoice_item(
+    event: "PendingCalendarEvent", client, service_type, rate, invoice: Invoice
+) -> None:
+    from django.db import transaction
+
+    from ..models import InvoiceItem, Session
+    from ..utils import sync_no_next_session_tag
+
+    with transaction.atomic():
+        session, _created = Session.objects.get_or_create(
+            client=client,
+            session_date=event.event_date,
+            session_time=event.event_time,
+            defaults={
+                "duration": service_type.default_duration,
+                "calendar_event_id": event.google_event_id,
+            },
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=service_type,
+            quantity=Decimal("1.00"),
+            rate=rate,
+            total=rate,
+            session=session,
+        )
+        event.status = PendingCalendarEvent.Status.IMPORTED
+        event.session = session
+        event.save(update_fields=["status", "session"])
+        sync_no_next_session_tag(client)
+
+
 @require_POST
 def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
     """
@@ -426,24 +559,13 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
     For "ignore", marks the event as SKIPPED.
     Redirects back to the client detail page.
     """
-    from datetime import datetime as dt
-
-    from django.contrib import messages
-    from django.db import transaction
     from django.shortcuts import redirect
-
-    from ..models import InvoiceItem, Session
-    from ..utils import get_next_invoice_number, sync_no_next_session_tag
-    from ..utils.calendar_import_helpers import get_or_create_invoice_for_month
 
     practice = getattr(request, "current_practice", None)
     action = request.POST.get("action")
 
-    try:
-        event = PendingCalendarEvent.objects.select_related(
-            "matched_client", "suggested_service_type"
-        ).get(pk=pk, practice=practice, status=PendingCalendarEvent.Status.PENDING)
-    except PendingCalendarEvent.DoesNotExist:
+    event = _fetch_pending_event(pk, practice)
+    if event is None:
         messages.error(request, _("Event not found."))
         return redirect("client_list")
 
@@ -453,13 +575,7 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
     if action == "ignore":
-        event.status = PendingCalendarEvent.Status.SKIPPED
-        event.save(update_fields=["status"])
-        messages.success(
-            request,
-            _("Event on %(date)s skipped.") % {"date": event.event_date.strftime("%d.%m.%Y")},
-        )
-        return redirect_target
+        return _skip_pending_event(request, event, redirect_target)
 
     if action not in ("current_invoice", "new_invoice"):
         messages.error(request, _("Unknown action."))
@@ -469,40 +585,12 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
         messages.error(request, _("No client assigned to this event."))
         return redirect("calendar_approval_queue")
 
-    # Resolve service type — prefer calendar match, fall back to default 60min
-    service_type = event.suggested_service_type
-    if service_type is None:
-        from django.db.models import Q
-
-        service_type = ServiceType.objects.filter(
-            Q(practice=practice) | Q(practice__isnull=True),
-            code="therapy_60",
-        ).first()
-
-    if service_type is None:
-        messages.error(request, _("No matching service type found."))
+    billing_inputs = _resolve_billing_inputs(request, event, client, practice)
+    if billing_inputs is None:
         return redirect_target
+    service_type, rate = billing_inputs
 
-    rate = resolve_session_rate(client, service_type)
-
-    if rate == Decimal("0") and service_type.code != "therapy_free":
-        messages.error(
-            request,
-            _("No hourly rate set for %(code)s.") % {"code": client.client_code},
-        )
-        return redirect_target
-
-    # Guard against duplicates — exclude cancelled invoices so re-import after
-    # cancellation works correctly.
-    if (
-        InvoiceItem.objects.filter(
-            invoice__client=client,
-            session__session_date=event.event_date,
-            service_type=service_type,
-        )
-        .exclude(invoice__status=Invoice.Status.CANCELLED)
-        .exists()
-    ):
+    if _session_already_billed(client, event, service_type):
         messages.warning(
             request,
             _("Session on %(date)s is already billed.")
@@ -510,43 +598,9 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
         )
         return redirect_target
 
-    # Get or create target invoice
-    event_dt = dt.combine(event.event_date, event.event_time or dt.min.time())
-    if action == "new_invoice":
-        invoice = Invoice.objects.create(
-            client=client,
-            invoice_date=event.event_date.replace(day=1),
-            invoice_number=get_next_invoice_number(client),
-            status="draft",
-            practice=client.practice,
-        )
-    else:
-        invoice = get_or_create_invoice_for_month(client, event_dt)
-
     try:
-        with transaction.atomic():
-            session, _created = Session.objects.get_or_create(
-                client=client,
-                session_date=event.event_date,
-                session_time=event.event_time,
-                defaults={
-                    "duration": service_type.default_duration,
-                    "calendar_event_id": event.google_event_id,
-                },
-            )
-            InvoiceItem.objects.create(
-                invoice=invoice,
-                service_type=service_type,
-                quantity=Decimal("1.00"),
-                rate=rate,
-                total=rate,
-                session=session,
-            )
-            event.status = PendingCalendarEvent.Status.IMPORTED
-            event.session = session
-            event.save(update_fields=["status", "session"])
-            sync_no_next_session_tag(client)
-
+        invoice = _resolve_quick_action_invoice(action, client, event)
+        _create_session_and_invoice_item(event, client, service_type, rate, invoice)
         messages.success(
             request,
             _("Event on %(date)s added to invoice %(number)s.")
