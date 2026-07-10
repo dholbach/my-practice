@@ -19,6 +19,7 @@ from ..models import (
     Practice,
     ServiceType,
     Session,
+    UserPractice,
 )
 
 
@@ -347,3 +348,175 @@ class AnalyticsFilterTest(TestCase):
         """Test analytics without any filters (all data)."""
         response = self.client_instance.get(reverse("analytics"))
         self.assertEqual(response.status_code, 200)
+
+
+class PracticeAnalysisRedirectTest(TestCase):
+    """Test the practice_analysis -> analytics?tab=capacity backwards-compat redirect."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="redirectuser", password="testpass123")
+        self.client_instance = TestClient()
+        self.client_instance.login(username="redirectuser", password="testpass123")
+
+    def test_redirects_to_capacity_tab(self):
+        response = self.client_instance.get(reverse("practice_analysis"))
+        self.assertRedirects(response, "/analytics/?tab=capacity", fetch_redirect_response=False)
+
+    def test_preserves_query_string(self):
+        response = self.client_instance.get(reverse("practice_analysis") + "?year=2025")
+        self.assertRedirects(
+            response, "/analytics/?tab=capacity&year=2025", fetch_redirect_response=False
+        )
+
+
+class AnalyticsClientsTabHeatmapTest(TestCase):
+    """Test the ?tab=clients branch of analytics_dashboard (heatmap data)."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="analytics-heatmap",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="heatmapuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_instance = TestClient()
+        self.client_instance.login(username="heatmapuser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+        Session.objects.create(client=self.test_client, session_date=date.today(), duration=60)
+
+    def test_clients_tab_includes_heatmap_context(self):
+        response = self.client_instance.get(reverse("analytics") + "?tab=clients")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("heatmap_data", response.context)
+        self.assertIn("active_clients_with_totals", response.context)
+        self.assertEqual(response.context["months_to_show"], 12)
+        self.assertEqual(response.context["start_offset"], 0)
+        self.assertEqual(response.context["heatmap_sort"], "total")
+
+    def test_clients_tab_invalid_months_falls_back_to_default(self):
+        response = self.client_instance.get(
+            reverse("analytics") + "?tab=clients&months=not-a-number"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["months_to_show"], 12)
+
+    def test_clients_tab_invalid_offset_falls_back_to_zero(self):
+        response = self.client_instance.get(
+            reverse("analytics") + "?tab=clients&offset=not-a-number"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["start_offset"], 0)
+
+    def test_clients_tab_offset_strips_thousand_separator_commas(self):
+        # replace(",", "") treats commas as thousand-separators, not decimals:
+        # "1,000" -> "1000", not 1.
+        response = self.client_instance.get(reverse("analytics") + "?tab=clients&offset=1,000")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["start_offset"], 1000)
+
+    def test_clients_tab_invalid_sort_falls_back_to_total(self):
+        response = self.client_instance.get(
+            reverse("analytics") + "?tab=clients&sort=not-a-real-sort"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["heatmap_sort"], "total")
+
+    def test_clients_tab_recent_sort_is_accepted(self):
+        response = self.client_instance.get(reverse("analytics") + "?tab=clients&sort=recent")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["heatmap_sort"], "recent")
+
+    def test_can_go_back_true_when_older_sessions_exist(self):
+        Session.objects.create(
+            client=self.test_client,
+            session_date=date.today() - timedelta(days=400),
+            duration=60,
+        )
+        response = self.client_instance.get(reverse("analytics") + "?tab=clients&months=1")
+        self.assertTrue(response.context["can_go_back"])
+
+    def test_revenue_tab_does_not_include_heatmap_context(self):
+        response = self.client_instance.get(reverse("analytics") + "?tab=revenue")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("heatmap_data", response.context)
+
+
+class RevenueReportTest(TestCase):
+    """Test the revenue_report view."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="revenue-report",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="revenueuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_instance = TestClient()
+        self.client_instance.login(username="revenueuser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+
+    def test_no_year_selected_shows_available_years_only(self):
+        response = self.client_instance.get(reverse("revenue_report"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("invoices", response.context)
+
+    def test_selected_year_shows_paid_invoices(self):
+        Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date(2026, 1, 15),
+            paid_date=date(2026, 1, 20),
+            status="paid",
+            total=Decimal("180.00"),
+            practice=self.practice,
+        )
+        response = self.client_instance.get(reverse("revenue_report") + "?year=2026")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["summary"]["count"], 1)
+        self.assertEqual(response.context["summary"]["same_year_count"], 1)
+        self.assertEqual(response.context["summary"]["total"], Decimal("180.00"))
+
+    def test_year_diff_flagged_for_cross_year_payment(self):
+        Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date(2025, 12, 20),
+            paid_date=date(2026, 1, 5),
+            status="paid",
+            total=Decimal("90.00"),
+            practice=self.practice,
+        )
+        response = self.client_instance.get(reverse("revenue_report") + "?year=2026")
+        self.assertEqual(response.context["summary"]["prev_year_count"], 1)
+        self.assertEqual(response.context["summary"]["same_year_count"], 0)
+        self.assertTrue(response.context["invoices"][0].year_diff)
+
+    def test_available_years_only_from_paid_invoices(self):
+        Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date(2026, 1, 15),
+            status="draft",
+            total=Decimal("90.00"),
+            practice=self.practice,
+        )
+        response = self.client_instance.get(reverse("revenue_report"))
+        self.assertEqual(response.context["available_years"], [])
