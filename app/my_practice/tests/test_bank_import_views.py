@@ -17,6 +17,7 @@ from django.urls import reverse
 from ..models import (
     BankTransaction,
     Client,
+    ClientAlias,
     CompanyExpense,
     CompanyWithdrawal,
     Invoice,
@@ -195,6 +196,33 @@ class BankReviewViewGetTest(BankReviewViewBase):
         response = self.http.get(reverse("bank_review"))
         transactions = response.context["transactions"]
         self.assertEqual(len(transactions), 1)
+
+    def test_payer_name_known_when_matches_client_full_name(self):
+        Client.objects.create(practice=self.practice, full_name="Anna Schmidt", client_code="AS-1")
+        self._make_unmatched(payer="anna schmidt")  # case-insensitive match
+        response = self.http.get(reverse("bank_review"))
+        transaction = response.context["transactions"][0]
+        self.assertTrue(transaction.payer_name_known)
+        self.assertNotContains(response, "create_alias")
+
+    def test_payer_name_known_when_alias_exists(self):
+        client_obj = Client.objects.create(
+            practice=self.practice, full_name="Anna Schmidt", client_code="AS-1"
+        )
+        ClientAlias.objects.create(client=client_obj, alias_name="A. Schmidt (Mutter)")
+        self._make_unmatched(payer="a. schmidt (mutter)")
+        response = self.http.get(reverse("bank_review"))
+        transaction = response.context["transactions"][0]
+        self.assertTrue(transaction.payer_name_known)
+        self.assertNotContains(response, "create_alias")
+
+    def test_payer_name_unknown_offers_alias_checkbox(self):
+        Client.objects.create(practice=self.practice, full_name="Anna Schmidt", client_code="AS-1")
+        self._make_unmatched(payer="Hans Mueller")
+        response = self.http.get(reverse("bank_review"))
+        transaction = response.context["transactions"][0]
+        self.assertFalse(transaction.payer_name_known)
+        self.assertContains(response, "create_alias")
 
 
 class BankReviewBulkActionsTest(BankReviewViewBase):

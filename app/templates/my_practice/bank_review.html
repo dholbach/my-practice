@@ -295,6 +295,7 @@
                         </label>
                         {{ form.invoice }}
 
+                        {% if not trans.payer_name_known %}
                         <!-- ClientAlias Option -->
                         <div class="inline-note inline-note--info mt-1">
                             <label class="d-flex items-center gap-sm text-sm text-info cursor-pointer">
@@ -306,6 +307,7 @@
                                 {% trans "Future payments from this name will be recognised automatically." %}
                             </div>
                         </div>
+                        {% endif %}
                     </div>
                     <div class="d-flex gap-sm">
                         <button type="submit" name="action" value="match" class="btn btn-primary">
