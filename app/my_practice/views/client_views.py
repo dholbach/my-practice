@@ -382,6 +382,51 @@ def client_gdpr_delete_confirm(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
 
+def _send_gdpr_deletion_email(request: HttpRequest, client: Client, practice) -> None:
+    """Best-effort notification email to the client before their data is erased."""
+    if not (client.email and practice):
+        return
+    try:
+        subject, body = get_gdpr_deletion_email_content(client, practice)
+        EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=practice.email,
+            to=[client.email],
+        ).send()
+        logger.info("GDPR deletion email sent for %s", client.client_code)
+    except Exception:
+        logger.exception("Failed to send GDPR deletion email for %s", client.client_code)
+        messages.warning(
+            request,
+            _(
+                "Note: The notification email to %(email)s could not be sent. "
+                "Please inform the client manually."
+            )
+            % {"email": client.email},
+        )
+
+
+def _collect_document_file_paths(client: Client) -> list[str]:
+    """Absolute paths of a client's document files, before their DB records are deleted."""
+    paths = []
+    for doc in client.documents.all():
+        if doc.file and doc.file.name:
+            try:
+                paths.append(doc.file.path)
+            except ValueError:
+                pass
+    return paths
+
+
+def _delete_files_from_disk(paths: list[str]) -> None:
+    for path in paths:
+        try:
+            os.unlink(path)
+        except OSError:
+            logger.warning("Could not delete media file after GDPR erasure: %s", path)
+
+
 @require_POST
 def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     """GDPR Art. 17 deletion: send notification email then erase client data."""
@@ -396,37 +441,8 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     practice = request.current_practice
     client_code = client.client_code
 
-    # Send notification email before deletion (best-effort)
-    if client.email and practice:
-        try:
-            subject, body = get_gdpr_deletion_email_content(client, practice)
-            msg = EmailMessage(
-                subject=subject,
-                body=body,
-                from_email=practice.email,
-                to=[client.email],
-            )
-            msg.send()
-            logger.info("GDPR deletion email sent for %s", client_code)
-        except Exception:
-            logger.exception("Failed to send GDPR deletion email for %s", client_code)
-            messages.warning(
-                request,
-                _(
-                    "Note: The notification email to %(email)s could not be sent. "
-                    "Please inform the client manually."
-                )
-                % {"email": client.email},
-            )
-
-    # Collect document file paths before deletion
-    doc_file_paths = []
-    for doc in client.documents.all():
-        if doc.file and doc.file.name:
-            try:
-                doc_file_paths.append(doc.file.path)
-            except ValueError:
-                pass
+    _send_gdpr_deletion_email(request, client, practice)
+    doc_file_paths = _collect_document_file_paths(client)
 
     # Delete in FK dependency order (PROTECT constraints first)
     with transaction.atomic():
@@ -436,17 +452,30 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
         # SupervisionItem, ClientNote, ClientAlias
 
     # Delete document files from disk after DB records are gone
-    for path in doc_file_paths:
-        try:
-            os.unlink(path)
-        except OSError:
-            logger.warning("Could not delete media file after GDPR erasure: %s", path)
+    _delete_files_from_disk(doc_file_paths)
 
     messages.success(
         request,
         _("Client %(code)s has been deleted pursuant to GDPR Art. 17.") % {"code": client_code},
     )
     return redirect("client_list")
+
+
+def _extract_alpha_parts(full_name: str) -> list[str]:
+    """Split a name into uppercase alpha-only tokens, dropping empty ones."""
+    tokens = [p for p in full_name.upper().split() if any(c.isalpha() for c in p)]
+    tokens = ["".join(c for c in p if c.isalpha()) for p in tokens]
+    return [p for p in tokens if p]
+
+
+def _dedupe_preserve_order(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for item in items:
+        if item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
 
 
 def _generate_code_candidates(full_name: str) -> list[str]:
@@ -457,46 +486,28 @@ def _generate_code_candidates(full_name: str) -> list[str]:
     first-N-of-first-name, first-N-of-last-name, and combinations.
     Only alpha characters are considered; digits and punctuation are stripped.
     """
-    parts = [p for p in full_name.upper().split() if any(c.isalpha() for c in p)]
-    parts = ["".join(c for c in p if c.isalpha()) for p in parts]
-    parts = [p for p in parts if p]
+    parts = _extract_alpha_parts(full_name)
     if not parts:
         return []
 
     first = parts[0]
     last = parts[-1] if len(parts) > 1 else ""
 
-    candidates: list[str] = []
+    # (condition, candidate) pairs, in priority order: 2-letter initials/prefixes
+    # first, then 3-letter combinations.
+    candidate_specs = [
+        (bool(last), first[:1] + last[:1]),
+        (len(first) >= 2, first[:2]),
+        (len(last) >= 2, last[:2]),
+        (bool(last) and len(first) >= 2, first[:2] + last[:1]),
+        (bool(last) and len(last) >= 2, first[:1] + last[:2]),
+        (len(parts) >= 3, "".join(p[0] for p in parts[:3])),
+        (len(first) >= 3, first[:3]),
+        (len(last) >= 3, last[:3]),
+    ]
+    candidates = [code for condition, code in candidate_specs if condition]
 
-    # 2-letter: initials, first-2-of-first, first-2-of-last
-    if last:
-        candidates.append(first[0] + last[0])
-    if len(first) >= 2:
-        candidates.append(first[:2])
-    if len(last) >= 2:
-        candidates.append(last[:2])
-
-    # 3-letter combinations
-    if last:
-        if len(first) >= 2:
-            candidates.append(first[:2] + last[0])
-        if len(last) >= 2:
-            candidates.append(first[0] + last[:2])
-    if len(parts) >= 3:
-        candidates.append("".join(p[0] for p in parts[:3]))
-    if len(first) >= 3:
-        candidates.append(first[:3])
-    if len(last) >= 3:
-        candidates.append(last[:3])
-
-    # Deduplicate preserving order
-    seen: set[str] = set()
-    result: list[str] = []
-    for c in candidates:
-        if c not in seen:
-            seen.add(c)
-            result.append(c)
-    return result
+    return _dedupe_preserve_order(candidates)
 
 
 def suggest_client_code(request: HttpRequest) -> JsonResponse:
