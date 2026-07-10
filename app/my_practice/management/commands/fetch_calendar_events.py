@@ -125,32 +125,34 @@ class Command(BaseCommand):
         updated_cancelled = self._cancel_stale_future_events(
             practice, start_dt, end_dt, live_ids, dry_run, affected_clients
         )
-        created = skipped_dup = rescheduled = reinstated = 0
-        for event in parsed:
-            result = self._upsert_event(event, practice, dry_run, affected_clients)
-            if result == "created":
-                created += 1
-            elif result == "rescheduled":
-                rescheduled += 1
-            elif result == "reinstated":
-                reinstated += 1
-            elif result == "skipped":
-                skipped_dup += 1
-
-        action = "[dry-run] Would create" if dry_run else "Created"
-        parts = [
-            f"{created} new",
-            f"{updated_cancelled} marked as cancelled",
-            f"{skipped_dup} already present",
-        ]
-        if rescheduled:
-            parts.append(f"{rescheduled} rescheduled")
-        if reinstated:
-            parts.append(f"{reinstated} reinstated")
-        self.stdout.write(self.style.SUCCESS(f"  ✅ {action}: {', '.join(parts)}"))
+        counts = self._upsert_all_events(parsed, practice, dry_run, affected_clients)
+        self._report_fetch_summary(dry_run, updated_cancelled, counts)
 
         if not dry_run:
             self._sync_no_next_session_tags(affected_clients)
+
+    def _upsert_all_events(
+        self, parsed_events: list, practice, dry_run: bool, affected_clients: set
+    ) -> dict[str, int]:
+        counts = {"created": 0, "skipped": 0, "rescheduled": 0, "reinstated": 0}
+        for event in parsed_events:
+            result = self._upsert_event(event, practice, dry_run, affected_clients)
+            if result in counts:
+                counts[result] += 1
+        return counts
+
+    def _report_fetch_summary(self, dry_run: bool, updated_cancelled: int, counts: dict) -> None:
+        action = "[dry-run] Would create" if dry_run else "Created"
+        parts = [
+            f"{counts['created']} new",
+            f"{updated_cancelled} marked as cancelled",
+            f"{counts['skipped']} already present",
+        ]
+        if counts["rescheduled"]:
+            parts.append(f"{counts['rescheduled']} rescheduled")
+        if counts["reinstated"]:
+            parts.append(f"{counts['reinstated']} reinstated")
+        self.stdout.write(self.style.SUCCESS(f"  ✅ {action}: {', '.join(parts)}"))
 
     def _sync_no_next_session_tags(self, clients: set) -> None:
         for client in clients:
@@ -238,24 +240,17 @@ class Command(BaseCommand):
     def _upsert_event(
         self, event, practice, dry_run, affected_clients: set | None = None
     ) -> str | None:
-        """Return 'created', 'skipped', or None (invalid/no-id/no-start)."""
+        """Return 'created', 'skipped', 'rescheduled', 'reinstated', or None (invalid/no-id/no-start)."""
         event_id = event.get("id")
         start = event.get("start")
         if not event_id or not start:
             return None
 
         status = self._resolve_event_status(event)
-        event_date = start.date() if hasattr(start, "date") else start
-        event_time = (
-            start.time() if hasattr(start, "time") and (start.hour or start.minute) else None
-        )
+        event_date, event_time = self._split_event_datetime(start)
 
         if dry_run:
-            code = event["matched_client"].client_code if event.get("matched_client") else "?"
-            self.stdout.write(
-                f"  [dry-run] {code} am {event_date} "
-                f"({event.get('duration_minutes')} min) status={status}"
-            )
+            self._report_dry_run_event(event, event_date, status)
             return "created"
 
         obj, was_created = PendingCalendarEvent.objects.get_or_create(
@@ -280,79 +275,163 @@ class Command(BaseCommand):
             return "created"
 
         if status == PendingCalendarEvent.Status.CANCELLED:
-            PendingCalendarEvent.objects.filter(
-                google_event_id=event_id,
-                status=PendingCalendarEvent.Status.PENDING,
-            ).update(status=PendingCalendarEvent.Status.CANCELLED)
-            if obj.session_id:
-                Session.objects.filter(pk=obj.session_id).update(cancelled=True)
-                if obj.matched_client and affected_clients is not None:
-                    affected_clients.add(obj.matched_client)
+            self._transition_to_cancelled(obj, event_id, affected_clients)
             return "skipped"
 
-        # Reinstate a previously-cancelled event (e.g. un-cancelled in Google Calendar)
         if obj.status == PendingCalendarEvent.Status.CANCELLED:
-            PendingCalendarEvent.objects.filter(pk=obj.pk).update(
-                status=PendingCalendarEvent.Status.PENDING
-            )
-            if obj.session_id:
-                Session.objects.filter(pk=obj.session_id).update(cancelled=False)
-                if obj.matched_client and affected_clients is not None:
-                    affected_clients.add(obj.matched_client)
-            code = event.get("matched_client")
-            code = code.client_code if code else "?"
-            self.stdout.write(self.style.SUCCESS(f"  ✅ Reinstated: {code} on {event_date}"))
+            self._transition_to_reinstated(obj, event, event_date, affected_clients)
             return "reinstated"
 
-        # Detect rescheduled or updated events (date or duration changed)
+        if self._apply_reschedule_if_changed(obj, event, event_date, event_time, affected_clients):
+            return "rescheduled"
+
+        return "skipped"
+
+    @staticmethod
+    def _split_event_datetime(start) -> tuple:
+        event_date = start.date() if hasattr(start, "date") else start
+        event_time = (
+            start.time() if hasattr(start, "time") and (start.hour or start.minute) else None
+        )
+        return event_date, event_time
+
+    def _report_dry_run_event(self, event, event_date, status) -> None:
+        code = event["matched_client"].client_code if event.get("matched_client") else "?"
+        self.stdout.write(
+            f"  [dry-run] {code} am {event_date} "
+            f"({event.get('duration_minutes')} min) status={status}"
+        )
+
+    @staticmethod
+    def _transition_to_cancelled(
+        obj: "PendingCalendarEvent", event_id: str, affected_clients: set | None
+    ) -> None:
+        PendingCalendarEvent.objects.filter(
+            google_event_id=event_id,
+            status=PendingCalendarEvent.Status.PENDING,
+        ).update(status=PendingCalendarEvent.Status.CANCELLED)
+        if obj.session_id:
+            Session.objects.filter(pk=obj.session_id).update(cancelled=True)
+            if obj.matched_client and affected_clients is not None:
+                affected_clients.add(obj.matched_client)
+
+    def _transition_to_reinstated(
+        self, obj: "PendingCalendarEvent", event, event_date, affected_clients: set | None
+    ) -> None:
+        """Reinstate a previously-cancelled event (e.g. un-cancelled in Google Calendar)."""
+        PendingCalendarEvent.objects.filter(pk=obj.pk).update(
+            status=PendingCalendarEvent.Status.PENDING
+        )
+        if obj.session_id:
+            Session.objects.filter(pk=obj.session_id).update(cancelled=False)
+            if obj.matched_client and affected_clients is not None:
+                affected_clients.add(obj.matched_client)
+        code = event.get("matched_client")
+        code = code.client_code if code else "?"
+        self.stdout.write(self.style.SUCCESS(f"  ✅ Reinstated: {code} on {event_date}"))
+
+    def _apply_reschedule_if_changed(
+        self,
+        obj: "PendingCalendarEvent",
+        event,
+        event_date,
+        event_time,
+        affected_clients: set | None,
+    ) -> bool:
+        """Detect a rescheduled or updated event (date or duration changed), apply
+        the change, and report it. Returns True if anything changed."""
         new_duration = event.get("duration_minutes", 0)
         date_changed = obj.event_date != event_date
         duration_changed = bool(new_duration and obj.duration_minutes != new_duration)
 
-        if date_changed or duration_changed:
-            updates: dict = {}
-            if date_changed:
-                updates["event_date"] = event_date
-                updates["event_time"] = event_time
-            if duration_changed:
-                updates["duration_minutes"] = new_duration
-            if obj.status == PendingCalendarEvent.Status.IMPORTED and obj.session is None:
-                updates["status"] = PendingCalendarEvent.Status.PENDING
-            PendingCalendarEvent.objects.filter(pk=obj.pk).update(**updates)
+        if not (date_changed or duration_changed):
+            return False
 
-            # Propagate changes to the linked Session
-            if obj.session_id:
-                session_updates: dict = {}
-                if duration_changed:
-                    session_updates["duration"] = new_duration
-                if date_changed:
-                    session_updates["session_date"] = event_date
-                    session_updates["session_time"] = event_time
-                    # A date change can move the session across the
-                    # past/future boundary the tag depends on
-                    if obj.matched_client and affected_clients is not None:
-                        affected_clients.add(obj.matched_client)
-                if session_updates:
-                    Session.objects.filter(pk=obj.session_id).update(**session_updates)
+        self._apply_reschedule_updates(
+            obj, event_date, event_time, new_duration, date_changed, duration_changed
+        )
+        self._propagate_reschedule_to_session(
+            obj,
+            event_date,
+            event_time,
+            new_duration,
+            date_changed,
+            duration_changed,
+            affected_clients,
+        )
+        self._report_reschedule(
+            obj, event, event_date, new_duration, date_changed, duration_changed
+        )
+        return True
 
-            code = event.get("matched_client")
-            code = code.client_code if code else "?"
-            if date_changed:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"  📅 Rescheduled: {code} moved from {obj.event_date} → {event_date}"
-                    )
+    @staticmethod
+    def _apply_reschedule_updates(
+        obj: "PendingCalendarEvent",
+        event_date,
+        event_time,
+        new_duration,
+        date_changed,
+        duration_changed,
+    ) -> None:
+        updates: dict = {}
+        if date_changed:
+            updates["event_date"] = event_date
+            updates["event_time"] = event_time
+        if duration_changed:
+            updates["duration_minutes"] = new_duration
+        if obj.status == PendingCalendarEvent.Status.IMPORTED and obj.session is None:
+            updates["status"] = PendingCalendarEvent.Status.PENDING
+        PendingCalendarEvent.objects.filter(pk=obj.pk).update(**updates)
+
+    @staticmethod
+    def _propagate_reschedule_to_session(
+        obj: "PendingCalendarEvent",
+        event_date,
+        event_time,
+        new_duration,
+        date_changed,
+        duration_changed,
+        affected_clients: set | None,
+    ) -> None:
+        if not obj.session_id:
+            return
+        session_updates: dict = {}
+        if duration_changed:
+            session_updates["duration"] = new_duration
+        if date_changed:
+            session_updates["session_date"] = event_date
+            session_updates["session_time"] = event_time
+            # A date change can move the session across the
+            # past/future boundary the tag depends on
+            if obj.matched_client and affected_clients is not None:
+                affected_clients.add(obj.matched_client)
+        if session_updates:
+            Session.objects.filter(pk=obj.session_id).update(**session_updates)
+
+    def _report_reschedule(
+        self,
+        obj: "PendingCalendarEvent",
+        event,
+        event_date,
+        new_duration,
+        date_changed,
+        duration_changed,
+    ) -> None:
+        code = event.get("matched_client")
+        code = code.client_code if code else "?"
+        if date_changed:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  📅 Rescheduled: {code} moved from {obj.event_date} → {event_date}"
                 )
-            if duration_changed:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"  ⏱ Duration updated: {code} on {event_date} "
-                        f"{obj.duration_minutes} → {new_duration} min"
-                    )
+            )
+        if duration_changed:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  ⏱ Duration updated: {code} on {event_date} "
+                    f"{obj.duration_minutes} → {new_duration} min"
                 )
-            return "rescheduled"
-
-        return "skipped"
+            )
 
     @staticmethod
     def _resolve_event_status(event) -> str:
