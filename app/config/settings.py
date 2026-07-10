@@ -3,6 +3,7 @@ Django settings for payments project.
 """
 
 import os
+import sys
 from pathlib import Path
 
 from django.utils.csp import CSP
@@ -162,6 +163,17 @@ PAYMENTS_DATA_DIR = Path(
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Logging configuration
+#
+# Without an explicit "root" entry, loggers not listed below (most of
+# my_practice.*) have no configured handler and fall through to Python's
+# logging.lastResort, which prints WARNING+ straight to stderr regardless of
+# level. That's normally fine, but it means every test that deliberately
+# exercises an error path (mocked exceptions, missing Ghostscript, invalid
+# uploads, ...) also prints a full traceback to the test runner's output,
+# which reads like a failure even though the test passed. Routing everything
+# through an explicit root logger lets us quiet it specifically during
+# `manage.py test` without touching dev/prod logging.
+RUNNING_TESTS = "test" in sys.argv
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -176,6 +188,10 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "CRITICAL" if RUNNING_TESTS else "WARNING",
     },
     "loggers": {
         "django.core.mail": {
