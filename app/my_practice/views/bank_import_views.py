@@ -15,7 +15,14 @@ from django.views.generic import FormView, ListView
 from django.views.generic.edit import FormMixin
 
 from ..import_forms import BankStatementUploadForm, TransactionMatchForm
-from ..models import BankTransaction, ClientAlias, CompanyExpense, CompanyWithdrawal, Invoice
+from ..models import (
+    BankTransaction,
+    Client,
+    ClientAlias,
+    CompanyExpense,
+    CompanyWithdrawal,
+    Invoice,
+)
 from ..utils import BankStatementImporter
 
 
@@ -120,6 +127,7 @@ class BankReviewView(FormMixin, ListView):
         )
         paid_map = maps["paid"]
         sent_map = maps["sent"]
+        known_names = self._known_payer_names(self.request.current_practice)
 
         for trans in transactions_list:
             trans.matching_paid_invoice = None
@@ -132,8 +140,20 @@ class BankReviewView(FormMixin, ListView):
                 sent = sent_map.get(num)
                 if sent and abs(sent.total - trans.amount) < Decimal("0.01"):
                     trans.matching_unpaid_invoice = sent
+            trans.payer_name_known = bool(
+                trans.payer_name and trans.payer_name.lower().strip() in known_names
+            )
 
         return transactions_list
+
+    @staticmethod
+    def _known_payer_names(practice) -> set[str]:
+        """Names that already resolve to a client: exact client names + existing aliases."""
+        client_names = Client.objects.filter(practice=practice).values_list("full_name", flat=True)
+        alias_names = ClientAlias.objects.filter(client__practice=practice).values_list(
+            "alias_name", flat=True
+        )
+        return {n.lower().strip() for n in client_names} | {n.lower().strip() for n in alias_names}
 
     def get_form_kwargs(self):
         """Add practice to form kwargs"""
