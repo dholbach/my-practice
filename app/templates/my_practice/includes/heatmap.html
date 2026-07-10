@@ -4,9 +4,9 @@
 
 {% if heatmap_data %}
 <div class="section" id="heatmap">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h2 style="margin: 0;">🔥 {% blocktrans with n=months_to_show %}Activity Heatmap ({{ n }} months){% endblocktrans %}</h2>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
+    <div class="flex justify-between items-center mb-2">
+        <h2 class="m-0">🔥 {% blocktrans with n=months_to_show %}Activity Heatmap ({{ n }} months){% endblocktrans %}</h2>
+        <div class="flex gap-2 items-center">
             <span class="text-xs text-muted">{% trans "Sort:" %}</span>
             <a href="?{{ heatmap_url_prefix }}offset={{ start_offset }}&months={{ months_to_show }}&sort=total#heatmap"
                class="btn btn-sm{% if heatmap_sort != 'recent' %} btn-primary{% endif %}">

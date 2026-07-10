@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}{% if object %}TODO bearbeiten{% else %}Neue Aufgabe{% endif %}{% endblock %}
+{% block title %}{% if object %}{% trans "Edit TODO" %}{% else %}{% trans "New task" %}{% endif %}{% endblock %}
 
 {% block page_icon %}✅{% endblock %}
-{% block page_title %}{% if object %}TODO bearbeiten{% else %}Neue Aufgabe erstellen{% endif %}{% endblock %}
+{% block page_title %}{% if object %}{% trans "Edit TODO" %}{% else %}{% trans "Create new task" %}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="card form-container">
-    <form method="post" style="max-width: 600px;">
+    <form method="post" class="max-w-[600px]">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -30,10 +31,10 @@
             {% if form.description.errors %}
             <div class="error">{{ form.description.errors }}</div>
             {% endif %}
-            <small class="text-secondary">Optional: Detaillierte Notizen zur Aufgabe</small>
+            <small class="text-secondary">{% trans "Optional: detailed notes on the task" %}</small>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
                 <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
                 {{ form.category }}
@@ -57,7 +58,7 @@
             {% if form.due_date.errors %}
             <div class="error">{{ form.due_date.errors }}</div>
             {% endif %}
-            <small class="text-secondary">Optional: Fälligkeitsdatum (TT.MM.JJJJ oder JJJJ-MM-TT)</small>
+            <small class="text-secondary">{% trans "Optional: due date (DD.MM.YYYY or YYYY-MM-DD)" %}</small>
         </div>
 
         {% if object %}
@@ -67,13 +68,13 @@
             {% if form.completed_at.errors %}
             <div class="error">{{ form.completed_at.errors }}</div>
             {% endif %}
-            <small class="text-secondary">Leer lassen für "nicht erledigt"</small>
+            <small class="text-secondary">{% trans 'Leave empty for "not completed"' %}</small>
         </div>
         {% endif %}
 
         <div class="form-actions">
-            <button type="submit" class="btn">💾 Speichern</button>
-            <a href="{% url 'todo_list' %}" class="btn btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn">💾 {% trans "Save" %}</button>
+            <a href="{% url 'todo_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
         </div>
     </form>
 </div>

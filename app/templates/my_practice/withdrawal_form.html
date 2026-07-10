@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Entnahme {{ action }}{% endblock %}
+{% block title %}{% if withdrawal %}{% trans "Edit withdrawal" %}{% else %}{% trans "New withdrawal" %}{% endif %}{% endblock %}
 
-{% block page_title %}Entnahme {{ action }}{% endblock %}
-{% block page_subtitle %}{% if withdrawal %}Entnahme vom {{ withdrawal.date|date:"d.m.Y" }} bearbeiten{% else %}Neue Entnahme erfassen{% endif %}{% endblock %}
+{% block page_title %}{% if withdrawal %}{% trans "Edit withdrawal" %}{% else %}{% trans "New withdrawal" %}{% endif %}{% endblock %}
+{% block page_subtitle %}{% if withdrawal %}{% blocktrans with date=withdrawal.date|date:"d.m.Y" %}Edit withdrawal of {{ date }}{% endblocktrans %}{% else %}{% trans "Record a new withdrawal" %}{% endif %}{% endblock %}
 
 {% block content %}
 
-<div class="card" style="max-width: 800px; margin: 2rem auto;">
-    <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
+<div class="card max-w-[800px] my-8 mx-auto">
+    <form method="post" class="flex flex-col gap-6">
         {% csrf_token %}
         {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
@@ -67,12 +68,12 @@
             {% endif %}
         </div>
 
-        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+        <div class="flex gap-4 justify-end mt-2">
             <a href="{% if next %}{{ next }}{% else %}{% url 'withdrawal_list' %}{% endif %}" class="btn btn-secondary">
-                Abbrechen
+                {% trans "Cancel" %}
             </a>
             <button type="submit" class="btn btn-primary">
-                💾 Speichern
+                💾 {% trans "Save" %}
             </button>
         </div>
     </form>

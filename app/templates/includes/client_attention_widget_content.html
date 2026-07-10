@@ -3,13 +3,13 @@ Client Attention Widget Content - P-003 Phase 4
 Shows clients requiring attention (no recent sessions, tags)
 Uses centralized styles from widgets.css
 {% endcomment %}
-
+{% load i18n %}
 <div class="widget-content-section">
     {% if total_attention_count > 0 %}
         {% if no_recent_session_count > 0 %}
             <div class="widget-section">
                 <div class="section-header">
-                    <h4>⏰ Keine Sitzungen seit 60+ Tagen</h4>
+                    <h4>⏰ {% trans "No sessions for 60+ days" %}</h4>
                 </div>
                 <ul class="widget-pill-list">
                     {% for client in no_recent_session_clients %}
@@ -22,7 +22,7 @@ Uses centralized styles from widgets.css
                     {% if no_recent_session_count > 5 %}
                         <li class="widget-pill dashed">
                             <a href="{% url 'client_list' %}?tag=no-next-session">
-                                +{{ no_recent_session_count|add:"-5" }} weitere
+                                {% blocktrans with more=no_recent_session_count|add:"-5" %}+{{ more }} more{% endblocktrans %}
                             </a>
                         </li>
                     {% endif %}
@@ -37,7 +37,7 @@ Uses centralized styles from widgets.css
                         <span class="tag-badge" style="background: {{ data.tag.color }}20; color: {{ data.tag.color }};">
                             {{ data.tag.name }}
                         </span>
-                        {{ data.count }} Klient{{ data.count|pluralize:"en,en" }}
+                        {% blocktrans count count=data.count %}{{ count }} client{% plural %}{{ count }} clients{% endblocktrans %}
                     </h4>
                 </div>
                 <ul class="widget-pill-list">
@@ -51,7 +51,7 @@ Uses centralized styles from widgets.css
                     {% if data.count > 5 %}
                         <li class="widget-pill dashed">
                             <a href="{% url 'client_list' %}?tag={{ data.tag.id }}">
-                                +{{ data.count|add:"-5" }} weitere
+                                {% blocktrans with more=data.count|add:"-5" %}+{{ more }} more{% endblocktrans %}
                             </a>
                         </li>
                     {% endif %}
@@ -59,14 +59,14 @@ Uses centralized styles from widgets.css
             </div>
         {% endfor %}
 
-        <div style="padding-top: 1rem; border-top: 1px solid var(--color-border);">
+        <div class="pt-4 border-t border-border">
             <a href="{% url 'client_list' %}" class="widget-btn-secondary">
-                Alle Klienten ansehen
+                {% trans "View all clients" %}
             </a>
         </div>
     {% else %}
         <div class="widget-empty-state">
-            <p>✨ Keine Klienten benötigen aktuell besondere Aufmerksamkeit</p>
+            <p>✨ {% trans "No clients currently need special attention" %}</p>
         </div>
     {% endif %}
 </div>

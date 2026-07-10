@@ -1,51 +1,50 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Google Calendar verbinden{% endblock %}
+{% block title %}{% trans "Connect Google Calendar" %}{% endblock %}
 
 {% block content %}
 <div class="content-container">
-    <h1>Google Calendar verbinden</h1>
+    <h1>{% trans "Connect Google Calendar" %}</h1>
 
     <div class="info-box">
-        <h3>🗓️ Google Calendar verbinden</h3>
+        <h3>🗓️ {% trans "Connect Google Calendar" %}</h3>
         <p>
-            Kalender-Events werden automatisch als Sitzungen erkannt und können direkt in die Abrechnung übernommen werden.
+            {% trans "Calendar events are automatically recognised as sessions and can be taken straight into billing." %}
         </p>
         <ul>
-            <li>Neue Events werden als ausstehende Sitzungen vorgeschlagen</li>
-            <li>Absagen und Verschiebungen werden erkannt und synchronisiert</li>
-            <li>Duplikate werden automatisch gefiltert</li>
+            <li>{% trans "New events are suggested as pending sessions" %}</li>
+            <li>{% trans "Cancellations and reschedulings are detected and synchronised" %}</li>
+            <li>{% trans "Duplicates are filtered automatically" %}</li>
         </ul>
     </div>
 
-    <div class="card" style="max-width: 600px; margin: 30px auto; padding: 30px; text-align: center;">
-        <h2>Zugriff autorisieren</h2>
-        <p class="text-secondary" style="margin: 20px 0;">
-            Um Kalender-Events zu importieren, musst du den Zugriff auf deinen Google Calendar autorisieren.
+    <div class="card max-w-[600px] mx-auto my-8 p-8 text-center">
+        <h2>{% trans "Authorise access" %}</h2>
+        <p class="text-secondary my-5">
+            {% trans "To import calendar events you need to authorise access to your Google Calendar." %}
         </p>
 
         <div class="info-box">
-            <p><strong>Erforderliche Berechtigung:</strong></p>
-            <p style="margin: 10px 0;">
-                <code>calendar.readonly</code> - Lesezugriff auf Kalender-Events
+            <p><strong>{% trans "Required permission:" %}</strong></p>
+            <p class="my-2.5">
+                <code>calendar.readonly</code> - {% trans "Read access to calendar events" %}
             </p>
         </div>
 
         <a href="{% url 'calendar_authorize' %}"
-           class="btn btn-primary"
-           style="display: inline-block; padding: 15px 30px; font-size: 16px; margin-top: 20px;">
-            🔐 Mit Google verbinden
+           class="btn btn-primary inline-block py-[15px] px-[30px] text-base mt-5">
+            🔐 {% trans "Connect with Google" %}
         </a>
     </div>
 
-    <div class="info-box" style="max-width: 600px; margin: 0 auto;">
-        <h4>Datenschutz</h4>
+    <div class="info-box max-w-[600px] mx-auto">
+        <h4>{% trans "Privacy" %}</h4>
         <ul>
-            <li>Nur Lesezugriff auf deinen Kalender</li>
-            <li>Keine Änderungen an deinen Events</li>
-            <li>Token wird verschlüsselt in der lokalen Datenbank gespeichert</li>
-            <li>Du kannst den Zugriff jederzeit in deinem Google-Konto widerrufen</li>
+            <li>{% trans "Read-only access to your calendar" %}</li>
+            <li>{% trans "No changes to your events" %}</li>
+            <li>{% trans "Token is stored encrypted in the local database" %}</li>
+            <li>{% trans "You can revoke access in your Google account at any time" %}</li>
         </ul>
     </div>
 </div>
-{% endblock %}

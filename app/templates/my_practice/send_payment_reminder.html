@@ -1,27 +1,25 @@
 {% extends 'base.html' %}
 {% load payment_tags %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Zahlungserinnerung senden{% endblock %}
+{% block title %}{% trans "Send payment reminder" %}{% endblock %}
 
-{% block page_title %}📧 Zahlungserinnerung senden{% endblock %}
+{% block page_title %}📧 {% trans "Send payment reminder" %}{% endblock %}
 {% block page_subtitle %}<span class="sensitive-data">{{ client.full_name }}</span> ({{ client.client_code }}) &mdash; {% if client.language == 'en' %}🇬🇧 English{% else %}🇩🇪 Deutsch{% endif %}{% endblock %}
-
-{% block extra_css %}
-{% endblock %}
 
 {% block content %}
 
 <!-- Open invoices summary -->
-<div class="form-section" style="border-left: 4px solid var(--color-warning);">
-    <h3 style="margin: 0 0 1rem 0;">📄 Offene Rechnungen ({{ open_invoices|length }})</h3>
+<div class="form-section border-l-4 border-l-warning">
+    <h3 class="m-0 mb-2">📄 {% trans "Open invoices" %} ({{ open_invoices|length }})</h3>
     <table class="open-invoices-table">
         <thead>
             <tr>
-                <th>Rechnungsnr.</th>
-                <th>Datum</th>
-                <th>Status</th>
-                <th style="text-align: right;">Betrag</th>
+                <th>{% trans "Invoice no." %}</th>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th class="text-right">{% trans "Amount" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -35,14 +33,14 @@
                 </td>
                 <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
                 <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
-                <td style="text-align: right; font-weight: 600;">{{ invoice.total|currency }}</td>
+                <td class="text-right font-semibold">{{ invoice.total|currency }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
             <tr class="total-row">
-                <td colspan="3">Gesamt offen</td>
-                <td style="text-align: right;"><strong>{{ open_invoices_total|floatformat:2 }} €</strong></td>
+                <td colspan="3">{% trans "Total open" %}</td>
+                <td class="text-right"><strong>{{ open_invoices_total|floatformat:2 }} €</strong></td>
             </tr>
         </tfoot>
     </table>
@@ -50,12 +48,12 @@
 
 <!-- Email form -->
 <div class="email-preview">
-    <h2>📧 E-Mail anpassen und senden</h2>
+    <h2>📧 {% trans "Customise and send email" %}</h2>
 
     {% if not client.salutation %}
     <div class="callout callout-warning">
-        <strong>⚠️ Keine persönliche Anrede für diesen Klienten hinterlegt</strong><br>
-        Die E-Mail verwendet eine generische Anrede. Du kannst die Anrede im Tekstfeld unten anpassen.
+        <strong>⚠️ {% trans "No personal salutation stored for this client" %}</strong><br>
+        {% trans "The email uses a generic salutation. You can adjust the salutation in the text field below." %}
     </div>
     {% endif %}
 
@@ -79,16 +77,16 @@
             {{ form.body }}
             {% if form.body.errors %}<div class="error">{{ form.body.errors }}</div>{% endif %}
             <div class="helptext">
-                Du kannst den Text frei anpassen. Keine Anhänge — nur Text.
+                {% trans "You can adjust the text freely. No attachments — text only." %}
             </div>
         </div>
 
         <div class="button-group">
             <button type="submit" class="btn btn-primary">
-                📧 Erinnerung senden
+                📧 {% trans "Send reminder" %}
             </button>
             <a href="{% url 'client_detail' client.pk %}" class="btn btn-secondary">
-                Abbrechen
+                {% trans "Cancel" %}
             </a>
         </div>
     </form>

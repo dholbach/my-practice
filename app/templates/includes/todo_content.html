@@ -1,43 +1,44 @@
 {% load static %}
+{% load i18n %}
 {# Partial rendered by TodoListView (full page) and todo_toggle_complete (HTMX swap). #}
 <div id="todo-content">
 
 <!-- Stats -->
 <div class="todo-stats">
-    <a href="{% url 'todo_list' %}" class="stat-card {% if current_status == 'all' %}active{% endif %}" style="text-decoration: none;">
-        <div class="stat-label">Gesamt</div>
+    <a href="{% url 'todo_list' %}" class="stat-card no-underline {% if current_status == 'all' %}active{% endif %}">
+        <div class="stat-label">{% trans "Total" %}</div>
         <div class="stat-value">{{ stats.total }}</div>
     </a>
-    <a href="{% url 'todo_list' %}?status=active" class="stat-card {% if current_status == 'active' %}active{% endif %}" style="text-decoration: none;">
-        <div class="stat-label">Aktiv</div>
+    <a href="{% url 'todo_list' %}?status=active" class="stat-card no-underline {% if current_status == 'active' %}active{% endif %}">
+        <div class="stat-label">{% trans "Active" %}</div>
         <div class="stat-value">{{ stats.active }}</div>
     </a>
-    <a href="{% url 'todo_list' %}?status=completed" class="stat-card {% if current_status == 'completed' %}active{% endif %}" style="text-decoration: none;">
-        <div class="stat-label">Erledigt</div>
+    <a href="{% url 'todo_list' %}?status=completed" class="stat-card no-underline {% if current_status == 'completed' %}active{% endif %}">
+        <div class="stat-label">{% trans "Completed" %}</div>
         <div class="stat-value">{{ stats.completed }}</div>
     </a>
     <div class="stat-card {% if stats.overdue > 0 %}overdue{% else %}surface{% endif %}">
-        <div class="stat-label">Überfällig</div>
+        <div class="stat-label">{% trans "Overdue" %}</div>
         <div class="stat-value">{{ stats.overdue }}</div>
     </div>
 </div>
 
 <!-- Filters -->
 <div class="todo-filters">
-    <a href="{% url 'todo_create' %}" class="btn">➕ Neue Aufgabe</a>
+    <a href="{% url 'todo_create' %}" class="btn">➕ {% trans "New task" %}</a>
 
-    <form method="get" style="display: flex; gap: 1rem; flex: 1; align-items: center;">
-        <label for="category-filter" class="text-muted">Kategorie:</label>
+    <form method="get" class="flex gap-4 flex-1 items-center">
+        <label for="category-filter" class="text-muted">{% trans "Category:" %}</label>
         <select name="category" id="category-filter" x-data x-on:change="$el.form.submit()">
-            <option value="">Alle</option>
+            <option value="">{% trans "All" %}</option>
             {% for value, label in categories %}
             <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
 
-        <label for="priority-filter" class="text-muted">Priorität:</label>
+        <label for="priority-filter" class="text-muted">{% trans "Priority:" %}</label>
         <select name="priority" id="priority-filter" x-data x-on:change="$el.form.submit()">
-            <option value="">Alle</option>
+            <option value="">{% trans "All" %}</option>
             {% for value, label in priorities %}
             <option value="{{ value }}" {% if current_priority == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
@@ -46,7 +47,7 @@
         <input type="hidden" name="status" value="{{ current_status }}">
 
         {% if current_category or current_priority %}
-        <a href="{% url 'todo_list' %}?status={{ current_status }}" class="btn btn-secondary">Filter zurücksetzen</a>
+        <a href="{% url 'todo_list' %}?status={{ current_status }}" class="btn btn-secondary">{% trans "Reset filters" %}</a>
         {% endif %}
     </form>
 </div>
@@ -62,7 +63,7 @@
                hx-post="{% url 'todo_toggle' todo.pk %}?status={{ current_status }}&category={{ current_category }}&priority={{ current_priority }}"
                hx-target="#todo-content"
                hx-swap="outerHTML"
-               title="{% if todo.is_completed %}Als unerledigt markieren{% else %}Als erledigt markieren{% endif %}">
+               title="{% if todo.is_completed %}{% trans 'Mark as not completed' %}{% else %}{% trans 'Mark as completed' %}{% endif %}">
 
         <div class="todo-content">
             <div class="todo-title">{{ todo.title }}</div>
@@ -78,7 +79,7 @@
                 {% if todo.due_date %}
                 <span class="todo-due-date {% if todo.is_overdue and not todo.is_completed %}overdue{% endif %}">
                     📅 {{ todo.due_date|date:"d.m.Y" }}
-                    {% if todo.is_overdue and not todo.is_completed %}(überfällig!){% endif %}
+                    {% if todo.is_overdue and not todo.is_completed %}({% trans "overdue!" %}){% endif %}
                 </span>
                 {% endif %}
 
@@ -95,9 +96,9 @@
                     hx-post="{% url 'todo_toggle_focus' todo.pk %}?status={{ current_status }}&category={{ current_category }}&priority={{ current_priority }}"
                     hx-target="#todo-content"
                     hx-swap="outerHTML"
-                    title="{% if todo.is_focus %}Fokus entfernen{% else %}Als Fokus markieren{% endif %}">{% if todo.is_focus %}⭐{% else %}☆{% endif %}</button>
-            <a href="{% url 'todo_edit' todo.pk %}" class="link-primary" title="Bearbeiten">✏️</a>
-            <a href="{% url 'todo_delete' todo.pk %}" class="text-danger link-plain" title="Löschen">🗑️</a>
+                    title="{% if todo.is_focus %}{% trans 'Remove focus' %}{% else %}{% trans 'Mark as focus' %}{% endif %}">{% if todo.is_focus %}⭐{% else %}☆{% endif %}</button>
+            <a href="{% url 'todo_edit' todo.pk %}" class="link-primary" title="{% trans 'Edit' %}">✏️</a>
+            <a href="{% url 'todo_delete' todo.pk %}" class="text-danger link-plain" title="{% trans 'Delete' %}">🗑️</a>
         </div>
     </div>
     {% endfor %}
@@ -109,9 +110,9 @@
 
 {% else %}
 <div class="empty-state">
-    <h2>Keine Aufgaben</h2>
-    <p>{% if current_status == 'completed' %}Noch keine Aufgaben erledigt.{% elif current_status == 'active' %}Keine aktiven Aufgaben.{% else %}Noch keine Aufgaben erstellt.{% endif %}</p>
-    <a href="{% url 'todo_create' %}" class="btn">➕ Erste Aufgabe erstellen</a>
+    <h2>{% trans "No tasks" %}</h2>
+    <p>{% if current_status == 'completed' %}{% trans "No tasks completed yet." %}{% elif current_status == 'active' %}{% trans "No active tasks." %}{% else %}{% trans "No tasks created yet." %}{% endif %}</p>
+    <a href="{% url 'todo_create' %}" class="btn">➕ {% trans "Create first task" %}</a>
 </div>
 {% endif %}
 

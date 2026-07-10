@@ -19,45 +19,45 @@
                 {% else %}
                     {% block page_icon %}🏥{% endblock %}
                 {% endif %}
-                {% block page_title %}{% if request.current_practice and request.current_practice.short_title %}{{ request.current_practice.short_title }}{% else %}Praxisverwaltung{% endif %}{% endblock %}
+                {% block page_title %}{% if request.current_practice and request.current_practice.short_title %}{{ request.current_practice.short_title }}{% else %}{% trans "Practice management" %}{% endif %}{% endblock %}
             </h1>
-            <p class="subtitle">{% block page_subtitle %}Praxisverwaltung{% endblock %}</p>
+            <p class="subtitle">{% block page_subtitle %}{% trans "Practice management" %}{% endblock %}</p>
             <nav>
-                <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 Übersicht</a>
+                <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 {% trans "Overview" %}</a>
                 <div class="dropdown">
-                    <span {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' or request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' %}class="active"{% endif %}>📄 Rechnungen ▾</span>
+                    <span {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' or request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' %}class="active"{% endif %}>📄 {% trans "Invoices" %} ▾</span>
                     <div class="dropdown-content">
-                        <a href="{% url 'invoice_list' %}">📄 Rechnungen</a>
-                        <a href="{% url 'monthly_billing' %}">📅 Abrechnung</a>
+                        <a href="{% url 'invoice_list' %}">📄 {% trans "Invoices" %}</a>
+                        <a href="{% url 'monthly_billing' %}">📅 {% trans "Billing" %}</a>
                     </div>
                 </div>
-                <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' %}class="active"{% endif %}>📋 Klienten</a>
-                <a href="{% url 'inquiry_list' %}" {% if 'inquiry' in request.resolver_match.url_name %}class="active"{% endif %}>📬 Anfragen</a>
-                <a href="{% url 'todo_list' %}" {% if 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>✅ Aufgaben</a>
+                <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' %}class="active"{% endif %}>📋 {% trans "Clients" %}</a>
+                <a href="{% url 'inquiry_list' %}" {% if 'inquiry' in request.resolver_match.url_name %}class="active"{% endif %}>📬 {% trans "Inquiries" %}</a>
+                <a href="{% url 'todo_list' %}" {% if 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>✅ {% trans "Tasks" %}</a>
                 <div class="dropdown">
-                    <span {% if request.resolver_match.url_name == 'withdrawal_list' or request.resolver_match.url_name == 'expense_list' or request.resolver_match.url_name == 'tax_year_summary' or request.resolver_match.url_name == 'tax_quarter_overview' or request.resolver_match.url_name == 'analytics' or 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>💰 Finanzen{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %} ▾</span>
+                    <span {% if request.resolver_match.url_name == 'withdrawal_list' or request.resolver_match.url_name == 'expense_list' or request.resolver_match.url_name == 'tax_year_summary' or request.resolver_match.url_name == 'tax_quarter_overview' or request.resolver_match.url_name == 'analytics' or 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>💰 {% trans "Finances" %}{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %} ▾</span>
                     <div class="dropdown-content">
-                        <a href="{% url 'bank_import' %}">🏦 Bank-Import{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %}</a>
-                        <a href="{% url 'withdrawal_list' %}">📤 Entnahmen</a>
-                        <a href="{% url 'expense_list' %}">💸 Ausgaben</a>
-                        <a href="{% url 'bank_expense_review' %}">🏦 Bank-Ausgaben</a>
-                        <a href="{% url 'analytics' %}">📊 Analysen</a>
-                        <a href="{% url 'tax_year_summary' %}">📋 Steuer-Jahresübersicht</a>
-                        <a href="{% url 'tax_quarter_overview' %}">📊 Steuer-Quartalsübersicht</a>
+                        <a href="{% url 'bank_import' %}">🏦 {% trans "Bank import" %}{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %}</a>
+                        <a href="{% url 'withdrawal_list' %}">📤 {% trans "Withdrawals" %}</a>
+                        <a href="{% url 'expense_list' %}">💸 {% trans "Expenses" %}</a>
+                        <a href="{% url 'bank_expense_review' %}">🏦 {% trans "Bank expenses" %}</a>
+                        <a href="{% url 'analytics' %}">📊 {% trans "Analytics" %}</a>
+                        <a href="{% url 'tax_year_summary' %}">📋 {% trans "Tax annual overview" %}</a>
+                        <a href="{% url 'tax_quarter_overview' %}">📊 {% trans "Tax quarterly overview" %}</a>
                     </div>
                 </div>
                 <div class="dropdown">
                     <span>⚙️ Admin ▾</span>
                     <div class="dropdown-content">
-                        <a href="{% url 'calendar_approval_queue' %}">📅 Kalender-Genehmigung</a>
+                        <a href="{% url 'calendar_approval_queue' %}">📅 {% trans "Calendar approval" %}</a>
                         <a href="{% url 'supervision_queue' %}">🔍 Supervision</a>
-                        <a href="{% url 'boilerplate' %}">✉️ E-Mail-Textbausteine</a>
+                        <a href="{% url 'boilerplate' %}">✉️ {% trans "Email templates" %}</a>
                         <a href="{% url 'admin:index' %}">⚙️ Django Admin</a>
                     </div>
                 </div>
                 {% if user.is_authenticated and user.practices.exists %}
                 <div class="dropdown practice-switcher">
-                    <span>{{ request.current_practice.short_title|default:"Praxis" }} ▾</span>
+                    {% trans "Practice" as practice_fallback %}<span>{{ request.current_practice.short_title|default:practice_fallback }} ▾</span>
                     <div class="dropdown-content">
                         {% for practice in user.practices.all %}
                         <a href="{% url 'practice_switch' practice.slug %}"
@@ -66,11 +66,11 @@
                             {% if practice.id == request.current_practice.id %}✓{% endif %}
                         </a>
                         {% endfor %}
-                        <a href="{% url 'practice_management' %}" class="nav-manage-link">⚙️ Praxen verwalten</a>
+                        <a href="{% url 'practice_management' %}" class="nav-manage-link">⚙️ {% trans "Manage practices" %}</a>
                     </div>
                 </div>
                 {% endif %}
-                <form id="lang-form" action="{% url 'set_language' %}" method="post" style="display:none">
+                <form id="lang-form" action="{% url 'set_language' %}" method="post" class="hidden">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <input type="hidden" name="language" id="lang-input" value="">
@@ -78,10 +78,10 @@
                 <button class="lang-toggle" id="langToggle" title="Sprache wechseln / Switch language">
                     {{ CURRENT_LANGUAGE|upper }}
                 </button>
-                <button class="theme-toggle" id="themeToggle" title="Dark Mode umschalten">
+                <button class="theme-toggle" id="themeToggle" title="{% trans 'Toggle dark mode' %}">
                     🌙
                 </button>
-                <button class="privacy-toggle" id="privacyToggle" title="Klicken zum Verbergen sensibler Daten">
+                <button class="privacy-toggle" id="privacyToggle" title="{% trans 'Click to hide sensitive data' %}">
                     👁️ Privacy
                 </button>
             </nav>
@@ -99,9 +99,9 @@
 
         {% if update_available %}
         <div x-data="{ show: true }" x-show="show" class="update-banner">
-            <span>{{ current_version }} → <a href="https://github.com/dholbach/my-practice/releases/tag/{{ latest_version }}" target="_blank" rel="noopener"><strong>{{ latest_version }}</strong></a> verfügbar</span>
+            <span>{{ current_version }} → <a href="https://github.com/dholbach/my-practice/releases/tag/{{ latest_version }}" target="_blank" rel="noopener"><strong>{{ latest_version }}</strong></a> {% trans "available" %}</span>
             <a href="https://github.com/dholbach/my-practice/blob/main/UPGRADING.md" target="_blank" rel="noopener">Upgrade</a>
-            <button @click="show = false" class="update-banner__dismiss" title="Schließen">✕</button>
+            <button @click="show = false" class="update-banner__dismiss" title="{% trans 'Close' %}">✕</button>
         </div>
         {% endif %}
 

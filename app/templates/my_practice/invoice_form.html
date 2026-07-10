@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load payment_tags %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Neue Rechnung{% endblock %}
+{% block title %}{% trans "New Invoice" %}{% endblock %}
 
-{% block page_title %}Neue Rechnung{% endblock %}
-{% block page_subtitle %}Rechnung erstellen{% endblock %}
+{% block page_title %}{% trans "New Invoice" %}{% endblock %}
+{% block page_subtitle %}{% trans "Create invoice" %}{% endblock %}
 
 {% block content %}
 <form method="post" id="invoice-form">
@@ -45,7 +46,7 @@
             {{ form.paid_date.label_tag }}
             {{ form.paid_date }}
             {{ form.paid_date.errors }}
-            <div class="helptext">Optional: Datum der Zahlung (nur bei Status "Bezahlt" relevant)</div>
+            <div class="helptext">{% trans 'Optional: payment date (only relevant for status "Paid")' %}</div>
         </div>
     </div>
 
@@ -53,7 +54,7 @@
         {{ form.tax_rate.label_tag }}
         {{ form.tax_rate }}
         {{ form.tax_rate.errors }}
-        <div class="helptext">Kleinunternehmer = 0%</div>
+        <div class="helptext">{% trans "Small business owner = 0%" %}</div>
     </div>
 
     <div class="form-group">
@@ -63,7 +64,7 @@
     </div>
 
     <div class="formset-container">
-        <div class="formset-title">📋 Rechnungspositionen</div>
+        <div class="formset-title">📋 {% trans "Invoice items" %}</div>
 
         {{ items.management_form }}
         {{ items.non_form_errors }}
@@ -72,11 +73,11 @@
             {% for item_form in items %}
             <div class="formset-item">
                 <div class="formset-item-header">
-                    <strong>Item {{ forloop.counter }}</strong>
+                    <strong>{% trans "Item" %} {{ forloop.counter }}</strong>
                     {% if items.can_delete and not item_form.instance.pk %}
                     <label class="delete-checkbox">
                         {{ item_form.DELETE }}
-                        Löschen
+                        {% trans "Delete" %}
                     </label>
                     {% endif %}
                 </div>
@@ -121,14 +122,14 @@
             {% endfor %}
         </div>
 
-        <button type="button" id="add-item" class="btn btn-secondary" style="margin-top: 1rem;">
-            ➕ Weiteres Item hinzufügen
+        <button type="button" id="add-item" class="btn btn-secondary mt-2">
+            ➕ {% trans "Add another item" %}
         </button>
     </div>
 
     <div class="form-actions">
-        <button type="submit" class="btn">💾 Rechnung Erstellen</button>
-        <a href="{% url 'invoice_list' %}" class="btn btn-secondary">❌ Abbrechen</a>
+        <button type="submit" class="btn">💾 {% trans "Create Invoice" %}</button>
+        <a href="{% url 'invoice_list' %}" class="btn btn-secondary">❌ {% trans "Cancel" %}</a>
     </div>
 </form>
 
@@ -330,7 +331,8 @@ document.getElementById('add-item').addEventListener('click', function() {
     }
 
     // Update item counter
-    newItem.querySelector('strong').textContent = `Item ${formNum + 1}`;
+    {% trans "Item" as js_item %}
+    newItem.querySelector('strong').textContent = `{{ js_item|escapejs }} ${formNum + 1}`;
 
     // Add to container
     container.appendChild(newItem);

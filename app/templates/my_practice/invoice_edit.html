@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load payment_tags %}
+{% load i18n %}
 
-{% block title %}Rechnung bearbeiten - {{ invoice.invoice_number }}{% endblock %}
+{% block title %}{% trans "Edit invoice" %} - {{ invoice.invoice_number }}{% endblock %}
 
-{% block page_title %}Rechnung bearbeiten{% endblock %}
+{% block page_title %}{% trans "Edit invoice" %}{% endblock %}
 {% block page_subtitle %}{{ invoice.invoice_number }} - <span class="sensitive-data">{{ invoice.client.full_name }}</span>{% endblock %}
 
 {% block content %}
@@ -66,18 +67,18 @@
     <!-- Invoice Items Formset -->
     <div class="formset-container">
         <div class="formset-title">
-            <span>📋 Rechnungspositionen</span>
+            <span>📋 {% trans "Invoice items" %}</span>
             <button type="button" id="add-item" class="btn btn-sm btn-success">
-                ➕ Position hinzufügen
+                ➕ {% trans "Add item" %}
             </button>
         </div>
 
         {{ formset.management_form }}
 
         {% if formset.total_form_count == 0 %}
-        <div class="info-box" style="margin-bottom: 1rem;">
-            <strong>Keine Positionen vorhanden.</strong><br>
-            <span>Klicken Sie auf "➕ Position hinzufügen" um eine neue Position zu erstellen.</span>
+        <div class="info-box mb-2">
+            <strong>{% trans "No items yet." %}</strong><br>
+            <span>{% trans 'Click "➕ Add item" to create a new item.' %}</span>
         </div>
         {% endif %}
 
@@ -85,11 +86,11 @@
             {% for item_form in formset %}
             <div class="formset-item" data-form-index="{{ forloop.counter0 }}">
                 <div class="formset-item-header">
-                    <strong>Position {{ forloop.counter }}</strong>
+                    <strong>{% trans "Item" %} {{ forloop.counter }}</strong>
                     {% if item_form.instance.pk %}
                     <label class="delete-label">
                         {{ item_form.DELETE }}
-                        <span class="delete-text">🗑️ Löschen</span>
+                        <span class="delete-text">🗑️ {% trans "Delete" %}</span>
                     </label>
                     {% endif %}
                 </div>
@@ -99,25 +100,25 @@
 
                 <div class="item-grid">
                     <div class="form-group">
-                        <label for="{{ item_form.session_date.id_for_label }}">Sitzungsdatum *</label>
+                        <label for="{{ item_form.session_date.id_for_label }}">{% trans "Session date" %} *</label>
                         {{ item_form.session_date }}
                         {{ item_form.session_date.errors }}
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ item_form.service_type.id_for_label }}">Service *</label>
+                        <label for="{{ item_form.service_type.id_for_label }}">{% trans "Service" %} *</label>
                         {{ item_form.service_type }}
                         {{ item_form.service_type.errors }}
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ item_form.duration.id_for_label }}">Dauer (min) *</label>
+                        <label for="{{ item_form.duration.id_for_label }}">{% trans "Duration (min)" %} *</label>
                         {{ item_form.duration }}
                         {{ item_form.duration.errors }}
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ item_form.rate.id_for_label }}">Stundensatz (€) *</label>
+                        <label for="{{ item_form.rate.id_for_label }}">{% trans "Hourly rate (€)" %} *</label>
                         {{ item_form.rate }}
                         {{ item_form.rate.errors }}
                     </div>
@@ -125,7 +126,7 @@
 
                 <div class="item-grid-wide">
                     <div class="form-group">
-                        <label for="{{ item_form.description.id_for_label }}">Beschreibung</label>
+                        <label for="{{ item_form.description.id_for_label }}">{% trans "Description" %}</label>
                         {{ item_form.description }}
                         {{ item_form.description.errors }}
                     </div>
@@ -137,9 +138,9 @@
 
     <div class="form-actions">
         <button type="submit" class="btn btn-gradient">
-            💾 Speichern
+            💾 {% trans "Save" %}
         </button>
-        <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-secondary">❌ Abbrechen</a>
+        <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-secondary">❌ {% trans "Cancel" %}</a>
     </div>
 </form>
 
@@ -277,7 +278,8 @@ document.getElementById('add-item').addEventListener('click', function() {
     }
 
     // Update item counter
-    newItem.querySelector('strong').textContent = `Position ${formNum + 1}`;
+    {% trans "Item" as js_item %}
+    newItem.querySelector('strong').textContent = `{{ js_item|escapejs }} ${formNum + 1}`;
 
     // Remove delete checkbox from header (new items don't need it initially)
     const deleteLabel = newItem.querySelector('.delete-label');

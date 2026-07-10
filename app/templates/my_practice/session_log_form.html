@@ -17,7 +17,7 @@
     {% endif %}
     {% csrf_token %}
 
-    <div class="cn-field" style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
+    <div class="cn-field flex gap-6 items-end flex-wrap">
         {% if not is_edit %}
         <div>
             <label class="cn-label" for="id_session_date">{% trans "Session date" %}</label>
@@ -27,7 +27,7 @@
         {% else %}
         <div>
             <label class="cn-label">{% trans "Session date" %}</label>
-            <div class="text-secondary" style="padding: 0.5rem 0;">
+            <div class="text-secondary py-2">
                 {{ log.session.session_date|date:"d.m.Y" }}
             </div>
         </div>
@@ -35,11 +35,11 @@
         <div>
             <label class="cn-label" for="id_duration">{% trans "Duration (minutes)" %}</label>
             <input type="number" id="id_duration" name="duration"
-                   class="form-control" value="{% if is_edit %}{{ log.session.duration }}{% else %}{{ prefill_duration }}{% endif %}" min="1" style="max-width: 120px;">
+                   class="form-control max-w-[120px]" value="{% if is_edit %}{{ log.session.duration }}{% else %}{{ prefill_duration }}{% endif %}" min="1">
         </div>
         <div>
             <label class="cn-label" for="id_session_type">{% trans "Session type" %}</label>
-            <select id="id_session_type" name="session_type" class="form-control" style="max-width: 200px;">
+            <select id="id_session_type" name="session_type" class="form-control max-w-[200px]">
                 {% for value, label in session_type_choices %}
                 <option value="{{ value }}"
                     {% if is_edit and log.session_type == value %}selected
@@ -71,8 +71,8 @@
                value="{% if is_edit %}{{ log.summary }}{% endif %}">
     </div>
 
-    <div class="cn-field" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 260px;">
+    <div class="cn-field flex gap-4 flex-wrap">
+        <div class="flex-1 min-w-[260px]">
             <label class="cn-label" for="id_therapist_reflection">{% trans "Own reflection" %}</label>
             <textarea id="id_therapist_reflection" name="therapist_reflection"
                       class="form-control cn-textarea-small"
@@ -84,7 +84,7 @@
             </details>
             {% endif %}
         </div>
-        <div style="flex: 1; min-width: 260px;">
+        <div class="flex-1 min-w-[260px]">
             <label class="cn-label" for="id_interventions">{% trans "Interventions" %}</label>
             <textarea id="id_interventions" name="interventions"
                       class="form-control cn-textarea-small"

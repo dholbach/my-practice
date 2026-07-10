@@ -1,21 +1,22 @@
+{% load i18n %}
 {% if show_widget %}
-<div style="padding: 0.75rem 0;">
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0;">
+<div class="py-3">
+    <div class="flex items-center justify-between py-2">
         <div>
             <div class="font-medium text-primary">
-                {{ pending_count }} Termin{{ pending_count|pluralize:"e" }} warten auf Genehmigung
+                {% blocktrans count count=pending_count %}{{ count }} appointment waiting for approval{% plural %}{{ count }} appointments waiting for approval{% endblocktrans %}
             </div>
             <div class="text-xs text-secondary">
-                Kalender-Termine wurden automatisch abgerufen
+                {% trans "Calendar events were fetched automatically" %}
             </div>
         </div>
         <a href="{{ approval_url }}" class="btn btn-primary btn-sm">
-            Genehmigen
+            {% trans "Approve" %}
         </a>
     </div>
 </div>
 {% else %}
-<div class="text-secondary text-sm text-center" style="padding: 0.75rem 0;">
-    ✅ Keine ausstehenden Kalender-Termine
+<div class="text-secondary text-sm text-center py-3">
+    ✅ {% trans "No pending calendar events" %}
 </div>
 {% endif %}

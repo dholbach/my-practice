@@ -275,7 +275,7 @@
             {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">{% trans "Unbilled" %}</span>{% else %}<span class="cn-session-not-billable">{% trans "Non-billable" %}</span>{% endif %}{% endif %}
             {% if session.pk in recent_sessions_needing_log %}<span class="cn-session-missing-log">📝 {% trans "Log missing" %}</span>{% endif %}
             {% if log %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>{% endfor %}{% endif %}
-            {% if session.gebueh_leistungen.all %}<div class="cn-gebueh-ziffern" style="display:inline-flex;">{% for le in session.gebueh_leistungen.all %}<span class="cn-gebueh-chip">{{ le.ziffer.nummer }}</span>{% endfor %}</div>{% endif %}
+            {% if session.gebueh_leistungen.all %}<div class="cn-gebueh-ziffern inline-flex">{% for le in session.gebueh_leistungen.all %}<span class="cn-gebueh-chip">{{ le.ziffer.nummer }}</span>{% endfor %}</div>{% endif %}
         </div>
         <div class="cn-session-actions">
             {% if log %}
@@ -424,7 +424,7 @@
         {% else %}
         {% blocktrans %}Diagnosis not yet set — invoices currently show "Probationary phase". Please update once the probationary phase is complete.{% endblocktrans %}
         {% endif %}
-        <a href="#id_arbeitsdiagnose" style="margin-left: 0.5rem; white-space: nowrap;">{% trans "Edit →" %}</a>
+        <a href="#id_arbeitsdiagnose" class="ml-1 whitespace-nowrap">{% trans "Edit →" %}</a>
     </div>
     {% endif %}
 
@@ -601,7 +601,7 @@
 <div id="ptab-abrechnung" class="page-tab-content">
 
     <!-- Billing quick actions -->
-    <div class="client-actions" style="margin-bottom: 1.5rem;">
+    <div class="client-actions mb-3">
         <div class="client-actions-left">
             <a href="{% url 'invoice_create' %}?client={{ client.id }}" class="btn btn-invoice-create">➕ {% trans "New invoice" %}</a>
             {% if client.email %}
@@ -704,7 +704,7 @@
     {% include 'my_practice/client_detail_documents.html' %}
 
     {% if documents %}
-    <div class="section-card" style="margin-top: 1rem;">
+    <div class="section-card mt-2">
         <h3>{% trans "Uploaded documents" %}</h3>
         <ul class="sidebar-doc-list">
             {% for doc in documents %}
