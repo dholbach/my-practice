@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pypdf
 from django.core.files.base import ContentFile
+from django.utils.translation import gettext as _
 from PIL import Image, ImageOps
 
 logger = logging.getLogger(__name__)
@@ -161,6 +162,33 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
                 pass
 
 
+def _process_image_upload(upload, name: str) -> ContentFile:
+    try:
+        return compress_image_upload(upload)
+    except Exception:
+        # Re-raise: a file that claims to be an image but can't be parsed
+        # should be rejected, not stored as-is (could be active content).
+        logger.exception("Image compression failed for %s; rejecting upload", name)
+        raise ValueError(
+            _("Image file '%(name)s' could not be processed.") % {"name": name}
+        ) from None
+
+
+def _process_pdf_upload(upload, name: str):
+    try:
+        upload.seek(0)
+        data = upload.read()
+        compressed = _compress_pdf_bytes(data)
+        return ContentFile(compressed, name=name)
+    except Exception:
+        logger.exception("PDF compression failed for %s; storing original", name)
+        try:
+            upload.seek(0)
+        except Exception:
+            pass
+        return upload
+
+
 def process_upload(upload) -> ContentFile:
     """
     Compress an uploaded file for storage.
@@ -175,30 +203,13 @@ def process_upload(upload) -> ContentFile:
     content_type = getattr(upload, "content_type", "") or ""
 
     if ext not in _ALLOWED_EXTENSIONS:
-        raise ValueError(f"Dateityp '{ext or 'unbekannt'}' ist nicht erlaubt.")
+        raise ValueError(_("File type '%(ext)s' is not allowed.") % {"ext": ext or _("unknown")})
 
     if content_type.startswith("image/") or ext in _IMAGE_EXTENSIONS:
-        try:
-            return compress_image_upload(upload)
-        except Exception:
-            # Re-raise: a file that claims to be an image but can't be parsed
-            # should be rejected, not stored as-is (could be active content).
-            logger.exception("Image compression failed for %s; rejecting upload", name)
-            raise ValueError(f"Bilddatei '{name}' konnte nicht verarbeitet werden.") from None
+        return _process_image_upload(upload, name)
 
     if content_type == "application/pdf" or ext in _PDF_EXTENSIONS:
-        try:
-            upload.seek(0)
-            data = upload.read()
-            compressed = _compress_pdf_bytes(data)
-            return ContentFile(compressed, name=name)
-        except Exception:
-            logger.exception("PDF compression failed for %s; storing original", name)
-            try:
-                upload.seek(0)
-            except Exception:
-                pass
-            return upload
+        return _process_pdf_upload(upload, name)
 
     # Allowed but not compressed (e.g. .docx)
     return upload
@@ -222,11 +233,14 @@ def compress_image_inplace(path: str, force: bool = False) -> int:
     ext = Path(path).suffix.lower()
 
     img = Image.open(path)
+    # Check the raw orientation tag rather than comparing objects around
+    # exif_transpose(): Pillow always returns a new copy from that call (even
+    # for images with no orientation tag at all), so an identity check would
+    # report "needs fixing" for every image and defeat the skip below.
+    needs_orientation_fix = img.getexif().get(0x0112, 1) != 1
     # Physically rotate pixels to match EXIF orientation before stripping EXIF.
     # Without this, re-saving strips the Orientation tag and viewers see raw scanner pixels.
-    img_transposed = ImageOps.exif_transpose(img)
-    needs_orientation_fix = img_transposed is not img
-    img = img_transposed
+    img = ImageOps.exif_transpose(img)
     needs_resize = max(img.size) > MAX_IMAGE_PX
 
     if (

@@ -31,6 +31,50 @@ _LEFT_MARGIN_PT = 2.0 * 28.346  # ≈ 56.69
 _RIGHT_EDGE_PT = 595.28 - _LEFT_MARGIN_PT  # ≈ 538.59  (A4 width - right margin)
 
 
+def _classify_sig_label(first: str, next_text: str) -> tuple[str, str] | None:
+    """
+    Classify a sig-label snippet into (kind, tooltip), or None if *first*
+    isn't one of the recognised DE/EN sig-label openers.
+    """
+    if first in ("(Ort,", "(Place,"):
+        return "datum", "Ort, Datum / Place, date"
+    if first == "(Unterschrift" and "Patient" in next_text:
+        return "unterschrift_patient", "Unterschrift Patient/in"
+    if first == "(Unterschrift" and "Heilpraktiker" in next_text:
+        return "unterschrift_hp", "Unterschrift Therapeut/in"
+    if first.startswith("(Patient"):
+        return "unterschrift_patient", "Patient's signature"
+    if first == "(Natural":
+        return "unterschrift_hp", "Natural practitioner's signature"
+    return None
+
+
+def _build_field_spec(
+    word: dict, kind: str, tooltip: str, page_num: int, page_height: float, mid_x: float
+) -> dict:
+    """Build a {page, name, tooltip, rect} spec for a sig-label word."""
+    # pdfplumber: y=0 at top, increases downward.
+    # pypdf:      y=0 at bottom, increases upward.
+    label_top_plumber = float(word["top"])
+
+    # The sig-line (0.8 cm) sits just above the label with a 0.1 cm gap.
+    field_bottom_plumber = label_top_plumber - _SIG_LINE_GAP_PT
+    field_top_plumber = field_bottom_plumber - _SIG_LINE_HEIGHT_PT
+
+    y1 = page_height - field_bottom_plumber  # lower PDF y-coord
+    y2 = page_height - field_top_plumber  # upper PDF y-coord
+
+    label_x = float(word["x0"])
+    is_left = label_x < mid_x
+    x1 = _LEFT_MARGIN_PT if is_left else mid_x + 5
+    x2 = (mid_x - 5) if is_left else _RIGHT_EDGE_PT
+
+    side = "L" if is_left else "R"
+    name = f"p{page_num + 1}_{kind}_{side}"
+
+    return {"page": page_num, "name": name, "tooltip": tooltip, "rect": (x1, y1, x2, y2)}
+
+
 def _detect_sig_fields(pdf_bytes: bytes) -> list[dict]:
     """
     Locate signature-label text in the PDF and return form-field specs.
@@ -57,51 +101,13 @@ def _detect_sig_fields(pdf_bytes: bytes) -> list[dict]:
 
                 # Peek at next word to classify the label type.
                 next_text = words[i + 1]["text"] if i + 1 < len(words) else ""
-
-                if first in ("(Ort,", "(Place,"):
-                    kind = "datum"
-                    tooltip = "Ort, Datum / Place, date"
-                elif first == "(Unterschrift" and "Patient" in next_text:
-                    kind = "unterschrift_patient"
-                    tooltip = "Unterschrift Patient/in"
-                elif first == "(Unterschrift" and "Heilpraktiker" in next_text:
-                    kind = "unterschrift_hp"
-                    tooltip = "Unterschrift Therapeut/in"
-                elif first.startswith("(Patient"):
-                    kind = "unterschrift_patient"
-                    tooltip = "Patient's signature"
-                elif first == "(Natural":
-                    kind = "unterschrift_hp"
-                    tooltip = "Natural practitioner's signature"
-                else:
+                classified = _classify_sig_label(first, next_text)
+                if classified is None:
                     continue
-
-                # pdfplumber: y=0 at top, increases downward.
-                # pypdf:      y=0 at bottom, increases upward.
-                label_top_plumber = float(word["top"])
-
-                # The sig-line (0.8 cm) sits just above the label with a 0.1 cm gap.
-                field_bottom_plumber = label_top_plumber - _SIG_LINE_GAP_PT
-                field_top_plumber = field_bottom_plumber - _SIG_LINE_HEIGHT_PT
-
-                y1 = page_height - field_bottom_plumber  # lower PDF y-coord
-                y2 = page_height - field_top_plumber  # upper PDF y-coord
-
-                label_x = float(word["x0"])
-                is_left = label_x < mid_x
-                x1 = _LEFT_MARGIN_PT if is_left else mid_x + 5
-                x2 = (mid_x - 5) if is_left else _RIGHT_EDGE_PT
-
-                side = "L" if is_left else "R"
-                name = f"p{page_num + 1}_{kind}_{side}"
+                kind, tooltip = classified
 
                 field_specs.append(
-                    {
-                        "page": page_num,
-                        "name": name,
-                        "tooltip": tooltip,
-                        "rect": (x1, y1, x2, y2),
-                    }
+                    _build_field_spec(word, kind, tooltip, page_num, page_height, mid_x)
                 )
 
     return field_specs
