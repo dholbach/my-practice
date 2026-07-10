@@ -4,13 +4,25 @@ Tests for client views.
 
 from datetime import date, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
+from ..models import (
+    Client,
+    ClientDocument,
+    ClientTag,
+    Invoice,
+    InvoiceItem,
+    Practice,
+    ServiceType,
+    Session,
+    UserPractice,
+)
 from ..utils.tag_helpers import SESSION_LOG_MIN_DURATION
 
 
@@ -29,6 +41,7 @@ class ClientListViewTest(TestCase):
         )
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -74,6 +87,25 @@ class ClientListViewTest(TestCase):
         # Test search if implemented
         response = self.client_instance.get(reverse("client_list") + "?q=One")
         self.assertEqual(response.status_code, 200)
+
+    def test_client_list_search_param_filters_results(self):
+        """The ?search= param matches on client_code via icontains."""
+        response = self.client_instance.get(reverse("client_list") + "?search=CL1")
+        self.assertEqual(response.status_code, 200)
+        codes = {c.client_code for c in response.context["clients"]}
+        self.assertIn("CL1", codes)
+        self.assertNotIn("CL2", codes)
+
+    def test_client_list_tag_filter(self):
+        """The ?tag= param restricts the list to clients with that tag."""
+        tag = ClientTag.objects.create(name="follow-up", slug="follow-up")
+        tagged_client = Client.objects.get(client_code="CL1")
+        tagged_client.tags.add(tag)
+
+        response = self.client_instance.get(reverse("client_list") + "?tag=follow-up")
+        self.assertEqual(response.status_code, 200)
+        codes = {c.client_code for c in response.context["clients"]}
+        self.assertEqual(codes, {"CL1"})
 
 
 class ClientDetailViewTest(TestCase):
@@ -356,6 +388,38 @@ class ClientCreateViewTest(TestCase):
         self.assertTrue(response.context["form"].errors)
 
 
+class ClientIntakeEditTest(TestCase):
+    """Test ClientIntakeView in edit mode (get_object with a pk in the URL)."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="intake-edit",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="edituser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.http = TestClient()
+        self.http.login(username="edituser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            practice=self.practice,
+        )
+
+    def test_edit_loads_existing_client(self):
+        response = self.http.get(reverse("client_edit", kwargs={"pk": self.test_client.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["form"].instance.pk, self.test_client.pk)
+
+    def test_edit_nonexistent_client_404s(self):
+        response = self.http.get(reverse("client_edit", kwargs={"pk": 99999}))
+        self.assertEqual(response.status_code, 404)
+
+
 class SessionLogDurationThresholdTest(TestCase):
     """
     Regression tests for the SESSION_LOG_MIN_DURATION threshold.
@@ -456,6 +520,11 @@ class SuggestClientCodeTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()["suggestions"], [])
 
+    def test_name_with_no_alpha_characters_returns_empty(self):
+        resp = self._get("123 456")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["suggestions"], [])
+
     def test_two_part_name_suggests_initials_first(self):
         resp = self._get("Anna Schmidt")
         suggestions = resp.json()["suggestions"]
@@ -490,3 +559,310 @@ class SuggestClientCodeTest(TestCase):
     def test_max_six_suggestions_returned(self):
         suggestions = self._get("Anna Schmidt").json()["suggestions"]
         self.assertLessEqual(len(suggestions), 6)
+
+
+class ClientOnboardingStepTest(TestCase):
+    """Test the client_onboarding_step view."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="onboarding-step",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="onboarduser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.http = TestClient()
+        self.http.login(username="onboarduser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            practice=self.practice,
+        )
+
+    def test_get_not_allowed(self):
+        response = self.http.get(
+            reverse("client_onboarding_step", kwargs={"pk": self.test_client.pk})
+        )
+        self.assertEqual(response.status_code, 405)
+
+    def test_marks_intake_step_complete(self):
+        response = self.http.post(
+            reverse("client_onboarding_step", kwargs={"pk": self.test_client.pk}),
+            {"step": "intake"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.test_client.refresh_from_db()
+        self.assertEqual(self.test_client.intake_sent_date, date.today())
+
+    def test_resets_intake_step(self):
+        self.test_client.intake_sent_date = date.today()
+        self.test_client.save()
+        self.http.post(
+            reverse("client_onboarding_step", kwargs={"pk": self.test_client.pk}),
+            {"step": "intake", "reset": "1"},
+        )
+        self.test_client.refresh_from_db()
+        self.assertIsNone(self.test_client.intake_sent_date)
+
+    def test_unknown_step_is_a_noop(self):
+        response = self.http.post(
+            reverse("client_onboarding_step", kwargs={"pk": self.test_client.pk}),
+            {"step": "not-a-real-step"},
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_completing_removes_incomplete_intake_tag(self):
+        tag = ClientTag.objects.create(name="incomplete-intake", slug="incomplete-intake")
+        self.test_client.tags.add(tag)
+        self.http.post(
+            reverse("client_onboarding_step", kwargs={"pk": self.test_client.pk}),
+            {"step": "complete"},
+        )
+        self.assertNotIn(tag, self.test_client.tags.all())
+
+
+class ClientDocumentUploadTest(TestCase):
+    """Test the client_document_upload and client_document_delete views."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="doc-upload",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="docuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.http = TestClient()
+        self.http.login(username="docuser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            practice=self.practice,
+        )
+
+    def _pdf_file(self, name="beleg.pdf"):
+        content = b"%PDF-1.0\n1 0 obj<</Type /Catalog>>endobj\n"
+        return SimpleUploadedFile(name, content, content_type="application/pdf")
+
+    def test_get_not_allowed(self):
+        response = self.http.get(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk})
+        )
+        self.assertEqual(response.status_code, 405)
+
+    def test_no_file_returns_400(self):
+        response = self.http.post(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk}), {}
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_rejected_extension_returns_400(self):
+        bad_file = SimpleUploadedFile("evil.svg", b"<svg></svg>", content_type="image/svg+xml")
+        response = self.http.post(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk}),
+            {"file": bad_file},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_uploads_document_and_returns_metadata(self):
+        response = self.http.post(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk}),
+            {
+                "file": self._pdf_file(),
+                "document_type": ClientDocument.DocumentType.OTHER,
+                "description": "Test-Beleg",
+                "document_date": "2026-01-15",
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data["document_type"], ClientDocument.DocumentType.OTHER)
+        self.assertEqual(data["description"], "Test-Beleg")
+        self.assertIsNone(data["onboarding_step_completed"])
+        self.assertTrue(ClientDocument.objects.filter(client=self.test_client).exists())
+
+    def test_invalid_document_date_falls_back_to_today(self):
+        response = self.http.post(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk}),
+            {"file": self._pdf_file(), "document_date": "not-a-date"},
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["document_date"], str(date.today()))
+
+    def test_unknown_document_type_falls_back_to_other(self):
+        response = self.http.post(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk}),
+            {"file": self._pdf_file(), "document_type": "not-a-real-type"},
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["document_type"], ClientDocument.DocumentType.OTHER)
+
+    def test_intake_upload_marks_onboarding_step_complete(self):
+        response = self.http.post(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk}),
+            {"file": self._pdf_file(), "document_type": ClientDocument.DocumentType.INTAKE},
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["onboarding_step_completed"], "intake")
+        self.test_client.refresh_from_db()
+        self.assertIsNotNone(self.test_client.intake_sent_date)
+
+    def test_intake_upload_does_not_overwrite_existing_step_date(self):
+        self.test_client.intake_sent_date = date(2020, 1, 1)
+        self.test_client.save()
+        response = self.http.post(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk}),
+            {"file": self._pdf_file(), "document_type": ClientDocument.DocumentType.INTAKE},
+        )
+        self.assertIsNone(response.json()["onboarding_step_completed"])
+        self.test_client.refresh_from_db()
+        self.assertEqual(self.test_client.intake_sent_date, date(2020, 1, 1))
+
+    def test_delete_removes_document(self):
+        upload_response = self.http.post(
+            reverse("client_document_upload", kwargs={"pk": self.test_client.pk}),
+            {"file": self._pdf_file()},
+        )
+        doc_id = upload_response.json()["id"]
+
+        response = self.http.post(reverse("client_document_delete", kwargs={"pk": doc_id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"success": True})
+        self.assertFalse(ClientDocument.objects.filter(pk=doc_id).exists())
+
+    def test_delete_wrong_practice_raises_permission_denied(self):
+        other_practice = Practice.objects.create(
+            name="Other Practice",
+            slug="doc-upload-other",
+            title="Other Practitioner",
+            email="other@practice.com",
+            city="Hamburg",
+        )
+        other_client = Client.objects.create(
+            client_code="OC",
+            full_name="Anna Schmidt",
+            practice=other_practice,
+        )
+        doc = ClientDocument.objects.create(
+            client=other_client,
+            document_type=ClientDocument.DocumentType.OTHER,
+            file=self._pdf_file(),
+            document_date=date.today(),
+        )
+        response = self.http.post(reverse("client_document_delete", kwargs={"pk": doc.pk}))
+        self.assertEqual(response.status_code, 403)
+
+
+class ClientGdprDeleteTest(TestCase):
+    """Test client_gdpr_delete_confirm and client_gdpr_delete views."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="gdpr-delete",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="gdpruser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.http = TestClient()
+        self.http.login(username="gdpruser", password="testpass123")
+
+        self.old_date = date.today() - timedelta(days=365 * 11)
+        self.eligible_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            email="max@example.com",
+            practice=self.practice,
+            active=False,
+        )
+        Session.objects.create(client=self.eligible_client, session_date=self.old_date, duration=60)
+
+    def test_confirm_page_for_eligible_client(self):
+        response = self.http.get(
+            reverse("client_gdpr_delete_confirm", kwargs={"pk": self.eligible_client.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "my_practice/client_gdpr_delete_confirm.html")
+
+    def test_confirm_page_rejects_active_client(self):
+        self.eligible_client.active = True
+        self.eligible_client.save()
+        response = self.http.get(
+            reverse("client_gdpr_delete_confirm", kwargs={"pk": self.eligible_client.pk})
+        )
+        self.assertRedirects(response, reverse("client_list"))
+
+    def test_confirm_page_rejects_recent_session(self):
+        recent_client = Client.objects.create(
+            client_code="RC",
+            full_name="Anna Schmidt",
+            practice=self.practice,
+            active=False,
+        )
+        Session.objects.create(client=recent_client, session_date=date.today(), duration=60)
+        response = self.http.get(
+            reverse("client_gdpr_delete_confirm", kwargs={"pk": recent_client.pk})
+        )
+        self.assertRedirects(response, reverse("client_list"))
+
+    def test_delete_get_not_allowed(self):
+        response = self.http.get(
+            reverse("client_gdpr_delete", kwargs={"pk": self.eligible_client.pk})
+        )
+        self.assertEqual(response.status_code, 405)
+
+    def test_delete_rejects_ineligible_client(self):
+        self.eligible_client.active = True
+        self.eligible_client.save()
+        response = self.http.post(
+            reverse("client_gdpr_delete", kwargs={"pk": self.eligible_client.pk})
+        )
+        self.assertRedirects(response, reverse("client_list"))
+        self.assertTrue(Client.objects.filter(pk=self.eligible_client.pk).exists())
+
+    @patch("my_practice.views.client_views.EmailMessage.send")
+    def test_delete_erases_client_and_sends_notification(self, mock_send):
+        client_pk = self.eligible_client.pk
+        content = b"%PDF-1.0\n1 0 obj<</Type /Catalog>>endobj\n"
+        ClientDocument.objects.create(
+            client=self.eligible_client,
+            document_type=ClientDocument.DocumentType.OTHER,
+            file=SimpleUploadedFile("beleg.pdf", content, content_type="application/pdf"),
+            document_date=date.today(),
+        )
+        response = self.http.post(reverse("client_gdpr_delete", kwargs={"pk": client_pk}))
+        self.assertRedirects(response, reverse("client_list"))
+        self.assertFalse(Client.objects.filter(pk=client_pk).exists())
+        mock_send.assert_called_once()
+
+    @patch(
+        "my_practice.views.client_views.EmailMessage.send",
+        side_effect=RuntimeError("smtp down"),
+    )
+    def test_delete_continues_when_email_send_fails(self, mock_send):
+        client_pk = self.eligible_client.pk
+        response = self.http.post(
+            reverse("client_gdpr_delete", kwargs={"pk": client_pk}), follow=True
+        )
+        self.assertFalse(Client.objects.filter(pk=client_pk).exists())
+        page_messages = list(response.context["messages"])
+        self.assertTrue(any("konnte nicht gesendet werden" in str(m) for m in page_messages))
+
+    def test_delete_client_without_email_skips_notification(self):
+        self.eligible_client.email = ""
+        self.eligible_client.save()
+        with patch("my_practice.views.client_views.EmailMessage.send") as mock_send:
+            response = self.http.post(
+                reverse("client_gdpr_delete", kwargs={"pk": self.eligible_client.pk})
+            )
+        self.assertRedirects(response, reverse("client_list"))
+        mock_send.assert_not_called()
