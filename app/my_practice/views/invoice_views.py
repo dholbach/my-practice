@@ -182,6 +182,12 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
         context = self.get_context_data()
         items = context["items"]
 
+        # Validate the item formset *before* touching the DB, so an invalid
+        # formset never leaves a stray draft invoice behind.
+        if not items.is_valid():
+            self._add_item_formset_errors(items)
+            return self.form_invalid(form)
+
         try:
             with transaction.atomic():
                 # Practice assignment handled by PracticeScopedCreateView base class
@@ -191,49 +197,13 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
 
                 # Generate invoice number only if not provided
                 if not form.instance.invoice_number:
-                    client = form.instance.client
-                    form.instance.invoice_number = get_next_invoice_number(client)
+                    form.instance.invoice_number = get_next_invoice_number(form.instance.client)
 
                 self.object = form.save()
-
-                if items.is_valid():
-                    items.instance = self.object
-                    # Create/get Sessions for each item from form's session_date + duration
-                    client = self.object.client
-                    for form in items.forms:
-                        if not form.cleaned_data or form.cleaned_data.get("DELETE"):
-                            continue
-                        session_date = form.cleaned_data["session_date"]
-                        duration = form.cleaned_data.get("duration", 60)
-                        session, _created = Session.objects.get_or_create(
-                            client=client,
-                            session_date=session_date,
-                            defaults={"duration": duration},
-                        )
-                        form.instance.session = session
-                    items.save()  # signals handle total + date recalculation
-                    self.object.refresh_from_db()
-
-                    messages.success(
-                        self.request,
-                        _("Invoice %(num)s created successfully!")
-                        % {"num": self.object.invoice_number},
-                    )
-                    return redirect(self.success_url)
-                else:
-                    # Formset validation failed - show errors
-                    for i, form_errors in enumerate(items.errors):
-                        if form_errors:
-                            messages.error(
-                                self.request,
-                                _("Item %(n)s: %(errors)s") % {"n": i + 1, "errors": form_errors},
-                            )
-                    if items.non_form_errors():
-                        messages.error(
-                            self.request,
-                            _("Formset errors: %(errors)s") % {"errors": items.non_form_errors()},
-                        )
-                    return self.form_invalid(form)
+                items.instance = self.object
+                self._attach_sessions_to_items(items, self.object.client)
+                items.save()  # signals handle total + date recalculation
+                self.object.refresh_from_db()
         except Exception as e:
             logger.exception("Error creating invoice")
             messages.error(
@@ -241,6 +211,41 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
                 _("Error creating invoice: %(error)s") % {"error": str(e)},
             )
             return self.form_invalid(form)
+
+        messages.success(
+            self.request,
+            _("Invoice %(num)s created successfully!") % {"num": self.object.invoice_number},
+        )
+        return redirect(self.success_url)
+
+    @staticmethod
+    def _attach_sessions_to_items(items, client):
+        """Create/get a Session for each formset item from its session_date + duration."""
+        for item_form in items.forms:
+            if not item_form.cleaned_data or item_form.cleaned_data.get("DELETE"):
+                continue
+            session_date = item_form.cleaned_data["session_date"]
+            duration = item_form.cleaned_data.get("duration", 60)
+            session, _created = Session.objects.get_or_create(
+                client=client,
+                session_date=session_date,
+                defaults={"duration": duration},
+            )
+            item_form.instance.session = session
+
+    def _add_item_formset_errors(self, items):
+        """Surface per-row and non-form errors from the item formset as messages."""
+        for i, form_errors in enumerate(items.errors):
+            if form_errors:
+                messages.error(
+                    self.request,
+                    _("Item %(n)s: %(errors)s") % {"n": i + 1, "errors": form_errors},
+                )
+        if items.non_form_errors():
+            messages.error(
+                self.request,
+                _("Formset errors: %(errors)s") % {"errors": items.non_form_errors()},
+            )
 
 
 class InvoiceDetailView(DetailView):
@@ -322,89 +327,80 @@ class InvoiceEditView(InvoiceFormsetMixin, PracticeScopedUpdateView):
         context = self.get_context_data()
         formset = context["formset"]
 
+        if not formset.is_valid():
+            # form_invalid() re-derives and reports the same formset errors,
+            # so don't emit them here too (would show every error twice).
+            return self.form_invalid(form)
+
         with transaction.atomic():
-            if formset.is_valid():
-                # Save invoice first
-                invoice = form.save()
+            invoice = form.save()
+            self._attach_sessions_to_formset(formset, invoice)
 
-                # Create/get Sessions for each item from form's session_date + duration
-                for f in formset.forms:
-                    if not f.cleaned_data or f.cleaned_data.get("DELETE"):
-                        continue
-                    session_date = f.cleaned_data["session_date"]
-                    duration = f.cleaned_data.get("duration", 60)
-                    session, _created = Session.objects.get_or_create(
-                        client=invoice.client,
-                        session_date=session_date,
-                        defaults={"duration": duration},
-                    )
-                    f.instance.session = session
+            # Save formset (this will trigger signals for each item)
+            formset.instance = invoice
+            formset.save()
 
-                # Save formset (this will trigger signals for each item)
-                formset.instance = invoice
-                formset.save()
+            # Signals handle total/date recalculation when items change.
+            # For DRAFT invoices where no items changed, ensure the date is
+            # still refreshed to max(today, latest_session_date).
+            if invoice.status == Invoice.Status.DRAFT:
+                recalculate_invoice_total(invoice)
 
-                # Signals handle total/date recalculation when items change.
-                # For DRAFT invoices where no items changed, ensure the date is
-                # still refreshed to max(today, latest_session_date).
-                if invoice.status == Invoice.Status.DRAFT:
-                    recalculate_invoice_total(invoice)
+            # Refresh invoice from DB to get updated values
+            invoice.refresh_from_db()
 
-                # Refresh invoice from DB to get updated values
-                invoice.refresh_from_db()
+        self.object = invoice
+        # Success message handled by PracticeScopedUpdateView
+        return redirect(self.get_success_url())
 
-                self.object = invoice
-                # Success message handled by PracticeScopedUpdateView
-                return redirect(self.get_success_url())
-            else:
-                # Show formset errors
-                for i, form_errors in enumerate(formset.errors):
-                    if form_errors:
-                        for field, errors in form_errors.items():
-                            for error in errors:
-                                messages.error(
-                                    self.request,
-                                    _("Item %(n)s - %(field)s: %(error)s")
-                                    % {"n": i + 1, "field": field, "error": error},
-                                )
-                if formset.non_form_errors():
-                    for error in formset.non_form_errors():
+    @staticmethod
+    def _attach_sessions_to_formset(formset, invoice):
+        """Create/get a Session for each formset item from its session_date + duration."""
+        for f in formset.forms:
+            if not f.cleaned_data or f.cleaned_data.get("DELETE"):
+                continue
+            session_date = f.cleaned_data["session_date"]
+            duration = f.cleaned_data.get("duration", 60)
+            session, _created = Session.objects.get_or_create(
+                client=invoice.client,
+                session_date=session_date,
+                defaults={"duration": duration},
+            )
+            f.instance.session = session
+
+    def _emit_formset_errors(self, formset):
+        """Report per-field and non-form errors from the item formset as messages."""
+        for i, form_errors in enumerate(formset.errors):
+            if form_errors:
+                for field, errors in form_errors.items():
+                    for error in errors:
                         messages.error(
                             self.request,
-                            _("Formset: %(error)s") % {"error": error},
+                            _("Item %(n)s - %(field)s: %(error)s")
+                            % {"n": i + 1, "field": field, "error": error},
                         )
-                return self.form_invalid(form)
+        if formset.non_form_errors():
+            for error in formset.non_form_errors():
+                messages.error(self.request, _("Formset: %(error)s") % {"error": error})
+
+    def _emit_form_field_errors(self, form):
+        """Report main-form field errors as messages."""
+        for field, errors in form.errors.items():
+            for error in errors:
+                field_label = form.fields.get(field).label if field in form.fields else field
+                messages.error(
+                    self.request,
+                    _("%(label)s: %(error)s") % {"label": field_label, "error": error},
+                )
 
     def form_invalid(self, form):
-        # Show main form errors
-        if form.errors:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    field_label = form.fields.get(field).label if field in form.fields else field
-                    messages.error(
-                        self.request,
-                        _("%(label)s: %(error)s") % {"label": field_label, "error": error},
-                    )
+        self._emit_form_field_errors(form)
 
         # Also check formset errors (formset validation might happen even if form is invalid)
         context = self.get_context_data(form=form)
         formset = context.get("formset")
         if formset and hasattr(formset, "errors"):
-            for i, form_errors in enumerate(formset.errors):
-                if form_errors:
-                    for field, errors in form_errors.items():
-                        for error in errors:
-                            messages.error(
-                                self.request,
-                                _("Item %(n)s - %(field)s: %(error)s")
-                                % {"n": i + 1, "field": field, "error": error},
-                            )
-            if hasattr(formset, "non_form_errors") and formset.non_form_errors():
-                for error in formset.non_form_errors():
-                    messages.error(
-                        self.request,
-                        _("Formset: %(error)s") % {"error": error},
-                    )
+            self._emit_formset_errors(formset)
 
         if not form.errors and (not formset or not formset.errors):
             messages.error(self.request, _("Please correct the errors in the form."))
@@ -592,13 +588,7 @@ def _build_client_rows(
         if skip_ok and status == "ok":
             continue
 
-        drafts = [i for i in client_invoices if i.status == Invoice.Status.DRAFT]
-        sent = [i for i in client_invoices if i.status == Invoice.Status.SENT]
-        primary_invoice = (
-            drafts[0]
-            if drafts
-            else (sent[0] if sent else (client_invoices[0] if client_invoices else None))
-        )
+        primary_invoice = _pick_primary_invoice(client_invoices)
 
         rows.append(
             {
@@ -616,6 +606,15 @@ def _build_client_rows(
             }
         )
     return rows
+
+
+def _pick_primary_invoice(client_invoices: list) -> "Invoice | None":
+    """Prefer a draft invoice, then a sent one, then whatever's first."""
+    for status in (Invoice.Status.DRAFT, Invoice.Status.SENT):
+        for invoice in client_invoices:
+            if invoice.status == status:
+                return invoice
+    return client_invoices[0] if client_invoices else None
 
 
 def _build_billing_summary(rows: list[dict]) -> dict:
@@ -742,11 +741,15 @@ def _determine_client_billing_status(
         return "warning", _("Appointments pending"), "⚠️"
     if unbilled_count > 0:
         return "warning", _("Not billed"), "📝"
-    if client_invoices and all(i.status == Invoice.Status.DRAFT for i in client_invoices):
+    if not client_invoices:
+        return "ok", _("OK"), "✅"
+
+    statuses = {i.status for i in client_invoices}
+    if statuses == {Invoice.Status.DRAFT}:
         return "draft", _("Draft"), "📄"
-    if client_invoices and any(i.status == Invoice.Status.SENT for i in client_invoices):
+    if Invoice.Status.SENT in statuses:
         return "sent", _("Sent"), "📤"
-    if client_invoices and all(i.status == Invoice.Status.PAID for i in client_invoices):
+    if statuses == {Invoice.Status.PAID}:
         return "ok", _("Paid"), "✅"
     return "ok", _("OK"), "✅"
 

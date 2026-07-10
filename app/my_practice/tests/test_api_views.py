@@ -300,3 +300,287 @@ class IntakeFormPdfTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("IntakeForm_TC.pdf", response["Content-Disposition"])
         self.assertTrue(self._get_form_fields(response.content))
+
+
+class ContractPdfTest(TestCase):
+    """Tests for the pre-filled Behandlungsvertrag PDF."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="contract-pdf-test",
+            title="Heilpraktikerin für Psychotherapie",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="contractpdfuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_http = TestClient()
+        self.client_http.login(username="contractpdfuser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+
+    def test_contract_pdf_download_german_default(self):
+        response = self.client_http.get(reverse("contract_pdf", kwargs={"pk": self.test_client.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("Behandlungsvertrag_TC.pdf", response["Content-Disposition"])
+
+    def test_contract_pdf_lang_param_switches_to_english(self):
+        response = self.client_http.get(
+            reverse("contract_pdf", kwargs={"pk": self.test_client.pk}) + "?lang=en"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("TreatmentContract_TC.pdf", response["Content-Disposition"])
+
+    def test_contract_pdf_uses_client_language_when_no_param(self):
+        self.test_client.language = "en"
+        self.test_client.save()
+        response = self.client_http.get(reverse("contract_pdf", kwargs={"pk": self.test_client.pk}))
+        self.assertIn("TreatmentContract_TC.pdf", response["Content-Disposition"])
+
+    def test_contract_pdf_404_for_nonexistent_client(self):
+        response = self.client_http.get(reverse("contract_pdf", kwargs={"pk": 99999}))
+        self.assertEqual(response.status_code, 404)
+
+
+class InvoicePdfGebuehTest(TestCase):
+    """Test the needs_gebueh_invoice branch of invoice PDF rendering."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="invoice-pdf-gebueh",
+            title="Heilpraktikerin für Psychotherapie",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="gebuehpdfuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_http = TestClient()
+        self.client_http.login(username="gebuehpdfuser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+            needs_gebueh_invoice=True,
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date.today(),
+            total=Decimal("90.00"),
+            practice=self.practice,
+        )
+
+    def test_invoice_pdf_renders_for_gebueh_client_with_no_leistungen(self):
+        response = self.client_http.get(reverse("invoice_pdf", kwargs={"pk": self.invoice.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+
+
+class InvoiceBatchDownloadTest(TestCase):
+    """Tests for the ZIP batch-download endpoint."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="invoice-batch-download",
+            title="Test Practitioner",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="batchuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_http = TestClient()
+        self.client_http.login(username="batchuser", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            practice=self.practice,
+        )
+
+    def test_get_not_allowed(self):
+        response = self.client_http.get(reverse("invoice_batch_download"))
+        self.assertEqual(response.status_code, 405)
+
+    def test_missing_year_returns_400(self):
+        response = self.client_http.post(reverse("invoice_batch_download"), {})
+        self.assertEqual(response.status_code, 400)
+
+    def test_non_numeric_year_returns_400(self):
+        response = self.client_http.post(reverse("invoice_batch_download"), {"year": "abcd"})
+        self.assertEqual(response.status_code, 400)
+
+    def test_no_matching_invoices_returns_204(self):
+        response = self.client_http.post(
+            reverse("invoice_batch_download"), {"year": "2020", "status": "paid"}
+        )
+        self.assertEqual(response.status_code, 204)
+
+    def test_downloads_zip_of_matching_invoices(self):
+        Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date(2026, 3, 1),
+            status=Invoice.Status.PAID,
+            total=Decimal("90.00"),
+            practice=self.practice,
+        )
+        response = self.client_http.post(
+            reverse("invoice_batch_download"), {"year": "2026", "status": "paid"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/zip")
+        self.assertIn("Rechnungen_2026.zip", response["Content-Disposition"])
+
+        import zipfile
+        from io import BytesIO
+
+        zf = zipfile.ZipFile(BytesIO(response.content))
+        self.assertEqual(len(zf.namelist()), 1)
+        self.assertIn("TC_Rechnung_TC-1.pdf", zf.namelist()[0])
+
+
+class UpdateInvoiceStatusTest(TestCase):
+    """Tests for the update_invoice_status endpoint."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="update-invoice-status",
+            title="Test Practitioner",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="statususer", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_http = TestClient()
+        self.client_http.login(username="statususer", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            practice=self.practice,
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date.today(),
+            status=Invoice.Status.DRAFT,
+            total=Decimal("90.00"),
+            practice=self.practice,
+        )
+
+    def test_get_not_allowed(self):
+        response = self.client_http.get(
+            reverse("update_invoice_status", kwargs={"pk": self.invoice.pk})
+        )
+        self.assertEqual(response.status_code, 405)
+
+    def test_invalid_status_returns_400(self):
+        response = self.client_http.post(
+            reverse("update_invoice_status", kwargs={"pk": self.invoice.pk}),
+            {"status": "not-a-real-status"},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_marking_paid_sets_paid_date(self):
+        response = self.client_http.post(
+            reverse("update_invoice_status", kwargs={"pk": self.invoice.pk}),
+            {"status": Invoice.Status.PAID},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.status, Invoice.Status.PAID)
+        self.assertEqual(self.invoice.paid_date, date.today())
+        self.assertEqual(response.json()["status"], Invoice.Status.PAID)
+
+    def test_unmarking_paid_clears_paid_date(self):
+        self.invoice.status = Invoice.Status.PAID
+        self.invoice.paid_date = date.today()
+        self.invoice.save()
+
+        response = self.client_http.post(
+            reverse("update_invoice_status", kwargs={"pk": self.invoice.pk}),
+            {"status": Invoice.Status.SENT},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.invoice.refresh_from_db()
+        self.assertIsNone(self.invoice.paid_date)
+
+    def test_htmx_request_returns_badge_html(self):
+        response = self.client_http.post(
+            reverse("update_invoice_status", kwargs={"pk": self.invoice.pk}),
+            {"status": Invoice.Status.SENT},
+            HTTP_HX_REQUEST="true",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/html; charset=utf-8")
+
+    def test_next_param_redirects(self):
+        next_url = reverse("invoice_detail", kwargs={"pk": self.invoice.pk})
+        response = self.client_http.post(
+            reverse("update_invoice_status", kwargs={"pk": self.invoice.pk}),
+            {"status": Invoice.Status.SENT, "next": next_url},
+        )
+        self.assertRedirects(response, next_url)
+
+
+class PracticeImagesTransparencyTest(TestCase):
+    """Test the RGBA-composite branch of _prepare_practice_images via invoice_pdf."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="practice-logo-transparency",
+            title="Test Practitioner",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="logouser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_http = TestClient()
+        self.client_http.login(username="logouser", password="testpass123")
+
+        self.practice.logo = self._transparent_png("logo.png")
+        self.practice.signature = self._transparent_png("signature.png")
+        self.practice.save()
+
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            practice=self.practice,
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date.today(),
+            total=Decimal("90.00"),
+            practice=self.practice,
+        )
+
+    @staticmethod
+    def _transparent_png(name: str):
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        img = Image.new("RGBA", (20, 20), (255, 0, 0, 0))
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
+
+    def test_invoice_pdf_composites_transparent_logo_and_signature(self):
+        response = self.client_http.get(reverse("invoice_pdf", kwargs={"pk": self.invoice.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
