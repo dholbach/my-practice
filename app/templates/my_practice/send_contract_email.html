@@ -1,13 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Behandlungsvertrag senden{% endblock %}
+{% block title %}{% trans "Send treatment contract" %}{% endblock %}
 
-{% block page_title %}📧 Behandlungsvertrag senden{% endblock %}
+{% block page_title %}📧 {% trans "Send treatment contract" %}{% endblock %}
 {% block page_subtitle %}<span class="sensitive-data">{{ client.client_code }}</span>{% endblock %}
-
-{% block extra_css %}
-{% endblock %}
 
 {% block content %}
 <div class="email-preview">
@@ -16,8 +14,8 @@
 
         {% if not client.salutation %}
         <div class="warning-box">
-            <strong>⚠️ Keine persönliche Anrede hinterlegt</strong>
-            Es wird eine generische Anrede verwendet. Eine individuelle Anrede kann im Klientenprofil gesetzt werden.
+            <strong>⚠️ {% trans "No personal salutation stored" %}</strong>
+            {% trans "A generic salutation will be used. An individual salutation can be set in the client profile." %}
         </div>
         {% endif %}
 
@@ -44,27 +42,27 @@
                 <div class="error">{{ form.body.errors }}</div>
             {% endif %}
             <div class="help-text">
-                Text kann frei angepasst werden. Die Signatur ist durch "-- " abgetrennt.
+                {% trans 'The text can be edited freely. The signature is separated by "-- ".' %}
             </div>
         </div>
 
         <div class="attachment-preview">
-            <strong style="display: block; margin-bottom: 0.5rem;">📎 Anhang</strong>
-            <span style="font-weight: 600;">📄 {{ filename }}</span>
-            <div style="margin-top: 0.5rem; font-size: 0.875rem;">
-                Der Vertrag wird automatisch als PDF angehängt (mit ausfüllbaren Feldern).
-                <a href="{% url 'contract_pdf' client.pk %}" target="_blank" style="margin-left: 0.75rem;">
-                    🔍 Vorschau / Herunterladen
+            <strong class="block mb-1">📎 {% trans "Attachment" %}</strong>
+            <span class="font-semibold">📄 {{ filename }}</span>
+            <div class="mt-1 text-sm">
+                {% trans "The contract is attached automatically as a PDF (with fillable fields)." %}
+                <a href="{% url 'contract_pdf' client.pk %}" target="_blank" class="ml-3">
+                    🔍 {% trans "Preview / Download" %}
                 </a>
             </div>
         </div>
 
         <div class="button-group">
             <button type="submit" class="btn btn-primary">
-                📧 Senden
+                📧 {% trans "Send" %}
             </button>
             <a href="{% url 'client_detail' client.pk %}" class="btn btn-secondary">
-                Abbrechen
+                {% trans "Cancel" %}
             </a>
         </div>
     </form>

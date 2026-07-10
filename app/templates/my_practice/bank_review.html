@@ -1,28 +1,29 @@
 {% extends "base.html" %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Bank Import - Manuelle Zuordnung{% endblock %}
+{% block title %}{% trans "Bank import — manual assignment" %}{% endblock %}
 
 {% block content %}
 <div class="container bank-review-page">
     <div class="flex-between mb-4">
-        <h1 class="mb-0">📋 Bank Import - Manuelle Zuordnung</h1>
+        <h1 class="mb-0">📋 {% trans "Bank import — manual assignment" %}</h1>
         <div class="d-flex gap-md">
             <a href="{% url 'bank_import' %}" class="btn btn-secondary">
-                ⬅️ Zurück zum Import
+                ⬅️ {% trans "Back to import" %}
             </a>
             {% if expense_count > 0 %}
             <a href="{% url 'bank_expense_review' %}" class="btn btn-secondary">
-                💸 Ausgaben ({{ expense_count }})
+                💸 {% trans "Expenses" %} ({{ expense_count }})
             </a>
             {% endif %}
             {% if withdrawal_count > 0 %}
             <a href="{% url 'bank_withdrawal_review' %}" class="btn btn-secondary">
-                🏧 Entnahmen ({{ withdrawal_count }})
+                🏧 {% trans "Withdrawals" %} ({{ withdrawal_count }})
             </a>
             {% endif %}
             <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
-                📄 Rechnungen
+                📄 {% trans "Invoices" %}
             </a>
         </div>
     </div>
@@ -30,17 +31,17 @@
     <!-- Bulk Actions -->
     {% if transactions and paid_invoice_count > 0 %}
     <div class="card mb-3">
-        <h3 class="section-label">Bulk-Aktionen</h3>
+        <h3 class="section-label">{% trans "Bulk actions" %}</h3>
         <div class="d-flex gap-sm flex-wrap items-center">
             <form method="post" class="form-inline">
                 {% csrf_token %}
                 <button type="submit" name="action" value="bulk_ignore_paid" class="btn btn-sm btn-secondary d-inline-flex items-center gap-sm"
-                        x-data x-on:click="confirm('{{ paid_invoice_count }} Transaktion{{ paid_invoice_count|pluralize:'en' }} ignorieren, die bereits bezahlten Rechnungen entsprechen?') || $event.preventDefault()">
-                    💡 {{ paid_invoice_count }} bereits bezahlte ignorieren
+                        x-data x-on:click="confirm('{% blocktrans count count=paid_invoice_count %}Ignore {{ count }} transaction that matches an already-paid invoice?{% plural %}Ignore {{ count }} transactions that match already-paid invoices?{% endblocktrans %}') || $event.preventDefault()">
+                    💡 {% blocktrans count count=paid_invoice_count %}Ignore {{ count }} already paid{% plural %}Ignore {{ count }} already paid{% endblocktrans %}
                 </button>
             </form>
             <span class="text-muted text-xs">
-                Ignoriert automatisch alle Transaktionen mit Hinweis "kann ignoriert werden"
+                {% trans 'Automatically ignores all transactions marked "can be ignored"' %}
             </span>
         </div>
     </div>
@@ -49,36 +50,36 @@
     <!-- Import Results Summary -->
     {% if import_results %}
     <div class="import-results-panel">
-        <h2>✅ Import abgeschlossen</h2>
+        <h2>✅ {% trans "Import completed" %}</h2>
         <div class="import-results-grid">
             <div>
                 <div class="stat-num-lg">{{ import_results.matched }}</div>
-                <div class="text-sm">Automatisch zugeordnet</div>
+                <div class="text-sm">{% trans "Matched automatically" %}</div>
             </div>
             <div>
                 <div class="stat-num-lg">{{ import_results.unmatched }}</div>
-                <div class="text-sm">Manuelle Prüfung</div>
+                <div class="text-sm">{% trans "Manual review" %}</div>
             </div>
             {% if import_results.needs_review > 0 %}
             <div>
                 <div class="stat-num-lg">{{ import_results.needs_review }}</div>
-                <div class="text-sm">Ausgaben erkannt</div>
+                <div class="text-sm">{% trans "Expenses detected" %}</div>
             </div>
             {% endif %}
             <div>
                 <div class="stat-num-lg">{{ import_results.ignored }}</div>
-                <div class="text-sm">Ignoriert</div>
+                <div class="text-sm">{% trans "Ignored" %}</div>
             </div>
             <div>
                 <div class="stat-num-lg">{{ import_results.total }}</div>
-                <div class="text-sm">Gesamt</div>
+                <div class="text-sm">{% trans "Total" %}</div>
             </div>
         </div>
 
         {% if import_results.needs_review > 0 %}
         <div class="divider-section">
             <a href="{% url 'bank_expense_review' %}" class="btn-amber">
-                💸 {{ import_results.needs_review }} Ausgabe{{ import_results.needs_review|pluralize:"n" }} zuordnen
+                💸 {% blocktrans count count=import_results.needs_review %}Assign {{ count }} expense{% plural %}Assign {{ count }} expenses{% endblocktrans %}
                 <span class="text-xl">→</span>
             </a>
         </div>
@@ -86,7 +87,7 @@
 
         {% if import_results.errors %}
         <div class="divider-section">
-            <strong>⚠️ {{ import_results.errors|length }} Fehler:</strong>
+            <strong>⚠️ {% blocktrans count count=import_results.errors|length %}{{ count }} error:{% plural %}{{ count }} errors:{% endblocktrans %}</strong>
             <ul class="mt-1 p-0">
                 {% for error in import_results.errors %}
                     <li>{{ error }}</li>
@@ -102,7 +103,7 @@
     <div class="matched-transactions-panel">
         <h3>
             <span>✅</span>
-            <span>Bereits zugeordnet ({{ recently_matched|length }})</span>
+            <span>{% trans "Already matched" %} ({{ recently_matched|length }})</span>
         </h3>
         <div class="trans-list">
             {% for trans in recently_matched %}
@@ -119,11 +120,11 @@
                     </a>
                     <span class="text-muted text-xs">({{ trans.matched_invoice.client.client_code }})</span>
                     {% if trans.match_confidence == 'exact' %}
-                        <span class="match-badge match-badge--exact">Exakt</span>
+                        <span class="match-badge match-badge--exact">{% trans "Exact" %}</span>
                     {% elif trans.match_confidence == 'fuzzy' %}
                         <span class="match-badge match-badge--fuzzy">Fuzzy</span>
                     {% elif trans.match_confidence == 'manual' %}
-                        <span class="match-badge match-badge--manual">Manuell</span>
+                        <span class="match-badge match-badge--manual">{% trans "Manual" %}</span>
                     {% endif %}
                 </div>
             </div>
@@ -138,19 +139,19 @@
         {% if stats.unmatched %}
         <div class="stat-mini-card stat-mini-card--danger">
             <div class="stat-num-md">{{ stats.unmatched }}</div>
-            <div class="text-sm">Noch offen</div>
+            <div class="text-sm">{% trans "Still open" %}</div>
         </div>
         {% endif %}
         {% if expense_count > 0 %}
         <a href="{% url 'bank_expense_review' %}" class="stat-mini-card stat-mini-card--warning">
             <div class="stat-num-md">{{ expense_count }}</div>
-            <div class="text-sm">Ausgaben prüfen →</div>
+            <div class="text-sm">{% trans "Review expenses" %} →</div>
         </a>
         {% endif %}
         {% if stats.ignored %}
         <div class="stat-mini-card stat-mini-card--muted">
             <div class="stat-num-md">{{ stats.ignored }}</div>
-            <div class="text-sm">Ignoriert</div>
+            <div class="text-sm">{% trans "Ignored" %}</div>
         </div>
         {% endif %}
     </div>
@@ -160,22 +161,22 @@
     {% if transactions %}
     <div class="card rounded-lg">
         <div class="flex-between mb-3">
-            <h2 class="mb-0 text-primary">Offene Transaktionen ({{ page_obj.paginator.count }})</h2>
+            <h2 class="mb-0 text-primary">{% trans "Open transactions" %} ({{ page_obj.paginator.count }})</h2>
             <div class="d-flex gap-sm">
                 {% if expense_count %}
                 <form method="post" class="form-inline">
                     {% csrf_token %}
                     <button type="submit" name="action" value="ignore_all_expenses" class="btn btn-secondary text-sm"
-                            x-data x-on:click="confirm('{{ expense_count }} Ausgaben (negative Beträge) als ignoriert markieren?') || $event.preventDefault()">
-                        🗑️ {{ expense_count }} Ausgaben ignorieren
+                            x-data x-on:click="confirm('{% blocktrans with count=expense_count %}Mark {{ count }} expenses (negative amounts) as ignored?{% endblocktrans %}') || $event.preventDefault()">
+                        🗑️ {% blocktrans with count=expense_count %}Ignore {{ count }} expenses{% endblocktrans %}
                     </button>
                 </form>
                 {% endif %}
                 <form method="post" class="form-inline">
                     {% csrf_token %}
                     <button type="submit" name="action" value="ignore_all_unmatched" class="btn btn-secondary text-sm"
-                            x-data x-on:click="confirm('Alle {{ page_obj.paginator.count }} offenen Transaktionen ignorieren?') || $event.preventDefault()">
-                        ➖ Alle ignorieren
+                            x-data x-on:click="confirm('{% blocktrans with count=page_obj.paginator.count %}Ignore all {{ count }} open transactions?{% endblocktrans %}') || $event.preventDefault()">
+                        ➖ {% trans "Ignore all" %}
                     </button>
                 </form>
             </div>
@@ -186,60 +187,60 @@
             <!-- Transaction Info -->
             <div class="trans-card__info-grid">
                 <div>
-                    <div class="field-label">Datum</div>
+                    <div class="field-label">{% trans "Date" %}</div>
                     <div class="text-primary font-semibold">{{ trans.transaction_date|date:"d.m.Y" }}</div>
                 </div>
                 <div>
-                    <div class="field-label">Betrag</div>
+                    <div class="field-label">{% trans "Amount" %}</div>
                     <div class="text-xl font-bold {% if trans.amount < 0 %}text-danger{% else %}text-success{% endif %}">
                         {% if trans.amount < 0 %}🔻{% endif %}
                         {{ trans.amount|floatformat:2 }}&nbsp;€
                     </div>
                     {% if trans.amount < 0 %}
-                    <div class="text-xs text-danger mt-1">Ausgabe</div>
+                    <div class="text-xs text-danger mt-1">{% trans "Expense" %}</div>
                     {% elif trans.match_confidence == 'auto-contribution' %}
-                    <div class="text-xs text-success mt-1 font-bold">💰 Kapitaleinlage</div>
+                    <div class="text-xs text-success mt-1 font-bold">💰 {% trans "Capital contribution" %}</div>
                     {% endif %}
                 </div>
             </div>
 
             <div class="mb-2">
-                <div class="field-label">Name</div>
+                <div class="field-label">{% trans "Name" %}</div>
                 <div class="text-primary">
                     <span class="sensitive-data">{{ trans.payer_name }}</span>
                 </div>
             </div>
 
             <div class="mb-3">
-                <div class="field-label">Verwendungszweck</div>
+                <div class="field-label">{% trans "Payment reference" %}</div>
                 <div class="monospace-ref">{{ trans.reference }}</div>
                 {% if trans.extracted_invoice_number %}
                 <div class="text-info mt-1">
-                    💡 Extrahierte Rechnungsnummer: <strong>{{ trans.extracted_invoice_number }}</strong>
+                    💡 {% trans "Extracted invoice number:" %} <strong>{{ trans.extracted_invoice_number }}</strong>
                 </div>
                 {% endif %}
                 {% if trans.matching_paid_invoice %}
                 <div class="inline-note inline-note--warning">
-                    <div class="box-title">⚠️ Rechnung bereits bezahlt</div>
+                    <div class="box-title">⚠️ {% trans "Invoice already paid" %}</div>
                     <div class="text-sm">
                         <a href="{% url 'invoice_detail' trans.matching_paid_invoice.pk %}" class="text-warning underline">{{ trans.matching_paid_invoice.invoice_number }}</a>
-                        wurde bereits als bezahlt markiert
+                        {% trans "was already marked as paid" %}
                         {% if trans.matching_paid_invoice.paid_date %}
                         ({{ trans.matching_paid_invoice.paid_date|date:"d.m.Y" }})
                         {% endif %}
                         → <a href="{% url 'client_detail' trans.matching_paid_invoice.client.pk %}" class="text-warning underline">{{ trans.matching_paid_invoice.client.client_code }}</a>
                     </div>
-                    <div class="box-hint">💡 Diese Transaktion kann ignoriert werden</div>
+                    <div class="box-hint">💡 {% trans "This transaction can be ignored" %}</div>
                 </div>
                 {% endif %}
                 {% if trans.match_confidence == 'auto-contribution' %}
                 <div class="inline-note inline-note--success">
-                    <div class="box-title">💰 Kapitaleinlage vom privaten Konto</div>
+                    <div class="box-title">💰 {% trans "Capital contribution from private account" %}</div>
                     <div class="text-sm">
-                        Diese Transaktion wurde vom hinterlegten privaten Bankkonto überwiesen.<br>
-                        Es handelt sich vermutlich um eine Kapitaleinlage (Einlage in das Betriebsvermögen).
+                        {% trans "This transaction was transferred from the stored private bank account." %}<br>
+                        {% trans "It is presumably a capital contribution (deposit into business assets)." %}
                     </div>
-                    <div class="box-hint">💡 Diese Transaktion kann ignoriert werden</div>
+                    <div class="box-hint">💡 {% trans "This transaction can be ignored" %}</div>
                 </div>
                 {% endif %}
             </div>
@@ -253,19 +254,19 @@
                     <!-- Auto-Match to Unpaid Invoice -->
                     <input type="hidden" name="suggested_invoice_id" value="{{ trans.matching_unpaid_invoice.id }}">
                     <div class="auto-match-box form-field-flex">
-                        <div class="text-success font-bold mb-1">✨ Auto-Match verfügbar</div>
+                        <div class="text-success font-bold mb-1">✨ {% trans "Auto-match available" %}</div>
                         <div class="text-success text-sm">
-                            Rechnung <strong>{{ trans.matching_unpaid_invoice.invoice_number }}</strong>
+                            {% trans "Invoice" %} <strong>{{ trans.matching_unpaid_invoice.invoice_number }}</strong>
                             → <strong>{{ trans.matching_unpaid_invoice.client.client_code }}</strong>
                             ({{ trans.matching_unpaid_invoice.calculate_total|floatformat:2 }}&nbsp;€)
                         </div>
                     </div>
                     <div class="d-flex gap-sm">
                         <button type="submit" name="action" value="auto_match" class="btn btn-success">
-                            ⚡ Automatisch importieren
+                            ⚡ {% trans "Import automatically" %}
                         </button>
                         <button type="submit" name="action" value="ignore" class="btn btn-secondary">
-                            ➖ Ignorieren
+                            ➖ {% trans "Ignore" %}
                         </button>
                     </div>
 
@@ -274,15 +275,15 @@
                     <input type="hidden" name="suggested_invoice_id" value="{{ trans.matching_paid_invoice.id }}">
                     <div class="form-field-flex">
                         <div class="text-muted text-sm">
-                            Rechnung <strong>{{ trans.matching_paid_invoice.invoice_number }}</strong> bereits bezahlt
+                            {% blocktrans with number=trans.matching_paid_invoice.invoice_number %}Invoice <strong>{{ number }}</strong> already paid{% endblocktrans %}
                         </div>
                     </div>
                     <div class="d-flex gap-sm">
                         <button type="submit" name="action" value="confirm_paid" class="btn btn-warning">
-                            ✓ Bestätigen (bereits bezahlt)
+                            ✓ {% trans "Confirm (already paid)" %}
                         </button>
                         <button type="submit" name="action" value="ignore" class="btn btn-secondary">
-                            ➖ Ignorieren
+                            ➖ {% trans "Ignore" %}
                         </button>
                     </div>
 
@@ -290,28 +291,28 @@
                     <!-- Manual Assignment -->
                     <div class="form-field-flex">
                         <label class="d-block font-semibold mb-1 text-primary">
-                            Rechnung manuell zuordnen
+                            {% trans "Assign invoice manually" %}
                         </label>
                         {{ form.invoice }}
 
                         <!-- ClientAlias Option -->
                         <div class="inline-note inline-note--info mt-1">
-                            <label class="d-flex items-center gap-sm text-sm" class="text-info" style="cursor: pointer;">
-                                <input type="checkbox" name="create_alias" value="1" style="cursor: pointer;">
-                                <span class="font-semibold">📌 Bank-Name als Alias speichern</span>
+                            <label class="d-flex items-center gap-sm text-sm text-info cursor-pointer">
+                                <input type="checkbox" name="create_alias" value="1" class="cursor-pointer">
+                                <span class="font-semibold">📌 {% trans "Save bank name as alias" %}</span>
                             </label>
-                            <div class="box-hint" style="padding-left: 1.5rem;">
-                                Speichert "<span class="sensitive-data">{{ trans.payer_name }}</span>" als alternativen Namen für diesen Klienten.
-                                Zukünftige Zahlungen von diesem Namen werden automatisch erkannt.
+                            <div class="box-hint pl-6">
+                                {% trans "Saves" %} "<span class="sensitive-data">{{ trans.payer_name }}</span>" {% trans "as an alternative name for this client." %}
+                                {% trans "Future payments from this name will be recognised automatically." %}
                             </div>
                         </div>
                     </div>
                     <div class="d-flex gap-sm">
                         <button type="submit" name="action" value="match" class="btn btn-primary">
-                            ✓ Manuell zuordnen
+                            ✓ {% trans "Assign manually" %}
                         </button>
                         <button type="submit" name="action" value="ignore" class="btn btn-secondary">
-                            ➖ Ignorieren
+                            ➖ {% trans "Ignore" %}
                         </button>
                     </div>
                 {% endif %}
@@ -323,17 +324,17 @@
         {% if is_paginated %}
         <div class="pagination-bar">
             {% if page_obj.has_previous %}
-                <a href="?page=1" class="btn btn-secondary">« Erste</a>
-                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary">‹ Zurück</a>
+                <a href="?page=1" class="btn btn-secondary">« {% trans "First" %}</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary">‹ {% trans "Previous" %}</a>
             {% endif %}
 
             <span class="text-primary p-1">
-                Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}
+                {% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Page {{ page }} of {{ pages }}{% endblocktrans %}
             </span>
 
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">Weiter ›</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-secondary">Letzte »</a>
+                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">{% trans "Next" %} ›</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-secondary">{% trans "Last" %} »</a>
             {% endif %}
         </div>
         {% endif %}
@@ -341,8 +342,8 @@
     {% else %}
     <div class="bank-empty-state">
         <div class="bank-empty-state__icon mb-2">✨</div>
-        <h2 class="mb-0">Alle Transaktionen sind zugeordnet!</h2>
-        <p class="mt-1">Keine offenen Transaktionen mehr vorhanden.</p>
+        <h2 class="mb-0">{% trans "All transactions are matched!" %}</h2>
+        <p class="mt-1">{% trans "No open transactions remaining." %}</p>
     </div>
     {% endif %}
 </div>

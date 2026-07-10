@@ -949,7 +949,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% for category in expense_distribution.categories %}
                 <li class="expense-category-item">
                     <span class="expense-category-item__label">
-                        <span class="type-indicator" style="background: {% cycle '#ed8936' '#f56565' '#9f7aea' '#38b2ac' '#667eea' '#48bb78' %}; flex-shrink: 0;"></span>
+                        <span class="type-indicator shrink-0" style="background: {% cycle '#ed8936' '#f56565' '#9f7aea' '#38b2ac' '#667eea' '#48bb78' %};"></span>
                         <span class="text-break">{{ category.category }}</span>
                     </span>
                     <span class="expense-category-item__amount">

@@ -47,11 +47,11 @@
         </div>
 
         <div class="attachment-preview">
-            <strong style="display: block; margin-bottom: 0.5rem;">📎 {% trans "Attachment" %}</strong>
-            <span style="font-weight: 600;">📄 {{ filename }}</span>
-            <div style="margin-top: 0.5rem; font-size: 0.875rem;">
+            <strong class="block mb-1">📎 {% trans "Attachment" %}</strong>
+            <span class="font-semibold">📄 {{ filename }}</span>
+            <div class="mt-1 text-sm">
                 {% trans "The intake form is attached automatically as a PDF (with fillable fields)." %}
-                <a href="{% url 'intake_form_pdf' client.pk %}" target="_blank" style="margin-left: 0.75rem;">
+                <a href="{% url 'intake_form_pdf' client.pk %}" target="_blank" class="ml-3">
                     🔍 {% trans "Preview / download" %}
                 </a>
             </div>

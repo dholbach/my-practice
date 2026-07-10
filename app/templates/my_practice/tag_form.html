@@ -1,34 +1,34 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}{% if object.pk %}Tag bearbeiten{% else %}Neues Tag{% endif %}{% endblock %}
+{% block title %}{% if object.pk %}{% trans "Edit tag" %}{% else %}{% trans "New tag" %}{% endif %}{% endblock %}
 
-{% block page_title %}{% if object.pk %}Tag bearbeiten{% else %}Neues Tag erstellen{% endif %}{% endblock %}
+{% block page_title %}{% if object.pk %}{% trans "Edit tag" %}{% else %}{% trans "Create new tag" %}{% endif %}{% endblock %}
 
 {% block content %}
-<div class="section-card" style="max-width: 600px; margin: 0 auto;">
+<div class="section-card max-w-[600px] mx-auto">
     <form method="post">
         {% csrf_token %}
 
         <div class="form-group">
-            <label for="{{ form.name.id_for_label }}">Name *</label>
+            <label for="{{ form.name.id_for_label }}">{% trans "Name" %} *</label>
             {{ form.name }}
             {% if form.name.errors %}
                 <div class="error-message">{{ form.name.errors }}</div>
             {% endif %}
             <small class="text-muted text-sm">
-                z.B. "missing-paperwork", "follow-up", "needs-documentation"
+                {% trans 'e.g. "missing-paperwork", "follow-up", "needs-documentation"' %}
             </small>
         </div>
 
         <div class="form-group">
-            <label for="{{ form.color.id_for_label }}">Farbe *</label>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
+            <label for="{{ form.color.id_for_label }}">{% trans "Color" %} *</label>
+            <div class="grid grid-cols-4 gap-2">
                 {% for value, label in form.color.field.choices %}
-                    <label class="color-option" style="cursor: pointer;">
+                    <label class="color-option">
                         <input type="radio" name="color" value="{{ value }}"
-                               {% if form.color.value == value %}checked{% endif %}
-                               style="display: none;">
-                        <span class="color-box {{ value }}" style="display: block; padding: 0.75rem; border-radius: 8px; text-align: center; font-size: 0.75rem; font-weight: 600; color: white; border: 3px solid transparent; transition: all 0.2s;">
+                               {% if form.color.value == value %}checked{% endif %}>
+                        <span class="color-box {{ value }}">
                             {{ label }}
                         </span>
                     </label>
@@ -40,22 +40,22 @@
         </div>
 
         <div class="form-group">
-            <label for="{{ form.description.id_for_label }}">Beschreibung (optional)</label>
+            <label for="{{ form.description.id_for_label }}">{% trans "Description (optional)" %}</label>
             {{ form.description }}
             {% if form.description.errors %}
                 <div class="error-message">{{ form.description.errors }}</div>
             {% endif %}
             <small class="text-muted text-sm">
-                Was bedeutet dieses Tag? Wann sollte es verwendet werden?
+                {% trans "What does this tag mean? When should it be used?" %}
             </small>
         </div>
 
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <div class="flex gap-4 mt-4">
             <button type="submit" class="btn">
-                {% if object.pk %}💾 Speichern{% else %}➕ Erstellen{% endif %}
+                {% if object.pk %}💾 {% trans "Save" %}{% else %}➕ {% trans "Create" %}{% endif %}
             </button>
             <a href="{% url 'tag_list' %}" class="btn btn-secondary">
-                Abbrechen
+                {% trans "Cancel" %}
             </a>
         </div>
     </form>

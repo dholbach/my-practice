@@ -44,7 +44,7 @@
                 ⚙️ {% trans "Edit" %}
             </a>
             {% if practice.is_active %}
-            <a href="{% url 'practice_delete' practice.slug %}" class="btn btn-secondary" style="background: var(--color-danger-bg); color: var(--color-danger);">
+            <a href="{% url 'practice_delete' practice.slug %}" class="btn btn-secondary bg-danger-bg text-danger">
                 🗑️ {% trans "Deactivate" %}
             </a>
             {% endif %}

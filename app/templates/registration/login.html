@@ -1,25 +1,26 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Anmelden{% endblock %}
-{% block page_title %}Anmelden{% endblock %}
-{% block page_subtitle %}Praxisverwaltung{% endblock %}
+{% block title %}{% trans "Sign in" %}{% endblock %}
+{% block page_title %}{% trans "Sign in" %}{% endblock %}
+{% block page_subtitle %}{% trans "Practice management" %}{% endblock %}
 
 {% block content %}
-<div class="form-container" style="max-width: 400px; margin: 4rem auto;">
+<div class="form-container max-w-[400px] my-16 mx-auto">
     <form method="post">
         {% csrf_token %}
         {% if form.errors %}
-        <div class="alert alert-error">Benutzername oder Passwort falsch.</div>
+        <div class="alert alert-error">{% trans "Username or password incorrect." %}</div>
         {% endif %}
         <div class="form-group">
-            <label for="id_username">Benutzername</label>
+            <label for="id_username">{% trans "Username" %}</label>
             {{ form.username }}
         </div>
         <div class="form-group">
-            <label for="id_password">Passwort</label>
+            <label for="id_password">{% trans "Password" %}</label>
             {{ form.password }}
         </div>
-        <button type="submit" class="btn btn-primary">Anmelden</button>
+        <button type="submit" class="btn btn-primary">{% trans "Sign in" %}</button>
     </form>
 </div>
 {% endblock %}

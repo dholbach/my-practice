@@ -11,7 +11,7 @@
     {% csrf_token %}
 
     {% if form.errors %}
-    <div class="message error" style="margin-bottom: 1.5rem;">
+    <div class="message error mb-3">
         <strong>{% trans "Error saving:" %}</strong>
         <ul>
             {% for field, errors in form.errors.items %}
@@ -60,7 +60,7 @@
         {% if object %}
         <div class="form-group checkbox-group">
             {{ form.is_active }}
-            <label for="{{ form.is_active.id_for_label }}" style="margin-bottom: 0;">{% trans "Practice is active" %}</label>
+            <label for="{{ form.is_active.id_for_label }}" class="mb-0">{% trans "Practice is active" %}</label>
         </div>
         {% endif %}
     </div>
@@ -149,7 +149,7 @@
         </div>
         <div class="form-group checkbox-group">
             {{ form.is_kleinunternehmer }}
-            <label for="{{ form.is_kleinunternehmer.id_for_label }}" style="margin-bottom: 0;">
+            <label for="{{ form.is_kleinunternehmer.id_for_label }}" class="mb-0">
                 {% trans "Small business owner (§19 UStG — no VAT)" %}
             </label>
         </div>
@@ -222,8 +222,8 @@
                 {{ form.logo }}
                 <div class="help-text">{% trans "Practice logo for invoices and documents" %}</div>
                 {% if object.logo %}
-                <div style="margin-top: 0.5rem;">
-                    <img src="{{ object.logo.url }}" alt="{% trans "Logo" %}" class="border rounded-sm" style="max-height: 100px;">
+                <div class="mt-1">
+                    <img src="{{ object.logo.url }}" alt="{% trans "Logo" %}" class="border rounded-sm max-h-[100px]">
                 </div>
                 {% endif %}
             </div>
@@ -232,8 +232,8 @@
                 {{ form.signature }}
                 <div class="help-text">{% trans "Digital signature for invoices" %}</div>
                 {% if object.signature %}
-                <div style="margin-top: 0.5rem;">
-                    <img src="{{ object.signature.url }}" alt="{% trans "Signature" %}" class="border rounded-sm" style="max-height: 100px;">
+                <div class="mt-1">
+                    <img src="{{ object.signature.url }}" alt="{% trans "Signature" %}" class="border rounded-sm max-h-[100px]">
                 </div>
                 {% endif %}
             </div>
@@ -250,9 +250,9 @@
             </div>
             <div class="form-group">
                 <label>{% trans "Practice days (weekdays)" %}</label>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                <div class="flex gap-4 flex-wrap mt-[0.25rem]">
                     {% for checkbox in form.practice_weekdays %}
-                    <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: normal; cursor: pointer;">
+                    <label class="flex items-center gap-[0.35rem] font-normal cursor-pointer">
                         {{ checkbox.tag }} {{ checkbox.choice_label }}
                     </label>
                     {% endfor %}

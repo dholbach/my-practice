@@ -10,7 +10,7 @@
 
 {% block content %}
 <div class="invoice-header bg-surface border border-border rounded-lg p-6 mb-8">
-    <div class="invoice-meta grid gap-4 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+    <div class="invoice-meta grid gap-4 mb-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
         <div class="meta-item p-4 bg-bg-secondary rounded-lg border-l-4 border-l-btn-primary">
             <div class="meta-label text-text-secondary text-sm uppercase tracking-wide">{% trans "Invoice Number" %}</div>
             <div class="meta-value text-lg font-semibold mt-1">{{ invoice.invoice_number }}</div>
@@ -35,7 +35,7 @@
                 <span class="status-badge {{ invoice.status }}" id="status-badge">
                     {{ invoice.get_status_display }}
                 </span>
-                <select id="status-select" class="form-control" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; border-radius: 4px; width: auto; display: inline-block;">
+                <select id="status-select" class="form-control ml-1 py-1 px-2 rounded w-auto inline-block">
                     <option value="">{% trans "Change status…" %}</option>
                     <option value="draft">{% trans "Draft" %}</option>
                     <option value="sent">{% trans "Sent" %}</option>
@@ -62,7 +62,7 @@
     </div>
 
     {% if invoice.client.full_name|slice:":7" == "Klient " and "@example.com" in invoice.client.email %}
-    <div class="alert-box error" style="margin-top: 1rem;">
+    <div class="alert-box error mt-2">
         <strong>📋 {% trans "Imported client data — needs updating" %}</strong><br>
         <span class="text-danger">{% trans "This client was imported with placeholder data. Please update with real information:" %}
         <a href="{% url 'client_intake' %}?client={{ invoice.client.pk }}" class="text-danger underline font-semibold">
@@ -90,7 +90,7 @@
         {% if gebueh_blocks %}
         {% if arbeitsdiagnose %}
         <tr>
-            <td colspan="5" style="color: var(--color-text-secondary); font-style: italic;">
+            <td colspan="5" class="text-secondary italic">
                 {% trans "Diagnosis" %}: {{ arbeitsdiagnose }}
             </td>
         </tr>
@@ -112,7 +112,7 @@
             <td class="text-right font-bold">{{ block.vereinbarter_betrag|currency }}</td>
         </tr>
         {% for le in block.leistungen %}
-        <tr style="color: var(--color-text-secondary); font-size: 0.875rem;">
+        <tr class="text-secondary text-sm">
             <td></td>
             <td>{% trans "Code" %} {{ le.ziffer.nummer }} — {{ le.ziffer.bezeichnung }}</td>
             <td></td>
@@ -121,18 +121,18 @@
         </tr>
         {% endfor %}
         {% if block.leistungen %}
-        <tr style="font-size: 0.875rem; border-top: 1px dashed var(--color-border);">
+        <tr class="text-sm border-t border-dashed border-border">
             <td></td>
-            <td style="color: var(--color-text-secondary);">{% trans "GebüH subtotal" %}</td>
+            <td class="text-secondary">{% trans "GebüH subtotal" %}</td>
             <td></td>
-            <td class="text-right" style="color: var(--color-text-secondary);">{{ block.gebueh_sum|currency }}</td>
+            <td class="text-right text-secondary">{{ block.gebueh_sum|currency }}</td>
             <td></td>
         </tr>
-        <tr style="font-size: 0.875rem;">
+        <tr class="text-sm">
             <td></td>
-            <td style="color: var(--color-text-secondary);">{% trans "Remaining amount" %}</td>
+            <td class="text-secondary">{% trans "Remaining amount" %}</td>
             <td></td>
-            <td class="text-right" style="color: var(--color-text-secondary);">{{ block.restbetrag|currency }}</td>
+            <td class="text-right text-secondary">{{ block.restbetrag|currency }}</td>
             <td></td>
         </tr>
         {% endif %}
@@ -180,9 +180,9 @@
         <span class="font-semibold">{{ invoice.tax_amount|currency }}</span>
     </div>
     {% endif %}
-    <div class="flex-between mt-3" style="padding-top: 1rem; border-top: 2px solid var(--color-link); font-size: 1.25rem;">
+    <div class="flex-between mt-3 pt-4 border-t-2 border-link text-xl">
         <span class="font-bold">{% trans "Total:" %}</span>
-        <span class="font-bold" class="text-primary">{{ invoice.total|currency }}</span>
+        <span class="font-bold text-primary">{{ invoice.total|currency }}</span>
     </div>
 </div>
 
@@ -203,7 +203,7 @@
     {% if invoice.status != 'sent' %}
     <a href="{% url 'send_invoice_email' invoice.pk %}" class="btn btn-secondary">📧 {% trans "Send by email" %}</a>
     {% else %}
-    <span class="text-muted" style="padding: 0.5rem 1rem; background: var(--color-bg-secondary); border-radius: 8px; display: inline-block;">
+    <span class="text-muted py-2 px-4 bg-bg-secondary rounded-lg inline-block">
         ✅ {% trans "Email already sent" %}
     </span>
     {% endif %}
@@ -216,6 +216,9 @@
 {% trans "Status changed to:" as js_status_changed %}
 {% trans "Error changing status" as js_error %}
 {% trans "Paid on" as js_paid_on %}
+const jsStatusChanged = "{{ js_status_changed|escapejs }}";
+const jsError = "{{ js_error|escapejs }}";
+const jsPaidOn = "{{ js_paid_on|escapejs }}";
 document.getElementById('status-select').addEventListener('change', async function() {
     const newStatus = this.value;
     if (!newStatus) return;
@@ -242,7 +245,7 @@ document.getElementById('status-select').addEventListener('change', async functi
 
             const paidDateElements = document.querySelectorAll('.invoice-meta .meta-item');
             paidDateElements.forEach(el => {
-                if (el.querySelector('.meta-label')?.textContent === js_paid_on) {
+                if (el.querySelector('.meta-label')?.textContent === jsPaidOn) {
                     const valueEl = el.querySelector('.meta-value');
                     if (data.paid_date) {
                         valueEl.innerHTML = data.paid_date;
@@ -255,13 +258,13 @@ document.getElementById('status-select').addEventListener('change', async functi
             const message = document.createElement('div');
             message.className = 'alert-box success';
             message.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-            message.innerHTML = `<strong>${js_status_changed} ${data.display}</strong>`;
+            message.innerHTML = `<strong>${jsStatusChanged} ${data.display}</strong>`;
             document.body.appendChild(message);
             setTimeout(() => message.remove(), 3000);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert(js_error);
+        alert(jsError);
     }
 });
 </script>

@@ -1,17 +1,18 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Tag-Verwaltung{% endblock %}
+{% block title %}{% trans "Tag Management" %}{% endblock %}
 
-{% block page_title %}Tags{% endblock %}
-{% block page_subtitle %}Verwalte Client-Tags für bessere Organisation{% endblock %}
+{% block page_title %}{% trans "Tags" %}{% endblock %}
+{% block page_subtitle %}{% trans "Manage client tags for better organisation" %}{% endblock %}
 
 {% block content %}
-<div class="actions" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+<div class="actions mb-4 flex justify-between items-center">
     <a href="{% url 'client_list' %}" class="btn btn-secondary">
-        ← Zurück zur Klientenliste
+        ← {% trans "Back to client list" %}
     </a>
     <a href="{% url 'tag_create' %}" class="btn">
-        ➕ Neues Tag erstellen
+        ➕ {% trans "Create new tag" %}
     </a>
 </div>
 
@@ -20,26 +21,26 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Farbe</th>
-                <th>Beschreibung</th>
-                <th>Verwendet von</th>
-                <th>Aktionen</th>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Color" %}</th>
+                <th>{% trans "Description" %}</th>
+                <th>{% trans "Used by" %}</th>
+                <th>{% trans "Actions" %}</th>
             </tr>
         </thead>
         <tbody>
             {% for tag in tags %}
             <tr>
                 <td>
-                    <span class="tag {{ tag.color }}" style="display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: white;">
+                    <span class="tag {{ tag.color }}">
                         {{ tag.name }}
                         {% if tag.is_system %}
-                            <span style="margin-left: 0.25rem; opacity: 0.7; font-size: 0.625rem;">(System)</span>
+                            <span class="ml-[0.25rem] opacity-70 text-[0.625rem]">(System)</span>
                         {% endif %}
                     </span>
                 </td>
                 <td>
-                    <span class="tag {{ tag.color }}" style="display: inline-block; padding: 0.25rem 0.5rem; border-radius: 8px; font-size: 0.625rem; color: white;">
+                    <span class="tag-preview {{ tag.color }}">
                         {{ tag.get_color_display }}
                     </span>
                 </td>
@@ -47,24 +48,24 @@
                     {% if tag.description %}
                         {{ tag.description }}
                     {% else %}
-                        <span class="text-muted-light italic">Keine Beschreibung</span>
+                        <span class="text-muted-light italic">{% trans "No description" %}</span>
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'client_list' %}?tag={{ tag.slug }}" style="color: #667eea; text-decoration: none; font-weight: 600;">
-                        {{ tag.client_count }} Klient{{ tag.client_count|pluralize:"en" }}
+                    <a href="{% url 'client_list' %}?tag={{ tag.slug }}" class="text-link no-underline font-semibold">
+                        {% blocktrans count count=tag.client_count %}{{ count }} client{% plural %}{{ count }} clients{% endblocktrans %}
                     </a>
                 </td>
                 <td>
                     {% if not tag.is_system %}
-                        <a href="{% url 'tag_update' tag.pk %}" class="btn btn-sm btn-secondary" style="margin-right: 0.5rem;">
-                            ✏️ Bearbeiten
+                        <a href="{% url 'tag_update' tag.pk %}" class="btn btn-sm btn-secondary mr-2">
+                            ✏️ {% trans "Edit" %}
                         </a>
                         <a href="{% url 'tag_delete' tag.pk %}" class="btn btn-sm btn-danger">
-                            🗑️ Löschen
+                            🗑️ {% trans "Delete" %}
                         </a>
                     {% else %}
-                        <span class="text-muted-light text-sm">System-Tag</span>
+                        <span class="text-muted-light text-sm">{% trans "System tag" %}</span>
                     {% endif %}
                 </td>
             </tr>
@@ -74,10 +75,10 @@
 </div>
 {% else %}
 <div class="empty-state">
-    <h2>Keine Tags vorhanden</h2>
-    <p>Erstelle dein erstes Tag, um Klienten besser zu organisieren.</p>
-    <a href="{% url 'tag_create' %}" class="btn" style="margin-top: 1rem;">
-        ➕ Erstes Tag erstellen
+    <h2>{% trans "No tags yet" %}</h2>
+    <p>{% trans "Create your first tag to organise clients better." %}</p>
+    <a href="{% url 'tag_create' %}" class="btn mt-2">
+        ➕ {% trans "Create first tag" %}
     </a>
 </div>
 {% endif %}

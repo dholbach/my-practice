@@ -247,7 +247,9 @@
   .relative { position: relative; } .absolute { position: absolute; } .sticky { position: sticky; }
 
   /* Tag color picker boxes */
-  .color-box { transition: transform 0.15s, box-shadow 0.15s; }
+  .color-box { display: block; padding: 0.75rem; border-radius: 8px; text-align: center; font-size: 0.75rem; font-weight: 600; color: white; border: 3px solid transparent; transition: transform 0.15s, box-shadow 0.15s; }
+  .color-option { cursor: pointer; }
+  .color-option input[type="radio"] { display: none; }
   .color-box:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); }
   .color-box.red    { background: #f56565; } .color-box.orange { background: #ed8936; }
   .color-box.yellow { background: #ecc94b; color: #2d3748; } .color-box.green { background: #48bb78; }
@@ -1475,6 +1477,9 @@
   .checklist-nav-divider { margin: 2.5rem 0; border-color: var(--color-border); }
   .checklist-nav-title { font-size: 1rem; color: var(--color-text-secondary); margin-bottom: 1rem; }
   .checklist-type-list { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .checklist-type-pill { padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.9rem; background: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
+  .checklist-type-pill--active { background: var(--color-primary); color: white; border-color: transparent; }
+  .checklist-label--done { text-decoration: line-through; color: var(--color-text-secondary); }
 
   /* ── Bank review page ── */
   .bank-review-page { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }

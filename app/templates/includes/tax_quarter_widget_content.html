@@ -1,48 +1,49 @@
+{% load i18n %}
 {% if show_warning %}
-<div style="padding: 0.75rem 0;">
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0;">
+<div class="py-3">
+    <div class="flex items-center justify-between py-2">
         <div>
             <div class="font-medium text-primary">
-                Q{{ current_quarter }} Umsatz: {{ quarter_revenue|floatformat:0 }}&nbsp;€
+                {% blocktrans with quarter=current_quarter %}Q{{ quarter }} revenue:{% endblocktrans %} {{ quarter_revenue|floatformat:0 }}&nbsp;€
             </div>
             <div class="text-xs text-secondary mt-1">
-                Noch keine Steuervorauszahlung für Q{{ current_quarter }} erfasst
+                {% blocktrans with quarter=current_quarter %}No tax prepayment recorded for Q{{ quarter }} yet{% endblocktrans %}
             </div>
         </div>
         <a href="{{ add_payment_url }}" class="btn btn-warning btn-sm">
-            Erfassen
+            {% trans "Record" %}
         </a>
     </div>
-    <div style="margin-top: 0.5rem;">
+    <div class="mt-1">
         <a href="{{ quarter_overview_url }}"
            class="text-xs text-secondary link-plain">
-            → Quartalsübersicht anzeigen
+            → {% trans "Show quarter overview" %}
         </a>
     </div>
 </div>
 {% elif has_tax_payment %}
-<div style="padding: 0.75rem 0;">
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0;">
+<div class="py-3">
+    <div class="flex items-center justify-between py-2">
         <div>
             <div class="font-medium text-primary">
-                Q{{ current_quarter }} Umsatz: {{ quarter_revenue|floatformat:0 }}&nbsp;€
+                {% blocktrans with quarter=current_quarter %}Q{{ quarter }} revenue:{% endblocktrans %} {{ quarter_revenue|floatformat:0 }}&nbsp;€
             </div>
             <div class="text-xs text-success mt-1">
-                ✅ Steuervorauszahlung für Q{{ current_quarter }} erfasst
+                ✅ {% blocktrans with quarter=current_quarter %}Tax prepayment recorded for Q{{ quarter }}{% endblocktrans %}
             </div>
         </div>
         <a href="{{ quarter_overview_url }}" class="btn btn-secondary btn-sm">
-            Übersicht
+            {% trans "Overview" %}
         </a>
     </div>
 </div>
 {% else %}
-<div class="text-secondary text-sm" style="padding: 0.75rem 0;">
-    <div>Q{{ current_quarter }} Umsatz: {{ quarter_revenue|floatformat:0 }}&nbsp;€</div>
-    <div style="margin-top: 0.5rem;">
+<div class="text-secondary text-sm py-3">
+    <div>{% blocktrans with quarter=current_quarter %}Q{{ quarter }} revenue:{% endblocktrans %} {{ quarter_revenue|floatformat:0 }}&nbsp;€</div>
+    <div class="mt-1">
         <a href="{{ quarter_overview_url }}"
            class="text-xs text-secondary link-plain">
-            → Quartalsübersicht anzeigen
+            → {% trans "Show quarter overview" %}
         </a>
     </div>
 </div>

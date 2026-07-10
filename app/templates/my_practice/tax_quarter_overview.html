@@ -51,7 +51,7 @@
     </div>
 
     <!-- Batch PDF download -->
-    <form method="post" action="{% url 'invoice_batch_download' %}" style="display: inline-block; margin-bottom: 1rem;">
+    <form method="post" action="{% url 'invoice_batch_download' %}" class="inline-block mb-2">
         {% csrf_token %}
         <input type="hidden" name="year" value="{{ year }}">
         <input type="hidden" name="status" value="paid">

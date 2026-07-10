@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
 {% block title %}{{ checklist_type_display }}{% endblock %}
 
@@ -9,10 +10,10 @@
         <div>
             <h1 class="mb-0">📋 {{ checklist_type_display }}</h1>
             <p class="text-muted mt-1">
-                Periode: {{ period_start|date:"F Y" }}
+                {% trans "Period:" %} {{ period_start|date:"F Y" }}
             </p>
         </div>
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Übersicht</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">← {% trans "Overview" %}</a>
     </div>
 
     {% if messages %}
@@ -26,19 +27,19 @@
     {% if checklist.is_completed %}
     <div class="checklist-done-banner">
         <div class="checklist-done-banner__title">
-            ✅ Abgeschlossen am {{ checklist.completed_at|date:"d.m.Y" }} um {{ checklist.completed_at|time:"H:i" }} Uhr
+            ✅ {% blocktrans with date=checklist.completed_at|date:"d.m.Y" time=checklist.completed_at|time:"H:i" %}Completed on {{ date }} at {{ time }}{% endblocktrans %}
         </div>
         {% if checklist.notes %}
         <div class="checklist-done-banner__notes">
-            <strong>Notizen:</strong> {{ checklist.notes }}
+            <strong>{% trans "Notes:" %}</strong> {{ checklist.notes }}
         </div>
         {% endif %}
         <div class="checklist-done-banner__actions">
-            <a href="{% url 'dashboard' %}" class="btn btn-secondary me-1">← Zur Übersicht</a>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary me-1">← {% trans "Back to overview" %}</a>
         </div>
     </div>
 
-    <h3 class="checklist-section-label">Erledigte Punkte</h3>
+    <h3 class="checklist-section-label">{% trans "Completed items" %}</h3>
     <div class="checklist-list checklist-list--completed">
         {% for item in items %}
         <div class="checklist-item-done checklist-list__divider">
@@ -62,16 +63,16 @@
                     <div class="checklist-item-paused__body">
                         <span class="checklist-item-paused__title">{{ item.title }}</span>
                         <div class="checklist-item-paused__reason">
-                            <strong>Pausiert:</strong> {{ item.pause.reason }}
+                            <strong>{% trans "Paused:" %}</strong> {{ item.pause.reason }}
                             {% if item.pause.paused_until %}
-                            · <em>bis {{ item.pause.paused_until|date:"d.m.Y" }}</em>
+                            · <em>{% blocktrans with date=item.pause.paused_until|date:"d.m.Y" %}until {{ date }}{% endblocktrans %}</em>
                             {% endif %}
                         </div>
                     </div>
                     <form method="post" action="{% url 'checklist_unpause' checklist_type item.id %}" class="checklist-item-paused__actions">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-secondary checklist-unpause-btn" title="Pause aufheben">
-                            ▶ Fortsetzen
+                        <button type="submit" class="btn btn-secondary checklist-unpause-btn" title="{% trans 'Resume' %}">
+                            ▶ {% trans "Resume" %}
                         </button>
                     </form>
                 </div>
@@ -90,19 +91,19 @@
                             {{ item.title }}
                         </label>
                         <details class="checklist-pause-details">
-                            <summary class="checklist-pause-summary">⏸ Pausieren</summary>
+                            <summary class="checklist-pause-summary">⏸ {% trans "Pause" %}</summary>
                             <form method="post" action="{% url 'checklist_pause' checklist_type item.id %}" class="checklist-pause-form">
                                 {% csrf_token %}
-                                <label class="checklist-pause-form__label">Grund</label>
+                                <label class="checklist-pause-form__label">{% trans "Reason" %}</label>
                                 <textarea name="reason" rows="2" required
                                     class="checklist-pause-form__textarea"
-                                    placeholder="z.B. Neue MicroSD-Karten noch nicht geliefert…"></textarea>
+                                    placeholder="{% trans 'e.g. new microSD cards not delivered yet…' %}"></textarea>
                                 <label class="checklist-pause-form__label">
-                                    Pausiert bis <span class="checklist-pause-form__label--optional">(leer = unbegrenzt)</span>
+                                    {% trans "Paused until" %} <span class="checklist-pause-form__label--optional">{% trans "(empty = indefinitely)" %}</span>
                                 </label>
                                 <input type="date" name="paused_until" class="checklist-pause-form__date">
                                 <div>
-                                    <button type="submit" class="btn btn-secondary checklist-pause-form__btn">⏸ Element pausieren</button>
+                                    <button type="submit" class="btn btn-secondary checklist-pause-form__btn">⏸ {% trans "Pause item" %}</button>
                                 </div>
                             </form>
                         </details>
@@ -115,23 +116,23 @@
 
         <div class="checklist-notes-section">
             <label for="notes" class="checklist-notes-label">
-                Notizen <span class="checklist-notes-label__optional">(optional)</span>
+                {% trans "Notes" %} <span class="checklist-notes-label__optional">{% trans "(optional)" %}</span>
             </label>
             <textarea
                 class="checklist-notes-textarea"
                 id="notes"
                 name="notes"
                 rows="3"
-                placeholder="z.B. Restore-Test OK, 676 Rechnungen verifiziert, keine Fehler in Logs…"
+                placeholder="{% trans 'e.g. restore test OK, 676 invoices verified, no errors in logs…' %}"
             ></textarea>
         </div>
 
         <div class="checklist-submit-row">
             <button type="submit" id="complete-btn" class="btn btn-primary checklist-submit-btn" disabled>
-                ✅ Checkliste abschließen
+                ✅ {% trans "Complete checklist" %}
             </button>
             <span id="progress-hint" class="checklist-progress-hint">
-                0 von ? erledigt
+                {% trans "0 of ? completed" %}
             </span>
         </div>
     </form>
@@ -139,16 +140,11 @@
 
     <hr class="checklist-nav-divider">
 
-    <h3 class="checklist-nav-title">Andere Checklisten</h3>
+    <h3 class="checklist-nav-title">{% trans "Other checklists" %}</h3>
     <div class="checklist-type-list">
         {% for type_id, type_label in all_types %}
         <a href="{% url 'checklist' type_id %}"
-           style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.9rem;
-                  {% if type_id == checklist_type %}
-                  background: var(--color-primary); color: white;
-                  {% else %}
-                  background: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border);
-                  {% endif %}">
+           class="checklist-type-pill{% if type_id == checklist_type %} checklist-type-pill--active{% endif %}">
             {{ type_label }}
         </a>
         {% endfor %}
@@ -156,7 +152,11 @@
 </div>
 
 <script>
+{% trans "All items paused" as js_all_paused %}
+{% trans "%1 of %2 completed" as js_progress %}
 (function() {
+    const jsAllPaused = "{{ js_all_paused|escapejs }}";
+    const jsProgress = "{{ js_progress|escapejs }}";
     // Only count checkboxes for non-paused items
     const checkboxes = document.querySelectorAll('.checklist-checkbox[data-required="true"]');
     const btn = document.getElementById('complete-btn');
@@ -169,11 +169,10 @@
 
         if (btn) btn.disabled = !allDone;
         if (hint) {
-            const pausedCount = document.querySelectorAll('[data-required]').length;
             if (total === 0) {
-                hint.textContent = 'Alle Punkte pausiert';
+                hint.textContent = jsAllPaused;
             } else {
-                hint.textContent = checked + ' von ' + total + ' erledigt';
+                hint.textContent = jsProgress.replace('%1', checked).replace('%2', total);
             }
         }
     }
@@ -183,8 +182,7 @@
             const row = this.closest('.checklist-row');
             const label = row ? row.querySelector('.checklist-label') : null;
             if (label) {
-                label.style.textDecoration = this.checked ? 'line-through' : '';
-                label.style.color = this.checked ? 'var(--color-text-secondary)' : 'var(--color-text-primary)';
+                label.classList.toggle('checklist-label--done', this.checked);
             }
             updateProgress();
         });
