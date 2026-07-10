@@ -169,11 +169,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # logging.lastResort, which prints WARNING+ straight to stderr regardless of
 # level. That's normally fine, but it means every test that deliberately
 # exercises an error path (mocked exceptions, missing Ghostscript, invalid
-# uploads, ...) also prints a full traceback to the test runner's output,
-# which reads like a failure even though the test passed. Routing everything
-# through an explicit root logger lets us quiet it specifically during
-# `manage.py test` without touching dev/prod logging.
+# uploads, Django's own django.request logger emitting 4xx/5xx access
+# warnings, ...) also prints noise to the test runner's output that reads
+# like a failure even though the test passed.
+#
+# The level must be set on the *handler*, not just the logger: a record
+# reaching root via propagation (e.g. from "django.request", which sets its
+# own effective level via its "django" ancestor) is filtered by each
+# handler's own level as it's emitted, not by root's logger-level attribute.
+# A logger-only threshold has no effect on records the logger itself didn't
+# originate.
 RUNNING_TESTS = "test" in sys.argv
+_CONSOLE_LEVEL = "CRITICAL" if RUNNING_TESTS else "WARNING"
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -187,11 +194,12 @@ LOGGING = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
+            "level": _CONSOLE_LEVEL,
         },
     },
     "root": {
         "handlers": ["console"],
-        "level": "CRITICAL" if RUNNING_TESTS else "WARNING",
+        "level": _CONSOLE_LEVEL,
     },
     "loggers": {
         "django.core.mail": {
