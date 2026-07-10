@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-10 11:13+0200\n"
+"POT-Creation-Date: 2026-07-10 18:23+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -370,6 +370,20 @@ msgstr ""
 msgid "Record"
 msgstr ""
 
+#: my_practice/utils/file_processing.py:173
+#, python-format
+msgid "Image file '%(name)s' could not be processed."
+msgstr ""
+
+#: my_practice/utils/file_processing.py:207
+#, python-format
+msgid "File type '%(ext)s' is not allowed."
+msgstr ""
+
+#: my_practice/utils/file_processing.py:207
+msgid "unknown"
+msgstr ""
+
 #: my_practice/utils/practice_analysis.py:215
 #, python-format
 msgid "%(n)s working day"
@@ -476,137 +490,137 @@ msgstr "Invalid status"
 msgid "Status changed to: %(status)s"
 msgstr "Status changed to: %(status)s"
 
-#: my_practice/views/bank_import_views.py:72
+#: my_practice/views/bank_import_views.py:79
 #, python-format
 msgid "%(count)s automatically matched"
 msgstr "%(count)s automatically matched"
 
-#: my_practice/views/bank_import_views.py:73
+#: my_practice/views/bank_import_views.py:80
 #, python-format
 msgid "%(count)s require manual review"
 msgstr "%(count)s require manual review"
 
-#: my_practice/views/bank_import_views.py:77
+#: my_practice/views/bank_import_views.py:84
 #, python-format
 msgid "%(count)s expenses detected automatically"
 msgstr "%(count)s expenses detected automatically"
 
-#: my_practice/views/bank_import_views.py:79
+#: my_practice/views/bank_import_views.py:86
 #, python-format
 msgid "%(count)s ignored"
 msgstr "%(count)s ignored"
 
-#: my_practice/views/bank_import_views.py:82
+#: my_practice/views/bank_import_views.py:89
 #, python-format
 msgid "Import complete: %(details)s."
 msgstr "Import complete: %(details)s."
 
-#: my_practice/views/bank_import_views.py:220
+#: my_practice/views/bank_import_views.py:240
 msgid "No transaction selected."
 msgstr "No transaction selected."
 
-#: my_practice/views/bank_import_views.py:308
+#: my_practice/views/bank_import_views.py:328
 #, python-format
 msgid "Auto-ignored: invoice %(number)s already paid"
 msgstr "Auto-ignored: invoice %(number)s already paid"
 
-#: my_practice/views/bank_import_views.py:318
+#: my_practice/views/bank_import_views.py:338
 #, python-format
 msgid "✅ %(count)s transaction with already-paid invoice ignored."
 msgid_plural "✅ %(count)s transactions with already-paid invoices ignored."
 msgstr[0] "✅ %(count)s transaction with already-paid invoice ignored."
 msgstr[1] "✅ %(count)s transactions with already-paid invoices ignored."
 
-#: my_practice/views/bank_import_views.py:325
+#: my_practice/views/bank_import_views.py:345
 msgid "No matching transactions to ignore."
 msgstr "No matching transactions to ignore."
 
-#: my_practice/views/bank_import_views.py:338
+#: my_practice/views/bank_import_views.py:358
 #, python-format
 msgid "%(count)s expense ignored."
 msgid_plural "%(count)s expenses ignored."
 msgstr[0] "%(count)s expense ignored."
 msgstr[1] "%(count)s expenses ignored."
 
-#: my_practice/views/bank_import_views.py:355
-#: my_practice/views/bank_import_views.py:667
-#: my_practice/views/bank_import_views.py:817
+#: my_practice/views/bank_import_views.py:375
+#: my_practice/views/bank_import_views.py:687
+#: my_practice/views/bank_import_views.py:837
 #, python-format
 msgid "%(count)s transaction ignored."
 msgid_plural "%(count)s transactions ignored."
 msgstr[0] "%(count)s transaction ignored."
 msgstr[1] "%(count)s transactions ignored."
 
-#: my_practice/views/bank_import_views.py:369
+#: my_practice/views/bank_import_views.py:389
 msgid "Transaction ignored."
 msgstr "Transaction ignored."
 
-#: my_practice/views/bank_import_views.py:393
+#: my_practice/views/bank_import_views.py:413
 #, python-format
 msgid "Transaction linked to %(number)s (already paid)."
 msgstr "Transaction linked to %(number)s (already paid)."
 
-#: my_practice/views/bank_import_views.py:397
+#: my_practice/views/bank_import_views.py:417
 msgid "Transaction confirmed (invoice already paid)."
 msgstr "Transaction confirmed (invoice already paid)."
 
-#: my_practice/views/bank_import_views.py:403
+#: my_practice/views/bank_import_views.py:423
 msgid "No invoice specified."
 msgstr "No invoice specified."
 
-#: my_practice/views/bank_import_views.py:423
+#: my_practice/views/bank_import_views.py:443
 #, python-format
 msgid "Transaction automatically linked to %(number)s and marked as paid."
 msgstr "Transaction automatically linked to %(number)s and marked as paid."
 
-#: my_practice/views/bank_import_views.py:432
+#: my_practice/views/bank_import_views.py:452
 msgid "Error processing form."
 msgstr "Error processing form."
 
-#: my_practice/views/bank_import_views.py:437
+#: my_practice/views/bank_import_views.py:457
 msgid "Please select at least one invoice."
 msgstr "Please select at least one invoice."
 
-#: my_practice/views/bank_import_views.py:468
+#: my_practice/views/bank_import_views.py:488
 #, python-format
 msgid "Payment successfully assigned to invoice %(number)s."
 msgstr "Payment successfully assigned to invoice %(number)s."
 
-#: my_practice/views/bank_import_views.py:475
+#: my_practice/views/bank_import_views.py:495
 #, python-format
 msgid "Payment successfully assigned to %(count)s invoices: %(numbers)s"
 msgstr "Payment successfully assigned to %(count)s invoices: %(numbers)s"
 
-#: my_practice/views/bank_import_views.py:496
+#: my_practice/views/bank_import_views.py:516
 #, python-format
 msgid "📌 Alias '%(name)s' for %(code)s saved."
 msgstr "📌 Alias '%(name)s' for %(code)s saved."
 
-#: my_practice/views/bank_import_views.py:503
+#: my_practice/views/bank_import_views.py:523
 #, python-format
 msgid "Alias '%(name)s' for %(code)s saved."
 msgstr "Alias '%(name)s' for %(code)s saved."
 
-#: my_practice/views/bank_import_views.py:570
-#: my_practice/views/bank_import_views.py:652
-#: my_practice/views/bank_import_views.py:716
-#: my_practice/views/bank_import_views.py:790
+#: my_practice/views/bank_import_views.py:590
+#: my_practice/views/bank_import_views.py:672
+#: my_practice/views/bank_import_views.py:736
+#: my_practice/views/bank_import_views.py:810
 msgid "Please select at least one transaction."
 msgstr "Please select at least one transaction."
 
-#: my_practice/views/bank_import_views.py:579
-#: my_practice/views/bank_import_views.py:725
+#: my_practice/views/bank_import_views.py:599
+#: my_practice/views/bank_import_views.py:745
 msgid "No transactions found."
 msgstr "No transactions found."
 
-#: my_practice/views/bank_import_views.py:640
+#: my_practice/views/bank_import_views.py:660
 #, python-format
 msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
 msgstr[0] "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgstr[1] "%(count)s transactions successfully grouped into expense: %(amount)s €"
 
-#: my_practice/views/bank_import_views.py:779
+#: my_practice/views/bank_import_views.py:799
 #, python-format
 msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
@@ -2170,7 +2184,7 @@ msgstr ""
 
 #: templates/my_practice/bank_review.html:269
 #: templates/my_practice/bank_review.html:286
-#: templates/my_practice/bank_review.html:315
+#: templates/my_practice/bank_review.html:317
 #: templates/my_practice/client_detail.html:647
 msgid "Ignore"
 msgstr ""
@@ -2188,52 +2202,52 @@ msgstr ""
 msgid "Assign invoice manually"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:302
+#: templates/my_practice/bank_review.html:303
 msgid "Save bank name as alias"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:305
+#: templates/my_practice/bank_review.html:306
 msgid "Saves"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:305
+#: templates/my_practice/bank_review.html:306
 msgid "as an alternative name for this client."
 msgstr ""
 
-#: templates/my_practice/bank_review.html:306
+#: templates/my_practice/bank_review.html:307
 msgid "Future payments from this name will be recognised automatically."
 msgstr ""
 
-#: templates/my_practice/bank_review.html:312
+#: templates/my_practice/bank_review.html:314
 msgid "Assign manually"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:327
+#: templates/my_practice/bank_review.html:329
 msgid "First"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:328
+#: templates/my_practice/bank_review.html:330
 msgid "Previous"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:332
+#: templates/my_practice/bank_review.html:334
 #, python-format
 msgid "Page %(page)s of %(pages)s"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:336
+#: templates/my_practice/bank_review.html:338
 msgid "Next"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:337
+#: templates/my_practice/bank_review.html:339
 msgid "Last"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:345
+#: templates/my_practice/bank_review.html:347
 msgid "All transactions are matched!"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:346
+#: templates/my_practice/bank_review.html:348
 msgid "No open transactions remaining."
 msgstr ""
 
