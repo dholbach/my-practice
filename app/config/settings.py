@@ -3,6 +3,7 @@ Django settings for payments project.
 """
 
 import os
+import sys
 from pathlib import Path
 
 from django.utils.csp import CSP
@@ -162,6 +163,24 @@ PAYMENTS_DATA_DIR = Path(
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Logging configuration
+#
+# Without an explicit "root" entry, loggers not listed below (most of
+# my_practice.*) have no configured handler and fall through to Python's
+# logging.lastResort, which prints WARNING+ straight to stderr regardless of
+# level. That's normally fine, but it means every test that deliberately
+# exercises an error path (mocked exceptions, missing Ghostscript, invalid
+# uploads, Django's own django.request logger emitting 4xx/5xx access
+# warnings, ...) also prints noise to the test runner's output that reads
+# like a failure even though the test passed.
+#
+# The level must be set on the *handler*, not just the logger: a record
+# reaching root via propagation (e.g. from "django.request", which sets its
+# own effective level via its "django" ancestor) is filtered by each
+# handler's own level as it's emitted, not by root's logger-level attribute.
+# A logger-only threshold has no effect on records the logger itself didn't
+# originate.
+RUNNING_TESTS = "test" in sys.argv
+_CONSOLE_LEVEL = "CRITICAL" if RUNNING_TESTS else "WARNING"
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -175,7 +194,12 @@ LOGGING = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
+            "level": _CONSOLE_LEVEL,
         },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": _CONSOLE_LEVEL,
     },
     "loggers": {
         "django.core.mail": {
