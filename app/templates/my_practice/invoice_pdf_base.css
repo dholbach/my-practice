@@ -240,6 +240,8 @@ table.items tbody.gebueh-block { break-inside: avoid; page-break-inside: avoid; 
 /* ── Signature ──────────────────────────────────────────────────────────────── */
 .signature-section {
   margin-top: 22pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .signature-section img {
   max-height: 52pt;
