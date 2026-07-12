@@ -163,24 +163,51 @@ table.items tbody td .item-sub {
   margin-bottom: 10pt;
 }
 .gebueh-diagnose strong { color: var(--ink); }
-table.items td.gebueh-ziffer    { font-size: 8.5pt; color: var(--muted); padding: 4pt 0; border-bottom: none; }
-table.items td.gebueh-ziffer-nr { font-weight: 600; width: 4rem; }
-table.items td.gebueh-sub       { font-size: 8.5pt; color: var(--body); padding: 5pt 0 5pt 1rem; border-bottom: none; }
-table.items td.gebueh-sub.bold  { font-weight: 600; color: var(--ink); }
-table.items tr.gebueh-total td  { border-top: 1pt solid var(--pine); padding-top: 6pt; font-weight: 700; color: var(--pine); font-size: 9.5pt; }
-table.items tr.gebueh-separator td { padding: 0; border: none; height: 6pt; }
+/* Headline row: date + service name read first, amount is the visual anchor
+   on the right — this is what changed hands, at a glance, per visit. */
+table.items tr.gebueh-headline td   { border-bottom: none; padding: 8pt 0 1pt; }
+table.items tr.gebueh-headline .gebueh-date {
+  display: inline-block;
+  width: 2.6em;
+  color: var(--muted);
+  font-size: 8.5pt;
+}
+table.items tr.gebueh-headline .gebueh-service-name { font-weight: 700; color: var(--ink); font-size: 10.5pt; }
+table.items tr.gebueh-headline td.gebueh-amount     { font-weight: 700; color: var(--pine); font-size: 10.5pt; }
+/* No detail row follows (no GebüH codes recorded) — the border moves here. */
+table.items tr.gebueh-headline-solo td { border-bottom: 1pt solid var(--hair); padding-bottom: 8pt; }
+
+/* Detail row: Ziffer code(s), description, per-code amount and Restbetrag —
+   still fully present, just collapsed into one muted line instead of a
+   separate row (+ indent) per fact. */
+table.items tr.gebueh-detail-row td {
+  padding: 0 0 8pt;
+  border-bottom: 1pt solid var(--hair);
+  color: var(--muted);
+  font-size: 8pt;
+}
+
+/* Each session is its own row-group (<tbody>) so it never splits across a
+   page break. */
+table.items tbody.gebueh-block { break-inside: avoid; page-break-inside: avoid; }
 
 /* ── Totals ─────────────────────────────────────────────────────────────────── */
 .totals {
   margin-left: auto;
   width: 50%;
   font-size: 9.5pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .totals .row {
   display: flex;
   justify-content: space-between;
   padding: 5pt 0;
   color: var(--body);
+}
+.totals .row .row-note {
+  font-size: 8pt;
+  color: var(--muted);
 }
 .totals .grand {
   margin-top: 6pt;
@@ -192,6 +219,13 @@ table.items tr.gebueh-separator td { padding: 0; border: none; height: 6pt; }
   font-family: 'Newsreader', 'Liberation Serif', Georgia, serif;
   font-size: 15pt;
   color: var(--pine);
+}
+
+/* Note, client note and signature always move to the next page together —
+   splitting the payment instructions from the signature reads as broken. */
+.closing-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 /* ── Note & payment terms ───────────────────────────────────────────────────── */

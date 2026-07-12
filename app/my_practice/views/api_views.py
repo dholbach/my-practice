@@ -22,7 +22,7 @@ from weasyprint.text.fonts import FontConfiguration
 from ..models import Client, Invoice, Practice
 from ..utils import get_next_invoice_number
 from ..utils.contract_form import add_contract_form_fields
-from ..utils.gebueh_helpers import build_gebueh_blocks, get_arbeitsdiagnose
+from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks, get_arbeitsdiagnose
 
 
 def next_invoice_number(request: HttpRequest) -> JsonResponse:
@@ -116,6 +116,7 @@ def _render_invoice_pdf_bytes(
 
     if invoice.client.needs_gebueh_invoice:
         ctx["gebueh_blocks"] = build_gebueh_blocks(invoice)
+        ctx["gebueh_total"] = gebueh_total_for_blocks(ctx["gebueh_blocks"])
         ctx["arbeitsdiagnose"] = get_arbeitsdiagnose(invoice.client)
 
     html_string = render_to_string(template_name, ctx)

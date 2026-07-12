@@ -54,48 +54,28 @@
 <table class="items">
   <thead>
     <tr>
-      <th style="width:60%;">Service</th>
-      <th style="width:10%;">Code</th>
+      <th style="width:75%;">Date &amp; Service</th>
       <th class="r">Amount</th>
     </tr>
   </thead>
-  <tbody>
-    {% for block in gebueh_blocks %}
-    {% if block.leistungen %}
-    {% for le in block.leistungen %}
-    <tr>
-      <td class="gebueh-ziffer">{{ le.ziffer.bezeichnung }}<div class="item-sub">{{ block.item.session.session_date|date:"d.m.Y" }}</div></td>
-      <td class="gebueh-ziffer gebueh-ziffer-nr">{{ le.ziffer.nummer }}</td>
-      <td class="gebueh-ziffer r">{{ le.betrag|currency }}</td>
-    </tr>
-    {% endfor %}
-    <tr>
-      <td class="gebueh-sub" colspan="2">GebüH subtotal</td>
-      <td class="gebueh-sub r">{{ block.gebueh_sum|currency }}</td>
-    </tr>
-    {% if block.restbetrag %}
-    <tr>
-      <td class="gebueh-sub" colspan="2">Remaining amount</td>
-      <td class="gebueh-sub r">{{ block.restbetrag|currency }}</td>
-    </tr>
-    {% endif %}
-    <tr class="gebueh-total">
-      <td colspan="2">{{ block.item.service_type.name_en|default:block.item.service_type.name }}</td>
-      <td class="r">{{ block.vereinbarter_betrag|currency }}</td>
-    </tr>
-    {% else %}
-    <tr>
+  {% for block in gebueh_blocks %}
+  <tbody class="gebueh-block">
+    <tr class="gebueh-headline{% if not block.leistungen %} gebueh-headline-solo{% endif %}">
       <td>
-        {{ block.item.service_type.name_en|default:block.item.service_type.name }}
-        <div class="item-sub">{{ block.item.session.session_date|date:"d.m.Y" }}</div>
+        <span class="gebueh-date">{{ block.item.session.session_date|date:"d.m." }}</span>
+        <span class="gebueh-service-name">{{ block.item.service_type.name_en|default:block.item.service_type.name }}</span>
       </td>
-      <td></td>
-      <td class="r">{{ block.item.rate|currency }}</td>
+      <td class="r gebueh-amount">{{ block.vereinbarter_betrag|currency }}</td>
+    </tr>
+    {% if block.leistungen %}
+    <tr class="gebueh-detail-row">
+      <td colspan="2" class="gebueh-detail">
+        {% for le in block.leistungen %}Code {{ le.ziffer.nummer }} · {{ le.ziffer.bezeichnung }} — {{ le.betrag|currency }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if block.restbetrag %} + Remaining amount {{ block.restbetrag|currency }}{% endif %}
+      </td>
     </tr>
     {% endif %}
-    {% if not forloop.last %}<tr class="gebueh-separator"><td colspan="3"></td></tr>{% endif %}
-    {% endfor %}
   </tbody>
+  {% endfor %}
 </table>
 {% else %}
 <table class="items">
@@ -121,25 +101,28 @@
 
 <!-- Totals -->
 <div class="totals">
+  {% if gebueh_total %}
+  <div class="row"><span>GebüH total <span class="row-note">(official fee schedule)</span></span><span>{{ gebueh_total|currency }}</span></div>
+  {% endif %}
   <div class="grand"><span>Total</span><span>{{ invoice.total|currency }}</span></div>
 </div>
 
-<!-- Note + payment terms -->
-<div class="note">
-  {{ practice.payment_terms_text_en }}
-</div>
+<!-- Note + client note + signature always stay together on one page -->
+<div class="closing-block">
+  <div class="note">
+    {{ practice.payment_terms_text_en }}
+  </div>
 
-<!-- Client note (therapy) -->
-<div class="client-note">
-  All services were provided to {{ invoice.client.full_name }}, born {{ invoice.client.date_of_birth|date:"d.m.Y" }}.
-</div>
+  <div class="client-note">
+    All services were provided to {{ invoice.client.full_name }}, born {{ invoice.client.date_of_birth|date:"d.m.Y" }}.
+  </div>
 
-<!-- Signature -->
-<div class="signature-section">
-  {% if signature_data %}
-  <img src="data:image/jpeg;base64,{{ signature_data }}" alt="Signature">
-  {% endif %}
-  <div class="signature-name">{{ practice.name }}<br>{{ practice.title }}</div>
+  <div class="signature-section">
+    {% if signature_data %}
+    <img src="data:image/jpeg;base64,{{ signature_data }}" alt="Signature">
+    {% endif %}
+    <div class="signature-name">{{ practice.name }}<br>{{ practice.title }}</div>
+  </div>
 </div>
 
 </body>

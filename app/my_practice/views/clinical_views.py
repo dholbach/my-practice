@@ -644,10 +644,12 @@ def gebueh_leistung_create(request, client_pk, session_pk):
         session.gebueh_leistungen.all().delete()
         vereinbarter_betrag = Leistungserfassung.compute_vereinbarter_betrag(session)
         for ziffer in selected_ziffern:
+            # Ziffer.satz_max is only the fee schedule's ceiling for this code —
+            # never bill more than what's actually charged for the session.
             Leistungserfassung.objects.create(
                 session=session,
                 ziffer=ziffer,
-                betrag=ziffer.satz_max,
+                betrag=min(ziffer.satz_max, vereinbarter_betrag),
                 vereinbarter_betrag=vereinbarter_betrag,
             )
 
