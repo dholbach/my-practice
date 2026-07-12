@@ -221,6 +221,13 @@ table.items tbody.gebueh-block { break-inside: avoid; page-break-inside: avoid; 
   color: var(--pine);
 }
 
+/* Note, client note and signature always move to the next page together —
+   splitting the payment instructions from the signature reads as broken. */
+.closing-block {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
 /* ── Note & payment terms ───────────────────────────────────────────────────── */
 .note {
   margin-top: 22pt;
@@ -240,8 +247,6 @@ table.items tbody.gebueh-block { break-inside: avoid; page-break-inside: avoid; 
 /* ── Signature ──────────────────────────────────────────────────────────────── */
 .signature-section {
   margin-top: 22pt;
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
 .signature-section img {
   max-height: 52pt;

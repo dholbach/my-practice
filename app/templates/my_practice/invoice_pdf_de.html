@@ -107,22 +107,22 @@
   <div class="grand"><span>Gesamtbetrag</span><span>{{ invoice.total|currency }}</span></div>
 </div>
 
-<!-- Note + payment terms -->
-<div class="note">
-  {{ practice.payment_terms_text_de }}
-</div>
+<!-- Note + client note + signature always stay together on one page -->
+<div class="closing-block">
+  <div class="note">
+    {{ practice.payment_terms_text_de }}
+  </div>
 
-<!-- Client note (therapy) -->
-<div class="client-note">
-  Alle Leistungen wurden für {{ invoice.client.full_name }}, geb. {{ invoice.client.date_of_birth|date:"d.m.Y" }}, erbracht.
-</div>
+  <div class="client-note">
+    Alle Leistungen wurden für {{ invoice.client.full_name }}, geb. {{ invoice.client.date_of_birth|date:"d.m.Y" }}, erbracht.
+  </div>
 
-<!-- Signature -->
-<div class="signature-section">
-  {% if signature_data %}
-  <img src="data:image/jpeg;base64,{{ signature_data }}" alt="Unterschrift">
-  {% endif %}
-  <div class="signature-name">{{ practice.name }}<br>{{ practice.title }}</div>
+  <div class="signature-section">
+    {% if signature_data %}
+    <img src="data:image/jpeg;base64,{{ signature_data }}" alt="Unterschrift">
+    {% endif %}
+    <div class="signature-name">{{ practice.name }}<br>{{ practice.title }}</div>
+  </div>
 </div>
 
 </body>
