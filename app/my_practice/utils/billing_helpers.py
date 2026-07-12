@@ -1,13 +1,14 @@
 """
 Shared helpers for session → InvoiceItem creation.
 
-Three call sites need consistent service-type resolution, rate computation, and
+Four call sites need consistent service-type resolution, rate computation, and
 already-billed detection:
   1. invoice_views.add_sessions_to_invoice
   2. invoice_views.create_invoice_with_sessions
   3. calendar_views (approval flow)
+  4. calendar_import_helpers (manual calendar import flow, via resolve_session_rate)
 
-Keeping this logic in one place means bugs fixed here fix all three.
+Keeping this logic in one place means bugs fixed here fix all four.
 """
 
 from decimal import Decimal
@@ -39,14 +40,19 @@ def resolve_session_rate(client, service_type) -> Decimal:
     Return the billing rate for a session of this service type for the client.
 
     Returns Decimal("0") for free consultations (service_type.code == "therapy_free").
-    Otherwise uses the client's 90-min rate for types with default_duration >= 90,
-    and the 60-min rate for shorter types.
+    Types with default_duration >= 90 use the client's separately-negotiated 90-min
+    rate — not prorated, since practices often discount double sessions rather than
+    charging a strict 1.5x multiple of the 60-min rate. Shorter types are prorated
+    off the 60-min rate (default_duration / 60 * hourly_rate_60), so e.g. a 15-min
+    check-in bills at a quarter of a full session instead of the full rate.
     """
     if service_type.code == "therapy_free":
         return Decimal("0")
     if service_type.default_duration >= 90:
         return Decimal(str(client.hourly_rate_90 or client.hourly_rate_60 or 0))
-    return Decimal(str(client.hourly_rate_60 or 0))
+    hourly_rate_60 = Decimal(str(client.hourly_rate_60 or 0))
+    proration = Decimal(service_type.default_duration) / Decimal("60")
+    return (hourly_rate_60 * proration).quantize(Decimal("0.01"))
 
 
 def is_session_already_billed(session) -> bool:

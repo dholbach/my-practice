@@ -41,7 +41,13 @@ def _make_service_types(practice):
         default_duration=20,
         practice=practice,
     )
-    return st60, st90, st_free
+    st15 = ServiceType.objects.create(
+        code="checkin_15",
+        name="15-Min Check-In",
+        default_duration=15,
+        practice=practice,
+    )
+    return st60, st90, st_free, st15
 
 
 def _make_client(practice):
@@ -75,7 +81,7 @@ def _make_session(client, duration=60):
 class BuildServiceTypeMapTests(TestCase):
     def setUp(self):
         self.practice = _make_practice()
-        self.st60, self.st90, self.st_free = _make_service_types(self.practice)
+        self.st60, self.st90, self.st_free, self.st15 = _make_service_types(self.practice)
 
     def test_maps_duration_to_service_type(self):
         m = build_service_type_map(self.practice)
@@ -109,7 +115,7 @@ class BuildServiceTypeMapTests(TestCase):
 class ResolveSessionRateTests(TestCase):
     def setUp(self):
         self.practice = _make_practice()
-        self.st60, self.st90, self.st_free = _make_service_types(self.practice)
+        self.st60, self.st90, self.st_free, self.st15 = _make_service_types(self.practice)
         self.client = _make_client(self.practice)
 
     def test_therapy_free_returns_zero(self):
@@ -127,11 +133,23 @@ class ResolveSessionRateTests(TestCase):
         self.client.save()
         self.assertEqual(resolve_session_rate(self.client, self.st90), Decimal("100.00"))
 
+    def test_15min_is_prorated_to_a_quarter_of_60min_rate(self):
+        self.assertEqual(resolve_session_rate(self.client, self.st15), Decimal("25.00"))
+
+    def test_30min_is_prorated_to_half_of_60min_rate(self):
+        st30 = ServiceType.objects.create(
+            code="therapy_30",
+            name="30-Min Therapy",
+            default_duration=30,
+            practice=self.practice,
+        )
+        self.assertEqual(resolve_session_rate(self.client, st30), Decimal("50.00"))
+
 
 class IsSessionAlreadyBilledTests(TestCase):
     def setUp(self):
         self.practice = _make_practice()
-        self.st60, _, _ = _make_service_types(self.practice)
+        self.st60, _, _, _ = _make_service_types(self.practice)
         self.client = _make_client(self.practice)
 
     def test_unbilled_session_returns_false(self):
@@ -169,7 +187,7 @@ class IsSessionAlreadyBilledTests(TestCase):
 class CreateInvoiceItemForSessionTests(TestCase):
     def setUp(self):
         self.practice = _make_practice()
-        self.st60, self.st90, self.st_free = _make_service_types(self.practice)
+        self.st60, self.st90, self.st_free, self.st15 = _make_service_types(self.practice)
         self.client = _make_client(self.practice)
         self.invoice = _make_invoice(self.client)
         self.service_type_map = {60: self.st60, 90: self.st90, 20: self.st_free}

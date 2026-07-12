@@ -12,6 +12,7 @@ from django.utils.translation import gettext as _
 from ..models import Client, Invoice, InvoiceItem, ServiceType
 from ..models import Session
 from ..utils import get_next_invoice_number, sync_no_next_session_tag
+from .billing_helpers import resolve_session_rate
 
 
 # ── Private resolution helpers ────────────────────────────────────────────────
@@ -58,19 +59,13 @@ def _resolve_service_type(
 def _resolve_rate(client: Client, service_type: ServiceType) -> tuple[Decimal | None, str | None]:
     """Return (rate, None) or (None, error_message).
 
-    Initial consultations (therapy_free) are always zero-rated.
-    90-min sessions use hourly_rate_90 when set, falling back to hourly_rate_60.
+    Delegates to billing_helpers.resolve_session_rate — the single source of
+    truth for rate resolution shared with the manual invoice-creation and
+    calendar-approval flows — and only adds the "no hourly rate configured"
+    error this import flow surfaces to the user.
     """
-    if service_type.code == "therapy_free":
-        return Decimal("0"), None
-    rate = Decimal(
-        str(
-            (client.hourly_rate_90 if service_type.default_duration >= 90 else None)
-            or client.hourly_rate_60
-            or 0
-        )
-    )
-    if rate == Decimal("0"):
+    rate = resolve_session_rate(client, service_type)
+    if rate == Decimal("0") and service_type.code != "therapy_free":
         return None, _("Client %(code)s has no hourly rate — set it in client settings") % {
             "code": client.client_code
         }
