@@ -122,7 +122,7 @@
         <button type="submit" class="btn btn-primary">
             {% if is_edit %}{% trans "Update" %}{% else %}{% trans "Save protocol" %}{% endif %}
         </button>
-        <a href="{% url 'client_detail' client.pk %}#tab-sitzungen" class="btn btn-secondary">{% trans "Cancel" %}</a>
+        <a href="{% url 'client_detail' client.pk %}#ptab-protokoll" class="btn btn-secondary">{% trans "Cancel" %}</a>
     </div>
     </form>
 </div>

@@ -56,7 +56,7 @@ def client_profile_save(request, pk):
     profile.save()
 
     messages.success(request, _("Client profile saved."))
-    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-profil")
+    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-profil")
 
 
 # ─── SessionLog ────────────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ def session_log_create(request, pk):
             request,
             _("Session log for %(date)s saved.") % {"date": session_date.strftime("%d.%m.%Y")},
         )
-        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-sitzungen")
+        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
     # GET — render form
     prefill_date = request.GET.get("session_date", "")
@@ -181,7 +181,7 @@ def session_log_edit(request, client_pk, log_pk):
                 pass
 
         messages.success(request, _("Session log updated."))
-        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
+        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
 
     context = {
         "client": client,
@@ -203,14 +203,14 @@ def supervision_item_create(request, pk):
     content = request.POST.get("content", "").strip()
     if not content:
         messages.error(request, _("Content must not be empty."))
-        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-supervision")
+        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
     SupervisionItem.objects.create(client=client, content=content)
     messages.success(request, _("Supervision topic added."))
     return redirect(
         safe_next(
             request,
-            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#tab-supervision",
+            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
         )
     )
 
@@ -225,7 +225,7 @@ def supervision_item_delete(request, pk, item_pk):
     return redirect(
         safe_next(
             request,
-            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#tab-supervision",
+            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
         )
     )
 
@@ -247,7 +247,7 @@ def supervision_item_toggle(request, pk, item_pk):
     return redirect(
         safe_next(
             request,
-            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#tab-supervision",
+            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
         )
     )
 
@@ -298,13 +298,13 @@ def client_note_create(request, pk):
 
     if not content or not note_date_str:
         messages.error(request, _("Date and content are required."))
-        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-notizen")
+        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
     try:
         note_date = date.fromisoformat(note_date_str)
     except ValueError:
         messages.error(request, _("Invalid date."))
-        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-notizen")
+        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
     note_type = request.POST.get("note_type", ClientNote.NoteType.NOTE)
     if note_type not in ClientNote.NoteType.values:
@@ -319,12 +319,12 @@ def client_note_create(request, pk):
         return redirect(
             safe_next(
                 request,
-                fallback=reverse("client_detail", kwargs={"pk": pk}) + "#tab-protokoll",
+                fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
             )
         )
 
     messages.success(request, _("Note saved."))
-    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-notizen")
+    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
 
 @require_POST
@@ -338,14 +338,14 @@ def client_note_update(request, pk, note_pk):
 
     if not content:
         messages.error(request, _("Content must not be empty."))
-        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-protokoll")
+        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
     if note_date_str:
         try:
             note.note_date = date.fromisoformat(note_date_str)
         except ValueError:
             messages.error(request, _("Invalid date."))
-            return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-protokoll")
+            return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
     note.content = content
     note.save()
@@ -353,7 +353,7 @@ def client_note_update(request, pk, note_pk):
     return redirect(
         safe_next(
             request,
-            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#tab-protokoll",
+            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
         )
     )
 
@@ -365,7 +365,7 @@ def client_note_delete(request, pk, note_pk):
     note = get_object_or_404(ClientNote, pk=note_pk, client=client)
     note.delete()
     messages.success(request, _("Note deleted."))
-    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-notizen")
+    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
 
 @require_POST
@@ -380,14 +380,31 @@ def session_log_delete(request, client_pk, log_pk):
     if not session.invoice_items.exists():
         session.delete()
     messages.success(request, _("Session log deleted."))
-    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
+    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
 
 
 @require_POST
 def session_duration_edit(request, pk, session_pk):
-    """Update a session's duration. Used to correct calendar-imported sessions."""
+    """
+    Update a session's duration. Used to correct calendar-imported sessions.
+
+    Blocked if the session already has a linked InvoiceItem: the item's
+    service_type/rate/total are resolved from the duration at billing time
+    and are not recalculated here, so changing the duration afterwards would
+    silently leave the invoice showing stale pricing for the new duration.
+    """
     client = _get_scoped_client(request, pk)
     session = get_object_or_404(Session, pk=session_pk, client=client)
+    if session.invoice_items.exists():
+        messages.error(
+            request,
+            _(
+                "Session of %(date)s cannot be edited: it has already been billed. "
+                "Remove the invoice item first."
+            )
+            % {"date": session.session_date.strftime("%d.%m.%Y")},
+        )
+        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
     try:
         new_duration = int(request.POST.get("duration", 0))
         if new_duration > 0:
@@ -401,7 +418,7 @@ def session_duration_edit(request, pk, session_pk):
             messages.error(request, _("Invalid duration."))
     except ValueError, TypeError:
         messages.error(request, _("Invalid duration."))
-    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-sitzungen")
+    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
 
 @require_POST
@@ -427,7 +444,7 @@ def session_delete(request, client_pk, session_pk):
         date_str = session.session_date.strftime("%d.%m.%Y")
         session.delete()  # SessionLog cascades via OneToOne(on_delete=CASCADE)
         messages.success(request, _("Session of %(date)s deleted.") % {"date": date_str})
-    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
+    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
 
 
 @require_POST
@@ -438,7 +455,7 @@ def session_log_mark_noshow(request, client_pk, log_pk):
     log.session_type = SessionLog.SessionType.AUSFALL
     log.save(update_fields=["session_type"])
     messages.success(request, _("Marked as no-show / cancellation."))
-    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
+    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
 
 
 @require_POST
@@ -458,7 +475,7 @@ def session_bill(request, pk, session_pk):
         messages.success(request, message)
     else:
         messages.error(request, message)
-    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#tab-sitzungen")
+    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
 
 # ─── Triage summary ────────────────────────────────────────────────────────────
@@ -526,7 +543,12 @@ def session_toggle_billable(request, client_pk, session_pk):
     session = get_object_or_404(Session, pk=session_pk, client=client)
     session.billable = not session.billable
     session.save(update_fields=["billable"])
-    return redirect(safe_next(request, fallback=reverse("client_detail", kwargs={"pk": client_pk})))
+    return redirect(
+        safe_next(
+            request,
+            fallback=reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll",
+        )
+    )
 
 
 # ─── GebüH Leistungserfassung ──────────────────────────────────────────────────
@@ -546,7 +568,7 @@ def gebueh_leistung_create(request, client_pk, session_pk):
     client = _get_scoped_client(request, client_pk)
     if not client.needs_gebueh_invoice:
         messages.error(request, _("GebüH billing is not enabled for this client."))
-        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
+        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
 
     session = get_object_or_404(Session, pk=session_pk, client=client)
     ziffern = GebuhZiffer.objects.all()
@@ -571,7 +593,7 @@ def gebueh_leistung_create(request, client_pk, session_pk):
                 _("GebüH entries for %(date)s cleared.")
                 % {"date": session.session_date.strftime("%d.%m.%Y")},
             )
-            return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
+            return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
 
         # ── Soft warnings ──────────────────────────────────────────────────────
 
@@ -637,7 +659,7 @@ def gebueh_leistung_create(request, client_pk, session_pk):
                 "date": session.session_date.strftime("%d.%m.%Y"),
             },
         )
-        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#tab-sitzungen")
+        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
 
     context = {
         "client": client,

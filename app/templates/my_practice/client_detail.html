@@ -252,7 +252,7 @@
         <div class="cn-session-actions cn-session-actions-bar">
             <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ {% trans "Edit" %}</a>
             {% if client.needs_gebueh_invoice %}
-            <a href="{% url 'gebueh_leistung_create' client.pk session.pk %}" class="btn btn-secondary btn-sm">{% trans "GebüH" %}</a>
+            {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}
             {% if not session.invoice_items.all %}
             {% url 'session_bill' client.pk session.pk as session_bill_url %}
@@ -281,7 +281,7 @@
             {% if log %}
             <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ {% trans "Edit" %}</a>
             {% if client.needs_gebueh_invoice %}
-            <a href="{% url 'gebueh_leistung_create' client.pk session.pk %}" class="btn btn-secondary btn-sm">{% trans "GebüH" %}</a>
+            {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}
             {% if log.session_type != 'ausfall' %}
             {% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
@@ -291,7 +291,7 @@
             {% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_log %}
             {% else %}
             {% if client.needs_gebueh_invoice %}
-            <a href="{% url 'gebueh_leistung_create' client.pk session.pk %}" class="btn btn-secondary btn-sm">{% trans "GebüH" %}</a>
+            {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}
             {% if not session.invoice_items.all %}
             {% url 'session_bill' client.pk session.pk as session_bill_url %}
@@ -301,12 +301,12 @@
             {% else %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_billable button_class='btn-secondary btn-sm' %}{% endif %}
             {% endif %}
             {% if session.pk not in no_log_needed_session_ids %}<a href="{% url 'session_log_create' client.pk %}?session_date={{ session.session_date|date:'Y-m-d' }}" class="btn btn-sm">{% trans "+ Log" %}</a>{% endif %}
+            {% if not session.invoice_items.all %}
             <form method="post" action="{% url 'session_duration_edit' client.pk session.pk %}" class="form-inline cn-duration-edit-form">
                 {% csrf_token %}
                 <input type="number" name="duration" value="{{ session.duration }}" min="1" max="300" class="form-control cn-duration-input" title="{% trans 'Duration in minutes' %}">
                 <button type="submit" class="btn btn-secondary btn-sm">{% trans "Save min." %}</button>
             </form>
-            {% if not session.invoice_items.all %}
             {% url 'session_delete' client.pk session.pk as session_delete_url %}
             {% include 'includes/inline_post_button.html' with action_url=session_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_session %}
             {% endif %}

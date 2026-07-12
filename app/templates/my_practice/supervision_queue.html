@@ -11,7 +11,7 @@
 {% for group in grouped_items %}
 <div class="section-card">
     <h3 class="cn-client-heading">
-        <a href="{% url 'client_detail' group.client.pk %}#tab-supervision">
+        <a href="{% url 'client_detail' group.client.pk %}#ptab-protokoll">
             {{ group.client.client_code }}
         </a>
         <span class="cn-badge">{{ group.items|length }}</span>

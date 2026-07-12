@@ -1,0 +1,9 @@
+{# GebüH record button - shows picked Ziffern on the button itself so it's visible without hunting for the chip row #}
+{# Usage: {% include 'includes/gebueh_button.html' with client=client session=session %} #}
+{% load i18n %}
+{% with leistungen=session.gebueh_leistungen.all %}
+<a href="{% url 'gebueh_leistung_create' client.pk session.pk %}"
+   class="btn btn-sm {% if leistungen %}btn-primary{% else %}btn-secondary{% endif %}">
+    {% if leistungen %}✅ {% trans "GebüH" %} ({% for le in leistungen %}{{ le.ziffer.nummer }}{% if not forloop.last %}, {% endif %}{% endfor %}){% else %}{% trans "GebüH" %}{% endif %}
+</a>
+{% endwith %}
