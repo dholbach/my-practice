@@ -59,8 +59,8 @@
       <th class="r">Amount</th>
     </tr>
   </thead>
-  <tbody>
-    {% for block in gebueh_blocks %}
+  {% for block in gebueh_blocks %}
+  <tbody class="gebueh-block">
     {% if block.leistungen %}
     {% for le in block.leistungen %}
     <tr>
@@ -95,9 +95,8 @@
       <td class="r">{{ block.item.rate|currency }}</td>
     </tr>
     {% endif %}
-    {% if not forloop.last %}<tr class="gebueh-separator"><td colspan="3"></td></tr>{% endif %}
-    {% endfor %}
   </tbody>
+  {% endfor %}
 </table>
 {% else %}
 <table class="items">

@@ -163,18 +163,24 @@ table.items tbody td .item-sub {
   margin-bottom: 10pt;
 }
 .gebueh-diagnose strong { color: var(--ink); }
-table.items td.gebueh-ziffer    { font-size: 8.5pt; color: var(--muted); padding: 3pt 0; border-bottom: none; }
+table.items td.gebueh-ziffer    { font-size: 8.5pt; color: var(--muted); padding: 2pt 0; border-bottom: none; }
 table.items td.gebueh-ziffer-nr { font-weight: 600; width: 4rem; }
-table.items td.gebueh-sub       { font-size: 8pt; color: var(--body); padding: 2pt 0 2pt 1rem; border-bottom: none; }
+table.items td.gebueh-sub       { font-size: 8pt; color: var(--body); padding: 1.5pt 0 1.5pt 1rem; border-bottom: none; }
 table.items td.gebueh-sub.bold  { font-weight: 600; color: var(--ink); }
-table.items tr.gebueh-total td  { border-top: 1pt solid var(--pine); padding-top: 4pt; padding-bottom: 4pt; font-weight: 700; color: var(--pine); font-size: 9.5pt; }
-table.items tr.gebueh-separator td { padding: 0; border: none; height: 3pt; }
+table.items tr.gebueh-total td  { border-top: 1pt solid var(--pine); padding-top: 3pt; padding-bottom: 6pt; font-weight: 700; color: var(--pine); font-size: 9.5pt; }
+
+/* Each session is its own row-group (<tbody>) so it never splits across a
+   page break — the total row's own top border/bold weight already reads as
+   a separator, so no extra spacer row is needed between groups. */
+table.items tbody.gebueh-block { break-inside: avoid; page-break-inside: avoid; }
 
 /* ── Totals ─────────────────────────────────────────────────────────────────── */
 .totals {
   margin-left: auto;
   width: 50%;
   font-size: 9.5pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .totals .row {
   display: flex;
