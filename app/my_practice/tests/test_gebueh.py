@@ -403,10 +403,13 @@ class GebuhPdfTemplateTest(TestCase):
         self._total = gebueh_total_for_blocks
 
     def _render(self):
+        """Render and return only the <body> — the <style> block contains the
+        same class names as selectors, which would false-trigger substring
+        assertions if included."""
         from django.template.loader import render_to_string
 
         blocks = self._build(self.invoice)
-        return render_to_string(
+        html = render_to_string(
             "my_practice/invoice_pdf_de.html",
             {
                 "invoice": self.invoice,
@@ -416,8 +419,20 @@ class GebuhPdfTemplateTest(TestCase):
                 "arbeitsdiagnose": "",
             },
         )
+        return html.split("<body>", 1)[1]
 
-    def test_single_code_hides_redundant_subtotal_row(self):
+    def test_headline_row_shows_service_and_amount(self):
+        html = self._render()
+        self.assertIn("gebueh-headline", html)
+        self.assertIn("Therapiesitzung", html)
+        self.assertIn("90,00", html)
+
+    def test_no_leistungen_gets_solo_headline_with_border(self):
+        html = self._render()
+        self.assertIn("gebueh-headline-solo", html)
+        self.assertNotIn("gebueh-detail-row", html)
+
+    def test_single_code_shown_in_detail_line(self):
         z, _ = GebuhZiffer.objects.get_or_create(
             nummer="19.2",
             defaults={
@@ -431,9 +446,12 @@ class GebuhPdfTemplateTest(TestCase):
             session=self.session, ziffer=z, betrag=z.satz_max, vereinbarter_betrag=Decimal("90.00")
         )
         html = self._render()
-        self.assertNotIn("Zwischensumme GebüH", html)
+        self.assertIn("gebueh-detail-row", html)
+        self.assertNotIn("gebueh-headline-solo", html)
+        self.assertIn("Ziffer 19.2", html)
+        self.assertIn("Psychotherapie 50–90 Min", html)
 
-    def test_multiple_codes_shows_subtotal_row(self):
+    def test_multiple_codes_all_shown_in_one_detail_line(self):
         z1, _ = GebuhZiffer.objects.get_or_create(
             nummer="19.2",
             defaults={
@@ -460,7 +478,10 @@ class GebuhPdfTemplateTest(TestCase):
                 vereinbarter_betrag=Decimal("90.00"),
             )
         html = self._render()
-        self.assertIn("Zwischensumme GebüH", html)
+        self.assertIn("Ziffer 19.2", html)
+        self.assertIn("Ziffer 4", html)
+        # Both codes collapse into a single detail row, not one row per code.
+        self.assertEqual(html.count('class="gebueh-detail-row"'), 1)
 
     def test_gebueh_gesamt_total_shown_when_leistungen_recorded(self):
         z, _ = GebuhZiffer.objects.get_or_create(

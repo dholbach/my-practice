@@ -54,45 +54,24 @@
 <table class="items">
   <thead>
     <tr>
-      <th style="width:60%;">Leistung</th>
-      <th style="width:10%;">Ziffer</th>
+      <th style="width:75%;">Termin &amp; Leistung</th>
       <th class="r">Betrag</th>
     </tr>
   </thead>
   {% for block in gebueh_blocks %}
   <tbody class="gebueh-block">
-    {% if block.leistungen %}
-    {% for le in block.leistungen %}
-    <tr>
-      <td class="gebueh-ziffer">{{ le.ziffer.bezeichnung }}<div class="item-sub">{{ block.item.session.session_date|date:"d.m.Y" }}</div></td>
-      <td class="gebueh-ziffer gebueh-ziffer-nr">{{ le.ziffer.nummer }}</td>
-      <td class="gebueh-ziffer r">{{ le.betrag|currency }}</td>
-    </tr>
-    {% endfor %}
-    {% if block.leistungen|length > 1 %}
-    <tr>
-      <td class="gebueh-sub" colspan="2">Zwischensumme GebüH</td>
-      <td class="gebueh-sub r">{{ block.gebueh_sum|currency }}</td>
-    </tr>
-    {% endif %}
-    {% if block.restbetrag %}
-    <tr>
-      <td class="gebueh-sub" colspan="2">Restbetrag</td>
-      <td class="gebueh-sub r">{{ block.restbetrag|currency }}</td>
-    </tr>
-    {% endif %}
-    <tr class="gebueh-total">
-      <td colspan="2">{{ block.item.service_type.name_de|default:block.item.service_type.name }}</td>
-      <td class="r">{{ block.vereinbarter_betrag|currency }}</td>
-    </tr>
-    {% else %}
-    <tr>
+    <tr class="gebueh-headline{% if not block.leistungen %} gebueh-headline-solo{% endif %}">
       <td>
-        {{ block.item.service_type.name_de|default:block.item.service_type.name }}
-        <div class="item-sub">{{ block.item.session.session_date|date:"d.m.Y" }}</div>
+        <span class="gebueh-date">{{ block.item.session.session_date|date:"d.m." }}</span>
+        <span class="gebueh-service-name">{{ block.item.service_type.name_de|default:block.item.service_type.name }}</span>
       </td>
-      <td></td>
-      <td class="r">{{ block.item.rate|currency }}</td>
+      <td class="r gebueh-amount">{{ block.vereinbarter_betrag|currency }}</td>
+    </tr>
+    {% if block.leistungen %}
+    <tr class="gebueh-detail-row">
+      <td colspan="2" class="gebueh-detail">
+        {% for le in block.leistungen %}Ziffer {{ le.ziffer.nummer }} · {{ le.ziffer.bezeichnung }} — {{ le.betrag|currency }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if block.restbetrag %} + Restbetrag {{ block.restbetrag|currency }}{% endif %}
+      </td>
     </tr>
     {% endif %}
   </tbody>
@@ -123,7 +102,7 @@
 <!-- Totals -->
 <div class="totals">
   {% if gebueh_total %}
-  <div class="row"><span>GebüH gesamt</span><span>{{ gebueh_total|currency }}</span></div>
+  <div class="row"><span>GebüH gesamt <span class="row-note">(offizielle Gebührenordnung)</span></span><span>{{ gebueh_total|currency }}</span></div>
   {% endif %}
   <div class="grand"><span>Gesamtbetrag</span><span>{{ invoice.total|currency }}</span></div>
 </div>
