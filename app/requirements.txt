@@ -15,10 +15,10 @@ pypdf==6.14.2
 urllib3==2.7.0
 
 # Google Calendar API
-google-auth==2.55.1
+google-auth==2.55.2
 google-auth-oauthlib==1.4.0
 google-auth-httplib2==0.4.0
 google-api-python-client==2.198.0
 
 # Async support (Django 5.1+)
-uvicorn==0.50.2
+uvicorn==0.51.0
