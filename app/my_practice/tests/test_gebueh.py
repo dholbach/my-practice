@@ -130,6 +130,25 @@ class GebuhLeistungViewTest(TestCase):
         self.assertEqual(le.betrag, self.ziffer.satz_max)
         self.assertEqual(le.vereinbarter_betrag, Decimal("90.00"))
 
+    def test_post_caps_betrag_at_actual_session_fee(self):
+        """
+        satz_max is only the fee schedule's ceiling for a code — a short
+        session's actual (prorated) fee can be lower, and betrag should never
+        exceed what's actually charged, even if the code allows more.
+        """
+        short_session = Session.objects.create(
+            client=self.client_obj, session_date=date.today(), duration=15
+        )
+        # client hourly_rate_60=90.00 → 15-min session fee prorates to 22.50,
+        # below self.ziffer.satz_max (46.00).
+        url = reverse(
+            "gebueh_leistung_create",
+            kwargs={"client_pk": self.client_obj.pk, "session_pk": short_session.pk},
+        )
+        self.http.post(url, {"ziffern": [self.ziffer.pk]})
+        le = Leistungserfassung.objects.get(session=short_session)
+        self.assertEqual(le.betrag, Decimal("22.50"))
+
     def test_post_replaces_existing_entries(self):
         ziffer2, _ = GebuhZiffer.objects.get_or_create(
             nummer="19.5",
@@ -288,7 +307,7 @@ class GebuhPdfBlocksTest(TestCase):
         b = blocks[0]
         self.assertEqual(b["leistungen"], [])
         self.assertEqual(b["gebueh_sum"], Decimal("0"))
-        self.assertEqual(b["vereinbarter_betrag"], Decimal("90.00"))  # falls back to item.rate
+        self.assertEqual(b["vereinbarter_betrag"], Decimal("90.00"))  # item.total, no leistungen
 
     def test_restbetrag_clamped_to_zero(self):
         # Two expensive Ziffern whose sum exceeds vereinbarter_betrag
@@ -306,6 +325,37 @@ class GebuhPdfBlocksTest(TestCase):
         blocks = self._build(self.invoice)
         self.assertEqual(blocks[0]["restbetrag"], Decimal("0"))
 
+    def test_gebueh_total_for_blocks_sums_across_sessions(self):
+        from ..utils.gebueh_helpers import gebueh_total_for_blocks
+
+        session2 = Session.objects.create(
+            client=self.client_obj, session_date=date.today(), duration=60
+        )
+        InvoiceItem.objects.create(
+            invoice=self.invoice,
+            service_type=self.service_type,
+            session=session2,
+            rate=Decimal("90.00"),
+            quantity=Decimal("1"),
+            total=Decimal("90.00"),
+        )
+        self._record_leistung()  # 46.00 on self.session
+        Leistungserfassung.objects.create(
+            session=session2,
+            ziffer=self.ziffer,
+            betrag=self.ziffer.satz_max,
+            vereinbarter_betrag=Decimal("90.00"),
+        )  # another 46.00 on session2
+
+        blocks = self._build(self.invoice)
+        self.assertEqual(gebueh_total_for_blocks(blocks), Decimal("92.00"))
+
+    def test_gebueh_total_for_blocks_zero_when_no_leistungen(self):
+        from ..utils.gebueh_helpers import gebueh_total_for_blocks
+
+        blocks = self._build(self.invoice)
+        self.assertEqual(gebueh_total_for_blocks(blocks), Decimal("0"))
+
     def test_get_arbeitsdiagnose_no_profile(self):
         # No ClientProfile exists yet — should return empty string, not raise
         result = self._diagnose(self.client_obj)
@@ -319,3 +369,115 @@ class GebuhPdfBlocksTest(TestCase):
         ClientProfile.objects.create(client=self.client_obj, arbeitsdiagnose="F32.1")
         result = self._diagnose(self.client_obj)
         self.assertIsInstance(result, str)
+
+
+class GebuhPdfTemplateTest(TestCase):
+    """
+    Tests the invoice_pdf_de.html GebüH block markup directly via render_to_string,
+    without going through WeasyPrint — faster and lets us assert on the rendered HTML.
+    """
+
+    def setUp(self):
+        from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks
+
+        self.practice = _make_practice(slug="gebueh-pdf-template-test")
+        self.client_obj = _make_client(self.practice, code="TPL")
+        self.session = Session.objects.create(
+            client=self.client_obj, session_date=date.today(), duration=60
+        )
+        self.service_type = ServiceType.objects.create(
+            name="Therapie", name_de="Therapiesitzung", name_en="Therapy session"
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.client_obj, practice=self.practice, invoice_number="TPL-1", status="draft"
+        )
+        self.item = InvoiceItem.objects.create(
+            invoice=self.invoice,
+            service_type=self.service_type,
+            session=self.session,
+            rate=Decimal("90.00"),
+            quantity=Decimal("1"),
+            total=Decimal("90.00"),
+        )
+        self._build = build_gebueh_blocks
+        self._total = gebueh_total_for_blocks
+
+    def _render(self):
+        from django.template.loader import render_to_string
+
+        blocks = self._build(self.invoice)
+        return render_to_string(
+            "my_practice/invoice_pdf_de.html",
+            {
+                "invoice": self.invoice,
+                "practice": self.practice,
+                "gebueh_blocks": blocks,
+                "gebueh_total": self._total(blocks),
+                "arbeitsdiagnose": "",
+            },
+        )
+
+    def test_single_code_hides_redundant_subtotal_row(self):
+        z, _ = GebuhZiffer.objects.get_or_create(
+            nummer="19.2",
+            defaults={
+                "bezeichnung": "Psychotherapie 50–90 Min",
+                "satz_max": Decimal("46.00"),
+                "satz_min": Decimal("26.00"),
+                "sort_order": 40,
+            },
+        )
+        Leistungserfassung.objects.create(
+            session=self.session, ziffer=z, betrag=z.satz_max, vereinbarter_betrag=Decimal("90.00")
+        )
+        html = self._render()
+        self.assertNotIn("Zwischensumme GebüH", html)
+
+    def test_multiple_codes_shows_subtotal_row(self):
+        z1, _ = GebuhZiffer.objects.get_or_create(
+            nummer="19.2",
+            defaults={
+                "bezeichnung": "Psychotherapie 50–90 Min",
+                "satz_max": Decimal("46.00"),
+                "satz_min": Decimal("26.00"),
+                "sort_order": 40,
+            },
+        )
+        z2, _ = GebuhZiffer.objects.get_or_create(
+            nummer="4",
+            defaults={
+                "bezeichnung": "Eingehende Beratung",
+                "satz_max": Decimal("22.00"),
+                "satz_min": Decimal("16.40"),
+                "sort_order": 90,
+            },
+        )
+        for z in (z1, z2):
+            Leistungserfassung.objects.create(
+                session=self.session,
+                ziffer=z,
+                betrag=z.satz_max,
+                vereinbarter_betrag=Decimal("90.00"),
+            )
+        html = self._render()
+        self.assertIn("Zwischensumme GebüH", html)
+
+    def test_gebueh_gesamt_total_shown_when_leistungen_recorded(self):
+        z, _ = GebuhZiffer.objects.get_or_create(
+            nummer="19.2",
+            defaults={
+                "bezeichnung": "Psychotherapie 50–90 Min",
+                "satz_max": Decimal("46.00"),
+                "satz_min": Decimal("26.00"),
+                "sort_order": 40,
+            },
+        )
+        Leistungserfassung.objects.create(
+            session=self.session, ziffer=z, betrag=z.satz_max, vereinbarter_betrag=Decimal("90.00")
+        )
+        html = self._render()
+        self.assertIn("GebüH gesamt", html)
+
+    def test_gebueh_gesamt_total_hidden_when_no_leistungen(self):
+        html = self._render()
+        self.assertNotIn("GebüH gesamt", html)

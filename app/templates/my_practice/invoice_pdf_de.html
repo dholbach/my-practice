@@ -69,10 +69,12 @@
       <td class="gebueh-ziffer r">{{ le.betrag|currency }}</td>
     </tr>
     {% endfor %}
+    {% if block.leistungen|length > 1 %}
     <tr>
       <td class="gebueh-sub" colspan="2">Zwischensumme GebüH</td>
       <td class="gebueh-sub r">{{ block.gebueh_sum|currency }}</td>
     </tr>
+    {% endif %}
     {% if block.restbetrag %}
     <tr>
       <td class="gebueh-sub" colspan="2">Restbetrag</td>
@@ -121,6 +123,9 @@
 
 <!-- Totals -->
 <div class="totals">
+  {% if gebueh_total %}
+  <div class="row"><span>GebüH gesamt</span><span>{{ gebueh_total|currency }}</span></div>
+  {% endif %}
   <div class="grand"><span>Gesamtbetrag</span><span>{{ invoice.total|currency }}</span></div>
 </div>
 

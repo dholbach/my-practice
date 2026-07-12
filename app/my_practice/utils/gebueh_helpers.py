@@ -23,8 +23,11 @@ def build_gebueh_blocks(invoice: Invoice) -> list[dict]:
       item                — the InvoiceItem
       leistungen          — list of Leistungserfassung (empty if none recorded)
       gebueh_sum          — sum of all betrag values
-      vereinbarter_betrag — from Leistungserfassung (frozen) or item.rate as fallback
-      restbetrag          — max(0, vereinbarter_betrag - gebueh_sum)
+      vereinbarter_betrag — item.total, i.e. the amount actually billed (can be
+                             below the GebüH satz_max sum — providers are free to
+                             charge less than a code's maximum rate)
+      restbetrag          — max(0, vereinbarter_betrag - gebueh_sum), the portion
+                             billed above what the GebüH codes alone cover
     """
     blocks = []
     items = invoice.items.select_related("session", "service_type").prefetch_related(
@@ -41,7 +44,7 @@ def build_gebueh_blocks(invoice: Invoice) -> list[dict]:
             else []
         )
         gebueh_sum = sum((le.betrag for le in leistungen), Decimal("0"))
-        vereinbarter_betrag = leistungen[0].vereinbarter_betrag if leistungen else item.rate
+        vereinbarter_betrag = item.total
         restbetrag = max(Decimal("0"), vereinbarter_betrag - gebueh_sum)
         blocks.append(
             {
@@ -53,3 +56,8 @@ def build_gebueh_blocks(invoice: Invoice) -> list[dict]:
             }
         )
     return blocks
+
+
+def gebueh_total_for_blocks(blocks: list[dict]) -> Decimal:
+    """Return the running total of gebueh_sum across all blocks (0 if none/empty)."""
+    return sum((b["gebueh_sum"] for b in blocks), Decimal("0"))
