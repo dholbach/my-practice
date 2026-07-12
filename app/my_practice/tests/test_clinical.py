@@ -7,7 +7,8 @@ Covers:
   - SessionLog creation with mood_tags
   - SupervisionItem create + status toggle
   - clinical_views: client_profile_save, session_log_create, supervision_item_create,
-    supervision_item_toggle, supervision_queue, client_triage_summary
+    supervision_item_toggle, supervision_queue, client_triage_summary,
+    session_duration_edit
 """
 
 from datetime import date
@@ -389,6 +390,70 @@ class SupervisionViewTests(ClinicalTestBase):
         response = self.http.get(reverse("supervision_queue"))
         total_open = response.context["total_open"]
         self.assertEqual(total_open, 1)
+
+
+class SessionDurationEditViewTests(ClinicalTestBase):
+    """Tests for session_duration_edit — updates Session.duration."""
+
+    def test_updates_duration(self):
+        """POST with a valid duration updates the session."""
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 15), duration=60
+        )
+        url = reverse(
+            "session_duration_edit", kwargs={"pk": self.client_obj.pk, "session_pk": session.pk}
+        )
+        self.http.post(url, {"duration": "15"})
+        session.refresh_from_db()
+        self.assertEqual(session.duration, 15)
+
+    def test_rejects_invalid_duration(self):
+        """POST with a non-positive duration leaves the session unchanged."""
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 15), duration=60
+        )
+        url = reverse(
+            "session_duration_edit", kwargs={"pk": self.client_obj.pk, "session_pk": session.pk}
+        )
+        self.http.post(url, {"duration": "0"})
+        session.refresh_from_db()
+        self.assertEqual(session.duration, 60)
+
+    def test_blocked_when_already_billed(self):
+        """
+        A session with an existing InvoiceItem cannot have its duration edited.
+
+        The invoice item's service_type/rate/total are resolved at billing
+        time and are not recalculated here, so allowing the edit would leave
+        the invoice showing stale pricing for the session's new duration.
+        """
+        from ..models import Invoice, InvoiceItem, ServiceType
+
+        service = ServiceType.objects.create(
+            code="individual", name_en="Individual Session", name_de="Einzelsitzung"
+        )
+        invoice = Invoice.objects.create(
+            client=self.client_obj,
+            invoice_number="TEST-1",
+            invoice_date=date(2026, 3, 15),
+            practice=self.practice,
+        )
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 15), duration=60
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=service,
+            session=session,
+            rate=Decimal("90.00"),
+            quantity=Decimal("1.00"),
+        )
+        url = reverse(
+            "session_duration_edit", kwargs={"pk": self.client_obj.pk, "session_pk": session.pk}
+        )
+        self.http.post(url, {"duration": "15"})
+        session.refresh_from_db()
+        self.assertEqual(session.duration, 60)
 
 
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)

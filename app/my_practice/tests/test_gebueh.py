@@ -123,7 +123,7 @@ class GebuhLeistungViewTest(TestCase):
         resp = self.http.post(self._url(), {"ziffern": [self.ziffer.pk]})
         self.assertRedirects(
             resp,
-            reverse("client_detail", kwargs={"pk": self.client_obj.pk}) + "#tab-sitzungen",
+            reverse("client_detail", kwargs={"pk": self.client_obj.pk}) + "#ptab-protokoll",
         )
         self.assertEqual(Leistungserfassung.objects.filter(session=self.session).count(), 1)
         le = Leistungserfassung.objects.get(session=self.session)
@@ -174,7 +174,7 @@ class GebuhLeistungViewTest(TestCase):
         resp = self.http.get(url)
         self.assertRedirects(
             resp,
-            reverse("client_detail", kwargs={"pk": regular.pk}) + "#tab-sitzungen",
+            reverse("client_detail", kwargs={"pk": regular.pk}) + "#ptab-protokoll",
         )
 
     def test_frequency_warning(self):
