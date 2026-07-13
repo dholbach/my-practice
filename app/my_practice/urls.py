@@ -96,6 +96,12 @@ urlpatterns = [
         views.SendQuestionnaireEmailView.as_view(),
         name="send_questionnaire_docx",
     ),
+    path("questionnaires/<str:code>/pdf/", views.questionnaire_pdf, name="questionnaire_pdf"),
+    path(
+        "clients/<int:pk>/send-questionnaire-pdf/gad7/",
+        views.SendQuestionnairePdfEmailView.as_view(),
+        name="send_questionnaire_pdf_email",
+    ),
     path(
         "clients/<int:pk>/onboarding/", views.client_onboarding_step, name="client_onboarding_step"
     ),

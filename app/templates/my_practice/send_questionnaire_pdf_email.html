@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Send questionnaire" %}{% endblock %}
+
+{% block page_title %}📧 {% trans "Send questionnaire" %}{% endblock %}
+{% block page_subtitle %}<span class="sensitive-data">{{ client.client_code }}</span>{% endblock %}
+
+{% block content %}
+<div class="email-preview">
+    <form method="post">
+        {% csrf_token %}
+
+        {% if not client.salutation %}
+        <div class="warning-box">
+            <strong>⚠️ {% trans "No personal salutation set" %}</strong>
+            {% trans "A generic salutation will be used. An individual salutation can be set in the client profile." %}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="id_recipient">{{ form.recipient.label }}</label>
+            {{ form.recipient }}
+            {% if form.recipient.errors %}
+                <div class="error">{{ form.recipient.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_subject">{{ form.subject.label }}</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}
+                <div class="error">{{ form.subject.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_body">{{ form.body.label }}</label>
+            {{ form.body }}
+            {% if form.body.errors %}
+                <div class="error">{{ form.body.errors }}</div>
+            {% endif %}
+            <div class="help-text">
+                {% trans 'The text can be edited freely. The signature is separated by "-- ".' %}
+            </div>
+        </div>
+
+        <div class="attachment-preview">
+            <strong class="block mb-1">📎 {% trans "Attachment" %}</strong>
+            <span class="font-semibold">📄 {{ filename }}</span>
+            <div class="mt-1 text-sm">
+                {% trans "The questionnaire is attached automatically as a PDF (with fillable fields)." %}
+                <a href="{% url 'questionnaire_pdf' questionnaire_code %}?lang={{ client.language }}" target="_blank" class="ml-3">
+                    🔍 {% trans "Preview / download" %}
+                </a>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                📧 {% trans "Send" %}
+            </button>
+            <a href="{% url 'client_detail' client.pk %}" class="btn btn-secondary">
+                {% trans "Cancel" %}
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

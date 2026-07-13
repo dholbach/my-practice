@@ -1,0 +1,31 @@
+{
+  "code": "gad7",
+  "title": {
+    "de": "GAD-7 Fragebogen",
+    "en": "GAD-7 Questionnaire"
+  },
+  "intro": {
+    "de": "Wie oft fühlten Sie sich im Verlauf der letzten 2 Wochen durch die folgenden Beschwerden beeinträchtigt?",
+    "en": "Over the last 2 weeks, how often have you been bothered by the following problems?"
+  },
+  "sections": [
+    {
+      "type": "grid",
+      "columns": [
+        {"de": "Überhaupt nicht", "en": "Not at all"},
+        {"de": "An einzelnen Tagen", "en": "Several days"},
+        {"de": "An mehr als der Hälfte der Tage", "en": "More than half the days"},
+        {"de": "Beinahe jeden Tag", "en": "Nearly every day"}
+      ],
+      "items": [
+        {"de": "Nervosität, Ängstlichkeit oder Anspannung", "en": "Feeling nervous, anxious, or on edge"},
+        {"de": "Nicht in der Lage sein, Sorgen zu stoppen oder zu kontrollieren", "en": "Not being able to stop or control worrying"},
+        {"de": "Übermäßige Sorgen bezüglich verschiedener Angelegenheiten", "en": "Worrying too much about different things"},
+        {"de": "Schwierigkeiten zu entspannen", "en": "Trouble relaxing"},
+        {"de": "Rastlosigkeit, so dass Stillsitzen schwerfällt", "en": "Being so restless that it is hard to sit still"},
+        {"de": "Schnelle Verärgerung oder Reizbarkeit", "en": "Becoming easily annoyed or irritable"},
+        {"de": "Gefühl der Angst, als könnte etwas Schlimmes passieren", "en": "Feeling afraid, as if something awful might happen"}
+      ]
+    }
+  ]
+}

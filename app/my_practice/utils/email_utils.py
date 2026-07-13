@@ -282,6 +282,39 @@ def get_gdpr_deletion_email_content(client: "Client", practice: "Practice") -> t
     return subject, body
 
 
+def get_questionnaire_pdf_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
+    """Get default email content (subject, body) for sending the GAD-7 PDF.
+
+    Returns:
+        tuple: (subject, body)
+    """
+    salutation = get_salutation_for_client(client)
+
+    if client.language == "en":
+        subject = "Questionnaire"
+        body = (
+            f"{salutation},\n\n"
+            "please find attached a short questionnaire. You can fill it in "
+            "directly in the PDF or by hand. "
+            "Please send it back to me or simply bring it to our next session.\n\n"
+            "Feel free to get in touch at any time if you have any questions."
+        )
+    else:
+        subject = "Fragebogen"
+        body = (
+            f"{salutation},\n\n"
+            "anbei findest du einen kurzen Fragebogen. Du kannst ihn direkt "
+            "im PDF oder handschriftlich ausfüllen. "
+            "Bitte sende ihn mir zurück oder bring ihn einfach zur nächsten Sitzung mit.\n\n"
+            "Bei Fragen melde dich gerne jederzeit."
+        )
+
+    if practice.email_signature:
+        body = body + "\n\n-- \n" + practice.email_signature
+
+    return subject, body
+
+
 def get_contract_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
     """Get default email content (subject, body) for sending the Behandlungsvertrag.
 

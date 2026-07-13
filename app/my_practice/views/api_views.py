@@ -23,6 +23,8 @@ from ..models import Client, Invoice, Practice
 from ..utils import get_next_invoice_number
 from ..utils.contract_form import add_contract_form_fields
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks, get_arbeitsdiagnose
+from ..utils.practice_helpers import require_practice
+from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
 
 
 def next_invoice_number(request: HttpRequest) -> JsonResponse:
@@ -205,6 +207,63 @@ def intake_form_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     practice = client.practice
     lang = request.GET.get("lang") or client.language or "de"
     pdf_bytes, filename = generate_intake_form_pdf_bytes(client, practice, lang)
+    response = HttpResponse(pdf_bytes, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+def generate_questionnaire_pdf_bytes(code: str, practice: Practice, lang: str) -> tuple[bytes, str]:
+    """Render a blank clinical questionnaire (e.g. GAD-7) as fillable PDF bytes.
+
+    Unlike the intake form / contract PDFs, this is not tied to a specific
+    client — the same bytes apply to anyone. Content (question text, response
+    scale) comes from ``load_questionnaire``, not this template, so instruments
+    with restrictive licensing never need their text committed to this repo.
+
+    Returns:
+        (pdf_bytes, filename) — filename is suitable for download or attachment.
+    """
+    content = load_questionnaire(code)
+    logo_data, _signature = _prepare_practice_images(practice)
+    sections = [
+        {
+            "type": section["type"],
+            "columns": [c[lang] for c in section["columns"]],
+            "items": [i[lang] for i in section["items"]],
+        }
+        for section in content.sections
+        if section["type"] == "grid"
+    ]
+    html_string = render_to_string(
+        "my_practice/questionnaire_pdf.html",
+        {
+            "practice": practice,
+            "logo_data": logo_data,
+            "lang": lang,
+            "title": content.title[lang],
+            "intro": content.intro.get(lang, ""),
+            "sections": sections,
+        },
+    )
+    pdf_bytes = HTML(string=html_string).write_pdf(pdf_forms=True)
+    filename = f"{content.code.upper()}_{lang}.pdf"
+    return pdf_bytes, filename
+
+
+@require_practice
+def questionnaire_pdf(request: HttpRequest, code: str) -> HttpResponse:
+    """Generate a blank, fillable clinical questionnaire PDF.
+
+    Optional query param ``?lang=en`` switches to the English version
+    (default: German).
+    """
+    practice = request.current_practice
+    lang = request.GET.get("lang") or "de"
+    try:
+        pdf_bytes, filename = generate_questionnaire_pdf_bytes(code, practice, lang)
+    except QuestionnaireNotFoundError as e:
+        messages.error(request, str(e))
+        return redirect("dashboard")
     response = HttpResponse(pdf_bytes, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response

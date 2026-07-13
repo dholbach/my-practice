@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-07-13 — P-118 Clinical Questionnaire PDFs (pilot)**: GAD-7 as a branded, fillable PDF (DE/EN), sent from a new "Assessments" card on the client detail page. Question content lives outside the template (`PAYMENTS_DATA_DIR/questionnaires/` or an in-repo file for public-domain instruments only) so licensed instruments like BDI-II/ADNM-20 never need their text committed to this public repo. See [docs/projects/done/P-118_QUESTIONNAIRE_PDFS.md](docs/projects/done/P-118_QUESTIONNAIRE_PDFS.md).
 - **2026-07-13 — v0.2.11 release**: GebüH invoice PDF tightening — headline-row layout, running GebüH total, amounts capped at what's actually charged (#216). Short sessions billed pro-rata from the 60-min rate instead of the full rate (#215). Client detail Protocol tab bugs fixed: redirect, GebüH-recorded indicator, stale service-type label (#214). Calendar fetch reliability: two-miss debounce before auto-cancelling, reinstate now refreshes date/time/duration (#217). Django 6.0.7 security patch (#212); M-PAT-04 fully complete (#204).
-- **2026-07-10 — M-PAT-04 sweep (#168)**: all remaining static inline `style=` attributes removed from non-PDF templates (37 files); only dynamic values (progress-bar widths, tag colours) remain inline. P-039: 23 previously unwrapped templates fully i18n-wrapped in the same pass (base.html nav, bank_review, invoice_form/edit, expense_list, checklist, billing_open_overview, tags, todos, login, widgets); ~260 new de.po entries. Closes #62–#66.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -41,6 +41,7 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 
 | Projekt | Beschreibung | Abgeschlossen |
 | ------- | ------------ | ------------- |
+| P-118 | Clinical Questionnaire PDFs (pilot): GAD-7 branded fillable PDF, content/template separation for future licensed instruments, send flow via new "Assessments" card | Jul 2026 |
 | P-117 | Dashboard Redesign: stats strip, two-pane console (Heute / Braucht Aktion), ActionQueueBuilder with grouped rows, charts → Analytics, heatmap → Analytics Clients tab | Jul 2026 |
 | P-024 | OSS Release: repo public (AGPL-3.0, `v0.1.0`), orphan push without private history, topics/description set; post-release onramp (CONTRIBUTING, CoC, issue/PR templates, lint CI, compliance prominence) | Jun 2026 |
 | P-045 | Tailwind CSS: full migration — 29 per-page CSS files deleted, `common.css` merged, `@theme` token system, zero hardcoded hex in templates, dark mode everywhere | Jun 2026 |

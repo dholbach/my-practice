@@ -16,6 +16,7 @@ from .api_views import (
     invoice_batch_download,
     invoice_pdf,
     next_invoice_number,
+    questionnaire_pdf,
     update_invoice_status,
 )
 
@@ -87,6 +88,7 @@ from .email_views import (
     SendInvoiceEmailView,
     SendPaymentReminderView,
     SendQuestionnaireEmailView,
+    SendQuestionnairePdfEmailView,
 )
 
 # Expense views
@@ -226,6 +228,7 @@ __all__ = [
     "invoice_batch_download",
     "next_invoice_number",
     "invoice_pdf",
+    "questionnaire_pdf",
     "update_invoice_status",
     # Bank import views
     "BankExpenseReviewView",
@@ -240,6 +243,7 @@ __all__ = [
     "SendInvoiceEmailView",
     "SendPaymentReminderView",
     "SendQuestionnaireEmailView",
+    "SendQuestionnairePdfEmailView",
     # Withdrawal views
     "withdrawal_list",
     "WithdrawalCreateView",
