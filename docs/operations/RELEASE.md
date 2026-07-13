@@ -1,6 +1,10 @@
 # Release Checklist
 
-## Version strings — update all three
+## 1. Version-bump PR
+
+Version bumps go through a PR like any other change to `main` (branch-protected — no direct commits).
+
+**Version strings — update all three, they must match:**
 
 | File | What to change |
 |------|---------------|
@@ -8,43 +12,56 @@
 | `prod.py` | `VERSION = "vX.Y.Z"` (line ~15) |
 | `docker-compose.prod.yml` | `image: ghcr.io/dholbach/my-practice:vX.Y.Z` |
 
-All three must match. `prod.py` constructs download URLs and the image pull from `VERSION`; `docker-compose.prod.yml` pins what self-hosters actually run.
+`prod.py` constructs download URLs and the image pull from `VERSION`; `docker-compose.prod.yml` pins what self-hosters actually run.
 
-## Docs pass
+**Docs pass** (same PR):
 
-- [ ] `docs/CHANGELOG.md` — add release section with highlights
+- [ ] `docs/CHANGELOG.md` — add a release section with highlights, grouped by Feature/Bug fix/Refactor/i18n/Tests/Deps (see prior entries for the style)
 - [ ] `docs/FEATURES.md` — add user-facing additions under the right section
 - [ ] `PROJECTS.md` — update Recent Activity, cap at 2 entries
 
-## Git
+```bash
+git checkout -b chore/release-vX.Y.Z
+git add app/my_practice/version.py prod.py docker-compose.prod.yml docs/ PROJECTS.md
+git commit -m "chore: bump version to vX.Y.Z"
+git push -u origin chore/release-vX.Y.Z
+gh pr create --title "chore: bump version to vX.Y.Z" --body "..."
+```
+
+## 2. Merge, then tag
+
+Once the version-bump PR is merged into `main`:
 
 ```bash
-# Commit the version bumps
-git add app/my_practice/version.py prod.py docker-compose.prod.yml docs/
-git commit -m "chore: bump version to vX.Y.Z"
-
-# Tag — this triggers the GitHub Actions image build (image.yml)
+git checkout main && git pull --ff-only
 git tag vX.Y.Z
-git push origin main
 git push origin vX.Y.Z
 ```
 
-The `image.yml` workflow fires on `push` to `v*` tags and builds
-`linux/amd64` + `linux/arm64` images, pushing both a versioned tag and `:latest`.
+Tagging triggers the GitHub Actions image build (`image.yml`), which fires on
+`push` to `v*` tags and builds `linux/amd64` + `linux/arm64` images, pushing
+both a versioned tag and `:latest`.
 
-## GitHub Release
+## 3. GitHub Release with a real changelog
 
-Create a release at https://github.com/dholbach/my-practice/releases/new
-(or via `gh release create vX.Y.Z`).
+Required: `./prod.py update` queries the GitHub Releases API
+(`/releases/latest`) to detect newer versions — a bare git tag is not enough.
 
-This is required: `./prod.py update` queries the GitHub Releases API
-(`/releases/latest`) to detect newer versions. A bare git tag is not enough.
+Write actual release notes (pull the highlights straight from the
+`docs/CHANGELOG.md` entry for this version) — not just a pointer to the file:
 
 ```bash
-gh release create vX.Y.Z --title "vX.Y.Z" --notes "See docs/CHANGELOG.md"
+gh release create vX.Y.Z --title "vX.Y.Z" --notes "$(cat <<'EOF'
+## Highlights
+- ...
+- ...
+
+Full changelog: docs/CHANGELOG.md
+EOF
+)"
 ```
 
-## Verify
+## 4. Verify
 
 - [ ] Image appears at `ghcr.io/dholbach/my-practice:vX.Y.Z` (check Actions tab)
 - [ ] `./dev.py smoke vX.Y.Z` — boots the released image with a throwaway DB and verifies migrations + login page (runs safely alongside the dev stack)

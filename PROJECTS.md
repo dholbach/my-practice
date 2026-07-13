@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-07-06
+**Last Updated**: 2026-07-13
 
 ## 🔍 Recent Activity
 
+- **2026-07-13 — v0.2.11 release**: GebüH invoice PDF tightening — headline-row layout, running GebüH total, amounts capped at what's actually charged (#216). Short sessions billed pro-rata from the 60-min rate instead of the full rate (#215). Client detail Protocol tab bugs fixed: redirect, GebüH-recorded indicator, stale service-type label (#214). Calendar fetch reliability: two-miss debounce before auto-cancelling, reinstate now refreshes date/time/duration (#217). Django 6.0.7 security patch (#212); M-PAT-04 fully complete (#204).
 - **2026-07-10 — M-PAT-04 sweep (#168)**: all remaining static inline `style=` attributes removed from non-PDF templates (37 files); only dynamic values (progress-bar widths, tag colours) remain inline. P-039: 23 previously unwrapped templates fully i18n-wrapped in the same pass (base.html nav, bank_review, invoice_form/edit, expense_list, checklist, billing_open_overview, tags, todos, login, widgets); ~260 new de.po entries. Closes #62–#66.
-- **2026-07-08 — v0.2.10 release**: Fillable Aufnahmebogen PDF + send-by-email from the onboarding widget (#200). Instant `no-next-session` tag sync from calendar fetch (#199). Tax settlement (Steuerbescheid) tracking (#196). Billing-guard fixes + `billing_helpers` extraction (#188); dashboard labels no longer fall back to English (#189); expired-token hint points at `./dev.py calendar-auth` (#197). i18n: `email_views.py`, `api_views.py`, `calendar_import_helpers.py`, `bank_import_views.py`, `calendar_views.py` wrapped.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
