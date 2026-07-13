@@ -20,12 +20,14 @@ from ..utils.email_utils import (
     get_intake_email_content,
     get_invoice_email_content,
     get_questionnaire_email_content,
+    get_questionnaire_pdf_email_content,
 )
 from .api_views import (
     _prepare_practice_images,
     _render_invoice_pdf_bytes,
     generate_contract_pdf_bytes,
     generate_intake_form_pdf_bytes,
+    generate_questionnaire_pdf_bytes,
 )
 
 logger = logging.getLogger("my_practice.email")
@@ -667,5 +669,43 @@ class SendIntakeFormEmailView(BaseClientEmailView):
 
     def get_success_html(self, recipient: str) -> str:
         return _("✅ Intake form sent to %(recipient)s") % {
+            "recipient": f'<span class="sensitive-data">{recipient}</span>'
+        }
+
+
+class SendQuestionnairePdfEmailView(BaseClientEmailView):
+    """Email the blank, fillable GAD-7 PDF to the client.
+
+    Pilot for P-118: hardcoded to the GAD-7 instrument for now. Extending to
+    other instruments means generalising this to accept a ``code`` URL
+    param — deferred until there's a second instrument to prove the pattern
+    against.
+    """
+
+    template_name = "my_practice/send_questionnaire_pdf_email.html"
+    questionnaire_code = "gad7"
+
+    def _get_filename(self, client: Client) -> str:
+        lang = client.language or "de"
+        return f"GAD-7_{lang}.pdf"
+
+    def get_default_content(self, client: Client, practice: Practice) -> tuple[str, str]:
+        return get_questionnaire_pdf_email_content(client, practice)
+
+    def get_extra_context(self, client: Client, practice: Practice) -> dict:
+        return {
+            "filename": self._get_filename(client),
+            "questionnaire_code": self.questionnaire_code,
+        }
+
+    def get_attachment(self, client: Client, practice: Practice) -> tuple[str, bytes, str] | None:
+        lang = client.language or "de"
+        pdf_bytes, _filename = generate_questionnaire_pdf_bytes(
+            self.questionnaire_code, practice, lang
+        )
+        return (self._get_filename(client), pdf_bytes, "application/pdf")
+
+    def get_success_html(self, recipient: str) -> str:
+        return _("✅ Questionnaire sent to %(recipient)s") % {
             "recipient": f'<span class="sensitive-data">{recipient}</span>'
         }

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }} – {{ practice.name }}</title>
+    <style>
+        {% include 'my_practice/invoice_pdf_base.css' %}
+
+        body {
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+
+        .invoice-title-block h1 {
+            font-size: 16pt;
+            font-weight: 600;
+        }
+        .invoice-title-block .inv-meta {
+            font-size: 8pt;
+            line-height: 1.55;
+        }
+
+        .intro {
+            margin: 0.5cm 0 0.7cm;
+            font-size: 9.5pt;
+        }
+
+        .q-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+        .q-grid th, .q-grid td {
+            border: 1px solid #ccc;
+            padding: 0.2cm 0.25cm;
+            vertical-align: middle;
+        }
+        .q-grid th {
+            font-size: 8pt;
+            font-weight: 600;
+            text-align: center;
+            background: var(--sand, #F4EFE4);
+        }
+        .q-grid td.q-item {
+            text-align: left;
+        }
+        .q-grid td.q-choice {
+            text-align: center;
+            width: 2.2cm;
+        }
+        /* Fillable PDF form fields (rendered as AcroForm radio buttons via pdf_forms=True) */
+        .q-radio {
+            appearance: auto;
+            width: 0.4cm;
+            height: 0.4cm;
+        }
+
+        .note {
+            font-size: 8.5pt;
+            color: #555;
+            margin-top: 0.4cm;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Practice header -->
+    <div class="head">
+        <div class="brand">
+            {% if logo_data %}
+            <img src="data:image/png;base64,{{ logo_data }}" class="logo-mark" alt="Logo">
+            {% endif %}
+            <div>
+                <div class="brand-text-name">{{ practice.name }}</div>
+                {% if lang == "en" %}{% if practice.subtitle_en %}<div class="brand-text-sub">{{ practice.subtitle_en }}</div>{% endif %}{% else %}{% if practice.subtitle_de %}<div class="brand-text-sub">{{ practice.subtitle_de }}</div>{% endif %}{% endif %}
+            </div>
+        </div>
+        <div class="invoice-title-block">
+            <h1>{{ title }}</h1>
+            <div class="inv-meta">
+                {{ practice.title }}<br>
+                {{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}<br>
+                {{ practice.email }}
+            </div>
+        </div>
+    </div>
+
+    {% if intro %}<div class="intro">{{ intro }}</div>{% endif %}
+
+    {% for section in sections %}
+    {% if section.type == "grid" %}
+    <table class="q-grid">
+        <thead>
+            <tr>
+                <th></th>
+                {% for column in section.columns %}<th>{{ column }}</th>{% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in section.items %}
+            <tr>
+                <td class="q-item">{{ forloop.counter }}. {{ item }}</td>
+                {% for column in section.columns %}
+                <td class="q-choice"><input type="radio" name="q{{ forloop.parentloop.counter }}" class="q-radio"></td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    {% endfor %}
+
+</body>
+</html>

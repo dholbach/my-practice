@@ -41,6 +41,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Fillable intake form (Aufnahmebogen) PDF — real form fields pre-filled from client data, remaining fields typable in any PDF viewer
 - ✅ Send intake form by email from the onboarding widget — attaches the fillable PDF and marks the step done (`intake_sent_date`)
 - ✅ `no-next-session` tag updated immediately by the calendar fetch for affected clients (no wait for the hourly tag run)
+- ✅ Clinical questionnaire PDFs (P-118 pilot) — GAD-7 rendered as a fillable, branded PDF (DE/EN) and sent by email from the client detail page; question content is separated from the template so licensed instruments (e.g. BDI-II, ADNM-20) can be added later without their text entering the repo
 
 ### Invoice Management
 - ✅ Invoice creation with line items
