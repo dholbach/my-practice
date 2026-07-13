@@ -122,11 +122,11 @@ class Command(BaseCommand):
         # for the next update_client_tags timer run.
         affected_clients: set = set()
 
-        updated_cancelled = self._cancel_stale_future_events(
+        cancelled_count, flagged_count = self._cancel_stale_future_events(
             practice, start_dt, end_dt, live_ids, dry_run, affected_clients
         )
         counts = self._upsert_all_events(parsed, practice, dry_run, affected_clients)
-        self._report_fetch_summary(dry_run, updated_cancelled, counts)
+        self._report_fetch_summary(dry_run, cancelled_count, flagged_count, counts)
 
         if not dry_run:
             self._sync_no_next_session_tags(affected_clients)
@@ -141,13 +141,17 @@ class Command(BaseCommand):
                 counts[result] += 1
         return counts
 
-    def _report_fetch_summary(self, dry_run: bool, updated_cancelled: int, counts: dict) -> None:
+    def _report_fetch_summary(
+        self, dry_run: bool, cancelled_count: int, flagged_count: int, counts: dict
+    ) -> None:
         action = "[dry-run] Would create" if dry_run else "Created"
         parts = [
             f"{counts['created']} new",
-            f"{updated_cancelled} marked as cancelled",
+            f"{cancelled_count} marked as cancelled",
             f"{counts['skipped']} already present",
         ]
+        if flagged_count:
+            parts.append(f"{flagged_count} newly missing (cancels next run if still absent)")
         if counts["rescheduled"]:
             parts.append(f"{counts['rescheduled']} rescheduled")
         if counts["reinstated"]:
@@ -215,8 +219,16 @@ class Command(BaseCommand):
         live_ids: set,
         dry_run: bool,
         affected_clients: set | None = None,
-    ) -> int:
-        count = 0
+    ) -> tuple[int, int]:
+        """Cancel PENDING events missing from live_ids — but only on the second
+        consecutive miss. Google's events.list() can transiently omit an event
+        right after it was edited server-side; requiring two misses avoids
+        cancelling a still-live session on that kind of blip.
+
+        Returns (cancelled_count, newly_flagged_count).
+        """
+        cancelled = 0
+        flagged = 0
         existing = PendingCalendarEvent.objects.filter(
             practice=practice,
             event_date__range=(start_dt.date(), end_dt.date()),
@@ -224,18 +236,30 @@ class Command(BaseCommand):
             status=PendingCalendarEvent.Status.PENDING,
         )
         for db_event in existing:
-            if db_event.google_event_id not in live_ids:
+            if db_event.google_event_id in live_ids:
+                if db_event.missing_since and not dry_run:
+                    db_event.missing_since = None
+                    db_event.save(update_fields=["missing_since"])
+                continue
+
+            if not db_event.missing_since:
+                flagged += 1
                 if not dry_run:
-                    db_event.status = PendingCalendarEvent.Status.CANCELLED
-                    db_event.save(update_fields=["status"])
-                    if db_event.session_id:
-                        Session.objects.filter(pk=db_event.session_id).update(cancelled=True)
-                        if db_event.matched_client and affected_clients is not None:
-                            affected_clients.add(db_event.matched_client)
-                count += 1
-                code = db_event.matched_client.client_code if db_event.matched_client else "?"
-                self.stdout.write(f"  🚫 Cancelled: {code} on {db_event.event_date}")
-        return count
+                    db_event.missing_since = timezone.now()
+                    db_event.save(update_fields=["missing_since"])
+                continue
+
+            cancelled += 1
+            if not dry_run:
+                db_event.status = PendingCalendarEvent.Status.CANCELLED
+                db_event.save(update_fields=["status"])
+                if db_event.session_id:
+                    Session.objects.filter(pk=db_event.session_id).update(cancelled=True)
+                    if db_event.matched_client and affected_clients is not None:
+                        affected_clients.add(db_event.matched_client)
+            code = db_event.matched_client.client_code if db_event.matched_client else "?"
+            self.stdout.write(f"  🚫 Cancelled: {code} on {db_event.event_date}")
+        return cancelled, flagged
 
     def _upsert_event(
         self, event, practice, dry_run, affected_clients: set | None = None
@@ -279,7 +303,7 @@ class Command(BaseCommand):
             return "skipped"
 
         if obj.status == PendingCalendarEvent.Status.CANCELLED:
-            self._transition_to_reinstated(obj, event, event_date, affected_clients)
+            self._transition_to_reinstated(obj, event, event_date, event_time, affected_clients)
             return "reinstated"
 
         if self._apply_reschedule_if_changed(obj, event, event_date, event_time, affected_clients):
@@ -316,14 +340,35 @@ class Command(BaseCommand):
                 affected_clients.add(obj.matched_client)
 
     def _transition_to_reinstated(
-        self, obj: "PendingCalendarEvent", event, event_date, affected_clients: set | None
+        self,
+        obj: "PendingCalendarEvent",
+        event,
+        event_date,
+        event_time,
+        affected_clients: set | None,
     ) -> None:
-        """Reinstate a previously-cancelled event (e.g. un-cancelled in Google Calendar)."""
+        """Reinstate a previously-cancelled event (e.g. un-cancelled in Google Calendar).
+
+        Also refreshes event_date/event_time/duration_minutes and clears
+        missing_since — the cancelled row can be stale on a moved event, and a
+        stale missing_since would let the two-miss cancel debounce fire on the
+        very next run even though nothing actually changed.
+        """
+        new_duration = event.get("duration_minutes") or obj.duration_minutes
         PendingCalendarEvent.objects.filter(pk=obj.pk).update(
-            status=PendingCalendarEvent.Status.PENDING
+            status=PendingCalendarEvent.Status.PENDING,
+            event_date=event_date,
+            event_time=event_time,
+            duration_minutes=new_duration,
+            missing_since=None,
         )
         if obj.session_id:
-            Session.objects.filter(pk=obj.session_id).update(cancelled=False)
+            Session.objects.filter(pk=obj.session_id).update(
+                cancelled=False,
+                session_date=event_date,
+                session_time=event_time,
+                duration=new_duration,
+            )
             if obj.matched_client and affected_clients is not None:
                 affected_clients.add(obj.matched_client)
         code = event.get("matched_client")

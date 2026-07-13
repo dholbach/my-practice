@@ -129,6 +129,12 @@ class PendingCalendarEvent(models.Model):
         verbose_name="Sitzung",
     )
     fetched_at = models.DateTimeField(auto_now_add=True, verbose_name="Abgerufen am")
+    missing_since = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Fehlt seit",
+        help_text="Erster Fetch, bei dem der Termin nicht mehr im Kalender gefunden wurde",
+    )
 
     class Meta:
         ordering = ["event_date", "event_time"]
