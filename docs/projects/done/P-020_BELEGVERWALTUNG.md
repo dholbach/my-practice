@@ -118,7 +118,7 @@ def expense_receipt_upload_path(instance, filename):
 
 ### Backup
 - `media/` wird bereits durch `backup.sh` gesichert — kein zusätzlicher Aufwand
-  (Media liegen unter `$PAYMENTS_DATA_DIR/media/`, außerhalb des Repos)
+  (Media liegen unter `$MY_PRACTICE_DATA_DIR/media/`, außerhalb des Repos)
 
 ---
 

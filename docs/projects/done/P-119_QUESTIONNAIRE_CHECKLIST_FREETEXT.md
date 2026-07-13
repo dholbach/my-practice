@@ -48,5 +48,5 @@ ADNM-20 hack.
 
 No ADNM-20 content file shipped in this PR — that's licensed content
 Daniel sources himself and drops into
-`PAYMENTS_DATA_DIR/questionnaires/adnm20.json` (never committed, per the
+`MY_PRACTICE_DATA_DIR/questionnaires/adnm20.json` (never committed, per the
 P-118 licensing boundary).

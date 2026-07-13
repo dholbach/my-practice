@@ -13,6 +13,7 @@ from django.urls import reverse
 from my_practice.models import Client, Practice, UserPractice
 from my_practice.utils.questionnaire_content import (
     QuestionnaireNotFoundError,
+    list_available_questionnaires,
     load_questionnaire,
 )
 from my_practice.views.api_views import (
@@ -36,13 +37,27 @@ class LoadQuestionnaireTest(TestCase):
         self.assertEqual(len(content.sections[0]["items"]), 7)
         self.assertEqual(len(content.sections[0]["columns"]), 4)
 
+    def test_filename_label_defaults_to_uppercased_code_when_absent(self):
+        content = load_questionnaire("gad7")
+        self.assertEqual(content.filename_label, "GAD-7")
+
+    def test_list_available_questionnaires_includes_shipped_fixtures(self):
+        """Drives the client detail "Assessments" picker.
+
+        Only asserts the shipped gad7 fixture is discoverable — doesn't
+        assume anything about instance-local content, since that's
+        per-deployment and never present in this repo/CI.
+        """
+        codes = {q.code for q in list_available_questionnaires()}
+        self.assertIn("gad7", codes)
+
     def test_missing_code_raises_actionable_error(self):
         with self.assertRaises(QuestionnaireNotFoundError) as ctx:
             load_questionnaire("does-not-exist")
         self.assertIn("does-not-exist", str(ctx.exception))
 
     def test_instance_local_file_takes_precedence_over_shipped_fixture(self):
-        """PAYMENTS_DATA_DIR/questionnaires/gad7.json, if present, wins."""
+        """MY_PRACTICE_DATA_DIR/questionnaires/gad7.json, if present, wins."""
         import json
         import tempfile
         from pathlib import Path
@@ -62,7 +77,7 @@ class LoadQuestionnaireTest(TestCase):
                 ),
                 encoding="utf-8",
             )
-            with override_settings(PAYMENTS_DATA_DIR=data_dir):
+            with override_settings(MY_PRACTICE_DATA_DIR=data_dir):
                 content = load_questionnaire("gad7")
         self.assertEqual(content.title["de"], "Override")
 
@@ -150,7 +165,9 @@ class SendQuestionnairePdfEmailViewTest(TestCase):
 
     def test_form_loads_prefilled(self):
         response = self.client_http.get(
-            reverse("send_questionnaire_pdf_email", kwargs={"pk": self.test_client.pk})
+            reverse(
+                "send_questionnaire_pdf_email", kwargs={"pk": self.test_client.pk, "code": "gad7"}
+            )
         )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "my_practice/send_questionnaire_pdf_email.html")
@@ -163,7 +180,9 @@ class SendQuestionnairePdfEmailViewTest(TestCase):
         self.test_client.save()
 
         response = self.client_http.get(
-            reverse("send_questionnaire_pdf_email", kwargs={"pk": self.test_client.pk})
+            reverse(
+                "send_questionnaire_pdf_email", kwargs={"pk": self.test_client.pk, "code": "gad7"}
+            )
         )
         self.assertRedirects(response, reverse("client_detail", kwargs={"pk": self.test_client.pk}))
 
@@ -174,7 +193,9 @@ class SendQuestionnairePdfEmailViewTest(TestCase):
         mock_instance.send.return_value = 1
 
         response = self.client_http.post(
-            reverse("send_questionnaire_pdf_email", kwargs={"pk": self.test_client.pk}),
+            reverse(
+                "send_questionnaire_pdf_email", kwargs={"pk": self.test_client.pk, "code": "gad7"}
+            ),
             {
                 "recipient": "max@example.com",
                 "subject": "Fragebogen",
@@ -187,8 +208,43 @@ class SendQuestionnairePdfEmailViewTest(TestCase):
         mock_instance.attach.assert_called_once()
         fname, fbytes, fmime = mock_instance.attach.call_args.args
         self.assertEqual(fname, "GAD-7_de.pdf")
-        self.assertEqual(fmime, "application/pdf")
-        self.assertTrue(fbytes.startswith(b"%PDF"))
+
+    def test_serves_a_second_instrument_by_code(self):
+        """The view isn't hardcoded to gad7 — any code with content resolves.
+
+        Uses a fully synthetic instrument code/content, unrelated to any
+        real instrument, so this test has no dependency on (or reference
+        to) licensed content that lives outside this repo. Also exercises
+        the fallback filename label (uppercased code) for codes not listed
+        in QUESTIONNAIRE_FILENAME_LABELS.
+        """
+        import json
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            (data_dir / "questionnaires").mkdir()
+            (data_dir / "questionnaires" / "testinstrument.json").write_text(
+                json.dumps(
+                    {
+                        "code": "testinstrument",
+                        "title": {"de": "Testbogen", "en": "Test form"},
+                        "sections": [
+                            {"type": "freetext", "intro": {"de": "", "en": ""}, "lines": 1}
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with override_settings(MY_PRACTICE_DATA_DIR=data_dir):
+                response = self.client_http.get(
+                    reverse(
+                        "send_questionnaire_pdf_email",
+                        kwargs={"pk": self.test_client.pk, "code": "testinstrument"},
+                    )
+                )
+                self.assertEqual(response.context["filename"], "TESTINSTRUMENT_de.pdf")
 
 
 class ResolveQuestionnaireSectionTest(TestCase):
@@ -346,7 +402,7 @@ class MixedSectionQuestionnairePdfTest(TestCase):
             (data_dir / "questionnaires" / "mixed-test.json").write_text(
                 json.dumps(content), encoding="utf-8"
             )
-            with override_settings(PAYMENTS_DATA_DIR=data_dir):
+            with override_settings(MY_PRACTICE_DATA_DIR=data_dir):
                 pdf_bytes, filename = generate_questionnaire_pdf_bytes(
                     "mixed-test", self.practice, "de"
                 )

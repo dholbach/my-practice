@@ -141,7 +141,7 @@ server {
     }
 
     location /media/ {
-        # Media files live outside the repo under $PAYMENTS_DATA_DIR/media/
+        # Media files live outside the repo under $MY_PRACTICE_DATA_DIR/media/
         alias /path/to/payments-data/media/;
     }
 }

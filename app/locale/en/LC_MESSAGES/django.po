@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-13 15:07+0200\n"
+"POT-Creation-Date: 2026-07-13 22:19+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -346,7 +346,7 @@ msgid "%(n)s %(label)s"
 msgstr ""
 
 #: my_practice/utils/dashboard_widgets.py:572
-#: templates/my_practice/client_detail.html:691
+#: templates/my_practice/client_detail.html:695
 msgid "View"
 msgstr ""
 
@@ -468,24 +468,24 @@ msgstr "Client ID required"
 msgid "Client not found"
 msgstr "Client not found"
 
-#: my_practice/views/api_views.py:285
+#: my_practice/views/api_views.py:338
 msgid "Invalid year for batch download."
 msgstr "Invalid year for batch download."
 
-#: my_practice/views/api_views.py:300
+#: my_practice/views/api_views.py:353
 #, python-format
 msgid "No invoices found for %(year)s with status '%(status)s'."
 msgstr "No invoices found for %(year)s with status '%(status)s'."
 
-#: my_practice/views/api_views.py:331
+#: my_practice/views/api_views.py:384
 msgid "POST required"
 msgstr "POST required"
 
-#: my_practice/views/api_views.py:344
+#: my_practice/views/api_views.py:397
 msgid "Invalid status"
 msgstr "Invalid status"
 
-#: my_practice/views/api_views.py:368
+#: my_practice/views/api_views.py:421
 #, python-format
 msgid "Status changed to: %(status)s"
 msgstr "Status changed to: %(status)s"
@@ -868,91 +868,91 @@ msgstr ""
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr ""
 
-#: my_practice/views/email_views.py:65 my_practice/views/email_views.py:363
+#: my_practice/views/email_views.py:66 my_practice/views/email_views.py:364
 #, python-format
 msgid "Email sending failed (result: %(result)s)."
 msgstr "Email sending failed (result: %(result)s)."
 
-#: my_practice/views/email_views.py:69
+#: my_practice/views/email_views.py:70
 #, python-format
 msgid "Error while sending: %(error)s"
 msgstr "Error while sending: %(error)s"
 
-#: my_practice/views/email_views.py:138 my_practice/views/email_views.py:162
+#: my_practice/views/email_views.py:139 my_practice/views/email_views.py:163
 msgid "Practice settings not configured."
 msgstr "Practice settings not configured."
 
-#: my_practice/views/email_views.py:144
+#: my_practice/views/email_views.py:145
 #, python-format
 msgid "Client %(code)s has no email address on file."
 msgstr "Client %(code)s has no email address on file."
 
-#: my_practice/views/email_views.py:178
+#: my_practice/views/email_views.py:179
 #, python-format
 msgid "Error creating attachment: %(error)s"
 msgstr "Error creating attachment: %(error)s"
 
-#: my_practice/views/email_views.py:220 my_practice/views/email_views.py:255
+#: my_practice/views/email_views.py:221 my_practice/views/email_views.py:256
 #, python-format
 msgid "Invoice %(number)s has already been sent. Change the status to send it again."
 msgstr "Invoice %(number)s has already been sent. Change the status to send it again."
 
-#: my_practice/views/email_views.py:312
+#: my_practice/views/email_views.py:313
 #, python-format
 msgid "Invoice date was updated to %(date)s"
 msgstr "Invoice date was updated to %(date)s"
 
-#: my_practice/views/email_views.py:321
+#: my_practice/views/email_views.py:322
 #, python-format
 msgid "Error creating the PDF: %(error)s"
 msgstr "Error creating the PDF: %(error)s"
 
-#: my_practice/views/email_views.py:345
+#: my_practice/views/email_views.py:346
 #, python-format
 msgid "Error sending the email: %(error)s"
 msgstr "Error sending the email: %(error)s"
 
-#: my_practice/views/email_views.py:356
+#: my_practice/views/email_views.py:357
 #, python-format
 msgid "✅ Invoice successfully sent to %(recipient)s"
 msgstr "✅ Invoice successfully sent to %(recipient)s"
 
-#: my_practice/views/email_views.py:401
+#: my_practice/views/email_views.py:402
 #, python-format
 msgid "No open invoices for %(code)s."
 msgstr "No open invoices for %(code)s."
 
-#: my_practice/views/email_views.py:419
+#: my_practice/views/email_views.py:420
 #, python-format
 msgid "✅ Payment reminder sent to %(recipient)s"
 msgstr "✅ Payment reminder sent to %(recipient)s"
 
-#: my_practice/views/email_views.py:546
+#: my_practice/views/email_views.py:547
 #, python-format
 msgid "✅ Cancellation sent to %(recipient)s"
 msgstr "✅ Cancellation sent to %(recipient)s"
 
-#: my_practice/views/email_views.py:573
+#: my_practice/views/email_views.py:574
 #, python-format
-msgid "File not found: %(path)s. Please place the .docx file under PAYMENTS_DATA_DIR/documents/."
-msgstr "File not found: %(path)s. Please place the .docx file under PAYMENTS_DATA_DIR/documents/."
+msgid "File not found: %(path)s. Please place the .docx file under MY_PRACTICE_DATA_DIR/documents/."
+msgstr "File not found: %(path)s. Please place the .docx file under MY_PRACTICE_DATA_DIR/documents/."
 
-#: my_practice/views/email_views.py:594
+#: my_practice/views/email_views.py:595
 #, python-format
 msgid "File not found: %(path)s."
 msgstr "File not found: %(path)s."
 
-#: my_practice/views/email_views.py:609 my_practice/views/email_views.py:709
+#: my_practice/views/email_views.py:610 my_practice/views/email_views.py:726
 #, python-format
 msgid "✅ Questionnaire sent to %(recipient)s"
 msgstr "✅ Questionnaire sent to %(recipient)s"
 
-#: my_practice/views/email_views.py:640
+#: my_practice/views/email_views.py:641
 #, python-format
 msgid "✅ Treatment contract sent to %(recipient)s"
 msgstr "✅ Treatment contract sent to %(recipient)s"
 
-#: my_practice/views/email_views.py:671
+#: my_practice/views/email_views.py:672
 #, python-format
 msgid "✅ Intake form sent to %(recipient)s"
 msgstr "✅ Intake form sent to %(recipient)s"
@@ -1252,7 +1252,7 @@ msgstr ""
 
 #: templates/includes/client_card.html:19
 #: templates/my_practice/billing_open_overview.html:55
-#: templates/my_practice/client_detail.html:681
+#: templates/my_practice/client_detail.html:685
 #: templates/my_practice/includes/heatmap.html:13
 msgid "Sessions"
 msgstr ""
@@ -1669,8 +1669,8 @@ msgstr "Name"
 
 #: templates/my_practice/analytics.html:395
 #: templates/my_practice/billing_open_overview.html:58
-#: templates/my_practice/client_detail.html:637
-#: templates/my_practice/client_detail.html:681
+#: templates/my_practice/client_detail.html:641
+#: templates/my_practice/client_detail.html:685
 #: templates/my_practice/inquiry_confirm_delete.html:30
 #: templates/my_practice/invoice_detail.html:33
 #: templates/my_practice/revenue_report.html:55
@@ -2110,8 +2110,8 @@ msgid "Ignore all"
 msgstr ""
 
 #: templates/my_practice/bank_review.html:190
-#: templates/my_practice/client_detail.html:637
-#: templates/my_practice/client_detail.html:681
+#: templates/my_practice/client_detail.html:641
+#: templates/my_practice/client_detail.html:685
 #: templates/my_practice/expense_list.html:78
 #: templates/my_practice/inquiry_list.html:178
 #: templates/my_practice/inquiry_list.html:224
@@ -2124,7 +2124,7 @@ msgid "Date"
 msgstr ""
 
 #: templates/my_practice/bank_review.html:194
-#: templates/my_practice/client_detail.html:681
+#: templates/my_practice/client_detail.html:685
 #: templates/my_practice/expense_list.html:81
 #: templates/my_practice/revenue_report.html:56
 #: templates/my_practice/send_payment_reminder.html:22
@@ -2193,7 +2193,7 @@ msgstr ""
 #: templates/my_practice/bank_review.html:269
 #: templates/my_practice/bank_review.html:286
 #: templates/my_practice/bank_review.html:317
-#: templates/my_practice/client_detail.html:657
+#: templates/my_practice/client_detail.html:661
 msgid "Ignore"
 msgstr ""
 
@@ -2317,8 +2317,8 @@ msgid "Billed"
 msgstr ""
 
 #: templates/my_practice/billing_open_overview.html:59
-#: templates/my_practice/client_detail.html:637
-#: templates/my_practice/client_detail.html:681
+#: templates/my_practice/client_detail.html:641
+#: templates/my_practice/client_detail.html:685
 #: templates/my_practice/expense_list.html:85
 #: templates/my_practice/inquiry_list.html:183
 #: templates/my_practice/inquiry_list.html:229
@@ -2701,7 +2701,7 @@ msgstr "Delete session?"
 
 #: templates/my_practice/client_detail.html:228
 #: templates/my_practice/client_detail.html:274
-#: templates/my_practice/client_detail.html:644
+#: templates/my_practice/client_detail.html:648
 #: templates/my_practice/gebueh_leistung_form.html:6
 #: templates/my_practice/invoice_detail.html:110
 #: templates/my_practice/invoice_detail.html:141
@@ -2947,7 +2947,7 @@ msgstr ""
 
 #: templates/my_practice/client_detail.html:545
 #: templates/my_practice/client_detail.html:562
-#: templates/my_practice/client_detail.html:594
+#: templates/my_practice/client_detail.html:596
 msgid "no email"
 msgstr ""
 
@@ -2981,122 +2981,123 @@ msgstr ""
 msgid "✓ Finalise"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:591
+#: templates/my_practice/client_detail.html:592
 msgid "Assessments"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:593
-msgid "Send GAD-7"
-msgstr ""
+#: templates/my_practice/client_detail.html:595
+#, python-format
+msgid "Send %(title)s"
+msgstr "Send %(title)s"
 
-#: templates/my_practice/client_detail.html:601
+#: templates/my_practice/client_detail.html:605
 msgid "Source inquiry"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:616
+#: templates/my_practice/client_detail.html:620
 msgid "New invoice"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:619
+#: templates/my_practice/client_detail.html:623
 msgid "Oldest open invoice: over 30 days"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:619
-#: templates/my_practice/client_detail.html:621
 #: templates/my_practice/client_detail.html:623
 #: templates/my_practice/client_detail.html:625
+#: templates/my_practice/client_detail.html:627
+#: templates/my_practice/client_detail.html:629
 msgid "Payment reminder"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:621
+#: templates/my_practice/client_detail.html:625
 msgid "Oldest open invoice: 14–30 days"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:623
+#: templates/my_practice/client_detail.html:627
 msgid "Open invoice exists"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:625
+#: templates/my_practice/client_detail.html:629
 msgid "No outstanding sent invoices"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:627
+#: templates/my_practice/client_detail.html:631
 msgid "Prepare cancellation email due to illness"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:627
+#: templates/my_practice/client_detail.html:631
 msgid "Cancel session"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:634
+#: templates/my_practice/client_detail.html:638
 msgid "Pending sessions"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:637
+#: templates/my_practice/client_detail.html:641
 #: templates/my_practice/inquiry_form.html:121
 msgid "Time"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:637
+#: templates/my_practice/client_detail.html:641
 #: templates/my_practice/invoice_detail.html:84
 msgid "Duration"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:645
+#: templates/my_practice/client_detail.html:649
 msgid "Pending"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:650
+#: templates/my_practice/client_detail.html:654
 #, python-format
 msgid "+ Invoice %(num)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:651
+#: templates/my_practice/client_detail.html:655
 #, python-format
 msgid "Add to invoice %(num)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:653
+#: templates/my_practice/client_detail.html:657
 msgid "+ Separate invoice"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:655
+#: templates/my_practice/client_detail.html:659
 #: templates/my_practice/dashboard.html:41
 msgid "+ New invoice"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:669
+#: templates/my_practice/client_detail.html:673
 msgid "Invoice history"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:672
+#: templates/my_practice/client_detail.html:676
 #, python-format
 msgid "⚠️ %(count)s appointment pending"
 msgid_plural "⚠️ %(count)s appointments pending"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/client_detail.html:674
+#: templates/my_practice/client_detail.html:678
 #, python-format
 msgid "📝 %(count)s session open"
 msgid_plural "📝 %(count)s sessions open"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/client_detail.html:681
+#: templates/my_practice/client_detail.html:685
 #: templates/my_practice/send_payment_reminder.html:19
 msgid "Invoice no."
 msgstr ""
 
-#: templates/my_practice/client_detail.html:697
+#: templates/my_practice/client_detail.html:701
 msgid "No invoices for this client yet."
 msgstr ""
 
-#: templates/my_practice/client_detail.html:703
+#: templates/my_practice/client_detail.html:707
 msgid "Session activity"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:718
+#: templates/my_practice/client_detail.html:722
 msgid "Uploaded documents"
 msgstr ""
 

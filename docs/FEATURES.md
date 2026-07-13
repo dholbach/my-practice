@@ -43,6 +43,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ `no-next-session` tag updated immediately by the calendar fetch for affected clients (no wait for the hourly tag run)
 - ✅ Clinical questionnaire PDFs (P-118 pilot) — GAD-7 rendered as a fillable, branded PDF (DE/EN) and sent by email from the client detail page; question content is separated from the template so licensed instruments (e.g. BDI-II, ADNM-20) can be added later without their text entering the repo
 - ✅ Questionnaire PDFs support `checklist` and `freetext` block types, and grids with multiple independent response scales per statement (`column_groups`) (P-119) — enables multi-part instruments like ADNM-20 once their content file is sourced
+- ✅ Client detail "Assessments" card lists whatever questionnaire instruments actually have content available, sending/download links generated dynamically (P-120) — no send flow is hardcoded to a single instrument anymore
 
 ### Invoice Management
 - ✅ Invoice creation with line items

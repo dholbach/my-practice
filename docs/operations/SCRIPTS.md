@@ -4,11 +4,11 @@ These scripts provide easy backup and restoration of the payments system data.
 
 ## 📁 Data Directory (IMPORTANT)
 
-Backups and media files live **outside the Git repository** under `PAYMENTS_DATA_DIR`.
+Backups and media files live **outside the Git repository** under `MY_PRACTICE_DATA_DIR`.
 The path is read from `.env` (default: `../payments-data` — sibling directory of the repo clone).
 
 ```
-$PAYMENTS_DATA_DIR/
+$MY_PRACTICE_DATA_DIR/
   backups/    ← PostgreSQL dumps + media archives (bind-mounted → /app/backups in container)
   media/      ← Practice logo, signature, receipt files (bind-mounted → /app/media in container)
 ```
@@ -22,8 +22,8 @@ This ensures a `rm -rf` or `git clean` of the repo never destroys data.
 ```
 
 The script creates (CWD-independent — uses `$SCRIPT_DIR` for path resolution):
-- **PostgreSQL dump** (gzip-compressed): `$PAYMENTS_DATA_DIR/backups/db_backup_YYYYMMDD_HHMMSS.sql.gz`
-- **Media files** (logo/signature): `$PAYMENTS_DATA_DIR/backups/media_backup_YYYYMMDD_HHMMSS.tar.gz`
+- **PostgreSQL dump** (gzip-compressed): `$MY_PRACTICE_DATA_DIR/backups/db_backup_YYYYMMDD_HHMMSS.sql.gz`
+- **Media files** (logo/signature): `$MY_PRACTICE_DATA_DIR/backups/media_backup_YYYYMMDD_HHMMSS.tar.gz`
 
 ### Features:
 - ✅ Timestamped backups (sortable)
@@ -50,14 +50,14 @@ The script creates (CWD-independent — uses `$SCRIPT_DIR` for path resolution):
 ./scripts/restore.sh
 
 # With a specific file:
-./scripts/restore.sh $PAYMENTS_DATA_DIR/backups/db_backup_20251215_103000.sql.gz
+./scripts/restore.sh $MY_PRACTICE_DATA_DIR/backups/db_backup_20251215_103000.sql.gz
 ```
 
 Or with media files:
 ```bash
 ./scripts/restore.sh \
-  $PAYMENTS_DATA_DIR/backups/db_backup_20251215_103000.sql.gz \
-  $PAYMENTS_DATA_DIR/backups/media_backup_20251215_103000.tar.gz
+  $MY_PRACTICE_DATA_DIR/backups/db_backup_20251215_103000.sql.gz \
+  $MY_PRACTICE_DATA_DIR/backups/media_backup_20251215_103000.tar.gz
 ```
 
 ### Safety Features:
@@ -105,7 +105,7 @@ journalctl --user -u my-practice-fetch-calendar-events.service -n 20
 
 ## 📤 External Backups
 
-The system creates backups in `$PAYMENTS_DATA_DIR/backups/` (outside the repository).
+The system creates backups in `$MY_PRACTICE_DATA_DIR/backups/` (outside the repository).
 From there they are manually copied to external media (external disk, NAS).
 
 **Note**: For data protection reasons, backups containing client data are not uploaded to

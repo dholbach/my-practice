@@ -17,7 +17,7 @@ The rendering template (`questionnaire_pdf.html`, committed) only defines a
 generic branded shell + a `grid` block layout (statement rows × response
 columns). The actual question text lives in a JSON content file, loaded at
 render time via `utils/questionnaire_content.py`:
-- Instance-local first: `PAYMENTS_DATA_DIR/questionnaires/<code>.json`
+- Instance-local first: `MY_PRACTICE_DATA_DIR/questionnaires/<code>.json`
   (never committed — same convention already used for the `Anamnesebogen.docx`
   attachment in `SendQuestionnaireEmailView`)
 - Falls back to `app/my_practice/questionnaire_content/<code>.json` shipped
@@ -25,7 +25,7 @@ render time via `utils/questionnaire_content.py`:
 
 This means every instrument gets the same branded/fillable treatment
 regardless of licensing status — adding BDI-II or ADNM-20 later is a matter
-of dropping a content file under `PAYMENTS_DATA_DIR/questionnaires/`, not
+of dropping a content file under `MY_PRACTICE_DATA_DIR/questionnaires/`, not
 writing new code.
 
 ## What shipped
