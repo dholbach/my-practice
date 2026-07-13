@@ -211,6 +211,41 @@ class ResolveQuestionnaireSectionTest(TestCase):
             ],
         )
 
+    def test_grid_with_column_groups_resolves_independent_scales_per_row(self):
+        section = {
+            "type": "grid",
+            "column_groups": [
+                {
+                    "label": {"de": "Häufigkeit", "en": "Frequency"},
+                    "columns": [{"de": "Nie", "en": "Never"}, {"de": "Oft", "en": "Often"}],
+                },
+                {
+                    "label": {"de": "Wie lange?", "en": "Duration"},
+                    "columns": [{"de": "<1 Monat", "en": "<1 month"}],
+                },
+            ],
+            "items": [{"de": "Erstens", "en": "First"}],
+        }
+        resolved = _resolve_questionnaire_section(section, "en", index=1)
+        self.assertEqual(resolved["type"], "grid")
+        self.assertEqual(
+            resolved["column_groups"],
+            [
+                {"label": "Frequency", "columns": ["Never", "Often"]},
+                {"label": "Duration", "columns": ["<1 month"]},
+            ],
+        )
+        self.assertEqual(len(resolved["rows"]), 1)
+        row = resolved["rows"][0]
+        self.assertEqual(row["label"], "First")
+        self.assertEqual(
+            row["groups"],
+            [
+                {"field_name": "s1_q0_g0", "columns": ["Never", "Often"]},
+                {"field_name": "s1_q0_g1", "columns": ["<1 month"]},
+            ],
+        )
+
     def test_checklist_resolves_items_and_field_names(self):
         section = {
             "type": "checklist",
@@ -289,6 +324,20 @@ class MixedSectionQuestionnairePdfTest(TestCase):
                     "columns": [{"de": "Nie", "en": "Never"}, {"de": "Oft", "en": "Often"}],
                     "items": [{"de": "Aussage 1", "en": "Statement 1"}],
                 },
+                {
+                    "type": "grid",
+                    "column_groups": [
+                        {
+                            "label": {"de": "Häufigkeit", "en": "Frequency"},
+                            "columns": [{"de": "Nie", "en": "Never"}, {"de": "Oft", "en": "Often"}],
+                        },
+                        {
+                            "label": {"de": "Wie lange?", "en": "Duration"},
+                            "columns": [{"de": "<1 Monat", "en": "<1 month"}],
+                        },
+                    ],
+                    "items": [{"de": "Aussage 2", "en": "Statement 2"}],
+                },
             ],
         }
         with tempfile.TemporaryDirectory() as tmp:
@@ -313,3 +362,5 @@ class MixedSectionQuestionnairePdfTest(TestCase):
         self.assertIn(
             "s2_q0.s2_q0", field_names
         )  # grid radio group (nested naming, see GAD-7 test)
+        self.assertIn("s3_q0_g0.s3_q0_g0", field_names)  # dual-scale grid: frequency group
+        self.assertIn("s3_q0_g1.s3_q0_g1", field_names)  # dual-scale grid: duration group

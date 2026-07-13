@@ -9,9 +9,13 @@ ADNM-20 and similar multi-part instruments:
   response scale (ADNM-20 part 1: 18 life events).
 - **`freetext`** — a prompt with N blank fillable lines (ADNM-20's "please
   indicate the most straining event(s)").
+- **`grid` with `column_groups`** — two (or more) independent response
+  scales per statement, side by side (ADNM-20 part 2: "frequency" and
+  "duration" per statement, matching the source form's layout rather than
+  splitting into two separate tables).
 
-Both render as real AcroForm fields via WeasyPrint's `pdf_forms=True`, same
-as the `grid` type's radio buttons.
+All render as real AcroForm fields via WeasyPrint's `pdf_forms=True`, same
+as the original `grid` type's radio buttons.
 
 ## What changed
 
@@ -28,17 +32,19 @@ as the `grid` type's radio buttons.
 - `questionnaire_pdf.html` gained `checklist` and `freetext` branches, plus
   an optional per-section `intro` (any section type can now have its own
   intro text, not just the document-level one).
+- `grid` sections can now specify `column_groups` (a list of
+  `{label, columns}`) instead of a flat `columns` list — renders a two-tier
+  header (group label spanning its columns, then individual column labels)
+  and, per statement row, one independent radio group per column group
+  (`s{i}_q{j}_g{k}`). Backward compatible: existing flat-`columns` grids
+  (GAD-7) are unaffected.
 
-## Deliberately not done
-
-ADNM-20 part 2 needs two *independent* column groups per statement
-(frequency **and** duration side by side) — the `grid` type only supports
-one column group per item. Not extended here since it wasn't part of what
-was asked for. Workaround once ADNM-20's content file is built: represent
-part 2 as two separate `grid` sections (frequency, then duration), each
-repeating the item labels — lower-fidelity than the source form, fully
-functional with no new code. If full fidelity is wanted later, `grid` would
-need a `column_groups` variant.
+Chose to build the full two-scale grid rather than the "two separate tables"
+workaround floated when P-118 shipped — a client filling out a real
+20-statement instrument shouldn't have to answer the same 20 statements
+twice in disconnected tables; the extra code is a reusable primitive for any
+future instrument with the same multi-scale-per-item shape, not a one-off
+ADNM-20 hack.
 
 No ADNM-20 content file shipped in this PR — that's licensed content
 Daniel sources himself and drops into

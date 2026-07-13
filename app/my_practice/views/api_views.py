@@ -219,11 +219,33 @@ def _resolve_questionnaire_section(section: dict, lang: str, index: int) -> dict
     sections in one document never collide, and computed here rather than via
     nested Django ``forloop.parentloop`` chains, keeping the template simple.
 
-    Supported ``type`` values: ``grid`` (statement rows x response columns),
+    Supported ``type`` values: ``grid`` (statement rows x response columns;
+    optionally multiple independent column groups per row, e.g. a
+    "frequency" scale and a separate "duration" scale side by side),
     ``checklist`` (statement rows with a single yes/no checkbox), ``freetext``
     (a prompt with N blank fillable lines).
     """
     intro = section.get("intro", {}).get(lang, "")
+
+    if section["type"] == "grid" and "column_groups" in section:
+        column_groups = [
+            {"label": g["label"][lang], "columns": [c[lang] for c in g["columns"]]}
+            for g in section["column_groups"]
+        ]
+        rows = [
+            {
+                "label": item[lang],
+                "groups": [
+                    {
+                        "field_name": f"s{index}_q{item_idx}_g{group_idx}",
+                        "columns": group["columns"],
+                    }
+                    for group_idx, group in enumerate(column_groups)
+                ],
+            }
+            for item_idx, item in enumerate(section["items"])
+        ]
+        return {"type": "grid", "intro": intro, "column_groups": column_groups, "rows": rows}
 
     if section["type"] == "grid":
         columns = [c[lang] for c in section["columns"]]

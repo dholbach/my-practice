@@ -5,7 +5,7 @@
 
 ## 🔍 Recent Activity
 
-- **2026-07-13 — P-119 Questionnaire checklist + freetext block types**: added the two remaining block types needed for ADNM-20-style instruments (`checklist`: single yes/no checkbox per statement; `freetext`: blank fillable lines), both as real AcroForm fields. Field names now prefixed per section to avoid collisions across mixed-type documents; unrecognized section types now raise loudly instead of silently vanishing from the PDF. See [docs/projects/done/P-119_QUESTIONNAIRE_CHECKLIST_FREETEXT.md](docs/projects/done/P-119_QUESTIONNAIRE_CHECKLIST_FREETEXT.md).
+- **2026-07-13 — P-119 Questionnaire checklist + freetext + dual-scale grid block types**: added the remaining block types needed for ADNM-20-style instruments (`checklist`: single yes/no checkbox per statement; `freetext`: blank fillable lines; `grid` with `column_groups`: two independent response scales per statement, e.g. frequency + duration), all as real AcroForm fields. Field names now prefixed per section to avoid collisions across mixed-type documents; unrecognized section types now raise loudly instead of silently vanishing from the PDF. See [docs/projects/done/P-119_QUESTIONNAIRE_CHECKLIST_FREETEXT.md](docs/projects/done/P-119_QUESTIONNAIRE_CHECKLIST_FREETEXT.md).
 - **2026-07-13 — P-118 Clinical Questionnaire PDFs (pilot)**: GAD-7 as a branded, fillable PDF (DE/EN), sent from a new "Assessments" card on the client detail page. Question content lives outside the template (`PAYMENTS_DATA_DIR/questionnaires/` or an in-repo file for public-domain instruments only) so licensed instruments like BDI-II/ADNM-20 never need their text committed to this public repo. See [docs/projects/done/P-118_QUESTIONNAIRE_PDFS.md](docs/projects/done/P-118_QUESTIONNAIRE_PDFS.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
@@ -41,7 +41,7 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 
 | Projekt | Beschreibung | Abgeschlossen |
 | ------- | ------------ | ------------- |
-| P-119 | Questionnaire PDFs: checklist + freetext block types, per-section field-name prefixing to avoid collisions, unrecognized section types now raise instead of silently dropping | Jul 2026 |
+| P-119 | Questionnaire PDFs: checklist + freetext block types, dual-scale grids (`column_groups`), per-section field-name prefixing to avoid collisions, unrecognized section types now raise instead of silently dropping | Jul 2026 |
 | P-118 | Clinical Questionnaire PDFs (pilot): GAD-7 branded fillable PDF, content/template separation for future licensed instruments, send flow via new "Assessments" card | Jul 2026 |
 | P-117 | Dashboard Redesign: stats strip, two-pane console (Heute / Braucht Aktion), ActionQueueBuilder with grouped rows, charts → Analytics, heatmap → Analytics Clients tab | Jul 2026 |
 | P-024 | OSS Release: repo public (AGPL-3.0, `v0.1.0`), orphan push without private history, topics/description set; post-release onramp (CONTRIBUTING, CoC, issue/PR templates, lint CI, compliance prominence) | Jun 2026 |

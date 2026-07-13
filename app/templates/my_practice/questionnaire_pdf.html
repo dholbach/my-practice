@@ -113,7 +113,32 @@
     {% for section in sections %}
     {% if section.intro %}<div class="section-intro">{{ section.intro }}</div>{% endif %}
 
-    {% if section.type == "grid" %}
+    {% if section.type == "grid" and section.column_groups %}
+    <table class="q-grid">
+        <thead>
+            <tr>
+                <th rowspan="2"></th>
+                {% for group in section.column_groups %}<th colspan="{{ group.columns|length }}">{{ group.label }}</th>{% endfor %}
+            </tr>
+            <tr>
+                {% for group in section.column_groups %}{% for column in group.columns %}<th>{{ column }}</th>{% endfor %}{% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in section.rows %}
+            <tr>
+                <td class="q-item">{{ forloop.counter }}. {{ row.label }}</td>
+                {% for group in row.groups %}
+                {% for column in group.columns %}
+                <td class="q-choice"><input type="radio" name="{{ group.field_name }}" class="q-radio"></td>
+                {% endfor %}
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% elif section.type == "grid" %}
     <table class="q-grid">
         <thead>
             <tr>
