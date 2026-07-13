@@ -212,6 +212,64 @@ def intake_form_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     return response
 
 
+def _resolve_questionnaire_section(section: dict, lang: str, index: int) -> dict:
+    """Resolve one raw content section to language + pre-computed field names.
+
+    Field names are prefixed by section index (``s{index}_...``) so multiple
+    sections in one document never collide, and computed here rather than via
+    nested Django ``forloop.parentloop`` chains, keeping the template simple.
+
+    Supported ``type`` values: ``grid`` (statement rows x response columns;
+    optionally multiple independent column groups per row, e.g. a
+    "frequency" scale and a separate "duration" scale side by side),
+    ``checklist`` (statement rows with a single yes/no checkbox), ``freetext``
+    (a prompt with N blank fillable lines).
+    """
+    intro = section.get("intro", {}).get(lang, "")
+
+    if section["type"] == "grid" and "column_groups" in section:
+        column_groups = [
+            {"label": g["label"][lang], "columns": [c[lang] for c in g["columns"]]}
+            for g in section["column_groups"]
+        ]
+        rows = [
+            {
+                "label": item[lang],
+                "groups": [
+                    {
+                        "field_name": f"s{index}_q{item_idx}_g{group_idx}",
+                        "columns": group["columns"],
+                    }
+                    for group_idx, group in enumerate(column_groups)
+                ],
+            }
+            for item_idx, item in enumerate(section["items"])
+        ]
+        return {"type": "grid", "intro": intro, "column_groups": column_groups, "rows": rows}
+
+    if section["type"] == "grid":
+        columns = [c[lang] for c in section["columns"]]
+        rows = [
+            {"label": item[lang], "field_name": f"s{index}_q{item_idx}"}
+            for item_idx, item in enumerate(section["items"])
+        ]
+        return {"type": "grid", "intro": intro, "columns": columns, "rows": rows}
+
+    if section["type"] == "checklist":
+        rows = [
+            {"label": item[lang], "field_name": f"s{index}_c{item_idx}"}
+            for item_idx, item in enumerate(section["items"])
+        ]
+        return {"type": "checklist", "intro": intro, "rows": rows}
+
+    if section["type"] == "freetext":
+        n_lines = section.get("lines", 1)
+        field_names = [f"s{index}_f{line_idx}" for line_idx in range(n_lines)]
+        return {"type": "freetext", "intro": intro, "field_names": field_names}
+
+    raise ValueError(f"Unknown questionnaire section type: {section['type']!r}")
+
+
 def generate_questionnaire_pdf_bytes(code: str, practice: Practice, lang: str) -> tuple[bytes, str]:
     """Render a blank clinical questionnaire (e.g. GAD-7) as fillable PDF bytes.
 
@@ -226,13 +284,8 @@ def generate_questionnaire_pdf_bytes(code: str, practice: Practice, lang: str) -
     content = load_questionnaire(code)
     logo_data, _signature = _prepare_practice_images(practice)
     sections = [
-        {
-            "type": section["type"],
-            "columns": [c[lang] for c in section["columns"]],
-            "items": [i[lang] for i in section["items"]],
-        }
-        for section in content.sections
-        if section["type"] == "grid"
+        _resolve_questionnaire_section(section, lang, index)
+        for index, section in enumerate(content.sections)
     ]
     html_string = render_to_string(
         "my_practice/questionnaire_pdf.html",
