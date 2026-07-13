@@ -502,3 +502,64 @@ class GebuhPdfTemplateTest(TestCase):
     def test_gebueh_gesamt_total_hidden_when_no_leistungen(self):
         html = self._render()
         self.assertNotIn("GebüH gesamt", html)
+
+
+class GebuhInvoiceDetailViewTest(TestCase):
+    """Tests the tightened GebüH block on the web invoice_detail.html view:
+    one headline row per visit + a single collapsed detail line (codes +
+    Restbetrag), mirroring the invoice PDF layout — not a row per code plus
+    separate subtotal/remaining rows."""
+
+    def setUp(self):
+        self.practice = _make_practice(slug="gebueh-invoice-detail-test")
+        self.client_obj = _make_client(self.practice, code="TID")
+        self.session = Session.objects.create(
+            client=self.client_obj, session_date=date.today(), duration=60
+        )
+        self.service_type = ServiceType.objects.create(
+            name="Therapie", name_de="Therapiesitzung", name_en="Therapy session"
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.client_obj, practice=self.practice, invoice_number="TID-1", status="draft"
+        )
+        self.item = InvoiceItem.objects.create(
+            invoice=self.invoice,
+            service_type=self.service_type,
+            session=self.session,
+            rate=Decimal("90.00"),
+            quantity=Decimal("1"),
+            total=Decimal("90.00"),
+        )
+
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.test_client = TestClient()
+        self.test_client.login(username="testuser", password="testpass123")
+
+    def _get(self):
+        response = self.test_client.get(reverse("invoice_detail", kwargs={"pk": self.invoice.pk}))
+        return response.content.decode()
+
+    def test_no_leistungen_shows_headline_row_only(self):
+        html = self._get()
+        self.assertIn("Therapiesitzung", html)
+        self.assertNotIn("Code 19.2", html)
+
+    def test_recorded_codes_collapse_into_one_detail_line(self):
+        z1 = _make_ziffer(nummer="19.2", satz_max="46.00", sort_order=40)
+        z2 = _make_ziffer(nummer="4", satz_max="18.50", sort_order=10)
+        for z in (z1, z2):
+            Leistungserfassung.objects.create(
+                session=self.session,
+                ziffer=z,
+                betrag=z.satz_max,
+                vereinbarter_betrag=Decimal("90.00"),
+            )
+        html = self._get()
+        self.assertIn("Code 19.2", html)
+        self.assertIn("Code 4", html)
+        self.assertIn("Restbetrag", html)
+        # Both codes + the Restbetrag are one collapsed line, not separate rows.
+        self.assertEqual(html.count("Code "), 2)
+        self.assertNotIn("GebüH subtotal", html)
+        self.assertNotIn("GebüH-Zwischensumme", html)
