@@ -97,8 +97,8 @@
         {% endif %}
         {% for block in gebueh_blocks %}
         <tr>
-            <td>{{ block.item.session.session_date|date:"d.m.Y" }}</td>
-            <td>
+            <td{% if block.leistungen %} class="border-b-0"{% endif %}>{{ block.item.session.session_date|date:"d.m.Y" }}</td>
+            <td class="font-semibold{% if block.leistungen %} border-b-0{% endif %}">
                 {% if block.item.service_type %}
                     {% if invoice.client.language == 'en' %}
                         {{ block.item.service_type.name_en|default:block.item.service_type.name }}
@@ -107,33 +107,16 @@
                     {% endif %}
                 {% endif %}
             </td>
-            <td>{{ block.item.session.duration }} {% trans "min" %}</td>
-            <td class="text-right">{{ block.vereinbarter_betrag|currency }}</td>
-            <td class="text-right font-bold">{{ block.vereinbarter_betrag|currency }}</td>
+            <td{% if block.leistungen %} class="border-b-0"{% endif %}>{{ block.item.session.duration }} {% trans "min" %}</td>
+            <td class="text-right{% if block.leistungen %} border-b-0{% endif %}">{{ block.vereinbarter_betrag|currency }}</td>
+            <td class="text-right font-bold{% if block.leistungen %} border-b-0{% endif %}">{{ block.vereinbarter_betrag|currency }}</td>
         </tr>
-        {% for le in block.leistungen %}
+        {% if block.leistungen %}
         <tr class="text-secondary text-sm">
             <td></td>
-            <td>{% trans "Code" %} {{ le.ziffer.nummer }} — {{ le.ziffer.bezeichnung }}</td>
-            <td></td>
-            <td class="text-right">{{ le.betrag|currency }}</td>
-            <td></td>
-        </tr>
-        {% endfor %}
-        {% if block.leistungen %}
-        <tr class="text-sm border-t border-dashed border-border">
-            <td></td>
-            <td class="text-secondary">{% trans "GebüH subtotal" %}</td>
-            <td></td>
-            <td class="text-right text-secondary">{{ block.gebueh_sum|currency }}</td>
-            <td></td>
-        </tr>
-        <tr class="text-sm">
-            <td></td>
-            <td class="text-secondary">{% trans "Remaining amount" %}</td>
-            <td></td>
-            <td class="text-right text-secondary">{{ block.restbetrag|currency }}</td>
-            <td></td>
+            <td colspan="4">
+                {% for le in block.leistungen %}{% trans "Code" %} {{ le.ziffer.nummer }} · {{ le.ziffer.bezeichnung }} — {{ le.betrag|currency }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if block.restbetrag %} + {% trans "Remaining amount" %} {{ block.restbetrag|currency }}{% endif %}
+            </td>
         </tr>
         {% endif %}
         {% endfor %}
