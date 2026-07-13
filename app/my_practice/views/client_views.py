@@ -42,7 +42,9 @@ class ClientListView(PracticeScopedListView):
     model = Client
     template_name = "my_practice/client_list_cards.html"
     context_object_name = "clients"
-    paginate_by = 100  # Prevents slow renders; grouping works on per-page slice
+    # No pagination: the template has no page-navigation UI, so paginate_by
+    # here would silently truncate the needs-attention/active/inactive
+    # grouping to whatever fits on "page 1" with no way to reach the rest.
     ordering = ["client_code"]
 
     def get_queryset(self) -> QuerySet[Client]:
