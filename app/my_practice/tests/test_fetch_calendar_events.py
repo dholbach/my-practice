@@ -178,6 +178,42 @@ class UpsertEventRescheduleTest(UpsertEventTestBase):
         self.assertEqual(self.pce.status, PendingCalendarEvent.Status.IMPORTED)
 
 
+class UpsertEventReinstateTest(UpsertEventTestBase):
+    def setUp(self):
+        super().setUp()
+        self.cmd._upsert_event(self._event(), self.practice, dry_run=False)
+        self.pce = PendingCalendarEvent.objects.get(google_event_id="evt-1")
+        self.session = self.pce.session
+        PendingCalendarEvent.objects.filter(pk=self.pce.pk).update(
+            status=PendingCalendarEvent.Status.CANCELLED,
+            missing_since=timezone.now(),
+        )
+        Session.objects.filter(pk=self.session.pk).update(cancelled=True)
+
+    def test_reinstate_refreshes_date_and_clears_missing_since(self):
+        """A cancelled event that comes back live must pick up its current
+        date/time/duration immediately — not just flip status — otherwise the
+        next run sees a stale date and reports a spurious 'rescheduled'."""
+        new_date = date(2026, 3, 5)
+        result = self.cmd._upsert_event(self._event(start=new_date), self.practice, dry_run=False)
+        self.assertEqual(result, "reinstated")
+        self.pce.refresh_from_db()
+        self.session.refresh_from_db()
+        self.assertEqual(self.pce.status, PendingCalendarEvent.Status.PENDING)
+        self.assertEqual(self.pce.event_date, new_date)
+        self.assertIsNone(self.pce.missing_since)
+        self.assertFalse(self.session.cancelled)
+        self.assertEqual(self.session.session_date, new_date)
+
+    def test_reinstate_then_refetch_same_event_is_skipped_not_rescheduled(self):
+        """Regression test: fetching the same live event twice in a row after
+        a reinstate must not report a second 'rescheduled' change."""
+        new_date = date(2026, 3, 5)
+        self.cmd._upsert_event(self._event(start=new_date), self.practice, dry_run=False)
+        result = self.cmd._upsert_event(self._event(start=new_date), self.practice, dry_run=False)
+        self.assertEqual(result, "skipped")
+
+
 class ResolveEventStatusTest(TestCase):
     def test_cancelled_event(self):
         status = Command._resolve_event_status({"is_cancelled": True})
@@ -306,7 +342,38 @@ class CancelStaleFutureEventsTest(TestCase):
         self.cmd = _make_command()
         self.future_date = date.today() + timedelta(days=5)
 
-    def test_event_missing_from_live_ids_is_cancelled(self):
+    def test_first_miss_flags_but_does_not_cancel(self):
+        """A single missing fetch only starts the debounce clock — Google's API
+        can transiently omit a just-edited event, so we don't cancel yet."""
+        session = Session.objects.create(
+            client=self.test_client, session_date=self.future_date, duration=60
+        )
+        pce = PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="gone-event",
+            summary="Termin",
+            event_date=self.future_date,
+            duration_minutes=60,
+            matched_client=self.test_client,
+            status=PendingCalendarEvent.Status.PENDING,
+            session=session,
+        )
+        cancelled, flagged = self.cmd._cancel_stale_future_events(
+            self.practice,
+            timezone.now(),
+            timezone.now() + timedelta(days=10),
+            live_ids=set(),
+            dry_run=False,
+        )
+        self.assertEqual(cancelled, 0)
+        self.assertEqual(flagged, 1)
+        pce.refresh_from_db()
+        self.assertIsNotNone(pce.missing_since)
+        self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
+        session.refresh_from_db()
+        self.assertFalse(session.cancelled)
+
+    def test_second_consecutive_miss_cancels(self):
         session = Session.objects.create(
             client=self.test_client, session_date=self.future_date, duration=60
         )
@@ -319,17 +386,41 @@ class CancelStaleFutureEventsTest(TestCase):
             matched_client=self.test_client,
             status=PendingCalendarEvent.Status.PENDING,
             session=session,
+            missing_since=timezone.now() - timedelta(hours=6),
         )
-        count = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd._cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
             live_ids=set(),
             dry_run=False,
         )
-        self.assertEqual(count, 1)
+        self.assertEqual(cancelled, 1)
+        self.assertEqual(flagged, 0)
         session.refresh_from_db()
         self.assertTrue(session.cancelled)
+
+    def test_reappearing_event_clears_missing_since(self):
+        pce = PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="still-here",
+            summary="Termin",
+            event_date=self.future_date,
+            duration_minutes=60,
+            status=PendingCalendarEvent.Status.PENDING,
+            missing_since=timezone.now() - timedelta(hours=6),
+        )
+        cancelled, flagged = self.cmd._cancel_stale_future_events(
+            self.practice,
+            timezone.now(),
+            timezone.now() + timedelta(days=10),
+            live_ids={"still-here"},
+            dry_run=False,
+        )
+        self.assertEqual(cancelled, 0)
+        self.assertEqual(flagged, 0)
+        pce.refresh_from_db()
+        self.assertIsNone(pce.missing_since)
 
     def test_event_present_in_live_ids_is_not_cancelled(self):
         PendingCalendarEvent.objects.create(
@@ -340,16 +431,17 @@ class CancelStaleFutureEventsTest(TestCase):
             duration_minutes=60,
             status=PendingCalendarEvent.Status.PENDING,
         )
-        count = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd._cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
             live_ids={"still-here"},
             dry_run=False,
         )
-        self.assertEqual(count, 0)
+        self.assertEqual(cancelled, 0)
+        self.assertEqual(flagged, 0)
 
-    def test_dry_run_counts_without_writing(self):
+    def test_dry_run_first_miss_flags_without_writing(self):
         PendingCalendarEvent.objects.create(
             practice=self.practice,
             google_event_id="gone-event",
@@ -358,14 +450,38 @@ class CancelStaleFutureEventsTest(TestCase):
             duration_minutes=60,
             status=PendingCalendarEvent.Status.PENDING,
         )
-        count = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd._cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
             live_ids=set(),
             dry_run=True,
         )
-        self.assertEqual(count, 1)
+        self.assertEqual(cancelled, 0)
+        self.assertEqual(flagged, 1)
+        pce = PendingCalendarEvent.objects.get(google_event_id="gone-event")
+        self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
+        self.assertIsNone(pce.missing_since)
+
+    def test_dry_run_second_miss_counts_cancel_without_writing(self):
+        PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="gone-event",
+            summary="Termin",
+            event_date=self.future_date,
+            duration_minutes=60,
+            status=PendingCalendarEvent.Status.PENDING,
+            missing_since=timezone.now() - timedelta(hours=6),
+        )
+        cancelled, flagged = self.cmd._cancel_stale_future_events(
+            self.practice,
+            timezone.now(),
+            timezone.now() + timedelta(days=10),
+            live_ids=set(),
+            dry_run=True,
+        )
+        self.assertEqual(cancelled, 1)
+        self.assertEqual(flagged, 0)
         pce = PendingCalendarEvent.objects.get(google_event_id="gone-event")
         self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
 

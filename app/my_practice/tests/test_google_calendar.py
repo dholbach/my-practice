@@ -662,7 +662,9 @@ class FetchTagSyncTest(TestCase):
         self.assertTrue(self.client_obj.tags.filter(slug="no-next-session").exists())
 
     def test_stale_event_cancellation_collects_client(self):
-        """_cancel_stale_future_events collects the client when its session is cancelled."""
+        """_cancel_stale_future_events collects the client when its session is
+        cancelled — which only happens on the second consecutive miss (the
+        first miss just starts the debounce clock, see missing_since)."""
         session = Session.objects.create(
             client=self.client_obj,
             session_date=self.future_date,
@@ -678,13 +680,14 @@ class FetchTagSyncTest(TestCase):
             matched_client=self.client_obj,
             status=PendingCalendarEvent.Status.PENDING,
             session=session,
+            missing_since=timezone.now() - timedelta(hours=6),
         )
         cmd = self._get_command()
         affected: set = set()
 
         start_dt = timezone.now()
         end_dt = start_dt + timedelta(days=14)
-        count = cmd._cancel_stale_future_events(
+        cancelled, flagged = cmd._cancel_stale_future_events(
             self.practice,
             start_dt,
             end_dt,
@@ -693,7 +696,8 @@ class FetchTagSyncTest(TestCase):
             affected_clients=affected,
         )
 
-        self.assertEqual(count, 1)
+        self.assertEqual(cancelled, 1)
+        self.assertEqual(flagged, 0)
         self.assertIn(self.client_obj, affected)
         session.refresh_from_db()
         self.assertTrue(session.cancelled)
