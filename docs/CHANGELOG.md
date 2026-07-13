@@ -2,6 +2,18 @@
 
 Major features and milestones in chronological order.
 
+## 2026-07-13 — v0.2.11 patch release
+
+- **Feature — GebüH invoice PDF tightening** (#216): Per-visit rows redesigned as a headline (date, service, amount) with Ziffer code, description, and Restbetrag collapsed into one muted detail line underneath — six visits now read in the space four used to. New running "GebüH gesamt" total near the grand total. Recorded Ziffer amount now capped at what's actually charged (`min(satz_max, vereinbarter_betrag)`) instead of always showing the code's ceiling rate. Page-break fixes: each visit block, and the closing note/client-note/signature group, now stay together across a page break.
+- **Bug fix — prorated short-session billing** (#215): Sessions under 60 minutes (e.g. 15-min Check-In) are now billed pro-rata from the 60-min rate instead of the full hourly rate; 90-min+ sessions keep their own negotiated flat rate. Historical/already-billed invoice items were left untouched.
+- **Bug fix — client detail Protocol tab** (#214): Every action button was redirecting to the Überblick tab instead of staying on Protokoll; the GebüH button now shows a marker once a code has been recorded for that session; invoice line items no longer show a stale service-type label that disagreed with the session's actual duration.
+- **Bug fix — calendar fetch reliability** (#217): A session is now only auto-cancelled after its Google Calendar event is missing on two consecutive fetches, instead of the first — a single transient gap in Google's API response could previously cancel a still-live session. Reinstating a previously-cancelled event now also refreshes its date/time/duration, fixing a stale-data bug that showed up as a spurious "rescheduled" report on the next run.
+- **Bug fix — bank alias checkbox** (#205): Hidden when the payer name is already known, instead of always shown.
+- **Security** (#212): Django 6.0.6 → 6.0.7, fixes 3 known CVEs.
+- **Refactor — M-PAT-04 complete** (#204): All remaining static inline `style=` attributes removed from non-PDF templates (23 files); same PR fully i18n-wraps those templates.
+- **Tests** (#206–#211): Coverage raised across invoice/billing paths, client views, contract/file processing, analytics views, calendar integration, and email backend/management commands; complexity reduced in several hotspots.
+- **Chore**: Quieter log output during test runs (#213); dependency bumps — Django, uvicorn, ruff, mypy, google-auth (#198, #212, #218).
+
 ## 2026-07-08 — v0.2.10 patch release
 
 - **Feature — fillable intake form** (#200): The Aufnahmebogen PDF now contains real form fields (AcroForm via WeasyPrint `pdf_forms=True`), pre-filled from client data; blank fields and signature lines can be typed into with any PDF viewer.

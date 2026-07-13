@@ -12,6 +12,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Supervision tab — agenda items with `besprochen` toggle (separate from Protokoll log)
 - ✅ Chronological unified log view (sessions + notes + supervision notes, newest first, collapse >10)
 - ✅ Unbilled session delete (blocked if already invoiced)
+- ✅ GebüH-recorded indicator on session rows — the GebüH button shows a visual marker once a code has been entered for that session
 
 ### Client Detail Cockpit (P-094)
 - ✅ Tabbed layout: Überblick / Protokoll / Profil / Abrechnung / Dokumente — replaces sidebar layout
@@ -60,7 +61,8 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ `Client.needs_gebueh_invoice` flag — gates all GebüH features per client (PKV/Beihilfe clients only)
 - ✅ Quick-entry form (`/gebueh/`) — checkbox list per session, <30 seconds to record; soft warnings for frequency overruns and Alleinleistung conflicts (Ziffer 4)
 - ✅ Session row chips — recorded Ziffer numbers shown inline in the Sitzungen tab
-- ✅ Invoice PDF — conditional GebüH block: Diagnose line, per-Ziffer rows, Zwischensumme, Restbetrag, Sitzung-gesamt; unchanged layout for non-GebüH clients
+- ✅ Invoice PDF — conditional GebüH block: Diagnose line, per-visit headline row (date, service, amount) with Ziffer/Restbetrag collapsed into a muted detail line underneath; running "GebüH gesamt" total near the grand total; unchanged layout for non-GebüH clients
+- ✅ Recorded Ziffer amount capped at what's actually charged (`min(satz_max, vereinbarter_betrag)`) rather than always showing the code's ceiling rate
 - ✅ Probatorik callout — Profil tab hint when diagnosis not yet set; escalates to warning badge after 5+ diagnostic Ziffern recorded
 
 ### Session Tracking
@@ -71,6 +73,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Cancellation tracking (`Session.cancelled` field — source of truth for capacity analytics)
 - ✅ Group session support (`Session.group_size` — therapist-hour normalisation)
 - ✅ Session-to-invoice reconciliation
+- ✅ Short sessions (e.g. 15-min Check-In) billed pro-rata from the 60-min rate (`hourly_rate_60 * duration/60`) instead of the full hourly rate; 90-min+ sessions keep their own negotiated flat rate
 - ✅ Billable toggle (`Session.billable`) — excludes intro calls or non-billable sessions from all billing calculations; toggle button in protocol tab
 - ✅ Interactive heatmap visualization
 - ✅ Delete unbilled session from client detail (blocked if already invoiced)
@@ -196,7 +199,8 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Automatic client matching via client codes
 - ✅ Service type mapping based on duration (15/20/60/90 min)
 - ✅ Cancellation detection with "(cancel)" keyword
-- ✅ Reinstatement: un-cancelling an event in Google Calendar now restores the Session automatically on next fetch
+- ✅ Reinstatement: un-cancelling an event in Google Calendar restores the Session on next fetch, refreshing its date/time/duration in the same step
+- ✅ Two-miss cancellation debounce: a session is only auto-cancelled after its calendar event is missing on two consecutive fetches, avoiding false cancellations from transient Google API gaps
 
 #### Phase 3-4: Smart Workflow
 - ✅ Duplicate detection (checks existing InvoiceItems)

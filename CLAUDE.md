@@ -60,15 +60,15 @@ See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TO
 ### Release process
 Full checklist: [docs/operations/RELEASE.md](docs/operations/RELEASE.md). Summary:
 
-1. **Bump all three version strings** (they must match):
+1. **Open a version-bump PR** — bump all three version strings (they must match) plus the docs pass, same as any other change (branch-protected `main`):
    - `app/my_practice/version.py` — `VERSION = "vX.Y.Z"`
    - `prod.py` — `VERSION = "vX.Y.Z"`
    - `docker-compose.prod.yml` — `image: ghcr.io/dholbach/my-practice:vX.Y.Z`
-2. **Docs pass**: `docs/CHANGELOG.md`, `docs/FEATURES.md`, `PROJECTS.md`
-3. **Merge PR**, then tag and create GitHub release (required for `./prod.py update`):
+   - Docs pass: `docs/CHANGELOG.md`, `docs/FEATURES.md`, `PROJECTS.md`
+2. **Merge PR**, then tag and create a GitHub release with real highlights (not just a pointer to CHANGELOG.md — required for `./prod.py update`):
    ```bash
    git tag vX.Y.Z && git push origin vX.Y.Z
-   gh release create vX.Y.Z --title "vX.Y.Z" --notes "See docs/CHANGELOG.md"
+   gh release create vX.Y.Z --title "vX.Y.Z" --notes "<highlights pulled from docs/CHANGELOG.md>"
    ```
 
 ### Testing Strategy
