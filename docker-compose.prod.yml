@@ -47,6 +47,7 @@ services:
       - static_data:/app/staticfiles
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/media:/app/media
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/documents:/my-practice-data/documents
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/questionnaires:/my-practice-data/questionnaires
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/admin/login/"]
       interval: 5s

@@ -283,7 +283,7 @@ def get_gdpr_deletion_email_content(client: "Client", practice: "Practice") -> t
 
 
 def get_questionnaire_pdf_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
-    """Get default email content (subject, body) for sending the GAD-7 PDF.
+    """Get default email content (subject, body) for sending a questionnaire PDF.
 
     Returns:
         tuple: (subject, body)

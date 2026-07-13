@@ -168,7 +168,7 @@ MEDIA_ROOT = (
 )
 
 # Persistent data directory (bind-mounted from host; contains static documents like .docx templates)
-PAYMENTS_DATA_DIR = Path(
+MY_PRACTICE_DATA_DIR = Path(
     os.environ.get("MY_PRACTICE_DATA_DIR", str(BASE_DIR.parent / "my-practice-data"))
 )
 

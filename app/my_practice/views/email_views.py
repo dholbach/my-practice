@@ -22,6 +22,7 @@ from ..utils.email_utils import (
     get_questionnaire_email_content,
     get_questionnaire_pdf_email_content,
 )
+from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
 from .api_views import (
     _prepare_practice_images,
     _render_invoice_pdf_bytes,
@@ -131,7 +132,7 @@ class BaseClientEmailView(View):
     def _redirect_to_detail(self, pk: int) -> HttpResponse:
         return redirect(reverse("client_detail", kwargs={"pk": pk}))
 
-    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+    def get(self, request: HttpRequest, pk: int, **kwargs) -> HttpResponse:
         client, practice = self._get_client_and_practice(request, pk)
 
         if not practice:
@@ -155,7 +156,7 @@ class BaseClientEmailView(View):
         ctx = {"client": client, "form": form, **self.get_extra_context(client, practice)}
         return render(request, self.template_name, ctx)
 
-    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+    def post(self, request: HttpRequest, pk: int, **kwargs) -> HttpResponse:
         client, practice = self._get_client_and_practice(request, pk)
 
         if not practice:
@@ -556,7 +557,7 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
     def _get_docx(self, lang: str) -> tuple[str, bytes] | None:
         """Return (filename, bytes) for the docx, or None if not found."""
         docx_name = "Anamnesebogen.docx" if lang == "de" else "Anamnesebogen (eng).docx"
-        docx_path = settings.PAYMENTS_DATA_DIR / "documents" / docx_name
+        docx_path = settings.MY_PRACTICE_DATA_DIR / "documents" / docx_name
         if not docx_path.exists():
             return None
         return docx_name, docx_path.read_bytes()
@@ -571,9 +572,9 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
                 request,
                 _(
                     "File not found: %(path)s. "
-                    "Please place the .docx file under PAYMENTS_DATA_DIR/documents/."
+                    "Please place the .docx file under MY_PRACTICE_DATA_DIR/documents/."
                 )
-                % {"path": settings.PAYMENTS_DATA_DIR / "documents" / docx_name},
+                % {"path": settings.MY_PRACTICE_DATA_DIR / "documents" / docx_name},
             )
             return self._redirect_to_detail(pk)
         return None
@@ -592,7 +593,7 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
             docx_name = "Anamnesebogen.docx" if lang == "de" else "Anamnesebogen (eng).docx"
             raise FileNotFoundError(
                 _("File not found: %(path)s.")
-                % {"path": settings.PAYMENTS_DATA_DIR / "documents" / docx_name}
+                % {"path": settings.MY_PRACTICE_DATA_DIR / "documents" / docx_name}
             )
         docx_name, docx_bytes = result
         return (
@@ -674,20 +675,36 @@ class SendIntakeFormEmailView(BaseClientEmailView):
 
 
 class SendQuestionnairePdfEmailView(BaseClientEmailView):
-    """Email the blank, fillable GAD-7 PDF to the client.
+    """Email the blank, fillable PDF for a questionnaire instrument to the client.
 
-    Pilot for P-118: hardcoded to the GAD-7 instrument for now. Extending to
-    other instruments means generalising this to accept a ``code`` URL
-    param — deferred until there's a second instrument to prove the pattern
-    against.
+    The instrument is selected by the ``code`` URL kwarg, so this one view
+    serves every instrument. The filename label comes from the content
+    file's own ``filename_label`` (see ``QuestionnaireContent``) rather than
+    a hardcoded map — instrument names are never hardcoded in committed
+    code, since licensed instruments only exist as instance-local files.
     """
 
     template_name = "my_practice/send_questionnaire_pdf_email.html"
-    questionnaire_code = "gad7"
+
+    @property
+    def questionnaire_code(self) -> str:
+        return self.kwargs["code"]
+
+    def extra_get_checks(
+        self, request: HttpRequest, client: Client, practice: Practice, pk: int
+    ) -> HttpResponse | None:
+        try:
+            load_questionnaire(self.questionnaire_code)
+        except QuestionnaireNotFoundError as e:
+            messages.error(request, str(e))
+            return self._redirect_to_detail(pk)
+        return None
 
     def _get_filename(self, client: Client) -> str:
         lang = client.language or "de"
-        return f"GAD-7_{lang}.pdf"
+        content = load_questionnaire(self.questionnaire_code)
+        label = content.filename_label or self.questionnaire_code.upper()
+        return f"{label}_{lang}.pdf"
 
     def get_default_content(self, client: Client, practice: Practice) -> tuple[str, str]:
         return get_questionnaire_pdf_email_content(client, practice)

@@ -15,6 +15,7 @@ from ..models.clinical import (
 from ..models.session import Session
 from .chart_helpers import aggregate_invoice_items_by_month, prepare_monthly_chart_data
 from .calculations import count_sessions
+from .questionnaire_content import list_available_questionnaires
 from .revenue_helpers import RevenueCalculator
 from .tag_helpers import sort_tags_by_category
 
@@ -271,4 +272,5 @@ class ClientDetailContextBuilder:
             "documents": self.client.documents.order_by("-document_date", "-created_at"),
             "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,
             "gebueh_diagnostic_count": gebueh_diagnostic_count,
+            "available_questionnaires": list_available_questionnaires(),
         }

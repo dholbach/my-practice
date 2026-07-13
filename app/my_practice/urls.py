@@ -98,7 +98,7 @@ urlpatterns = [
     ),
     path("questionnaires/<str:code>/pdf/", views.questionnaire_pdf, name="questionnaire_pdf"),
     path(
-        "clients/<int:pk>/send-questionnaire-pdf/gad7/",
+        "clients/<int:pk>/send-questionnaire-pdf/<str:code>/",
         views.SendQuestionnairePdfEmailView.as_view(),
         name="send_questionnaire_pdf_email",
     ),

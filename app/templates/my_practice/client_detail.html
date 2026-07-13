@@ -586,15 +586,19 @@
         </details>
     </div>
 
-    <!-- Clinical questionnaires (P-118) -->
+    <!-- Clinical questionnaires (P-118/P-119) -->
+    {% if available_questionnaires %}
     <div class="section-card">
         <div class="sidebar-section-label">🧠 {% trans "Assessments" %}</div>
+        {% for q in available_questionnaires %}
         <div class="step-actions">
-            {% if client.email %}<a href="{% url 'send_questionnaire_pdf_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send GAD-7" %}</a>
+            {% if client.email %}<a href="{% url 'send_questionnaire_pdf_email' client.pk q.code %}" class="btn btn-secondary btn-sm">📧 {% blocktrans with title=q.title|dict_get:client.language %}Send {{ title }}{% endblocktrans %}</a>
             {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
-            <a href="{% url 'questionnaire_pdf' 'gad7' %}?lang={{ client.language }}" target="_blank" class="btn btn-secondary btn-sm">📄 PDF</a>
+            <a href="{% url 'questionnaire_pdf' q.code %}?lang={{ client.language }}" target="_blank" class="btn btn-secondary btn-sm">📄 PDF</a>
         </div>
+        {% endfor %}
     </div>
+    {% endif %}
 
     {% if client.source_inquiry %}
     <div class="section-card">
