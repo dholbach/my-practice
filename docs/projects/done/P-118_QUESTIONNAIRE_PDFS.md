@@ -55,4 +55,5 @@ writing new code.
   *blank* form doesn't touch client-specific psychological data, so no DPIA
   change was needed for this pilot.
 - **`checklist` and `freetext` block types** — named in the content schema
-  but not implemented; only `grid` was needed for GAD-7.
+  but not implemented; only `grid` was needed for GAD-7. Implemented in
+  [P-119](P-119_QUESTIONNAIRE_CHECKLIST_FREETEXT.md).

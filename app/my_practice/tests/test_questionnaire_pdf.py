@@ -15,7 +15,10 @@ from my_practice.utils.questionnaire_content import (
     QuestionnaireNotFoundError,
     load_questionnaire,
 )
-from my_practice.views.api_views import generate_questionnaire_pdf_bytes
+from my_practice.views.api_views import (
+    _resolve_questionnaire_section,
+    generate_questionnaire_pdf_bytes,
+)
 
 User = get_user_model()
 
@@ -92,11 +95,11 @@ class QuestionnairePdfGenerationTest(TestCase):
         self.assertEqual(filename, "GAD7_de.pdf")
 
     def test_pdf_has_one_fillable_radio_group_per_item(self):
-        """One radio-button group per statement (q1..q7), each with 4 choices."""
+        """One radio-button group per statement (s0_q0..s0_q6), each with 4 choices."""
         pdf_bytes, _filename = generate_questionnaire_pdf_bytes("gad7", self.practice, "de")
         fields = self._get_form_fields(pdf_bytes)
         group_names = {name.split(".")[0] for name in fields}
-        self.assertEqual(group_names, {f"q{i}" for i in range(1, 8)})
+        self.assertEqual(group_names, {f"s0_q{i}" for i in range(7)})
 
     def test_view_download_german_default(self):
         response = self.client_http.get(reverse("questionnaire_pdf", kwargs={"code": "gad7"}))
@@ -186,3 +189,127 @@ class SendQuestionnairePdfEmailViewTest(TestCase):
         self.assertEqual(fname, "GAD-7_de.pdf")
         self.assertEqual(fmime, "application/pdf")
         self.assertTrue(fbytes.startswith(b"%PDF"))
+
+
+class ResolveQuestionnaireSectionTest(TestCase):
+    """Tests for _resolve_questionnaire_section (P-119: checklist + freetext)."""
+
+    def test_grid_resolves_columns_and_field_names(self):
+        section = {
+            "type": "grid",
+            "columns": [{"de": "Nie", "en": "Never"}, {"de": "Oft", "en": "Often"}],
+            "items": [{"de": "Erstens", "en": "First"}, {"de": "Zweitens", "en": "Second"}],
+        }
+        resolved = _resolve_questionnaire_section(section, "de", index=2)
+        self.assertEqual(resolved["type"], "grid")
+        self.assertEqual(resolved["columns"], ["Nie", "Oft"])
+        self.assertEqual(
+            resolved["rows"],
+            [
+                {"label": "Erstens", "field_name": "s2_q0"},
+                {"label": "Zweitens", "field_name": "s2_q1"},
+            ],
+        )
+
+    def test_checklist_resolves_items_and_field_names(self):
+        section = {
+            "type": "checklist",
+            "items": [{"de": "Scheidung", "en": "Divorce"}, {"de": "Umzug", "en": "Moving"}],
+        }
+        resolved = _resolve_questionnaire_section(section, "en", index=0)
+        self.assertEqual(resolved["type"], "checklist")
+        self.assertEqual(
+            resolved["rows"],
+            [
+                {"label": "Divorce", "field_name": "s0_c0"},
+                {"label": "Moving", "field_name": "s0_c1"},
+            ],
+        )
+
+    def test_freetext_resolves_field_names_for_line_count(self):
+        section = {
+            "type": "freetext",
+            "intro": {"de": "Bitte angeben:", "en": "Please indicate:"},
+            "lines": 2,
+        }
+        resolved = _resolve_questionnaire_section(section, "en", index=3)
+        self.assertEqual(resolved["type"], "freetext")
+        self.assertEqual(resolved["intro"], "Please indicate:")
+        self.assertEqual(resolved["field_names"], ["s3_f0", "s3_f1"])
+
+    def test_freetext_defaults_to_one_line(self):
+        resolved = _resolve_questionnaire_section({"type": "freetext"}, "de", index=0)
+        self.assertEqual(resolved["field_names"], ["s0_f0"])
+
+    def test_unknown_type_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            _resolve_questionnaire_section({"type": "essay"}, "de", index=0)
+
+
+class MixedSectionQuestionnairePdfTest(TestCase):
+    """End-to-end test: a document mixing grid + checklist + freetext sections."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="mixed-questionnaire-test",
+            title="Test Practitioner",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="mixeduser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+
+    def _get_form_fields(self, pdf_bytes: bytes) -> dict:
+        from pypdf import PdfReader
+
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        return reader.get_fields() or {}
+
+    def test_mixed_content_renders_all_field_types(self):
+        import json
+        import tempfile
+        from pathlib import Path
+
+        content = {
+            "code": "mixed-test",
+            "title": {"de": "Testbogen", "en": "Test Form"},
+            "intro": {"de": "", "en": ""},
+            "sections": [
+                {
+                    "type": "checklist",
+                    "items": [{"de": "Ereignis A", "en": "Event A"}],
+                },
+                {
+                    "type": "freetext",
+                    "lines": 2,
+                },
+                {
+                    "type": "grid",
+                    "columns": [{"de": "Nie", "en": "Never"}, {"de": "Oft", "en": "Often"}],
+                    "items": [{"de": "Aussage 1", "en": "Statement 1"}],
+                },
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            (data_dir / "questionnaires").mkdir()
+            (data_dir / "questionnaires" / "mixed-test.json").write_text(
+                json.dumps(content), encoding="utf-8"
+            )
+            with override_settings(PAYMENTS_DATA_DIR=data_dir):
+                pdf_bytes, filename = generate_questionnaire_pdf_bytes(
+                    "mixed-test", self.practice, "de"
+                )
+
+        self.assertTrue(pdf_bytes.startswith(b"%PDF"))
+        self.assertEqual(filename, "MIXED-TEST_de.pdf")
+
+        fields = self._get_form_fields(pdf_bytes)
+        field_names = set(fields)
+        self.assertIn("s0_c0", field_names)  # checklist checkbox
+        self.assertIn("s1_f0", field_names)  # freetext line 1
+        self.assertIn("s1_f1", field_names)  # freetext line 2
+        self.assertIn(
+            "s2_q0.s2_q0", field_names
+        )  # grid radio group (nested naming, see GAD-7 test)

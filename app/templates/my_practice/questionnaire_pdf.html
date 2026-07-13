@@ -24,11 +24,16 @@
             margin: 0.5cm 0 0.7cm;
             font-size: 9.5pt;
         }
+        .section-intro {
+            margin: 0.6cm 0 0.3cm;
+            font-size: 9.5pt;
+        }
 
         .q-grid {
             width: 100%;
             border-collapse: collapse;
             font-size: 9pt;
+            margin-bottom: 0.5cm;
         }
         .q-grid th, .q-grid td {
             border: 1px solid #ccc;
@@ -48,11 +53,29 @@
             text-align: center;
             width: 2.2cm;
         }
-        /* Fillable PDF form fields (rendered as AcroForm radio buttons via pdf_forms=True) */
-        .q-radio {
+        /* Fillable PDF form fields (rendered as AcroForm fields via pdf_forms=True) */
+        .q-radio, .q-check {
             appearance: auto;
             width: 0.4cm;
             height: 0.4cm;
+        }
+
+        .q-checklist td.q-check-cell {
+            text-align: center;
+            width: 1.5cm;
+        }
+
+        .q-freetext-line {
+            appearance: auto;
+            display: block;
+            width: 100%;
+            height: 0.6cm;
+            border: none;
+            border-bottom: 1px solid #000;
+            background: transparent;
+            font-size: 11pt;
+            font-family: inherit;
+            margin-bottom: 0.3cm;
         }
 
         .note {
@@ -88,6 +111,8 @@
     {% if intro %}<div class="intro">{{ intro }}</div>{% endif %}
 
     {% for section in sections %}
+    {% if section.intro %}<div class="section-intro">{{ section.intro }}</div>{% endif %}
+
     {% if section.type == "grid" %}
     <table class="q-grid">
         <thead>
@@ -97,16 +122,34 @@
             </tr>
         </thead>
         <tbody>
-            {% for item in section.items %}
+            {% for row in section.rows %}
             <tr>
-                <td class="q-item">{{ forloop.counter }}. {{ item }}</td>
+                <td class="q-item">{{ forloop.counter }}. {{ row.label }}</td>
                 {% for column in section.columns %}
-                <td class="q-choice"><input type="radio" name="q{{ forloop.parentloop.counter }}" class="q-radio"></td>
+                <td class="q-choice"><input type="radio" name="{{ row.field_name }}" class="q-radio"></td>
                 {% endfor %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    {% elif section.type == "checklist" %}
+    <table class="q-grid q-checklist">
+        <tbody>
+            {% for row in section.rows %}
+            <tr>
+                <td class="q-check-cell"><input type="checkbox" name="{{ row.field_name }}" class="q-check"></td>
+                <td class="q-item">{{ forloop.counter }}. {{ row.label }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% elif section.type == "freetext" %}
+    {% for field_name in section.field_names %}
+    <input type="text" name="{{ field_name }}" class="q-freetext-line">
+    {% endfor %}
+
     {% endif %}
     {% endfor %}
 
