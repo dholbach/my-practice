@@ -4,6 +4,7 @@ Django settings for payments project.
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 from django.utils.csp import CSP
@@ -13,6 +14,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Used both for logging noise suppression (below) and to keep test runs from
+# writing real uploaded files into the bind-mounted host media directory
+# (see MEDIA_ROOT) — TestCase rolls back DB rows on teardown but has no way
+# to undo a FileField's actual filesystem write, so without this every test
+# run that uploads an image leaves an orphaned file behind in production
+# storage.
+RUNNING_TESTS = "test" in sys.argv
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-dev-key-change-in-production")
 
@@ -152,7 +161,11 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 # Media files
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = (
+    Path(tempfile.mkdtemp(prefix="my-practice-test-media-"))
+    if RUNNING_TESTS
+    else BASE_DIR / "media"
+)
 
 # Persistent data directory (bind-mounted from host; contains static documents like .docx templates)
 PAYMENTS_DATA_DIR = Path(
@@ -179,7 +192,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # handler's own level as it's emitted, not by root's logger-level attribute.
 # A logger-only threshold has no effect on records the logger itself didn't
 # originate.
-RUNNING_TESTS = "test" in sys.argv
 _CONSOLE_LEVEL = "CRITICAL" if RUNNING_TESTS else "WARNING"
 LOGGING = {
     "version": 1,

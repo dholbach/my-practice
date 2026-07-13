@@ -5,6 +5,7 @@ Tests for invoice signals (automatic total and date calculation).
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.core.files.storage import default_storage
 from django.test import TestCase
 from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
 
@@ -317,3 +318,62 @@ class InvoiceSignalTests(TestCase):
         # Total should be updated
         invoice.refresh_from_db()
         self.assertEqual(invoice.total, Decimal("200.00"))
+
+
+class PracticeImageCleanupSignalTests(TestCase):
+    """Tests for the logo/signature filesystem cleanup signals."""
+
+    @staticmethod
+    def _png(name: str):
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        img = Image.new("RGB", (10, 10), (255, 0, 0))
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Signal Test Practice",
+            slug="signal-image-cleanup",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+
+    def test_replacing_logo_deletes_old_file(self):
+        self.practice.logo = self._png("first.png")
+        self.practice.save()
+        old_name = self.practice.logo.name
+        self.assertTrue(default_storage.exists(old_name))
+
+        self.practice.logo = self._png("second.png")
+        self.practice.save()
+
+        self.assertFalse(default_storage.exists(old_name))
+        self.assertTrue(default_storage.exists(self.practice.logo.name))
+
+    def test_saving_without_changing_image_does_not_delete_it(self):
+        self.practice.logo = self._png("keep.png")
+        self.practice.save()
+        logo_name = self.practice.logo.name
+
+        self.practice.title = "Updated Title"
+        self.practice.save()
+
+        self.assertTrue(default_storage.exists(logo_name))
+
+    def test_deleting_practice_deletes_logo_and_signature(self):
+        self.practice.logo = self._png("logo.png")
+        self.practice.signature = self._png("sig.png")
+        self.practice.save()
+        logo_name = self.practice.logo.name
+        signature_name = self.practice.signature.name
+
+        self.practice.delete()
+
+        self.assertFalse(default_storage.exists(logo_name))
+        self.assertFalse(default_storage.exists(signature_name))

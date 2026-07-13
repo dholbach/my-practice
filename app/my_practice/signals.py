@@ -3,12 +3,16 @@ Signals for automatic invoice total calculation
 ================================================
 Automatically recalculates Invoice.total when InvoiceItems are saved or deleted.
 Also syncs Session.cancelled and Session.group_size from InvoiceItems (P-035).
+
+Also cleans up Practice.logo/signature files on the filesystem — ImageField
+doesn't do this on its own, so without these signals every re-upload in
+Practice settings leaves the previous file behind forever.
 """
 
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
-from .models import Invoice, InvoiceItem
+from .models import Invoice, InvoiceItem, Practice
 
 
 @receiver(post_save, sender=InvoiceItem)
@@ -96,3 +100,36 @@ def _resync_session(session_id: int) -> None:
         cancelled=is_cancelled,
         group_size=max_group_size,
     )
+
+
+@receiver(pre_save, sender=Practice)
+def delete_old_practice_image_on_replace(
+    sender,
+    instance,
+    **kwargs,  # noqa: ARG001, vulture
+):  # pylint: disable=unused-argument
+    """Delete the old logo/signature file when it's replaced by a new upload."""
+    if not instance.pk:
+        return
+    try:
+        old = Practice.objects.get(pk=instance.pk)
+    except Practice.DoesNotExist:
+        return
+    for field_name in ("logo", "signature"):
+        old_file = getattr(old, field_name)
+        new_file = getattr(instance, field_name)
+        if old_file and old_file != new_file:
+            old_file.delete(save=False)
+
+
+@receiver(post_delete, sender=Practice)
+def delete_practice_images_on_delete(
+    sender,
+    instance,
+    **kwargs,  # noqa: ARG001, vulture
+):  # pylint: disable=unused-argument
+    """Delete logo/signature files when a Practice itself is deleted."""
+    for field_name in ("logo", "signature"):
+        file_field = getattr(instance, field_name)
+        if file_field:
+            file_field.delete(save=False)
