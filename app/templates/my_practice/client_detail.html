@@ -45,6 +45,7 @@
     <button class="page-tab-btn page-tab-active" data-tab="ueberlick" onclick="pageTab('ueberlick', this)">{% trans "Overview" %}</button>
     <button class="page-tab-btn" data-tab="protokoll" onclick="pageTab('protokoll', this)">📝 {% trans "Protocol" %}
         {% if log_entries %}<span class="cn-badge">{{ log_entries|length }}</span>{% endif %}
+        {% if open_supervision_count %}<span class="cn-badge cn-badge-warn" title="{% trans 'Open supervision topics' %}">🔍 {{ open_supervision_count }}</span>{% endif %}
     </button>
     <button class="page-tab-btn" data-tab="profil" onclick="pageTab('profil', this)">📋 {% trans "Profile" %}</button>
     <button class="page-tab-btn" data-tab="abrechnung" onclick="pageTab('abrechnung', this)">💶 {% trans "Billing" %}
@@ -195,6 +196,40 @@
             </div>
             <textarea name="content" class="form-control cn-textarea" placeholder="{% trans 'Supervision feedback and recommendations (Markdown)…' %}" rows="4" required></textarea>
         </form>
+    </div>
+
+    <!-- Supervision section, above the chronological timeline so open topics aren't buried -->
+    <div class="cn-supervision-section">
+        <h3 class="cn-supervision-heading">🔍 {% trans "Supervision" %}</h3>
+        <form method="post" action="{% url 'supervision_item_create' client.pk %}" class="cn-field cn-supervision-new-form">
+            {% csrf_token %}
+            <textarea name="content" class="form-control cn-textarea-small"
+                      placeholder="{% trans 'Supervision topic or question…' %}" rows="3"></textarea>
+            <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
+        </form>
+        {% if supervision_items %}
+        <div class="cn-supervision-list">
+        {% for item in supervision_items %}
+        {% trans "Delete supervision topic?" as confirm_del_supervision %}
+        {% if item.status %}{% trans "↩ Reopen" as lbl_toggle %}{% else %}{% trans "✓ Discussed" as lbl_toggle %}{% endif %}
+        <div class="cn-supervision-item cn-status-{{ item.status }}">
+            <div class="cn-supervision-content">{{ item.content }}</div>
+            <div class="cn-supervision-meta">
+                <span class="cn-status-badge cn-status-{{ item.status }}">{{ item.get_status_display }}</span>
+                <span class="cn-date-hint">{{ item.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <div class="cn-supervision-actions">
+            {% url 'supervision_item_toggle' client.pk item.pk as toggle_url %}
+            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=lbl_toggle button_class='btn btn-secondary btn-sm' %}
+            {% url 'supervision_item_delete' client.pk item.pk as delete_url %}
+            {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm=confirm_del_supervision %}
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+        {% else %}
+        <p class="cn-empty-state">{% trans "No supervision topics for this client yet." %}</p>
+        {% endif %}
     </div>
 
     {% if log_entries %}
@@ -370,40 +405,6 @@
     {% else %}
     <p class="cn-empty-state">{% trans "No entries yet. Session logs are created when adding new entries." %}</p>
     {% endif %}
-
-    <!-- Supervision section at bottom of Protokoll tab -->
-    <div class="cn-supervision-section">
-        <h3 class="cn-supervision-heading">🔍 {% trans "Supervision" %}</h3>
-        <form method="post" action="{% url 'supervision_item_create' client.pk %}" class="cn-field cn-supervision-new-form">
-            {% csrf_token %}
-            <textarea name="content" class="form-control cn-textarea-small"
-                      placeholder="{% trans 'Supervision topic or question…' %}" rows="3"></textarea>
-            <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
-        </form>
-        {% if supervision_items %}
-        <div class="cn-supervision-list">
-        {% for item in supervision_items %}
-        {% trans "Delete supervision topic?" as confirm_del_supervision %}
-        {% if item.status %}{% trans "↩ Reopen" as lbl_toggle %}{% else %}{% trans "✓ Discussed" as lbl_toggle %}{% endif %}
-        <div class="cn-supervision-item cn-status-{{ item.status }}">
-            <div class="cn-supervision-content">{{ item.content }}</div>
-            <div class="cn-supervision-meta">
-                <span class="cn-status-badge cn-status-{{ item.status }}">{{ item.get_status_display }}</span>
-                <span class="cn-date-hint">{{ item.created_at|date:"d.m.Y" }}</span>
-            </div>
-            <div class="cn-supervision-actions">
-            {% url 'supervision_item_toggle' client.pk item.pk as toggle_url %}
-            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=lbl_toggle button_class='btn btn-secondary btn-sm' %}
-            {% url 'supervision_item_delete' client.pk item.pk as delete_url %}
-            {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm=confirm_del_supervision %}
-            </div>
-        </div>
-        {% endfor %}
-        </div>
-        {% else %}
-        <p class="cn-empty-state">{% trans "No supervision topics for this client yet." %}</p>
-        {% endif %}
-    </div>
 
 </div><!-- /ptab-protokoll -->
 

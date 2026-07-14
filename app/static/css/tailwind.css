@@ -1134,8 +1134,8 @@
   .cockpit-tag.gray   { background: #718096; }
   .cockpit-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
 
-  /* Supervision section at bottom of Protokoll tab */
-  .cn-supervision-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); }
+  /* Supervision section, above the chronological timeline in the Protokoll tab */
+  .cn-supervision-section { margin: 1.5rem 0; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); }
   .cn-supervision-heading { margin: 0 0 1rem; color: var(--color-text-secondary); font-size: 1rem; }
 
   /* Onboarding widget inline (Profil tab) */
