@@ -5,7 +5,15 @@ from itertools import chain
 
 from dateutil.relativedelta import relativedelta
 
-from ..models import ClientDocument, ClientNote, ClientProfile, ClientTag, Invoice, InvoiceItem
+from ..models import (
+    ClientDocument,
+    ClientNote,
+    ClientProfile,
+    ClientTag,
+    Invoice,
+    InvoiceItem,
+    SupervisionItem,
+)
 from ..models.clinical import (
     CASE_NOTES_TEMPLATE,
     INTAKE_NOTES_TEMPLATE,
@@ -264,6 +272,9 @@ class ClientDetailContextBuilder:
             "recent_sessions_needing_log": recent_sessions_needing_log,
             "no_log_needed_session_ids": no_log_needed_session_ids,
             "supervision_items": self.client.supervision_items.order_by("-created_at"),
+            "open_supervision_count": self.client.supervision_items.filter(
+                status=SupervisionItem.Status.OFFEN
+            ).count(),
             "session_type_choices": SessionLog.SessionType.choices,
             "mood_tag_choices": MoodTag.choices,
             "intake_notes_template": INTAKE_NOTES_TEMPLATE,
