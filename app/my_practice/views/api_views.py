@@ -224,8 +224,13 @@ def _resolve_questionnaire_section(section: dict, lang: str, index: int) -> dict
     "frequency" scale and a separate "duration" scale side by side),
     ``checklist`` (statement rows with a single yes/no checkbox), ``freetext``
     (a prompt with N blank fillable lines).
+
+    ``intro`` is the section's public instruction text; the optional
+    ``note`` is a second, distinctly-styled paragraph for interviewer-only
+    guidance (e.g. scoring instructions not meant for the respondent).
     """
     intro = section.get("intro", {}).get(lang, "")
+    note = section.get("note", {}).get(lang, "")
 
     if section["type"] == "grid" and "column_groups" in section:
         column_groups = [
@@ -245,7 +250,13 @@ def _resolve_questionnaire_section(section: dict, lang: str, index: int) -> dict
             }
             for item_idx, item in enumerate(section["items"])
         ]
-        return {"type": "grid", "intro": intro, "column_groups": column_groups, "rows": rows}
+        return {
+            "type": "grid",
+            "intro": intro,
+            "note": note,
+            "column_groups": column_groups,
+            "rows": rows,
+        }
 
     if section["type"] == "grid":
         columns = [c[lang] for c in section["columns"]]
@@ -253,19 +264,19 @@ def _resolve_questionnaire_section(section: dict, lang: str, index: int) -> dict
             {"label": item[lang], "field_name": f"s{index}_q{item_idx}"}
             for item_idx, item in enumerate(section["items"])
         ]
-        return {"type": "grid", "intro": intro, "columns": columns, "rows": rows}
+        return {"type": "grid", "intro": intro, "note": note, "columns": columns, "rows": rows}
 
     if section["type"] == "checklist":
         rows = [
             {"label": item[lang], "field_name": f"s{index}_c{item_idx}"}
             for item_idx, item in enumerate(section["items"])
         ]
-        return {"type": "checklist", "intro": intro, "rows": rows}
+        return {"type": "checklist", "intro": intro, "note": note, "rows": rows}
 
     if section["type"] == "freetext":
         n_lines = section.get("lines", 1)
         field_names = [f"s{index}_f{line_idx}" for line_idx in range(n_lines)]
-        return {"type": "freetext", "intro": intro, "field_names": field_names}
+        return {"type": "freetext", "intro": intro, "note": note, "field_names": field_names}
 
     raise ValueError(f"Unknown questionnaire section type: {section['type']!r}")
 

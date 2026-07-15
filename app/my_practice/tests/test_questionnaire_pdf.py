@@ -41,15 +41,28 @@ class LoadQuestionnaireTest(TestCase):
         content = load_questionnaire("gad7")
         self.assertEqual(content.filename_label, "GAD-7")
 
+    def test_loads_shipped_shutd_fixture(self):
+        content = load_questionnaire("shutd")
+        self.assertEqual(content.code, "shutd")
+        self.assertEqual(content.filename_label, "Shut-D")
+        self.assertEqual(len(content.sections), 1)
+        self.assertEqual(content.sections[0]["type"], "grid")
+        self.assertEqual(len(content.sections[0]["items"]), 13)
+        self.assertEqual(len(content.sections[0]["columns"]), 4)
+        # Interviewer-only note is present and bilingual (distinct from intro).
+        self.assertTrue(content.sections[0]["note"]["de"])
+        self.assertTrue(content.sections[0]["note"]["en"])
+
     def test_list_available_questionnaires_includes_shipped_fixtures(self):
         """Drives the client detail "Assessments" picker.
 
-        Only asserts the shipped gad7 fixture is discoverable — doesn't
+        Only asserts the shipped fixtures are discoverable — doesn't
         assume anything about instance-local content, since that's
         per-deployment and never present in this repo/CI.
         """
         codes = {q.code for q in list_available_questionnaires()}
         self.assertIn("gad7", codes)
+        self.assertIn("shutd", codes)
 
     def test_missing_code_raises_actionable_error(self):
         with self.assertRaises(QuestionnaireNotFoundError) as ctx:
@@ -134,6 +147,30 @@ class QuestionnairePdfGenerationTest(TestCase):
             reverse("questionnaire_pdf", kwargs={"code": "does-not-exist"})
         )
         self.assertRedirects(response, reverse("dashboard"))
+
+    def test_shutd_generate_bytes_returns_valid_pdf(self):
+        pdf_bytes, filename = generate_questionnaire_pdf_bytes("shutd", self.practice, "de")
+        self.assertTrue(pdf_bytes.startswith(b"%PDF"))
+        self.assertEqual(filename, "SHUTD_de.pdf")
+
+    def test_shutd_pdf_has_one_fillable_radio_group_per_item(self):
+        """One radio-button group per statement (s0_q0..s0_q12), 13 items."""
+        pdf_bytes, _filename = generate_questionnaire_pdf_bytes("shutd", self.practice, "de")
+        fields = self._get_form_fields(pdf_bytes)
+        group_names = {name.split(".")[0] for name in fields}
+        self.assertEqual(group_names, {f"s0_q{i}" for i in range(13)})
+
+    def test_shutd_pdf_renders_interviewer_only_note_text(self):
+        """The section-level `note` (P-121) actually renders into the PDF body."""
+        from pypdf import PdfReader
+
+        pdf_bytes, _filename = generate_questionnaire_pdf_bytes("shutd", self.practice, "de")
+        text = PdfReader(io.BytesIO(pdf_bytes)).pages[0].extract_text()
+        self.assertIn("Nur für den Interviewer/in", text)
+
+        pdf_bytes_en, _filename = generate_questionnaire_pdf_bytes("shutd", self.practice, "en")
+        text_en = PdfReader(io.BytesIO(pdf_bytes_en)).pages[0].extract_text()
+        self.assertIn("For the interviewer only", text_en)
 
 
 class SendQuestionnairePdfEmailViewTest(TestCase):
@@ -301,6 +338,27 @@ class ResolveQuestionnaireSectionTest(TestCase):
                 {"field_name": "s1_q0_g1", "columns": ["<1 month"]},
             ],
         )
+
+    def test_grid_resolves_optional_note_distinct_from_intro(self):
+        section = {
+            "type": "grid",
+            "intro": {"de": "Öffentliche Anleitung", "en": "Public instruction"},
+            "note": {"de": "Nur für Interviewer", "en": "Interviewer only"},
+            "columns": [{"de": "Nie", "en": "Never"}],
+            "items": [{"de": "Erstens", "en": "First"}],
+        }
+        resolved = _resolve_questionnaire_section(section, "de", index=0)
+        self.assertEqual(resolved["intro"], "Öffentliche Anleitung")
+        self.assertEqual(resolved["note"], "Nur für Interviewer")
+
+    def test_grid_note_defaults_to_empty_string_when_absent(self):
+        section = {
+            "type": "grid",
+            "columns": [{"de": "Nie", "en": "Never"}],
+            "items": [{"de": "Erstens", "en": "First"}],
+        }
+        resolved = _resolve_questionnaire_section(section, "de", index=0)
+        self.assertEqual(resolved["note"], "")
 
     def test_checklist_resolves_items_and_field_names(self):
         section = {

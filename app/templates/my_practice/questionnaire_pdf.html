@@ -116,6 +116,7 @@
 
     {% for section in sections %}
     {% if section.intro %}<div class="section-intro">{{ section.intro }}</div>{% endif %}
+    {% if section.note %}<div class="note">{{ section.note }}</div>{% endif %}
 
     {% if section.type == "grid" and section.column_groups %}
     <table class="q-grid">
