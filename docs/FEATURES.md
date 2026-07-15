@@ -65,7 +65,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Quick-entry form (`/gebueh/`) — checkbox list per session, <30 seconds to record; soft warnings for frequency overruns and Alleinleistung conflicts (Ziffer 4)
 - ✅ Session row chips — recorded Ziffer numbers shown inline in the Sitzungen tab
 - ✅ Invoice PDF — conditional GebüH block: Diagnose line, per-visit headline row (date, service, amount) with Ziffer/Restbetrag collapsed into a muted detail line underneath; running "GebüH gesamt" total near the grand total; unchanged layout for non-GebüH clients
-- ✅ Invoice detail page (web view) mirrors the same headline-row + collapsed detail-line layout as the PDF, instead of a separate row per code plus subtotal/remaining rows
+- ✅ Invoice detail page (web view) mirrors the same headline-row + collapsed detail-line layout as the PDF, instead of a separate row per code plus subtotal/remaining rows; totals block also shows the running "GebüH gesamt" alongside the invoice grand total, matching the PDF
 - ✅ Recorded Ziffer amount capped at what's actually charged (`min(satz_max, vereinbarter_betrag)`) rather than always showing the code's ceiling rate
 - ✅ Probatorik callout — Profil tab hint when diagnosis not yet set; escalates to warning badge after 5+ diagnostic Ziffern recorded
 

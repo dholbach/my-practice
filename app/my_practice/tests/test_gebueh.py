@@ -544,6 +544,8 @@ class GebuhInvoiceDetailViewTest(TestCase):
         html = self._get()
         self.assertIn("Therapiesitzung", html)
         self.assertNotIn("Code 19.2", html)
+        # No recorded GebüH codes → gebueh_total is 0 → totals-block row hidden.
+        self.assertNotIn("GebüH gesamt", html)
 
     def test_recorded_codes_collapse_into_one_detail_line(self):
         z1 = _make_ziffer(nummer="19.2", satz_max="46.00", sort_order=40)
@@ -563,3 +565,22 @@ class GebuhInvoiceDetailViewTest(TestCase):
         self.assertEqual(html.count("Code "), 2)
         self.assertNotIn("GebüH subtotal", html)
         self.assertNotIn("GebüH-Zwischensumme", html)
+
+    def test_totals_block_shows_gebueh_total_alongside_grand_total(self):
+        from ..templatetags.payment_tags import currency
+
+        z1 = _make_ziffer(nummer="19.2", satz_max="46.00", sort_order=40)
+        z2 = _make_ziffer(nummer="4", satz_max="18.50", sort_order=10)
+        total = Decimal("0")
+        for z in (z1, z2):
+            Leistungserfassung.objects.create(
+                session=self.session,
+                ziffer=z,
+                betrag=z.satz_max,
+                vereinbarter_betrag=Decimal("90.00"),
+            )
+            total += z.satz_max
+        html = self._get()
+        self.assertIn("GebüH gesamt", html)
+        self.assertIn(currency(total), html)
+        self.assertIn(currency(Decimal("90.00")), html)  # invoice.total unaffected

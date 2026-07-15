@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-14 18:53+0200\n"
+"POT-Creation-Date: 2026-07-15 11:51+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -719,30 +719,30 @@ msgstr "Event on %(date)s added to invoice %(number)s."
 msgid "Import error: %(error)s"
 msgstr "Import error: %(error)s"
 
-#: my_practice/views/client_views.py:174
+#: my_practice/views/client_views.py:173
 #, python-brace-format
 msgid "Client {obj.full_name} saved successfully!"
 msgstr ""
 
-#: my_practice/views/client_views.py:287
+#: my_practice/views/client_views.py:278
 msgid "No file selected."
 msgstr ""
 
-#: my_practice/views/client_views.py:367
+#: my_practice/views/client_views.py:358
 #, python-format
 msgid "Client %(code)s does not meet the requirements for GDPR deletion (inactive + last session more than %(years)s years ago)."
 msgstr ""
 
-#: my_practice/views/client_views.py:405
+#: my_practice/views/client_views.py:396
 #, python-format
 msgid "Note: The notification email to %(email)s could not be sent. Please inform the client manually."
 msgstr ""
 
-#: my_practice/views/client_views.py:440
+#: my_practice/views/client_views.py:431
 msgid "Requirements for GDPR deletion not met."
 msgstr ""
 
-#: my_practice/views/client_views.py:461
+#: my_practice/views/client_views.py:452
 #, python-format
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr ""
@@ -957,27 +957,27 @@ msgstr "✅ Treatment contract sent to %(recipient)s"
 msgid "✅ Intake form sent to %(recipient)s"
 msgstr "✅ Intake form sent to %(recipient)s"
 
-#: my_practice/views/invoice_views.py:211
+#: my_practice/views/invoice_views.py:212
 #, python-format
 msgid "Error creating invoice: %(error)s"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:217
+#: my_practice/views/invoice_views.py:218
 #, python-format
 msgid "Invoice %(num)s created successfully!"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:242
+#: my_practice/views/invoice_views.py:243
 #, python-format
 msgid "Item %(n)s: %(errors)s"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:247
+#: my_practice/views/invoice_views.py:248
 #, python-format
 msgid "Formset errors: %(errors)s"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:296
+#: my_practice/views/invoice_views.py:297
 #, python-brace-format
 msgid "Invoice {obj.invoice_number} updated successfully!"
 msgstr ""
@@ -1425,7 +1425,7 @@ msgstr ""
 #: templates/my_practice/inquiry_list.html:26
 #: templates/my_practice/inquiry_list.html:203
 #: templates/my_practice/inquiry_list.html:249
-#: templates/my_practice/invoice_detail.html:183
+#: templates/my_practice/invoice_detail.html:189
 #: templates/my_practice/practice_management.html:44
 #: templates/my_practice/tag_list.html:62
 #: templates/my_practice/tax_quarter_overview.html:170
@@ -1440,7 +1440,7 @@ msgstr "Edit"
 #: templates/my_practice/inquiry_list.html:27
 #: templates/my_practice/inquiry_list.html:207
 #: templates/my_practice/inquiry_list.html:253
-#: templates/my_practice/invoice_detail.html:195
+#: templates/my_practice/invoice_detail.html:201
 #: templates/my_practice/invoice_edit.html:93
 #: templates/my_practice/invoice_form.html:80
 #: templates/my_practice/practice_form.html:285
@@ -2460,7 +2460,7 @@ msgid "Completed on %(date)s at %(time)s"
 msgstr ""
 
 #: templates/my_practice/checklist.html:34
-#: templates/my_practice/invoice_detail.html:174
+#: templates/my_practice/invoice_detail.html:180
 msgid "Notes:"
 msgstr ""
 
@@ -3646,7 +3646,7 @@ msgid "Invoice Number"
 msgstr ""
 
 #: templates/my_practice/invoice_detail.html:23
-#: templates/my_practice/invoice_detail.html:201
+#: templates/my_practice/invoice_detail.html:207
 msgid "Paid on"
 msgstr ""
 
@@ -3708,36 +3708,44 @@ msgstr ""
 msgid "Kleinunternehmerregelung § 19 UStG — no tax"
 msgstr ""
 
-#: templates/my_practice/invoice_detail.html:167
+#: templates/my_practice/invoice_detail.html:168
+msgid "GebüH total:"
+msgstr ""
+
+#: templates/my_practice/invoice_detail.html:168
+msgid "official fee schedule"
+msgstr ""
+
+#: templates/my_practice/invoice_detail.html:173
 #: templates/my_practice/revenue_report.html:93
 msgid "Total:"
 msgstr ""
 
-#: templates/my_practice/invoice_detail.html:182
+#: templates/my_practice/invoice_detail.html:188
 msgid "Back to list"
 msgstr ""
 
-#: templates/my_practice/invoice_detail.html:184
+#: templates/my_practice/invoice_detail.html:190
 msgid "View PDF"
 msgstr ""
 
-#: templates/my_practice/invoice_detail.html:187
+#: templates/my_practice/invoice_detail.html:193
 msgid "Send by email"
 msgstr ""
 
-#: templates/my_practice/invoice_detail.html:190
+#: templates/my_practice/invoice_detail.html:196
 msgid "Email already sent"
 msgstr ""
 
-#: templates/my_practice/invoice_detail.html:194
+#: templates/my_practice/invoice_detail.html:200
 msgid "Do you really want to delete this invoice? This action cannot be undone."
 msgstr ""
 
-#: templates/my_practice/invoice_detail.html:199
+#: templates/my_practice/invoice_detail.html:205
 msgid "Status changed to:"
 msgstr ""
 
-#: templates/my_practice/invoice_detail.html:200
+#: templates/my_practice/invoice_detail.html:206
 msgid "Error changing status"
 msgstr ""
 
