@@ -31,6 +31,7 @@
 
         .q-grid {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             font-size: 9pt;
             margin-bottom: 0.5cm;
@@ -46,12 +47,15 @@
             text-align: center;
             background: var(--sand, #F4EFE4);
         }
-        .q-grid td.q-item {
+        .q-grid:not(.q-checklist) th:first-child, .q-grid:not(.q-checklist) td.q-item {
+            width: 46%;
+            text-align: left;
+        }
+        .q-grid.q-checklist td.q-item {
             text-align: left;
         }
         .q-grid td.q-choice {
             text-align: center;
-            width: 2.2cm;
         }
         .q-grid tbody tr {
             break-inside: avoid;
@@ -116,7 +120,6 @@
 
     {% for section in sections %}
     {% if section.intro %}<div class="section-intro">{{ section.intro }}</div>{% endif %}
-    {% if section.note %}<div class="note">{{ section.note }}</div>{% endif %}
 
     {% if section.type == "grid" and section.column_groups %}
     <table class="q-grid">

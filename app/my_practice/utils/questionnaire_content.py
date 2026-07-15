@@ -31,9 +31,7 @@ class QuestionnaireContent:
     ``views.api_views._resolve_questionnaire_section``: ``grid`` (statement
     rows x response columns), ``checklist`` (statement rows with a single
     yes/no checkbox), or ``freetext`` (a prompt with N blank fillable
-    lines). Every section type may also carry an optional ``intro`` dict
-    (public instruction text) and an optional ``note`` dict (a second,
-    distinctly-styled paragraph for interviewer-only guidance).
+    lines). Every section type may also carry an optional ``intro`` dict.
     """
 
     code: str

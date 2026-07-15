@@ -14,10 +14,6 @@
   "sections": [
     {
       "type": "grid",
-      "note": {
-        "de": "Nur für den Interviewer/in: Menschen, die unter Traumafolgestörungen leiden, können körperliche Reaktionen zeigen, wenn Erinnerungen an die Ereignisse getriggert werden. Schon sehr subtile Erinnerungsreize, die vom Betroffenen oft nicht bewusst wahrgenommen werden, können zu einer Reihe starker körperlicher Reaktion führen. Einige Überlebende erleben solche Zustände immer dann wenn sie aufgeregt oder nervös sind, wenn Sie (auch ohne Grund) erschrecken, oder auf andere Weise an die Bedrohungssituation(en) erinnert werden. Nachfolgend sind typische Reaktionen aufgelistet. Fragen Sie „In den vergangenen 6 Monaten“; falls weniger als 6 Monate seit dem traumatischen Ereignis vergangen sind, fragen Sie „Seit dem(n) traumatischen Ereignis(sen)“. Fragen Sie in Bezug auf alle positiven Antworten nach den Häufigkeiten (z.B. „Wie oft ist dies bereits geschehen?“).",
-        "en": "For the interviewer only: People who have been extremely stressed, like survivors of life-threatening situations, will show bodily responses when something reminds them of the stressful experience. Even for very subtle reminders that are not consciously attended, the body can show a set of strong responses. Some survivors of traumatic events experience bodily reactions whenever they are excited or nervous about something or when they get startled or reminded of the events even without realizing. Here are listed typical responses. Ask which ones the respondent may experience in everyday life. Ask, „in your everyday life“ (past 6 months); if <6 month since trauma, ask “since the traumatic event/s”. Probe all positive responses and then ask for the frequency (e.g., “How often has this been happening?”)."
-      },
       "columns": [
         {"de": "nie", "en": "Not at all"},
         {"de": "1×/Monat seltener", "en": "Once a month or less/little"},

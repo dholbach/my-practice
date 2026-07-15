@@ -49,9 +49,6 @@ class LoadQuestionnaireTest(TestCase):
         self.assertEqual(content.sections[0]["type"], "grid")
         self.assertEqual(len(content.sections[0]["items"]), 13)
         self.assertEqual(len(content.sections[0]["columns"]), 4)
-        # Interviewer-only note is present and bilingual (distinct from intro).
-        self.assertTrue(content.sections[0]["note"]["de"])
-        self.assertTrue(content.sections[0]["note"]["en"])
 
     def test_list_available_questionnaires_includes_shipped_fixtures(self):
         """Drives the client detail "Assessments" picker.
@@ -159,18 +156,6 @@ class QuestionnairePdfGenerationTest(TestCase):
         fields = self._get_form_fields(pdf_bytes)
         group_names = {name.split(".")[0] for name in fields}
         self.assertEqual(group_names, {f"s0_q{i}" for i in range(13)})
-
-    def test_shutd_pdf_renders_interviewer_only_note_text(self):
-        """The section-level `note` (P-121) actually renders into the PDF body."""
-        from pypdf import PdfReader
-
-        pdf_bytes, _filename = generate_questionnaire_pdf_bytes("shutd", self.practice, "de")
-        text = PdfReader(io.BytesIO(pdf_bytes)).pages[0].extract_text()
-        self.assertIn("Nur für den Interviewer/in", text)
-
-        pdf_bytes_en, _filename = generate_questionnaire_pdf_bytes("shutd", self.practice, "en")
-        text_en = PdfReader(io.BytesIO(pdf_bytes_en)).pages[0].extract_text()
-        self.assertIn("For the interviewer only", text_en)
 
 
 class SendQuestionnairePdfEmailViewTest(TestCase):
@@ -338,27 +323,6 @@ class ResolveQuestionnaireSectionTest(TestCase):
                 {"field_name": "s1_q0_g1", "columns": ["<1 month"]},
             ],
         )
-
-    def test_grid_resolves_optional_note_distinct_from_intro(self):
-        section = {
-            "type": "grid",
-            "intro": {"de": "Öffentliche Anleitung", "en": "Public instruction"},
-            "note": {"de": "Nur für Interviewer", "en": "Interviewer only"},
-            "columns": [{"de": "Nie", "en": "Never"}],
-            "items": [{"de": "Erstens", "en": "First"}],
-        }
-        resolved = _resolve_questionnaire_section(section, "de", index=0)
-        self.assertEqual(resolved["intro"], "Öffentliche Anleitung")
-        self.assertEqual(resolved["note"], "Nur für Interviewer")
-
-    def test_grid_note_defaults_to_empty_string_when_absent(self):
-        section = {
-            "type": "grid",
-            "columns": [{"de": "Nie", "en": "Never"}],
-            "items": [{"de": "Erstens", "en": "First"}],
-        }
-        resolved = _resolve_questionnaire_section(section, "de", index=0)
-        self.assertEqual(resolved["note"], "")
 
     def test_checklist_resolves_items_and_field_names(self):
         section = {
