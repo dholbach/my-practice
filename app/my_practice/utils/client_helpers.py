@@ -1,7 +1,7 @@
 """Helper functions for client-related operations"""
 
 from datetime import date
-from typing import Any, Dict
+from typing import Any
 
 
 def annotate_activity_status(clients, today=None):
@@ -50,7 +50,7 @@ def flatten_invoice_items(invoices):
     return [item for invoice in invoices for item in invoice.items.all()]
 
 
-def calculate_client_session_stats(items) -> Dict[str, Any]:
+def calculate_client_session_stats(items) -> dict[str, Any]:
     """
     Calculate comprehensive session statistics from invoice items.
 

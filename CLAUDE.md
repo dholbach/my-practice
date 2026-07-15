@@ -131,20 +131,25 @@ sessions = count_sessions(invoice.items.all())  # Formula: (duration / 60.0) * q
 #### CRUD Views - Use mixins from `views/crud_mixins.py`
 ```python
 # Simple form-based CRUD
-class ExpenseCreateView(FormCreateViewMixin):
+class ExpenseCreateView(PracticeScopedCreateView):
     model = CompanyExpense
     form_class = CompanyExpenseForm
     template_name = "my_practice/expense_form.html"
-    success_url_name = "expense_list"
-    success_message_template = "Ausgabe vom {date} erfolgreich erstellt."
-    form_action = "Erstellen"
+    success_url = reverse_lazy("expense_list")
+    success_message = "Ausgabe vom {obj.date:%d.%m.%Y} erfolgreich erstellt."
+
+# ?next= redirect support (success_url honors ?next=, exposes context["next"])
+class ExpenseDeleteView(NextRedirectMixin, PracticeScopedDeleteView):
+    model = CompanyExpense
+    success_url = reverse_lazy("expense_list")
 
 # Invoice formsets
-class InvoiceCreateView(InvoiceFormsetMixin, CreateView):
+class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return self.get_formset_context(context, formset_key="items")
 ```
+Available base classes: `PracticeScopedListView`, `PracticeScopedCreateView`, `PracticeScopedUpdateView`, `PracticeScopedDeleteView`, `NextRedirectMixin`, `InvoiceFormsetMixin`.
 
 #### Centralized Queries and Calculations
 ```python
@@ -264,7 +269,7 @@ Use relative imports for app-internal code:
 # Good
 from ..models import Client, Invoice
 from ..utils import count_sessions, RevenueCalculator
-from .crud_mixins import FormCreateViewMixin
+from .crud_mixins import PracticeScopedCreateView
 
 # Avoid
 from my_practice.models import Client

@@ -10,8 +10,9 @@ from django.urls import reverse_lazy
 from ..forms import CompanyWithdrawalForm
 from ..models import CompanyWithdrawal
 from ..utils.financial_list_context_builder import FinancialListContextBuilder
-from ..utils.view_helpers import get_year_from_request, safe_next
+from ..utils.view_helpers import get_year_from_request
 from .crud_mixins import (
+    NextRedirectMixin,
     PracticeScopedCreateView,
     PracticeScopedDeleteView,
     PracticeScopedUpdateView,
@@ -83,7 +84,7 @@ class WithdrawalCreateView(PracticeScopedCreateView):
         return context
 
 
-class WithdrawalUpdateView(PracticeScopedUpdateView):
+class WithdrawalUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
     """Update an existing withdrawal"""
 
     model = CompanyWithdrawal
@@ -93,17 +94,13 @@ class WithdrawalUpdateView(PracticeScopedUpdateView):
     success_message = "Entnahme vom {obj.date:%d.%m.%Y} erfolgreich aktualisiert."
     context_object_name = "withdrawal"
 
-    def get_success_url(self) -> str:
-        return safe_next(self.request, fallback=str(self.success_url))
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["action"] = "Bearbeiten"
-        context["next"] = self.request.GET.get("next", "")
         return context
 
 
-class WithdrawalDeleteView(PracticeScopedDeleteView):
+class WithdrawalDeleteView(NextRedirectMixin, PracticeScopedDeleteView):
     """Delete a withdrawal"""
 
     model = CompanyWithdrawal
@@ -111,11 +108,3 @@ class WithdrawalDeleteView(PracticeScopedDeleteView):
     success_url = reverse_lazy("withdrawal_list")
     context_object_name = "withdrawal"
     success_message = "Entnahme vom {obj.date:%d.%m.%Y} über {obj.amount}€ erfolgreich gelöscht."
-
-    def get_success_url(self) -> str:
-        return safe_next(self.request, fallback=str(self.success_url))
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["next"] = self.request.GET.get("next", "")
-        return context

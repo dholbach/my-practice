@@ -17,8 +17,9 @@ from ..forms import CompanyExpenseForm
 from ..models import BankTransaction, CompanyExpense, ExpenseReceipt
 from ..utils.file_processing import process_upload
 from ..utils.financial_list_context_builder import FinancialListContextBuilder
-from ..utils.view_helpers import get_year_from_request, safe_next
+from ..utils.view_helpers import get_year_from_request
 from .crud_mixins import (
+    NextRedirectMixin,
     PracticeScopedCreateView,
     PracticeScopedDeleteView,
     PracticeScopedUpdateView,
@@ -69,7 +70,7 @@ class ExpenseCreateView(PracticeScopedCreateView):
         return context
 
 
-class ExpenseUpdateView(PracticeScopedUpdateView):
+class ExpenseUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
     """Update an existing expense and manage its receipt attachments."""
 
     model = CompanyExpense
@@ -78,9 +79,6 @@ class ExpenseUpdateView(PracticeScopedUpdateView):
     success_url = reverse_lazy("expense_list")
     success_message = "Ausgabe vom {obj.date:%d.%m.%Y} erfolgreich aktualisiert."
     context_object_name = "expense"
-
-    def get_success_url(self) -> str:
-        return safe_next(self.request, fallback=str(self.success_url))
 
     def form_valid(self, form: CompanyExpenseForm) -> HttpResponse:  # type: ignore[override]
         response = super().form_valid(form)
@@ -94,7 +92,6 @@ class ExpenseUpdateView(PracticeScopedUpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["action"] = "Bearbeiten"
-        context["next"] = self.request.GET.get("next", "")
 
         expense = self.object
 
@@ -167,7 +164,7 @@ class ExpenseUpdateView(PracticeScopedUpdateView):
         return context
 
 
-class ExpenseDeleteView(PracticeScopedDeleteView):
+class ExpenseDeleteView(NextRedirectMixin, PracticeScopedDeleteView):
     """Delete an expense"""
 
     model = CompanyExpense
@@ -175,14 +172,6 @@ class ExpenseDeleteView(PracticeScopedDeleteView):
     success_url = reverse_lazy("expense_list")
     context_object_name = "expense"
     success_message = "Ausgabe vom {obj.date:%d.%m.%Y} über {obj.amount}€ erfolgreich gelöscht."
-
-    def get_success_url(self) -> str:
-        return safe_next(self.request, fallback=str(self.success_url))
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["next"] = self.request.GET.get("next", "")
-        return context
 
 
 def _sync_expense_amount(expense: CompanyExpense) -> None:

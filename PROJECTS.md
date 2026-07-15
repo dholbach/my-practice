@@ -30,7 +30,6 @@
 
 ### Concept / Mid-term
 
-- **P-046 GebüH-Abrechnung** ✅ merged: all 4 phases complete → [docs/projects/done/P-046_GEBUEH_BILLING.md](docs/projects/done/P-046_GEBUEH_BILLING.md)
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
 - **OSS follow-ups** (post P-024): extend CI beyond lint (pytest); GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
@@ -41,6 +40,7 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 
 | Projekt | Beschreibung | Abgeschlossen |
 | ------- | ------------ | ------------- |
+| P-046 | GebüH-Abrechnung: Ziffern catalogue + `Leistungserfassung` per session, GebüH-compliant invoice PDF (headline + collapsed detail lines), Restbetrag decomposition, invoice-detail tightening | Jul 2026 |
 | P-120 | Questionnaire multi-instrument wiring: page-break fix for long grids, Docker volume mount for instance-local content, dynamic "Assessments" card (no hardcoded instrument names in committed code) | Jul 2026 |
 | P-119 | Questionnaire PDFs: checklist + freetext block types, dual-scale grids (`column_groups`), per-section field-name prefixing to avoid collisions, unrecognized section types now raise instead of silently dropping | Jul 2026 |
 | P-118 | Clinical Questionnaire PDFs (pilot): GAD-7 branded fillable PDF, content/template separation for future licensed instruments, send flow via new "Assessments" card | Jul 2026 |

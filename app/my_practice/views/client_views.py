@@ -28,8 +28,7 @@ from ..utils import (
     annotate_activity_status,
     sort_tags_by_category,
 )
-from ..utils.view_helpers import safe_next
-from .crud_mixins import PracticeScopedListView, PracticeScopedUpdateView
+from .crud_mixins import NextRedirectMixin, PracticeScopedListView, PracticeScopedUpdateView
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +163,7 @@ class ClientListView(PracticeScopedListView):
         return context
 
 
-class ClientIntakeView(PracticeScopedUpdateView):
+class ClientIntakeView(NextRedirectMixin, PracticeScopedUpdateView):
     """Client intake/edit form - supports both creating and updating clients"""
 
     model = Client
@@ -172,14 +171,6 @@ class ClientIntakeView(PracticeScopedUpdateView):
     template_name = "my_practice/client_intake.html"
     success_url = reverse_lazy("client_list")
     success_message = _("Client {obj.full_name} saved successfully!")
-
-    def get_success_url(self) -> str:
-        return safe_next(self.request, fallback=str(self.success_url))
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["next"] = self.request.GET.get("next", "")
-        return context
 
     def get_object(self, queryset=None):
         """Get existing client if pk is provided, else return new instance"""
