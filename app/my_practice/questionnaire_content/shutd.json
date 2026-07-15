@@ -1,0 +1,79 @@
+{
+  "code": "shutd",
+  "filename_label": "Shut-D",
+  "license": "CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)",
+  "source": "Schalinski, I., Schauer, M. & Elbert, T. (2016). Shut-D. Shutdown-Dissoziationsskala [Verfahrensdokumentation, Fragebogen deutsch, englisch und norwegisch sowie Durchführungshinweise]. In Leibniz-Institut für Psychologie (ZPID) (Hrsg.), Open Test Archive. Trier: ZPID. https://doi.org/10.23668/psycharchives.4596",
+  "title": {
+    "de": "Shut-D (Shutdown-Dissoziationsskala)",
+    "en": "Shut-D (Shutdown Dissociation Scale)"
+  },
+  "intro": {
+    "de": "Ich werde Ihnen nun einige Fragen zu körperlichen Erfahrungen und Körperempfindungen stellen, die Sie seit dem(n) traumatischen Ereignis(sen) möglicherweise in Ihrem Alltag erleben oder erlebt haben. Ich möchte gerne wissen, ob sich solche Beschwerden entwickelt haben und wie häufig Sie unter diesen körperlichen Erfahrungen und Empfindungen leiden.",
+    "en": "I'm going to be asking you questions about bodily experiences that you may have had in your day to day life since the traumatic event/s. We are interested in how these complaints have developed and how often you suffer from these experiences."
+  },
+  "sections": [
+    {
+      "type": "grid",
+      "columns": [
+        {"de": "nie", "en": "Not at all"},
+        {"de": "1×/Monat seltener", "en": "Once a month or less/little"},
+        {"de": "mehrmals/Monat manchmal", "en": "Several times a month/sometimes"},
+        {"de": "mehrmals/Woche häufig", "en": "Several times a week/often"}
+      ],
+      "items": [
+        {
+          "de": "Haben Sie das Bewusstsein verloren?/Sind Sie in Ohnmacht gefallen?/Ist Ihr „Kreislauf“ vollständig kollabiert?",
+          "en": "Have you fainted?/Have you been passing out?"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Ihnen schwindelig war und Ihnen schwarz vor Augen wurde?",
+          "en": "Have you felt dizzy and has your vision gone black?/Have you felt dizzy and you couldn't see anymore, as if you were blind?"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Sie nicht mehr hören konnten als ob Sie taub gewesen sind? Oder haben Sie erlebt, dass Sie Stimmen von Personen, die direkt neben Ihnen standen und sich mit Ihnen unterhielten, so angehört haben als ob die Stimmen weit weg waren?",
+          "en": "Have you felt like you couldn't hear for a while, as if you were deaf? When people were talking to you, did they sound far away?"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Sie nicht mehr deutlich sehen konnten (zum Beispiel verschwommen oder wie durch eine Nebelwand)?",
+          "en": "Have you had an experience of not being able to properly see things around you (e.g. blurred vision)"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Ihr Körper oder ein Teil Ihres Körpers taub war oder sich angefühlt hat, als ob er nicht zu Ihnen gehören würde?",
+          "en": "Have you felt like your body or a part of your body has gone numb?"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Sie sich nicht mehr bewegen konnten als ob Sie gelähmt wären?/als ob ihr Körper Ihnen nicht gehorcht?",
+          "en": "Have you felt like you couldn't move for a while, as if you were paralyzed?"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Ihr Körper oder ein Teil Ihres Körpers schmerzunempfindlich war? (Analgesie)",
+          "en": "Have you felt like your body, or a part of it was insensitive to pain (analgesia)?"
+        },
+        {
+          "de": "Haben Sie eine plötzlich einsetzende Müdigkeit und Schwere in ihren Gliedmaßen empfunden?",
+          "en": "Have you been in a state where your body suddenly felt heavy and tired?"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Ihr Körper für eine Weile erstarrte/ganz steif war?",
+          "en": "Have you had times when your body became stiff for a while?"
+        },
+        {
+          "de": "War Ihnen übel? Hatten Sie das Gefühl sich übergeben zu müssen? Haben Sie kalte Schweißausbrüche erlebt?",
+          "en": "Have you felt nauseous? Have you felt like you are about to throw up? Have you felt yourself break out in a cold sweat?"
+        },
+        {
+          "de": "Haben Sie sich gefühlt, als ob Sie außerhalb Ihres Körpers waren? (Out-of-body)",
+          "en": "Have you had an 'out-of-body' sensation? Have you felt like you were outside of your body?"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Sie nicht mehr sprechen konnten, obwohl Sie etwas sagen wollten?/Konnten Sie nur unter großer Anstrengung sprechen?/Konnten Sie nur Flüstern?",
+          "en": "Have you had moments when you found that you couldn't speak?/Have you been able to speak only with great effort?/Have you had an experience in which you could only whisper for a period of time?"
+        },
+        {
+          "de": "Haben Sie erlebt, dass Ihr Körper ohne offensichtlichen Grund schlaff und warm gewesen ist?",
+          "en": "Has your body felt weak and warm for no apparent reason?"
+        }
+      ]
+    }
+  ]
+}

@@ -41,15 +41,25 @@ class LoadQuestionnaireTest(TestCase):
         content = load_questionnaire("gad7")
         self.assertEqual(content.filename_label, "GAD-7")
 
+    def test_loads_shipped_shutd_fixture(self):
+        content = load_questionnaire("shutd")
+        self.assertEqual(content.code, "shutd")
+        self.assertEqual(content.filename_label, "Shut-D")
+        self.assertEqual(len(content.sections), 1)
+        self.assertEqual(content.sections[0]["type"], "grid")
+        self.assertEqual(len(content.sections[0]["items"]), 13)
+        self.assertEqual(len(content.sections[0]["columns"]), 4)
+
     def test_list_available_questionnaires_includes_shipped_fixtures(self):
         """Drives the client detail "Assessments" picker.
 
-        Only asserts the shipped gad7 fixture is discoverable — doesn't
+        Only asserts the shipped fixtures are discoverable — doesn't
         assume anything about instance-local content, since that's
         per-deployment and never present in this repo/CI.
         """
         codes = {q.code for q in list_available_questionnaires()}
         self.assertIn("gad7", codes)
+        self.assertIn("shutd", codes)
 
     def test_missing_code_raises_actionable_error(self):
         with self.assertRaises(QuestionnaireNotFoundError) as ctx:
@@ -134,6 +144,18 @@ class QuestionnairePdfGenerationTest(TestCase):
             reverse("questionnaire_pdf", kwargs={"code": "does-not-exist"})
         )
         self.assertRedirects(response, reverse("dashboard"))
+
+    def test_shutd_generate_bytes_returns_valid_pdf(self):
+        pdf_bytes, filename = generate_questionnaire_pdf_bytes("shutd", self.practice, "de")
+        self.assertTrue(pdf_bytes.startswith(b"%PDF"))
+        self.assertEqual(filename, "SHUTD_de.pdf")
+
+    def test_shutd_pdf_has_one_fillable_radio_group_per_item(self):
+        """One radio-button group per statement (s0_q0..s0_q12), 13 items."""
+        pdf_bytes, _filename = generate_questionnaire_pdf_bytes("shutd", self.practice, "de")
+        fields = self._get_form_fields(pdf_bytes)
+        group_names = {name.split(".")[0] for name in fields}
+        self.assertEqual(group_names, {f"s0_q{i}" for i in range(13)})
 
 
 class SendQuestionnairePdfEmailViewTest(TestCase):
