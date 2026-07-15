@@ -5,7 +5,7 @@ Forms for the payments application.
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from .models import CapacityPeriod, Client, CompanyExpense, CompanyWithdrawal, Practice
+from .models import CapacityPeriod, Client, CompanyExpense, CompanyWithdrawal, Practice, TimeOff
 
 
 class DateFormField(forms.DateField):
@@ -163,6 +163,25 @@ class CompanyExpenseForm(StyledFormMixin, forms.ModelForm):
             "is_tax_deductible": "Steuerlich absetzbar",
             "has_invoice": "Rechnung vorhanden",
             "is_filed_in_tax_return": "In Steuererklärung eingetragen",
+        }
+
+
+class TimeOffForm(StyledFormMixin, forms.ModelForm):
+    """Form for creating and editing time-off periods"""
+
+    start_date = DateFormField(label=_("Start Date"))
+    end_date = DateFormField(label=_("End Date"))
+
+    class Meta:
+        model = TimeOff
+        fields = ["start_date", "end_date", "type", "title", "notes"]
+        widgets = {
+            "notes": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "type": _("Type"),
+            "title": _("Title"),
+            "notes": _("Notes"),
         }
 
 

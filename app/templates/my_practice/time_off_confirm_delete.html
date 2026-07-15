@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Delete time off" %}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-[600px] p-2.5 sm:p-5">
+    <h1>🗑️ {% trans "Delete time off" %}</h1>
+
+    <div class="bg-surface border border-border rounded-lg p-5 sm:p-8 shadow">
+        <div class="flex flex-col items-center p-5 bg-red-600/10 border-2 border-red-600 rounded-lg mb-8">
+            <span class="text-5xl mb-2.5">⚠️</span>
+            <p class="m-0 text-lg font-semibold text-center">{% trans "Do you really want to delete this time-off period?" %}</p>
+            <p class="text-sm mt-2 text-text-secondary">{% trans "This action cannot be undone." %}</p>
+        </div>
+
+        <div class="mb-8">
+            <div class="flex justify-between p-3 border-b border-border last:border-b-0">
+                <span class="font-medium text-text-secondary">{% trans "Title" %}:</span>
+                <span class="font-semibold">{{ time_off.title }}</span>
+            </div>
+            <div class="flex justify-between p-3 border-b border-border last:border-b-0">
+                <span class="font-medium text-text-secondary">{% trans "Type" %}:</span>
+                <span class="font-semibold">{{ time_off.get_type_display }}</span>
+            </div>
+            <div class="flex justify-between p-3 border-b border-border last:border-b-0">
+                <span class="font-medium text-text-secondary">{% trans "Start" %}:</span>
+                <span class="font-semibold">{{ time_off.start_date|date:"d.m.Y" }}</span>
+            </div>
+            <div class="flex justify-between p-3 border-b border-border last:border-b-0">
+                <span class="font-medium text-text-secondary">{% trans "End" %}:</span>
+                <span class="font-semibold">{{ time_off.end_date|date:"d.m.Y" }}</span>
+            </div>
+            {% if time_off.notes %}
+            <div class="flex justify-between p-3 border-b border-border last:border-b-0">
+                <span class="font-medium text-text-secondary">{% trans "Notes" %}:</span>
+                <span class="font-semibold">{{ time_off.notes }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <div class="flex flex-col sm:flex-row gap-4 justify-center pt-5 border-t border-border">
+                <button type="submit" class="btn-danger w-full sm:w-auto">{% trans "Yes, delete" %}</button>
+                <a href="{% if next %}{{ next }}{% else %}{% url 'timeoff_list' %}{% endif %}" class="btn-secondary w-full sm:w-auto">{% trans "Cancel" %}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

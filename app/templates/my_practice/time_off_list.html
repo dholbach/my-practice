@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Time off" %}{% endblock %}
+
+{% block page_title %}🌴 {% trans "Time off" %}{% endblock %}
+{% block page_subtitle %}{% trans "Holidays, vacation, and other periods when the practice is closed" %}{% endblock %}
+
+{% block content %}
+
+<div class="mt-3 mb-4 flex gap-4 justify-end">
+    <a href="{% url 'timeoff_create' %}" class="btn btn-success btn-sm">
+        ➕ {% trans "New time off" %}
+    </a>
+</div>
+
+<div class="card mb-4">
+    <h3 class="m-0 mb-3">📅 {% trans "Upcoming & current" %} <span class="text-sm text-secondary">({{ upcoming|length }})</span></h3>
+
+    {% if upcoming %}
+    <form method="get" action="{% url 'timeoff_notify' %}">
+        <div class="mb-3">
+            <button type="submit" class="btn btn-sm btn-secondary">
+                📧 {% trans "Send heads-up email for selected" %}
+            </button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>{% trans "Title" %}</th>
+                    <th>{% trans "Type" %}</th>
+                    <th>{% trans "Start" %}</th>
+                    <th>{% trans "End" %}</th>
+                    <th class="text-right">{% trans "Duration" %}</th>
+                    <th class="text-center">{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for time_off in upcoming %}
+                <tr>
+                    <td><input type="checkbox" name="ids" value="{{ time_off.pk }}" class="form-check-input" aria-label="{% trans 'Select for heads-up email' %}"></td>
+                    <td class="font-bold">{{ time_off.title }}</td>
+                    <td>{{ time_off.get_type_display }}</td>
+                    <td>{{ time_off.start_date|date:"d.m.Y" }}</td>
+                    <td>{{ time_off.end_date|date:"d.m.Y" }}</td>
+                    <td class="text-right">{{ time_off.duration_days }} {% trans "days" %}</td>
+                    <td class="text-center whitespace-nowrap">
+                        {% if time_off.is_current %}
+                        <span class="badge badge-current">🏖️ {% trans "Currently off" %}</span>
+                        {% else %}
+                        <span class="badge badge-info">📅 {% trans "Upcoming" %}</span>
+                        {% endif %}
+                        <a href="{% url 'timeoff_update' time_off.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-secondary" title="{% trans 'Edit' %}">✏️</a>
+                        <a href="{% url 'timeoff_delete' time_off.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-danger" title="{% trans 'Delete' %}">🗑️</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    {% else %}
+    <p class="empty-state-msg">
+        {% trans "No upcoming time off." %}
+    </p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3 class="m-0 mb-3">✅ {% trans "Past" %} <span class="text-sm text-secondary">({{ past|length }})</span></h3>
+
+    {% if past %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>{% trans "Title" %}</th>
+                <th>{% trans "Type" %}</th>
+                <th>{% trans "Start" %}</th>
+                <th>{% trans "End" %}</th>
+                <th class="text-right">{% trans "Duration" %}</th>
+                <th class="text-center">{% trans "Actions" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for time_off in past %}
+            <tr>
+                <td>{{ time_off.title }}</td>
+                <td>{{ time_off.get_type_display }}</td>
+                <td>{{ time_off.start_date|date:"d.m.Y" }}</td>
+                <td>{{ time_off.end_date|date:"d.m.Y" }}</td>
+                <td class="text-right">{{ time_off.duration_days }} {% trans "days" %}</td>
+                <td class="text-center whitespace-nowrap">
+                    <a href="{% url 'timeoff_update' time_off.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-secondary" title="{% trans 'Edit' %}">✏️</a>
+                    <a href="{% url 'timeoff_delete' time_off.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-danger" title="{% trans 'Delete' %}">🗑️</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state-msg">
+        {% trans "No past time off recorded." %}
+    </p>
+    {% endif %}
+</div>
+
+{% endblock %}
