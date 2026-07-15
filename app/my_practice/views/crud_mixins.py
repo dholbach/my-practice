@@ -10,6 +10,32 @@ from django.forms import ModelForm
 from django.http import HttpResponse
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
+from ..utils.view_helpers import safe_next
+
+
+class NextRedirectMixin:
+    """
+    Adds ?next= redirect support to an Update/DeleteView.
+
+    get_success_url() honors ?next= (falling back to self.success_url), and
+    the raw value is exposed to templates as context["next"] (e.g. for a
+    Cancel link). Override get_success_url() in a subclass if the fallback
+    needs to be something other than self.success_url.
+
+    Example:
+        class ExpenseDeleteView(NextRedirectMixin, PracticeScopedDeleteView):
+            model = CompanyExpense
+            success_url = reverse_lazy("expense_list")
+    """
+
+    def get_success_url(self) -> str:
+        return safe_next(self.request, fallback=str(self.success_url))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["next"] = self.request.GET.get("next", "")
+        return context
+
 
 class InvoiceFormsetMixin:
     """

@@ -5,7 +5,6 @@ Centralized logic for date calculations and range handling.
 
 import calendar
 from datetime import date
-from typing import Tuple, Union
 
 from dateutil.relativedelta import relativedelta
 
@@ -19,7 +18,7 @@ class DateRangeHelper:
     """
 
     @staticmethod
-    def get_year_range(year_date: Union[date, int]) -> Tuple[date, date]:
+    def get_year_range(year_date: date | int) -> tuple[date, date]:
         """
         Get start and end dates for a year.
 
@@ -45,7 +44,7 @@ class DateRangeHelper:
         return year_start, year_end
 
     @staticmethod
-    def get_month_range(month_date: date) -> Tuple[date, date]:
+    def get_month_range(month_date: date) -> tuple[date, date]:
         """
         Get start and end dates for a month.
 
@@ -262,7 +261,7 @@ class DateRangeHelper:
         return month_date.strftime("%B %Y")
 
     @staticmethod
-    def get_quarter_range(year: int, quarter: int) -> Tuple[date, date]:
+    def get_quarter_range(year: int, quarter: int) -> tuple[date, date]:
         """
         Get start and end dates for a calendar quarter.
 
@@ -288,7 +287,7 @@ class DateRangeHelper:
         return start, end
 
     @staticmethod
-    def get_quarter_for_date(target_date: date) -> Tuple[int, date, date]:
+    def get_quarter_for_date(target_date: date) -> tuple[int, date, date]:
         """
         Get the quarter number and boundaries for the quarter containing a date.
 

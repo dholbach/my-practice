@@ -3,10 +3,10 @@ Financial calculation utilities for invoice and item calculations.
 """
 
 from decimal import Decimal
-from typing import Iterable, List, Union
+from typing import Iterable
 
 
-def to_float(value: Union[Decimal, int, float, str]) -> float:
+def to_float(value: Decimal | int | float | str) -> float:
     """
     Safe conversion of Decimal/int/str to float for calculations.
 
@@ -141,7 +141,7 @@ def count_session_hours(
     return total
 
 
-def apply_remainder_distribution(created_items: List, total_amount: Decimal) -> None:
+def apply_remainder_distribution(created_items: list, total_amount: Decimal) -> None:
     """
     Apply remainder distribution to ensure exact invoice total.
 

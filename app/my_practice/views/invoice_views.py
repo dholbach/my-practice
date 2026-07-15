@@ -28,6 +28,7 @@ from ..utils.invoice_filter_helper import InvoiceFilterHelper
 from ..utils.view_helpers import get_year_from_request, safe_next
 from .crud_mixins import (
     InvoiceFormsetMixin,
+    NextRedirectMixin,
     PracticeScopedCreateView,
     PracticeScopedListView,
     PracticeScopedUpdateView,
@@ -286,7 +287,7 @@ class InvoiceDetailView(DetailView):
         return context
 
 
-class InvoiceEditView(InvoiceFormsetMixin, PracticeScopedUpdateView):
+class InvoiceEditView(NextRedirectMixin, InvoiceFormsetMixin, PracticeScopedUpdateView):
     """Edit invoice with inline items using formset"""
 
     model = Invoice
@@ -314,7 +315,6 @@ class InvoiceEditView(InvoiceFormsetMixin, PracticeScopedUpdateView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context: dict[str, Any] = super().get_context_data(**kwargs)
-        context["next"] = self.request.GET.get("next", "")
         return self.get_formset_context(context, formset_key="formset")
 
     def get_form(self, form_class=None):
