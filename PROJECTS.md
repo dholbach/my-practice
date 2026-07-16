@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-07-13
+**Last Updated**: 2026-07-15
 
 ## 🔍 Recent Activity
 
+- **2026-07-15 — P-121 Time-off CRUD + client heads-up email**: in-app screen for `TimeOff` entries (`/timeoff/`, previously admin-only), plus a multi-period heads-up email to clients — recipient table shows client code/language/last-next-session for quick trimming, editable bilingual (DE/EN) preview, date-only subject/body (no title leaked to clients) with per-client `{salutation}` substitution. Also the first feature built entirely under the P-039 "English msgids" i18n convention, which surfaced some gaps in how that policy was worded — see [docs/projects/done/P-121_TIMEOFF_NOTICE.md](docs/projects/done/P-121_TIMEOFF_NOTICE.md).
 - **2026-07-13 — P-120 Questionnaire multi-instrument wiring**: ADNM-20 as the second instrument exposed a page-break bug losing radio buttons on long grids (fixed with `break-inside: avoid`), a missing Docker volume mount for `MY_PRACTICE_DATA_DIR/questionnaires/`, and hardcoded GAD-7-only wiring in the send/email flow. Generalized: `code` is now a URL param, filename labels live in the content file, and the client detail "Assessments" card dynamically lists whatever instruments actually have content present. See [docs/projects/done/P-120_QUESTIONNAIRE_MULTI_INSTRUMENT.md](docs/projects/done/P-120_QUESTIONNAIRE_MULTI_INSTRUMENT.md).
-- **2026-07-13 — P-119 Questionnaire checklist + freetext + dual-scale grid block types**: added the remaining block types needed for ADNM-20-style instruments (`checklist`: single yes/no checkbox per statement; `freetext`: blank fillable lines; `grid` with `column_groups`: two independent response scales per statement, e.g. frequency + duration), all as real AcroForm fields. Field names now prefixed per section to avoid collisions across mixed-type documents; unrecognized section types now raise loudly instead of silently vanishing from the PDF. See [docs/projects/done/P-119_QUESTIONNAIRE_CHECKLIST_FREETEXT.md](docs/projects/done/P-119_QUESTIONNAIRE_CHECKLIST_FREETEXT.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -40,6 +40,7 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 
 | Projekt | Beschreibung | Abgeschlossen |
 | ------- | ------------ | ------------- |
+| P-121 | Time-off CRUD (`/timeoff/`, previously admin-only) + multi-period client heads-up email with date-only bilingual content and a scannable recipient table | Jul 2026 |
 | P-046 | GebüH-Abrechnung: Ziffern catalogue + `Leistungserfassung` per session, GebüH-compliant invoice PDF (headline + collapsed detail lines), Restbetrag decomposition, invoice-detail tightening | Jul 2026 |
 | P-120 | Questionnaire multi-instrument wiring: page-break fix for long grids, Docker volume mount for instance-local content, dynamic "Assessments" card (no hardcoded instrument names in committed code) | Jul 2026 |
 | P-119 | Questionnaire PDFs: checklist + freetext block types, dual-scale grids (`column_groups`), per-section field-name prefixing to avoid collisions, unrecognized section types now raise instead of silently dropping | Jul 2026 |

@@ -5,7 +5,7 @@ Email utility functions for invoice sending.
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ..models import Client, Invoice, Practice
+    from ..models import Client, Invoice, Practice, TimeOff
 
 _GERMAN_MONTHS = {
     1: "Januar",
@@ -21,6 +21,8 @@ _GERMAN_MONTHS = {
     11: "November",
     12: "Dezember",
 }
+
+_GERMAN_WEEKDAYS_ABBR = {0: "Mo", 1: "Di", 2: "Mi", 3: "Do", 4: "Fr", 5: "Sa", 6: "So"}
 
 
 def _build_sessions_intro(invoice: "Invoice", language: str) -> str:
@@ -348,3 +350,111 @@ def get_contract_email_content(client: "Client", practice: "Practice") -> tuple[
         body = body + "\n\n-- \n" + practice.email_signature
 
     return subject, body
+
+
+def _ordinal_suffix_en(day: int) -> str:
+    if 11 <= (day % 100) <= 13:
+        return "th"
+    return {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+
+
+def _same_month(t: "TimeOff") -> bool:
+    return (t.start_date.year, t.start_date.month) == (t.end_date.year, t.end_date.month)
+
+
+def _format_period_subject_en(t: "TimeOff") -> str:
+    """Compact date range for the subject line, e.g. '24-28th July' or '30th Jun-2nd Jul'."""
+    start, end = t.start_date, t.end_date
+    end_str = f"{end.day}{_ordinal_suffix_en(end.day)}"
+    if _same_month(t):
+        return f"{start.day}-{end_str} {end.strftime('%B')}"
+    start_str = f"{start.day}{_ordinal_suffix_en(start.day)}"
+    return f"{start_str} {start.strftime('%B')}-{end_str} {end.strftime('%B')}"
+
+
+def _format_period_body_en(t: "TimeOff") -> str:
+    """Weekday-annotated date range for the body, e.g. 'fri 24th - tue 28th july'."""
+    start, end = t.start_date, t.end_date
+    start_str = f"{start.strftime('%a').lower()} {start.day}{_ordinal_suffix_en(start.day)}"
+    end_str = f"{end.strftime('%a').lower()} {end.day}{_ordinal_suffix_en(end.day)}"
+    if _same_month(t):
+        return f"{start_str} - {end_str} {end.strftime('%B').lower()}"
+    return f"{start_str} {start.strftime('%B').lower()} - {end_str} {end.strftime('%B').lower()}"
+
+
+def _format_period_subject_de(t: "TimeOff") -> str:
+    """Compact date range for the subject line, e.g. '24.-28. Juli' or '30. Juni-2. Juli'."""
+    start, end = t.start_date, t.end_date
+    if _same_month(t):
+        return f"{start.day}.-{end.day}. {_GERMAN_MONTHS[end.month]}"
+    return f"{start.day}. {_GERMAN_MONTHS[start.month]}-{end.day}. {_GERMAN_MONTHS[end.month]}"
+
+
+def _format_period_body_de(t: "TimeOff") -> str:
+    """Weekday-annotated date range for the body, e.g. 'Fr 24. - Di 28. Juli'."""
+    start, end = t.start_date, t.end_date
+    start_wd = _GERMAN_WEEKDAYS_ABBR[start.weekday()]
+    end_wd = _GERMAN_WEEKDAYS_ABBR[end.weekday()]
+    if _same_month(t):
+        return f"{start_wd} {start.day}. - {end_wd} {end.day}. {_GERMAN_MONTHS[end.month]}"
+    return (
+        f"{start_wd} {start.day}. {_GERMAN_MONTHS[start.month]} - "
+        f"{end_wd} {end.day}. {_GERMAN_MONTHS[end.month]}"
+    )
+
+
+def get_timeoff_notice_default_content(
+    time_offs: list["TimeOff"], practice: "Practice"
+) -> tuple[str, str, str, str]:
+    """Get default bilingual email content for a time-off heads-up notice.
+
+    Accepts one or more time-off periods (e.g. several separate holidays
+    announced in a single email) and summarises them either as a single
+    date range (one period) or a bulleted list of ranges (several periods).
+
+    Content is deliberately date-only, not title-based: clients don't need to
+    know what the practitioner is doing with the time, just which dates and
+    weekdays are affected, so they can scan for their own recurring slot.
+
+    Unlike the other builders here, this one is not rendered for a single client:
+    it's used to pre-fill an editable multi-recipient form. The bodies contain a
+    literal ``{salutation}`` placeholder that is filled in per-recipient at send
+    time via render_email_template(), the same mechanism used for the
+    DB-configurable invoice email templates above.
+
+    Returns:
+        tuple: (subject_de, body_de, subject_en, body_en)
+    """
+    subject_de = f"Praxis geschlossen: {', '.join(_format_period_subject_de(t) for t in time_offs)}"
+    subject_en = f"Practice closed: {', '.join(_format_period_subject_en(t) for t in time_offs)}"
+
+    if len(time_offs) == 1:
+        periods_de = _format_period_body_de(time_offs[0])
+        periods_en = _format_period_body_en(time_offs[0])
+    else:
+        periods_de = "\n".join(f"- {_format_period_body_de(t)}" for t in time_offs)
+        periods_en = "\n".join(f"- {_format_period_body_en(t)}" for t in time_offs)
+
+    body_de = (
+        "{salutation},\n\n"
+        "ich möchte dich frühzeitig informieren: Die Praxis ist geschlossen:\n\n"
+        f"{periods_de}\n\n"
+        "In dieser Zeit bin ich leider nicht erreichbar. Bei dringenden Anliegen "
+        "melde dich bitte rechtzeitig vorher bei mir.\n\n"
+        "Ich wünsche dir bis dahin alles Gute."
+    )
+
+    body_en = (
+        "{salutation},\n\n"
+        "I wanted to give you advance notice: the practice will be closed:\n\n"
+        f"{periods_en}\n\n"
+        "I won't be reachable during this time. If anything urgent comes up, "
+        "please get in touch beforehand.\n\n"
+        "All the best until then."
+    )
+
+    if practice.email_signature:
+        body_de = body_de + "\n\n-- \n" + practice.email_signature
+        body_en = body_en + "\n\n-- \n" + practice.email_signature
+
+    return subject_de, body_de, subject_en, body_en

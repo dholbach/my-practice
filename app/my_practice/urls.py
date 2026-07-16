@@ -145,6 +145,23 @@ urlpatterns = [
         views.update_invoice_status,
         name="update_invoice_status",
     ),
+    path("timeoff/", views.timeoff_list, name="timeoff_list"),
+    path("timeoff/new/", views.TimeOffCreateView.as_view(), name="timeoff_create"),
+    path(
+        "timeoff/<int:pk>/edit/",
+        views.TimeOffUpdateView.as_view(),
+        name="timeoff_update",
+    ),
+    path(
+        "timeoff/<int:pk>/delete/",
+        views.TimeOffDeleteView.as_view(),
+        name="timeoff_delete",
+    ),
+    path(
+        "timeoff/notify/",
+        views.SendTimeOffNoticeView.as_view(),
+        name="timeoff_notify",
+    ),
     path("withdrawals/", views.withdrawal_list, name="withdrawal_list"),
     path(
         "withdrawals/new/",

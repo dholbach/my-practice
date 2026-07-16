@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% if time_off %}{% trans "Edit time off" %}{% else %}{% trans "New time off" %}{% endif %}{% endblock %}
+
+{% block page_title %}{% if time_off %}{% trans "Edit time off" %}{% else %}{% trans "New time off" %}{% endif %}{% endblock %}
+{% block page_subtitle %}{% if time_off %}{{ time_off.title }}{% else %}{% trans "Record a new time-off period" %}{% endif %}{% endblock %}
+
+{% block content %}
+
+<div class="card max-w-[800px] my-8 mx-auto">
+    <form method="post" class="flex flex-col gap-6">
+        {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+            <div class="error-message">{{ form.title.errors }}</div>
+            {% endif %}
+            {% if form.title.help_text %}
+            <small class="form-text">{{ form.title.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.type.id_for_label }}">{{ form.type.label }}</label>
+            {{ form.type }}
+            {% if form.type.errors %}
+            <div class="error-message">{{ form.type.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.start_date.id_for_label }}">{{ form.start_date.label }}</label>
+            {{ form.start_date }}
+            {% if form.start_date.errors %}
+            <div class="error-message">{{ form.start_date.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.end_date.id_for_label }}">{{ form.end_date.label }}</label>
+            {{ form.end_date }}
+            {% if form.end_date.errors %}
+            <div class="error-message">{{ form.end_date.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+            <div class="error-message">{{ form.notes.errors }}</div>
+            {% endif %}
+            {% if form.notes.help_text %}
+            <small class="form-text">{{ form.notes.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="flex gap-4 justify-end mt-2">
+            <a href="{% if next %}{{ next }}{% else %}{% url 'timeoff_list' %}{% endif %}" class="btn btn-secondary">
+                {% trans "Cancel" %}
+            </a>
+            <button type="submit" class="btn btn-primary">
+                💾 {% trans "Save" %}
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
