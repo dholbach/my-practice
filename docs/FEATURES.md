@@ -182,7 +182,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Period-based calculations
 - ✅ Calendar integration
 - ✅ In-app create/edit/delete (`/timeoff/`) — no longer admin-only; list splits into upcoming/current vs. past (P-121)
-- ✅ Multi-period heads-up email to clients — select any combination of upcoming periods, editable bilingual (DE/EN) preview with per-client personalized salutation; recipient table (client code, language, last/next session) for quickly trimming a long list; subject/body are date-only ("24-28th July" / "fri 24th - tue 28th july") so clients see what's affected without needing to know what the time off is for (P-121)
+- ✅ Multi-period heads-up email to clients — select any combination of upcoming periods, editable bilingual (DE/EN) preview with per-client personalized salutation; recipient table (client code, language, last/next session) with a select/unselect-all toggle for quickly trimming a long list; subject/body are date-only ("24-28th July" / "Fri 24th - Tue 28th July") so clients see what's affected without needing to know what the time off is for (P-121)
 
 ---
 
