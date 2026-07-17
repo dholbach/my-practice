@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-15 22:46+0200\n"
+"POT-Creation-Date: 2026-07-17 09:02+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -1717,7 +1717,7 @@ msgstr ""
 #: templates/my_practice/analytics.html:393
 #: templates/my_practice/client_list_cards.html:106
 #: templates/my_practice/invoice_detail.html:118
-#: templates/my_practice/time_off_notice_form.html:25
+#: templates/my_practice/time_off_notice_form.html:28
 msgid "Code"
 msgstr ""
 
@@ -2661,7 +2661,7 @@ msgstr "Working diagnosis"
 
 #: templates/my_practice/client_detail.html:67
 #: templates/my_practice/client_list_cards.html:108
-#: templates/my_practice/time_off_notice_form.html:27
+#: templates/my_practice/time_off_notice_form.html:30
 msgid "Last session"
 msgstr ""
 
@@ -2879,7 +2879,7 @@ msgstr "Delete supervision note?"
 #: templates/my_practice/tax_quarter_overview.html:191
 #: templates/my_practice/time_off_confirm_delete.html:47
 #: templates/my_practice/time_off_form.html:70
-#: templates/my_practice/time_off_notice_form.html:91
+#: templates/my_practice/time_off_notice_form.html:94
 #: templates/my_practice/todo_form.html:77
 #: templates/my_practice/withdrawal_form.html:73
 msgid "Cancel"
@@ -2962,7 +2962,7 @@ msgstr ""
 #: templates/my_practice/inquiry_list.html:100
 #: templates/my_practice/inquiry_list.html:181
 #: templates/my_practice/inquiry_list.html:227
-#: templates/my_practice/time_off_notice_form.html:26
+#: templates/my_practice/time_off_notice_form.html:29
 msgid "Language"
 msgstr ""
 
@@ -4761,37 +4761,41 @@ msgstr "No assessment recorded yet."
 
 #: templates/my_practice/time_off_notice_form.html:4
 #: templates/my_practice/time_off_notice_form.html:6
-#: templates/my_practice/time_off_notice_form.html:88
+#: templates/my_practice/time_off_notice_form.html:91
 msgid "Send heads-up email"
 msgstr ""
 
-#: templates/my_practice/time_off_notice_form.html:28
+#: templates/my_practice/time_off_notice_form.html:26
+msgid "Select/unselect all"
+msgstr ""
+
+#: templates/my_practice/time_off_notice_form.html:31
 #, fuzzy
 #| msgid "Delete session?"
 msgid "Next session"
 msgstr "Delete session?"
 
-#: templates/my_practice/time_off_notice_form.html:34
+#: templates/my_practice/time_off_notice_form.html:37
 msgid "Select recipient"
 msgstr ""
 
-#: templates/my_practice/time_off_notice_form.html:44
+#: templates/my_practice/time_off_notice_form.html:47
 #, fuzzy
 #| msgid "Client %(code)s has no email address on file."
 msgid "No active clients with an email address on file."
 msgstr "Client %(code)s has no email address on file."
 
-#: templates/my_practice/time_off_notice_form.html:49
+#: templates/my_practice/time_off_notice_form.html:52
 msgid "German"
 msgstr ""
 
-#: templates/my_practice/time_off_notice_form.html:62
-#: templates/my_practice/time_off_notice_form.html:81
+#: templates/my_practice/time_off_notice_form.html:65
+#: templates/my_practice/time_off_notice_form.html:84
 #, python-brace-format
 msgid "Leave the {salutation} token in place — it is replaced with each client's personal salutation when sending."
 msgstr ""
 
-#: templates/my_practice/time_off_notice_form.html:68
+#: templates/my_practice/time_off_notice_form.html:71
 msgid "English"
 msgstr ""
 

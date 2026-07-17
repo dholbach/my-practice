@@ -21,7 +21,10 @@
         <table class="data-table w-auto">
             <thead>
                 <tr>
-                    <th class="py-0.5 px-2"></th>
+                    <th class="py-0.5 px-2">
+                        <input type="checkbox" id="recipients-select-all" class="form-check-input" checked
+                               title="{% trans 'Select/unselect all' %}" aria-label="{% trans 'Select/unselect all' %}">
+                    </th>
                     <th class="py-0.5 px-2">{% trans "Code" %}</th>
                     <th class="py-0.5 px-2">{% trans "Language" %}</th>
                     <th class="py-0.5 px-2">{% trans "Last session" %}</th>
@@ -31,7 +34,7 @@
             <tbody>
                 {% for client in form.recipients.field.queryset %}
                 <tr>
-                    <td class="py-0.5 px-2"><input type="checkbox" name="recipients" value="{{ client.pk }}" class="form-check-input" {% if client.pk|stringformat:"s" in checked_ids %}checked{% endif %} aria-label="{% trans 'Select recipient' %}"></td>
+                    <td class="py-0.5 px-2"><input type="checkbox" name="recipients" value="{{ client.pk }}" class="form-check-input recipient-checkbox" {% if client.pk|stringformat:"s" in checked_ids %}checked{% endif %} aria-label="{% trans 'Select recipient' %}"></td>
                     <td class="py-0.5 px-2 font-mono font-bold text-base">{{ client.client_code }}</td>
                     <td class="py-0.5 px-2"><span class="badge badge-{{ client.language }} py-0.5 px-2">{{ client.language|upper }}</span></td>
                     <td class="py-0.5 px-2">{{ client.last_session_date|date:"Y-m-d"|default:"–" }}</td>
@@ -92,5 +95,21 @@
         </a>
     </div>
 </form>
+
+<script>
+document.getElementById('recipients-select-all')?.addEventListener('change', function () {
+    document.querySelectorAll('.recipient-checkbox').forEach(cb => {
+        cb.checked = this.checked;
+    });
+});
+
+document.querySelectorAll('.recipient-checkbox').forEach(cb => {
+    cb.addEventListener('change', function () {
+        const selectAll = document.getElementById('recipients-select-all');
+        const boxes = document.querySelectorAll('.recipient-checkbox');
+        selectAll.checked = Array.from(boxes).every(b => b.checked);
+    });
+});
+</script>
 
 {% endblock %}
