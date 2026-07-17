@@ -2,6 +2,22 @@
 
 Major features and milestones in chronological order.
 
+## 2026-07-17 — v0.2.12 patch release
+
+- **Feature — time-off CRUD + client heads-up email** (P-121, #233): In-app create/edit/delete for `TimeOff` entries (`/timeoff/`, previously admin-only), list split into upcoming/current vs. past. New multi-period heads-up email flow: recipient table shows client code/language/last-next-session for quick trimming, editable bilingual (DE/EN) preview, date-only subject/body (no title leaked to clients) with per-client `{salutation}` substitution. First feature built entirely under the P-039 "English msgids" i18n convention.
+- **Feature — time-off notice polish** (#234): Header checkbox to select/unselect all recipients at once; English body date ranges title-cased ("Fri 24th - Tue 28th July") to match the German equivalent.
+- **Feature — Shut-D questionnaire** (#232): Shutdown Dissociation Scale shipped in-repo as a second public-domain instrument (Schalinski et al. 2016, CC BY-SA 4.0), alongside GAD-7.
+- **Feature — questionnaire multi-instrument wiring** (P-120, #225): ADNM-20 as the second instance-local instrument exposed a page-break bug losing radio buttons on long grids (fixed with `break-inside: avoid`), a missing Docker volume mount for `MY_PRACTICE_DATA_DIR/questionnaires/`, and hardcoded GAD-7-only wiring. Generalized: instrument code is now a URL param, filename labels live in the content file, and the client detail "Assessments" card dynamically lists whatever instruments actually have content present.
+- **Feature — questionnaire checklist/freetext blocks** (P-119, #223): New `checklist` and `freetext` block types for questionnaire PDFs, plus dual-scale grids (`column_groups`) for statements with more than one independent response scale; per-section field-name prefixing avoids collisions; unrecognized section types now raise instead of silently dropping.
+- **Feature — clinical questionnaire PDFs pilot** (P-118, #222): GAD-7 rendered as a fillable, branded PDF (DE/EN) and sent by email from the client detail page; question content kept separate from the committed template so licensed instruments never enter git.
+- **Feature — GebüH invoice-detail total** (#231): Invoice detail page shows a running "GebüH gesamt" total alongside the grand total, matching the PDF.
+- **Feature — GebüH invoice-detail tightening** (#220): Invoice detail page mirrors the PDF's headline-row + collapsed detail-line layout instead of a separate row per code plus subtotal/remaining rows.
+- **Bug fix — client list pagination** (#221): Removed a silent cap that hid clients beyond the first page.
+- **Bug fix — orphaned Practice logo/signature files** (#224): Re-uploads now delete the previous file instead of leaking it into the media directory.
+- **Bug fix — supervision topics hidden on client detail** (#229): Open supervision topics are now surfaced in the client detail cockpit.
+- **Chore — quarterly review** (#230): Deduped next-redirect CRUD logic across delete views; stale docs fixed.
+- **Deps**: mypy 2.3.0, types-markdown 3.10.2.20260712, google-auth 2.56.0 (#226–#228).
+
 ## 2026-07-13 — v0.2.11 patch release
 
 - **Feature — GebüH invoice PDF tightening** (#216): Per-visit rows redesigned as a headline (date, service, amount) with Ziffer code, description, and Restbetrag collapsed into one muted detail line underneath — six visits now read in the space four used to. New running "GebüH gesamt" total near the grand total. Recorded Ziffer amount now capped at what's actually charged (`min(satz_max, vereinbarter_betrag)`) instead of always showing the code's ceiling rate. Page-break fixes: each visit block, and the closing note/client-note/signature group, now stay together across a page break.
