@@ -373,13 +373,13 @@ def _format_period_subject_en(t: "TimeOff") -> str:
 
 
 def _format_period_body_en(t: "TimeOff") -> str:
-    """Weekday-annotated date range for the body, e.g. 'fri 24th - tue 28th july'."""
+    """Weekday-annotated date range for the body, e.g. 'Fri 24th - Tue 28th July'."""
     start, end = t.start_date, t.end_date
-    start_str = f"{start.strftime('%a').lower()} {start.day}{_ordinal_suffix_en(start.day)}"
-    end_str = f"{end.strftime('%a').lower()} {end.day}{_ordinal_suffix_en(end.day)}"
+    start_str = f"{start.strftime('%a')} {start.day}{_ordinal_suffix_en(start.day)}"
+    end_str = f"{end.strftime('%a')} {end.day}{_ordinal_suffix_en(end.day)}"
     if _same_month(t):
-        return f"{start_str} - {end_str} {end.strftime('%B').lower()}"
-    return f"{start_str} {start.strftime('%B').lower()} - {end_str} {end.strftime('%B').lower()}"
+        return f"{start_str} - {end_str} {end.strftime('%B')}"
+    return f"{start_str} {start.strftime('%B')} - {end_str} {end.strftime('%B')}"
 
 
 def _format_period_subject_de(t: "TimeOff") -> str:

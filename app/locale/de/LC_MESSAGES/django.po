@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-15 22:46+0200\n"
+"POT-Creation-Date: 2026-07-17 09:02+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -1716,7 +1716,7 @@ msgstr "Rang"
 #: templates/my_practice/analytics.html:393
 #: templates/my_practice/client_list_cards.html:106
 #: templates/my_practice/invoice_detail.html:118
-#: templates/my_practice/time_off_notice_form.html:25
+#: templates/my_practice/time_off_notice_form.html:28
 msgid "Code"
 msgstr "Code"
 
@@ -2660,7 +2660,7 @@ msgstr "Arbeitsdiagnose"
 
 #: templates/my_practice/client_detail.html:67
 #: templates/my_practice/client_list_cards.html:108
-#: templates/my_practice/time_off_notice_form.html:27
+#: templates/my_practice/time_off_notice_form.html:30
 msgid "Last session"
 msgstr "Letzte Sitzung"
 
@@ -2878,7 +2878,7 @@ msgstr "Supervisionsnotiz löschen?"
 #: templates/my_practice/tax_quarter_overview.html:191
 #: templates/my_practice/time_off_confirm_delete.html:47
 #: templates/my_practice/time_off_form.html:70
-#: templates/my_practice/time_off_notice_form.html:91
+#: templates/my_practice/time_off_notice_form.html:94
 #: templates/my_practice/todo_form.html:77
 #: templates/my_practice/withdrawal_form.html:73
 msgid "Cancel"
@@ -2961,7 +2961,7 @@ msgstr "Kostenträger"
 #: templates/my_practice/inquiry_list.html:100
 #: templates/my_practice/inquiry_list.html:181
 #: templates/my_practice/inquiry_list.html:227
-#: templates/my_practice/time_off_notice_form.html:26
+#: templates/my_practice/time_off_notice_form.html:29
 msgid "Language"
 msgstr "Sprache"
 
@@ -4754,33 +4754,37 @@ msgstr "Keine vergangenen Abwesenheiten erfasst."
 
 #: templates/my_practice/time_off_notice_form.html:4
 #: templates/my_practice/time_off_notice_form.html:6
-#: templates/my_practice/time_off_notice_form.html:88
+#: templates/my_practice/time_off_notice_form.html:91
 msgid "Send heads-up email"
 msgstr "Hinweis-E-Mail senden"
 
-#: templates/my_practice/time_off_notice_form.html:28
+#: templates/my_practice/time_off_notice_form.html:26
+msgid "Select/unselect all"
+msgstr "Alle aus-/abwählen"
+
+#: templates/my_practice/time_off_notice_form.html:31
 msgid "Next session"
 msgstr "Nächste Sitzung"
 
-#: templates/my_practice/time_off_notice_form.html:34
+#: templates/my_practice/time_off_notice_form.html:37
 msgid "Select recipient"
 msgstr "Empfänger:in auswählen"
 
-#: templates/my_practice/time_off_notice_form.html:44
+#: templates/my_practice/time_off_notice_form.html:47
 msgid "No active clients with an email address on file."
 msgstr "Keine aktiven Klient:innen mit hinterlegter E-Mail-Adresse."
 
-#: templates/my_practice/time_off_notice_form.html:49
+#: templates/my_practice/time_off_notice_form.html:52
 msgid "German"
 msgstr "Deutsch"
 
-#: templates/my_practice/time_off_notice_form.html:62
-#: templates/my_practice/time_off_notice_form.html:81
+#: templates/my_practice/time_off_notice_form.html:65
+#: templates/my_practice/time_off_notice_form.html:84
 #, python-brace-format
 msgid "Leave the {salutation} token in place — it is replaced with each client's personal salutation when sending."
 msgstr "Den Platzhalter {salutation} bitte stehen lassen — er wird beim Versand durch die persönliche Anrede der jeweiligen Person ersetzt."
 
-#: templates/my_practice/time_off_notice_form.html:68
+#: templates/my_practice/time_off_notice_form.html:71
 msgid "English"
 msgstr "Englisch"
 
