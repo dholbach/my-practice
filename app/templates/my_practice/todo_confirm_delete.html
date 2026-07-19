@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}TODO löschen{% endblock %}
+{% block title %}{% trans "Delete to-do" %}{% endblock %}
 
 {% block page_icon %}🗑️{% endblock %}
-{% block page_title %}TODO löschen{% endblock %}
+{% block page_title %}{% trans "Delete to-do" %}{% endblock %}
 
 {% block content %}
 <div class="confirm-delete">
     <div class="warning-box">
-        <h2>⚠️ Wirklich löschen?</h2>
-        <p>Möchten Sie diese Aufgabe wirklich löschen?</p>
+        <h2>⚠️ {% trans "Really delete?" %}</h2>
+        <p>{% trans "Are you sure you want to delete this task?" %}</p>
 
         <div class="object-details">
             <h3>{{ object.title }}</h3>
@@ -29,8 +30,8 @@
     <form method="post">
         {% csrf_token %}
         <div class="form-actions">
-            <button type="submit" class="btn btn-danger">🗑️ Ja, löschen</button>
-            <a href="{% url 'todo_list' %}" class="btn btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn btn-danger">🗑️ {% trans "Yes, delete" %}</button>
+            <a href="{% url 'todo_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
         </div>
     </form>
 </div>
