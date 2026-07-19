@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-19 17:32+0200\n"
+"POT-Creation-Date: 2026-07-19 17:50+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -1307,6 +1307,101 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+#: templates/includes/agenda_widget_content.html:42
+#: templates/includes/todo_content.html:21
+msgid "Overdue"
+msgstr ""
+
+#: templates/includes/agenda_widget_content.html:44
+msgid "Today"
+msgstr ""
+
+#: templates/includes/agenda_widget_content.html:46
+msgid "Soon"
+msgstr ""
+
+#: templates/includes/agenda_widget_content.html:76
+msgid "No sessions or tasks for today!"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:16
+msgid "Calendar match: discrepancies found"
+msgstr "Calendar match: discrepancies found"
+
+#: templates/includes/calendar_preflight_widget.html:18
+msgid "Calendar match: all appointments confirmed"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:25
+msgid "Date (invoice)"
+msgstr "Date (invoice)"
+
+#: templates/includes/calendar_preflight_widget.html:26
+#: templates/my_practice/client_detail.html:642
+#: templates/my_practice/invoice_detail.html:84
+#: templates/my_practice/time_off_list.html:35
+#: templates/my_practice/time_off_list.html:80
+msgid "Duration"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:27
+#: templates/my_practice/analytics.html:395
+#: templates/my_practice/billing_open_overview.html:58
+#: templates/my_practice/client_detail.html:642
+#: templates/my_practice/client_detail.html:686
+#: templates/my_practice/inquiry_confirm_delete.html:30
+#: templates/my_practice/invoice_confirm_delete.html:32
+#: templates/my_practice/invoice_detail.html:33
+#: templates/my_practice/revenue_report.html:55
+#: templates/my_practice/send_payment_reminder.html:21
+#: templates/my_practice/tax_quarter_overview.html:81
+msgid "Status"
+msgstr "Status"
+
+#: templates/includes/calendar_preflight_widget.html:28
+#: templates/my_practice/inquiry_form.html:121
+msgid "Note"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:42
+msgid "Confirmed"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:44
+#: templates/my_practice/analytics.html:912
+#: templates/my_practice/dashboard.html:154
+#: templates/my_practice/invoice_detail.html:43
+msgid "Cancelled"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:46
+msgid "Moved"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:48
+msgid "No match"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:53
+msgid "Appointment was cancelled in the calendar — check the invoice"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:55
+#, python-format
+msgid "Calendar date: %(suggested_date)s — update the invoice date if needed"
+msgstr ""
+
+#: templates/includes/calendar_preflight_widget.html:57
+msgid "No matching calendar entry found"
+msgstr "No matching calendar entry found"
+
+#: templates/includes/calendar_preflight_widget.html:68
+#, python-format
+msgid "%(counter)s calendar appointment not on the invoice:"
+msgid_plural "%(counter)s calendar appointments not on the invoice:"
+msgstr[0] "%(counter)s calendar appointment not on the invoice:"
+msgstr[1] "%(counter)s calendar appointments not on the invoice:"
+
 #: templates/includes/capacity_monitoring_widget_content.html:6
 #, python-format
 msgid "Capacity below 80%% of monthly target"
@@ -1384,8 +1479,58 @@ msgstr ""
 msgid "(%(n)s days ago)"
 msgstr ""
 
+#: templates/includes/client_tags.html:21
+msgid "Add tag"
+msgstr ""
+
+#: templates/includes/client_tags.html:30
+msgid "No more tags available"
+msgstr ""
+
+#: templates/includes/client_tags.html:31
+msgid "Create new tag →"
+msgstr "Create new tag →"
+
+#: templates/includes/client_tags.html:81
+msgid "Error adding tag"
+msgstr ""
+
+#: templates/includes/client_tags.html:102
+msgid "Error removing tag"
+msgstr "Error removing tag"
+
 #: templates/includes/gebueh_button.html:7
 msgid "GebüH"
+msgstr ""
+
+#: templates/includes/invoice_status_badge.html:10
+msgid "Click to mark as sent"
+msgstr ""
+
+#: templates/includes/invoice_status_badge.html:11
+msgid "DRAFT →"
+msgstr ""
+
+#: templates/includes/invoice_status_badge.html:19
+msgid "Click to mark as paid"
+msgstr ""
+
+#: templates/includes/invoice_status_badge.html:20
+msgid "SENT →"
+msgstr ""
+
+#: templates/includes/pagination.html:17
+msgid "← Previous"
+msgstr ""
+
+#: templates/includes/pagination.html:19
+#: templates/my_practice/bank_review.html:334
+#, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr ""
+
+#: templates/includes/pagination.html:21
+msgid "Next →"
 msgstr ""
 
 #: templates/includes/pending_calendar_widget_content.html:7
@@ -1489,10 +1634,6 @@ msgstr "Active"
 msgid "Completed"
 msgstr ""
 
-#: templates/includes/todo_content.html:21
-msgid "Overdue"
-msgstr ""
-
 #: templates/includes/todo_content.html:28
 #: templates/my_practice/todo_form.html:4
 msgid "New task"
@@ -1529,6 +1670,7 @@ msgid "overdue!"
 msgstr ""
 
 #: templates/includes/todo_content.html:99
+#: templates/includes/weekly_focus_widget_content.html:46
 msgid "Remove focus"
 msgstr ""
 
@@ -1591,6 +1733,31 @@ msgstr ""
 
 #: templates/includes/todo_content.html:115
 msgid "Create first task"
+msgstr ""
+
+#: templates/includes/weekly_focus_widget_content.html:11
+msgid "Sessions this week"
+msgstr ""
+
+#: templates/includes/weekly_focus_widget_content.html:25
+msgid "No sessions this week."
+msgstr "No sessions this week."
+
+#: templates/includes/weekly_focus_widget_content.html:31
+msgid "Focus tasks"
+msgstr ""
+
+#: templates/includes/weekly_focus_widget_content.html:41
+msgid "Mark as done"
+msgstr ""
+
+#: templates/includes/weekly_focus_widget_content.html:60
+#, python-format
+msgid "No focus tasks. Click ⭐ on a task in the <a href=\"%(todo_list_url)s\">to-do list</a>."
+msgstr ""
+
+#: templates/includes/widget_base.html:39
+msgid "Toggle widget"
 msgstr ""
 
 #: templates/my_practice/analytics.html:10
@@ -1789,19 +1956,6 @@ msgstr ""
 #: templates/my_practice/tag_list.html:24
 msgid "Name"
 msgstr "Name"
-
-#: templates/my_practice/analytics.html:395
-#: templates/my_practice/billing_open_overview.html:58
-#: templates/my_practice/client_detail.html:642
-#: templates/my_practice/client_detail.html:686
-#: templates/my_practice/inquiry_confirm_delete.html:30
-#: templates/my_practice/invoice_confirm_delete.html:32
-#: templates/my_practice/invoice_detail.html:33
-#: templates/my_practice/revenue_report.html:55
-#: templates/my_practice/send_payment_reminder.html:21
-#: templates/my_practice/tax_quarter_overview.html:81
-msgid "Status"
-msgstr "Status"
 
 #: templates/my_practice/analytics.html:396
 msgid "Sessions (period)"
@@ -2070,12 +2224,6 @@ msgstr ""
 
 #: templates/my_practice/analytics.html:911
 msgid "Cancellation rate"
-msgstr ""
-
-#: templates/my_practice/analytics.html:912
-#: templates/my_practice/dashboard.html:154
-#: templates/my_practice/invoice_detail.html:43
-msgid "Cancelled"
 msgstr ""
 
 #: templates/my_practice/analytics.html:923
@@ -2357,11 +2505,6 @@ msgstr ""
 
 #: templates/my_practice/bank_review.html:330
 msgid "Previous"
-msgstr ""
-
-#: templates/my_practice/bank_review.html:334
-#, python-format
-msgid "Page %(page)s of %(pages)s"
 msgstr ""
 
 #: templates/my_practice/bank_review.html:338
@@ -3173,13 +3316,6 @@ msgstr ""
 msgid "Time"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:642
-#: templates/my_practice/invoice_detail.html:84
-#: templates/my_practice/time_off_list.html:35
-#: templates/my_practice/time_off_list.html:80
-msgid "Duration"
-msgstr ""
-
 #: templates/my_practice/client_detail.html:650
 msgid "Pending"
 msgstr ""
@@ -3720,10 +3856,6 @@ msgstr ""
 
 #: templates/my_practice/inquiry_form.html:121
 msgid "Step"
-msgstr ""
-
-#: templates/my_practice/inquiry_form.html:121
-msgid "Note"
 msgstr ""
 
 #: templates/my_practice/inquiry_form.html:126

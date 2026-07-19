@@ -2,12 +2,16 @@
 {# Required: card_title, card_id, body_de                                          #}
 {# Optional: body_en     — adds DE/EN tabs when present                            #}
 {#           subject_de, subject_en — adds copyable subject row inside each panel  #}
+{# Exempt from i18n (like utils/email_utils.py): labels here identify the language #}
+{# of the authored content beside them (Betreff/Subject, Kopieren/Copy), not the   #}
+{# app's UI language — translating them would make the German panel show English  #}
+{# labels when the UI is switched to English, which defeats the point.            #}
 <section class="bp-card" x-data="{ tab: 'de' }">
     <h2>{{ card_title }}</h2>
     {% if body_en %}
     <div class="bp-tabs">
         <button type="button" class="bp-tab" :class="{ active: tab === 'de' }" x-on:click="tab = 'de'">Deutsch</button>
-        <button type="button" class="bp-tab" :class="{ active: tab === 'en' }" x-on:click="tab = 'en'">Englisch</button>
+        <button type="button" class="bp-tab" :class="{ active: tab === 'en' }" x-on:click="tab = 'en'">English</button>
     </div>
     {% endif %}
     <div id="{{ card_id }}-de" class="bp-body" :class="{ active: tab === 'de' }">

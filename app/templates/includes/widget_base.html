@@ -1,9 +1,10 @@
+{% load i18n %}
 {% comment %}
 Widget Base Template - P-003 Phase 3
 Collapsible widget card with state persistence via LocalStorage
 
 Usage:
-{% include 'includes/widget_base.html' with widget_id="agenda" widget_title="📅 Heute" widget_content="..." %}
+{% include 'includes/widget_base.html' with widget_id="agenda" widget_title="📅 Today" widget_content="..." %}
 
 Required parameters:
 - widget_id: Unique identifier for the widget (used for LocalStorage key)
@@ -35,7 +36,7 @@ Optional parameters:
                 </div>
             {% endif %}
         </div>
-        <button class="widget-toggle" aria-label="Toggle widget">
+        <button class="widget-toggle" aria-label="{% trans 'Toggle widget' %}">
             <span class="toggle-icon">▼</span>
         </button>
     </div>

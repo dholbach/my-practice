@@ -1,3 +1,4 @@
+{% load i18n %}
 {# Invoice status badge — rendered as a <td> innerHTML via HTMX or directly in invoice_list.html #}
 {# Requires: invoice #}
 {% if invoice.status == 'draft' %}
@@ -6,8 +7,8 @@
         hx-vals='{"status": "sent"}'
         hx-target="#invoice-status-{{ invoice.pk }}"
         hx-swap="innerHTML"
-        title="Klicken: als Gesendet markieren">
-    ENTWURF →
+        title="{% trans 'Click to mark as sent' %}">
+    {% trans "DRAFT →" %}
 </button>
 {% elif invoice.status == 'sent' %}
 <button class="status-badge sent htmx-badge"
@@ -15,8 +16,8 @@
         hx-vals='{"status": "paid"}'
         hx-target="#invoice-status-{{ invoice.pk }}"
         hx-swap="innerHTML"
-        title="Klicken: als Bezahlt markieren">
-    GESENDET →
+        title="{% trans 'Click to mark as paid' %}">
+    {% trans "SENT →" %}
 </button>
 {% else %}
 <span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span>

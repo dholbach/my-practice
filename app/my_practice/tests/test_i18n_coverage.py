@@ -17,34 +17,22 @@ TEMPLATES_DIR = Path(settings.BASE_DIR) / "templates"
 LOCALE_DIR = Path(settings.BASE_DIR) / "locale"
 
 # Handle language per-document (client language field), not via Django i18n.
+# includes/email_card.html is here too: its labels (Betreff/Subject,
+# Kopieren/Copy) identify the language of the authored bilingual content next
+# to them, not the app's UI language — same rationale as utils/email_utils.py.
 EXEMPT_TEMPLATES = {
     "my_practice/invoice_pdf_de.html",
     "my_practice/invoice_pdf_en.html",
     "my_practice/treatment_contract_pdf.html",
     "my_practice/intake_form_pdf.html",
     "my_practice/questionnaire_pdf.html",
+    "includes/email_card.html",
 }
 
 # Templates not yet wrapped for i18n — tracked as the Phase 1 backlog of the
 # dedicated P-039 sweep (issue #69). Remove an entry here in the same PR that
 # wraps it with {% load i18n %} + {% trans %}/{% blocktrans %}.
 KNOWN_UNWRAPPED_TEMPLATES = {
-    "includes/agenda_widget_content.html",
-    "includes/agenda_widget.html",
-    "includes/bank_import_widget_content.html",
-    "includes/calendar_preflight_widget.html",
-    "includes/checklist_widget_content.html",
-    "includes/client_tags.html",
-    "includes/email_card.html",
-    "includes/empty_state.html",
-    "includes/inline_post_button.html",
-    "includes/invoice_actions_widget_content.html",
-    "includes/invoice_status_badge.html",
-    "includes/pagination.html",
-    "includes/stat_card.html",
-    "includes/stats_grid.html",
-    "includes/weekly_focus_widget_content.html",
-    "includes/widget_base.html",
     "my_practice/bank_expense_review.html",
     "my_practice/bank_import.html",
     "my_practice/bank_withdrawal_review.html",
@@ -76,9 +64,12 @@ GEBUEH_RE = re.compile(r"Gebü[hH]")
 GERMAN_CHAR_RE = re.compile(r"[äöüßÄÖÜ]")
 
 COMMENT_RE = re.compile(r"{%\s*comment\s*%}.*?{%\s*endcomment\s*%}|{#.*?#}|<!--.*?-->", re.DOTALL)
-SCRIPT_STYLE_RE = re.compile(
-    r"<script\b[^>]*>.*?</script>|<style\b[^>]*>.*?</style>", re.DOTALL | re.IGNORECASE
-)
+# Only <style> is stripped — CSS won't contain prose. <script> is deliberately
+# NOT stripped: templates embed {% trans %} inside alert()/JS string literals
+# (see includes/client_tags.html), and a leaked German alert() string is a
+# real bug the same as leaked HTML text — a past version of this regex
+# excluded <script> too and missed exactly that.
+STYLE_RE = re.compile(r"<style\b[^>]*>.*?</style>", re.DOTALL | re.IGNORECASE)
 
 
 def _all_templates():
@@ -87,7 +78,7 @@ def _all_templates():
 
 
 def _strip_noise(text):
-    text = SCRIPT_STYLE_RE.sub("", text)
+    text = STYLE_RE.sub("", text)
     text = COMMENT_RE.sub("", text)
     return GEBUEH_RE.sub("", text)
 
