@@ -1,20 +1,20 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Bank-Import{% endblock %}
+{% block title %}{% trans "Bank import" %}{% endblock %}
 
 {% block content %}
 <div class="bank-import-page">
     <div class="flex-between mb-4">
-        <h1 class="mb-0">💳 Bank-Import</h1>
+        <h1 class="mb-0">💳 {% trans "Bank import" %}</h1>
         <a href="{% url 'bank_review' %}" class="btn btn-secondary">
-            📋 Zur Prüfung
+            📋 {% trans "Go to review" %}
         </a>
     </div>
 
     <!-- Upload Form -->
     <div class="upload-card">
-        <h2 class="upload-card__title">CSV-Datei hochladen</h2>
+        <h2 class="upload-card__title">{% trans "Upload CSV file" %}</h2>
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
@@ -55,36 +55,36 @@
             </div>
 
             <button type="submit" class="btn btn-primary upload-submit-btn">
-                📤 Importieren & Verarbeiten
+                📤 {% trans "Import & process" %}
             </button>
         </form>
     </div>
 
     <!-- Format Info -->
     <div class="format-info-box">
-        <h3 class="format-info-box__title">ℹ️ Unterstützte Formate</h3>
+        <h3 class="format-info-box__title">ℹ️ {% trans "Supported formats" %}</h3>
         <ul class="format-info-box__list">
-            <li>CSV-Kontoauszug (Semikolon-getrennt)</li>
-            <li>UTF-8 Encoding</li>
-            <li>Deutsche Dezimalformate (90,00 €)</li>
-            <li>Datumformat: TT.MM.JJJJ</li>
+            <li>{% trans "CSV bank statement (semicolon-separated)" %}</li>
+            <li>{% trans "UTF-8 encoding" %}</li>
+            <li>{% trans "German decimal format (90,00 €)" %}</li>
+            <li>{% trans "Date format: DD.MM.YYYY" %}</li>
         </ul>
     </div>
 
     <!-- Recent Transactions -->
     {% if recent_transactions %}
     <div class="recent-transactions-card">
-        <h2 class="recent-transactions-card__title">Letzte Importe</h2>
+        <h2 class="recent-transactions-card__title">{% trans "Recent imports" %}</h2>
 
         <div class="overflow-x-auto">
             <table class="data-table--bank">
                 <thead>
                     <tr>
-                        <th>Datum</th>
-                        <th>Name</th>
-                        <th>Verwendungszweck</th>
-                        <th class="text-right">Betrag</th>
-                        <th>Status</th>
+                        <th>{% trans "Date" %}</th>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Reference" %}</th>
+                        <th class="text-right">{% trans "Amount" %}</th>
+                        <th>{% trans "Status" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -101,31 +101,31 @@
                         <td>
                             {% if trans.match_confidence == 'exact' %}
                                 <span class="import-badge import-badge--matched">
-                                    ✓ Exakt
+                                    ✓ {% trans "Exact" %}
                                 </span>
                             {% elif trans.match_confidence == 'fuzzy' %}
                                 <span class="import-badge import-badge--fuzzy">
-                                    ~ Fuzzy
+                                    ~ {% trans "Fuzzy" %}
                                 </span>
                             {% elif trans.match_confidence == 'manual' %}
                                 <span class="import-badge import-badge--manual">
-                                    ✍️ Manuell
+                                    ✍️ {% trans "Manual" %}
                                 </span>
                             {% elif trans.match_confidence == 'ignored' %}
                                 <span class="import-badge import-badge--neutral">
-                                    ➖ Ignoriert
+                                    ➖ {% trans "Ignored" %}
                                 </span>
                             {% elif trans.match_confidence == 'auto-withdrawal' %}
                                 <span class="import-badge import-badge--neutral">
-                                    💸 Entnahme
+                                    💸 {% trans "Withdrawal" %}
                                 </span>
                             {% elif trans.match_confidence == 'auto-expense' %}
                                 <span class="import-badge import-badge--neutral">
-                                    📋 Ausgabe
+                                    📋 {% trans "Expense" %}
                                 </span>
                             {% else %}
                                 <span class="import-badge import-badge--open">
-                                    ? Offen
+                                    ? {% trans "Open" %}
                                 </span>
                             {% endif %}
                         </td>

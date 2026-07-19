@@ -3,6 +3,8 @@ Forms for data import functionality.
 """
 
 from django import forms
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
 from .forms import StyledFormMixin
 
@@ -14,14 +16,20 @@ class BankStatementUploadForm(StyledFormMixin, forms.Form):
     """Form for uploading bank statement CSV files"""
 
     csv_file = forms.FileField(
-        label="CSV-Datei",
-        help_text="CSV-Kontoauszug im GLS-Bank-Format (Semikolon-getrennt, UTF-8). Andere Banken müssen ggf. das Format anpassen.",
+        label=gettext_lazy("CSV file"),
+        help_text=gettext_lazy(
+            "CSV bank statement in GLS bank format (semicolon-separated, UTF-8). "
+            "Other banks may require adjusting the format."
+        ),
         widget=forms.FileInput(attrs={"accept": ".csv"}),
     )
 
     skip_expenses = forms.BooleanField(
-        label="Nicht-erkannte Ausgaben ignorieren",
-        help_text="Überspringt negative Beträge, die nicht als Entnahme/Ausgabe erkannt werden. Entnahmen und Ausgaben werden automatisch erstellt.",
+        label=gettext_lazy("Ignore unrecognized expenses"),
+        help_text=gettext_lazy(
+            "Skips negative amounts that aren't recognized as a withdrawal/expense. "
+            "Withdrawals and expenses are created automatically."
+        ),
         initial=True,
         required=False,
     )
@@ -32,11 +40,11 @@ class BankStatementUploadForm(StyledFormMixin, forms.Form):
 
         # Check file extension
         if not csv_file.name.endswith(".csv"):
-            raise forms.ValidationError("Nur CSV-Dateien sind erlaubt.")
+            raise forms.ValidationError(_("Only CSV files are allowed."))
 
         # Check file size (max 5MB)
         if csv_file.size > 5 * 1024 * 1024:
-            raise forms.ValidationError("Datei ist zu groß (max. 5MB).")
+            raise forms.ValidationError(_("File is too large (max. 5MB)."))
 
         return csv_file
 
@@ -46,17 +54,19 @@ class TransactionMatchForm(StyledFormMixin, forms.Form):
 
     invoice: forms.Field = forms.ModelMultipleChoiceField(
         queryset=None,  # Will be set in __init__
-        label="Rechnung(en)",
-        help_text="Eine oder mehrere Rechnungen der Zahlung zuordnen (für Sammelzahlungen)",
+        label=gettext_lazy("Invoice(s)"),
+        help_text=gettext_lazy(
+            "Assign one or more invoices to the payment (for combined payments)"
+        ),
         required=False,  # Not required when ignoring
         widget=forms.SelectMultiple(attrs={"size": "10"}),
     )
 
     notes = forms.CharField(
-        label="Notizen",
+        label=gettext_lazy("Notes"),
         widget=forms.Textarea(attrs={"rows": 2}),
         required=False,
-        help_text="Optionale Notizen zur manuellen Zuordnung",
+        help_text=gettext_lazy("Optional notes for the manual match"),
     )
 
     def __init__(self, *args, practice=None, **kwargs):
@@ -93,32 +103,32 @@ class ExpenseGroupForm(StyledFormMixin, forms.Form):
 
     transactions: forms.Field = forms.ModelMultipleChoiceField(
         queryset=None,  # Will be set in __init__
-        label="Transaktionen",
+        label=gettext_lazy("Transactions"),
         widget=forms.CheckboxSelectMultiple,
-        help_text="Wähle die Transaktionen, die zu einer Ausgabe zusammengefasst werden sollen",
+        help_text=gettext_lazy("Select the transactions to group into a single expense"),
     )
 
     category = forms.ChoiceField(
         choices=CompanyExpense.CATEGORY_CHOICES,
-        label="Kategorie",
+        label=gettext_lazy("Category"),
         initial="other",
     )
 
     description = forms.CharField(
-        label="Beschreibung",
+        label=gettext_lazy("Description"),
         widget=forms.Textarea(attrs={"rows": 2}),
         required=False,
-        help_text="Optional: Beschreibung für die zusammengefasste Ausgabe",
+        help_text=gettext_lazy("Optional: description for the grouped expense"),
     )
 
     has_invoice = forms.BooleanField(
-        label="Rechnung vorhanden",
+        label=gettext_lazy("Invoice available"),
         required=False,
         initial=False,
     )
 
     is_tax_deductible = forms.BooleanField(
-        label="Steuerlich absetzbar",
+        label=gettext_lazy("Tax deductible"),
         required=False,
         initial=True,
     )

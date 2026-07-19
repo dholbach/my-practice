@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-19 17:50+0200\n"
+"POT-Creation-Date: 2026-07-19 18:13+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -65,7 +65,8 @@ msgstr "Typ"
 msgid "Title"
 msgstr "Titel"
 
-#: my_practice/forms.py:184 templates/my_practice/checklist.html:119
+#: my_practice/forms.py:184 my_practice/import_forms.py:64
+#: templates/my_practice/checklist.html:119
 #: templates/my_practice/time_off_confirm_delete.html:36
 #: templates/my_practice/withdrawal_list.html:61
 #: templates/my_practice/withdrawal_list.html:110
@@ -83,6 +84,86 @@ msgstr ""
 #: my_practice/forms.py:259
 msgid "Gültig ab"
 msgstr ""
+
+#: my_practice/import_forms.py:19
+msgid "CSV file"
+msgstr "CSV-Datei"
+
+#: my_practice/import_forms.py:21
+msgid "CSV bank statement in GLS bank format (semicolon-separated, UTF-8). Other banks may require adjusting the format."
+msgstr "CSV-Kontoauszug im GLS-Bank-Format (Semikolon-getrennt, UTF-8). Andere Banken müssen ggf. das Format anpassen."
+
+#: my_practice/import_forms.py:28
+msgid "Ignore unrecognized expenses"
+msgstr "Nicht-erkannte Ausgaben ignorieren"
+
+#: my_practice/import_forms.py:30
+msgid "Skips negative amounts that aren't recognized as a withdrawal/expense. Withdrawals and expenses are created automatically."
+msgstr "Überspringt negative Beträge, die nicht als Entnahme/Ausgabe erkannt werden. Entnahmen und Ausgaben werden automatisch erstellt."
+
+#: my_practice/import_forms.py:43
+msgid "Only CSV files are allowed."
+msgstr "Nur CSV-Dateien sind erlaubt."
+
+#: my_practice/import_forms.py:47
+msgid "File is too large (max. 5MB)."
+msgstr "Datei ist zu groß (max. 5MB)."
+
+#: my_practice/import_forms.py:57
+msgid "Invoice(s)"
+msgstr "Rechnung(en)"
+
+#: my_practice/import_forms.py:58
+msgid "Assign one or more invoices to the payment (for combined payments)"
+msgstr "Eine oder mehrere Rechnungen der Zahlung zuordnen (für Sammelzahlungen)"
+
+#: my_practice/import_forms.py:67
+msgid "Optional notes for the manual match"
+msgstr "Optionale Notizen zur manuellen Zuordnung"
+
+#: my_practice/import_forms.py:104
+msgid "Transactions"
+msgstr "Transaktionen"
+
+#: my_practice/import_forms.py:106
+msgid "Select the transactions to group into a single expense"
+msgstr "Wähle die Transaktionen, die zu einer Ausgabe zusammengefasst werden sollen"
+
+#: my_practice/import_forms.py:111
+#: templates/my_practice/bank_expense_review.html:31
+#: templates/my_practice/bank_withdrawal_review.html:31
+#: templates/my_practice/expense_confirm_delete.html:27
+#: templates/my_practice/expense_list.html:80
+#: templates/my_practice/withdrawal_confirm_delete.html:27
+#: templates/my_practice/withdrawal_list.html:60
+#: templates/my_practice/withdrawal_list.html:109
+msgid "Category"
+msgstr "Kategorie"
+
+#: my_practice/import_forms.py:116
+#: templates/my_practice/expense_confirm_delete.html:23
+#: templates/my_practice/expense_list.html:79
+#: templates/my_practice/invoice_edit.html:129
+#: templates/my_practice/marketing_period_confirm_delete.html:18
+#: templates/my_practice/tag_list.html:26
+#: templates/my_practice/withdrawal_confirm_delete.html:32
+msgid "Description"
+msgstr "Beschreibung"
+
+#: my_practice/import_forms.py:119
+msgid "Optional: description for the grouped expense"
+msgstr "Optional: Beschreibung für die zusammengefasste Ausgabe"
+
+#: my_practice/import_forms.py:123
+#: templates/my_practice/bank_expense_review.html:62
+msgid "Invoice available"
+msgstr "Rechnung vorhanden"
+
+#: my_practice/import_forms.py:129
+#: templates/my_practice/bank_expense_review.html:66
+#: templates/my_practice/expense_list.html:27
+msgid "Tax deductible"
+msgstr "Steuerlich absetzbar"
 
 #: my_practice/models/client.py:183
 msgid "GebüH-Rechnung"
@@ -278,6 +359,7 @@ msgid "Client"
 msgstr "Klient:in"
 
 #: my_practice/utils/dashboard_widgets.py:215
+#: templates/my_practice/bank_import.html:128
 msgid "Open"
 msgstr "Öffnen"
 
@@ -541,137 +623,145 @@ msgstr "Ungültiger Status"
 msgid "Status changed to: %(status)s"
 msgstr "Status geändert zu: %(status)s"
 
-#: my_practice/views/bank_import_views.py:79
+#: my_practice/views/bank_import_views.py:78
 #, python-format
 msgid "%(count)s automatically matched"
 msgstr "%(count)s automatisch zugeordnet"
 
-#: my_practice/views/bank_import_views.py:80
+#: my_practice/views/bank_import_views.py:79
 #, python-format
 msgid "%(count)s require manual review"
 msgstr "%(count)s benötigen manuelle Prüfung"
 
-#: my_practice/views/bank_import_views.py:84
+#: my_practice/views/bank_import_views.py:83
 #, python-format
 msgid "%(count)s expenses detected automatically"
 msgstr "%(count)s Ausgaben automatisch erkannt"
 
-#: my_practice/views/bank_import_views.py:86
+#: my_practice/views/bank_import_views.py:85
 #, python-format
 msgid "%(count)s ignored"
 msgstr "%(count)s ignoriert"
 
-#: my_practice/views/bank_import_views.py:89
+#: my_practice/views/bank_import_views.py:88
 #, python-format
 msgid "Import complete: %(details)s."
 msgstr "Import abgeschlossen: %(details)s."
 
-#: my_practice/views/bank_import_views.py:240
+#: my_practice/views/bank_import_views.py:238
 msgid "No transaction selected."
 msgstr "Keine Transaktion ausgewählt."
 
-#: my_practice/views/bank_import_views.py:328
+#: my_practice/views/bank_import_views.py:326
 #, python-format
 msgid "Auto-ignored: invoice %(number)s already paid"
 msgstr "Auto-ignoriert: Rechnung %(number)s bereits bezahlt"
 
-#: my_practice/views/bank_import_views.py:338
+#: my_practice/views/bank_import_views.py:336
 #, python-format
 msgid "✅ %(count)s transaction with already-paid invoice ignored."
 msgid_plural "✅ %(count)s transactions with already-paid invoices ignored."
 msgstr[0] "✅ %(count)s Transaktion mit bereits bezahlter Rechnung ignoriert."
 msgstr[1] "✅ %(count)s Transaktionen mit bereits bezahlten Rechnungen ignoriert."
 
-#: my_practice/views/bank_import_views.py:345
+#: my_practice/views/bank_import_views.py:343
 msgid "No matching transactions to ignore."
 msgstr "Keine passenden Transaktionen zum Ignorieren gefunden."
 
-#: my_practice/views/bank_import_views.py:358
+#: my_practice/views/bank_import_views.py:356
 #, python-format
 msgid "%(count)s expense ignored."
 msgid_plural "%(count)s expenses ignored."
 msgstr[0] "%(count)s Ausgabe ignoriert."
 msgstr[1] "%(count)s Ausgaben ignoriert."
 
-#: my_practice/views/bank_import_views.py:375
-#: my_practice/views/bank_import_views.py:687
-#: my_practice/views/bank_import_views.py:837
+#: my_practice/views/bank_import_views.py:373
+#: my_practice/views/bank_import_views.py:685
+#: my_practice/views/bank_import_views.py:835
 #, python-format
 msgid "%(count)s transaction ignored."
 msgid_plural "%(count)s transactions ignored."
 msgstr[0] "%(count)s Transaktion ignoriert."
 msgstr[1] "%(count)s Transaktionen ignoriert."
 
-#: my_practice/views/bank_import_views.py:389
+#: my_practice/views/bank_import_views.py:387
 msgid "Transaction ignored."
 msgstr "Transaktion ignoriert."
 
-#: my_practice/views/bank_import_views.py:413
+#: my_practice/views/bank_import_views.py:411
 #, python-format
 msgid "Transaction linked to %(number)s (already paid)."
 msgstr "Transaktion mit %(number)s verknüpft (bereits bezahlt)."
 
-#: my_practice/views/bank_import_views.py:417
+#: my_practice/views/bank_import_views.py:415
 msgid "Transaction confirmed (invoice already paid)."
 msgstr "Transaktion bestätigt (Rechnung bereits bezahlt)."
 
-#: my_practice/views/bank_import_views.py:423
+#: my_practice/views/bank_import_views.py:421
 msgid "No invoice specified."
 msgstr "Keine Rechnung angegeben."
 
-#: my_practice/views/bank_import_views.py:443
+#: my_practice/views/bank_import_views.py:441
 #, python-format
 msgid "Transaction automatically linked to %(number)s and marked as paid."
 msgstr "Transaktion automatisch mit %(number)s verknüpft und als bezahlt markiert."
 
-#: my_practice/views/bank_import_views.py:452
+#: my_practice/views/bank_import_views.py:450
 msgid "Error processing form."
 msgstr "Fehler beim Verarbeiten des Formulars."
 
-#: my_practice/views/bank_import_views.py:457
+#: my_practice/views/bank_import_views.py:455
 msgid "Please select at least one invoice."
 msgstr "Bitte wählen Sie mindestens eine Rechnung aus."
 
-#: my_practice/views/bank_import_views.py:488
+#: my_practice/views/bank_import_views.py:486
 #, python-format
 msgid "Payment successfully assigned to invoice %(number)s."
 msgstr "Zahlung erfolgreich der Rechnung %(number)s zugeordnet."
 
-#: my_practice/views/bank_import_views.py:495
+#: my_practice/views/bank_import_views.py:493
 #, python-format
 msgid "Payment successfully assigned to %(count)s invoices: %(numbers)s"
 msgstr "Zahlung erfolgreich %(count)s Rechnungen zugeordnet: %(numbers)s"
 
-#: my_practice/views/bank_import_views.py:516
+#: my_practice/views/bank_import_views.py:514
 #, python-format
 msgid "📌 Alias '%(name)s' for %(code)s saved."
 msgstr "📌 Alias '%(name)s' für %(code)s gespeichert."
 
-#: my_practice/views/bank_import_views.py:523
+#: my_practice/views/bank_import_views.py:521
 #, python-format
 msgid "Alias '%(name)s' for %(code)s saved."
 msgstr "Alias '%(name)s' für %(code)s gespeichert."
 
-#: my_practice/views/bank_import_views.py:590
-#: my_practice/views/bank_import_views.py:672
-#: my_practice/views/bank_import_views.py:736
-#: my_practice/views/bank_import_views.py:810
+#: my_practice/views/bank_import_views.py:570
+msgid "Bank Import - Assign Expenses"
+msgstr "Bank Import - Ausgaben zuordnen"
+
+#: my_practice/views/bank_import_views.py:588
+#: my_practice/views/bank_import_views.py:670
+#: my_practice/views/bank_import_views.py:734
+#: my_practice/views/bank_import_views.py:808
 msgid "Please select at least one transaction."
 msgstr "Bitte wähle mindestens eine Transaktion aus."
 
-#: my_practice/views/bank_import_views.py:599
-#: my_practice/views/bank_import_views.py:745
+#: my_practice/views/bank_import_views.py:597
+#: my_practice/views/bank_import_views.py:743
 msgid "No transactions found."
 msgstr "Keine Transaktionen gefunden."
 
-#: my_practice/views/bank_import_views.py:660
+#: my_practice/views/bank_import_views.py:658
 #, python-format
 msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
 msgstr[0] "%(count)s Transaktion erfolgreich zu Ausgabe zusammengefasst: %(amount)s €"
 msgstr[1] "%(count)s Transaktionen erfolgreich zu Ausgabe zusammengefasst: %(amount)s €"
 
-#: my_practice/views/bank_import_views.py:799
+#: my_practice/views/bank_import_views.py:717
+msgid "Bank Import - Assign Withdrawals"
+msgstr "Bank Import - Entnahmen zuordnen"
+
+#: my_practice/views/bank_import_views.py:797
 #, python-format
 msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
@@ -1192,6 +1282,8 @@ msgid "Practice management"
 msgstr "Praxisverwaltung"
 
 #: templates/base.html:26 templates/includes/tax_quarter_widget_content.html:36
+#: templates/my_practice/bank_expense_review.html:146
+#: templates/my_practice/bank_withdrawal_review.html:126
 #: templates/my_practice/checklist.html:16
 #: templates/my_practice/client_detail.html:45
 msgid "Overview"
@@ -1229,7 +1321,9 @@ msgstr "Aufgaben"
 msgid "Finances"
 msgstr "Finanzen"
 
-#: templates/base.html:40
+#: templates/base.html:40 templates/my_practice/bank_expense_review.html:144
+#: templates/my_practice/bank_import.html:4
+#: templates/my_practice/bank_import.html:9
 msgid "Bank import"
 msgstr "Bank-Import"
 
@@ -1244,6 +1338,7 @@ msgstr "Entnahmen"
 #: templates/my_practice/analytics.html:139
 #: templates/my_practice/analytics.html:186
 #: templates/my_practice/bank_review.html:17
+#: templates/my_practice/bank_withdrawal_review.html:124
 #: templates/my_practice/expense_list.html:66
 #: templates/my_practice/tax_quarter_overview.html:78
 msgid "Expenses"
@@ -1346,6 +1441,7 @@ msgstr "Dauer"
 
 #: templates/includes/calendar_preflight_widget.html:27
 #: templates/my_practice/analytics.html:395
+#: templates/my_practice/bank_import.html:87
 #: templates/my_practice/billing_open_overview.html:58
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
@@ -1492,10 +1588,12 @@ msgid "Create new tag →"
 msgstr "Neues Tag erstellen →"
 
 #: templates/includes/client_tags.html:81
+#: templates/includes/client_tags.html:86
 msgid "Error adding tag"
 msgstr "Fehler beim Hinzufügen des Tags"
 
 #: templates/includes/client_tags.html:102
+#: templates/includes/client_tags.html:107
 msgid "Error removing tag"
 msgstr "Fehler beim Entfernen des Tags"
 
@@ -1524,7 +1622,9 @@ msgid "← Previous"
 msgstr "← Zurück"
 
 #: templates/includes/pagination.html:19
+#: templates/my_practice/bank_expense_review.html:120
 #: templates/my_practice/bank_review.html:334
+#: templates/my_practice/bank_withdrawal_review.html:100
 #, python-format
 msgid "Page %(page)s of %(pages)s"
 msgstr "Seite %(page)s von %(pages)s"
@@ -1945,6 +2045,7 @@ msgid "Show dormant clients"
 msgstr "Ruhende Klienten anzeigen"
 
 #: templates/my_practice/analytics.html:394
+#: templates/my_practice/bank_import.html:84
 #: templates/my_practice/bank_review.html:208
 #: templates/my_practice/client_list_cards.html:107
 #: templates/my_practice/inquiry_confirm_delete.html:18
@@ -2264,6 +2365,254 @@ msgstr "Jährliche Betriebsausgaben %(start_year)s–heute"
 msgid "Back to overview"
 msgstr "Zur Übersicht"
 
+#: templates/my_practice/bank_expense_review.html:13
+msgid "Unmatched"
+msgstr "Nicht zugeordnet"
+
+#: templates/my_practice/bank_expense_review.html:17
+#: templates/my_practice/bank_withdrawal_review.html:17
+#: templates/my_practice/invoice_confirm_delete.html:38
+msgid "Total amount"
+msgstr "Gesamtbetrag"
+
+#: templates/my_practice/bank_expense_review.html:33
+msgid "Rent"
+msgstr "Miete"
+
+#: templates/my_practice/bank_expense_review.html:34
+#: templates/my_practice/client_detail.html:477
+#: templates/my_practice/inquiry_convert_confirm.html:24
+#: templates/my_practice/practice_form.html:111
+msgid "Phone"
+msgstr "Telefon"
+
+#: templates/my_practice/bank_expense_review.html:35
+msgid "Association / membership fees"
+msgstr "Verband / Mitgliedsbeiträge"
+
+#: templates/my_practice/bank_expense_review.html:36
+msgid "Insurance"
+msgstr "Versicherung"
+
+#: templates/my_practice/bank_expense_review.html:37
+msgid "Account / account fees"
+msgstr "Konto / Kontoführung"
+
+#: templates/my_practice/bank_expense_review.html:38
+msgid "Website / domain"
+msgstr "Webseite / Domain"
+
+#: templates/my_practice/bank_expense_review.html:39
+msgid "Advertising / marketing"
+msgstr "Werbung / Marketing"
+
+#: templates/my_practice/bank_expense_review.html:40
+msgid "Software"
+msgstr "Software"
+
+#: templates/my_practice/bank_expense_review.html:41
+msgid "Personal therapy (training)"
+msgstr "Selbsterfahrung"
+
+#: templates/my_practice/bank_expense_review.html:42
+#: templates/my_practice/client_detail.html:203
+#: templates/my_practice/client_detail.html:361
+msgid "Supervision"
+msgstr "Supervision"
+
+#: templates/my_practice/bank_expense_review.html:43
+msgid "Training / continuing education"
+msgstr "Training / Weiterbildung"
+
+#: templates/my_practice/bank_expense_review.html:44
+msgid "Training location"
+msgstr "Ausbildung Ort"
+
+#: templates/my_practice/bank_expense_review.html:45
+msgid "Group"
+msgstr "Gruppe"
+
+#: templates/my_practice/bank_expense_review.html:46
+msgid "Materials"
+msgstr "Materialien"
+
+#: templates/my_practice/bank_expense_review.html:47
+msgid "Hardware"
+msgstr "Hardware"
+
+#: templates/my_practice/bank_expense_review.html:48
+msgid "Literature"
+msgstr "Literatur"
+
+#: templates/my_practice/bank_expense_review.html:49
+msgid "Conference"
+msgstr "Kongress"
+
+#: templates/my_practice/bank_expense_review.html:50
+msgid "Other"
+msgstr "Sonstiges"
+
+#: templates/my_practice/bank_expense_review.html:55
+#: templates/my_practice/bank_withdrawal_review.html:40
+#: templates/my_practice/tag_form.html:43
+msgid "Description (optional)"
+msgstr "Beschreibung (optional)"
+
+#: templates/my_practice/bank_expense_review.html:56
+#: templates/my_practice/bank_withdrawal_review.html:41
+msgid "Auto-generated if left empty"
+msgstr "Wird automatisch generiert, wenn leer"
+
+#: templates/my_practice/bank_expense_review.html:73
+msgid "Group into expense"
+msgstr "Zu Ausgabe zusammenfassen"
+
+#: templates/my_practice/bank_expense_review.html:76
+#: templates/my_practice/bank_review.html:269
+#: templates/my_practice/bank_review.html:286
+#: templates/my_practice/bank_review.html:317
+#: templates/my_practice/bank_withdrawal_review.html:50
+#: templates/my_practice/client_detail.html:662
+msgid "Ignore"
+msgstr "Ignorieren"
+
+#: templates/my_practice/bank_expense_review.html:115
+#: templates/my_practice/bank_withdrawal_review.html:95
+msgid "« First"
+msgstr "« Erste"
+
+#: templates/my_practice/bank_expense_review.html:116
+#: templates/my_practice/bank_withdrawal_review.html:96
+msgid "‹ Previous"
+msgstr "‹ Zurück"
+
+#: templates/my_practice/bank_expense_review.html:124
+#: templates/my_practice/bank_withdrawal_review.html:104
+msgid "Next ›"
+msgstr "Weiter ›"
+
+#: templates/my_practice/bank_expense_review.html:125
+#: templates/my_practice/bank_withdrawal_review.html:105
+msgid "Last »"
+msgstr "Letzte »"
+
+#: templates/my_practice/bank_expense_review.html:133
+msgid "All transactions matched"
+msgstr "Alle Transaktionen zugeordnet"
+
+#: templates/my_practice/bank_expense_review.html:136
+msgid "There are no unmatched negative transactions."
+msgstr "Es gibt keine unzugeordneten negativen Transaktionen."
+
+#: templates/my_practice/bank_expense_review.html:143
+#: templates/my_practice/bank_withdrawal_review.html:123
+msgid "← Review invoices"
+msgstr "← Rechnungen prüfen"
+
+#: templates/my_practice/bank_expense_review.html:145
+msgid "Expense list"
+msgstr "Ausgaben-Liste"
+
+#: templates/my_practice/bank_import.html:11
+msgid "Go to review"
+msgstr "Zur Prüfung"
+
+#: templates/my_practice/bank_import.html:17
+msgid "Upload CSV file"
+msgstr "CSV-Datei hochladen"
+
+#: templates/my_practice/bank_import.html:58
+msgid "Import & process"
+msgstr "Importieren & Verarbeiten"
+
+#: templates/my_practice/bank_import.html:65
+msgid "Supported formats"
+msgstr "Unterstützte Formate"
+
+#: templates/my_practice/bank_import.html:67
+msgid "CSV bank statement (semicolon-separated)"
+msgstr "CSV-Kontoauszug (Semikolon-getrennt)"
+
+#: templates/my_practice/bank_import.html:68
+msgid "UTF-8 encoding"
+msgstr "UTF-8 Encoding"
+
+#: templates/my_practice/bank_import.html:69
+msgid "German decimal format (90,00 €)"
+msgstr "Deutsche Dezimalformate (90,00 €)"
+
+#: templates/my_practice/bank_import.html:70
+msgid "Date format: DD.MM.YYYY"
+msgstr "Datumformat: TT.MM.JJJJ"
+
+#: templates/my_practice/bank_import.html:77
+msgid "Recent imports"
+msgstr "Letzte Importe"
+
+#: templates/my_practice/bank_import.html:83
+#: templates/my_practice/bank_review.html:190
+#: templates/my_practice/client_detail.html:642
+#: templates/my_practice/client_detail.html:686
+#: templates/my_practice/expense_confirm_delete.html:19
+#: templates/my_practice/expense_list.html:78
+#: templates/my_practice/inquiry_list.html:178
+#: templates/my_practice/inquiry_list.html:224
+#: templates/my_practice/invoice_confirm_delete.html:28
+#: templates/my_practice/invoice_detail.html:19
+#: templates/my_practice/invoice_detail.html:82
+#: templates/my_practice/send_payment_reminder.html:20
+#: templates/my_practice/withdrawal_confirm_delete.html:19
+#: templates/my_practice/withdrawal_list.html:58
+#: templates/my_practice/withdrawal_list.html:107
+msgid "Date"
+msgstr "Datum"
+
+#: templates/my_practice/bank_import.html:85
+msgid "Reference"
+msgstr "Verwendungszweck"
+
+#: templates/my_practice/bank_import.html:86
+#: templates/my_practice/bank_review.html:194
+#: templates/my_practice/client_detail.html:686
+#: templates/my_practice/expense_confirm_delete.html:31
+#: templates/my_practice/expense_list.html:81
+#: templates/my_practice/revenue_report.html:56
+#: templates/my_practice/send_payment_reminder.html:22
+#: templates/my_practice/withdrawal_confirm_delete.html:23
+#: templates/my_practice/withdrawal_list.html:59
+#: templates/my_practice/withdrawal_list.html:108
+msgid "Amount"
+msgstr "Betrag"
+
+#: templates/my_practice/bank_import.html:104
+#: templates/my_practice/bank_review.html:123
+msgid "Exact"
+msgstr "Exakt"
+
+#: templates/my_practice/bank_import.html:108
+msgid "Fuzzy"
+msgstr "Fuzzy"
+
+#: templates/my_practice/bank_import.html:112
+#: templates/my_practice/bank_review.html:127
+msgid "Manual"
+msgstr "Manuell"
+
+#: templates/my_practice/bank_import.html:116
+#: templates/my_practice/bank_review.html:71
+#: templates/my_practice/bank_review.html:154
+msgid "Ignored"
+msgstr "Ignoriert"
+
+#: templates/my_practice/bank_import.html:120
+msgid "Withdrawal"
+msgstr "Entnahme"
+
+#: templates/my_practice/bank_import.html:124
+#: templates/my_practice/bank_review.html:200
+msgid "Expense"
+msgstr "Ausgabe"
+
 #: templates/my_practice/bank_review.html:5
 #: templates/my_practice/bank_review.html:10
 msgid "Bank import — manual assignment"
@@ -2311,11 +2660,6 @@ msgstr "Manuelle Prüfung"
 msgid "Expenses detected"
 msgstr "Ausgaben erkannt"
 
-#: templates/my_practice/bank_review.html:71
-#: templates/my_practice/bank_review.html:154
-msgid "Ignored"
-msgstr "Ignoriert"
-
 #: templates/my_practice/bank_review.html:82
 #, python-format
 msgid "Assign %(count)s expense"
@@ -2333,14 +2677,6 @@ msgstr[1] "%(count)s Fehler:"
 #: templates/my_practice/bank_review.html:106
 msgid "Already matched"
 msgstr "Bereits zugeordnet"
-
-#: templates/my_practice/bank_review.html:123
-msgid "Exact"
-msgstr "Exakt"
-
-#: templates/my_practice/bank_review.html:127
-msgid "Manual"
-msgstr "Manuell"
 
 #: templates/my_practice/bank_review.html:142
 msgid "Still open"
@@ -2372,39 +2708,6 @@ msgstr "Alle %(count)s offenen Transaktionen ignorieren?"
 #: templates/my_practice/bank_review.html:179
 msgid "Ignore all"
 msgstr "Alle ignorieren"
-
-#: templates/my_practice/bank_review.html:190
-#: templates/my_practice/client_detail.html:642
-#: templates/my_practice/client_detail.html:686
-#: templates/my_practice/expense_confirm_delete.html:19
-#: templates/my_practice/expense_list.html:78
-#: templates/my_practice/inquiry_list.html:178
-#: templates/my_practice/inquiry_list.html:224
-#: templates/my_practice/invoice_confirm_delete.html:28
-#: templates/my_practice/invoice_detail.html:19
-#: templates/my_practice/invoice_detail.html:82
-#: templates/my_practice/send_payment_reminder.html:20
-#: templates/my_practice/withdrawal_confirm_delete.html:19
-#: templates/my_practice/withdrawal_list.html:58
-#: templates/my_practice/withdrawal_list.html:107
-msgid "Date"
-msgstr "Datum"
-
-#: templates/my_practice/bank_review.html:194
-#: templates/my_practice/client_detail.html:686
-#: templates/my_practice/expense_confirm_delete.html:31
-#: templates/my_practice/expense_list.html:81
-#: templates/my_practice/revenue_report.html:56
-#: templates/my_practice/send_payment_reminder.html:22
-#: templates/my_practice/withdrawal_confirm_delete.html:23
-#: templates/my_practice/withdrawal_list.html:59
-#: templates/my_practice/withdrawal_list.html:108
-msgid "Amount"
-msgstr "Betrag"
-
-#: templates/my_practice/bank_review.html:200
-msgid "Expense"
-msgstr "Ausgabe"
 
 #: templates/my_practice/bank_review.html:202
 msgid "Capital contribution"
@@ -2458,13 +2761,6 @@ msgstr "Rechnung"
 #: templates/my_practice/bank_review.html:266
 msgid "Import automatically"
 msgstr "Automatisch importieren"
-
-#: templates/my_practice/bank_review.html:269
-#: templates/my_practice/bank_review.html:286
-#: templates/my_practice/bank_review.html:317
-#: templates/my_practice/client_detail.html:662
-msgid "Ignore"
-msgstr "Ignorieren"
 
 #: templates/my_practice/bank_review.html:278
 #, python-format
@@ -2522,6 +2818,32 @@ msgstr "Alle Transaktionen sind zugeordnet!"
 #: templates/my_practice/bank_review.html:348
 msgid "No open transactions remaining."
 msgstr "Keine offenen Transaktionen mehr vorhanden."
+
+#: templates/my_practice/bank_withdrawal_review.html:13
+#: templates/my_practice/client_detail.html:650
+msgid "Pending"
+msgstr "Ausstehend"
+
+#: templates/my_practice/bank_withdrawal_review.html:47
+msgid "Group into withdrawal"
+msgstr "Zu Entnahme zusammenfassen"
+
+#: templates/my_practice/bank_withdrawal_review.html:82
+#, python-format
+msgid "Auto-withdrawal: %(linked_withdrawal)s"
+msgstr "Auto-Entnahme: %(linked_withdrawal)s"
+
+#: templates/my_practice/bank_withdrawal_review.html:113
+msgid "All withdrawals matched"
+msgstr "Alle Entnahmen zugeordnet"
+
+#: templates/my_practice/bank_withdrawal_review.html:116
+msgid "There are no pending automatically detected withdrawals."
+msgstr "Es gibt keine ausstehenden automatisch erkannten Entnahmen."
+
+#: templates/my_practice/bank_withdrawal_review.html:125
+msgid "Withdrawal list"
+msgstr "Entnahmen-Liste"
 
 #: templates/my_practice/billing_open_overview.html:6
 #: templates/my_practice/billing_open_overview.html:8
@@ -2929,11 +3251,6 @@ msgstr "Notiz (Markdown unterstützt)…"
 msgid "Supervision feedback and recommendations (Markdown)…"
 msgstr "Supervisionsfeedback und Empfehlungen (Markdown)…"
 
-#: templates/my_practice/client_detail.html:203
-#: templates/my_practice/client_detail.html:361
-msgid "Supervision"
-msgstr "Supervision"
-
 #: templates/my_practice/client_detail.html:207
 msgid "Supervision topic or question…"
 msgstr "Supervisionsthema oder -frage…"
@@ -3133,12 +3450,6 @@ msgstr "Kontakt & Konditionen"
 msgid "Email"
 msgstr "E-Mail"
 
-#: templates/my_practice/client_detail.html:477
-#: templates/my_practice/inquiry_convert_confirm.html:24
-#: templates/my_practice/practice_form.html:111
-msgid "Phone"
-msgstr "Telefon"
-
 #: templates/my_practice/client_detail.html:482
 #: templates/my_practice/practice_form.html:69
 msgid "Address"
@@ -3315,10 +3626,6 @@ msgstr "Ausstehende Sitzungen"
 #: templates/my_practice/inquiry_form.html:121
 msgid "Time"
 msgstr "Zeit"
-
-#: templates/my_practice/client_detail.html:650
-msgid "Pending"
-msgstr "Ausstehend"
 
 #: templates/my_practice/client_detail.html:655
 #, python-format
@@ -3629,23 +3936,6 @@ msgstr "Ausgabe löschen"
 msgid "Are you sure you want to delete this expense?"
 msgstr "Möchten Sie diese Ausgabe wirklich löschen?"
 
-#: templates/my_practice/expense_confirm_delete.html:23
-#: templates/my_practice/expense_list.html:79
-#: templates/my_practice/invoice_edit.html:129
-#: templates/my_practice/marketing_period_confirm_delete.html:18
-#: templates/my_practice/tag_list.html:26
-#: templates/my_practice/withdrawal_confirm_delete.html:32
-msgid "Description"
-msgstr "Beschreibung"
-
-#: templates/my_practice/expense_confirm_delete.html:27
-#: templates/my_practice/expense_list.html:80
-#: templates/my_practice/withdrawal_confirm_delete.html:27
-#: templates/my_practice/withdrawal_list.html:60
-#: templates/my_practice/withdrawal_list.html:109
-msgid "Category"
-msgstr "Kategorie"
-
 #: templates/my_practice/expense_confirm_delete.html:40
 #: templates/my_practice/inquiry_confirm_delete.html:38
 #: templates/my_practice/invoice_confirm_delete.html:51
@@ -3670,10 +3960,6 @@ msgstr "Neue Ausgabe"
 #: templates/my_practice/expense_list.html:22
 msgid "Total expenses"
 msgstr "Gesamtausgaben"
-
-#: templates/my_practice/expense_list.html:27
-msgid "Tax deductible"
-msgstr "Steuerlich absetzbar"
 
 #: templates/my_practice/expense_list.html:34
 msgid "Expenses by year"
@@ -4029,10 +4315,6 @@ msgstr "Diese Aktion kann nicht rückgängig gemacht werden."
 #: templates/my_practice/invoice_confirm_delete.html:20
 msgid "Invoice number"
 msgstr "Rechnungsnummer"
-
-#: templates/my_practice/invoice_confirm_delete.html:38
-msgid "Total amount"
-msgstr "Gesamtbetrag"
 
 #: templates/my_practice/invoice_confirm_delete.html:42
 msgid "Number of items"
@@ -4860,10 +5142,6 @@ msgstr ""
 #: templates/my_practice/tag_list.html:25
 msgid "Color"
 msgstr "Farbe"
-
-#: templates/my_practice/tag_form.html:43
-msgid "Description (optional)"
-msgstr "Beschreibung (optional)"
 
 #: templates/my_practice/tag_form.html:49
 msgid "What does this tag mean? When should it be used?"
