@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 09:02+0200\n"
+"POT-Creation-Date: 2026-07-19 17:17+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -328,7 +328,7 @@ msgstr[1] "Rechnungen versandbereit"
 
 #: my_practice/utils/dashboard_widgets.py:375
 #: my_practice/views/invoice_views.py:750
-#: templates/my_practice/dashboard.html:136
+#: templates/my_practice/dashboard.html:139
 #: templates/my_practice/invoice_detail.html:40
 msgid "Draft"
 msgstr "Entwurf"
@@ -1097,13 +1097,13 @@ msgid "OK"
 msgstr "OK"
 
 #: my_practice/views/invoice_views.py:752
-#: templates/my_practice/dashboard.html:141
+#: templates/my_practice/dashboard.html:144
 #: templates/my_practice/invoice_detail.html:41
 msgid "Sent"
 msgstr "Versendet"
 
 #: my_practice/views/invoice_views.py:754
-#: templates/my_practice/dashboard.html:146
+#: templates/my_practice/dashboard.html:149
 #: templates/my_practice/invoice_detail.html:42
 msgid "Paid"
 msgstr "Bezahlt"
@@ -1306,6 +1306,40 @@ msgstr "verfügbar"
 msgid "Close"
 msgstr "Schließen"
 
+#: templates/includes/capacity_monitoring_widget_content.html:6
+#, python-format
+msgid "Capacity below 80%% of monthly target"
+msgstr "Kapazität unter 80 %% des Monatsziels"
+
+#: templates/includes/capacity_monitoring_widget_content.html:17
+msgid "hrs"
+msgstr "Std"
+
+#: templates/includes/capacity_monitoring_widget_content.html:26
+#: templates/my_practice/analytics.html:101
+#: templates/my_practice/analytics.html:185
+#: templates/my_practice/tax_quarter_overview.html:77
+msgid "Revenue"
+msgstr "Umsatz"
+
+#: templates/includes/capacity_monitoring_widget_content.html:40
+msgid "Target hrs:"
+msgstr "Ziel Std:"
+
+#: templates/includes/capacity_monitoring_widget_content.html:43
+msgid "Target revenue:"
+msgstr "Ziel Umsatz:"
+
+#: templates/includes/capacity_monitoring_widget_content.html:50
+#, python-format
+msgid "Hours this month: %(current)s / %(target)s"
+msgstr "Stunden diesen Monat: %(current)s / %(target)s"
+
+#: templates/includes/capacity_monitoring_widget_content.html:59
+#, python-format
+msgid "Revenue this month: %(current)s € / %(target)s €"
+msgstr "Umsatz diesen Monat: %(current)s € / %(target)s €"
+
 #: templates/includes/client_attention_widget_content.html:12
 msgid "No sessions for 60+ days"
 msgstr "Keine Sitzungen seit 60+ Tagen"
@@ -1444,7 +1478,7 @@ msgstr "Gesamt"
 #: templates/my_practice/analytics.html:415
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/client_list_cards.html:34
-#: templates/my_practice/dashboard.html:113
+#: templates/my_practice/dashboard.html:116
 #: templates/my_practice/practice_management.html:26
 msgid "Active"
 msgstr "Aktiv"
@@ -1614,12 +1648,6 @@ msgstr "Anwenden"
 #: templates/my_practice/analytics.html:73
 msgid "Reset"
 msgstr "Zurücksetzen"
-
-#: templates/my_practice/analytics.html:101
-#: templates/my_practice/analytics.html:185
-#: templates/my_practice/tax_quarter_overview.html:77
-msgid "Revenue"
-msgstr "Umsatz"
 
 #: templates/my_practice/analytics.html:107
 #: templates/my_practice/analytics.html:731
@@ -2038,7 +2066,7 @@ msgid "Cancellation rate"
 msgstr "Ausfallquote"
 
 #: templates/my_practice/analytics.html:912
-#: templates/my_practice/dashboard.html:151
+#: templates/my_practice/dashboard.html:154
 #: templates/my_practice/invoice_detail.html:43
 msgid "Cancelled"
 msgstr "Storniert"
@@ -3222,7 +3250,7 @@ msgid "💻 For clients whose sessions are primarily conducted online (video)."
 msgstr "💻 Für Klienten, die hauptsächlich Online-Sitzungen (Video) haben."
 
 #: templates/my_practice/client_intake.html:67
-msgid "Enable GebüH billing (Gebührenverzeichnis für Heilpraktiker) for this client."
+msgid "Enable GebüH billing (official German fee schedule for licensed alternative practitioners) for this client."
 msgstr "GebüH-Abrechnung (Gebührenverzeichnis für Heilpraktiker) für diesen Klienten aktivieren."
 
 #: templates/my_practice/client_intake.html:122
@@ -3308,48 +3336,60 @@ msgstr "Urlaub %(year)s"
 msgid "+ New client"
 msgstr "+ Neue Klient:in"
 
-#: templates/my_practice/dashboard.html:60
+#: templates/my_practice/dashboard.html:49
+msgid "📅 Today"
+msgstr "📅 Heute"
+
+#: templates/my_practice/dashboard.html:50
+msgid "📆 This Week"
+msgstr "📆 Diese Woche"
+
+#: templates/my_practice/dashboard.html:62
 msgid "Needs Action"
 msgstr "Braucht Aktion"
 
-#: templates/my_practice/dashboard.html:65
+#: templates/my_practice/dashboard.html:67
 msgid "by urgency"
 msgstr "nach Dringlichkeit"
 
-#: templates/my_practice/dashboard.html:83
+#: templates/my_practice/dashboard.html:85
 msgid "Nothing needs your attention right now."
 msgstr "Aktuell gibt es nichts zu tun."
 
-#: templates/my_practice/dashboard.html:101
+#: templates/my_practice/dashboard.html:94
+msgid "📈 Capacity Monitoring"
+msgstr "📈 Kapazitäts-Monitoring"
+
+#: templates/my_practice/dashboard.html:104
 #, python-format
 msgid "Practices %(year)s"
 msgstr "Praxen %(year)s"
 
-#: templates/my_practice/dashboard.html:102
+#: templates/my_practice/dashboard.html:105
 msgid "Manage"
 msgstr "Verwalten"
 
-#: templates/my_practice/dashboard.html:120
+#: templates/my_practice/dashboard.html:123
 #, python-format
 msgid "%(n)s invoice"
 msgid_plural "%(n)s invoices"
 msgstr[0] "%(n)s Rechnung"
 msgstr[1] "%(n)s Rechnungen"
 
-#: templates/my_practice/dashboard.html:123
+#: templates/my_practice/dashboard.html:126
 #: templates/my_practice/practice_management.html:39
 msgid "Switch"
 msgstr "Wechseln"
 
-#: templates/my_practice/dashboard.html:133
+#: templates/my_practice/dashboard.html:136
 msgid "All-time Status Overview"
 msgstr "Status-Übersicht (All-Zeit)"
 
-#: templates/my_practice/dashboard.html:160
+#: templates/my_practice/dashboard.html:163
 msgid "Recent Invoices"
 msgstr "Aktuelle Rechnungen"
 
-#: templates/my_practice/dashboard.html:174
+#: templates/my_practice/dashboard.html:177
 msgid "No invoices yet."
 msgstr "Noch keine Rechnungen vorhanden."
 

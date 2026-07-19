@@ -43,14 +43,16 @@
     </div>
 </div>
 
-{# Two-pane console: Heute (left) | Braucht Aktion (right) #}
+{# Two-pane console: Today (left) | Needs Action (right) #}
 <div class="dashboard-console">
     <div class="console-pane">
+        {% trans "📅 Today" as agenda_widget_title %}
+        {% trans "📆 This Week" as weekly_focus_widget_title %}
         {% with widget_content=agenda_widget_html %}
-            {% include 'includes/widget_base.html' with widget_id="agenda" widget_title="📅 Heute" widget_badge=agenda_badge_html %}
+            {% include 'includes/widget_base.html' with widget_id="agenda" widget_title=agenda_widget_title widget_badge=agenda_badge_html %}
         {% endwith %}
         {% with widget_content=weekly_focus_widget_html %}
-            {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title="📆 Diese Woche" widget_badge=weekly_focus_badge %}
+            {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title=weekly_focus_widget_title widget_badge=weekly_focus_badge %}
         {% endwith %}
     </div>
 
@@ -89,8 +91,9 @@
 
 {# Capacity monitoring (shown only when active) #}
 {% if capacity_show_widget %}
+{% trans "📈 Capacity Monitoring" as capacity_widget_title %}
 {% with widget_content=capacity_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="capacity_monitoring" widget_title="📈 Kapazitäts-Monitoring" widget_badge=capacity_badge %}
+    {% include 'includes/widget_base.html' with widget_id="capacity_monitoring" widget_title=capacity_widget_title widget_badge=capacity_badge %}
 {% endwith %}
 {% endif %}
 
