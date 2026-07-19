@@ -3,7 +3,7 @@
 
     {% if show_warning %}
     <div class="widget-alert warning">
-        ⚠️ Kapazität unter 80 % des Monatsziels
+        ⚠️ {% trans "Capacity below 80% of monthly target" %}
     </div>
     {% endif %}
 
@@ -14,7 +14,7 @@
             <div class="capacity-month__label">{{ m.label }}</div>
             {% if target_hours %}
             <div class="capacity-month__stat">
-                <span class="stat-label">Std</span>
+                <span class="stat-label">{% trans "hrs" %}</span>
                 <span class="stat-value">{{ m.hours }}</span>
                 {% if forloop.last and hours_pct is not None %}
                 <span class="stat-pct {% if warn_hours %}stat-pct--warn{% endif %}">{{ hours_pct }} %</span>
@@ -23,7 +23,7 @@
             {% endif %}
             {% if target_revenue %}
             <div class="capacity-month__stat">
-                <span class="stat-label">Umsatz</span>
+                <span class="stat-label">{% trans "Revenue" %}</span>
                 <span class="stat-value">{{ m.revenue|floatformat:0 }} €</span>
                 {% if forloop.last and revenue_pct is not None %}
                 <span class="stat-pct {% if warn_revenue %}stat-pct--warn{% endif %}">{{ revenue_pct }} %</span>
@@ -37,17 +37,17 @@
     <!-- Targets reference -->
     <div class="capacity-targets">
         {% if target_hours %}
-        <span class="capacity-target">Ziel Std: <strong>{{ target_hours }}</strong></span>
+        <span class="capacity-target">{% trans "Target hrs:" %} <strong>{{ target_hours }}</strong></span>
         {% endif %}
         {% if target_revenue %}
-        <span class="capacity-target">Ziel Umsatz: <strong>{{ target_revenue|floatformat:0 }} €</strong></span>
+        <span class="capacity-target">{% trans "Target revenue:" %} <strong>{{ target_revenue|floatformat:0 }} €</strong></span>
         {% endif %}
     </div>
 
     <!-- Progress bars (current month only) -->
     {% if target_hours and hours_pct is not None %}
     <div class="capacity-progress">
-        <div class="progress-label">Stunden diesen Monat: {{ current_hours }} / {{ target_hours }}</div>
+        <div class="progress-label">{% blocktrans with current=current_hours target=target_hours %}Hours this month: {{ current }} / {{ target }}{% endblocktrans %}</div>
         <div class="progress-bar-track">
             <div class="progress-bar-fill {% if warn_hours %}progress-bar-fill--warn{% endif %}"
                  style="width: {% if hours_pct > 100 %}100{% else %}{{ hours_pct }}{% endif %}%"></div>
@@ -56,7 +56,7 @@
     {% endif %}
     {% if target_revenue and revenue_pct is not None %}
     <div class="capacity-progress">
-        <div class="progress-label">Umsatz diesen Monat: {{ current_revenue|floatformat:0 }} € / {{ target_revenue|floatformat:0 }} €</div>
+        <div class="progress-label">{% blocktrans with current=current_revenue|floatformat:0 target=target_revenue|floatformat:0 %}Revenue this month: {{ current }} € / {{ target }} €{% endblocktrans %}</div>
         <div class="progress-bar-track">
             <div class="progress-bar-fill {% if warn_revenue %}progress-bar-fill--warn{% endif %}"
                  style="width: {% if revenue_pct > 100 %}100{% else %}{{ revenue_pct }}{% endif %}%"></div>
