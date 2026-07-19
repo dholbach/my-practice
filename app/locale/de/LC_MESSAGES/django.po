@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-19 17:17+0200\n"
+"POT-Creation-Date: 2026-07-19 17:32+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -272,6 +272,7 @@ msgstr "Protokoll fehlt"
 #: my_practice/utils/dashboard_widgets.py:252
 #: templates/my_practice/billing_open_overview.html:53
 #: templates/my_practice/client_detail.html:7
+#: templates/my_practice/invoice_confirm_delete.html:24
 #: templates/my_practice/revenue_report.html:51
 msgid "Client"
 msgstr "Klient:in"
@@ -1374,6 +1375,7 @@ msgid "Sessions"
 msgstr "Sitzungen"
 
 #: templates/includes/client_card.html:34
+#: templates/my_practice/client_gdpr_delete_confirm.html:40
 msgid "Last session:"
 msgstr "Letzte Session:"
 
@@ -1553,6 +1555,7 @@ msgid "Edit"
 msgstr "Bearbeiten"
 
 #: templates/includes/todo_content.html:101
+#: templates/my_practice/client_gdpr_delete_confirm.html:57
 #: templates/my_practice/client_list_cards.html:123
 #: templates/my_practice/expense_list.html:128
 #: templates/my_practice/inquiry_list.html:27
@@ -1634,10 +1637,12 @@ msgid "Custom"
 msgstr "Benutzerdefiniert"
 
 #: templates/my_practice/analytics.html:56
+#: templates/my_practice/marketing_period_confirm_delete.html:22
 msgid "From"
 msgstr "Von"
 
 #: templates/my_practice/analytics.html:62
+#: templates/my_practice/marketing_period_confirm_delete.html:26
 msgid "To"
 msgstr "Bis"
 
@@ -1779,6 +1784,7 @@ msgstr "Ruhende Klienten anzeigen"
 #: templates/my_practice/inquiry_convert_confirm.html:16
 #: templates/my_practice/inquiry_list.html:179
 #: templates/my_practice/inquiry_list.html:225
+#: templates/my_practice/practice_confirm_delete.html:24
 #: templates/my_practice/tag_form.html:14
 #: templates/my_practice/tag_list.html:24
 msgid "Name"
@@ -1789,6 +1795,7 @@ msgstr "Name"
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
 #: templates/my_practice/inquiry_confirm_delete.html:30
+#: templates/my_practice/invoice_confirm_delete.html:32
 #: templates/my_practice/invoice_detail.html:33
 #: templates/my_practice/revenue_report.html:55
 #: templates/my_practice/send_payment_reminder.html:21
@@ -2221,12 +2228,15 @@ msgstr "Alle ignorieren"
 #: templates/my_practice/bank_review.html:190
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
+#: templates/my_practice/expense_confirm_delete.html:19
 #: templates/my_practice/expense_list.html:78
 #: templates/my_practice/inquiry_list.html:178
 #: templates/my_practice/inquiry_list.html:224
+#: templates/my_practice/invoice_confirm_delete.html:28
 #: templates/my_practice/invoice_detail.html:19
 #: templates/my_practice/invoice_detail.html:82
 #: templates/my_practice/send_payment_reminder.html:20
+#: templates/my_practice/withdrawal_confirm_delete.html:19
 #: templates/my_practice/withdrawal_list.html:58
 #: templates/my_practice/withdrawal_list.html:107
 msgid "Date"
@@ -2234,9 +2244,11 @@ msgstr "Datum"
 
 #: templates/my_practice/bank_review.html:194
 #: templates/my_practice/client_detail.html:686
+#: templates/my_practice/expense_confirm_delete.html:31
 #: templates/my_practice/expense_list.html:81
 #: templates/my_practice/revenue_report.html:56
 #: templates/my_practice/send_payment_reminder.html:22
+#: templates/my_practice/withdrawal_confirm_delete.html:23
 #: templates/my_practice/withdrawal_list.html:59
 #: templates/my_practice/withdrawal_list.html:108
 msgid "Amount"
@@ -2886,13 +2898,18 @@ msgid "Delete supervision note?"
 msgstr "Supervisionsnotiz löschen?"
 
 #: templates/my_practice/client_detail.html:380
+#: templates/my_practice/client_gdpr_delete_confirm.html:55
 #: templates/my_practice/client_intake.html:123
+#: templates/my_practice/expense_confirm_delete.html:41
 #: templates/my_practice/gebueh_leistung_form.html:42
 #: templates/my_practice/inquiry_confirm_delete.html:39
 #: templates/my_practice/inquiry_convert_confirm.html:80
 #: templates/my_practice/inquiry_form.html:191
+#: templates/my_practice/invoice_confirm_delete.html:52
 #: templates/my_practice/invoice_edit.html:143
 #: templates/my_practice/invoice_form.html:132
+#: templates/my_practice/marketing_period_confirm_delete.html:35
+#: templates/my_practice/practice_confirm_delete.html:52
 #: templates/my_practice/practice_form.html:298
 #: templates/my_practice/send_contract_email.html:65
 #: templates/my_practice/send_intake_form_email.html:65
@@ -2907,7 +2924,9 @@ msgstr "Supervisionsnotiz löschen?"
 #: templates/my_practice/time_off_confirm_delete.html:47
 #: templates/my_practice/time_off_form.html:70
 #: templates/my_practice/time_off_notice_form.html:94
+#: templates/my_practice/todo_confirm_delete.html:34
 #: templates/my_practice/todo_form.html:77
+#: templates/my_practice/withdrawal_confirm_delete.html:43
 #: templates/my_practice/withdrawal_form.html:73
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -2966,6 +2985,7 @@ msgstr "Kontakt & Konditionen"
 #: templates/my_practice/client_detail.html:473
 #: templates/my_practice/client_list_cards.html:109
 #: templates/my_practice/inquiry_convert_confirm.html:20
+#: templates/my_practice/practice_confirm_delete.html:36
 #: templates/my_practice/practice_form.html:94
 msgid "Email"
 msgstr "E-Mail"
@@ -3218,6 +3238,77 @@ msgstr "Sitzungsaktivität"
 msgid "Uploaded documents"
 msgstr "Hochgeladene Dokumente"
 
+#: templates/my_practice/client_gdpr_delete_confirm.html:4
+msgid "Confirm GDPR deletion"
+msgstr "DSGVO-Löschung bestätigen"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:5
+msgid "GDPR deletion"
+msgstr "DSGVO-Löschung"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:12
+msgid "This action is irreversible."
+msgstr "Diese Aktion ist unwiderruflich."
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:13
+msgid "All data for this client will be permanently deleted."
+msgstr "Alle Daten zu diesem Klienten werden dauerhaft gelöscht."
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:16
+msgid "What will be deleted"
+msgstr "Was gelöscht wird"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:18
+msgid "Client master data (name, address, contact)"
+msgstr "Klientenstammdaten (Name, Adresse, Kontakt)"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:19
+#, python-format
+msgid "%(counter)s invoice incl. session items"
+msgid_plural "%(counter)s invoices incl. session items"
+msgstr[0] "%(counter)s Rechnung inkl. Sitzungsposten"
+msgstr[1] "%(counter)s Rechnungen inkl. Sitzungsposten"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:20
+#, python-format
+msgid "%(counter)s document (file on disk)"
+msgid_plural "%(counter)s documents (files on disk)"
+msgstr[0] "%(counter)s Dokument (Datei auf Disk)"
+msgstr[1] "%(counter)s Dokumente (Dateien auf Disk)"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:21
+msgid "Clinical notes, session logs, supervision"
+msgstr "Klinische Notizen, Sitzungsprotokolle, Supervision"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:22
+msgid "All session data"
+msgstr "Alle Sitzungsdaten"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:25
+msgid "Before deletion"
+msgstr "Vor der Löschung zu erledigen"
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:32
+msgid "I have deleted correspondence with this client from my email program."
+msgstr "Ich habe Korrespondenz mit diesem Klienten aus meinem E-Mail-Programm gelöscht."
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:39
+msgid "I confirm that the legal 10-year retention period has expired."
+msgstr "Ich bestätige, dass die gesetzliche Aufbewahrungsfrist von 10 Jahren abgelaufen ist."
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:46
+#, python-format
+msgid "A deletion notice will be sent to <strong>%(client_email)s</strong> (Art. 17 GDPR)."
+msgstr "Eine Löschbenachrichtigung wird an <strong>%(client_email)s</strong> (Art. 17 DSGVO) gesendet."
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:50
+msgid "No email address on file — no notification will be sent."
+msgstr "Keine E-Mail-Adresse hinterlegt — es wird keine Benachrichtigung gesendet."
+
+#: templates/my_practice/client_gdpr_delete_confirm.html:57
+msgid "Notify"
+msgstr "Benachrichtigen"
+
 #: templates/my_practice/client_intake.html:4
 #: templates/my_practice/client_intake.html:6
 msgid "Edit client"
@@ -3393,6 +3484,43 @@ msgstr "Aktuelle Rechnungen"
 msgid "No invoices yet."
 msgstr "Noch keine Rechnungen vorhanden."
 
+#: templates/my_practice/expense_confirm_delete.html:5
+#: templates/my_practice/expense_confirm_delete.html:9
+msgid "Delete expense"
+msgstr "Ausgabe löschen"
+
+#: templates/my_practice/expense_confirm_delete.html:14
+msgid "Are you sure you want to delete this expense?"
+msgstr "Möchten Sie diese Ausgabe wirklich löschen?"
+
+#: templates/my_practice/expense_confirm_delete.html:23
+#: templates/my_practice/expense_list.html:79
+#: templates/my_practice/invoice_edit.html:129
+#: templates/my_practice/marketing_period_confirm_delete.html:18
+#: templates/my_practice/tag_list.html:26
+#: templates/my_practice/withdrawal_confirm_delete.html:32
+msgid "Description"
+msgstr "Beschreibung"
+
+#: templates/my_practice/expense_confirm_delete.html:27
+#: templates/my_practice/expense_list.html:80
+#: templates/my_practice/withdrawal_confirm_delete.html:27
+#: templates/my_practice/withdrawal_list.html:60
+#: templates/my_practice/withdrawal_list.html:109
+msgid "Category"
+msgstr "Kategorie"
+
+#: templates/my_practice/expense_confirm_delete.html:40
+#: templates/my_practice/inquiry_confirm_delete.html:38
+#: templates/my_practice/invoice_confirm_delete.html:51
+#: templates/my_practice/marketing_period_confirm_delete.html:34
+#: templates/my_practice/tag_confirm_delete.html:34
+#: templates/my_practice/time_off_confirm_delete.html:46
+#: templates/my_practice/todo_confirm_delete.html:33
+#: templates/my_practice/withdrawal_confirm_delete.html:42
+msgid "Yes, delete"
+msgstr "Ja, löschen"
+
 #: templates/my_practice/expense_list.html:6
 #: templates/my_practice/expense_list.html:11
 msgid "Company Expenses"
@@ -3436,18 +3564,6 @@ msgstr "Fehlende Belege"
 #: templates/my_practice/expense_list.html:72
 msgid "Show missing receipts"
 msgstr "Fehlende Belege anzeigen"
-
-#: templates/my_practice/expense_list.html:79
-#: templates/my_practice/invoice_edit.html:129
-#: templates/my_practice/tag_list.html:26
-msgid "Description"
-msgstr "Beschreibung"
-
-#: templates/my_practice/expense_list.html:80
-#: templates/my_practice/withdrawal_list.html:60
-#: templates/my_practice/withdrawal_list.html:109
-msgid "Category"
-msgstr "Kategorie"
 
 #: templates/my_practice/expense_list.html:82
 msgid "Receipt"
@@ -3546,12 +3662,6 @@ msgstr "Eingangsdatum"
 #: templates/my_practice/inquiry_list.html:226
 msgid "Source"
 msgstr "Quelle"
-
-#: templates/my_practice/inquiry_confirm_delete.html:38
-#: templates/my_practice/tag_confirm_delete.html:34
-#: templates/my_practice/time_off_confirm_delete.html:46
-msgid "Yes, delete"
-msgstr "Ja, löschen"
 
 #: templates/my_practice/inquiry_convert_confirm.html:5
 #: templates/my_practice/inquiry_convert_confirm.html:9
@@ -3769,6 +3879,33 @@ msgstr "Keine Anfragen gefunden."
 msgid "Record first inquiry"
 msgstr "Erste Anfrage erfassen"
 
+#: templates/my_practice/invoice_confirm_delete.html:5
+#: templates/my_practice/invoice_confirm_delete.html:9
+msgid "Delete invoice"
+msgstr "Rechnung löschen"
+
+#: templates/my_practice/invoice_confirm_delete.html:14
+msgid "Are you sure you want to delete this invoice?"
+msgstr "Möchten Sie diese Rechnung wirklich löschen?"
+
+#: templates/my_practice/invoice_confirm_delete.html:15
+#: templates/my_practice/time_off_confirm_delete.html:14
+#: templates/my_practice/withdrawal_confirm_delete.html:14
+msgid "This action cannot be undone."
+msgstr "Diese Aktion kann nicht rückgängig gemacht werden."
+
+#: templates/my_practice/invoice_confirm_delete.html:20
+msgid "Invoice number"
+msgstr "Rechnungsnummer"
+
+#: templates/my_practice/invoice_confirm_delete.html:38
+msgid "Total amount"
+msgstr "Gesamtbetrag"
+
+#: templates/my_practice/invoice_confirm_delete.html:42
+msgid "Number of items"
+msgstr "Anzahl Positionen"
+
 #: templates/my_practice/invoice_detail.html:15
 msgid "Invoice Number"
 msgstr "Rechnungsnummer"
@@ -3941,6 +4078,70 @@ msgstr "Weiteres Item hinzufügen"
 msgid "Create Invoice"
 msgstr "Rechnung Erstellen"
 
+#: templates/my_practice/marketing_period_confirm_delete.html:4
+#: templates/my_practice/marketing_period_confirm_delete.html:8
+msgid "Delete marketing period"
+msgstr "Marketing-Zeitraum löschen"
+
+#: templates/my_practice/marketing_period_confirm_delete.html:13
+msgid "Are you sure you want to delete this marketing period?"
+msgstr "Möchten Sie diesen Marketing-Zeitraum wirklich löschen?"
+
+#: templates/my_practice/marketing_period_confirm_delete.html:27
+msgid "ongoing"
+msgstr "laufend"
+
+#: templates/my_practice/practice_confirm_delete.html:4
+#: templates/my_practice/practice_confirm_delete.html:6
+msgid "Deactivate practice"
+msgstr "Praxis deaktivieren"
+
+#: templates/my_practice/practice_confirm_delete.html:11
+msgid "Warning: deactivate practice"
+msgstr "Achtung: Praxis deaktivieren"
+
+#: templates/my_practice/practice_confirm_delete.html:12
+msgid "You are about to deactivate this practice. Please note:"
+msgstr "Sie sind dabei, diese Praxis zu deaktivieren. Bitte beachten Sie:"
+
+#: templates/my_practice/practice_confirm_delete.html:14
+msgid "The practice will not be deleted, only deactivated"
+msgstr "Die Praxis wird nicht gelöscht, sondern nur deaktiviert"
+
+#: templates/my_practice/practice_confirm_delete.html:15
+msgid "All data (clients, invoices, etc.) will be retained"
+msgstr "Alle Daten (Klienten, Rechnungen, etc.) bleiben erhalten"
+
+#: templates/my_practice/practice_confirm_delete.html:16
+msgid "The practice will no longer appear in the selection"
+msgstr "Die Praxis wird nicht mehr in der Auswahl angezeigt"
+
+#: templates/my_practice/practice_confirm_delete.html:17
+msgid "You can reactivate the practice later"
+msgstr "Sie können die Praxis später wieder aktivieren"
+
+#: templates/my_practice/practice_confirm_delete.html:22
+msgid "Practice details"
+msgstr "Praxis-Details"
+
+#: templates/my_practice/practice_confirm_delete.html:28
+#: templates/my_practice/practice_form.html:46
+msgid "Professional title"
+msgstr "Berufsbezeichnung"
+
+#: templates/my_practice/practice_confirm_delete.html:32
+#: templates/my_practice/practice_form.html:80
+msgid "City"
+msgstr "Stadt"
+
+#: templates/my_practice/practice_confirm_delete.html:40
+msgid "Slug"
+msgstr "Slug"
+
+#: templates/my_practice/practice_confirm_delete.html:50
+msgid "Yes, deactivate practice"
+msgstr "Ja, Praxis deaktivieren"
+
 #: templates/my_practice/practice_form.html:4
 #: templates/my_practice/practice_form.html:6
 msgid "Edit practice"
@@ -3971,10 +4172,6 @@ msgstr "Praxis-Name"
 msgid "Short title"
 msgstr "Kurzbezeichnung"
 
-#: templates/my_practice/practice_form.html:46
-msgid "Professional title"
-msgstr "Berufsbezeichnung"
-
 #: templates/my_practice/practice_form.html:52
 msgid "Subtitle (German)"
 msgstr "Untertitel (Deutsch)"
@@ -3994,10 +4191,6 @@ msgstr "Straße und Hausnummer"
 #: templates/my_practice/practice_form.html:76
 msgid "Postal code"
 msgstr "Postleitzahl"
-
-#: templates/my_practice/practice_form.html:80
-msgid "City"
-msgstr "Stadt"
 
 #: templates/my_practice/practice_form.html:85
 msgid "Country"
@@ -4725,10 +4918,6 @@ msgstr "Urlaub/Abwesenheit löschen"
 msgid "Do you really want to delete this time-off period?"
 msgstr "Möchten Sie diesen Zeitraum wirklich löschen?"
 
-#: templates/my_practice/time_off_confirm_delete.html:14
-msgid "This action cannot be undone."
-msgstr "Diese Aktion kann nicht rückgängig gemacht werden."
-
 #: templates/my_practice/time_off_confirm_delete.html:27
 #: templates/my_practice/time_off_list.html:33
 #: templates/my_practice/time_off_list.html:78
@@ -4828,6 +5017,19 @@ msgstr "Den Platzhalter {salutation} bitte stehen lassen — er wird beim Versan
 msgid "English"
 msgstr "Englisch"
 
+#: templates/my_practice/todo_confirm_delete.html:4
+#: templates/my_practice/todo_confirm_delete.html:7
+msgid "Delete to-do"
+msgstr "TODO löschen"
+
+#: templates/my_practice/todo_confirm_delete.html:12
+msgid "Really delete?"
+msgstr "Wirklich löschen?"
+
+#: templates/my_practice/todo_confirm_delete.html:13
+msgid "Are you sure you want to delete this task?"
+msgstr "Möchten Sie diese Aufgabe wirklich löschen?"
+
 #: templates/my_practice/todo_form.html:4
 #: templates/my_practice/todo_form.html:7
 msgid "Edit TODO"
@@ -4848,6 +5050,15 @@ msgstr "Optional: Fälligkeitsdatum (TT.MM.JJJJ oder JJJJ-MM-TT)"
 #: templates/my_practice/todo_form.html:71
 msgid "Leave empty for \"not completed\""
 msgstr ""
+
+#: templates/my_practice/withdrawal_confirm_delete.html:4
+#: templates/my_practice/withdrawal_confirm_delete.html:8
+msgid "Delete withdrawal"
+msgstr "Entnahme löschen"
+
+#: templates/my_practice/withdrawal_confirm_delete.html:13
+msgid "Are you sure you want to delete this withdrawal?"
+msgstr "Möchten Sie diese Entnahme wirklich löschen?"
 
 #: templates/my_practice/withdrawal_form.html:4
 #: templates/my_practice/withdrawal_form.html:6

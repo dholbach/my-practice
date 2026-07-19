@@ -1,61 +1,60 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}DSGVO-Löschung bestätigen{% endblock %}
-{% block page_title %}DSGVO-Löschung{% endblock %}
+{% block title %}{% trans "Confirm GDPR deletion" %}{% endblock %}
+{% block page_title %}{% trans "GDPR deletion" %}{% endblock %}
 {% block page_subtitle %}{{ client.client_code }}{% endblock %}
 
 {% block content %}
 <div class="form-container">
 
   <div class="alert alert-warning">
-    <strong>Diese Aktion ist unwiderruflich.</strong>
-    Alle Daten zu diesem Klienten werden dauerhaft gelöscht.
+    <strong>{% trans "This action is irreversible." %}</strong>
+    {% trans "All data for this client will be permanently deleted." %}
   </div>
 
-  <h3>Was wird gelöscht</h3>
+  <h3>{% trans "What will be deleted" %}</h3>
   <ul>
-    <li>Klientenstammdaten (Name, Adresse, Kontakt)</li>
-    <li>{{ invoice_count }} Rechnung{{ invoice_count|pluralize:"en" }} inkl. Sitzungsposten</li>
-    <li>{{ document_count }} Dokument{{ document_count|pluralize:"e" }} (Dateien auf Disk)</li>
-    <li>Klinische Notizen, Sitzungsprotokolle, Supervision</li>
-    <li>Alle Sitzungsdaten</li>
+    <li>{% trans "Client master data (name, address, contact)" %}</li>
+    <li>{% blocktrans count counter=invoice_count %}{{ counter }} invoice incl. session items{% plural %}{{ counter }} invoices incl. session items{% endblocktrans %}</li>
+    <li>{% blocktrans count counter=document_count %}{{ counter }} document (file on disk){% plural %}{{ counter }} documents (files on disk){% endblocktrans %}</li>
+    <li>{% trans "Clinical notes, session logs, supervision" %}</li>
+    <li>{% trans "All session data" %}</li>
   </ul>
 
-  <h3>Vor der Löschung zu erledigen</h3>
+  <h3>{% trans "Before deletion" %}</h3>
   <form method="post" action="{% url 'client_gdpr_delete' client.pk %}">
     {% csrf_token %}
 
     <div class="checklist-item">
       <label>
         <input type="checkbox" name="confirm_email" required>
-        Ich habe Korrespondenz mit diesem Klienten aus meinem E-Mail-Programm gelöscht.
+        {% trans "I have deleted correspondence with this client from my email program." %}
       </label>
     </div>
 
     <div class="checklist-item">
       <label>
         <input type="checkbox" name="confirm_retention" required>
-        Ich bestätige, dass die gesetzliche Aufbewahrungsfrist von 10 Jahren abgelaufen ist.
-        Letzte Sitzung: <strong>{{ last_session|date:"d.m.Y" }}</strong>
+        {% trans "I confirm that the legal 10-year retention period has expired." %}
+        {% trans "Last session:" %} <strong>{{ last_session|date:"d.m.Y" }}</strong>
       </label>
     </div>
 
     {% if has_email %}
     <p class="help-text">
-      Eine Löschbenachrichtigung wird an <strong>{{ client.email }}</strong>
-      (Art. 17 DSGVO) gesendet.
+      {% blocktrans with client_email=client.email %}A deletion notice will be sent to <strong>{{ client_email }}</strong> (Art. 17 GDPR).{% endblocktrans %}
     </p>
     {% else %}
     <p class="help-text">
-      Keine E-Mail-Adresse hinterlegt — es wird keine Benachrichtigung gesendet.
+      {% trans "No email address on file — no notification will be sent." %}
     </p>
     {% endif %}
 
     <div class="form-actions">
-      <a href="{% url 'client_list' %}" class="btn btn-secondary">Abbrechen</a>
+      <a href="{% url 'client_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
       <button type="submit" class="btn btn-danger">
-        Löschen{% if has_email %} &amp; Benachrichtigen{% endif %}
+        {% trans "Delete" %}{% if has_email %} &amp; {% trans "Notify" %}{% endif %}
       </button>
     </div>
   </form>

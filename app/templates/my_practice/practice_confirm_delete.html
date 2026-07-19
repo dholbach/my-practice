@@ -1,42 +1,43 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Praxis deaktivieren - Therapy Practice{% endblock %}
+{% block title %}{% trans "Deactivate practice" %} - Therapy Practice{% endblock %}
 
-{% block page_title %}Praxis deaktivieren{% endblock %}
+{% block page_title %}{% trans "Deactivate practice" %}{% endblock %}
 {% block page_subtitle %}{{ object.name }}{% endblock %}
 
 {% block content %}
 <div class="warning-box">
-    <h3>⚠️ Achtung: Praxis deaktivieren</h3>
-    <p>Sie sind dabei, diese Praxis zu deaktivieren. Bitte beachten Sie:</p>
+    <h3>⚠️ {% trans "Warning: deactivate practice" %}</h3>
+    <p>{% trans "You are about to deactivate this practice. Please note:" %}</p>
     <ul>
-        <li>Die Praxis wird nicht gelöscht, sondern nur deaktiviert</li>
-        <li>Alle Daten (Klienten, Rechnungen, etc.) bleiben erhalten</li>
-        <li>Die Praxis wird nicht mehr in der Auswahl angezeigt</li>
-        <li>Sie können die Praxis später wieder aktivieren</li>
+        <li>{% trans "The practice will not be deleted, only deactivated" %}</li>
+        <li>{% trans "All data (clients, invoices, etc.) will be retained" %}</li>
+        <li>{% trans "The practice will no longer appear in the selection" %}</li>
+        <li>{% trans "You can reactivate the practice later" %}</li>
     </ul>
 </div>
 
 <div class="practice-details">
-    <h3>Praxis-Details</h3>
+    <h3>{% trans "Practice details" %}</h3>
     <div class="detail-row">
-        <span class="detail-label">Name:</span>
+        <span class="detail-label">{% trans "Name" %}:</span>
         <span>{{ object.name }}</span>
     </div>
     <div class="detail-row">
-        <span class="detail-label">Berufsbezeichnung:</span>
+        <span class="detail-label">{% trans "Professional title" %}:</span>
         <span>{{ object.title }}</span>
     </div>
     <div class="detail-row">
-        <span class="detail-label">Stadt:</span>
+        <span class="detail-label">{% trans "City" %}:</span>
         <span>{{ object.city }}</span>
     </div>
     <div class="detail-row">
-        <span class="detail-label">E-Mail:</span>
+        <span class="detail-label">{% trans "Email" %}:</span>
         <span>{{ object.email }}</span>
     </div>
     <div class="detail-row">
-        <span class="detail-label">Slug:</span>
+        <span class="detail-label">{% trans "Slug" %}:</span>
         <span><code>{{ object.slug }}</code></span>
     </div>
 </div>
@@ -46,9 +47,9 @@
 
     <div class="form-actions">
         <button type="submit" class="btn btn-danger">
-            🗑️ Ja, Praxis deaktivieren
+            🗑️ {% trans "Yes, deactivate practice" %}
         </button>
-        <a href="{% url 'practice_management' %}" class="btn btn-secondary">Abbrechen</a>
+        <a href="{% url 'practice_management' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
     </div>
 </form>
 
