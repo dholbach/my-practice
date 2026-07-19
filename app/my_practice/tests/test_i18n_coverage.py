@@ -33,9 +33,6 @@ EXEMPT_TEMPLATES = {
 # dedicated P-039 sweep (issue #69). Remove an entry here in the same PR that
 # wraps it with {% load i18n %} + {% trans %}/{% blocktrans %}.
 KNOWN_UNWRAPPED_TEMPLATES = {
-    "my_practice/bank_expense_review.html",
-    "my_practice/bank_import.html",
-    "my_practice/bank_withdrawal_review.html",
     "my_practice/boilerplate.html",
     "my_practice/calendar_approval_queue.html",
     "my_practice/calendar_import.html",

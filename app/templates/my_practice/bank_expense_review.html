@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load payment_tags %}
-{% load static %}
+{% load static i18n %}
 
 {% block content %}
 <div class="container">
@@ -10,11 +10,11 @@
     <div class="expense-stats-card">
         <div class="expense-stats-grid">
             <div>
-                <div class="expense-stat__label">Nicht zugeordnet</div>
+                <div class="expense-stat__label">{% trans "Unmatched" %}</div>
                 <div class="expense-stat__value expense-stat__value--warning">{{ stats.unmatched }}</div>
             </div>
             <div>
-                <div class="expense-stat__label">Gesamt-Betrag</div>
+                <div class="expense-stat__label">{% trans "Total amount" %}</div>
                 <div class="expense-stat__value expense-stat__value--primary">{{ stats.total_amount|currency }}</div>
             </div>
         </div>
@@ -28,52 +28,52 @@
         <div class="expense-action-panel">
             <div class="expense-action-panel__fields">
                 <div class="expense-action-panel__field-wide">
-                    <label class="expense-action-panel__field-label">Kategorie</label>
+                    <label class="expense-action-panel__field-label">{% trans "Category" %}</label>
                     <select name="category" required class="expense-action-panel__select">
-                        <option value="miete">Miete</option>
-                        <option value="telefon">Telefon</option>
-                        <option value="verband">Verband / Mitgliedsbeiträge</option>
-                        <option value="versicherung">Versicherung</option>
-                        <option value="konto">Konto / Kontoführung</option>
-                        <option value="webseite">Webseite / Domain</option>
-                        <option value="werbung">Werbung / Marketing</option>
-                        <option value="software">Software</option>
-                        <option value="selbsterfahrung">Selbsterfahrung</option>
-                        <option value="supervision">Supervision</option>
-                        <option value="training">Training / Weiterbildung</option>
-                        <option value="ausbildung_ort">Ausbildung Ort</option>
-                        <option value="gruppe">Gruppe</option>
-                        <option value="materialien">Materialien</option>
-                        <option value="hardware">Hardware</option>
-                        <option value="literatur">Literatur</option>
-                        <option value="kongress">Kongress</option>
-                        <option value="other" selected>Sonstiges</option>
+                        <option value="miete">{% trans "Rent" %}</option>
+                        <option value="telefon">{% trans "Phone" %}</option>
+                        <option value="verband">{% trans "Association / membership fees" %}</option>
+                        <option value="versicherung">{% trans "Insurance" %}</option>
+                        <option value="konto">{% trans "Account / account fees" %}</option>
+                        <option value="webseite">{% trans "Website / domain" %}</option>
+                        <option value="werbung">{% trans "Advertising / marketing" %}</option>
+                        <option value="software">{% trans "Software" %}</option>
+                        <option value="selbsterfahrung">{% trans "Personal therapy (training)" %}</option>
+                        <option value="supervision">{% trans "Supervision" %}</option>
+                        <option value="training">{% trans "Training / continuing education" %}</option>
+                        <option value="ausbildung_ort">{% trans "Training location" %}</option>
+                        <option value="gruppe">{% trans "Group" %}</option>
+                        <option value="materialien">{% trans "Materials" %}</option>
+                        <option value="hardware">{% trans "Hardware" %}</option>
+                        <option value="literatur">{% trans "Literature" %}</option>
+                        <option value="kongress">{% trans "Conference" %}</option>
+                        <option value="other" selected>{% trans "Other" %}</option>
                     </select>
                 </div>
 
                 <div class="expense-action-panel__field-xl">
-                    <label class="expense-action-panel__field-label">Beschreibung (optional)</label>
-                    <textarea name="description" rows="2" placeholder="Wird automatisch generiert, wenn leer" class="expense-action-panel__textarea"></textarea>
+                    <label class="expense-action-panel__field-label">{% trans "Description (optional)" %}</label>
+                    <textarea name="description" rows="2" placeholder="{% trans 'Auto-generated if left empty' %}" class="expense-action-panel__textarea"></textarea>
                 </div>
 
                 <div class="expense-action-panel__checkboxes">
                     <label class="expense-action-panel__checkbox-label">
                         <input type="checkbox" name="has_invoice">
-                        <span class="expense-action-panel__checkbox-text">Rechnung vorhanden</span>
+                        <span class="expense-action-panel__checkbox-text">{% trans "Invoice available" %}</span>
                     </label>
                     <label class="expense-action-panel__checkbox-label">
                         <input type="checkbox" name="is_tax_deductible" checked>
-                        <span class="expense-action-panel__checkbox-text">Steuerlich absetzbar</span>
+                        <span class="expense-action-panel__checkbox-text">{% trans "Tax deductible" %}</span>
                     </label>
                 </div>
             </div>
 
             <div class="expense-action-panel__buttons">
                 <button type="submit" name="action" value="group" class="btn btn-primary">
-                    ✓ Zu Ausgabe zusammenfassen
+                    ✓ {% trans "Group into expense" %}
                 </button>
                 <button type="submit" name="action" value="ignore" class="btn btn-secondary">
-                    ➖ Ignorieren
+                    ➖ {% trans "Ignore" %}
                 </button>
             </div>
         </div>
@@ -112,17 +112,17 @@
     {% if is_paginated %}
     <div class="pagination-bar">
         {% if page_obj.has_previous %}
-            <a href="?page=1" class="btn btn-secondary">« Erste</a>
-            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary">‹ Zurück</a>
+            <a href="?page=1" class="btn btn-secondary">{% trans "« First" %}</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary">{% trans "‹ Previous" %}</a>
         {% endif %}
 
         <span class="text-muted p-1">
-            Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}
+            {% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Page {{ page }} of {{ pages }}{% endblocktrans %}
         </span>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">Weiter ›</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-secondary">Letzte »</a>
+            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">{% trans "Next ›" %}</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-secondary">{% trans "Last »" %}</a>
         {% endif %}
     </div>
     {% endif %}
@@ -130,20 +130,20 @@
     {% else %}
     <div class="expense-empty-state">
         <div class="expense-empty-state__title">
-            ✓ Alle Transaktionen zugeordnet
+            ✓ {% trans "All transactions matched" %}
         </div>
         <div class="expense-empty-state__desc">
-            Es gibt keine unzugeordneten negativen Transaktionen.
+            {% trans "There are no unmatched negative transactions." %}
         </div>
     </div>
     {% endif %}
 
     <!-- Navigation Links -->
     <div class="expense-nav-footer">
-        <a href="{% url 'bank_review' %}" class="btn btn-secondary">← Rechnungen prüfen</a>
-        <a href="{% url 'bank_import' %}" class="btn btn-secondary">Bank Import</a>
-        <a href="{% url 'expense_list' %}" class="btn btn-secondary">Ausgaben-Liste</a>
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Übersicht</a>
+        <a href="{% url 'bank_review' %}" class="btn btn-secondary">{% trans "← Review invoices" %}</a>
+        <a href="{% url 'bank_import' %}" class="btn btn-secondary">{% trans "Bank import" %}</a>
+        <a href="{% url 'expense_list' %}" class="btn btn-secondary">{% trans "Expense list" %}</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">{% trans "Overview" %}</a>
     </div>
 </div>
 {% endblock %}

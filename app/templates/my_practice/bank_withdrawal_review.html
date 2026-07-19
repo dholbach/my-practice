@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load payment_tags %}
-{% load static %}
+{% load static i18n %}
 
 {% block content %}
 <div class="container">
@@ -10,11 +10,11 @@
     <div class="expense-stats-card">
         <div class="expense-stats-grid">
             <div>
-                <div class="expense-stat__label">Ausstehend</div>
+                <div class="expense-stat__label">{% trans "Pending" %}</div>
                 <div class="expense-stat__value expense-stat__value--warning">{{ stats.unmatched }}</div>
             </div>
             <div>
-                <div class="expense-stat__label">Gesamt-Betrag</div>
+                <div class="expense-stat__label">{% trans "Total amount" %}</div>
                 <div class="expense-stat__value expense-stat__value--primary">{{ stats.total_amount|floatformat:2 }} €</div>
             </div>
         </div>
@@ -28,7 +28,7 @@
         <div class="expense-action-panel">
             <div class="expense-action-panel__fields">
                 <div class="expense-action-panel__field-wide">
-                    <label class="expense-action-panel__field-label">Kategorie</label>
+                    <label class="expense-action-panel__field-label">{% trans "Category" %}</label>
                     <select name="category" required class="expense-action-panel__select">
                         {% for value, label in category_choices %}
                         <option value="{{ value }}"{% if value == 'salary' %} selected{% endif %}>{{ label }}</option>
@@ -37,17 +37,17 @@
                 </div>
 
                 <div class="expense-action-panel__field-xl">
-                    <label class="expense-action-panel__field-label">Beschreibung (optional)</label>
-                    <textarea name="description" rows="2" placeholder="Wird automatisch generiert, wenn leer" class="expense-action-panel__textarea"></textarea>
+                    <label class="expense-action-panel__field-label">{% trans "Description (optional)" %}</label>
+                    <textarea name="description" rows="2" placeholder="{% trans 'Auto-generated if left empty' %}" class="expense-action-panel__textarea"></textarea>
                 </div>
             </div>
 
             <div class="expense-action-panel__buttons">
                 <button type="submit" name="action" value="group" class="btn btn-primary">
-                    ✓ Zu Entnahme zusammenfassen
+                    ✓ {% trans "Group into withdrawal" %}
                 </button>
                 <button type="submit" name="action" value="ignore" class="btn btn-secondary">
-                    ➖ Ignorieren
+                    ➖ {% trans "Ignore" %}
                 </button>
             </div>
         </div>
@@ -79,7 +79,7 @@
 
                     {% if trans.linked_withdrawal %}
                     <div class="expense-trans-card__iban">
-                        Auto-Entnahme: {{ trans.linked_withdrawal }}
+                        {% blocktrans with linked_withdrawal=trans.linked_withdrawal %}Auto-withdrawal: {{ linked_withdrawal }}{% endblocktrans %}
                     </div>
                     {% endif %}
                 </div>
@@ -92,17 +92,17 @@
     {% if is_paginated %}
     <div class="pagination-bar">
         {% if page_obj.has_previous %}
-            <a href="?page=1" class="btn btn-secondary">« Erste</a>
-            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary">‹ Zurück</a>
+            <a href="?page=1" class="btn btn-secondary">{% trans "« First" %}</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary">{% trans "‹ Previous" %}</a>
         {% endif %}
 
         <span class="text-muted p-1">
-            Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}
+            {% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Page {{ page }} of {{ pages }}{% endblocktrans %}
         </span>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">Weiter ›</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-secondary">Letzte »</a>
+            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">{% trans "Next ›" %}</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-secondary">{% trans "Last »" %}</a>
         {% endif %}
     </div>
     {% endif %}
@@ -110,20 +110,20 @@
     {% else %}
     <div class="expense-empty-state">
         <div class="expense-empty-state__title">
-            ✓ Alle Entnahmen zugeordnet
+            ✓ {% trans "All withdrawals matched" %}
         </div>
         <div class="expense-empty-state__desc">
-            Es gibt keine ausstehenden automatisch erkannten Entnahmen.
+            {% trans "There are no pending automatically detected withdrawals." %}
         </div>
     </div>
     {% endif %}
 
     <!-- Navigation Links -->
     <div class="expense-nav-footer">
-        <a href="{% url 'bank_review' %}" class="btn btn-secondary">← Rechnungen prüfen</a>
-        <a href="{% url 'bank_expense_review' %}" class="btn btn-secondary">💸 Ausgaben</a>
-        <a href="{% url 'withdrawal_list' %}" class="btn btn-secondary">Entnahmen-Liste</a>
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Übersicht</a>
+        <a href="{% url 'bank_review' %}" class="btn btn-secondary">{% trans "← Review invoices" %}</a>
+        <a href="{% url 'bank_expense_review' %}" class="btn btn-secondary">💸 {% trans "Expenses" %}</a>
+        <a href="{% url 'withdrawal_list' %}" class="btn btn-secondary">{% trans "Withdrawal list" %}</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">{% trans "Overview" %}</a>
     </div>
 </div>
 {% endblock %}

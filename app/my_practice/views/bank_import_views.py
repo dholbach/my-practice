@@ -38,7 +38,6 @@ class BankImportView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = "Bank Statement Import"
 
         # Show recent imports
         recent_transactions = (
@@ -163,7 +162,6 @@ class BankReviewView(FormMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = "Bank Import - Manuelle Zuordnung"
 
         # Get import results from session
         import_results = self.request.session.pop("import_results", None)
@@ -569,7 +567,7 @@ class BankExpenseReviewView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = "Bank Import - Ausgaben zuordnen"
+        context["page_title"] = _("Bank Import - Assign Expenses")
 
         qs = self.get_queryset()
         transactions = list(qs)
@@ -716,7 +714,7 @@ class BankWithdrawalReviewView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = "Bank Import - Entnahmen zuordnen"
+        context["page_title"] = _("Bank Import - Assign Withdrawals")
 
         qs = self.get_queryset()
         context["stats"] = {
