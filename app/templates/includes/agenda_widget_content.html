@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Agenda Widget Content - P-003 Phase 3
 Inner content for agenda widget (used with widget_base.html)
@@ -38,11 +39,11 @@ Inner content for agenda widget (used with widget_base.html)
                         {% if item.due_status %}
                             <span class="due-badge due-{{ item.due_status }}">
                                 {% if item.due_status == "overdue" %}
-                                    ⚠️ Überfällig
+                                    ⚠️ {% trans "Overdue" %}
                                 {% elif item.due_status == "today" %}
-                                    📅 Heute
+                                    📅 {% trans "Today" %}
                                 {% elif item.due_status == "soon" %}
-                                    📆 Bald
+                                    📆 {% trans "Soon" %}
                                 {% endif %}
                             </span>
                         {% endif %}
@@ -72,7 +73,7 @@ Inner content for agenda widget (used with widget_base.html)
         {% endfor %}
     {% else %}
         <div class="agenda-empty">
-            <p>🎉 Keine Sessions oder Aufgaben für heute!</p>
+            <p>🎉 {% trans "No sessions or tasks for today!" %}</p>
         </div>
     {% endif %}
 </div>

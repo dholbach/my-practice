@@ -2,13 +2,13 @@
 Weekly Focus Widget Content – P-028
 Shows Mon–Sun sessions and focus tasks (is_focus=True).
 {% endcomment %}
-{% load static %}
+{% load static i18n %}
 
 <div class="weekly-focus-content" id="weekly-focus-content">
 
     <!-- Week Sessions -->
     <div class="weekly-focus-section">
-        <div class="weekly-focus-section-title">📅 Sitzungen diese Woche</div>
+        <div class="weekly-focus-section-title">📅 {% trans "Sessions this week" %}</div>
         {% if week_sessions %}
             <div class="weekly-sessions-list">
                 {% for session in week_sessions %}
@@ -22,13 +22,13 @@ Shows Mon–Sun sessions and focus tasks (is_focus=True).
                 {% endfor %}
             </div>
         {% else %}
-            <div class="weekly-focus-empty">Keine Sitzungen diese Woche.</div>
+            <div class="weekly-focus-empty">{% trans "No sessions this week." %}</div>
         {% endif %}
     </div>
 
     <!-- Focus Tasks -->
     <div class="weekly-focus-section">
-        <div class="weekly-focus-section-title">⭐ Fokus-Aufgaben</div>
+        <div class="weekly-focus-section-title">⭐ {% trans "Focus tasks" %}</div>
         {% if focus_tasks %}
             <div class="weekly-focus-tasks">
                 {% for task in focus_tasks %}
@@ -38,12 +38,12 @@ Shows Mon–Sun sessions and focus tasks (is_focus=True).
                                 hx-post="{% url 'todo_toggle' task.pk %}?ctx=weekly_focus"
                                 hx-target="#weekly-focus-content"
                                 hx-swap="outerHTML"
-                                title="Als erledigt markieren">☐</button>
+                                title="{% trans 'Mark as done' %}">☐</button>
                         <button class="btn-focus-toggle is-focused"
                                 hx-post="{% url 'todo_toggle_focus' task.pk %}?ctx=weekly_focus"
                                 hx-target="#weekly-focus-content"
                                 hx-swap="outerHTML"
-                                title="Fokus entfernen">⭐</button>
+                                title="{% trans 'Remove focus' %}">⭐</button>
                         <span class="weekly-focus-task-title">{{ task.title }}</span>
                     </div>
                     {% if task.due_date %}
@@ -55,8 +55,9 @@ Shows Mon–Sun sessions and focus tasks (is_focus=True).
                 {% endfor %}
             </div>
         {% else %}
+            {% url 'todo_list' as todo_list_url %}
             <div class="weekly-focus-empty">
-                Keine Fokus-Aufgaben. Klicke ⭐ auf einer Aufgabe in der <a href="{% url 'todo_list' %}">Todo-Liste</a>.
+                {% blocktrans %}No focus tasks. Click ⭐ on a task in the <a href="{{ todo_list_url }}">to-do list</a>.{% endblocktrans %}
             </div>
         {% endif %}
     </div>

@@ -1,4 +1,4 @@
-{% load payment_tags %}
+{% load payment_tags i18n %}
 {% comment %}
 Reusable pagination component.
 
@@ -14,11 +14,11 @@ Automatically preserves all current query parameters (status, year, etc.)
 {% if page_obj and page_obj.paginator.num_pages > 1 %}
 <div class="pagination">
     {% if page_obj.has_previous %}
-    <a href="?{% query_string page=page_obj.previous_page_number %}" class="btn btn-secondary">← Previous</a>
+    <a href="?{% query_string page=page_obj.previous_page_number %}" class="btn btn-secondary">{% trans "← Previous" %}</a>
     {% endif %}
-    <span class="pagination-info">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
+    <span class="pagination-info">{% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Page {{ page }} of {{ pages }}{% endblocktrans %}</span>
     {% if page_obj.has_next %}
-    <a href="?{% query_string page=page_obj.next_page_number %}" class="btn btn-secondary">Next →</a>
+    <a href="?{% query_string page=page_obj.next_page_number %}" class="btn btn-secondary">{% trans "Next →" %}</a>
     {% endif %}
 </div>
 {% endif %}

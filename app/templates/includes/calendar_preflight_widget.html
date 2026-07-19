@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Calendar pre-flight check widget for invoice detail page (P-013).
 Include this inside the invoice detail template when `calendar_preflight` is available.
@@ -12,19 +13,19 @@ Context expected:
 <div class="{% if calendar_preflight.has_warnings %}warning-box{% else %}info-box{% endif %} mt-4" id="calendar-preflight">
     <strong class="preflight-title">
         {% if calendar_preflight.has_warnings %}
-        ⚠️ Kalender-Abgleich: Abweichungen gefunden
+        ⚠️ {% trans "Calendar match: discrepancies found" %}
         {% else %}
-        ✅ Kalender-Abgleich: Alle Termine bestätigt
+        ✅ {% trans "Calendar match: all appointments confirmed" %}
         {% endif %}
     </strong>
 
     <table class="preflight-table">
         <thead>
             <tr>
-                <th>Datum (Rechnung)</th>
-                <th>Dauer</th>
-                <th>Status</th>
-                <th>Hinweis</th>
+                <th>{% trans "Date (invoice)" %}</th>
+                <th>{% trans "Duration" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th>{% trans "Note" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -38,22 +39,22 @@ Context expected:
                 </td>
                 <td>
                     {% if result.status == 'confirmed' %}
-                        <span class="preflight-status-confirmed">✅ Bestätigt</span>
+                        <span class="preflight-status-confirmed">✅ {% trans "Confirmed" %}</span>
                     {% elif result.status == 'cancelled' %}
-                        <span class="preflight-status-cancelled">🚫 Abgesagt</span>
+                        <span class="preflight-status-cancelled">🚫 {% trans "Cancelled" %}</span>
                     {% elif result.status == 'moved' %}
-                        <span class="preflight-status-moved">📅 Verschoben</span>
+                        <span class="preflight-status-moved">📅 {% trans "Moved" %}</span>
                     {% else %}
-                        <span class="preflight-status-unmatched">❓ Kein Abgleich</span>
+                        <span class="preflight-status-unmatched">❓ {% trans "No match" %}</span>
                     {% endif %}
                 </td>
                 <td class="preflight-td-note">
                     {% if result.status == 'cancelled' %}
-                        Termin wurde im Kalender abgesagt — Rechnung prüfen
+                        {% trans "Appointment was cancelled in the calendar — check the invoice" %}
                     {% elif result.status == 'moved' %}
-                        Kalender-Datum: {{ result.suggested_date|date:"d.m.Y" }} — Datum in Rechnung ggf. anpassen
+                        {% blocktrans with suggested_date=result.suggested_date|date:"d.m.Y" %}Calendar date: {{ suggested_date }} — update the invoice date if needed{% endblocktrans %}
                     {% elif result.status == 'unmatched' %}
-                        Kein passender Kalender-Eintrag gefunden
+                        {% trans "No matching calendar entry found" %}
                     {% endif %}
                 </td>
             </tr>
@@ -64,7 +65,7 @@ Context expected:
     {% if calendar_preflight.unaccounted_events %}
     <div class="preflight-unaccounted">
         <strong class="preflight-unaccounted__title">
-            📋 {{ calendar_preflight.unaccounted_events|length }} Kalender-Termin{{ calendar_preflight.unaccounted_events|length|pluralize:"e" }} nicht auf der Rechnung:
+            📋 {% blocktrans count counter=calendar_preflight.unaccounted_events|length %}{{ counter }} calendar appointment not on the invoice:{% plural %}{{ counter }} calendar appointments not on the invoice:{% endblocktrans %}
         </strong>
         <ul class="preflight-unaccounted__list">
             {% for event in calendar_preflight.unaccounted_events %}
