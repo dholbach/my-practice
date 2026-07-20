@@ -10,6 +10,11 @@
 (function() {
     'use strict';
 
+    // Translated strings, provided by base.html via data-* attributes on <body>
+    // (see P-039 Phase 5 — small enough surface that a full JavaScriptCatalog
+    // wasn't worth wiring up).
+    const i18n = document.body.dataset;
+
     let searchTimeout = null;
     let currentResults = [];
     let selectedIndex = -1;
@@ -28,7 +33,7 @@
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
         searchInput.id = 'global-search-input';
-        searchInput.placeholder = 'Suche... (c:Klient/Anfrage, i:Rechnung)';
+        searchInput.placeholder = i18n.searchPlaceholder;
         searchInput.style.cssText = `
             padding: 0.5rem 1rem;
             border: 2px solid var(--color-border);
@@ -111,7 +116,7 @@
         const resultsDropdown = document.getElementById('global-search-results');
 
         // Show loading state
-        resultsDropdown.innerHTML = '<div style="padding: 1rem; color: var(--color-text-secondary); text-align: center;">Suche...</div>';
+        resultsDropdown.innerHTML = `<div style="padding: 1rem; color: var(--color-text-secondary); text-align: center;">${i18n.searchLoading}</div>`;
         resultsDropdown.style.display = 'block';
 
         // Perform AJAX request
@@ -124,7 +129,7 @@
             })
             .catch(error => {
                 console.error('Search error:', error);
-                resultsDropdown.innerHTML = '<div style="padding: 1rem; color: var(--color-danger);">Fehler bei der Suche</div>';
+                resultsDropdown.innerHTML = `<div style="padding: 1rem; color: var(--color-danger);">${i18n.searchError}</div>`;
             });
     }
 
@@ -132,7 +137,7 @@
         const resultsDropdown = document.getElementById('global-search-results');
 
         if (currentResults.length === 0) {
-            resultsDropdown.innerHTML = '<div style="padding: 1rem; color: var(--color-text-secondary); text-align: center;">Keine Ergebnisse</div>';
+            resultsDropdown.innerHTML = `<div style="padding: 1rem; color: var(--color-text-secondary); text-align: center;">${i18n.searchNoResults}</div>`;
             resultsDropdown.style.display = 'block';
             return;
         }
@@ -288,7 +293,7 @@
         // Update keyboard hint to include search
         const keyboardHint = document.getElementById('keyboard-hint');
         if (keyboardHint) {
-            keyboardHint.innerHTML = 'Drücke <kbd style="padding: 0.2rem 0.4rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace; color: var(--color-text-primary);">/</kbd> für Suche oder <kbd style="padding: 0.2rem 0.4rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace; color: var(--color-text-primary);">?</kbd> für Shortcuts';
+            keyboardHint.innerHTML = `${i18n.kbdPress} <kbd style="padding: 0.2rem 0.4rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace; color: var(--color-text-primary);">/</kbd> ${i18n.kbdForSearch} ${i18n.kbdOr} <kbd style="padding: 0.2rem 0.4rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace; color: var(--color-text-primary);">?</kbd> ${i18n.kbdForShortcuts}`;
         }
     }
 

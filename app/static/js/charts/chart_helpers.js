@@ -10,7 +10,7 @@
  */
 function showChartEmptyState(canvas, message) {
     if (message === undefined) {
-        message = (typeof CHART_MESSAGES !== 'undefined') ? CHART_MESSAGES.noData : 'Keine Daten vorhanden';
+        message = (typeof CHART_MESSAGES !== 'undefined') ? CHART_MESSAGES.noData : 'No data available';
     }
     // Size the canvas before drawing so coordinates match the displayed area.
     setupCanvas(canvas);
@@ -85,11 +85,11 @@ function validateChartData(data, options = {}) {
 function getValidationMessage(reason) {
     const cm = (typeof CHART_MESSAGES !== 'undefined') ? CHART_MESSAGES : null;
     const messages = {
-        'empty':       cm ? cm.noData    : 'Keine Daten vorhanden',
-        'all_zeros':   cm ? cm.allZero   : 'Keine Daten im ausgewählten Zeitraum',
-        'invalid_max': cm ? cm.invalidMax : 'Keine gültigen Daten vorhanden',
+        'empty':       cm ? cm.noData    : 'No data available',
+        'all_zeros':   cm ? cm.allZero   : 'No data in selected period',
+        'invalid_max': cm ? cm.invalidMax : 'No valid data available',
     };
-    return messages[reason] || (cm ? cm.noData : 'Keine Daten vorhanden');
+    return messages[reason] || (cm ? cm.noData : 'No data available');
 }
 
 // Export functions

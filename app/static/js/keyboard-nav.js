@@ -17,6 +17,11 @@
 (function() {
     'use strict';
 
+    // Translated strings, provided by base.html via data-* attributes on <body>
+    // (see P-039 Phase 5 — small enough surface that a full JavaScriptCatalog
+    // wasn't worth wiring up).
+    const i18n = document.body.dataset;
+
     // Helper: Check if user is typing in an input field
     function isTyping(event) {
         const target = event.target;
@@ -71,26 +76,26 @@
     // Keyboard shortcut mappings
     const shortcuts = {
         global: {
-            'c': { url: '/clients/', name: 'Klienten' },
-            'i': { url: '/invoices/', name: 'Rechnungen' },
+            'c': { url: '/clients/', name: i18n.kbdClients },
+            'i': { url: '/invoices/', name: i18n.kbdInvoices },
             'd': { url: '/dashboard/', name: 'Dashboard' },
             'a': { url: '/analytics/', name: 'Analytics' },
             'p': { url: '/practice-analysis/', name: 'Practice Analysis' },
-            '?': { action: 'showHelp', name: 'Hilfe' }
+            '?': { action: 'showHelp', name: i18n.kbdHelp }
         },
         contextual: {
             'clients': {
-                'n': { url: '/clients/new/', name: 'Neuer Klient' }
+                'n': { url: '/clients/new/', name: i18n.kbdNewClient }
             },
             'client-detail': {
-                'n': { action: 'createInvoice', name: 'Neue Rechnung' },
-                'e': { action: 'editClient', name: 'Klient bearbeiten' }
+                'n': { action: 'createInvoice', name: i18n.kbdNewInvoice },
+                'e': { action: 'editClient', name: i18n.kbdEditClient }
             },
             'invoices': {
-                'n': { url: '/invoices/new/', name: 'Neue Rechnung' }
+                'n': { url: '/invoices/new/', name: i18n.kbdNewInvoice }
             },
             'invoice-detail': {
-                'e': { action: 'editInvoice', name: 'Rechnung bearbeiten' }
+                'e': { action: 'editInvoice', name: i18n.kbdEditInvoice }
             }
         }
     };
@@ -157,12 +162,12 @@
         `;
 
         let html = `
-            <h2 style="margin-top: 0; color: var(--color-text-primary);">⌨️ Tastaturkürzel</h2>
+            <h2 style="margin-top: 0; color: var(--color-text-primary);">⌨️ ${i18n.kbdHelpTitle}</h2>
             <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem;">
-                Diese Shortcuts funktionieren überall (außer in Eingabefeldern).
+                ${i18n.kbdHelpIntro}
             </p>
 
-            <h3 style="color: var(--color-text-primary); margin-top: 1.5rem;">Globale Navigation</h3>
+            <h3 style="color: var(--color-text-primary); margin-top: 1.5rem;">${i18n.kbdGlobalNav}</h3>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
         `;
 
@@ -181,7 +186,7 @@
         // Context-specific shortcuts
         if (Object.keys(contextShortcuts).length > 0) {
             html += `
-                <h3 style="color: var(--color-text-primary); margin-top: 1.5rem;">Auf dieser Seite</h3>
+                <h3 style="color: var(--color-text-primary); margin-top: 1.5rem;">${i18n.kbdOnThisPage}</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
             `;
 
@@ -199,9 +204,9 @@
 
         html += `
             <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-top: 1.5rem; text-align: center;">
-                Drücke <kbd style="padding: 0.2rem 0.5rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace;">?</kbd>
-                oder <kbd style="padding: 0.2rem 0.5rem; background: var(--color-bg-secondary); border-radius: 4px;">ESC</kbd>
-                um zu schließen
+                ${i18n.kbdPress} <kbd style="padding: 0.2rem 0.5rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace;">?</kbd>
+                ${i18n.kbdOr} <kbd style="padding: 0.2rem 0.5rem; background: var(--color-bg-secondary); border-radius: 4px;">ESC</kbd>
+                ${i18n.kbdToClose}
             </p>
         `;
 
@@ -279,11 +284,11 @@
     // Add visual indicator for shortcuts (optional tooltip)
     function addShortcutIndicators() {
         const indicators = [
-            { selector: 'a[href*="/clients/"]', key: 'c', name: 'Clients' },
-            { selector: 'a[href*="/invoices/"]', key: 'i', name: 'Invoices' },
-            { selector: 'a[href*="/dashboard"]', key: 'd', name: 'Dashboard' },
-            { selector: 'a[href*="/analytics"]', key: 'a', name: 'Analytics' },
-            { selector: 'a[href*="/practice-analysis"]', key: 'p', name: 'Practice' }
+            { selector: 'a[href*="/clients/"]', key: 'c' },
+            { selector: 'a[href*="/invoices/"]', key: 'i' },
+            { selector: 'a[href*="/dashboard"]', key: 'd' },
+            { selector: 'a[href*="/analytics"]', key: 'a' },
+            { selector: 'a[href*="/practice-analysis"]', key: 'p' }
         ];
 
         indicators.forEach(function(indicator) {
@@ -293,7 +298,7 @@
                 if (el.closest('.dropdown-content')) return;
 
                 const originalTitle = el.getAttribute('title') || '';
-                const shortcutHint = `Shortcut: ${indicator.key}`;
+                const shortcutHint = `${i18n.kbdShortcutLabel}: ${indicator.key}`;
                 const newTitle = originalTitle ? `${originalTitle} (${shortcutHint})` : shortcutHint;
                 el.setAttribute('title', newTitle);
             });
@@ -329,7 +334,7 @@
             transition: opacity 0.2s;
             cursor: pointer;
         `;
-        hint.innerHTML = 'Drücke <kbd style="padding: 0.2rem 0.4rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace; color: var(--color-text-primary);">?</kbd> für Tastaturkürzel';
+        hint.innerHTML = `${i18n.kbdPress} <kbd style="padding: 0.2rem 0.4rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace; color: var(--color-text-primary);">?</kbd> ${i18n.kbdForShortcuts}`;
 
         hint.addEventListener('mouseenter', function() {
             hint.style.opacity = '1';
