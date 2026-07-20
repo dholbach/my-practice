@@ -1,10 +1,11 @@
 <!-- P-026: Client Documents -->
+{% load i18n %}
 <div class="section-card" id="client-documents">
-    <h3>📎 Dokumente</h3>
+    <h3>📎 {% trans "Documents" %}</h3>
 
     <!-- Upload zone -->
     <div class="doc-upload-zone" id="docDropZone">
-        <p>Datei hierher ziehen oder <strong>klicken</strong> zum Auswählen</p>
+        <p>{% blocktrans %}Drag file here or <strong>click</strong> to select{% endblocktrans %}</p>
         <input type="file" id="docFileInput" class="doc-upload-hidden"
                accept=".pdf,.jpg,.jpeg,.png,.docx">
     </div>
@@ -18,22 +19,26 @@
                 {% endfor %}
             </select>
             <input type="text" id="docDescription" class="form-control"
-                   placeholder="Beschreibung (optional)" maxlength="200">
+                   placeholder="{% trans "Description (optional)" %}" maxlength="200">
             <input type="date" id="docDate" class="form-control">
             <button type="button" class="btn btn-primary btn-sm" id="docUploadBtn">
-                Hochladen
+                {% trans "Upload" %}
             </button>
             <button type="button" class="btn btn-secondary btn-sm" id="docCancelBtn">
-                Abbrechen
+                {% trans "Cancel" %}
             </button>
         </div>
-        <div class="doc-upload-progress" id="docProgress">Wird hochgeladen…</div>
+        <div class="doc-upload-progress" id="docProgress">{% trans "Uploading…" %}</div>
     </div>
 
     <!-- Hidden list: populated by JS after upload; full list lives in sidebar -->
     <ul class="doc-list doc-upload-hidden" id="docList"></ul>
 </div>
 
+{% blocktrans asvar doc_drop_zone_hint %}Drag file here or <strong>click</strong> to select{% endblocktrans %}
+{% trans "Upload failed." as doc_upload_failed_msg %}
+{% trans "Delete document?" as doc_delete_confirm_msg %}
+{% trans "Delete failed." as doc_delete_failed_msg %}
 <script>
 (function() {
     const clientPk = {{ client.pk }};
@@ -82,10 +87,10 @@
             : null;
 
         // Document type: keyword matching (first match wins)
+        /* i18n-exempt-start: German filename keywords to match against uploaded filenames, not UI text */
         const typeMap = [
             ['vorgespräch',        'intro_notes'],
             ['vorgesprach',        'intro_notes'],   // without umlaut
-            ['vorgespräch',        'intro_notes'],
             ['aufnahmebogen',      'intake'],
             ['intake',             'intake'],
             ['anamnesebogen',      'anamnese'],
@@ -96,6 +101,7 @@
             ['uberweisung',        'referral'],      // without umlaut
             ['referral',           'referral'],
         ];
+        /* i18n-exempt-end */
         let inferredType = null;
         for (const [keyword, type] of typeMap) {
             if (stem.includes(keyword)) { inferredType = type; break; }
@@ -119,7 +125,7 @@
         selectedFile = null;
         fileInput.value = '';
         uploadForm.style.display = 'none';
-        dropZone.querySelector('p').innerHTML = 'Datei hierher ziehen oder <strong>klicken</strong> zum Auswählen';
+        dropZone.querySelector('p').innerHTML = '{{ doc_drop_zone_hint|escapejs }}';
     });
 
     uploadBtn.addEventListener('click', () => {
@@ -145,7 +151,7 @@
                 appendDocRow(data);
                 cancelBtn.click();
             })
-            .catch(() => alert('Upload fehlgeschlagen.'))
+            .catch(() => alert('{{ doc_upload_failed_msg|escapejs }}'))
             .finally(() => {
                 uploadBtn.disabled = false;
                 progress.classList.remove('visible');
@@ -180,7 +186,7 @@
 })();
 
 function docDelete(btn) {
-    if (!confirm('Dokument wirklich löschen?')) return;
+    if (!confirm('{{ doc_delete_confirm_msg|escapejs }}')) return;
     const docId = btn.dataset.docId;
     const csrf = btn.dataset.csrf;
     fetch('/documents/' + docId + '/delete/', {
@@ -196,6 +202,6 @@ function docDelete(btn) {
             if (sbLi) sbLi.remove();
         }
     })
-    .catch(() => alert('Löschen fehlgeschlagen.'));
+    .catch(() => alert('{{ doc_delete_failed_msg|escapejs }}'));
 }
 </script>

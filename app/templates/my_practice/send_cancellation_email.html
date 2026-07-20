@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Absage-Mail senden{% endblock %}
+{% block title %}{% trans "Send cancellation email" %}{% endblock %}
 
-{% block page_title %}🤒 Absage-Mail senden{% endblock %}
-{% block page_subtitle %}<span class="sensitive-data">{{ client.full_name }}</span> ({{ client.client_code }}) &mdash; {% if client.language == 'en' %}🇬🇧 English{% else %}🇩🇪 Deutsch{% endif %}{% endblock %}
+{% block page_title %}🤒 {% trans "Send cancellation email" %}{% endblock %}
+{% block page_subtitle %}<span class="sensitive-data">{{ client.full_name }}</span> ({{ client.client_code }}) &mdash; {% if client.language == 'en' %}🇬🇧 {% trans "English" %}{% else %}🇩🇪 {% trans "German" %}{% endif %}{% endblock %}
 
 {% block extra_css %}
 {% endblock %}
@@ -12,12 +12,12 @@
 {% block content %}
 
 <div class="email-preview">
-    <h2>🤒 Absage wegen Krankheit</h2>
+    <h2>🤒 {% trans "Cancellation due to illness" %}</h2>
 
     {% if not client.salutation %}
     <div class="callout callout-warning">
-        <strong>⚠️ Keine persönliche Anrede für diesen Klienten hinterlegt</strong><br>
-        Die E-Mail verwendet eine generische Anrede. Du kannst die Anrede im Textfeld unten anpassen.
+        <strong>⚠️ {% trans "No personal salutation on file for this client" %}</strong><br>
+        {% trans "The email uses a generic salutation. You can adjust the salutation in the text field below." %}
     </div>
     {% endif %}
 
@@ -41,16 +41,16 @@
             {{ form.body }}
             {% if form.body.errors %}<div class="error">{{ form.body.errors }}</div>{% endif %}
             <div class="helptext">
-                Du kannst den Text frei anpassen. Keine Anhänge — nur Text.
+                {% trans "You can adjust the text freely. No attachments — text only." %}
             </div>
         </div>
 
         <div class="button-group">
             <button type="submit" class="btn btn-primary">
-                📧 Absage senden
+                📧 {% trans "Send cancellation" %}
             </button>
             <a href="{% url 'client_detail' client.pk %}" class="btn btn-secondary">
-                Abbrechen
+                {% trans "Cancel" %}
             </a>
         </div>
     </form>

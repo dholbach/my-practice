@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 {% load payment_tags %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Steuer-Jahresübersicht {{ year }}{% endblock %}
+{% block title %}{% blocktrans %}Tax Year Summary {{ year }}{% endblocktrans %}{% endblock %}
 
-{% block page_title %}Steuer-Jahresübersicht{% endblock %}
-{% block page_subtitle %}Übersicht für Steuererklärung{% endblock %}
+{% block page_title %}{% trans "Tax Year Summary" %}{% endblock %}
+{% block page_subtitle %}{% trans "Overview for tax return" %}{% endblock %}
 
 {% block content %}
 <div class="tax-summary-container">
     <!-- Cross-link -->
     <div class="tax-nav-link-wrap">
         <a href="{% url 'tax_quarter_overview' %}?year={{ year }}" class="tax-nav-link">
-            📊 → Steuer-Quartalübersicht (Vorauszahlungen)
+            📊 → {% trans "Quarterly Tax Overview (advance payments)" %}
         </a>
         &nbsp;·&nbsp;
         <a href="{% url 'tax_workday_audit' %}?year={{ year }}" class="tax-nav-link">
-            📋 → Arbeitstage-Nachweis {{ year }}
+            📋 → {% blocktrans %}Workday Audit {{ year }}{% endblocktrans %}
         </a>
     </div>
     <!-- Year Selector -->
     <div class="year-selector">
         <form method="get">
-            <label for="year">Jahr:</label>
+            <label for="year">{% trans "Year:" %}</label>
             <select name="year" id="year" x-data x-on:change="$el.form.submit()">
                 {% for y in available_years %}
                     <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
@@ -34,44 +34,44 @@
     <!-- Summary Cards -->
     <div class="summary-cards">
         <div class="stat-card success">
-            <h3>Gesamtumsatz</h3>
+            <h3>{% trans "Total revenue" %}</h3>
             <div class="value">{{ total_revenue|currency }}</div>
         </div>
         <div class="stat-card warning">
-            <h3>Steuerlich absetzbare Ausgaben</h3>
+            <h3>{% trans "Tax-deductible expenses" %}</h3>
             <div class="value">{{ total_expenses|currency }}</div>
         </div>
         <div class="stat-card primary">
-            <h3>Gewinn</h3>
+            <h3>{% trans "Profit" %}</h3>
             <div class="value">{{ gross_profit|currency }}</div>
         </div>
     </div>
 
     {% if practice_split %}
     <div class="allocation-note">
-        <h3>Pauschalen-Aufteilung bei mehreren Tätigkeiten ({{ active_practice_count }} Praxen)</h3>
+        <h3>{% blocktrans count counter=active_practice_count %}Allowance split for multiple practices ({{ counter }} practice){% plural %}Allowance split for multiple practices ({{ counter }} practices){% endblocktrans %}</h3>
         <p>
-            Home-Office- und Entfernungspauschale dürfen pro Kalendertag nur einmal angesetzt werden.
-            Die Tabelle zeigt den berechneten Anteil dieser Praxis für {{ year }}:
+            {% trans "The home office and commuter allowance may only be claimed once per calendar day." %}
+            {% blocktrans %}The table shows the calculated share of this practice for {{ year }}:{% endblocktrans %}
         </p>
         <table class="data-table allocation-split-table">
             <thead>
                 <tr>
-                    <th>Aufteilungs&shy;schlüssel</th>
-                    <th class="text-right">Anteil</th>
-                    <th class="text-right">HO-Pauschale</th>
-                    <th class="text-right">Pendler-Pauschale</th>
+                    <th>{% trans "Split key" %}</th>
+                    <th class="text-right">{% trans "Share" %}</th>
+                    <th class="text-right">{% trans "Home office allowance" %}</th>
+                    <th class="text-right">{% trans "Commuter allowance" %}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Einnahmen ({{ practice_split.this_revenue|currency }} / {{ practice_split.total_revenue_all|currency }} gesamt)</td>
+                    <td>{% blocktrans with this=practice_split.this_revenue|currency total=practice_split.total_revenue_all|currency %}Revenue ({{ this }} / {{ total }} total){% endblocktrans %}</td>
                     <td class="text-right">{{ revenue_share_pct }} %</td>
                     <td class="text-right">{{ home_office_split_revenue|currency }}</td>
                     <td class="text-right">{{ fahrtkosten_split_revenue|currency }}</td>
                 </tr>
                 <tr>
-                    <td>Sitzungstage ({{ practice_split.this_session_days }} / {{ practice_split.total_session_days_all }} gesamt)</td>
+                    <td>{% blocktrans with this=practice_split.this_session_days total=practice_split.total_session_days_all %}Session days ({{ this }} / {{ total }} total){% endblocktrans %}</td>
                     <td class="text-right">{{ session_share_pct }} %</td>
                     <td class="text-right">{{ home_office_split_sessions|currency }}</td>
                     <td class="text-right">{{ fahrtkosten_split_sessions|currency }}</td>
@@ -79,28 +79,28 @@
             </tbody>
         </table>
         <p class="allocation-note__footer">
-            Einen Schlüssel wählen, dokumentieren und konsistent für alle Praxen verwenden.
+            {% trans "Choose a split key, document it, and use it consistently for all practices." %}
         </p>
     </div>
     {% endif %}
 
     <!-- Revenue Section -->
     <div class="section-card">
-        <h2>💰 Umsätze ({{ year }})</h2>
+        <h2>💰 {% blocktrans %}Revenue ({{ year }}){% endblocktrans %}</h2>
         <p class="section-subtitle">
-            {{ invoice_count }} Rechnungen • {{ total_revenue|currency }}
+            {% blocktrans count counter=invoice_count with total=total_revenue|currency %}{{ counter }} invoice • {{ total }}{% plural %}{{ counter }} invoices • {{ total }}{% endblocktrans %}
         </p>
 
         <!-- Monthly Breakdown -->
         {% if monthly_revenue %}
         <div class="subsection">
-            <h3>Monatliche Aufschlüsselung</h3>
+            <h3>{% trans "Monthly breakdown" %}</h3>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Monat</th>
-                        <th class="text-right">Anzahl</th>
-                        <th class="text-right">Betrag</th>
+                        <th>{% trans "Month" %}</th>
+                        <th class="text-right">{% trans "Count" %}</th>
+                        <th class="text-right">{% trans "Amount" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,15 +118,15 @@
 
         <!-- Invoice List -->
         <details>
-            <summary>Alle Rechnungen anzeigen ({{ invoice_count }})</summary>
+            <summary>{% blocktrans %}Show all invoices ({{ invoice_count }}){% endblocktrans %}</summary>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Rechnungsnr.</th>
-                        <th>Klient</th>
-                        <th>Rechnungsdatum</th>
-                        <th>Bezahlt am</th>
-                        <th class="text-right">Betrag</th>
+                        <th>{% trans "Invoice no." %}</th>
+                        <th>{% trans "Client" %}</th>
+                        <th>{% trans "Invoice date" %}</th>
+                        <th>{% trans "Paid on" %}</th>
+                        <th class="text-right">{% trans "Amount" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -148,21 +148,21 @@
 
     <!-- Expenses Section -->
     <div class="section-card">
-        <h2>📊 Steuerlich absetzbare Ausgaben ({{ year }})</h2>
+        <h2>📊 {% blocktrans %}Tax-deductible expenses ({{ year }}){% endblocktrans %}</h2>
         <p class="section-subtitle">
-            {{ expense_count }} Ausgaben • {{ total_expenses|currency }}
+            {% blocktrans count counter=expense_count with total=total_expenses|currency %}{{ counter }} expense • {{ total }}{% plural %}{{ counter }} expenses • {{ total }}{% endblocktrans %}
         </p>
 
         <!-- Category Breakdown -->
         {% if expense_by_category %}
         <div class="subsection">
-            <h3>Nach Kategorie</h3>
+            <h3>{% trans "By category" %}</h3>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Kategorie</th>
-                        <th class="text-right">Anzahl</th>
-                        <th class="text-right">Betrag</th>
+                        <th>{% trans "Category" %}</th>
+                        <th class="text-right">{% trans "Count" %}</th>
+                        <th class="text-right">{% trans "Amount" %}</th>
                         <th class="text-right">%</th>
                     </tr>
                 </thead>
@@ -182,22 +182,22 @@
 
         <!-- Expense List -->
         <details{% if expense_sort == "se" %} open{% endif %}>
-            <summary>Alle Ausgaben anzeigen ({{ expense_count }})</summary>
+            <summary>{% blocktrans %}Show all expenses ({{ expense_count }}){% endblocktrans %}</summary>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Datum</th>
-                        <th>Beschreibung</th>
-                        <th>Kategorie</th>
-                        <th class="text-center">Rechnung</th>
+                        <th>{% trans "Date" %}</th>
+                        <th>{% trans "Description" %}</th>
+                        <th>{% trans "Category" %}</th>
+                        <th class="text-center">{% trans "Invoice" %}</th>
                         <th class="text-center">
                             {% if expense_sort == "se" %}
-                            <a href="?year={{ year }}" title="Sortierung aufheben">SE ↓</a>
+                            <a href="?year={{ year }}" title="{% trans 'Clear sorting' %}">SE ↓</a>
                             {% else %}
-                            <a href="?year={{ year }}&sort=se" title="Nach Steuererklärung sortieren">SE</a>
+                            <a href="?year={{ year }}&sort=se" title="{% trans 'Sort by tax return' %}">SE</a>
                             {% endif %}
                         </th>
-                        <th class="text-right">Betrag</th>
+                        <th class="text-right">{% trans "Amount" %}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -212,7 +212,7 @@
                         <td class="text-right">{{ expense.amount|currency }}</td>
                         <td class="text-center">
                             <a href="{% url 'expense_update' expense.pk %}?next={{ request.get_full_path|urlencode }}"
-                               title="Bearbeiten">✎</a>
+                               title="{% trans 'Edit' %}">✎</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -224,18 +224,18 @@
     <!-- Fahrtkosten Section (P-027) -->
     {% if fahrtkosten and fahrtkosten.is_configured %}
     <div class="section-card">
-        <h2>🚗 Fahrtkosten — Entfernungspauschale ({{ year }})</h2>
+        <h2>🚗 {% blocktrans %}Travel costs — commute allowance ({{ year }}){% endblocktrans %}</h2>
         <p class="section-subtitle">
-            {{ fahrtkosten.session_days }} Sitzungstage à {{ fahrtkosten.distance_km }} km —
-            <strong>{{ fahrtkosten.deduction_total|currency }} absetzbar</strong>
+            {% blocktrans with days=fahrtkosten.session_days km=fahrtkosten.distance_km %}{{ days }} session days at {{ km }} km each —{% endblocktrans %}
+            <strong>{% blocktrans with total=fahrtkosten.deduction_total|currency %}{{ total }} deductible{% endblocktrans %}</strong>
         </p>
         <details>
-            <summary>Details anzeigen</summary>
+            <summary>{% trans "Show details" %}</summary>
             <div class="tax-details-block">
                 <table class="data-table">
                     <tbody>
                         <tr>
-                            <td>Konfigurierte Praxistage</td>
+                            <td>{% trans "Configured practice days" %}</td>
                             <td>
                                 {% for wd in fahrtkosten.configured_weekdays %}
                                 <span class="tag">{{ wd|weekday_name }}</span>
@@ -243,49 +243,49 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Tage mit Sitzungen in {{ year }}</td>
+                            <td>{% blocktrans %}Days with sessions in {{ year }}{% endblocktrans %}</td>
                             <td><strong>{{ fahrtkosten.session_days }}</strong></td>
                         </tr>
                         <tr class="muted-row">
-                            <td>Kalenderbasiert (Wochentage − Feiertage − Urlaub)</td>
+                            <td>{% trans "Calendar-based (weekdays − public holidays − vacation)" %}</td>
                             <td>{{ fahrtkosten.practice_days }}</td>
                         </tr>
                         <tr><td colspan="2"><hr></td></tr>
                         <tr>
-                            <td>Entfernung (einfach)</td>
+                            <td>{% trans "Distance (one-way)" %}</td>
                             <td>{{ fahrtkosten.distance_km }} km</td>
                         </tr>
                         <tr>
-                            <td>Erste 20 km × 0,30 € × {{ fahrtkosten.session_days }} Tage</td>
+                            <td>{% blocktrans with days=fahrtkosten.session_days %}First 20 km × €0.30 × {{ days }} days{% endblocktrans %}</td>
                             <td>{{ fahrtkosten.deduction_first_20_km|currency }}</td>
                         </tr>
                         {% if fahrtkosten.distance_km > 20 %}
                         <tr>
-                            <td>Ab km 21 ({{ fahrtkosten.distance_km|add:"-20" }} km) × 0,38 € × {{ fahrtkosten.session_days }} Tage</td>
+                            <td>{% blocktrans with remaining_km=fahrtkosten.distance_km|add:"-20" days=fahrtkosten.session_days %}From km 21 ({{ remaining_km }} km) × €0.38 × {{ days }} days{% endblocktrans %}</td>
                             <td>{{ fahrtkosten.deduction_above_20_km|currency }}</td>
                         </tr>
                         {% endif %}
                         <tr class="total-row">
-                            <td><strong>Entfernungspauschale gesamt</strong></td>
+                            <td><strong>{% trans "Distance allowance total" %}</strong></td>
                             <td><strong>{{ fahrtkosten.deduction_total|currency }}</strong></td>
                         </tr>
                     </tbody>
                 </table>
                 <p class="help-text compact-help">
-                    § 9 Abs. 1 Nr. 4 EStG. Als Betriebsausgabe in der Einnahmenüberschussrechnung eintragen.
+                    {% trans "§ 9 (1) no. 4 EStG. Enter as a business expense in the EÜR (income/expense statement)." %}
                 </p>
                 <a href="{% url 'practice_edit' request.current_practice.slug %}" class="settings-link">
-                    Entfernung / Praxistage anpassen ↗
+                    {% trans "Adjust distance / practice days ↗" %}
                 </a>
             </div>
         </details>
     </div>
     {% elif fahrtkosten %}
     <div class="section-card">
-        <h2>🚗 Fahrtkosten — Entfernungspauschale</h2>
+        <h2>🚗 {% trans "Travel costs — commute allowance" %}</h2>
         <p class="section-subtitle">
-            Noch nicht konfiguriert.
-            <a href="{% url 'practice_edit' request.current_practice.slug %}">Entfernung und Praxistage in den Praxiseinstellungen hinterlegen ↗</a>
+            {% trans "Not configured yet." %}
+            <a href="{% url 'practice_edit' request.current_practice.slug %}">{% trans "Set up distance and practice days in the practice settings ↗" %}</a>
         </p>
     </div>
     {% endif %}
@@ -293,21 +293,21 @@
     <!-- Home-Office Section -->
     {% if home_office and home_office.is_configured %}
     <div class="section-card">
-        <h2>🏠 Home-Office-Pauschale ({{ year }})</h2>
+        <h2>🏠 {% blocktrans %}Home office allowance ({{ year }}){% endblocktrans %}</h2>
         <p class="section-subtitle">
-            {{ home_office.home_office_days }} Home-Office-Tage
+            {% blocktrans with days=home_office.home_office_days %}{{ days }} home office days{% endblocktrans %}
             {% if home_office.home_office_days > home_office.capped_days %}
-            (davon {{ home_office.capped_days }} berücksichtigt)
+            {% blocktrans with capped=home_office.capped_days %}(of which {{ capped }} counted){% endblocktrans %}
             {% endif %}
-            — <strong>{{ home_office.deduction_total|currency }} absetzbar</strong>
+            — <strong>{% blocktrans with total=home_office.deduction_total|currency %}{{ total }} deductible{% endblocktrans %}</strong>
         </p>
         <details>
-            <summary>Details anzeigen</summary>
+            <summary>{% trans "Show details" %}</summary>
             <div class="tax-details-block">
                 <table class="data-table">
                     <tbody>
                         <tr>
-                            <td>Konfigurierte Praxistage</td>
+                            <td>{% trans "Configured practice days" %}</td>
                             <td>
                                 {% for wd in home_office.configured_practice_weekdays %}
                                 <span class="tag">{{ wd|weekday_name }}</span>
@@ -315,31 +315,31 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Home-Office-Wochentage (nicht Praxis)</td>
+                            <td>{% trans "Home office weekdays (not practice)" %}</td>
                             <td>
                                 {% for wd in home_office.home_office_weekdays %}
                                 <span class="tag">{{ wd|weekday_name }}</span>
                                 {% empty %}
-                                <span class="tag">Keine</span>
+                                <span class="tag">{% trans "None" %}</span>
                                 {% endfor %}
                             </td>
                         </tr>
                         <tr class="muted-row">
-                            <td>Kalenderbasiert (Wochentage − Feiertage − Urlaub)</td>
+                            <td>{% trans "Calendar-based (weekdays − public holidays − vacation)" %}</td>
                             <td>{{ home_office.home_office_days }}</td>
                         </tr>
                         <tr>
-                            <td>Pauschale: {{ home_office.capped_days }} Tage × 6,00 €</td>
+                            <td>{% blocktrans with days=home_office.capped_days %}Flat rate: {{ days }} days × €6.00{% endblocktrans %}</td>
                             <td>{{ home_office.deduction_total|currency }}</td>
                         </tr>
                         <tr class="total-row">
-                            <td><strong>Home-Office-Pauschale gesamt</strong></td>
+                            <td><strong>{% trans "Home office allowance total" %}</strong></td>
                             <td><strong>{{ home_office.deduction_total|currency }}</strong></td>
                         </tr>
                     </tbody>
                 </table>
                 <p class="help-text compact-help">
-                    Als Betriebsausgabe in der EÜR erfassen (Home-Office-Pauschale).
+                    {% trans "Enter as a business expense in the EÜR (home office allowance)." %}
                 </p>
             </div>
         </details>
@@ -348,30 +348,30 @@
 
     <!-- Summary Box -->
     <div class="section-card summary-box">
-        <h2>✅ Zusammenfassung {{ year }}</h2>
+        <h2>✅ {% blocktrans %}Summary {{ year }}{% endblocktrans %}</h2>
         <table class="summary-table">
             <tr>
-                <td class="label">Gesamtumsatz</td>
+                <td class="label">{% trans "Total revenue" %}</td>
                 <td class="value">{{ total_revenue|currency }}</td>
             </tr>
             <tr>
-                <td class="label">Abzgl. steuerlich absetzbare Ausgaben</td>
+                <td class="label">{% trans "Less tax-deductible expenses" %}</td>
                 <td class="value warning-color">{{ total_expenses|currency }}</td>
             </tr>
             {% if fahrtkosten_deduction %}
             <tr>
-                <td class="label">Abzgl. Fahrtkosten (Entfernungspauschale)</td>
+                <td class="label">{% trans "Less travel costs (commute allowance)" %}</td>
                 <td class="value warning-color">{{ fahrtkosten_deduction|currency }}</td>
             </tr>
             {% endif %}
             {% if home_office_deduction %}
             <tr>
-                <td class="label">Abzgl. Home-Office-Pauschale</td>
+                <td class="label">{% trans "Less home office allowance" %}</td>
                 <td class="value warning-color">{{ home_office_deduction|currency }}</td>
             </tr>
             {% endif %}
             <tr class="total-row">
-                <td class="label"><strong>= Gewinn</strong></td>
+                <td class="label"><strong>{% trans "= Profit" %}</strong></td>
                 <td class="value final">{{ gross_profit|currency }}</td>
             </tr>
         </table>
@@ -379,33 +379,38 @@
         <!-- Allocation note widget -->
         <div class="tax-note-widget" data-save-url="{% url 'save_tax_year_note' %}" data-year="{{ year }}">
             <label class="tax-note-widget__label" for="tax-note-textarea">
-                📝 Aufteilungsnotiz (z. B. verwendeter Schlüssel für Pauschalen-Aufteilung)
+                📝 {% trans "Allocation note (e.g. split key used for allowance allocation)" %}
             </label>
+            {% blocktrans asvar note_placeholder %}e.g. revenue share therapy 95% / coaching 5% for {{ year }}{% endblocktrans %}
             <textarea id="tax-note-textarea"
                       class="tax-note-widget__textarea"
-                      placeholder="z. B. Einnahmenanteil Therapie 95 % / Coaching 5 % für {{ year }}">{{ tax_year_note.allocation_note|default:"" }}</textarea>
+                      placeholder="{{ note_placeholder }}">{{ tax_year_note.allocation_note|default:"" }}</textarea>
             <div class="tax-note-widget__actions">
-                <button type="button" class="tax-note-widget__btn" id="tax-note-save-btn">Notiz speichern</button>
+                <button type="button" class="tax-note-widget__btn" id="tax-note-save-btn">{% trans "Save note" %}</button>
                 <span class="tax-note-widget__status" id="tax-note-status">
-                    {% if tax_year_note %}Zuletzt gespeichert: {{ tax_year_note.updated_at|date:"d.m.Y H:i" }}{% endif %}
+                    {% if tax_year_note %}{% blocktrans with date=tax_year_note.updated_at|date:"d.m.Y H:i" %}Last saved: {{ date }}{% endblocktrans %}{% endif %}
                 </span>
             </div>
         </div>
 
         <!-- Audit link -->
         <div class="audit-link-row">
-            <a href="{% url 'tax_workday_audit' %}?year={{ year }}">📋 Arbeitstage-Nachweis {{ year }} (druckbare Audit-Liste)</a>
+            <a href="{% url 'tax_workday_audit' %}?year={{ year }}">📋 {% blocktrans %}Workday Audit {{ year }} (printable audit list){% endblocktrans %}</a>
         </div>
     </div>
 
     <!-- Export Tip -->
     <div class="info-tip">
         <p>
-            💡 <strong>Tipp:</strong> Verwende <kbd>Strg+P</kbd> (oder <kbd>Cmd+P</kbd>) um diese Seite als PDF zu drucken
+            💡 <strong>{% trans "Tip:" %}</strong> {% blocktrans %}Use <kbd>Ctrl+P</kbd> (or <kbd>Cmd+P</kbd>) to print this page as a PDF{% endblocktrans %}
         </p>
     </div>
 </div>
 
+{% trans "Saving…" as note_saving_msg %}
+{% trans "Saved: " as note_saved_prefix %}
+{% trans "Error saving." as note_save_error_msg %}
+{% trans "Network error." as note_network_error_msg %}
 <script>
 (function () {
     const widget = document.querySelector('.tax-note-widget');
@@ -421,18 +426,18 @@
         body.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
         btn.disabled = true;
-        status.textContent = 'Speichern\u2026';
+        status.textContent = '{{ note_saving_msg|escapejs }}';
 
         fetch(widget.dataset.saveUrl, {method: 'POST', body: body})
             .then(r => r.json())
             .then(data => {
                 if (data.saved) {
-                    status.textContent = 'Gespeichert: ' + data.updated_at;
+                    status.textContent = '{{ note_saved_prefix|escapejs }}' + data.updated_at;
                 } else {
-                    status.textContent = 'Fehler beim Speichern.';
+                    status.textContent = '{{ note_save_error_msg|escapejs }}';
                 }
             })
-            .catch(() => { status.textContent = 'Netzwerkfehler.'; })
+            .catch(() => { status.textContent = '{{ note_network_error_msg|escapejs }}'; })
             .finally(() => { btn.disabled = false; });
     });
 })();

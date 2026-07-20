@@ -1,20 +1,20 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Arbeitstage-Nachweis {{ year }}{% endblock %}
-{% block page_title %}Arbeitstage-Nachweis{% endblock %}
-{% block page_subtitle %}Audit-Liste für Steuererklärung — {{ year }}{% endblock %}
+{% block title %}{% blocktrans %}Workday Audit {{ year }}{% endblocktrans %}{% endblock %}
+{% block page_title %}{% trans "Workday Audit" %}{% endblock %}
+{% block page_subtitle %}{% blocktrans %}Audit list for tax return — {{ year }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <div class="audit-container">
     <div class="audit-nav no-print">
-        <a href="{% url 'tax_year_summary' %}?year={{ year }}">&larr; Zurück zur Steuer-Jahresübersicht</a>
+        <a href="{% url 'tax_year_summary' %}?year={{ year }}">&larr; {% trans "Back to Tax Year Summary" %}</a>
     </div>
 
     <!-- Year selector -->
     <div class="year-selector no-print">
         <form method="get">
-            <label for="year">Jahr:</label>
+            <label for="year">{% trans "Year:" %}</label>
             <select name="year" id="year" x-data x-on:change="$el.form.submit()">
                 {% for y in available_years %}
                 <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
@@ -24,43 +24,43 @@
     </div>
 
     {% if not audit or not audit.entries %}
-    <p class="empty-hint">Keine Daten – Praxistage sind noch nicht konfiguriert.</p>
+    <p class="empty-hint">{% trans "No data – practice days are not configured yet." %}</p>
     {% else %}
 
     <!-- Summary -->
     <div class="audit-summary">
         <div class="audit-stat">
-            <span class="audit-stat__label">Praxistage</span>
+            <span class="audit-stat__label">{% trans "Practice days" %}</span>
             <span class="audit-stat__value practice">{{ audit.practice_days }}</span>
         </div>
         <div class="audit-stat">
-            <span class="audit-stat__label">Home-Office-Tage</span>
+            <span class="audit-stat__label">{% trans "Home office days" %}</span>
             <span class="audit-stat__value home-office">{{ audit.home_office_days }}</span>
         </div>
         <div class="audit-stat">
-            <span class="audit-stat__label">Feiertage</span>
+            <span class="audit-stat__label">{% trans "Public holidays" %}</span>
             <span class="audit-stat__value holiday">{{ audit.holiday_count }}</span>
         </div>
         <div class="audit-stat">
-            <span class="audit-stat__label">Urlaubs- / Ausfalltage</span>
+            <span class="audit-stat__label">{% trans "Vacation / time-off days" %}</span>
             <span class="audit-stat__value timeoff">{{ audit.timeoff_days }}</span>
         </div>
     </div>
 
     <!-- Print button -->
     <div class="no-print audit-print-btn-wrap">
-        <button x-data x-on:click="window.print()" class="btn-print">🖨 Drucken / als PDF speichern</button>
+        <button x-data x-on:click="window.print()" class="btn-print">🖨 {% trans "Print / save as PDF" %}</button>
     </div>
 
     <!-- Day table -->
     <table class="audit-table">
         <thead>
             <tr>
-                <th>Datum</th>
-                <th>Wochentag</th>
-                <th>Typ</th>
-                <th class="text-right">Sitzungen</th>
-                <th>Anmerkung</th>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "Weekday" %}</th>
+                <th>{% trans "Type" %}</th>
+                <th class="text-right">{% trans "Sessions" %}</th>
+                <th>{% trans "Note" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -70,13 +70,13 @@
                 <td>{{ entry.day|date:"l" }}</td>
                 <td>
                     {% if entry.day_type == "practice" %}
-                        <span class="badge badge--practice">Praxis</span>
+                        <span class="badge badge--practice">{% trans "Practice" %}</span>
                     {% elif entry.day_type == "home_office" %}
-                        <span class="badge badge--home-office">Home-Office</span>
+                        <span class="badge badge--home-office">{% trans "Home office" %}</span>
                     {% elif entry.day_type == "holiday" %}
-                        <span class="badge badge--holiday">Feiertag</span>
+                        <span class="badge badge--holiday">{% trans "Holiday" %}</span>
                     {% elif entry.day_type == "timeoff" %}
-                        <span class="badge badge--timeoff">Urlaub / Ausfall</span>
+                        <span class="badge badge--timeoff">{% trans "Vacation / time off" %}</span>
                     {% endif %}
                 </td>
                 <td class="text-right">{% if entry.sessions %}{{ entry.sessions }}{% else %}&ndash;{% endif %}</td>
@@ -86,8 +86,9 @@
         </tbody>
     </table>
 
+    {% now "d.m.Y H:i" as generated_at %}
     <p class="audit-footer">
-        Generiert: {% now "d.m.Y H:i" %} &mdash; Praxis: {{ practice.name }} &mdash; Jahr: {{ year }}
+        {% blocktrans with practice_name=practice.name %}Generated: {{ generated_at }} &mdash; Practice: {{ practice_name }} &mdash; Year: {{ year }}{% endblocktrans %}
     </p>
     {% endif %}
 </div>

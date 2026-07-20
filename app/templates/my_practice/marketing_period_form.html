@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Marketing-Zeitraum {{ action }}{% endblock %}
+{% block title %}{% if object %}{% trans "Edit marketing period" %}{% else %}{% trans "New marketing period" %}{% endif %}{% endblock %}
 
 {% block page_icon %}📣{% endblock %}
-{% block page_title %}Marketing-Zeitraum {{ action }}{% endblock %}
+{% block page_title %}{% if object %}{% trans "Edit marketing period" %}{% else %}{% trans "New marketing period" %}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-[600px] p-2.5 sm:p-5">
@@ -13,7 +13,7 @@
 
         {% if form.errors %}
         <div class="alert alert-error">
-            <strong>Fehler beim Speichern:</strong>
+            <strong>{% trans "Error saving:" %}</strong>
             <ul>
                 {% for field in form %}
                     {% for error in field.errors %}
@@ -49,8 +49,8 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn">{{ action }}</button>
-            <a href="{% url 'inquiry_list' %}" class="btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn">{% trans "Save" %}</button>
+            <a href="{% url 'inquiry_list' %}" class="btn-secondary">{% trans "Cancel" %}</a>
         </div>
     </form>
 </div>

@@ -11,6 +11,8 @@ from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_POST
 
 from ..forms import CompanyExpenseForm
@@ -53,7 +55,7 @@ class ExpenseCreateView(PracticeScopedCreateView):
     form_class = CompanyExpenseForm
     template_name = "my_practice/expense_form.html"
     success_url = reverse_lazy("expense_list")
-    success_message = "Ausgabe vom {obj.date:%d.%m.%Y} erfolgreich erstellt."
+    success_message = gettext_lazy("Expense from {obj.date:%d.%m.%Y} created successfully.")
 
     def form_valid(self, form: CompanyExpenseForm) -> HttpResponse:  # type: ignore[override]
         response = super().form_valid(form)
@@ -64,11 +66,6 @@ class ExpenseCreateView(PracticeScopedCreateView):
                 messages.error(self.request, str(exc))
         return response
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["action"] = "Erstellen"
-        return context
-
 
 class ExpenseUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
     """Update an existing expense and manage its receipt attachments."""
@@ -77,7 +74,7 @@ class ExpenseUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
     form_class = CompanyExpenseForm
     template_name = "my_practice/expense_form.html"
     success_url = reverse_lazy("expense_list")
-    success_message = "Ausgabe vom {obj.date:%d.%m.%Y} erfolgreich aktualisiert."
+    success_message = gettext_lazy("Expense from {obj.date:%d.%m.%Y} updated successfully.")
     context_object_name = "expense"
 
     def form_valid(self, form: CompanyExpenseForm) -> HttpResponse:  # type: ignore[override]
@@ -91,7 +88,6 @@ class ExpenseUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["action"] = "Bearbeiten"
 
         expense = self.object
 
@@ -171,7 +167,9 @@ class ExpenseDeleteView(NextRedirectMixin, PracticeScopedDeleteView):
     template_name = "my_practice/expense_confirm_delete.html"
     success_url = reverse_lazy("expense_list")
     context_object_name = "expense"
-    success_message = "Ausgabe vom {obj.date:%d.%m.%Y} über {obj.amount}€ erfolgreich gelöscht."
+    success_message = gettext_lazy(
+        "Expense from {obj.date:%d.%m.%Y} of {obj.amount}€ deleted successfully."
+    )
 
 
 def _sync_expense_amount(expense: CompanyExpense) -> None:
@@ -197,7 +195,7 @@ def expense_receipt_delete(request: HttpRequest, pk: int) -> HttpResponse:
     expense_pk = receipt.expense_id
     receipt.file.delete(save=False)
     receipt.delete()
-    messages.success(request, "Beleg erfolgreich gelöscht.")
+    messages.success(request, _("Receipt deleted successfully."))
     return redirect("expense_update", pk=expense_pk)
 
 
@@ -241,7 +239,11 @@ def expense_link_transaction(request: HttpRequest, pk: int) -> HttpResponse:
 
     messages.success(
         request,
-        f"Transaktion vom {transaction.transaction_date:%d.%m.%Y} ({transaction.payer_name}) verknüpft.",
+        _("Transaction from %(date)s (%(payer)s) linked.")
+        % {
+            "date": transaction.transaction_date.strftime("%d.%m.%Y"),
+            "payer": transaction.payer_name,
+        },
     )
     return redirect("expense_update", pk=pk)
 
@@ -265,7 +267,7 @@ def expense_merge(request: HttpRequest, pk: int) -> HttpResponse:
     source = get_object_or_404(CompanyExpense, pk=source_pk, practice=request.current_practice)
 
     if source.pk == target.pk:
-        messages.error(request, "Quelle und Ziel dürfen nicht identisch sein.")
+        messages.error(request, _("Source and target must not be identical."))
         return redirect("expense_update", pk=pk)
 
     with db_transaction.atomic():
@@ -297,7 +299,8 @@ def expense_merge(request: HttpRequest, pk: int) -> HttpResponse:
 
     messages.success(
         request,
-        f"Ausgabe zusammengeführt: {moved_txns} Buchung(en) und {moved_receipts} Beleg(e) übernommen.",
+        _("Expense merged: %(txns)s transaction(s) and %(receipts)s receipt(s) taken over.")
+        % {"txns": moved_txns, "receipts": moved_receipts},
     )
     return redirect("expense_update", pk=pk)
 
@@ -322,6 +325,7 @@ def expense_unlink_transaction(request: HttpRequest, pk: int, transaction_pk: in
 
     messages.success(
         request,
-        f"Verknüpfung mit Transaktion vom {transaction.transaction_date:%d.%m.%Y} aufgehoben.",
+        _("Link with transaction from %(date)s removed.")
+        % {"date": transaction.transaction_date.strftime("%d.%m.%Y")},
     )
     return redirect("expense_update", pk=pk)
