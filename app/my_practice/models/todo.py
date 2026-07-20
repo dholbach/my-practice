@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from .base import PracticeScopedManager, TimestampedModel
 
@@ -42,19 +43,19 @@ class PracticeTodo(TimestampedModel):
         URGENT = "urgent"
 
     CATEGORY_CHOICES = [
-        (Category.ADMIN, "Administrative"),
-        (Category.LEARNING, "Learning/Research"),
-        (Category.FINANCIAL, "Financial/Accounting"),
-        (Category.CLIENT, "Client-related"),
-        (Category.PRACTICE, "Practice Management"),
-        (Category.OTHER, "Other"),
+        (Category.ADMIN, _("Administrative")),
+        (Category.LEARNING, _("Learning/Research")),
+        (Category.FINANCIAL, _("Financial/Accounting")),
+        (Category.CLIENT, _("Client-related")),
+        (Category.PRACTICE, _("Practice Management")),
+        (Category.OTHER, _("Other")),
     ]
 
     PRIORITY_CHOICES = [
-        (Priority.LOW, "Low"),
-        (Priority.MEDIUM, "Medium"),
-        (Priority.HIGH, "High"),
-        (Priority.URGENT, "Urgent"),
+        (Priority.LOW, _("Low")),
+        (Priority.MEDIUM, _("Medium")),
+        (Priority.HIGH, _("High")),
+        (Priority.URGENT, _("Urgent")),
     ]
 
     # Practice relationship
@@ -62,42 +63,42 @@ class PracticeTodo(TimestampedModel):
         "Practice",
         on_delete=models.PROTECT,
         related_name="todos",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
     )
 
     # Core fields
-    title = models.CharField(max_length=255, help_text="Short description of the task")
-    description = models.TextField(blank=True, help_text="Optional detailed notes")
+    title = models.CharField(max_length=255, help_text=_("Short description of the task"))
+    description = models.TextField(blank=True, help_text=_("Optional detailed notes"))
     category = models.CharField(
         max_length=20,
         choices=CATEGORY_CHOICES,
         default="other",
-        help_text="Task category for organization",
+        help_text=_("Task category for organization"),
     )
     priority = models.CharField(
         max_length=10,
         choices=PRIORITY_CHOICES,
         default="medium",
-        help_text="Task priority level",
+        help_text=_("Task priority level"),
     )
     is_focus = models.BooleanField(
         default=False,
-        help_text="Mark as a focus task for the current week",
-        verbose_name="Fokus-Aufgabe",
+        help_text=_("Mark as a focus task for the current week"),
+        verbose_name=_("Focus task"),
     )
 
     # Dates
-    due_date = models.DateField(null=True, blank=True, help_text="Optional due date")
+    due_date = models.DateField(null=True, blank=True, help_text=_("Optional due date"))
     completed_at = models.DateTimeField(
-        null=True, blank=True, help_text="When the task was completed"
+        null=True, blank=True, help_text=_("When the task was completed")
     )
 
     # Practice-scoped manager
     objects = PracticeScopedManager()
 
     class Meta:
-        verbose_name = "Aufgabe"
-        verbose_name_plural = "Aufgaben"
+        verbose_name = _("Task")
+        verbose_name_plural = _("Tasks")
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["practice", "completed_at"], name="todo_prac_completed"),

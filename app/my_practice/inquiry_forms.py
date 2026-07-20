@@ -4,6 +4,7 @@ from datetime import date
 from typing import Any
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .forms import DateFormField, StyledFormMixin
 from .models import Client, ClientInquiry, InquiryStatus, MarketingPeriod
@@ -12,13 +13,13 @@ from .models import Client, ClientInquiry, InquiryStatus, MarketingPeriod
 class InquiryForm(StyledFormMixin, forms.ModelForm):
     """Form for creating and editing a ClientInquiry."""
 
-    inquiry_date = DateFormField(label="Eingangsdatum", initial=date.today)
+    inquiry_date = DateFormField(label=_("Date received"), initial=date.today)
 
     # Milestone dates — all optional; auto-filled when status reaches the corresponding stage
-    contacted_date = DateFormField(label="Rückmeldung am", required=False)
-    intro_date = DateFormField(label="Vorgespräch am", required=False)
-    decision_date = DateFormField(label="Entscheidung am", required=False)
-    converted_date = DateFormField(label="Aufgenommen am", required=False)
+    contacted_date = DateFormField(label=_("Responded on"), required=False)
+    intro_date = DateFormField(label=_("Intro meeting on"), required=False)
+    decision_date = DateFormField(label=_("Decision on"), required=False)
+    converted_date = DateFormField(label=_("Onboarded on"), required=False)
 
     class Meta:
         model = ClientInquiry
@@ -75,38 +76,38 @@ class InquiryConvertForm(StyledFormMixin, forms.Form):
 
     client_code = forms.CharField(
         max_length=10,
-        label="Klientenkürzel",
-        help_text="Eindeutiges Kürzel, z.B. AB-1",
+        label=_("Client code"),
+        help_text=_("Unique code, e.g. AB-1"),
     )
     first_seen_date = DateFormField(
-        label="Ersttermin",
+        label=_("First appointment"),
         required=False,
     )
     default_hourly_rate = forms.DecimalField(
         max_digits=8,
         decimal_places=2,
-        label="Stundensatz (€)",
+        label=_("Hourly rate (€)"),
         widget=forms.NumberInput(attrs={"step": "0.01"}),
     )
 
     def clean_client_code(self) -> str:
         code = self.cleaned_data["client_code"].strip().upper()
         if Client.objects.filter(client_code=code).exists():
-            raise forms.ValidationError(f'Kürzel "{code}" ist bereits vergeben.')
+            raise forms.ValidationError(_('Code "%(code)s" is already taken.') % {"code": code})
         return str(code)
 
 
 class MarketingPeriodForm(StyledFormMixin, forms.ModelForm):
     """Form for creating and editing a MarketingPeriod."""
 
-    start_date = DateFormField(label="Von")
-    end_date = DateFormField(label="Bis", required=False)
+    start_date = DateFormField(label=_("From"))
+    end_date = DateFormField(label=_("To"), required=False)
 
     class Meta:
         model = MarketingPeriod
         fields = ["description", "start_date", "end_date"]
         widgets = {
-            "description": forms.TextInput(attrs={"placeholder": 'z.B. "Google Ads 5 €/Tag"'}),
+            "description": forms.TextInput(attrs={"placeholder": _('e.g. "Google Ads €5/day"')}),
         }
 
     def clean(self):
@@ -114,5 +115,5 @@ class MarketingPeriodForm(StyledFormMixin, forms.ModelForm):
         start = cleaned.get("start_date")
         end = cleaned.get("end_date")
         if start and end and end < start:
-            self.add_error("end_date", "Das Enddatum muss nach dem Startdatum liegen.")
+            self.add_error("end_date", _("The end date must be after the start date."))
         return cleaned

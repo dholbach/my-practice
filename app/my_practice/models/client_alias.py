@@ -5,6 +5,7 @@ Handles name variations in bank statements (parent payments, legal name changes,
 """
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from .base import TimestampedModel
 
@@ -28,22 +29,22 @@ class ClientAlias(TimestampedModel):
         "Client",
         on_delete=models.CASCADE,
         related_name="payment_aliases",
-        verbose_name="Klient",
+        verbose_name=_("Client"),
     )
     alias_name = models.CharField(
         max_length=200,
-        verbose_name="Bank-Name",
-        help_text="Name wie er auf Kontoauszügen erscheint",
+        verbose_name=_("Bank name"),
+        help_text=_("Name as it appears on bank statements"),
     )
     notes = models.TextField(
         blank=True,
-        verbose_name="Notizen",
-        help_text="z.B. 'Mutter zahlt' oder 'Alter Nachname'",
+        verbose_name=_("Notes"),
+        help_text=_("e.g. 'Parent pays' or 'Former surname'"),
     )
 
     class Meta:
-        verbose_name = "Klienten-Alias"
-        verbose_name_plural = "Klienten-Aliase"
+        verbose_name = _("Client alias")
+        verbose_name_plural = _("Client aliases")
         unique_together = [["client", "alias_name"]]
         indexes = [
             models.Index(fields=["alias_name"]),

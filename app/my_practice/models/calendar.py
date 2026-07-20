@@ -4,6 +4,7 @@ from datetime import date
 from enum import StrEnum
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from .base import PracticeScopedManager, TimestampedModel
 
@@ -16,22 +17,22 @@ class GoogleCalendarToken(TimestampedModel):
         "Practice",
         on_delete=models.CASCADE,
         related_name="calendar_tokens",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
         null=True,  # Temporary - will be required after migration
     )
 
     # OAuth2 tokens (stored as JSON)
-    token = models.TextField(help_text="Encrypted OAuth2 token JSON")
-    refresh_token = models.TextField(blank=True, help_text="Refresh token for token renewal")
+    token = models.TextField(help_text=_("Encrypted OAuth2 token JSON"))
+    refresh_token = models.TextField(blank=True, help_text=_("Refresh token for token renewal"))
     token_uri = models.CharField(max_length=500, default="https://oauth2.googleapis.com/token")
     client_id = models.CharField(max_length=500)
     client_secret = models.CharField(max_length=500)
-    scopes = models.JSONField(default=list, help_text="List of granted scopes")
+    scopes = models.JSONField(default=list, help_text=_("List of granted scopes"))
 
     # Metadata
-    expires_at = models.DateTimeField(null=True, blank=True, help_text="Token expiration time")
+    expires_at = models.DateTimeField(null=True, blank=True, help_text=_("Token expiration time"))
     is_active = models.BooleanField(
-        default=True, help_text="Whether this token is currently active"
+        default=True, help_text=_("Whether this token is currently active")
     )
 
     # Practice-scoped manager
@@ -39,13 +40,15 @@ class GoogleCalendarToken(TimestampedModel):
 
     class Meta:
         ordering = ["-created_at"]
-        verbose_name = "Google Kalender Token"
-        verbose_name_plural = "Google Kalender Tokens"
+        verbose_name = _("Google Calendar Token")
+        verbose_name_plural = _("Google Calendar Tokens")
 
     def __str__(self) -> str:
-        status = "Aktiv" if self.is_active else "Inaktiv"
-        expires = self.expires_at.strftime("%Y-%m-%d %H:%M") if self.expires_at else "Kein Ablauf"
-        return f"Kalender Token ({status}, läuft ab: {expires})"
+        status = _("Active") if self.is_active else _("Inactive")
+        expires = (
+            self.expires_at.strftime("%Y-%m-%d %H:%M") if self.expires_at else str(_("No expiry"))
+        )
+        return f"{_('Calendar Token')} ({status}, {_('expires')}: {expires})"
 
     @property
     def is_expired(self) -> bool:
@@ -77,34 +80,34 @@ class PendingCalendarEvent(models.Model):
         CANCELLED = "cancelled"
 
     STATUS_CHOICES = [
-        (Status.PENDING, "Ausstehend"),
-        (Status.IMPORTED, "Importiert"),
-        (Status.SKIPPED, "Übersprungen"),
-        (Status.CANCELLED, "Abgesagt"),
+        (Status.PENDING, _("Pending")),
+        (Status.IMPORTED, _("Imported")),
+        (Status.SKIPPED, _("Skipped")),
+        (Status.CANCELLED, _("Cancelled")),
     ]
 
     practice = models.ForeignKey(
         "Practice",
         on_delete=models.CASCADE,
         related_name="pending_calendar_events",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
     )
     google_event_id = models.CharField(
         max_length=255,
         unique=True,
         verbose_name="Google Event ID",
     )
-    summary = models.CharField(max_length=500, verbose_name="Zusammenfassung")
-    event_date = models.DateField(verbose_name="Datum")
-    event_time = models.TimeField(null=True, blank=True, verbose_name="Uhrzeit")
-    duration_minutes = models.IntegerField(verbose_name="Dauer (Minuten)")
+    summary = models.CharField(max_length=500, verbose_name=_("Summary"))
+    event_date = models.DateField(verbose_name=_("Date"))
+    event_time = models.TimeField(null=True, blank=True, verbose_name=_("Time"))
+    duration_minutes = models.IntegerField(verbose_name=_("Duration (minutes)"))
     matched_client = models.ForeignKey(
         "Client",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
         related_name="pending_calendar_events",
-        verbose_name="Klient",
+        verbose_name=_("Client"),
     )
     suggested_service_type = models.ForeignKey(
         "ServiceType",
@@ -112,13 +115,13 @@ class PendingCalendarEvent(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="pending_calendar_events",
-        verbose_name="Leistungstyp",
+        verbose_name=_("Service type"),
     )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=Status.PENDING,
-        verbose_name="Status",
+        verbose_name=_("Status"),
     )
     session = models.OneToOneField(
         "Session",
@@ -126,20 +129,20 @@ class PendingCalendarEvent(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="pending_calendar_event",
-        verbose_name="Sitzung",
+        verbose_name=_("Session"),
     )
-    fetched_at = models.DateTimeField(auto_now_add=True, verbose_name="Abgerufen am")
+    fetched_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Fetched on"))
     missing_since = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name="Fehlt seit",
-        help_text="Erster Fetch, bei dem der Termin nicht mehr im Kalender gefunden wurde",
+        verbose_name=_("Missing since"),
+        help_text=_("First fetch where the event was no longer found in the calendar"),
     )
 
     class Meta:
         ordering = ["event_date", "event_time"]
-        verbose_name = "Ausstehender Kalender-Termin"
-        verbose_name_plural = "Ausstehende Kalender-Termine"
+        verbose_name = _("Pending calendar event")
+        verbose_name_plural = _("Pending calendar events")
         indexes = [
             models.Index(fields=["practice", "status"], name="pce_practice_status_idx"),
             models.Index(fields=["matched_client", "event_date"], name="pce_client_date_idx"),

@@ -1,6 +1,7 @@
 """Service type model for billable services"""
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from .base import PracticeScopedManager
 
@@ -13,7 +14,7 @@ class ServiceType(models.Model):
         "Practice",
         on_delete=models.PROTECT,
         related_name="service_types",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
         null=True,  # Intentionally nullable: global service types (practice=None) are shared across all practices
         blank=True,
     )
@@ -21,34 +22,34 @@ class ServiceType(models.Model):
     code = models.CharField(
         max_length=50,
         unique=True,
-        verbose_name="Code",
-        help_text="Internal identifier (e.g., therapy_60, therapy_90)",
+        verbose_name=_("Code"),
+        help_text=_("Internal identifier (e.g., therapy_60, therapy_90)"),
     )
     name = models.CharField(
         max_length=255,
-        verbose_name="Name (Default)",
-        help_text='Display name (e.g., "60-Min Therapy Session")',
+        verbose_name=_("Name (Default)"),
+        help_text=_('Display name (e.g., "60-Min Therapy Session")'),
     )
     name_de = models.CharField(
         max_length=255,
-        verbose_name="Name (Deutsch)",
+        verbose_name=_("Name (German)"),
         blank=True,
-        help_text='German name (e.g., "Psychotherapie, 60 Min.")',
+        help_text=_('German name (e.g., "Psychotherapie, 60 Min.")'),
     )
     name_en = models.CharField(
         max_length=255,
-        verbose_name="Name (English)",
+        verbose_name=_("Name (English)"),
         blank=True,
-        help_text='English name (e.g., "60-Min Therapy Session")',
+        help_text=_('English name (e.g., "60-Min Therapy Session")'),
     )
-    default_duration = models.IntegerField(default=60, verbose_name="Standarddauer (Minuten)")
+    default_duration = models.IntegerField(default=60, verbose_name=_("Default duration (minutes)"))
 
     # Practice-scoped manager
     objects = PracticeScopedManager()
 
     class Meta:
-        verbose_name = "Leistungsart"
-        verbose_name_plural = "Leistungsarten"
+        verbose_name = _("Service type")
+        verbose_name_plural = _("Service types")
         ordering = ["code"]
 
     def __str__(self) -> str:
