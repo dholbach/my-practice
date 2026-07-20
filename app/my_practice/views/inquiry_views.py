@@ -17,6 +17,8 @@ from django.db.models.functions import TruncMonth
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views import View
 
 from ..inquiry_forms import InquiryConvertForm, InquiryForm, MarketingPeriodForm
@@ -399,12 +401,7 @@ class InquiryCreateView(PracticeScopedCreateView):
     form_class = InquiryForm
     template_name = "my_practice/inquiry_form.html"
     success_url = reverse_lazy("inquiry_list")
-    success_message = "Anfrage von {obj.full_name} erfasst."
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["action"] = "Erstellen"
-        return context
+    success_message = gettext_lazy("Inquiry from {obj.full_name} recorded.")
 
 
 class InquiryUpdateView(PracticeScopedUpdateView):
@@ -414,11 +411,10 @@ class InquiryUpdateView(PracticeScopedUpdateView):
     form_class = InquiryForm
     template_name = "my_practice/inquiry_form.html"
     success_url = reverse_lazy("inquiry_list")
-    success_message = "Anfrage von {obj.full_name} gespeichert."
+    success_message = gettext_lazy("Inquiry from {obj.full_name} saved.")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["action"] = "Bearbeiten"
         context["show_convert_button"] = (
             self.object.status != InquiryStatus.CONVERTED and self.object.converted_client is None
         )
@@ -448,7 +444,7 @@ class InquiryDeleteView(PracticeScopedDeleteView):
     template_name = "my_practice/inquiry_confirm_delete.html"
     success_url = reverse_lazy("inquiry_list")
     context_object_name = "inquiry"
-    success_message = "Anfrage von {obj.full_name} gelöscht."
+    success_message = gettext_lazy("Inquiry from {obj.full_name} deleted.")
 
 
 class MarketingPeriodCreateView(PracticeScopedCreateView):
@@ -458,12 +454,7 @@ class MarketingPeriodCreateView(PracticeScopedCreateView):
     form_class = MarketingPeriodForm
     template_name = "my_practice/marketing_period_form.html"
     success_url = reverse_lazy("inquiry_list")
-    success_message = "Marketing-Zeitraum erfasst."
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["action"] = "Erstellen"
-        return context
+    success_message = gettext_lazy("Marketing period recorded.")
 
 
 class MarketingPeriodUpdateView(PracticeScopedUpdateView):
@@ -473,12 +464,7 @@ class MarketingPeriodUpdateView(PracticeScopedUpdateView):
     form_class = MarketingPeriodForm
     template_name = "my_practice/marketing_period_form.html"
     success_url = reverse_lazy("inquiry_list")
-    success_message = "Marketing-Zeitraum gespeichert."
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["action"] = "Bearbeiten"
-        return context
+    success_message = gettext_lazy("Marketing period saved.")
 
 
 class MarketingPeriodDeleteView(PracticeScopedDeleteView):
@@ -488,7 +474,7 @@ class MarketingPeriodDeleteView(PracticeScopedDeleteView):
     template_name = "my_practice/marketing_period_confirm_delete.html"
     success_url = reverse_lazy("inquiry_list")
     context_object_name = "period"
-    success_message = "Marketing-Zeitraum gelöscht."
+    success_message = gettext_lazy("Marketing period deleted.")
 
 
 class InquiryConvertView(LoginRequiredMixin, View):
@@ -548,6 +534,7 @@ class InquiryConvertView(LoginRequiredMixin, View):
 
         messages.success(
             request,
-            f"Klient:in {client.full_name} ({client.client_code}) wurde erfolgreich angelegt.",
+            _("Client %(name)s (%(code)s) created successfully.")
+            % {"name": client.full_name, "code": client.client_code},
         )
         return redirect(reverse("client_detail", kwargs={"pk": client.pk}))

@@ -2,10 +2,10 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{% trans "Inquiry" %} {{ action }}{% endblock %}
+{% block title %}{% if object %}{% trans "Edit inquiry" %}{% else %}{% trans "New inquiry" %}{% endif %}{% endblock %}
 
 {% block page_icon %}📬{% endblock %}
-{% block page_title %}{% trans "Inquiry" %} {{ action }}{% endblock %}
+{% block page_title %}{% if object %}{% trans "Edit inquiry" %}{% else %}{% trans "New inquiry" %}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="form-container">
@@ -187,7 +187,7 @@
         {% endif %}
 
         <div class="form-actions">
-            <button type="submit" class="btn">{{ action }}</button>
+            <button type="submit" class="btn">{% trans "Save" %}</button>
             <a href="{% url 'inquiry_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
         </div>
     </form>

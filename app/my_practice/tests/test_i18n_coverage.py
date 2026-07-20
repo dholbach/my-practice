@@ -32,22 +32,17 @@ EXEMPT_TEMPLATES = {
 # Templates not yet wrapped for i18n — tracked as the Phase 1 backlog of the
 # dedicated P-039 sweep (issue #69). Remove an entry here in the same PR that
 # wraps it with {% load i18n %} + {% trans %}/{% blocktrans %}.
-KNOWN_UNWRAPPED_TEMPLATES = {
-    "my_practice/client_detail_documents.html",
-    "my_practice/expense_form.html",
-    "my_practice/marketing_period_form.html",
-    "my_practice/send_cancellation_email.html",
-    "my_practice/tax_workday_audit.html",
-    "my_practice/tax_year_summary.html",
-}
+KNOWN_UNWRAPPED_TEMPLATES: set[str] = set()
 
 LOAD_I18N_RE = re.compile(r"{%\s*load[^%]*\bi18n\b[^%]*%}")
 
-# "GebüH" (Gebührenverzeichnis für Heilpraktiker) is a proper noun for the
-# official German fee schedule — kept verbatim in both languages, not
-# translated. It's the one legitimate source of German diacritics in an
-# otherwise-English msgid/template string.
-GEBUEH_RE = re.compile(r"Gebü[hH]")
+# Proper nouns/abbreviations for German tax and legal terms kept verbatim in
+# both languages, not translated — "GebüH" (Gebührenverzeichnis für
+# Heilpraktiker, the official fee schedule) and "EÜR" (Einnahmenüberschuss-
+# rechnung, the income/expense statement tax filing method). These are the
+# only legitimate sources of German diacritics in an otherwise-English
+# msgid/template string.
+GEBUEH_RE = re.compile(r"Gebü[hH]|EÜR")
 GERMAN_CHAR_RE = re.compile(r"[äöüßÄÖÜ]")
 
 COMMENT_RE = re.compile(r"{%\s*comment\s*%}.*?{%\s*endcomment\s*%}|{#.*?#}|<!--.*?-->", re.DOTALL)
@@ -58,6 +53,11 @@ COMMENT_RE = re.compile(r"{%\s*comment\s*%}.*?{%\s*endcomment\s*%}|{#.*?#}|<!--.
 # excluded <script> too and missed exactly that.
 STYLE_RE = re.compile(r"<style\b[^>]*>.*?</style>", re.DOTALL | re.IGNORECASE)
 
+# Narrow, explicit escape hatch for non-UI German inside <script> — e.g. filename
+# keyword-matching against German filenames a user might upload. Not a general
+# exemption: mark only the specific literal, keep it as tight as possible.
+JS_EXEMPT_RE = re.compile(r"/\*\s*i18n-exempt-start.*?\*/.*?/\*\s*i18n-exempt-end\s*\*/", re.DOTALL)
+
 
 def _all_templates():
     for path in sorted(TEMPLATES_DIR.rglob("*.html")):
@@ -67,6 +67,7 @@ def _all_templates():
 def _strip_noise(text):
     text = STYLE_RE.sub("", text)
     text = COMMENT_RE.sub("", text)
+    text = JS_EXEMPT_RE.sub("", text)
     return GEBUEH_RE.sub("", text)
 
 
