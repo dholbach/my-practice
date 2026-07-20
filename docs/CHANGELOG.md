@@ -2,7 +2,7 @@
 
 Major features and milestones in chronological order.
 
-## 2026-07-20 — v0.3.0 minor release
+## 2026-07-21 — v0.3.0 minor release
 
 - **Feature — full bilingual app UI** (P-039, issue #69, #236–#250): Dedicated 6-phase i18n sweep — every template, Python view/form/util, model, `admin.py`, and the small JS-string surface now wrapped via Django i18n. English msgids throughout; German lives as `.po` translations. 1,846 msgids, 0 fuzzy in either catalog. A regression guardrail (`test_i18n_coverage.py`) keeps this from rotting. Full retrospective: [docs/projects/done/P-039_DJANGO_I18N.md](projects/done/P-039_DJANGO_I18N.md).
   - Phase 0: added the guardrail test itself, which immediately surfaced 3 real regressions in templates previously marked "done".
@@ -13,6 +13,8 @@ Major features and milestones in chronological order.
   - Phase 5: the small JS-string surface (`keyboard-nav.js`, `global-search.js`, `chart_helpers.js`) wrapped via `data-*` template attributes rather than standing up a full `JavaScriptCatalog`.
   - Phase 6 (close-out): a bilingual click-through — rendering real pages under both locales and scanning the *output*, not just template source — found and fixed two bugs invisible to static scanning: a hardcoded German month-abbreviation list feeding 3 call sites regardless of active locale, and two admin-facing calendar pages that always showed a service type's German name instead of respecting the admin's own UI language.
   - Found and fixed several other real (pre-existing) localization bugs along the way — German text used as a msgid instead of English, ModelForm labels shadowing already-wrapped model verbose_names, eager `gettext` frozen at process-startup instead of `gettext_lazy` — catalogued in the retrospective doc.
+- **Bug fix — practice title bar/switcher stuck in German** (#252): `Practice.short_title` was a single free-text config field, not a `{% trans %}` string, so it fell outside the P-039 sweep entirely — the app's own header and practice-switcher dropdown (visible on every page) always showed the German value regardless of active UI language. Split into `short_title_de`/`short_title_en`, matching the existing `subtitle_de`/`_en`-style fields; migration preserves whatever self-hosted installs had already configured instead of resetting it.
+- **Bug fix — dashboard and client-detail German leaks** (#253): three more spots the sweep's guardrail couldn't see because the German text lived in Python f-strings/dict-keys feeding an already-wrapped template rather than in a `{% trans %}` tag: the dashboard agenda widget (`agenda_helpers.py`, zero prior wrapping — "Erledigen" button, due-date messages, session/task descriptions), the dashboard's stat badges (session/task/capacity counts built as raw hardcoded-German f-strings), and the client-detail "Intake process" widget's 4 step labels.
 - **Deps** (#241): `ruff` 0.15.22, `django-stubs` 6.0.7, `types-python-dateutil` 2.9.0.20260716.
 
 ## 2026-07-17 — v0.2.12 patch release
