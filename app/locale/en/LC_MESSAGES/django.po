@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-20 15:00+0200\n"
+"POT-Creation-Date: 2026-07-20 15:46+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -531,6 +531,46 @@ msgstr ""
 msgid "unknown"
 msgstr ""
 
+#: my_practice/utils/import_helpers.py:75
+#, python-format
+msgid "Row %(row)s: %(message)s"
+msgstr ""
+
+#: my_practice/utils/import_helpers.py:96
+#, python-format
+msgid "%(count)s newly imported"
+msgstr ""
+
+#: my_practice/utils/import_helpers.py:98
+#, python-format
+msgid "%(count)s updated"
+msgstr ""
+
+#: my_practice/utils/import_helpers.py:100
+#, python-format
+msgid "%(count)s skipped"
+msgstr ""
+
+#: my_practice/utils/import_helpers.py:102
+msgid "No data imported"
+msgstr ""
+
+#: my_practice/utils/import_helpers.py:105
+#, python-format
+msgid "✓ %(summary)s!"
+msgstr ""
+
+#: my_practice/utils/import_helpers.py:109
+#, python-format
+msgid "Import complete: %(summary)s. %(count)s errors occurred."
+msgstr ""
+
+#: my_practice/utils/import_helpers.py:167
+#: my_practice/views/calendar_views.py:610
+#, python-format
+msgid "Import error: %(error)s"
+msgstr "Import error: %(error)s"
+
 #: my_practice/utils/practice_analysis.py:215
 #, python-format
 msgid "%(n)s working day"
@@ -606,6 +646,10 @@ msgid "💰 Revenue opportunity: %(n)s client with sessions but no invoices"
 msgid_plural "💰 Revenue opportunity: %(n)s clients with sessions but no invoices"
 msgstr[0] ""
 msgstr[1] ""
+
+#: my_practice/utils/practice_helpers.py:41
+msgid "Please select a practice."
+msgstr ""
 
 #: my_practice/views/api_views.py:34
 msgid "Client ID required"
@@ -869,11 +913,6 @@ msgstr "Session on %(date)s is already billed."
 msgid "Event on %(date)s added to invoice %(number)s."
 msgstr "Event on %(date)s added to invoice %(number)s."
 
-#: my_practice/views/calendar_views.py:610
-#, python-format
-msgid "Import error: %(error)s"
-msgstr "Import error: %(error)s"
-
 #: my_practice/views/client_views.py:173
 #, python-brace-format
 msgid "Client {obj.full_name} saved successfully!"
@@ -1134,18 +1173,88 @@ msgstr ""
 msgid "Transaction from %(date)s (%(payer)s) linked."
 msgstr ""
 
-#: my_practice/views/expense_views.py:267
+#: my_practice/views/expense_views.py:270
 msgid "Source and target must not be identical."
 msgstr ""
 
-#: my_practice/views/expense_views.py:299
+#: my_practice/views/expense_views.py:302
 #, python-format
 msgid "Expense merged: %(txns)s transaction(s) and %(receipts)s receipt(s) taken over."
 msgstr ""
 
-#: my_practice/views/expense_views.py:325
+#: my_practice/views/expense_views.py:328
 #, python-format
 msgid "Link with transaction from %(date)s removed."
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:207
+#: my_practice/views/inquiry_views.py:369
+msgid "New"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:208
+#: my_practice/views/inquiry_views.py:370
+msgid "Contacted"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:209
+#: my_practice/views/inquiry_views.py:371
+msgid "Intro meeting"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:210
+msgid "Waitlist"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:211
+#: templates/my_practice/client_detail.html:523
+msgid "Intake"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:212
+#: my_practice/views/inquiry_views.py:373
+msgid "Onboarded"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:252
+msgid "Received → response"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:253
+msgid "Response → intro meeting"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:254
+msgid "Intro meeting → decision"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:255
+msgid "Decision → onboarded"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:274
+#: templates/my_practice/send_cancellation_email.html:7
+#: templates/my_practice/time_off_notice_form.html:52
+msgid "German"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:274
+#: templates/my_practice/send_cancellation_email.html:7
+#: templates/my_practice/time_off_notice_form.html:71
+msgid "English"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:372
+msgid "Waitlist / intake"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:374
+msgid "Closed"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:385
+#: templates/my_practice/bank_expense_review.html:50
+msgid "Other"
 msgstr ""
 
 #: my_practice/views/inquiry_views.py:404
@@ -1282,6 +1391,120 @@ msgstr ""
 msgid "Paid"
 msgstr ""
 
+#: my_practice/views/operational_views.py:26
+msgid "Connect external USB drive to laptop"
+msgstr ""
+
+#: my_practice/views/operational_views.py:29
+msgid "Run backup command (./dev.py backup or scripts/backup.sh)"
+msgstr ""
+
+#: my_practice/views/operational_views.py:31
+msgid "Check USB and NAS backup logs for errors"
+msgstr ""
+
+#: my_practice/views/operational_views.py:34
+msgid "Confirm that NAS backup was triggered automatically"
+msgstr ""
+
+#: my_practice/views/operational_views.py:36
+msgid "Safely disconnect USB drive"
+msgstr ""
+
+#: my_practice/views/operational_views.py:41
+msgid "Pick a random backup source (USB or NAS)"
+msgstr ""
+
+#: my_practice/views/operational_views.py:45
+msgid "Decrypt backup (passphrase from sealed envelope)"
+msgstr ""
+
+#: my_practice/views/operational_views.py:47
+msgid "Restore database to test instance"
+msgstr ""
+
+#: my_practice/views/operational_views.py:50
+msgid "Compare invoice count & client count with production"
+msgstr ""
+
+#: my_practice/views/operational_views.py:54
+msgid "Download a media file and verify checksum"
+msgstr ""
+
+#: my_practice/views/operational_views.py:59
+msgid "Log result: \"Restore test [DATE] [USB/NAS] [record count] ✅\""
+msgstr ""
+
+#: my_practice/views/operational_views.py:68
+msgid "Take the other card from the cabinet (alternate Card A and Card B)"
+msgstr ""
+
+#: my_practice/views/operational_views.py:73
+msgid "Copy latest Pika-Backup snapshot to card"
+msgstr ""
+
+#: my_practice/views/operational_views.py:77
+msgid "Encrypt card (same passphrase as USB/NAS)"
+msgstr ""
+
+#: my_practice/views/operational_views.py:81
+msgid "Quick test: check 1–2 files + database count for readability"
+msgstr ""
+
+#: my_practice/views/operational_views.py:85
+msgid "Label card: \"Card A/B — [Date]\""
+msgstr ""
+
+#: my_practice/views/operational_views.py:89
+msgid "Store in locked cabinet (location separate from laptop)"
+msgstr ""
+
+#: my_practice/views/operational_views.py:95
+msgid "Full restore test from MicroSD (offsite scenario)"
+msgstr ""
+
+#: my_practice/views/operational_views.py:99
+msgid "Check backup tool versions & security updates"
+msgstr ""
+
+#: my_practice/views/operational_views.py:103
+msgid "Review DPIA document for processing changes"
+msgstr ""
+
+#: my_practice/views/operational_views.py:107
+msgid "Review backup logs (no unexplained errors)"
+msgstr ""
+
+#: my_practice/views/operational_views.py:111
+msgid "Update emergency access plan (P-010) if needed"
+msgstr ""
+
+#: my_practice/views/operational_views.py:184
+msgid "Unknown checklist type."
+msgstr ""
+
+#: my_practice/views/operational_views.py:197
+#, python-format
+msgid "%(type)s has already been completed."
+msgstr ""
+
+#: my_practice/views/operational_views.py:206
+#, python-format
+msgid "✅ %(type)s for %(period)s completed."
+msgstr ""
+
+#: my_practice/views/operational_views.py:223
+msgid "Unknown checklist item."
+msgstr ""
+
+#: my_practice/views/operational_views.py:242
+msgid "⏸ Item paused."
+msgstr ""
+
+#: my_practice/views/operational_views.py:252
+msgid "▶️ Pause removed."
+msgstr ""
+
 #: my_practice/views/practice_views.py:31
 #, python-format
 msgid "Switched to practice '%(name)s'."
@@ -1318,6 +1541,35 @@ msgstr ""
 msgid "Practice '%(name)s' deactivated."
 msgstr ""
 
+#: my_practice/views/tag_views.py:42
+#, python-format
+msgid "Tag '%(name)s' created successfully!"
+msgstr ""
+
+#: my_practice/views/tag_views.py:58
+#, python-format
+msgid "Tag '%(name)s' updated successfully!"
+msgstr ""
+
+#: my_practice/views/tag_views.py:72
+#, python-format
+msgid "Tag '%(name)s' deleted successfully!"
+msgstr ""
+
+#: my_practice/views/tag_views.py:84
+msgid "Tag ID required"
+msgstr ""
+
+#: my_practice/views/tag_views.py:92
+#, python-format
+msgid "Tag '%(name)s' added"
+msgstr ""
+
+#: my_practice/views/tag_views.py:110
+#, python-format
+msgid "Tag '%(name)s' removed"
+msgstr ""
+
 #: my_practice/views/tax_views.py:45
 msgid "No practice selected"
 msgstr ""
@@ -1334,17 +1586,17 @@ msgstr "Invalid amount"
 msgid "Invalid date"
 msgstr "Invalid date"
 
-#: my_practice/views/timeoff_views.py:52
+#: my_practice/views/timeoff_views.py:52 my_practice/views/todo_views.py:91
 #, python-brace-format
 msgid "'{obj.title}' created successfully."
 msgstr ""
 
-#: my_practice/views/timeoff_views.py:62
+#: my_practice/views/timeoff_views.py:62 my_practice/views/todo_views.py:113
 #, python-brace-format
 msgid "'{obj.title}' updated successfully."
 msgstr ""
 
-#: my_practice/views/timeoff_views.py:73
+#: my_practice/views/timeoff_views.py:73 my_practice/views/todo_views.py:123
 #, python-brace-format
 msgid "'{obj.title}' deleted successfully."
 msgstr ""
@@ -1358,6 +1610,16 @@ msgstr ""
 #, python-format
 msgid "Failed to send to: %(clients)s"
 msgstr "Failed to send to: %(clients)s"
+
+#: my_practice/views/todo_views.py:179
+#, python-format
+msgid "'%(title)s' marked as open."
+msgstr ""
+
+#: my_practice/views/todo_views.py:182
+#, python-format
+msgid "'%(title)s' marked as completed."
+msgstr ""
 
 #: templates/base.html:22 templates/base.html:24
 #: templates/registration/login.html:6
@@ -2557,10 +2819,6 @@ msgstr ""
 
 #: templates/my_practice/bank_expense_review.html:49
 msgid "Conference"
-msgstr ""
-
-#: templates/my_practice/bank_expense_review.html:50
-msgid "Other"
 msgstr ""
 
 #: templates/my_practice/bank_expense_review.html:55
@@ -3932,10 +4190,6 @@ msgstr ""
 #: templates/my_practice/client_detail.html:514
 #, python-format
 msgid "✅ Intake completed on %(date)s"
-msgstr ""
-
-#: templates/my_practice/client_detail.html:523
-msgid "Intake"
 msgstr ""
 
 #: templates/my_practice/client_detail.html:524
@@ -5641,16 +5895,6 @@ msgstr ""
 #: templates/my_practice/send_cancellation_email.html:4
 #: templates/my_practice/send_cancellation_email.html:6
 msgid "Send cancellation email"
-msgstr ""
-
-#: templates/my_practice/send_cancellation_email.html:7
-#: templates/my_practice/time_off_notice_form.html:71
-msgid "English"
-msgstr ""
-
-#: templates/my_practice/send_cancellation_email.html:7
-#: templates/my_practice/time_off_notice_form.html:52
-msgid "German"
 msgstr ""
 
 #: templates/my_practice/send_cancellation_email.html:15

@@ -9,6 +9,7 @@ from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
@@ -37,7 +38,9 @@ class TagCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("tag_list")
 
     def form_valid(self, form):
-        messages.success(self.request, f"Tag '{form.instance.name}' erfolgreich erstellt!")
+        messages.success(
+            self.request, _("Tag '%(name)s' created successfully!") % {"name": form.instance.name}
+        )
         return super().form_valid(form)
 
 
@@ -50,7 +53,10 @@ class TagUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy("tag_list")
 
     def form_valid(self, form):
-        messages.success(self.request, f"Tag '{form.instance.name}' erfolgreich aktualisiert!")
+        messages.success(
+            self.request,
+            _("Tag '%(name)s' updated successfully!") % {"name": form.instance.name},
+        )
         return super().form_valid(form)
 
 
@@ -63,7 +69,9 @@ class TagDeleteView(LoginRequiredMixin, DeleteView):
 
     def form_valid(self, form):
         tag_name = self.object.name
-        messages.success(self.request, f"Tag '{tag_name}' erfolgreich gelöscht!")
+        messages.success(
+            self.request, _("Tag '%(name)s' deleted successfully!") % {"name": tag_name}
+        )
         return super().form_valid(form)
 
 
@@ -75,7 +83,7 @@ def client_add_tag(request, client_id):
     tag_id = request.POST.get("tag_id")
 
     if not tag_id:
-        return JsonResponse({"error": "Tag ID required"}, status=400)
+        return JsonResponse({"error": _("Tag ID required")}, status=400)
 
     tag = get_object_or_404(ClientTag, pk=tag_id)
     client.tags.add(tag)
@@ -83,7 +91,7 @@ def client_add_tag(request, client_id):
     return JsonResponse(
         {
             "success": True,
-            "message": f"Tag '{tag.name}' hinzugefügt",
+            "message": _("Tag '%(name)s' added") % {"name": tag.name},
             "tag": {"id": tag.id, "name": tag.name, "color": tag.color},
         }
     )
@@ -101,7 +109,7 @@ def client_remove_tag(request, client_id, tag_id):
     return JsonResponse(
         {
             "success": True,
-            "message": f"Tag '{tag.name}' entfernt",
+            "message": _("Tag '%(name)s' removed") % {"name": tag.name},
         }
     )
 

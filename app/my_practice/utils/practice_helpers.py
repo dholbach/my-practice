@@ -6,6 +6,7 @@ from functools import wraps
 
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.utils.translation import gettext as _
 
 
 def get_current_practice(request):
@@ -37,7 +38,7 @@ def require_practice(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not hasattr(request, "current_practice") or not request.current_practice:
-            messages.error(request, "Bitte wählen Sie eine Praxis aus.")
+            messages.error(request, _("Please select a practice."))
             return redirect("practice_select")
         return view_func(request, *args, **kwargs)
 

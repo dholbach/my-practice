@@ -8,6 +8,8 @@ from datetime import date, timedelta
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.generic import TemplateView
 
 from ..models import ChecklistItemPause, OperationalChecklistCompletion
@@ -21,88 +23,90 @@ from ..models import ChecklistItemPause, OperationalChecklistCompletion
 # and operational procedures. See docs/operations/SECURITY.md for context.
 CHECKLIST_ITEMS: dict[str, list[dict[str, str]]] = {
     "weekly": [
-        {"id": "connect_usb", "title": "Externe USB-Festplatte an Laptop anschließen"},
+        {"id": "connect_usb", "title": gettext_lazy("Connect external USB drive to laptop")},
         {
             "id": "run_backup",
-            "title": "Backup-Befehl ausführen (./dev.py backup oder scripts/backup.sh)",
+            "title": gettext_lazy("Run backup command (./dev.py backup or scripts/backup.sh)"),
         },
-        {"id": "verify_logs", "title": "USB- und NAS-Backup-Logs auf Fehler prüfen"},
+        {"id": "verify_logs", "title": gettext_lazy("Check USB and NAS backup logs for errors")},
         {
             "id": "nas_trigger",
-            "title": "Bestätigen, dass NAS-Backup automatisch ausgelöst wurde",
+            "title": gettext_lazy("Confirm that NAS backup was triggered automatically"),
         },
-        {"id": "disconnect_usb", "title": "USB-Festplatte sicher trennen"},
+        {"id": "disconnect_usb", "title": gettext_lazy("Safely disconnect USB drive")},
     ],
     "monthly": [
         {
             "id": "pick_source",
-            "title": "Zufällige Backup-Quelle auswählen (USB oder NAS)",
+            "title": gettext_lazy("Pick a random backup source (USB or NAS)"),
         },
         {
             "id": "decrypt",
-            "title": "Backup entschlüsseln (Passphrase aus versiegeltem Umschlag)",
+            "title": gettext_lazy("Decrypt backup (passphrase from sealed envelope)"),
         },
-        {"id": "restore_db", "title": "Datenbank auf Test-Instanz wiederherstellen"},
+        {"id": "restore_db", "title": gettext_lazy("Restore database to test instance")},
         {
             "id": "verify_counts",
-            "title": "Rechnungsanzahl & Klientenanzahl mit Produktion vergleichen",
+            "title": gettext_lazy("Compare invoice count & client count with production"),
         },
         {
             "id": "test_media",
-            "title": "Eine Mediendatei herunterladen und Prüfsumme verifizieren",
+            "title": gettext_lazy("Download a media file and verify checksum"),
         },
         {
             "id": "log_result",
-            "title": 'Ergebnis protokollieren: "Restore-Test [DATUM] [USB/NAS] [Anzahl Datensätze] ✅"',
+            "title": gettext_lazy('Log result: "Restore test [DATE] [USB/NAS] [record count] ✅"'),
         },
     ],
     "quarterly": [
         # Rotate every 2 weeks — alternate between Card A and Card B (UHS-I is fine, e.g. SanDisk Ultra / Samsung EVO Plus 32–64 GB)
         {
             "id": "pick_card",
-            "title": "Andere Karte aus dem Schrank nehmen (Karte A und Karte B im Wechsel)",
+            "title": gettext_lazy(
+                "Take the other card from the cabinet (alternate Card A and Card B)"
+            ),
         },
         {
             "id": "copy_backup",
-            "title": "Neueste Pika-Backup-Momentaufnahme auf Karte kopieren",
+            "title": gettext_lazy("Copy latest Pika-Backup snapshot to card"),
         },
         {
             "id": "encrypt_card",
-            "title": "Karte verschlüsseln (gleiche Passphrase wie USB/NAS)",
+            "title": gettext_lazy("Encrypt card (same passphrase as USB/NAS)"),
         },
         {
             "id": "test_restore",
-            "title": "Kurztest: 1–2 Dateien + Datenbankanzahl auf Lesbarkeit prüfen",
+            "title": gettext_lazy("Quick test: check 1–2 files + database count for readability"),
         },
         {
             "id": "label_card",
-            "title": 'Karte beschriften: "Karte A/B — [Datum]"',
+            "title": gettext_lazy('Label card: "Card A/B — [Date]"'),
         },
         {
             "id": "store_card",
-            "title": "Im abgeschlossenen Schrank lagern (separater Ort vom Laptop)",
+            "title": gettext_lazy("Store in locked cabinet (location separate from laptop)"),
         },
     ],
     "annual": [
         {
             "id": "microsd_restore",
-            "title": "Vollständiger Restore-Test von MicroSD (Offsite-Szenario)",
+            "title": gettext_lazy("Full restore test from MicroSD (offsite scenario)"),
         },
         {
             "id": "update_check",
-            "title": "Backup-Tool-Versionen & Sicherheitsupdates prüfen",
+            "title": gettext_lazy("Check backup tool versions & security updates"),
         },
         {
             "id": "dpia_review",
-            "title": "DPIA-Dokument auf Verarbeitungsänderungen prüfen",
+            "title": gettext_lazy("Review DPIA document for processing changes"),
         },
         {
             "id": "audit_logs",
-            "title": "Backup-Logs überprüfen (keine unerklärten Fehler)",
+            "title": gettext_lazy("Review backup logs (no unexplained errors)"),
         },
         {
             "id": "refresh_plan",
-            "title": "Notfallzugangsplan (P-010) bei Bedarf aktualisieren",
+            "title": gettext_lazy("Update emergency access plan (P-010) if needed"),
         },
     ],
 }
@@ -139,7 +143,7 @@ class OperationalChecklistView(TemplateView):
         period_start = _get_period_start(checklist_type)
 
         # Get or create the entry for this period (not yet completed)
-        checklist, _ = OperationalChecklistCompletion.objects.get_or_create(
+        checklist, _created = OperationalChecklistCompletion.objects.get_or_create(
             checklist_type=checklist_type,
             year_month=period_start,
         )
@@ -175,7 +179,7 @@ def checklist_complete(request: HttpRequest, checklist_type: str) -> HttpRespons
 
     valid_types: dict[str, str] = dict(OperationalChecklistCompletion.CHECKLIST_TYPES)
     if checklist_type not in valid_types:
-        messages.error(request, "Unbekannter Checklisten-Typ.")
+        messages.error(request, _("Unknown checklist type."))
         return redirect("dashboard")
 
     period_start = _get_period_start(checklist_type)
@@ -186,7 +190,10 @@ def checklist_complete(request: HttpRequest, checklist_type: str) -> HttpRespons
     )
 
     if checklist.is_completed:
-        messages.info(request, f"{valid_types[checklist_type]} wurde bereits abgeschlossen.")
+        messages.info(
+            request,
+            _("%(type)s has already been completed.") % {"type": valid_types[checklist_type]},
+        )
         return redirect("checklist", checklist_type=checklist_type)
 
     notes = request.POST.get("notes", "").strip()
@@ -194,7 +201,8 @@ def checklist_complete(request: HttpRequest, checklist_type: str) -> HttpRespons
 
     messages.success(
         request,
-        f"✅ {valid_types[checklist_type]} für {period_start.strftime('%B %Y')} abgeschlossen.",
+        _("✅ %(type)s for %(period)s completed.")
+        % {"type": valid_types[checklist_type], "period": period_start.strftime("%B %Y")},
     )
     return redirect("checklist", checklist_type=checklist_type)
 
@@ -210,7 +218,7 @@ def checklist_pause_item(request: HttpRequest, checklist_type: str, item_id: str
 
     valid_item_ids = {item["id"] for item in CHECKLIST_ITEMS.get(checklist_type, [])}
     if item_id not in valid_item_ids:
-        messages.error(request, "Unbekanntes Checklisten-Element.")
+        messages.error(request, _("Unknown checklist item."))
         return redirect("checklist", checklist_type=checklist_type)
 
     reason = request.POST.get("reason", "").strip()
@@ -229,7 +237,7 @@ def checklist_pause_item(request: HttpRequest, checklist_type: str, item_id: str
         item_id=item_id,
         defaults={"reason": reason, "paused_until": paused_until},
     )
-    messages.success(request, "⏸ Element pausiert.")
+    messages.success(request, _("⏸ Item paused."))
     return redirect("checklist", checklist_type=checklist_type)
 
 
@@ -239,7 +247,7 @@ def checklist_unpause_item(request: HttpRequest, checklist_type: str, item_id: s
         return redirect("checklist", checklist_type=checklist_type)
 
     ChecklistItemPause.objects.filter(checklist_type=checklist_type, item_id=item_id).delete()
-    messages.success(request, "▶️ Pause aufgehoben.")
+    messages.success(request, _("▶️ Pause removed."))
     return redirect("checklist", checklist_type=checklist_type)
 
 

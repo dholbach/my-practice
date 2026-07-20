@@ -204,12 +204,12 @@ def _build_inquiry_analytics(request) -> dict:
     }
 
     open_pipeline = [
-        (InquiryStatus.NEW, "Neu"),
-        (InquiryStatus.CONTACTED, "Kontaktiert"),
-        (InquiryStatus.INTRO_MEETING, "Vorgespräch"),
-        (InquiryStatus.WAITLIST, "Warteliste"),
-        (InquiryStatus.IN_INTAKE, "Aufnahme"),
-        (InquiryStatus.CONVERTED, "Aufgenommen"),
+        (InquiryStatus.NEW, _("New")),
+        (InquiryStatus.CONTACTED, _("Contacted")),
+        (InquiryStatus.INTRO_MEETING, _("Intro meeting")),
+        (InquiryStatus.WAITLIST, _("Waitlist")),
+        (InquiryStatus.IN_INTAKE, _("Intake")),
+        (InquiryStatus.CONVERTED, _("Onboarded")),
     ]
     funnel_stages = [(s, label, status_counts.get(s, 0)) for s, label in open_pipeline]
 
@@ -249,10 +249,10 @@ def _build_inquiry_analytics(request) -> dict:
     avg_to_converted, n_converted = _avg_days("decision_date", "converted_date")
 
     time_in_stage = [
-        ("Eingang → Rückmeldung", avg_to_contact, n_contact),
-        ("Rückmeldung → Vorgespräch", avg_to_intro, n_intro),
-        ("Vorgespräch → Entscheidung", avg_to_decision, n_decision),
-        ("Entscheidung → Aufgenommen", avg_to_converted, n_converted),
+        (_("Received → response"), avg_to_contact, n_contact),
+        (_("Response → intro meeting"), avg_to_intro, n_intro),
+        (_("Intro meeting → decision"), avg_to_decision, n_decision),
+        (_("Decision → onboarded"), avg_to_converted, n_converted),
     ]
 
     # --- Source breakdown ---
@@ -271,7 +271,7 @@ def _build_inquiry_analytics(request) -> dict:
     # --- Language breakdown ---
     lang_rows = list(base_qs.values("language").annotate(count=Count("id")).order_by("-count"))
     lang_total = sum(r["count"] for r in lang_rows) or 1
-    _lang_labels = {"de": "Deutsch", "en": "English"}
+    _lang_labels = {"de": _("German"), "en": _("English")}
     language_breakdown = [
         {
             "language": r["language"],
@@ -366,12 +366,12 @@ class InquiryListView(PracticeScopedListView):
         # Items are already ordered by status_priority then -created_at.
         thirty_days_ago = date.today() - timedelta(days=30)
         _group_labels = {
-            0: "Neu",
-            1: "Kontaktiert",
-            2: "Vorgespräch",
-            3: "Warteliste / Aufnahme",
-            4: "Aufgenommen",
-            5: "Geschlossen",
+            0: _("New"),
+            1: _("Contacted"),
+            2: _("Intro meeting"),
+            3: _("Waitlist / intake"),
+            4: _("Onboarded"),
+            5: _("Closed"),
         }
         inquiry_groups = []
         for priority, group_iter in groupby(
@@ -382,7 +382,7 @@ class InquiryListView(PracticeScopedListView):
             stale = [i for i in items if i.updated_at.date() < thirty_days_ago]
             inquiry_groups.append(
                 {
-                    "label": _group_labels.get(priority, "Sonstige"),
+                    "label": _group_labels.get(priority, _("Other")),
                     "priority": priority,
                     "status": items[0].status if items else "",
                     "fresh": fresh,
