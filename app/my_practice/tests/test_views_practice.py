@@ -122,7 +122,8 @@ class PracticeCreateViewTest(TestCase):
     def test_post_creates_practice_and_user_practice(self):
         data = {
             "name": "New Practice",
-            "short_title": "Therapie",
+            "short_title_de": "Therapie",
+            "short_title_en": "Therapy",
             "title": "Dr. Musterfrau",
             "subtitle_de": "",
             "subtitle_en": "",
@@ -176,7 +177,8 @@ class PracticeUpdateViewTest(TestCase):
             "capacity_periods-MIN_NUM_FORMS": "0",
             "capacity_periods-MAX_NUM_FORMS": "1000",
             "name": "Renamed Practice",
-            "short_title": "Therapie",
+            "short_title_de": "Therapie",
+            "short_title_en": "Therapy",
             "title": "Dr. Mustermann",
             "subtitle_de": "praxis",
             "subtitle_en": "practice",

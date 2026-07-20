@@ -41,7 +41,7 @@
                 {% else %}
                     {% block page_icon %}🏥{% endblock %}
                 {% endif %}
-                {% block page_title %}{% if request.current_practice and request.current_practice.short_title %}{{ request.current_practice.short_title }}{% else %}{% trans "Practice management" %}{% endif %}{% endblock %}
+                {% block page_title %}{% if request.current_practice and request.current_practice.short_title_de %}{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de }}{% else %}{{ request.current_practice.short_title_de }}{% endif %}{% else %}{% trans "Practice management" %}{% endif %}{% endblock %}
             </h1>
             <p class="subtitle">{% block page_subtitle %}{% trans "Practice management" %}{% endblock %}</p>
             <nav>
@@ -80,12 +80,13 @@
                 </div>
                 {% if user.is_authenticated and user.practices.exists %}
                 <div class="dropdown practice-switcher">
-                    {% trans "Practice" as practice_fallback %}<span>{{ request.current_practice.short_title|default:practice_fallback }} ▾</span>
+                    {% trans "Practice" as practice_fallback %}
+                    <span>{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de|default:practice_fallback }}{% else %}{{ request.current_practice.short_title_de|default:practice_fallback }}{% endif %} ▾</span>
                     <div class="dropdown-content">
                         {% for practice in user.practices.all %}
                         <a href="{% url 'practice_switch' practice.slug %}"
                            {% if practice.id == request.current_practice.id %}class="current-practice"{% endif %}>
-                            {{ practice.short_title|default:practice.name }}
+                            {% if CURRENT_LANGUAGE == "en" %}{{ practice.short_title_en|default:practice.short_title_de|default:practice.name }}{% else %}{{ practice.short_title_de|default:practice.name }}{% endif %}
                             {% if practice.id == request.current_practice.id %}✓{% endif %}
                         </a>
                         {% endfor %}

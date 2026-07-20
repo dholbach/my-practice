@@ -110,7 +110,8 @@ class PracticeCreateView(CreateView):
     template_name = "my_practice/practice_form.html"
     fields = [
         "name",
-        "short_title",
+        "short_title_de",
+        "short_title_en",
         "title",
         "subtitle_de",
         "subtitle_en",

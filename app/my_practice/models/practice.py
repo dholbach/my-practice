@@ -32,11 +32,18 @@ class Practice(models.Model):
         verbose_name=_("URL slug"),
         help_text=_("Unique identifier for the practice (e.g. 'therapy', 'coaching')"),
     )
-    short_title = models.CharField(
+    short_title_de = models.CharField(
         max_length=50,
         default="Therapie",
-        verbose_name=_("Short title"),
-        help_text=_("Short label for the title bar (e.g. 'Therapy', 'Coaching')"),
+        verbose_name=_("Short title (German)"),
+        help_text=_("Short label for the title bar, shown in the German UI (e.g. 'Therapie')"),
+    )
+    short_title_en = models.CharField(
+        max_length=50,
+        default="Therapy",
+        verbose_name=_("Short title (English)"),
+        help_text=_("Short label for the title bar, shown in the English UI (e.g. 'Therapy')"),
+        blank=True,
     )
     is_active = models.BooleanField(
         default=True,
