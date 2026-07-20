@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Praxis auswählen - Therapy Practice{% endblock %}
+{% block title %}{% trans "Select practice" %} - Therapy Practice{% endblock %}
 
-{% block page_title %}Praxis auswählen{% endblock %}
-{% block page_subtitle %}Bitte wählen Sie eine Praxis aus, um fortzufahren{% endblock %}
+{% block page_title %}{% trans "Select practice" %}{% endblock %}
+{% block page_subtitle %}{% trans "Please select a practice to continue" %}{% endblock %}
 
 {% block content %}
 <div class="practice-grid">
@@ -17,7 +18,7 @@
         </div>
         {% endif %}
         <div class="practice-select-btn">
-            Praxis auswählen →
+            {% trans "Select practice" %} →
         </div>
     </a>
     {% endfor %}
@@ -25,8 +26,8 @@
 
 {% if not practices %}
 <div class="empty-state">
-    <p>Sie haben keinen Zugriff auf eine Praxis.</p>
-    <p>Bitte kontaktieren Sie den Administrator.</p>
+    <p>{% trans "You don't have access to a practice." %}</p>
+    <p>{% trans "Please contact the administrator." %}</p>
 </div>
 {% endif %}
 {% endblock %}

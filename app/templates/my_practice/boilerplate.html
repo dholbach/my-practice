@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}E-Mail-Textbausteine{% endblock %}
+{% block title %}{% trans "Email templates" %}{% endblock %}
 
 {% block content %}
 <div class="content-container">
     <div class="bp-header">
-        <h1>✉️ E-Mail-Textbausteine</h1>
-        <p class="bp-subtitle">Texte anklicken zum Kopieren.</p>
+        <h1>✉️ {% trans "Email templates" %}</h1>
+        <p class="bp-subtitle">{% trans "Click text to copy." %}</p>
     </div>
 
     <div class="bp-grid">

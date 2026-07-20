@@ -33,20 +33,12 @@ EXEMPT_TEMPLATES = {
 # dedicated P-039 sweep (issue #69). Remove an entry here in the same PR that
 # wraps it with {% load i18n %} + {% trans %}/{% blocktrans %}.
 KNOWN_UNWRAPPED_TEMPLATES = {
-    "my_practice/boilerplate.html",
     "my_practice/client_detail_documents.html",
-    "my_practice/client_list.html",
-    "my_practice/client_triage.html",
     "my_practice/expense_form.html",
-    "my_practice/invoice_list.html",
     "my_practice/marketing_period_form.html",
-    "my_practice/monthly_billing_overview.html",
-    "my_practice/practice_select.html",
     "my_practice/send_cancellation_email.html",
-    "my_practice/supervision_queue.html",
     "my_practice/tax_workday_audit.html",
     "my_practice/tax_year_summary.html",
-    "my_practice/todo_list.html",
 }
 
 LOAD_I18N_RE = re.compile(r"{%\s*load[^%]*\bi18n\b[^%]*%}")
