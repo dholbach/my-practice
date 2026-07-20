@@ -9,6 +9,7 @@ from decimal import Decimal
 
 from django.db.models import Avg, Count, ExpressionWrapper, DurationField, F, Q, Sum
 from django.db.models.functions import TruncMonth
+from django.utils.translation import gettext as _
 
 from ..models import (
     Client,
@@ -277,7 +278,7 @@ class SessionAnalyzer:
         # 60min sessions
         count_60 = base_qs.filter(session__duration=60).count()
         if count_60 > 0:
-            service_counts["60-Min Sitzungen"] = {
+            service_counts[_("60-min sessions")] = {
                 "count": count_60,
                 "percentage": round((count_60 / total_items) * 100, 1),
             }
@@ -285,7 +286,7 @@ class SessionAnalyzer:
         # 90min sessions
         count_90 = base_qs.filter(session__duration=90).count()
         if count_90 > 0:
-            service_counts["90-Min Sitzungen"] = {
+            service_counts[_("90-min sessions")] = {
                 "count": count_90,
                 "percentage": round((count_90 / total_items) * 100, 1),
             }
@@ -293,7 +294,7 @@ class SessionAnalyzer:
         # Group sessions
         count_group = base_qs.filter(group_size__gt=1).count()
         if count_group > 0:
-            service_counts["Gruppensitzungen"] = {
+            service_counts[_("Group sessions")] = {
                 "count": count_group,
                 "percentage": round((count_group / total_items) * 100, 1),
             }

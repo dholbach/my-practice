@@ -7,6 +7,8 @@ from datetime import date
 from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils.safestring import SafeString, mark_safe
+from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 from ..models import Client, CompanyExpense, Invoice, TimeOff
 from .action_queue_builder import ActionQueueBuilder
@@ -126,19 +128,27 @@ class DashboardContextAssembler:
             agenda_ctx["unscheduled_count"],
         )
         agenda_badge_parts = [
-            f'<span class="stat-badge">{sc} Sitzung{"en" if sc != 1 else ""}</span>',
-            f'<span class="stat-badge">{tc} Aufgabe{"n" if tc != 1 else ""}</span>',
+            f'<span class="stat-badge">{ngettext("%(count)s session", "%(count)s sessions", sc) % {"count": sc}}</span>',
+            f'<span class="stat-badge">{ngettext("%(count)s task", "%(count)s tasks", tc) % {"count": tc}}</span>',
         ]
         if uc > 0:
-            agenda_badge_parts.append(f'<span class="stat-badge warning">{uc} ohne Uhrzeit</span>')
+            agenda_badge_parts.append(
+                f'<span class="stat-badge warning">'
+                f"{ngettext('%(count)s without a time', '%(count)s without a time', uc) % {'count': uc}}"
+                f"</span>"
+            )
 
         cap_ctx = CapacityMonitoringWidgetBuilder(practice).build_context()
         wf_ctx = WeeklyFocusWidgetBuilder(practice).build_context()
         focus_count = wf_ctx["focus_count"]
         wf_session_count = wf_ctx["session_count"]
-        wf_badge_parts = [f'<span class="stat-badge">{wf_session_count} Sitzungen</span>']
+        wf_badge_parts = [
+            f'<span class="stat-badge">'
+            f"{ngettext('%(count)s session', '%(count)s sessions', wf_session_count) % {'count': wf_session_count}}"
+            f"</span>"
+        ]
         if focus_count:
-            wf_badge_parts.append(f'<span class="stat-badge">{focus_count} Fokus</span>')
+            wf_badge_parts.append(f'<span class="stat-badge">{focus_count} {_("Focus")}</span>')
 
         def _html(template: str, ctx: dict) -> SafeString:
             return mark_safe(render_to_string(template, ctx))
@@ -157,7 +167,7 @@ class DashboardContextAssembler:
                 "includes/capacity_monitoring_widget_content.html", cap_ctx
             ),
             "capacity_badge": (
-                mark_safe('<span class="stat-badge warning">⚠️ Kapazität</span>')
+                mark_safe(f'<span class="stat-badge warning">⚠️ {_("Capacity")}</span>')
                 if cap_ctx.get("show_warning")
                 else ""
             ),

@@ -8,6 +8,8 @@ from datetime import date, time, timedelta
 from typing import Literal
 
 from django.db.models import Q, QuerySet
+from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 from ..models import PracticeTodo, Session
 
@@ -50,7 +52,7 @@ class AgendaItem:
         """Format time for display (e.g., '09:00')"""
         if self.time:
             return self.time.strftime("%H:%M")
-        return "Keine Uhrzeit"
+        return _("No time")
 
     @property
     def sort_key(self) -> tuple:
@@ -145,19 +147,19 @@ class AgendaWidgetBuilder:
         client_code = session.client.client_code
         first_item = next(iter(session.invoice_items.all()), None)
         service_name = (
-            first_item.service_type.name if first_item and first_item.service_type else "Sitzung"
+            first_item.service_type.name if first_item and first_item.service_type else _("Session")
         )
-        description = f"{service_name} ({session.duration} Min.)"
+        description = f"{service_name} ({session.duration} {_('min')})"
         if first_item:
             url = f"/invoices/{first_item.invoice_id}/"
-            action_label = "Rechnung anzeigen"
+            action_label = _("View invoice")
         else:
             url = f"/clients/{session.client_id}/detail/"
-            action_label = "Klient anzeigen"
+            action_label = _("View client")
         return AgendaItem(
             type="session",
             time=session.session_time,
-            title=f"Session {client_code}",
+            title=f"{_('Session')} {client_code}",
             description=description,
             client_code=client_code,
             url=url,
@@ -188,17 +190,18 @@ class AgendaWidgetBuilder:
         category_label = task.get_category_display()
         priority_label = task.get_priority_display()
 
-        description_parts = [f"{category_label} • Priorität: {priority_label}"]
+        description_parts = [f"{category_label} • {_('Priority')}: {priority_label}"]
         if task.due_date:
             due_date_str = task.due_date.strftime("%d.%m.%Y")
             if due_status == "overdue":
-                description_parts.append(f"⚠️ Überfällig seit {due_date_str}")
+                description_parts.append(_("⚠️ Overdue since %(date)s") % {"date": due_date_str})
             elif due_status == "today":
-                description_parts.append("📅 Heute fällig")
+                description_parts.append(_("📅 Due today"))
             elif due_status == "soon":
                 days_until = (task.due_date - self.target_date).days
                 description_parts.append(
-                    f"📅 Fällig in {days_until} Tag{'en' if days_until != 1 else ''}"
+                    ngettext("📅 Due in %(days)s day", "📅 Due in %(days)s days", days_until)
+                    % {"days": days_until}
                 )
 
         description = " • ".join(description_parts)
@@ -218,7 +221,7 @@ class AgendaWidgetBuilder:
             url=task_url,
             is_completed=bool(task.completed_at),
             action_url=action_url,
-            action_label="Erledigen",
+            action_label=_("Mark as done"),
             due_date=task.due_date,
             due_status=due_status,
         )

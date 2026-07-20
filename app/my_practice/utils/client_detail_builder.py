@@ -211,12 +211,13 @@ class ClientDetailContextBuilder:
             .order_by("-session__session_date")[:5]
         )
 
-        # Intake progress: 4 steps tracked as date fields on Client
+        # Intake progress: 4 steps tracked as date fields on Client. Labels reuse
+        # the exact msgids from the profile-tab onboarding checklist (client_detail.html).
         intake_steps = [
-            ("Aufnahme", self.client.intake_sent_date),
-            ("Vertrag", self.client.contract_signed_date),
-            ("Anamnese", self.client.questionnaire_sent_date),
-            ("Abschluss", self.client.onboarding_complete_date),
+            (_("Intake"), self.client.intake_sent_date),
+            (_("Contract"), self.client.contract_signed_date),
+            (_("Anamnesis"), self.client.questionnaire_sent_date),
+            (_("Intake complete"), self.client.onboarding_complete_date),
         ]
         intake_steps_done = sum(1 for _, d in intake_steps if d)
 
