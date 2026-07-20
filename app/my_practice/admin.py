@@ -4,6 +4,8 @@ Django Admin configuration for payments app.
 
 from django.contrib import admin, messages
 from django.utils.html import format_html, mark_safe
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy, ngettext
 
 from .models import (
     BankTransaction,
@@ -40,7 +42,7 @@ class PracticeAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Grundinformationen",
+            gettext_lazy("Basic Information"),
             {
                 "fields": (
                     "name",
@@ -49,47 +51,51 @@ class PracticeAdmin(admin.ModelAdmin):
                     "subtitle_de",
                     "subtitle_en",
                 ),
-                "description": "Basis-Informationen über die Praxis",
+                "description": gettext_lazy("Basic information about the practice"),
             },
         ),
         (
-            "Adresse",
+            gettext_lazy("Address"),
             {
                 "fields": ("street", "postal_code", "city", "country"),
                 "classes": ("collapse",),  # Collapsible group
             },
         ),
         (
-            "Kontakt",
+            gettext_lazy("Contact"),
             {
                 "fields": ("email", "email_from_name", "website", "phone"),
                 "classes": ("collapse",),
             },
         ),
         (
-            "Bankverbindung",
+            gettext_lazy("Bank Details"),
             {
                 "fields": ("bank_name", "iban", "bic", "private_bank_account"),
                 "classes": ("collapse",),
-                "description": "Geschäftskonto für Rechnungen. Das private Bankkonto (IBAN) wird beim Bank-Import zur automatischen Erkennung von Entnahmen und Kapitaleinlagen verwendet.",
+                "description": gettext_lazy(
+                    "Business account for invoices. The private bank account (IBAN) is used "
+                    "during bank import to automatically detect withdrawals and capital "
+                    "contributions."
+                ),
             },
         ),
         (
-            "Steuer",
+            gettext_lazy("Tax"),
             {
                 "fields": ("tax_id", "vat_exempt_text_de", "vat_exempt_text_en"),
                 "classes": ("collapse",),
             },
         ),
         (
-            "Mitgliedschaften",
+            gettext_lazy("Memberships"),
             {
                 "fields": ("memberships_de", "memberships_en"),
                 "classes": ("collapse",),
             },
         ),
         (
-            "Bilder",
+            gettext_lazy("Images"),
             {
                 "fields": (
                     "logo",
@@ -101,7 +107,7 @@ class PracticeAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Zahlungsbedingungen",
+            gettext_lazy("Payment Terms"),
             {
                 "fields": (
                     "payment_terms_days",
@@ -112,7 +118,7 @@ class PracticeAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Email Templates für Rechnungen",
+            gettext_lazy("Email Templates for Invoices"),
             {
                 "fields": (
                     "invoice_email_subject_de",
@@ -122,46 +128,56 @@ class PracticeAdmin(admin.ModelAdmin):
                     "email_signature",
                 ),
                 "classes": ("collapse", "wide"),  # Collapsible + wide for text fields
-                "description": "Templates für Rechnungs-Emails. Verfügbare Platzhalter: {salutation}, {invoice_number}, {amount}, {date}, {client_name}",
+                "description": gettext_lazy(
+                    "Templates for invoice emails. Available placeholders: {salutation}, "
+                    "{invoice_number}, {amount}, {date}, {client_name}"
+                ),
             },
         ),
         (
-            "Kapazitäts-Monitoring (P-013)",
+            gettext_lazy("Capacity Monitoring (P-013)"),
             {
                 "fields": (
                     "monthly_target_hours",
                     "monthly_target_revenue",
                 ),
                 "classes": ("collapse",),
-                "description": "Monatliche Ziele für Stunden und Umsatz. Wenn gesetzt, zeigt das Dashboard Warnungen bei rückläufigen Zahlen.",
+                "description": gettext_lazy(
+                    "Monthly targets for hours and revenue. When set, the dashboard shows "
+                    "warnings for declining numbers."
+                ),
             },
         ),
         (
-            "Fahrtkosten (P-027)",
+            gettext_lazy("Travel Costs (P-027)"),
             {
                 "fields": (
                     "commute_distance_km",
                     "practice_weekdays",
                 ),
                 "classes": ("collapse",),
-                "description": "Entfernungspauschale (§9 Abs. 1 Nr. 4 EStG). Einfache Strecke in km + Wochentage, an denen die Praxis besucht wird (JSON-Liste, z.B. [0, 1, 2, 3, 4] für Mo–Fr).",
+                "description": gettext_lazy(
+                    "Distance allowance (§9 (1) no. 4 EStG). One-way distance in km + "
+                    "weekdays on which the practice is attended (JSON list, e.g. "
+                    "[0, 1, 2, 3, 4] for Mon–Fri)."
+                ),
             },
         ),
     )
 
     readonly_fields = ["logo_preview", "signature_preview"]
 
-    @admin.display(description="Logo Vorschau")
+    @admin.display(description=gettext_lazy("Logo Preview"))
     def logo_preview(self, obj):
         if obj.logo:
             return format_html('<img src="{}" style="max-height: 200px;"/>', obj.logo.url)
-        return "Kein Logo hochgeladen"
+        return _("No logo uploaded")
 
-    @admin.display(description="Unterschrift Vorschau")
+    @admin.display(description=gettext_lazy("Signature Preview"))
     def signature_preview(self, obj):
         if obj.signature:
             return format_html('<img src="{}" style="max-height: 100px;"/>', obj.signature.url)
-        return "Keine Unterschrift hochgeladen"
+        return _("No signature uploaded")
 
     def has_add_permission(self, request):
         # Only allow one Practice instance
@@ -218,7 +234,7 @@ class ClientAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Basic Information",
+            gettext_lazy("Basic Information"),
             {
                 "fields": (
                     "client_code",
@@ -229,48 +245,56 @@ class ClientAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("Contact", {"fields": ("email", "phone", "address")}),
+        (gettext_lazy("Contact"), {"fields": ("email", "phone", "address")}),
         (
-            "Email Settings",
+            gettext_lazy("Email Settings"),
             {
                 "fields": ("salutation",),
-                "description": "Custom email salutation (e.g., 'Dear John', 'Liebe Maria'). If empty, defaults to 'Dear {name}' (EN) or 'Liebe:r {name}' (DE)",
+                "description": gettext_lazy(
+                    "Custom email salutation (e.g., 'Dear John', 'Liebe Maria'). If empty, "
+                    "defaults to 'Dear {name}' (EN) or 'Liebe:r {name}' (DE)"
+                ),
             },
         ),
         (
-            "Rates",
+            gettext_lazy("Rates"),
             {
                 "fields": ("hourly_rate_60", "hourly_rate_90", "cancellation_fee"),
-                "description": "Standard hourly rates for this client",
+                "description": gettext_lazy("Standard hourly rates for this client"),
             },
         ),
         (
-            "Organization",
+            gettext_lazy("Organization"),
             {
                 "fields": ("tags",),
-                "description": "Tags for organizing and categorizing clients",
+                "description": gettext_lazy("Tags for organizing and categorizing clients"),
             },
         ),
-        ("Additional", {"fields": ("notes", "active", "is_online_client", "needs_gebueh_invoice")}),
         (
-            "Timestamps",
+            gettext_lazy("Additional"),
+            {"fields": ("notes", "active", "is_online_client", "needs_gebueh_invoice")},
+        ),
+        (
+            gettext_lazy("Timestamps"),
             {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
         ),
     )
 
-    @admin.display(description="Status")
+    @admin.display(description=gettext_lazy("Status"))
     def active_status(self, obj):
         if obj.active:
-            return mark_safe('<span style="color: green; font-weight: bold;">✓ Aktiv</span>')
-        return mark_safe('<span style="color: red;">✗ Inaktiv</span>')
+            return mark_safe(
+                f'<span style="color: green; font-weight: bold;">✓ {_("Active")}</span>'
+            )
+        return mark_safe(f'<span style="color: red;">✗ {_("Inactive")}</span>')
 
-    @admin.display(description="Format", ordering="is_online_client")
+    @admin.display(description=gettext_lazy("Format"), ordering="is_online_client")
     def online_badge(self, obj):
         if obj.is_online_client:
-            return mark_safe('<span style="color: #667eea;">💻 Online</span>')
-        return mark_safe('<span style="color: #48bb78;">🏢 Vor Ort</span>')
+            return mark_safe(f'<span style="color: #667eea;">💻 {_("Online")}</span>')
+        return mark_safe(f'<span style="color: #48bb78;">🏢 {_("On-site")}</span>')
 
-    @admin.display(description="Tags")
+    @admin.display(description=gettext_lazy("Tags"))
     def tag_list(self, obj):
         tags = obj.tags.all()
         if not tags:
@@ -291,20 +315,20 @@ class ClientAliasAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Zuordnung",
+            gettext_lazy("Assignment"),
             {
                 "fields": ("client", "alias_name"),
             },
         ),
         (
-            "Details",
+            gettext_lazy("Details"),
             {
                 "fields": ("notes", "created_at"),
             },
         ),
     )
 
-    @admin.display(description="Klient", ordering="client")
+    @admin.display(description=gettext_lazy("Client"), ordering="client")
     def client_link(self, obj):
         """Display link to client."""
         return format_html(
@@ -313,7 +337,7 @@ class ClientAliasAdmin(admin.ModelAdmin):
             obj.client.client_code,
         )
 
-    @admin.display(description="Notizen")
+    @admin.display(description=gettext_lazy("Notes"))
     def notes_display(self, obj):
         """Display truncated notes."""
         if not obj.notes:
@@ -331,17 +355,19 @@ class ServiceTypeAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Leistungstyp",
+            gettext_lazy("Service Type"),
             {"fields": ("code", "name", "name_de", "name_en", "practice")},
         ),
-        ("Einstellungen", {"fields": ("default_duration",)}),
+        (gettext_lazy("Settings"), {"fields": ("default_duration",)}),
     )
 
-    @admin.display(description="Scope")
+    @admin.display(description=gettext_lazy("Scope"))
     def practice_scope(self, obj):
         if obj.practice:
             return obj.practice.name
-        return mark_safe('<span style="color: #667eea; font-weight: bold;">🌍 GLOBAL</span>')
+        return mark_safe(
+            f'<span style="color: #667eea; font-weight: bold;">🌍 {_("GLOBAL")}</span>'
+        )
 
 
 class InvoiceItemInline(admin.TabularInline):
@@ -380,14 +406,19 @@ class InvoiceAdmin(admin.ModelAdmin):
     # Django 5.1: Organize actions in groups
     actions = ["mark_as_sent", "mark_as_paid", "mark_as_cancelled"]
 
-    @admin.action(description="Als versendet markieren")
+    @admin.action(description=gettext_lazy("Mark as sent"))
     def mark_as_sent(self, request, queryset):
         updated = queryset.update(status="sent")
         self.message_user(
-            request, f"{updated} Rechnung(en) als versendet markiert.", messages.SUCCESS
+            request,
+            ngettext(
+                "%(count)s invoice marked as sent.", "%(count)s invoices marked as sent.", updated
+            )
+            % {"count": updated},
+            messages.SUCCESS,
         )
 
-    @admin.action(description="Als bezahlt markieren")
+    @admin.action(description=gettext_lazy("Mark as paid"))
     def mark_as_paid(self, request, queryset):
         from datetime import date
 
@@ -399,19 +430,31 @@ class InvoiceAdmin(admin.ModelAdmin):
             invoice.save()
             updated += 1
         self.message_user(
-            request, f"{updated} Rechnung(en) als bezahlt markiert.", messages.SUCCESS
+            request,
+            ngettext(
+                "%(count)s invoice marked as paid.", "%(count)s invoices marked as paid.", updated
+            )
+            % {"count": updated},
+            messages.SUCCESS,
         )
 
-    @admin.action(description="Als storniert markieren")
+    @admin.action(description=gettext_lazy("Mark as cancelled"))
     def mark_as_cancelled(self, request, queryset):
         updated = queryset.update(status="cancelled")
         self.message_user(
-            request, f"{updated} Rechnung(en) als storniert markiert.", messages.SUCCESS
+            request,
+            ngettext(
+                "%(count)s invoice marked as cancelled.",
+                "%(count)s invoices marked as cancelled.",
+                updated,
+            )
+            % {"count": updated},
+            messages.SUCCESS,
         )
 
     fieldsets = (
         (
-            "Invoice Information",
+            gettext_lazy("Invoice Information"),
             {
                 "fields": (
                     "invoice_number",
@@ -423,20 +466,22 @@ class InvoiceAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Amounts",
+            gettext_lazy("Amounts"),
             {
                 "fields": ("subtotal", "tax_rate", "tax_amount", "total"),
-                "description": "Amounts are calculated automatically from invoice items",
+                "description": gettext_lazy(
+                    "Amounts are calculated automatically from invoice items"
+                ),
             },
         ),
-        ("Additional", {"fields": ("notes",)}),
+        (gettext_lazy("Additional"), {"fields": ("notes",)}),
         (
-            "Timestamps",
+            gettext_lazy("Timestamps"),
             {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
         ),
     )
 
-    @admin.display(description="Total")
+    @admin.display(description=gettext_lazy("Total"))
     def total_formatted(self, obj):
         return format_html("<strong>{} €</strong>", f"{obj.total:.2f}")
 
@@ -460,9 +505,9 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     readonly_fields = ["total"]
 
     fieldsets = (
-        ("Sitzung", {"fields": ("invoice", "session", "service_type")}),
-        ("Abrechnung", {"fields": ("rate", "quantity", "total")}),
-        ("Details", {"fields": ("description",), "classes": ("collapse",)}),
+        (gettext_lazy("Session"), {"fields": ("invoice", "session", "service_type")}),
+        (gettext_lazy("Billing"), {"fields": ("rate", "quantity", "total")}),
+        (gettext_lazy("Details"), {"fields": ("description",), "classes": ("collapse",)}),
     )
 
 
@@ -487,11 +532,11 @@ class SessionAdmin(admin.ModelAdmin):
     autocomplete_fields = ["client"]
     readonly_fields = ["calendar_event_id"]
 
-    @admin.display(description="Protokoll", boolean=True)
+    @admin.display(description=gettext_lazy("Log"), boolean=True)
     def has_log(self, obj):
         return hasattr(obj, "log")
 
-    @admin.display(description="Rechnung", boolean=True)
+    @admin.display(description=gettext_lazy("Invoice"), boolean=True)
     def has_invoice_item(self, obj):
         return obj.invoice_items.exists()
 
@@ -510,15 +555,18 @@ class ClientProfileAdmin(admin.ModelAdmin):
     autocomplete_fields = ["client"]
 
     fieldsets = (
-        ("Klient", {"fields": ("client",)}),
+        (gettext_lazy("Client"), {"fields": ("client",)}),
         (
-            "Klinische Felder (Fernet-verschlüsselt)",
+            gettext_lazy("Clinical Fields (Fernet-encrypted)"),
             {"fields": ("arbeitsdiagnose", "intake_notes", "case_notes")},
         ),
-        ("Zeitstempel", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+        (
+            gettext_lazy("Timestamps"),
+            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+        ),
     )
 
-    @admin.display(description="Arbeitsdiagnose")
+    @admin.display(description=gettext_lazy("Working Diagnosis"))
     def arbeitsdiagnose_preview(self, obj):
         val = obj.arbeitsdiagnose or ""
         return val[:60] + "…" if len(val) > 60 else val or "—"
@@ -538,16 +586,19 @@ class SessionLogAdmin(admin.ModelAdmin):
     readonly_fields = ["created_at", "updated_at"]
 
     fieldsets = (
-        ("Sitzung", {"fields": ("session",)}),
-        ("Metadaten (unverschlüsselt)", {"fields": ("session_type", "mood_tags")}),
+        (gettext_lazy("Session"), {"fields": ("session",)}),
+        (gettext_lazy("Metadata (unencrypted)"), {"fields": ("session_type", "mood_tags")}),
         (
-            "Inhalte (Fernet-verschlüsselt)",
+            gettext_lazy("Content (Fernet-encrypted)"),
             {"fields": ("content", "therapist_reflection")},
         ),
-        ("Zeitstempel", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+        (
+            gettext_lazy("Timestamps"),
+            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+        ),
     )
 
-    @admin.display(description="Tags")
+    @admin.display(description=gettext_lazy("Tags"))
     def mood_tags_display(self, obj):
         tags = obj.mood_tags or []
         return ", ".join(tags) if tags else "—"
@@ -565,12 +616,15 @@ class SupervisionItemAdmin(admin.ModelAdmin):
     autocomplete_fields = ["client"]
 
     fieldsets = (
-        ("Klient & Status", {"fields": ("client", "status")}),
-        ("Inhalt (Fernet-verschlüsselt)", {"fields": ("content",)}),
-        ("Zeitstempel", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+        (gettext_lazy("Client & Status"), {"fields": ("client", "status")}),
+        (gettext_lazy("Content (Fernet-encrypted)"), {"fields": ("content",)}),
+        (
+            gettext_lazy("Timestamps"),
+            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+        ),
     )
 
-    @admin.display(description="Inhalt")
+    @admin.display(description=gettext_lazy("Content"))
     def content_preview(self, obj):
         val = obj.content or ""
         return val[:80] + "…" if len(val) > 80 else val or "—"
@@ -588,13 +642,16 @@ class ClientNoteAdmin(admin.ModelAdmin):
     autocomplete_fields = ["client"]
 
     fieldsets = (
-        ("Klient", {"fields": ("client",)}),
-        ("Metadaten", {"fields": ("note_date", "note_type")}),
-        ("Inhalt (Fernet-verschlüsselt)", {"fields": ("content",)}),
-        ("Zeitstempel", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+        (gettext_lazy("Client"), {"fields": ("client",)}),
+        (gettext_lazy("Metadata"), {"fields": ("note_date", "note_type")}),
+        (gettext_lazy("Content (Fernet-encrypted)"), {"fields": ("content",)}),
+        (
+            gettext_lazy("Timestamps"),
+            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+        ),
     )
 
-    @admin.display(description="Inhalt")
+    @admin.display(description=gettext_lazy("Content"))
     def content_preview(self, obj):
         val = obj.content or ""
         return val[:80] + "…" if len(val) > 80 else val or "—"
@@ -609,13 +666,13 @@ class CompanyWithdrawalAdmin(admin.ModelAdmin):
     ordering = ("-date",)
 
     fieldsets = (
-        ("Entnahme", {"fields": ("date", "amount", "category", "practice")}),
-        ("Details", {"fields": ("description",)}),
+        (gettext_lazy("Withdrawal"), {"fields": ("date", "amount", "category", "practice")}),
+        (gettext_lazy("Details"), {"fields": ("description",)}),
     )
 
     actions = ["mark_as_tax_year"]
 
-    @admin.action(description="Für aktuelles Steuerjahr markieren")
+    @admin.action(description=gettext_lazy("Flag for current tax year"))
     def mark_as_tax_year(self, request, queryset):
         from datetime import date
 
@@ -623,11 +680,16 @@ class CompanyWithdrawalAdmin(admin.ModelAdmin):
         updated = queryset.filter(date__year=current_year).count()
         self.message_user(
             request,
-            f"{updated} Entnahme(n) für Steuerjahr {current_year} gefunden.",
+            ngettext(
+                "%(count)s withdrawal found for tax year %(year)s.",
+                "%(count)s withdrawals found for tax year %(year)s.",
+                updated,
+            )
+            % {"count": updated, "year": current_year},
             messages.SUCCESS,
         )
 
-    @admin.display(description="Notizen")
+    @admin.display(description=gettext_lazy("Notes"))
     def description_short(self, obj):
         """Truncate description for list view"""
         if obj.description:
@@ -652,49 +714,72 @@ class CompanyExpenseAdmin(admin.ModelAdmin):
 
     actions = ["mark_tax_deductible", "mark_not_tax_deductible", "mark_has_invoice"]
 
-    @admin.action(description="Als steuerlich absetzbar markieren")
+    @admin.action(description=gettext_lazy("Mark as tax deductible"))
     def mark_tax_deductible(self, request, queryset):
         updated = queryset.update(is_tax_deductible=True)
         self.message_user(
-            request, f"{updated} Ausgabe(n) als steuerlich absetzbar markiert.", messages.SUCCESS
+            request,
+            ngettext(
+                "%(count)s expense marked as tax deductible.",
+                "%(count)s expenses marked as tax deductible.",
+                updated,
+            )
+            % {"count": updated},
+            messages.SUCCESS,
         )
 
-    @admin.action(description="Steuerlich nicht absetzbar")
+    @admin.action(description=gettext_lazy("Not tax deductible"))
     def mark_not_tax_deductible(self, request, queryset):
         updated = queryset.update(is_tax_deductible=False)
         self.message_user(
-            request, f"{updated} Ausgabe(n) als nicht absetzbar markiert.", messages.SUCCESS
+            request,
+            ngettext(
+                "%(count)s expense marked as not deductible.",
+                "%(count)s expenses marked as not deductible.",
+                updated,
+            )
+            % {"count": updated},
+            messages.SUCCESS,
         )
 
-    @admin.action(description="Mit Rechnung vorhanden markieren")
+    @admin.action(description=gettext_lazy("Mark as invoice available"))
     def mark_has_invoice(self, request, queryset):
         updated = queryset.update(has_invoice=True)
-        self.message_user(request, f"{updated} Ausgabe(n) mit Rechnung markiert.", messages.SUCCESS)
+        self.message_user(
+            request,
+            ngettext(
+                "%(count)s expense marked with invoice.",
+                "%(count)s expenses marked with invoice.",
+                updated,
+            )
+            % {"count": updated},
+            messages.SUCCESS,
+        )
 
     fieldsets = (
         (
-            "Allgemein",
+            gettext_lazy("General"),
             {"fields": ("date", "description", "category", "amount")},
         ),
         (
-            "Details",
+            gettext_lazy("Details"),
             {"fields": ("has_invoice", "is_tax_deductible")},
         ),
     )
 
-    @admin.display(description="Beschreibung")
+    @admin.display(description=gettext_lazy("Description"))
     def description_short(self, obj):
         """Truncate description for list view"""
         if obj.description:
             return obj.description[:60] + "..." if len(obj.description) > 60 else obj.description
         return "-"
 
-    @admin.display(description="Kategorie")
+    @admin.display(description=gettext_lazy("Category"))
     def category_display(self, obj):
         """Display category with label"""
         return obj.get_category_display()
 
-    @admin.display(description="Betrag")
+    @admin.display(description=gettext_lazy("Amount"))
     def amount_display(self, obj):
         """Format amount with Euro symbol"""
         amount_str = f"{float(obj.amount):.2f}"
@@ -724,7 +809,7 @@ class TimeOffAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Additional Information",
+            gettext_lazy("Additional Information"),
             {
                 "fields": ("notes",),
                 "classes": ("collapse",),
@@ -732,18 +817,18 @@ class TimeOffAdmin(admin.ModelAdmin):
         ),
     )
 
-    @admin.display(description="Status")
+    @admin.display(description=gettext_lazy("Status"))
     def status_badge(self, obj):
         """Display colored status badge"""
         if obj.is_current:
             color = "#48bb78"  # green
-            status = "🏖️ Currently Off"
+            status = f"🏖️ {_('Currently Off')}"
         elif obj.is_upcoming:
             color = "#667eea"  # blue
-            status = "📅 Upcoming"
+            status = f"📅 {_('Upcoming')}"
         else:
             color = "#a0aec0"  # gray
-            status = "✅ Past"
+            status = f"✅ {_('Past')}"
 
         return format_html(
             '<span style="background: {}; color: white; padding: 3px 8px; '
@@ -769,7 +854,7 @@ class MarketingPeriodAdmin(admin.ModelAdmin):
     list_filter = ["practice"]
     ordering = ["-start_date"]
 
-    @admin.display(description="Aktiv", boolean=True)
+    @admin.display(description=gettext_lazy("Active"), boolean=True)
     def is_active_badge(self, obj):
         return obj.is_active()
 
@@ -791,20 +876,20 @@ class ClientTagAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Tag Information",
+            gettext_lazy("Tag Information"),
             {"fields": ("name", "slug", "category", "color", "description")},
         ),
         (
-            "Settings",
+            gettext_lazy("Settings"),
             {"fields": ("is_system",)},
         ),
         (
-            "Timestamps",
+            gettext_lazy("Timestamps"),
             {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
         ),
     )
 
-    @admin.display(description="Tag")
+    @admin.display(description=gettext_lazy("Tag"))
     def color_badge(self, obj):
         """Display tag with its color"""
         color_map = {
@@ -828,7 +913,7 @@ class ClientTagAdmin(admin.ModelAdmin):
             obj.name,
         )
 
-    @admin.display(description="Kategorie")
+    @admin.display(description=gettext_lazy("Category"))
     def category_badge(self, obj):
         """Display category as a colored badge"""
         badge_styles = {
@@ -843,14 +928,13 @@ class ClientTagAdmin(admin.ModelAdmin):
             obj.get_category_display(),
         )
 
-    @admin.display(description="Used By")
+    @admin.display(description=gettext_lazy("Used By"))
     def client_count(self, obj):
         """Display number of clients with this tag"""
         count = obj.clients.count()
         return format_html(
-            '<span style="font-weight: 600; color: #667eea;">{} client{}</span>',
-            count,
-            "s" if count != 1 else "",
+            '<span style="font-weight: 600; color: #667eea;">{}</span>',
+            ngettext("%(count)s client", "%(count)s clients", count) % {"count": count},
         )
 
     def get_readonly_fields(self, request, obj=None):
@@ -891,15 +975,15 @@ class PracticeTodoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Task Information",
+            gettext_lazy("Task Information"),
             {"fields": ("practice", "title", "description")},
         ),
         (
-            "Organization",
+            gettext_lazy("Organization"),
             {"fields": ("category", "priority", "due_date")},
         ),
         (
-            "Status",
+            gettext_lazy("Status"),
             {"fields": ("completed_at",)},
         ),
     )
@@ -913,7 +997,7 @@ class PracticeTodoAdmin(admin.ModelAdmin):
             return mark_safe('<span style="font-size: 18px;">⚠️</span>')
         return mark_safe('<span style="font-size: 18px;">⏳</span>')
 
-    @admin.display(description="Task", ordering="title")
+    @admin.display(description=gettext_lazy("Task"), ordering="title")
     def title_display(self, obj):
         """Display title with strikethrough if completed."""
         if obj.is_completed:
@@ -923,7 +1007,7 @@ class PracticeTodoAdmin(admin.ModelAdmin):
             )
         return obj.title
 
-    @admin.display(description="Category", ordering="category")
+    @admin.display(description=gettext_lazy("Category"), ordering="category")
     def category_badge(self, obj):
         """Display category as a colored badge."""
         badge_styles = {
@@ -941,7 +1025,7 @@ class PracticeTodoAdmin(admin.ModelAdmin):
             obj.get_category_display(),
         )
 
-    @admin.display(description="Priority", ordering="priority")
+    @admin.display(description=gettext_lazy("Priority"), ordering="priority")
     def priority_badge(self, obj):
         """Display priority as a colored badge."""
         badge_styles = {
@@ -957,16 +1041,25 @@ class PracticeTodoAdmin(admin.ModelAdmin):
             obj.get_priority_display(),
         )
 
-    @admin.action(description="Als erledigt markieren")
+    @admin.action(description=gettext_lazy("Mark as completed"))
     def mark_completed(self, request, queryset):
         """Mark selected tasks as completed."""
         updated = 0
         for todo in queryset.filter(completed_at__isnull=True):
             todo.mark_completed()
             updated += 1
-        self.message_user(request, f"{updated} Aufgabe(n) als erledigt markiert.", messages.SUCCESS)
+        self.message_user(
+            request,
+            ngettext(
+                "%(count)s task marked as completed.",
+                "%(count)s tasks marked as completed.",
+                updated,
+            )
+            % {"count": updated},
+            messages.SUCCESS,
+        )
 
-    @admin.action(description="Als unerledigt markieren")
+    @admin.action(description=gettext_lazy("Mark as incomplete"))
     def mark_incomplete(self, request, queryset):
         """Mark selected tasks as incomplete."""
         updated = 0
@@ -974,15 +1067,29 @@ class PracticeTodoAdmin(admin.ModelAdmin):
             todo.mark_incomplete()
             updated += 1
         self.message_user(
-            request, f"{updated} Aufgabe(n) als unerledigt markiert.", messages.SUCCESS
+            request,
+            ngettext(
+                "%(count)s task marked as incomplete.",
+                "%(count)s tasks marked as incomplete.",
+                updated,
+            )
+            % {"count": updated},
+            messages.SUCCESS,
         )
 
-    @admin.action(description="Hohe Priorität setzen")
+    @admin.action(description=gettext_lazy("Set high priority"))
     def set_high_priority(self, request, queryset):
         """Set selected tasks to high priority."""
         updated = queryset.update(priority="high")
         self.message_user(
-            request, f"{updated} Aufgabe(n) auf hohe Priorität gesetzt.", messages.SUCCESS
+            request,
+            ngettext(
+                "%(count)s task set to high priority.",
+                "%(count)s tasks set to high priority.",
+                updated,
+            )
+            % {"count": updated},
+            messages.SUCCESS,
         )
 
 
@@ -1021,7 +1128,7 @@ class BankTransactionAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
-            "Transaktionsdaten",
+            gettext_lazy("Transaction Data"),
             {
                 "fields": (
                     "practice",
@@ -1033,13 +1140,13 @@ class BankTransactionAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Zahlungspartner",
+            gettext_lazy("Payment Partner"),
             {
                 "fields": ("payer_name", "payer_iban", "reference"),
             },
         ),
         (
-            "Zuordnung",
+            gettext_lazy("Matching"),
             {
                 "fields": (
                     "matched_invoice",
@@ -1050,7 +1157,7 @@ class BankTransactionAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Status",
+            gettext_lazy("Status"),
             {
                 "fields": (
                     "processed",
@@ -1063,14 +1170,14 @@ class BankTransactionAdmin(admin.ModelAdmin):
         ),
     )
 
-    @admin.display(description="Zahler", ordering="payer_name")
+    @admin.display(description=gettext_lazy("Payer"), ordering="payer_name")
     def payer_name_display(self, obj):
         """Display payer name with truncation."""
         if len(obj.payer_name) > 30:
             return f"{obj.payer_name[:27]}..."
         return obj.payer_name
 
-    @admin.display(description="Betrag", ordering="amount")
+    @admin.display(description=gettext_lazy("Amount"), ordering="amount")
     def amount_display(self, obj):
         """Display amount with color coding."""
         color = "#16a34a" if obj.is_income else "#dc2626"  # green : red
@@ -1081,9 +1188,14 @@ class BankTransactionAdmin(admin.ModelAdmin):
             amount_str,
         )
 
-    @admin.display(description="Zuordnung", ordering="match_confidence")
+    @admin.display(description=gettext_lazy("Match"), ordering="match_confidence")
     def confidence_badge(self, obj):
-        """Display match confidence as a colored badge."""
+        """Display match confidence as a colored badge.
+
+        Reuses BankTransaction.CONFIDENCE_CHOICES (get_match_confidence_display())
+        instead of a separate hardcoded label map, so the badge text can't drift
+        out of sync with the model's own translated choices.
+        """
         badge_styles = {
             "exact": "background: #bbf7d0; color: #14532d;",
             "fuzzy": "background: #fef3c7; color: #713f12;",
@@ -1091,22 +1203,14 @@ class BankTransactionAdmin(admin.ModelAdmin):
             "ignored": "background: #e5e7eb; color: #374151;",
             "unmatched": "background: #fecaca; color: #7f1d1d;",
         }
-        labels = {
-            "exact": "Exakt",
-            "fuzzy": "Fuzzy",
-            "manual": "Manuell",
-            "ignored": "Ignoriert",
-            "unmatched": "Offen",
-        }
         style = badge_styles.get(obj.match_confidence, badge_styles["unmatched"])
-        label = labels.get(obj.match_confidence, obj.match_confidence)
         return format_html(
             '<span style="{}; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600;">{}</span>',
             style,
-            label,
+            obj.get_match_confidence_display(),
         )
 
-    @admin.display(description="Rechnung", ordering="matched_invoice")
+    @admin.display(description=gettext_lazy("Invoice"), ordering="matched_invoice")
     def matched_invoice_link(self, obj):
         """Display link to matched invoice."""
         if obj.matched_invoice:
@@ -1119,9 +1223,9 @@ class BankTransactionAdmin(admin.ModelAdmin):
 
 
 # Customize admin site headers
-admin.site.site_header = "Therapy Practice Management"
-admin.site.site_title = "Payments Admin"
-admin.site.index_title = "Welcome to Therapy Practice Management"
+admin.site.site_header = gettext_lazy("Therapy Practice Management")
+admin.site.site_title = gettext_lazy("Payments Admin")
+admin.site.index_title = gettext_lazy("Welcome to Therapy Practice Management")
 
 
 @admin.register(OperationalChecklistCompletion)
@@ -1146,7 +1250,7 @@ class ChecklistItemPauseAdmin(admin.ModelAdmin):
     ordering = ["checklist_type", "item_id"]
     readonly_fields = ["created_at"]
 
-    @admin.display(boolean=True, description="Aktiv")
+    @admin.display(boolean=True, description=gettext_lazy("Active"))
     def is_active(self, obj: ChecklistItemPause) -> bool:
         return obj.is_active
 
@@ -1170,20 +1274,32 @@ class PendingCalendarEventAdmin(admin.ModelAdmin):
     date_hierarchy = "event_date"
     actions = ["mark_pending", "mark_skipped"]
 
-    @admin.display(description="Klient")
+    @admin.display(description=gettext_lazy("Client"))
     def client_code(self, obj: PendingCalendarEvent) -> str:
         return obj.matched_client.client_code if obj.matched_client else "—"
 
-    @admin.action(description="Als ausstehend markieren")
+    @admin.action(description=gettext_lazy("Mark as pending"))
     def mark_pending(self, request, queryset):
         updated = queryset.update(status=PendingCalendarEvent.Status.PENDING)
-        self.message_user(request, f"{updated} Termine als ausstehend markiert.", messages.SUCCESS)
+        self.message_user(
+            request,
+            ngettext(
+                "%(count)s event marked as pending.", "%(count)s events marked as pending.", updated
+            )
+            % {"count": updated},
+            messages.SUCCESS,
+        )
 
-    @admin.action(description="Als übersprungen markieren")
+    @admin.action(description=gettext_lazy("Mark as skipped"))
     def mark_skipped(self, request, queryset):
         updated = queryset.update(status=PendingCalendarEvent.Status.SKIPPED)
         self.message_user(
-            request, f"{updated} Termine als übersprungen markiert.", messages.SUCCESS
+            request,
+            ngettext(
+                "%(count)s event marked as skipped.", "%(count)s events marked as skipped.", updated
+            )
+            % {"count": updated},
+            messages.SUCCESS,
         )
 
 
