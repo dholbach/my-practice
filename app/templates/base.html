@@ -10,7 +10,29 @@
     <script src="{% static 'js/htmx.min.js' %}" defer></script>
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
 </head>
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+    data-kbd-clients="{% trans 'Clients' %}"
+    data-kbd-invoices="{% trans 'Invoices' %}"
+    data-kbd-help="{% trans 'Help' %}"
+    data-kbd-new-client="{% trans 'New client' %}"
+    data-kbd-new-invoice="{% trans 'New invoice' %}"
+    data-kbd-edit-client="{% trans 'Edit client' %}"
+    data-kbd-edit-invoice="{% trans 'Edit invoice' %}"
+    data-kbd-help-title="{% trans 'Keyboard Shortcuts' %}"
+    data-kbd-help-intro="{% trans 'These shortcuts work everywhere (except in input fields).' %}"
+    data-kbd-global-nav="{% trans 'Global Navigation' %}"
+    data-kbd-on-this-page="{% trans 'On This Page' %}"
+    data-kbd-press="{% trans 'Press' %}"
+    data-kbd-or="{% trans 'or' %}"
+    data-kbd-to-close="{% trans 'to close' %}"
+    data-kbd-for-shortcuts="{% trans 'for keyboard shortcuts' %}"
+    data-kbd-for-search="{% trans 'for search' %}"
+    data-kbd-shortcut-label="{% trans 'Shortcut' %}"
+    data-search-placeholder="{% trans 'Search... (c:client/inquiry, i:invoice)' %}"
+    data-search-loading="{% trans 'Searching…' %}"
+    data-search-error="{% trans 'Error while searching' %}"
+    data-search-no-results="{% trans 'No results' %}"
+>
     <div class="container">
         <div class="header">
             <h1>

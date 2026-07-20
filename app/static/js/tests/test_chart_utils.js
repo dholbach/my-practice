@@ -276,10 +276,10 @@ function testValidateChartData() {
 // Test getValidationMessage
 function testGetValidationMessage() {
     const tests = [
-        { input: 'empty', expected: 'Keine Daten vorhanden', desc: 'Empty reason' },
-        { input: 'all_zeros', expected: 'Keine Daten im ausgewählten Zeitraum', desc: 'All zeros reason' },
-        { input: 'invalid_max', expected: 'Keine gültigen Daten vorhanden', desc: 'Invalid max reason' },
-        { input: 'unknown', expected: 'Keine Daten vorhanden', desc: 'Unknown reason defaults' }
+        { input: 'empty', expected: 'No data available', desc: 'Empty reason' },
+        { input: 'all_zeros', expected: 'No data in selected period', desc: 'All zeros reason' },
+        { input: 'invalid_max', expected: 'No valid data available', desc: 'Invalid max reason' },
+        { input: 'unknown', expected: 'No data available', desc: 'Unknown reason defaults' }
     ];
 
     const results = tests.map(test => {
