@@ -51,7 +51,14 @@ class Command(BaseCommand):
             "Heilpraktikerin für Psychotherapie",
             no_input,
         )
-        short_title = self._ask("Short title (for invoice headers)", "Psychotherapie", no_input)
+        short_title_de = self._ask(
+            "Short title, German (for invoice headers and the German UI)",
+            "Psychotherapie",
+            no_input,
+        )
+        short_title_en = self._ask(
+            "Short title, English (for the English UI)", "Psychotherapy", no_input
+        )
 
         self.stdout.write("\nAddress (appears on invoices):")
         street = self._ask("  Street", "", no_input)
@@ -79,7 +86,8 @@ class Command(BaseCommand):
             name=name,
             slug=slug,
             title=title,
-            short_title=short_title,
+            short_title_de=short_title_de,
+            short_title_en=short_title_en,
             street=street,
             postal_code=postal_code,
             city=city,

@@ -33,11 +33,20 @@
                 <div class="help-text">{{ form.name.help_text }}</div>
                 {% endif %}
             </div>
+        </div>
+        <div class="form-grid">
             <div class="form-group">
-                <label for="{{ form.short_title.id_for_label }}">{% trans "Short title" %}</label>
-                {{ form.short_title }}
-                {% if form.short_title.help_text %}
-                <div class="help-text">{{ form.short_title.help_text }}</div>
+                <label for="{{ form.short_title_de.id_for_label }}">{% trans "Short title (German)" %}</label>
+                {{ form.short_title_de }}
+                {% if form.short_title_de.help_text %}
+                <div class="help-text">{{ form.short_title_de.help_text }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.short_title_en.id_for_label }}">{% trans "Short title (English)" %}</label>
+                {{ form.short_title_en }}
+                {% if form.short_title_en.help_text %}
+                <div class="help-text">{{ form.short_title_en.help_text }}</div>
                 {% endif %}
             </div>
         </div>

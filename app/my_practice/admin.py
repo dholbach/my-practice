@@ -46,7 +46,8 @@ class PracticeAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "name",
-                    "short_title",
+                    "short_title_de",
+                    "short_title_en",
                     "title",
                     "subtitle_de",
                     "subtitle_en",

@@ -491,8 +491,8 @@ class Command(BaseCommand):
             return  # clear-only; run without --clear to reseed
 
         # Always ensure the demo practice has the correct display name (idempotent).
-        Practice.objects.filter(slug=DEMO_SLUG).exclude(short_title="Therapie (Demo)").update(
-            short_title="Therapie (Demo)"
+        Practice.objects.filter(slug=DEMO_SLUG).exclude(short_title_de="Therapie (Demo)").update(
+            short_title_de="Therapie (Demo)", short_title_en="Therapy (Demo)"
         )
 
         # Idempotency check: fictional names like "Frodo Baggins" won't appear in a real practice
@@ -543,7 +543,8 @@ class Command(BaseCommand):
         practice = Practice.objects.create(
             slug=DEMO_SLUG,
             name="Anna Schmidt",
-            short_title="Therapie (Demo)",
+            short_title_de="Therapie (Demo)",
+            short_title_en="Therapy (Demo)",
             title="Heilpraktikerin für Psychotherapie",
         )
         self.stdout.write(f"  ✓ Created practice: {practice.name}")

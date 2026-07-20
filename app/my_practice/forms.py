@@ -211,7 +211,8 @@ class PracticeEditForm(StyledFormMixin, forms.ModelForm):
         model = Practice
         fields = [
             "name",
-            "short_title",
+            "short_title_de",
+            "short_title_en",
             "title",
             "subtitle_de",
             "subtitle_en",
