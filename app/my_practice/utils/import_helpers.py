@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from django.contrib import messages
 from django.db import models
 from django.http import HttpRequest
+from django.utils.translation import gettext as _
 
 if TYPE_CHECKING:
     from ..models import Client
@@ -71,7 +72,7 @@ class BaseCSVImporter:
 
     def add_error(self, row_num: int, message: str) -> None:
         """Add an error message for a specific row."""
-        self.errors.append(f"Zeile {row_num}: {message}")
+        self.errors.append(_("Row %(row)s: %(message)s") % {"row": row_num, "message": message})
 
     def increment_imported(self) -> None:
         """Increment imported counter."""
@@ -92,20 +93,21 @@ class BaseCSVImporter:
         """
         summary_parts = []
         if self.imported_count:
-            summary_parts.append(f"{self.imported_count} neu importiert")
+            summary_parts.append(_("%(count)s newly imported") % {"count": self.imported_count})
         if self.updated_count:
-            summary_parts.append(f"{self.updated_count} aktualisiert")
+            summary_parts.append(_("%(count)s updated") % {"count": self.updated_count})
         if self.skipped_count:
-            summary_parts.append(f"{self.skipped_count} übersprungen")
+            summary_parts.append(_("%(count)s skipped") % {"count": self.skipped_count})
 
-        summary = ", ".join(summary_parts) if summary_parts else "Keine Daten importiert"
+        summary = ", ".join(summary_parts) if summary_parts else _("No data imported")
 
         if self.imported_count > 0 and not self.errors:
-            messages.success(self.request, f"✓ {summary}!")
+            messages.success(self.request, _("✓ %(summary)s!") % {"summary": summary})
         elif self.errors:
             messages.warning(
                 self.request,
-                f"Import abgeschlossen: {summary}. {len(self.errors)} Fehler aufgetreten.",
+                _("Import complete: %(summary)s. %(count)s errors occurred.")
+                % {"summary": summary, "count": len(self.errors)},
             )
             # Show first 5-10 errors
             for error in self.errors[:10]:
@@ -162,7 +164,7 @@ class BaseCSVImporter:
             return len(self.errors) == 0
 
         except Exception as e:
-            messages.error(self.request, f"Import-Fehler: {str(e)}")
+            messages.error(self.request, _("Import error: %(error)s") % {"error": str(e)})
             return False
 
 

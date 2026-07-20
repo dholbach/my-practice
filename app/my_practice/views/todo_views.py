@@ -10,6 +10,8 @@ from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
 from ..models import PracticeTodo
 from ..utils import AgendaWidgetBuilder, WeeklyFocusWidgetBuilder
@@ -86,7 +88,7 @@ class TodoCreateView(PracticeScopedCreateView):
     template_name = "my_practice/todo_form.html"
     fields = ["title", "description", "category", "priority", "due_date"]
     success_url = reverse_lazy("todo_list")
-    success_message = "TODO '{obj.title}' erfolgreich erstellt."
+    success_message = gettext_lazy("'{obj.title}' created successfully.")
 
     def form_valid(self, form):
         """Ensure practice is set before saving"""
@@ -108,7 +110,7 @@ class TodoUpdateView(PracticeScopedUpdateView):
         "completed_at",
     ]
     success_url = reverse_lazy("todo_list")
-    success_message = "TODO '{obj.title}' erfolgreich aktualisiert."
+    success_message = gettext_lazy("'{obj.title}' updated successfully.")
 
 
 class TodoDeleteView(PracticeScopedDeleteView):
@@ -118,7 +120,7 @@ class TodoDeleteView(PracticeScopedDeleteView):
     template_name = "my_practice/todo_confirm_delete.html"
     success_url = reverse_lazy("todo_list")
     context_object_name = "todo"
-    success_message = "TODO '{obj.title}' erfolgreich gelöscht."
+    success_message = gettext_lazy("'{obj.title}' deleted successfully.")
 
 
 def _build_todo_context(request: HttpRequest) -> dict[str, Any]:
@@ -174,10 +176,10 @@ def todo_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse | JsonRe
     # Toggle completion
     if todo.is_completed:
         todo.mark_incomplete()
-        message = f"TODO '{todo.title}' als offen markiert."
+        message = _("'%(title)s' marked as open.") % {"title": todo.title}
     else:
         todo.mark_completed()
-        message = f"TODO '{todo.title}' als abgeschlossen markiert."
+        message = _("'%(title)s' marked as completed.") % {"title": todo.title}
 
     # Return HTMX partial
     if request.headers.get("HX-Request"):
