@@ -4,6 +4,7 @@ from datetime import date
 from enum import StrEnum
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
 
@@ -23,13 +24,13 @@ class InquirySource(StrEnum):
 
 INQUIRY_SOURCE_CHOICES = [
     (InquirySource.GOOGLE_ADS, "Google Ads"),
-    (InquirySource.GOOGLE_ORGANIC, "Google (organisch)"),
+    (InquirySource.GOOGLE_ORGANIC, _("Google (organic)")),
     (InquirySource.WEBSITE, "Website"),
-    (InquirySource.REFERRAL, "Empfehlung"),
-    (InquirySource.DIRECTORY, "Therapeutenliste"),
+    (InquirySource.REFERRAL, _("Referral")),
+    (InquirySource.DIRECTORY, _("Therapist directory")),
     (InquirySource.ITS_COMPLICATED, "It's Complicated"),
-    (InquirySource.NETWORK, "Netzwerk / Kolleg:innen"),
-    (InquirySource.OTHER, "Sonstiges"),
+    (InquirySource.NETWORK, _("Network / colleagues")),
+    (InquirySource.OTHER, _("Other")),
 ]
 
 
@@ -48,15 +49,15 @@ class InquiryStatus(StrEnum):
 
 
 INQUIRY_STATUS_CHOICES = [
-    (InquiryStatus.NEW, "Neu"),
-    (InquiryStatus.CONTACTED, "Kontaktiert"),
-    (InquiryStatus.INTRO_MEETING, "Vorgespräch"),
-    (InquiryStatus.WAITLIST, "Warteliste"),
-    (InquiryStatus.IN_INTAKE, "Aufnahme läuft"),
-    (InquiryStatus.CONVERTED, "Aufgenommen"),
-    (InquiryStatus.DECLINED, "Abgelehnt"),
-    (InquiryStatus.UNREACHABLE, "Nicht erreichbar"),
-    (InquiryStatus.NOT_SUITABLE, "Kein Match"),
+    (InquiryStatus.NEW, _("New")),
+    (InquiryStatus.CONTACTED, _("Contacted")),
+    (InquiryStatus.INTRO_MEETING, _("Intro meeting")),
+    (InquiryStatus.WAITLIST, _("Waitlist")),
+    (InquiryStatus.IN_INTAKE, _("Intake in progress")),
+    (InquiryStatus.CONVERTED, _("Onboarded")),
+    (InquiryStatus.DECLINED, _("Declined")),
+    (InquiryStatus.UNREACHABLE, _("Unreachable")),
+    (InquiryStatus.NOT_SUITABLE, _("Not a match")),
 ]
 
 
@@ -75,8 +76,8 @@ class ClientInquiryQuerySet(PracticeScopedQuerySet):
 
 
 INQUIRY_LANGUAGE_CHOICES = [
-    ("de", "Deutsch"),
-    ("en", "English"),
+    ("de", _("German")),
+    ("en", _("English")),
 ]
 
 
@@ -92,64 +93,64 @@ class ClientInquiry(TimestampedModel):
         "Practice",
         on_delete=models.CASCADE,
         related_name="inquiries",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
     )
-    full_name = models.CharField(max_length=200, verbose_name="Name")
-    email = models.EmailField(blank=True, verbose_name="E-Mail")
-    phone = models.CharField(max_length=50, blank=True, verbose_name="Telefon")
+    full_name = models.CharField(max_length=200, verbose_name=_("Name"))
+    email = models.EmailField(blank=True, verbose_name=_("Email"))
+    phone = models.CharField(max_length=50, blank=True, verbose_name=_("Phone"))
     source = models.CharField(
         max_length=20,
         choices=INQUIRY_SOURCE_CHOICES,
-        verbose_name="Quelle",
+        verbose_name=_("Source"),
     )
     status = models.CharField(
         max_length=20,
         choices=INQUIRY_STATUS_CHOICES,
         default=InquiryStatus.NEW,
-        verbose_name="Status",
+        verbose_name=_("Status"),
     )
     inquiry_date = models.DateField(
         default=date.today,
-        verbose_name="Eingangsdatum",
+        verbose_name=_("Date received"),
     )
     language = models.CharField(
         max_length=2,
         choices=INQUIRY_LANGUAGE_CHOICES,
         default="de",
-        verbose_name="Sprache",
-        help_text="Bevorzugte Sprache der anfragenden Person",
+        verbose_name=_("Language"),
+        help_text=_("Preferred language of the person inquiring"),
     )
-    notes = models.TextField(blank=True, verbose_name="Notizen")
+    notes = models.TextField(blank=True, verbose_name=_("Notes"))
     initial_contact_notes = models.TextField(
         blank=True,
-        verbose_name="Erstkontakt-Notizen",
-        help_text="Notizen aus dem ersten Vorgespräch (Anliegen, Erwartungen, Eindrücke)",
+        verbose_name=_("Initial contact notes"),
+        help_text=_("Notes from the initial conversation (concerns, expectations, impressions)"),
     )
 
     # Milestone dates — each records when that pipeline stage was reached
     contacted_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Rückmeldung am",
-        help_text="Datum deiner ersten Antwort / Kontaktaufnahme",
+        verbose_name=_("Responded on"),
+        help_text=_("Date of your first response / contact"),
     )
     intro_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Vorgespräch am",
-        help_text="Datum des Vorgesprächs",
+        verbose_name=_("Intro meeting on"),
+        help_text=_("Date of the intro meeting"),
     )
     decision_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Entscheidung am",
-        help_text="Datum der Klient:in-Entscheidung (Aufnahme oder Absage / Kein Match)",
+        verbose_name=_("Decision on"),
+        help_text=_("Date of the client decision (intake or decline / not a match)"),
     )
     converted_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Aufgenommen am",
-        help_text="Datum der Aufnahme als Klient:in",
+        verbose_name=_("Onboarded on"),
+        help_text=_("Date of onboarding as a client"),
     )
 
     converted_client = models.OneToOneField(
@@ -158,15 +159,15 @@ class ClientInquiry(TimestampedModel):
         null=True,
         blank=True,
         related_name="source_inquiry",
-        verbose_name="Klient:in (nach Aufnahme)",
+        verbose_name=_("Client (after onboarding)"),
     )
 
     objects = PracticeScopedManager.from_queryset(ClientInquiryQuerySet)()
 
     class Meta:
         ordering = ["-inquiry_date", "-created_at"]
-        verbose_name = "Anfrage"
-        verbose_name_plural = "Anfragen"
+        verbose_name = _("Inquiry")
+        verbose_name_plural = _("Inquiries")
 
     def __str__(self) -> str:
         return f"{self.full_name} ({self.get_status_display()})"
@@ -197,28 +198,28 @@ class MarketingPeriod(TimestampedModel):
         "Practice",
         on_delete=models.CASCADE,
         related_name="marketing_periods",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
     )
-    start_date = models.DateField(verbose_name="Von")
+    start_date = models.DateField(verbose_name=_("From"))
     end_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Bis",
-        help_text="Leer lassen wenn noch aktiv",
+        verbose_name=_("To"),
+        help_text=_("Leave empty if still active"),
     )
     description = models.CharField(
         max_length=500,
-        verbose_name="Beschreibung",
-        help_text='z.B. "Google Ads 5 €/Tag" oder "It\'s Complicated Premium"',
+        verbose_name=_("Description"),
+        help_text=_('e.g. "Google Ads €5/day" or "It\'s Complicated Premium"'),
     )
 
     class Meta:
         ordering = ["-start_date"]
-        verbose_name = "Marketing-Zeitraum"
-        verbose_name_plural = "Marketing-Zeiträume"
+        verbose_name = _("Marketing period")
+        verbose_name_plural = _("Marketing periods")
 
     def __str__(self) -> str:
-        end = self.end_date.strftime("%m/%Y") if self.end_date else "laufend"
+        end = self.end_date.strftime("%m/%Y") if self.end_date else str(_("ongoing"))
         return f"{self.start_date.strftime('%m/%Y')}–{end}: {self.description}"
 
     def is_active(self) -> bool:

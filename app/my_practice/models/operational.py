@@ -8,6 +8,7 @@ from enum import StrEnum
 
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from .base import TimestampedModel
 
@@ -26,38 +27,42 @@ class OperationalChecklistCompletion(models.Model):
         QUARTERLY = "quarterly"
         ANNUAL = "annual"
 
+    # Wording matches utils/dashboard_widgets.py's CHECKLIST_CADENCES — keep in sync.
     CHECKLIST_TYPES = [
-        (ChecklistType.WEEKLY, "Wöchentliche Sicherung"),
-        (ChecklistType.MONTHLY, "Monatlicher Restore-Test"),
-        (ChecklistType.QUARTERLY, "MicroSD-Offsite-Backup (Karte A/B im Wechsel, alle 2 Wochen)"),
-        (ChecklistType.ANNUAL, "Jährliche Sicherheitsüberprüfung"),
+        (ChecklistType.WEEKLY, _("Weekly backup")),
+        (ChecklistType.MONTHLY, _("Monthly restore test")),
+        (
+            ChecklistType.QUARTERLY,
+            _("MicroSD offsite backup (card A/B alternating, every 2 weeks)"),
+        ),
+        (ChecklistType.ANNUAL, _("Annual security review")),
     ]
 
     checklist_type = models.CharField(
         max_length=20,
         choices=CHECKLIST_TYPES,
-        verbose_name="Checklisten-Typ",
+        verbose_name=_("Checklist type"),
     )
     year_month = models.DateField(
-        verbose_name="Periode",
-        help_text="First day of the period (e.g. 2026-03-01 for March 2026)",
+        verbose_name=_("Period"),
+        help_text=_("First day of the period (e.g. 2026-03-01 for March 2026)"),
     )
     completed_at = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name="Abgeschlossen am",
+        verbose_name=_("Completed on"),
     )
     notes = models.TextField(
         blank=True,
-        verbose_name="Notizen",
-        help_text='z.B. "Restore-Test OK, 676 Rechnungen verifiziert"',
+        verbose_name=_("Notes"),
+        help_text=_('e.g. "Restore test OK, 676 invoices verified"'),
     )
 
     class Meta:
         ordering = ["-year_month", "checklist_type"]
         unique_together = ("checklist_type", "year_month")
-        verbose_name = "Checklisten-Abschluss"
-        verbose_name_plural = "Checklisten-Abschlüsse"
+        verbose_name = _("Checklist completion")
+        verbose_name_plural = _("Checklist completions")
 
     def __str__(self) -> str:
         status = "✅" if self.completed_at else "⏳"
@@ -93,32 +98,34 @@ class ChecklistItemPause(TimestampedModel):
     checklist_type = models.CharField(
         max_length=20,
         choices=CHECKLIST_TYPES,
-        verbose_name="Checklisten-Typ",
+        verbose_name=_("Checklist type"),
     )
     item_id = models.CharField(
         max_length=50,
-        verbose_name="Element-ID",
-        help_text="Matches the item id in CHECKLIST_ITEMS (e.g. 'pick_card')",
+        verbose_name=_("Item ID"),
+        help_text=_("Matches the item id in CHECKLIST_ITEMS (e.g. 'pick_card')"),
     )
     reason = models.TextField(
-        verbose_name="Grund",
-        help_text="Warum ist dieser Schritt pausiert?",
+        verbose_name=_("Reason"),
+        help_text=_("Why is this step paused?"),
     )
     paused_until = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Pausiert bis",
-        help_text="Leer = unbegrenzt. Datum = Pause läuft automatisch ab.",
+        verbose_name=_("Paused until"),
+        help_text=_("Empty = indefinite. Date = pause expires automatically."),
     )
 
     class Meta:
         unique_together = ("checklist_type", "item_id")
-        verbose_name = "Checklisten-Pause"
-        verbose_name_plural = "Checklisten-Pausen"
+        verbose_name = _("Checklist pause")
+        verbose_name_plural = _("Checklist pauses")
 
     def __str__(self) -> str:
-        until = self.paused_until.strftime("%d.%m.%Y") if self.paused_until else "unbegrenzt"
-        return f"⏸ {self.checklist_type}/{self.item_id} (bis {until})"
+        until = (
+            self.paused_until.strftime("%d.%m.%Y") if self.paused_until else str(_("indefinite"))
+        )
+        return f"⏸ {self.checklist_type}/{self.item_id} ({_('until')} {until})"
 
     @property
     def is_active(self) -> bool:

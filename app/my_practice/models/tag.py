@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import Any
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from .base import TimestampedModel
 
@@ -34,63 +35,65 @@ class ClientTag(TimestampedModel):
         EXIT = "exit"
 
     TAG_COLORS = [
-        (Color.RED, "Rot"),
-        (Color.ORANGE, "Orange"),
-        (Color.YELLOW, "Gelb"),
-        (Color.GREEN, "Grün"),
-        (Color.BLUE, "Blau"),
-        (Color.PURPLE, "Lila"),
-        (Color.PINK, "Rosa"),
-        (Color.GRAY, "Grau"),
+        (Color.RED, _("Red")),
+        (Color.ORANGE, _("Orange")),
+        (Color.YELLOW, _("Yellow")),
+        (Color.GREEN, _("Green")),
+        (Color.BLUE, _("Blue")),
+        (Color.PURPLE, _("Purple")),
+        (Color.PINK, _("Pink")),
+        (Color.GRAY, _("Gray")),
     ]
 
     TAG_CATEGORIES = [
-        (Category.GENERAL, "Allgemein"),
-        (Category.ATTENTION, "Benötigt Aufmerksamkeit"),
-        (Category.EXIT, "Austrittsgründe"),
+        (Category.GENERAL, _("General")),
+        (Category.ATTENTION, _("Needs attention")),
+        (Category.EXIT, _("Exit reasons")),
     ]
 
     name = models.CharField(
         max_length=50,
         unique=True,
-        verbose_name="Name",
-        help_text="Tag name (e.g., 'missing-paperwork', 'follow-up')",
+        verbose_name=_("Name"),
+        help_text=_("Tag name (e.g., 'missing-paperwork', 'follow-up')"),
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        verbose_name="Slug",
-        help_text="URL-friendly version of the name (auto-generated)",
+        verbose_name=_("Slug"),
+        help_text=_("URL-friendly version of the name (auto-generated)"),
     )
     color = models.CharField(
         max_length=20,
         choices=TAG_COLORS,
         default="blue",
-        verbose_name="Farbe",
-        help_text="Display color for the tag",
+        verbose_name=_("Color"),
+        help_text=_("Display color for the tag"),
     )
     category = models.CharField(
         max_length=20,
         choices=TAG_CATEGORIES,
         default="general",
-        verbose_name="Kategorie",
-        help_text="Tag category: General (informational), Needs Attention (priority), or Exit Reasons (documentation)",
+        verbose_name=_("Category"),
+        help_text=_(
+            "Tag category: General (informational), Needs Attention (priority), or Exit Reasons (documentation)"
+        ),
     )
     description = models.TextField(
         blank=True,
-        verbose_name="Beschreibung",
-        help_text="Optional description of what this tag represents",
+        verbose_name=_("Description"),
+        help_text=_("Optional description of what this tag represents"),
     )
     is_system = models.BooleanField(
         default=False,
-        verbose_name="Systemtag",
-        help_text="System-generated tags (like 'no-next-session') cannot be manually edited",
+        verbose_name=_("System tag"),
+        help_text=_("System-generated tags (like 'no-next-session') cannot be manually edited"),
     )
 
     class Meta:
         ordering = ["name"]
-        verbose_name = "Klient-Tag"
-        verbose_name_plural = "Klient-Tags"
+        verbose_name = _("Client tag")
+        verbose_name_plural = _("Client tags")
 
     @property
     def category_priority(self) -> int:
