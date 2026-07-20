@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Aufgaben{% endblock %}
+{% block title %}{% trans "Tasks" %}{% endblock %}
 
 {% block page_icon %}✅{% endblock %}
-{% block page_title %}Aufgaben{% endblock %}
-{% block page_subtitle %}Aufgaben & Planung{% endblock %}
+{% block page_title %}{% trans "Tasks" %}{% endblock %}
+{% block page_subtitle %}{% trans "Tasks & Planning" %}{% endblock %}
 
 {% block content %}
 {% include 'includes/todo_content.html' %}

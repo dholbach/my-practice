@@ -1,42 +1,42 @@
 {% extends 'base.html' %}
 {% load payment_tags %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Abrechnung {{ billing_month|date:"F Y" }}{% endblock %}
+{% block title %}{% blocktrans with month=billing_month|date:"F Y" %}Billing {{ month }}{% endblocktrans %}{% endblock %}
 {% block page_icon %}📅{% endblock %}
-{% block page_title %}Monatsabrechnung{% endblock %}
+{% block page_title %}{% trans "Monthly billing" %}{% endblock %}
 {% block page_subtitle %}{{ billing_month|date:"F Y" }}{% endblock %}
 
 {% block content %}
 
 <!-- Month navigation -->
 <div class="billing-nav">
-    <a href="{% url 'monthly_billing_overview' month=prev_month_str %}" class="btn btn-secondary btn-sm">‹ Vormonat</a>
+    <a href="{% url 'monthly_billing_overview' month=prev_month_str %}" class="btn btn-secondary btn-sm">‹ {% trans "Previous month" %}</a>
     <span class="billing-nav__month">{{ billing_month|date:"F Y" }}</span>
     {% if next_month_str %}
-    <a href="{% url 'monthly_billing_overview' month=next_month_str %}" class="btn btn-secondary btn-sm">Nächster ›</a>
+    <a href="{% url 'monthly_billing_overview' month=next_month_str %}" class="btn btn-secondary btn-sm">{% trans "Next month" %} ›</a>
     {% else %}
-    <span class="btn btn-secondary btn-sm disabled">Nächster ›</span>
+    <span class="btn btn-secondary btn-sm disabled">{% trans "Next month" %} ›</span>
     {% endif %}
-    <a href="{% url 'billing_open_overview' %}" class="btn btn-secondary btn-sm billing-nav__open-link" title="Alle offenen Posten über alle Monate">⚠️ Alle offen</a>
+    <a href="{% url 'billing_open_overview' %}" class="btn btn-secondary btn-sm billing-nav__open-link" title="{% trans 'All open items across all months' %}">⚠️ {% trans "All open" %}</a>
 </div>
 
 <!-- Summary bar -->
 {% if summary.total %}
 <div class="billing-summary">
     {% if summary.warning %}
-    <span class="billing-summary__chip chip-warning">⚠️ {{ summary.warning }} offen</span>
+    <span class="billing-summary__chip chip-warning">⚠️ {% blocktrans with count=summary.warning %}{{ count }} open{% endblocktrans %}</span>
     {% endif %}
     {% if summary.draft %}
-    <span class="billing-summary__chip chip-draft">📄 {{ summary.draft }} Entwurf{{ summary.draft|pluralize:"e" }}</span>
+    <span class="billing-summary__chip chip-draft">📄 {% blocktrans count count=summary.draft %}{{ count }} draft{% plural %}{{ count }} drafts{% endblocktrans %}</span>
     {% endif %}
     {% if summary.sent %}
-    <span class="billing-summary__chip chip-sent">📤 {{ summary.sent }} versendet</span>
+    <span class="billing-summary__chip chip-sent">📤 {% blocktrans with count=summary.sent %}{{ count }} sent{% endblocktrans %}</span>
     {% endif %}
     {% if summary.ok %}
-    <span class="billing-summary__chip chip-ok">✅ {{ summary.ok }} bezahlt</span>
+    <span class="billing-summary__chip chip-ok">✅ {% blocktrans with count=summary.ok %}{{ count }} paid{% endblocktrans %}</span>
     {% endif %}
-    <span class="billing-summary__total text-muted">{{ summary.total }} Klient{{ summary.total|pluralize:",en" }}</span>
+    <span class="billing-summary__total text-muted">{% blocktrans count count=summary.total %}{{ count }} client{% plural %}{{ count }} clients{% endblocktrans %}</span>
 </div>
 {% endif %}
 
@@ -44,13 +44,13 @@
 <table class="data-table billing-table">
     <thead>
         <tr>
-            <th>Klient</th>
-            <th class="text-center">Kalender</th>
-            <th class="text-center">Sitzungen</th>
-            <th class="text-center">Abgerechnet</th>
-            <th>Rechnung</th>
-            <th>Status</th>
-            <th>Aktionen</th>
+            <th>{% trans "Client" %}</th>
+            <th class="text-center">{% trans "Calendar" %}</th>
+            <th class="text-center">{% trans "Sessions" %}</th>
+            <th class="text-center">{% trans "Billed" %}</th>
+            <th>{% trans "Invoice" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Actions" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -63,7 +63,7 @@
             </td>
             <td class="text-center">
                 {% if row.pending_count %}
-                <a href="{% url 'calendar_approval_queue' %}" class="badge badge-warning" title="{{ row.pending_count }} ausstehende Termine">
+                <a href="{% url 'calendar_approval_queue' %}" class="badge badge-warning" title="{% blocktrans with count=row.pending_count %}{{ count }} pending appointments{% endblocktrans %}">
                     {{ row.pending_count }}
                 </a>
                 {% else %}
@@ -88,7 +88,7 @@
                 {{ row.billed_session_count }}/{{ total }}
                 {% endif %}
                 {% if row.cancelled_billed_count %}
-                <span class="badge badge-danger ms-1" title="{{ row.cancelled_billed_count }} abgesagte Sitzung(en) in Rechnung">🚫{{ row.cancelled_billed_count }}</span>
+                <span class="badge badge-danger ms-1" title="{% blocktrans with count=row.cancelled_billed_count %}{{ count }} cancelled session(s) on invoice{% endblocktrans %}">🚫{{ row.cancelled_billed_count }}</span>
                 {% endif %}
                 {% else %}
                 <span class="text-muted">–</span>
@@ -102,7 +102,7 @@
                 </a>
                 <span class="status-badge {{ row.primary_invoice.status }}">{{ row.primary_invoice.get_status_display|upper }}</span>
                 {% if row.invoices|length > 1 %}
-                <span class="text-muted" title="{{ row.invoices|length }} Rechnungen">+{{ row.invoices|length|add:"-1" }}</span>
+                <span class="text-muted" title="{% blocktrans with count=row.invoices|length %}{{ count }} invoices{% endblocktrans %}">+{{ row.invoices|length|add:"-1" }}</span>
                 {% endif %}
                 {% else %}
                 <span class="text-muted">–</span>
@@ -114,9 +114,9 @@
                 </span>
             </td>
             <td class="billing-row__actions">
-                <a href="{% url 'client_detail' row.client.pk %}" class="action-link" title="Klient öffnen">👤</a>
+                <a href="{% url 'client_detail' row.client.pk %}" class="action-link" title="{% trans 'Open client' %}">👤</a>
                 {% if row.primary_invoice %}
-                <a href="{% url 'invoice_detail' row.primary_invoice.pk %}" class="action-link" title="Rechnung öffnen">📄</a>
+                <a href="{% url 'invoice_detail' row.primary_invoice.pk %}" class="action-link" title="{% trans 'Open invoice' %}">📄</a>
                 {% if row.unbilled_sessions and row.primary_invoice.status == 'draft' %}
                 <form method="post" action="{% url 'invoice_add_sessions' row.primary_invoice.pk %}" class="action-form">
                     {% csrf_token %}
@@ -124,10 +124,10 @@
                     {% for session in row.unbilled_sessions %}
                     <input type="hidden" name="session_ids" value="{{ session.pk }}">
                     {% endfor %}
-                    <button type="submit" class="action-link action-link--button" title="{{ row.unbilled_count }} Sitzung{% if row.unbilled_count != 1 %}en{% endif %} zu {{ row.primary_invoice.invoice_number }} hinzufügen">➕</button>
+                    <button type="submit" class="action-link action-link--button" title="{% blocktrans count count=row.unbilled_count with number=row.primary_invoice.invoice_number %}Add {{ count }} session to {{ number }}{% plural %}Add {{ count }} sessions to {{ number }}{% endblocktrans %}">➕</button>
                 </form>
                 {% elif row.cancelled_billed_count %}
-                <a href="{% url 'invoice_edit' row.primary_invoice.pk %}" class="action-link" title="Rechnung bearbeiten">✏️</a>
+                <a href="{% url 'invoice_edit' row.primary_invoice.pk %}" class="action-link" title="{% trans 'Edit invoice' %}">✏️</a>
                 {% endif %}
                 {% else %}
                 {% if row.unbilled_sessions %}
@@ -138,14 +138,14 @@
                     {% for session in row.unbilled_sessions %}
                     <input type="hidden" name="session_ids" value="{{ session.pk }}">
                     {% endfor %}
-                    <button type="submit" class="action-link action-link--button" title="Entwurf mit {{ row.unbilled_count }} Sitzung{% if row.unbilled_count != 1 %}en{% endif %} erstellen">➕</button>
+                    <button type="submit" class="action-link action-link--button" title="{% blocktrans count count=row.unbilled_count %}Create draft with {{ count }} session{% plural %}Create draft with {{ count }} sessions{% endblocktrans %}">➕</button>
                 </form>
                 {% else %}
-                <a href="{% url 'invoice_create' %}?client={{ row.client.pk }}" class="action-link" title="Entwurf erstellen">➕</a>
+                <a href="{% url 'invoice_create' %}?client={{ row.client.pk }}" class="action-link" title="{% trans 'Create draft' %}">➕</a>
                 {% endif %}
                 {% endif %}
                 {% if row.pending_count %}
-                <a href="{% url 'calendar_approval_queue' %}" class="action-link" title="Kalender prüfen">📅</a>
+                <a href="{% url 'calendar_approval_queue' %}" class="action-link" title="{% trans 'Check calendar' %}">📅</a>
                 {% endif %}
             </td>
         </tr>
@@ -155,8 +155,8 @@
 
 {% else %}
 <div class="empty-state">
-    <p class="empty-state-msg">Keine Aktivität für {{ billing_month|date:"F Y" }}.</p>
-    <p class="text-muted">Sitzungen, Kalendertermine und Rechnungen erscheinen hier, sobald sie für diesen Monat vorliegen.</p>
+    <p class="empty-state-msg">{% blocktrans with month=billing_month|date:"F Y" %}No activity for {{ month }}.{% endblocktrans %}</p>
+    <p class="text-muted">{% trans "Sessions, calendar events, and invoices will appear here once available for this month." %}</p>
 </div>
 {% endif %}
 

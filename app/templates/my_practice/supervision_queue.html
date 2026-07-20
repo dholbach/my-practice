@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Supervision – Offene Themen{% endblock %}
-{% block page_title %}🔍 Supervision{% endblock %}
-{% block page_subtitle %}{{ total_open }} offene Themen{% endblock %}
+{% block title %}{% trans "Supervision – Open topics" %}{% endblock %}
+{% block page_title %}🔍 {% trans "Supervision" %}{% endblock %}
+{% block page_subtitle %}{% blocktrans count counter=total_open %}{{ counter }} open topic{% plural %}{{ counter }} open topics{% endblocktrans %}{% endblock %}
 
 
 {% block content %}
@@ -25,9 +25,11 @@
             </div>
             <div class="cn-supervision-actions">
             {% url 'supervision_item_toggle' group.client.pk item.pk as toggle_url %}
-            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text='✓ Besprochen' button_class='btn btn-secondary btn-sm' action_name='next' action_value='/supervision/' %}
+            {% trans "✓ Discussed" as lbl_discussed %}
+            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=lbl_discussed button_class='btn btn-secondary btn-sm' action_name='next' action_value='/supervision/' %}
             {% url 'supervision_item_delete' group.client.pk item.pk as delete_url %}
-            {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm='Supervisionsthema wirklich löschen?' action_name='next' action_value='/supervision/' %}
+            {% trans "Delete supervision topic?" as confirm_del_topic %}
+            {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm=confirm_del_topic action_name='next' action_value='/supervision/' %}
             </div>
         </div>
         {% endfor %}
@@ -36,7 +38,7 @@
 {% endfor %}
 {% else %}
 <div class="section-card">
-    <p class="cn-empty-state">Keine offenen Supervisionsthemen. 🎉</p>
+    <p class="cn-empty-state">{% trans "No open supervision topics." %} 🎉</p>
 </div>
 {% endif %}
 {% endblock %}

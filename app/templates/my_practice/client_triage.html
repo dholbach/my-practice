@@ -1,17 +1,16 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Triage-Übersicht – Notfallzugang{% endblock %}
-{% block page_title %}🚨 Triage-Übersicht{% endblock %}
-{% block page_subtitle %}Generiert am {{ generated_date|date:"d.m.Y" }} — Nur Metadaten (keine klinischen Inhalte){% endblock %}
+{% block title %}{% trans "Triage overview – Emergency access" %}{% endblock %}
+{% block page_title %}🚨 {% trans "Triage overview" %}{% endblock %}
+{% block page_subtitle %}{% blocktrans with date=generated_date|date:"d.m.Y" %}Generated on {{ date }} — Metadata only (no clinical content){% endblocktrans %}{% endblock %}
 
 
 {% block content %}
 <div class="mb-6 flex gap-4 items-center">
-    <button x-data x-on:click="window.print()" class="btn btn-secondary">🖨️ Drucken</button>
+    <button x-data x-on:click="window.print()" class="btn btn-secondary">🖨️ {% trans "Print" %}</button>
     <span class="text-sm text-text-secondary">
-        Diese Ansicht enthält ausschließlich unverschlüsselte Metadaten.
-        Klinische Inhalte sind nicht sichtbar.
+        {% trans "This view contains only unencrypted metadata. Clinical content is not visible." %}
     </span>
 </div>
 
@@ -20,13 +19,13 @@
     <div class="cn-triage-header">
         <strong>{{ entry.client.client_code }}</strong>
         {% if entry.has_crisis_tag_recent %}
-        <span class="cn-triage-badge cn-triage-badge-attention">Krise in letzten Sitzungen</span>
+        <span class="cn-triage-badge cn-triage-badge-attention">{% trans "Crisis in recent sessions" %}</span>
         {% endif %}
     </div>
 
     {% if entry.sessions %}
     <div class="cn-triage-sessions">
-        <div class="cn-label-small">Letzte {{ entry.sessions|length }} Sitzungen:</div>
+        <div class="cn-label-small">{% blocktrans count counter=entry.sessions|length %}Last {{ counter }} session:{% plural %}Last {{ counter }} sessions:{% endblocktrans %}</div>
         {% for s in entry.sessions %}
         <div class="cn-triage-session-row">
             <span class="cn-session-date">{{ s.date|date:"d.m.Y" }}</span>
@@ -40,12 +39,12 @@
         {% endfor %}
     </div>
     {% else %}
-    <div class="text-sm text-text-secondary">Noch keine Sitzungsprotokolle.</div>
+    <div class="text-sm text-text-secondary">{% trans "No session notes yet." %}</div>
     {% endif %}
 </div>
 {% empty %}
 <div class="section-card">
-    <p class="cn-empty-state">Keine aktiven Klienten gefunden.</p>
+    <p class="cn-empty-state">{% trans "No active clients found." %}</p>
 </div>
 {% endfor %}
 {% endblock %}

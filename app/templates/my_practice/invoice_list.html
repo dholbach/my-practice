@@ -1,39 +1,39 @@
 {% extends 'base.html' %}
 {% load payment_tags %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Rechnungen{% endblock %}
+{% block title %}{% trans "Invoices" %}{% endblock %}
 
 {% block page_icon %}📄{% endblock %}
-{% block page_title %}Rechnungen{% endblock %}
-{% block page_subtitle %}Übersicht aller Rechnungen{% endblock %}
+{% block page_title %}{% trans "Invoices" %}{% endblock %}
+{% block page_subtitle %}{% trans "Overview of all invoices" %}{% endblock %}
 
 {% block content %}
 {% if unbilled.client_count %}
 <div class="info-box unbilled-callout">
-    <strong>{{ unbilled.client_count }} Klient{{ unbilled.client_count|pluralize:",en" }} mit nicht abgerechneten Sitzungen</strong>
-    &mdash; ca. {{ unbilled.amount|floatformat:2 }} €
-    &ensp;<a href="{% url 'monthly_billing' %}">→ Monatsabrechnung öffnen</a>
+    <strong>{% blocktrans count count=unbilled.client_count %}{{ count }} client with unbilled sessions{% plural %}{{ count }} clients with unbilled sessions{% endblocktrans %}</strong>
+    &mdash; {% trans "approx." %} {{ unbilled.amount|floatformat:2 }} €
+    &ensp;<a href="{% url 'monthly_billing' %}">→ {% trans "Open monthly billing" %}</a>
 </div>
 {% endif %}
 <div class="flex gap-4 mb-8 flex-wrap">
     <a href="{% url 'invoice_list' %}{% if current_year != 'all' %}?year={{ current_year }}{% endif %}" class="stat-card link-plain {% if current_status == 'all' %}active{% endif %}">
-        <div class="stat-label">Gesamt</div>
+        <div class="stat-label">{% trans "Total" %}</div>
         <div class="stat-value">{{ stats.total }}</div>
         <div class="text-muted text-sm mt-1">{{ stats.total_amount|currency }}</div>
     </a>
     <a href="{% url 'invoice_list' %}?status=draft{% if current_year != 'all' %}&year={{ current_year }}{% endif %}" class="stat-card link-plain {% if current_status == 'draft' %}active{% endif %}">
-        <div class="stat-label">Entwurf</div>
+        <div class="stat-label">{% trans "Draft" %}</div>
         <div class="stat-value">{{ stats.draft }}</div>
         <div class="text-muted text-sm mt-1">{{ stats.draft_amount|currency }}</div>
     </a>
     <a href="{% url 'invoice_list' %}?status=sent{% if current_year != 'all' %}&year={{ current_year }}{% endif %}" class="stat-card link-plain {% if current_status == 'sent' %}active{% endif %}">
-        <div class="stat-label">Gesendet</div>
+        <div class="stat-label">{% trans "Sent" %}</div>
         <div class="stat-value">{{ stats.sent }}</div>
         <div class="text-muted text-sm mt-1">{{ stats.sent_amount|floatformat:2 }} €</div>
     </a>
     <a href="{% url 'invoice_list' %}?status=paid{% if current_year != 'all' %}&year={{ current_year }}{% endif %}" class="stat-card link-plain {% if current_status == 'paid' %}active{% endif %}">
-        <div class="stat-label">Bezahlt</div>
+        <div class="stat-label">{% trans "Paid" %}</div>
         <div class="stat-value">{{ stats.paid }}</div>
         <div class="text-muted text-sm mt-1">{{ stats.paid_amount|floatformat:2 }} €</div>
     </a>
@@ -43,14 +43,14 @@
 <div class="filter-panel">
     <details {% if start_date or end_date or min_amount or max_amount %}open{% endif %}>
         <summary class="filter-panel__summary">
-            🔍 Filter
+            🔍 {% trans "Filter" %}
         </summary>
 
         <form method="get" class="filter-panel__form">
 
             <!-- Date Range -->
             <div>
-                <label class="filter-panel__label">Von Datum</label>
+                <label class="filter-panel__label">{% trans "From date" %}</label>
                 <input
                     type="date"
                     name="start_date"
@@ -60,7 +60,7 @@
             </div>
 
             <div>
-                <label class="filter-panel__label">Bis Datum</label>
+                <label class="filter-panel__label">{% trans "To date" %}</label>
                 <input
                     type="date"
                     name="end_date"
@@ -71,7 +71,7 @@
 
             <!-- Amount Range -->
             <div>
-                <label class="filter-panel__label">Min. Betrag (€)</label>
+                <label class="filter-panel__label">{% trans "Min. amount (€)" %}</label>
                 <input
                     type="number"
                     name="min_amount"
@@ -83,7 +83,7 @@
             </div>
 
             <div>
-                <label class="filter-panel__label">Max. Betrag (€)</label>
+                <label class="filter-panel__label">{% trans "Max. amount (€)" %}</label>
                 <input
                     type="number"
                     name="max_amount"
@@ -96,12 +96,12 @@
 
             <!-- Year Filter -->
             <div>
-                <label class="filter-panel__label">Jahr</label>
+                <label class="filter-panel__label">{% trans "Year" %}</label>
                 <select
                     name="year"
                     class="filter-panel__input"
                 >
-                    <option value="">Alle Jahre</option>
+                    <option value="">{% trans "All years" %}</option>
                     {% for year in available_years %}
                     <option value="{{ year }}" {% if current_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
                     {% endfor %}
@@ -115,42 +115,42 @@
 
             <!-- Action buttons -->
             <div class="filter-panel__actions">
-                <button type="submit" class="btn filter-panel__btn">Filtern</button>
-                <a href="{% url 'invoice_list' %}" class="btn btn-secondary filter-panel__btn text-center">Zurücksetzen</a>
+                <button type="submit" class="btn filter-panel__btn">{% trans "Apply filter" %}</button>
+                <a href="{% url 'invoice_list' %}" class="btn btn-secondary filter-panel__btn text-center">{% trans "Reset" %}</a>
             </div>
         </form>
 
         {% if start_date or end_date or min_amount or max_amount %}
         <p class="filter-results-summary">
-            <strong class="text-primary">{{ invoices.paginator.count }}</strong> Rechnung{% if invoices.paginator.count != 1 %}en{% endif %} gefunden
-            {% if start_date %} • Ab: {{ start_date }}{% endif %}
-            {% if end_date %} • Bis: {{ end_date }}{% endif %}
-            {% if min_amount %} • Min: {{ min_amount }}€{% endif %}
-            {% if max_amount %} • Max: {{ max_amount }}€{% endif %}
+            <strong class="text-primary">{% blocktrans count count=invoices.paginator.count %}{{ count }} invoice found{% plural %}{{ count }} invoices found{% endblocktrans %}</strong>
+            {% if start_date %} • {% blocktrans with date=start_date %}From: {{ date }}{% endblocktrans %}{% endif %}
+            {% if end_date %} • {% blocktrans with date=end_date %}To: {{ date }}{% endblocktrans %}{% endif %}
+            {% if min_amount %} • {% blocktrans with amount=min_amount %}Min: {{ amount }}€{% endblocktrans %}{% endif %}
+            {% if max_amount %} • {% blocktrans with amount=max_amount %}Max: {{ amount }}€{% endblocktrans %}{% endif %}
         </p>
         {% endif %}
     </details>
 </div>
 
 <div class="actions">
-    <a href="{% url 'invoice_create' %}" class="btn">➕ Neue Rechnung</a>
-    <a href="{% url 'monthly_billing' %}" class="btn btn-primary">📅 Monatsabrechnung</a>
+    <a href="{% url 'invoice_create' %}" class="btn">➕ {% trans "New invoice" %}</a>
+    <a href="{% url 'monthly_billing' %}" class="btn btn-primary">📅 {% trans "Monthly billing" %}</a>
 
     {% if current_year != 'all' %}
     <form method="post" action="{% url 'invoice_batch_download' %}" class="d-inline-block ml-1">
         {% csrf_token %}
         <input type="hidden" name="year" value="{{ current_year }}">
         <input type="hidden" name="status" value="paid">
-        <button type="submit" class="btn btn-secondary" title="Alle bezahlten Rechnungen {{ current_year }} als ZIP herunterladen">
-            📥 Rechnungen {{ current_year }} (ZIP)
+        <button type="submit" class="btn btn-secondary" title="{% blocktrans with year=current_year %}Download all paid invoices for {{ year }} as ZIP{% endblocktrans %}">
+            📥 {% blocktrans with year=current_year %}Invoices {{ year }} (ZIP){% endblocktrans %}
         </button>
     </form>
     {% endif %}
 
     <div class="inline-block ml-4">
-        <label for="year-filter" class="text-muted me-1">Jahr:</label>
+        <label for="year-filter" class="text-muted me-1">{% trans "Year:" %}</label>
         <select id="year-filter" x-data x-on:change="window.location.href = '{% url 'invoice_list' %}{% if current_status != 'all' %}?status={{ current_status }}&year={% else %}?year={% endif %}' + $el.value" class="p-2 border border-border rounded">
-            <option value="">Alle Jahre</option>
+            <option value="">{% trans "All years" %}</option>
             {% for year in available_years %}
             <option value="{{ year }}" {% if current_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
             {% endfor %}
@@ -162,12 +162,12 @@
 <table class="data-table table-fixed">
     <thead>
         <tr>
-            <th class="w-[140px]">Invoice No.</th>
-            <th class="w-[220px]">Client</th>
-            <th class="w-[110px]">Date</th>
-            <th class="w-[120px]">Status</th>
-            <th class="w-[130px] text-right">Amount</th>
-            <th class="w-[100px]">Actions</th>
+            <th class="w-[140px]">{% trans "Invoice No." %}</th>
+            <th class="w-[220px]">{% trans "Client" %}</th>
+            <th class="w-[110px]">{% trans "Date" %}</th>
+            <th class="w-[120px]">{% trans "Status" %}</th>
+            <th class="w-[130px] text-right">{% trans "Amount" %}</th>
+            <th class="w-[100px]">{% trans "Actions" %}</th>
         </tr>
     </thead>
     <tbody>
@@ -181,7 +181,7 @@
             </td>
             <td class="truncate text-right">{{ invoice.total|floatformat:2 }}&nbsp;€</td>
             <td class="truncate">
-                <a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain font-semibold">👁️ Ansehen</a>
+                <a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain font-semibold">👁️ {% trans "View" %}</a>
             </td>
         </tr>
         {% endfor %}
@@ -194,8 +194,8 @@
 
 {% else %}
 <div class="empty-state">
-    <h2>Keine Rechnungen</h2>
-    <p>Es wurden noch keine Rechnungen erstellt.</p>
+    <h2>{% trans "No invoices" %}</h2>
+    <p>{% trans "No invoices have been created yet." %}</p>
 </div>
 {% endif %}
 {% endblock %}
