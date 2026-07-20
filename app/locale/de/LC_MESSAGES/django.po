@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-20 22:30+0200\n"
+"POT-Creation-Date: 2026-07-20 22:59+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -312,7 +312,8 @@ msgstr "Gesamt"
 #: my_practice/admin.py:509 my_practice/admin.py:590
 #: my_practice/models/calendar.py:132 my_practice/models/clinical.py:222
 #: my_practice/models/gebueh.py:87 my_practice/models/invoice.py:281
-#: my_practice/models/session.py:63
+#: my_practice/models/session.py:63 my_practice/utils/agenda_helpers.py:150
+#: my_practice/utils/agenda_helpers.py:162
 msgid "Session"
 msgstr "Sitzung"
 
@@ -515,7 +516,7 @@ msgstr "Aufgabeninformationen"
 msgid "Task"
 msgstr "Aufgabe"
 
-#: my_practice/admin.py:1029
+#: my_practice/admin.py:1029 my_practice/utils/agenda_helpers.py:193
 msgid "Priority"
 msgstr "Priorität"
 
@@ -2780,6 +2781,64 @@ msgstr "Wann die Aufgabe abgeschlossen wurde"
 msgid "Tasks"
 msgstr "Aufgaben"
 
+#: my_practice/utils/agenda_helpers.py:55
+msgid "No time"
+msgstr "Keine Uhrzeit"
+
+#: my_practice/utils/agenda_helpers.py:152
+#: templates/my_practice/client_detail.html:263
+#: templates/my_practice/client_detail.html:309
+#: templates/my_practice/client_detail.html:649
+#: templates/my_practice/gebueh_leistung_form.html:6
+#: templates/my_practice/invoice_detail.html:110
+#: templates/my_practice/invoice_detail.html:141
+msgid "min"
+msgstr "Min"
+
+#: my_practice/utils/agenda_helpers.py:155
+msgid "View invoice"
+msgstr "Rechnung anzeigen"
+
+#: my_practice/utils/agenda_helpers.py:158
+#: templates/my_practice/inquiry_list.html:193
+#: templates/my_practice/inquiry_list.html:239
+msgid "View client"
+msgstr "Klient:in anzeigen"
+
+#: my_practice/utils/agenda_helpers.py:197
+#, python-format
+msgid "⚠️ Overdue since %(date)s"
+msgstr "⚠️ Überfällig seit %(date)s"
+
+#: my_practice/utils/agenda_helpers.py:199
+msgid "📅 Due today"
+msgstr "📅 Heute fällig"
+
+#: my_practice/utils/agenda_helpers.py:203
+#, python-format
+msgid "📅 Due in %(days)s day"
+msgid_plural "📅 Due in %(days)s days"
+msgstr[0] "📅 Fällig in %(days)s Tag"
+msgstr[1] "📅 Fällig in %(days)s Tagen"
+
+#: my_practice/utils/agenda_helpers.py:224
+#: templates/includes/weekly_focus_widget_content.html:41
+#: templates/my_practice/calendar_approval_queue.html:38
+msgid "Mark as done"
+msgstr "Als erledigt markieren"
+
+#: my_practice/utils/analytics_utils.py:281
+msgid "60-min sessions"
+msgstr "60-Min Sitzungen"
+
+#: my_practice/utils/analytics_utils.py:289
+msgid "90-min sessions"
+msgstr "90-Min Sitzungen"
+
+#: my_practice/utils/analytics_utils.py:297
+msgid "Group sessions"
+msgstr "Gruppensitzungen"
+
 #: my_practice/utils/calendar_import_helpers.py:28
 #, python-format
 msgid "Client ID %(id)s not found for event %(summary)s"
@@ -2909,6 +2968,60 @@ msgstr "Dez"
 #, python-format
 msgid "since %(start)s"
 msgstr "seit %(start)s"
+
+#: my_practice/utils/client_detail_builder.py:217
+#: my_practice/views/inquiry_views.py:211
+#: templates/my_practice/client_detail.html:523
+msgid "Intake"
+msgstr "Aufnahme"
+
+#: my_practice/utils/client_detail_builder.py:218
+#: templates/my_practice/client_detail.html:540
+msgid "Contract"
+msgstr "Behandlungsvertrag"
+
+#: my_practice/utils/client_detail_builder.py:219
+#: templates/my_practice/client_detail.html:557
+msgid "Anamnesis"
+msgstr "Anamnese"
+
+#: my_practice/utils/client_detail_builder.py:220
+#: templates/my_practice/client_detail.html:574
+msgid "Intake complete"
+msgstr "Aufnahme abgeschlossen"
+
+#: my_practice/utils/dashboard_context_builder.py:131
+#: my_practice/utils/dashboard_context_builder.py:147
+#: templates/my_practice/client_detail.html:74
+#, python-format
+msgid "%(count)s session"
+msgid_plural "%(count)s sessions"
+msgstr[0] "%(count)s Sitzung"
+msgstr[1] "%(count)s Sitzungen"
+
+#: my_practice/utils/dashboard_context_builder.py:132
+#, python-format
+msgid "%(count)s task"
+msgid_plural "%(count)s tasks"
+msgstr[0] "%(count)s Aufgabe"
+msgstr[1] "%(count)s Aufgaben"
+
+#: my_practice/utils/dashboard_context_builder.py:137
+#, python-format
+msgid "%(count)s without a time"
+msgid_plural "%(count)s without a time"
+msgstr[0] "%(count)s ohne Uhrzeit"
+msgstr[1] "%(count)s ohne Uhrzeit"
+
+#: my_practice/utils/dashboard_context_builder.py:151
+msgid "Focus"
+msgstr "Fokus"
+
+#: my_practice/utils/dashboard_context_builder.py:170
+#: templates/my_practice/analytics.html:107
+#: templates/my_practice/analytics.html:731
+msgid "Capacity"
+msgstr "Kapazität"
 
 #: my_practice/utils/dashboard_widgets.py:26
 msgid "Follow-up"
@@ -3713,11 +3826,6 @@ msgstr "Ausgabe zusammengeführt: %(txns)s Buchung(en) und %(receipts)s Beleg(e)
 msgid "Link with transaction from %(date)s removed."
 msgstr "Verknüpfung mit Transaktion vom %(date)s aufgehoben."
 
-#: my_practice/views/inquiry_views.py:211
-#: templates/my_practice/client_detail.html:523
-msgid "Intake"
-msgstr "Aufnahme"
-
 #: my_practice/views/inquiry_views.py:252
 msgid "Received → response"
 msgstr "Eingang → Rückmeldung"
@@ -3989,25 +4097,25 @@ msgstr "Praxis nicht gefunden oder kein Zugriff."
 msgid "You don't have access to a practice. Please contact the administrator."
 msgstr "Sie haben keinen Zugriff auf eine Praxis. Bitte kontaktieren Sie den Administrator."
 
-#: my_practice/views/practice_views.py:146
+#: my_practice/views/practice_views.py:147
 #, python-format
 msgid "Practice '%(name)s' created successfully."
 msgstr "Praxis '%(name)s' erfolgreich erstellt."
 
-#: my_practice/views/practice_views.py:168
+#: my_practice/views/practice_views.py:169
 msgid "You don't have permission to edit this practice."
 msgstr "Sie haben keine Berechtigung, diese Praxis zu bearbeiten."
 
-#: my_practice/views/practice_views.py:200
+#: my_practice/views/practice_views.py:201
 #, python-format
 msgid "Practice '%(name)s' updated successfully."
 msgstr "Praxis '%(name)s' erfolgreich aktualisiert."
 
-#: my_practice/views/practice_views.py:221
+#: my_practice/views/practice_views.py:222
 msgid "You don't have permission to delete this practice."
 msgstr "Sie haben keine Berechtigung, diese Praxis zu löschen."
 
-#: my_practice/views/practice_views.py:232
+#: my_practice/views/practice_views.py:233
 #, python-format
 msgid "Practice '%(name)s' deactivated."
 msgstr "Praxis '%(name)s' deaktiviert."
@@ -4658,11 +4766,6 @@ msgstr "Keine Sitzungen diese Woche."
 msgid "Focus tasks"
 msgstr "Fokus-Aufgaben"
 
-#: templates/includes/weekly_focus_widget_content.html:41
-#: templates/my_practice/calendar_approval_queue.html:38
-msgid "Mark as done"
-msgstr "Als erledigt markieren"
-
 #: templates/includes/weekly_focus_widget_content.html:60
 #, python-format
 msgid "No focus tasks. Click ⭐ on a task in the <a href=\"%(todo_list_url)s\">to-do list</a>."
@@ -4718,11 +4821,6 @@ msgstr "Anwenden"
 #: templates/my_practice/invoice_list.html:119
 msgid "Reset"
 msgstr "Zurücksetzen"
-
-#: templates/my_practice/analytics.html:107
-#: templates/my_practice/analytics.html:731
-msgid "Capacity"
-msgstr "Kapazität"
 
 #: templates/my_practice/analytics.html:117
 msgid "Revenue & Profit"
@@ -6077,13 +6175,6 @@ msgstr "vor %(ago)s"
 msgid "Session hours"
 msgstr "Sitzungsstunden"
 
-#: templates/my_practice/client_detail.html:74
-#, python-format
-msgid "%(count)s session"
-msgid_plural "%(count)s sessions"
-msgstr[0] "%(count)s Sitzung"
-msgstr[1] "%(count)s Sitzungen"
-
 #: templates/my_practice/client_detail.html:77
 msgid "Open balance"
 msgstr "Offener Betrag"
@@ -6211,15 +6302,6 @@ msgstr "Sitzungsprotokoll löschen?"
 msgid "Delete session?"
 msgstr "Sitzung löschen?"
 
-#: templates/my_practice/client_detail.html:263
-#: templates/my_practice/client_detail.html:309
-#: templates/my_practice/client_detail.html:649
-#: templates/my_practice/gebueh_leistung_form.html:6
-#: templates/my_practice/invoice_detail.html:110
-#: templates/my_practice/invoice_detail.html:141
-msgid "min"
-msgstr "Min"
-
 #: templates/my_practice/client_detail.html:264
 #: templates/my_practice/client_detail.html:310
 msgid "Unbilled"
@@ -6341,10 +6423,6 @@ msgstr "rückgängig"
 msgid "✓ Done"
 msgstr "✓ Erledigt"
 
-#: templates/my_practice/client_detail.html:540
-msgid "Contract"
-msgstr "Behandlungsvertrag"
-
 #: templates/my_practice/client_detail.html:541
 #, python-format
 msgid "Signed on %(date)s"
@@ -6360,10 +6438,6 @@ msgstr "Vertrag per E-Mail zusenden, unterschrieben zurückerhalten"
 msgid "no email"
 msgstr "keine E-Mail"
 
-#: templates/my_practice/client_detail.html:557
-msgid "Anamnesis"
-msgstr "Anamnese"
-
 #: templates/my_practice/client_detail.html:558
 #, python-format
 msgid "Sent on %(date)s"
@@ -6372,10 +6446,6 @@ msgstr "Gesendet am %(date)s"
 #: templates/my_practice/client_detail.html:559
 msgid "Send questionnaire by email"
 msgstr "Fragebogen per E-Mail zusenden"
-
-#: templates/my_practice/client_detail.html:574
-msgid "Intake complete"
-msgstr "Aufnahme abgeschlossen"
 
 #: templates/my_practice/client_detail.html:575
 #, python-format
@@ -7190,11 +7260,6 @@ msgstr "Geschlossene ausblenden"
 #, python-format
 msgid "Show closed (%(n)s)"
 msgstr "Geschlossene anzeigen (%(n)s)"
-
-#: templates/my_practice/inquiry_list.html:193
-#: templates/my_practice/inquiry_list.html:239
-msgid "View client"
-msgstr "Klient:in anzeigen"
 
 #: templates/my_practice/inquiry_list.html:205
 #: templates/my_practice/inquiry_list.html:251
