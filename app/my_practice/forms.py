@@ -54,7 +54,7 @@ class StyledFormMixin:
 class ClientIntakeForm(StyledFormMixin, forms.ModelForm):
     """Client intake form"""
 
-    date_of_birth = DateFormField(required=False, label=_("Geburtsdatum"))
+    date_of_birth = DateFormField(required=False, label=_("Date of birth"))
 
     class Meta:
         model = Client
@@ -76,43 +76,45 @@ class ClientIntakeForm(StyledFormMixin, forms.ModelForm):
             "notes",
         ]
         widgets = {
-            "client_code": forms.TextInput(attrs={"placeholder": "z.B. DE, JM", "maxlength": 3}),
-            "full_name": forms.TextInput(attrs={"placeholder": "Vollständiger Name"}),
+            "client_code": forms.TextInput(attrs={"placeholder": _("e.g. DE, JM"), "maxlength": 3}),
+            "full_name": forms.TextInput(attrs={"placeholder": _("Full name")}),
             "email": forms.EmailInput(attrs={"placeholder": "email@example.com"}),
             "phone": forms.TextInput(attrs={"placeholder": "+49 ..."}),
-            "address": forms.Textarea(attrs={"rows": 3, "placeholder": "Straße, PLZ Ort"}),
+            "address": forms.Textarea(
+                attrs={"rows": 3, "placeholder": _("Street, postal code city")}
+            ),
             "cost_carrier": forms.TextInput(
-                attrs={"placeholder": "z.B. Selbstzahler, Allianz PKV, Beihilfe"}
+                attrs={"placeholder": _("e.g. self-pay, Allianz PKV, Beihilfe")}
             ),
             "salutation": forms.TextInput(
                 attrs={"placeholder": 'e.g., "Dear John" or "Liebe Maria"'}
             ),
             "hourly_rate_60": forms.NumberInput(attrs={"step": "0.01"}),
             "hourly_rate_90": forms.NumberInput(attrs={"step": "0.01"}),
-            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Zusätzliche Notizen"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": _("Additional notes")}),
         }
         labels = {
-            "client_code": "Klienten-Code",
-            "full_name": "Vollständiger Name",
-            "email": "Email",
-            "phone": "Telefon",
-            "address": "Adresse",
-            "cost_carrier": "Kostenträger",
-            "language": "Bevorzugte Sprache",
-            "salutation": "Custom Email Salutation",
-            "active": "Aktiver Klient",
-            "is_online_client": "Online-Klient (Videositzungen)",
-            "needs_gebueh_invoice": "GebüH-Abrechnung",
-            "hourly_rate_60": "Honorar 60 Min (€)",
-            "hourly_rate_90": "Honorar 90 Min (€)",
-            "notes": "Notizen",
+            "client_code": _("Client code"),
+            "full_name": _("Full name"),
+            "email": _("Email"),
+            "phone": _("Phone"),
+            "address": _("Address"),
+            "cost_carrier": _("Cost carrier"),
+            "language": _("Preferred language"),
+            "salutation": _("Custom Email Salutation"),
+            "active": _("Active client"),
+            "is_online_client": _("Online client (video sessions)"),
+            "needs_gebueh_invoice": _("GebüH-Abrechnung"),
+            "hourly_rate_60": _("Fee 60 min (€)"),
+            "hourly_rate_90": _("Fee 90 min (€)"),
+            "notes": _("Notes"),
         }
 
 
 class CompanyWithdrawalForm(StyledFormMixin, forms.ModelForm):
     """Form for creating and editing company withdrawals"""
 
-    date = DateFormField(label=_("Datum"))
+    date = DateFormField(label=_("Date"))
 
     class Meta:
         model = CompanyWithdrawal
@@ -122,21 +124,21 @@ class CompanyWithdrawalForm(StyledFormMixin, forms.ModelForm):
             "description": forms.Textarea(
                 attrs={
                     "rows": 3,
-                    "placeholder": "Optional: Verwendungszweck oder Notizen",
+                    "placeholder": _("Optional: purpose or notes"),
                 }
             ),
         }
         labels = {
-            "amount": "Betrag (€)",
-            "category": "Kategorie",
-            "description": "Beschreibung",
+            "amount": _("Amount (€)"),
+            "category": _("Category"),
+            "description": _("Description"),
         }
 
 
 class CompanyExpenseForm(StyledFormMixin, forms.ModelForm):
     """Form for creating and editing company expenses"""
 
-    date = DateFormField(label=_("Datum"))
+    date = DateFormField(label=_("Date"))
 
     class Meta:
         model = CompanyExpense
@@ -151,18 +153,18 @@ class CompanyExpenseForm(StyledFormMixin, forms.ModelForm):
         ]
         widgets = {
             "description": forms.Textarea(
-                attrs={"rows": 3, "placeholder": "Beschreibung der Ausgabe"}
+                attrs={"rows": 3, "placeholder": _("Description of the expense")}
             ),
             "amount": forms.NumberInput(attrs={"step": "0.01", "placeholder": "0.00"}),
             "receipt": forms.ClearableFileInput(attrs={"accept": "application/pdf,image/*"}),
         }
         labels = {
-            "description": "Beschreibung",
-            "category": "Kategorie",
-            "amount": "Betrag (€)",
-            "is_tax_deductible": "Steuerlich absetzbar",
-            "has_invoice": "Rechnung vorhanden",
-            "is_filed_in_tax_return": "In Steuererklärung eingetragen",
+            "description": _("Description"),
+            "category": _("Category"),
+            "amount": _("Amount (€)"),
+            "is_tax_deductible": _("Tax deductible"),
+            "has_invoice": _("Invoice available"),
+            "is_filed_in_tax_return": _("Filed in tax return"),
         }
 
 
@@ -186,11 +188,11 @@ class TimeOffForm(StyledFormMixin, forms.ModelForm):
 
 
 _WEEKDAY_CHOICES = [
-    (0, "Montag"),
-    (1, "Dienstag"),
-    (2, "Mittwoch"),
-    (3, "Donnerstag"),
-    (4, "Freitag"),
+    (0, _("Monday")),
+    (1, _("Tuesday")),
+    (2, _("Wednesday")),
+    (3, _("Thursday")),
+    (4, _("Friday")),
 ]
 
 
@@ -201,8 +203,8 @@ class PracticeEditForm(StyledFormMixin, forms.ModelForm):
         choices=_WEEKDAY_CHOICES,
         widget=forms.CheckboxSelectMultiple,
         required=False,
-        label=_("Praxistage (Wochentage)"),
-        help_text=_("Wochentage, an denen Sie zur Praxis fahren."),
+        label=_("Practice days (weekdays)"),
+        help_text=_("Weekdays on which you commute to the practice."),
     )
 
     class Meta:
@@ -256,7 +258,7 @@ class PracticeEditForm(StyledFormMixin, forms.ModelForm):
 
 
 class CapacityPeriodForm(StyledFormMixin, forms.ModelForm):
-    start_date = DateFormField(label=_("Gültig ab"))
+    start_date = DateFormField(label=_("Valid from"))
 
     class Meta:
         model = CapacityPeriod
