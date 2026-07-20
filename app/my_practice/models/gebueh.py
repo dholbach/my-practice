@@ -23,47 +23,47 @@ class GebuhZiffer(models.Model):
     in the quick-entry UI but never hard-block saving.
     """
 
-    nummer = models.CharField(max_length=10, unique=True, verbose_name=_("Ziffer"))
-    bezeichnung = models.CharField(max_length=300, verbose_name=_("Bezeichnung"))
+    nummer = models.CharField(max_length=10, unique=True, verbose_name=_("Code"))
+    bezeichnung = models.CharField(max_length=300, verbose_name=_("Description"))
     satz_max = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        verbose_name=_("Höchstsatz (€)"),
-        help_text=_("Wird für die Abrechnung verwendet"),
+        verbose_name=_("Maximum rate (€)"),
+        help_text=_("Used for billing"),
     )
     satz_min = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        verbose_name=_("Mindestsatz (€)"),
-        help_text=_("Referenzwert, wird nicht abgerechnet"),
+        verbose_name=_("Minimum rate (€)"),
+        help_text=_("Reference value, not billed"),
     )
     anmerkung = models.TextField(
         blank=True,
-        verbose_name=_("Anmerkung"),
-        help_text=_("Abrechnungshinweise (z.B. Alleinleistung, Häufigkeitsbeschränkung)"),
+        verbose_name=_("Note"),
+        help_text=_("Billing notes (e.g. standalone service, frequency restriction)"),
     )
     max_haeufigkeit = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
-        verbose_name=_("Max. Häufigkeit"),
-        help_text=_("Maximale Anzahl innerhalb des Bezugszeitraums"),
+        verbose_name=_("Max. frequency"),
+        help_text=_("Maximum count within the reference period"),
     )
     bezugszeitraum_tage = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
-        verbose_name=_("Bezugszeitraum (Tage)"),
-        help_text=_("Zeitraum in Tagen für die Häufigkeitsprüfung"),
+        verbose_name=_("Reference period (days)"),
+        help_text=_("Period in days for the frequency check"),
     )
     sort_order = models.PositiveSmallIntegerField(
         default=0,
-        verbose_name=_("Reihenfolge"),
-        help_text=_("Anzeigereihenfolge in der Schnellerfassung"),
+        verbose_name=_("Order"),
+        help_text=_("Display order in the quick-entry list"),
     )
 
     class Meta:
         ordering = ["sort_order", "nummer"]
-        verbose_name = _("GebüH-Ziffer")
-        verbose_name_plural = _("GebüH-Ziffern")
+        verbose_name = _("GebüH billing code")
+        verbose_name_plural = _("GebüH billing codes")
 
     def __str__(self) -> str:
         return f"Ziffer {self.nummer} – {self.bezeichnung}"
@@ -84,33 +84,31 @@ class Leistungserfassung(TimestampedModel):
         Session,
         on_delete=models.PROTECT,
         related_name="gebueh_leistungen",
-        verbose_name=_("Sitzung"),
+        verbose_name=_("Session"),
     )
     ziffer = models.ForeignKey(
         GebuhZiffer,
         on_delete=models.PROTECT,
         related_name="leistungen",
-        verbose_name=_("GebüH-Ziffer"),
+        verbose_name=_("GebüH billing code"),
     )
     betrag = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        verbose_name=_("GebüH-Betrag (€)"),
-        help_text=_("= Höchstsatz der Ziffer zum Zeitpunkt der Erfassung"),
+        verbose_name=_("GebüH amount (€)"),
+        help_text=_("= maximum rate of the billing code at the time of entry"),
     )
     vereinbarter_betrag = models.DecimalField(
         max_digits=8,
         decimal_places=2,
-        verbose_name=_("Vereinbarter Betrag (€)"),
-        help_text=_(
-            "Honorar für die Sitzung (hourly_rate × duration/60), eingefroren bei Erfassung"
-        ),
+        verbose_name=_("Agreed amount (€)"),
+        help_text=_("Fee for the session (hourly_rate × duration/60), frozen at entry time"),
     )
 
     class Meta:
         ordering = ["session__session_date", "ziffer__sort_order"]
-        verbose_name = _("Leistungserfassung")
-        verbose_name_plural = _("Leistungserfassungen")
+        verbose_name = _("Service entry")
+        verbose_name_plural = _("Service entries")
         indexes = [
             models.Index(
                 fields=["session"],

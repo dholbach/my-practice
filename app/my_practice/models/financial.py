@@ -5,6 +5,7 @@ from pathlib import Path
 
 from django.db import models
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 from .base import PracticeScopedManager, TimestampedModel
 
@@ -54,13 +55,13 @@ class CompanyWithdrawal(TimestampedModel):
         CORRECTION = "correction"
 
     CATEGORY_CHOICES = [
-        (Category.SALARY, "Gehalt / Personal"),
-        (Category.TAX, "Steuervorauszahlung"),
-        (Category.PRIVATE_TRANSFER, "Privat-Überweisung"),
-        (Category.OTHER, "Sonstiges"),
+        (Category.SALARY, _("Salary / personal")),
+        (Category.TAX, _("Tax prepayment")),
+        (Category.PRIVATE_TRANSFER, _("Private transfer")),
+        (Category.OTHER, _("Other")),
         # Incoming / adjustments
-        (Category.CONTRIBUTION, "Kapitaleinlage"),
-        (Category.CORRECTION, "Fehlbuchung / Korrektur"),
+        (Category.CONTRIBUTION, _("Capital contribution")),
+        (Category.CORRECTION, _("Incorrect posting / correction")),
     ]
 
     # Categories that represent money flowing *out* of the business account
@@ -78,24 +79,24 @@ class CompanyWithdrawal(TimestampedModel):
         "Practice",
         on_delete=models.PROTECT,
         related_name="withdrawals",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
     )
 
-    date = models.DateField(verbose_name="Datum")
+    date = models.DateField(verbose_name=_("Date"))
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name="Betrag",
-        help_text="Negativer Betrag für Korrekturen/Rückbuchungen",
+        verbose_name=_("Amount"),
+        help_text=_("Negative amount for corrections/reversals"),
     )
     description = models.TextField(
-        blank=True, verbose_name="Notizen", help_text="Optional: Verwendungszweck"
+        blank=True, verbose_name=_("Notes"), help_text=_("Optional: purpose")
     )
     category = models.CharField(
         max_length=20,
         choices=CATEGORY_CHOICES,
         default=Category.SALARY,
-        verbose_name="Kategorie",
+        verbose_name=_("Category"),
     )
 
     # Practice-scoped manager
@@ -138,25 +139,27 @@ class CompanyExpense(TimestampedModel):
         KONGRESS = "kongress"
         OTHER = "other"
 
+    # Wording matches the existing choices already reused verbatim in
+    # bank_expense_review.html — keep in sync if either changes.
     CATEGORY_CHOICES = [
-        (Category.MIETE, "Miete"),
-        (Category.TELEFON, "Telefon"),
-        (Category.VERBAND, "Verband / Mitgliedsbeiträge"),
-        (Category.VERSICHERUNG, "Versicherung"),
-        (Category.KONTO, "Konto / Kontoführung"),
-        (Category.WEBSEITE, "Webseite / Domain"),
-        (Category.WERBUNG, "Werbung / Marketing"),
-        (Category.SOFTWARE, "Software"),
-        (Category.SELBSTERFAHRUNG, "Selbsterfahrung"),
-        (Category.SUPERVISION, "Supervision"),
-        (Category.TRAINING, "Training / Weiterbildung"),
-        (Category.AUSBILDUNG_ORT, "Ausbildung Ort"),
-        (Category.GRUPPE, "Gruppe"),
-        (Category.MATERIALIEN, "Materialien"),
-        (Category.HARDWARE, "Hardware"),
-        (Category.LITERATUR, "Literatur"),
-        (Category.KONGRESS, "Kongress"),
-        (Category.OTHER, "Sonstiges"),
+        (Category.MIETE, _("Rent")),
+        (Category.TELEFON, _("Phone")),
+        (Category.VERBAND, _("Association / membership fees")),
+        (Category.VERSICHERUNG, _("Insurance")),
+        (Category.KONTO, _("Account / account fees")),
+        (Category.WEBSEITE, _("Website / domain")),
+        (Category.WERBUNG, _("Advertising / marketing")),
+        (Category.SOFTWARE, _("Software")),
+        (Category.SELBSTERFAHRUNG, _("Personal therapy (training)")),
+        (Category.SUPERVISION, _("Supervision")),
+        (Category.TRAINING, _("Training / continuing education")),
+        (Category.AUSBILDUNG_ORT, _("Training location")),
+        (Category.GRUPPE, _("Group")),
+        (Category.MATERIALIEN, _("Materials")),
+        (Category.HARDWARE, _("Hardware")),
+        (Category.LITERATUR, _("Literature")),
+        (Category.KONGRESS, _("Conference")),
+        (Category.OTHER, _("Other")),
     ]
 
     # Practice relationship
@@ -164,27 +167,27 @@ class CompanyExpense(TimestampedModel):
         "Practice",
         on_delete=models.PROTECT,
         related_name="expenses",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
     )
 
-    date = models.DateField(verbose_name="Datum")
+    date = models.DateField(verbose_name=_("Date"))
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name="Betrag",
-        help_text="Betrag als positive Zahl eingeben",
+        verbose_name=_("Amount"),
+        help_text=_("Enter amount as a positive number"),
     )
-    description = models.TextField(blank=True, verbose_name="Beschreibung")
+    description = models.TextField(blank=True, verbose_name=_("Description"))
     category = models.CharField(
         max_length=30,
         choices=CATEGORY_CHOICES,
         default=Category.OTHER,
-        verbose_name="Kategorie",
+        verbose_name=_("Category"),
     )
-    has_invoice = models.BooleanField(default=False, verbose_name="Rechnung vorhanden")
-    is_tax_deductible = models.BooleanField(default=True, verbose_name="Steuerlich absetzbar")
+    has_invoice = models.BooleanField(default=False, verbose_name=_("Invoice available"))
+    is_tax_deductible = models.BooleanField(default=True, verbose_name=_("Tax deductible"))
     is_filed_in_tax_return = models.BooleanField(
-        default=False, verbose_name="In Steuererklärung eingetragen"
+        default=False, verbose_name=_("Filed in tax return")
     )
 
     # Practice-scoped manager
@@ -228,19 +231,19 @@ class ExpenseReceipt(models.Model):
         CompanyExpense,
         on_delete=models.CASCADE,
         related_name="receipts",
-        verbose_name="Ausgabe",
+        verbose_name=_("Expense"),
     )
     file = models.FileField(
         upload_to=expense_attachment_upload_path,
-        verbose_name="Datei",
-        help_text="PDF, JPG oder PNG der Quittung / Rechnung",
+        verbose_name=_("File"),
+        help_text=_("PDF, JPG or PNG of the receipt / invoice"),
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["uploaded_at"]
-        verbose_name = "Beleg"
-        verbose_name_plural = "Belege"
+        verbose_name = _("Receipt")
+        verbose_name_plural = _("Receipts")
 
     def __str__(self) -> str:
         return f"{self.expense} — {Path(self.file.name or '').name}"
@@ -259,15 +262,15 @@ class TaxYearNote(models.Model):
         "Practice",
         on_delete=models.CASCADE,
         related_name="tax_year_notes",
-        verbose_name="Praxis",
+        verbose_name=_("Practice"),
     )
-    year = models.PositiveSmallIntegerField(verbose_name="Steuerjahr", db_index=True)
+    year = models.PositiveSmallIntegerField(verbose_name=_("Tax year"), db_index=True)
     allocation_note = models.TextField(
         blank=True,
-        verbose_name="Aufteilungsnotiz",
-        help_text=(
-            "Dokumentierter Aufteilungsschluessel, z. B. "
-            '"Einnahmenanteil 95/5 fuer 2025 - HO-Pauschale und Pendlerpauschale anteilig."'
+        verbose_name=_("Allocation note"),
+        help_text=_(
+            "Documented split key, e.g. "
+            '"Revenue share 95/5 for 2025 — HO allowance and commuter allowance split accordingly."'
         ),
     )
     settlement_amount = models.DecimalField(
@@ -275,22 +278,24 @@ class TaxYearNote(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name="Steuernachzahlung / -erstattung",
-        help_text="Positiv = Nachzahlung ans Finanzamt, negativ = Erstattung vom Finanzamt",
+        verbose_name=_("Tax back payment / refund"),
+        help_text=_(
+            "Positive = back payment to the tax office, negative = refund from the tax office"
+        ),
     )
     settlement_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Bescheiddatum",
-        help_text="Datum des Steuerbescheids",
+        verbose_name=_("Assessment date"),
+        help_text=_("Date of the tax assessment notice"),
     )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = [("practice", "year")]
         ordering = ["-year"]
-        verbose_name = "Steuer-Jahresnotiz"
-        verbose_name_plural = "Steuer-Jahresnotizen"
+        verbose_name = _("Tax year note")
+        verbose_name_plural = _("Tax year notes")
 
     def __str__(self) -> str:
         return f"{self.practice} — {self.year}"
