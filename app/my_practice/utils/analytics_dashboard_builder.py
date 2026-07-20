@@ -270,9 +270,7 @@ class AnalyticsDashboardBuilder:
                    avg_capacity_hours, years_count}
         """
         from collections import defaultdict
-        from ..utils.chart_helpers import GERMAN_MONTHS_SHORT
-
-        german_month_names = GERMAN_MONTHS_SHORT
+        from ..utils.chart_helpers import MONTH_ABBREVIATIONS
 
         by_month: dict[int, list] = defaultdict(list)
         for item in capacity_trends:
@@ -294,7 +292,7 @@ class AnalyticsDashboardBuilder:
                 avg_pct, avg_booked, avg_capacity, years_count = 0, 0.0, 0.0, 0
             result.append(
                 {
-                    "month_name": german_month_names[m - 1],
+                    "month_name": MONTH_ABBREVIATIONS[m - 1],
                     "month_num": m,
                     "avg_capacity_pct": avg_pct,
                     "avg_booked_hours": avg_booked,

@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from itertools import chain
 
 from dateutil.relativedelta import relativedelta
+from django.utils.translation import gettext as _
 
 from ..models import (
     ClientDocument,
@@ -21,17 +22,19 @@ from ..models.clinical import (
     MoodTag,
 )
 from ..models.session import Session
-from .chart_helpers import aggregate_invoice_items_by_month, prepare_monthly_chart_data
+from .chart_helpers import (
+    MONTH_ABBREVIATIONS,
+    aggregate_invoice_items_by_month,
+    prepare_monthly_chart_data,
+)
 from .calculations import count_sessions
 from .questionnaire_content import list_available_questionnaires
 from .revenue_helpers import RevenueCalculator
 from .tag_helpers import sort_tags_by_category
 
-_MONTHS_DE = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
-
 
 def _fmt_month(d: date) -> str:
-    return f"{_MONTHS_DE[d.month - 1]} {d.strftime('%y')}"
+    return f"{MONTH_ABBREVIATIONS[d.month - 1]} {d.strftime('%y')}"
 
 
 class ClientDetailContextBuilder:
@@ -134,7 +137,7 @@ class ClientDetailContextBuilder:
             return None
         start_str = _fmt_month(first)
         if is_recently_active:
-            return f"seit {start_str}"
+            return _("since %(start)s") % {"start": start_str}
         if last:
             end_str = _fmt_month(last)
             return f"{start_str} – {end_str}" if end_str != start_str else start_str
@@ -199,9 +202,9 @@ class ClientDetailContextBuilder:
     def _build_clinical_context(self) -> dict:
         from ..models import SessionLog
 
-        profile, _ = ClientProfile.objects.get_or_create(client=self.client)
+        profile, _created = ClientProfile.objects.get_or_create(client=self.client)
 
-        # Last 5 session logs for Überblick tab (unencrypted metadata only)
+        # Last 5 session logs for the overview tab (unencrypted metadata only)
         recent_session_logs = (
             SessionLog.objects.filter(session__client=self.client, session__cancelled=False)
             .select_related("session")

@@ -16,7 +16,7 @@ from .calculations import (
     count_sessions_rounded,
 )
 from .chart_helpers import (
-    GERMAN_MONTHS_SHORT,
+    MONTH_ABBREVIATIONS,
     aggregate_invoice_items_by_month,
     format_month_key,
     format_month_label,
@@ -83,7 +83,7 @@ __all__ = [
     "format_month_key",
     "format_month_label",
     "aggregate_invoice_items_by_month",
-    "GERMAN_MONTHS_SHORT",
+    "MONTH_ABBREVIATIONS",
     "prepare_monthly_chart_data",
     "annotate_activity_status",
     "flatten_invoice_items",
