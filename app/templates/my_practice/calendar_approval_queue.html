@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
 
 {% block title %}{% trans "Approve calendar events" %}{% endblock %}
 {% block page_title %}{% trans "Approve calendar events" %}{% endblock %}
@@ -109,7 +110,7 @@
                 <td class="text-primary">{{ event.summary }}</td>
                 <td class="text-muted text-sm">
                     {% if event.suggested_service_type %}
-                        {{ event.suggested_service_type.name_de|default:event.suggested_service_type.name }}
+                        {% if CURRENT_LANGUAGE == "en" %}{{ event.suggested_service_type.name_en|default:event.suggested_service_type.name }}{% else %}{{ event.suggested_service_type.name_de|default:event.suggested_service_type.name }}{% endif %}
                     {% else %}
                         <em>—</em>
                     {% endif %}

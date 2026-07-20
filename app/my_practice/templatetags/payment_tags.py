@@ -7,7 +7,7 @@ import html as _html
 from django import template
 from django.utils.safestring import mark_safe
 
-from ..utils.chart_helpers import GERMAN_MONTHS_SHORT
+from ..utils.chart_helpers import MONTH_ABBREVIATIONS
 
 register = template.Library()
 
@@ -202,14 +202,14 @@ def query_string(context, **kwargs):
 @register.filter(name="format_month_year")
 def format_month_year(date_value):
     """
-    Format date as German month and year (e.g., "Jan 2025").
+    Format date as localized month abbreviation and year (e.g., "Jan 2025").
     Usage: {{ date|format_month_year }}
     """
     if date_value is None:
         return "–"
 
     try:
-        month_name = GERMAN_MONTHS_SHORT[date_value.month - 1]
+        month_name = MONTH_ABBREVIATIONS[date_value.month - 1]
         return f"{month_name} {date_value.year}"
     except AttributeError, IndexError, ValueError, TypeError:
         return "–"

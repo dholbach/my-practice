@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load number_filters %}
 {% load static i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
 
 {% block title %}{% trans "Calendar import" %}{% endblock %}
 
@@ -137,7 +138,7 @@
                         {% for service in service_types %}
                         <option value="{{ service.id }}"
                                 {% if event.suggested_service_type_obj and event.suggested_service_type_obj.id == service.id %}selected{% endif %}>
-                            {{ service.name_de|default:service.name }}
+                            {% if CURRENT_LANGUAGE == "en" %}{{ service.name_en|default:service.name }}{% else %}{{ service.name_de|default:service.name }}{% endif %}
                         </option>
                         {% endfor %}
                     </select>

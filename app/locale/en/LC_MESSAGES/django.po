@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-20 20:44+0200\n"
+"POT-Creation-Date: 2026-07-20 21:22+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -145,7 +145,7 @@ msgstr ""
 #: templates/my_practice/analytics.html:395
 #: templates/my_practice/bank_import.html:87
 #: templates/my_practice/billing_open_overview.html:58
-#: templates/my_practice/calendar_import.html:92
+#: templates/my_practice/calendar_import.html:93
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
 #: templates/my_practice/inquiry_confirm_delete.html:30
@@ -216,7 +216,7 @@ msgstr ""
 #: my_practice/utils/dashboard_widgets.py:211
 #: my_practice/utils/dashboard_widgets.py:252
 #: templates/my_practice/billing_open_overview.html:53
-#: templates/my_practice/calendar_import.html:90
+#: templates/my_practice/calendar_import.html:91
 #: templates/my_practice/client_detail.html:7
 #: templates/my_practice/invoice_confirm_delete.html:24
 #: templates/my_practice/invoice_list.html:166
@@ -714,8 +714,8 @@ msgstr ""
 #: my_practice/models/financial.py:85 my_practice/models/financial.py:173
 #: templates/my_practice/bank_import.html:83
 #: templates/my_practice/bank_review.html:190
-#: templates/my_practice/calendar_approval_queue.html:89
-#: templates/my_practice/calendar_import.html:86
+#: templates/my_practice/calendar_approval_queue.html:90
+#: templates/my_practice/calendar_import.html:87
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
 #: templates/my_practice/expense_confirm_delete.html:19
@@ -784,7 +784,7 @@ msgid "Type"
 msgstr ""
 
 #: my_practice/forms.py:185 my_practice/models/timeoff.py:44
-#: templates/my_practice/calendar_approval_queue.html:92
+#: templates/my_practice/calendar_approval_queue.html:93
 #: templates/my_practice/time_off_confirm_delete.html:19
 #: templates/my_practice/time_off_list.html:31
 #: templates/my_practice/time_off_list.html:76
@@ -1156,8 +1156,8 @@ msgstr ""
 #: my_practice/models/session.py:37
 #: templates/includes/calendar_preflight_widget.html:44
 #: templates/my_practice/analytics.html:912
-#: templates/my_practice/calendar_import.html:55
-#: templates/my_practice/calendar_import.html:151
+#: templates/my_practice/calendar_import.html:56
+#: templates/my_practice/calendar_import.html:152
 #: templates/my_practice/dashboard.html:154
 #: templates/my_practice/invoice_detail.html:43
 msgid "Cancelled"
@@ -1168,8 +1168,8 @@ msgid "Summary"
 msgstr ""
 
 #: my_practice/models/calendar.py:102 my_practice/models/session.py:28
-#: templates/my_practice/calendar_approval_queue.html:90
-#: templates/my_practice/calendar_import.html:87
+#: templates/my_practice/calendar_approval_queue.html:91
+#: templates/my_practice/calendar_import.html:88
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/inquiry_form.html:121
 msgid "Time"
@@ -1181,7 +1181,7 @@ msgid "Duration (minutes)"
 msgstr ""
 
 #: my_practice/models/calendar.py:118 my_practice/models/service.py:51
-#: templates/my_practice/calendar_approval_queue.html:93
+#: templates/my_practice/calendar_approval_queue.html:94
 msgid "Service type"
 msgstr ""
 
@@ -1606,7 +1606,7 @@ msgstr ""
 #: my_practice/models/clinical.py:344 my_practice/models/clinical.py:380
 #: my_practice/models/gebueh.py:42
 #: templates/includes/calendar_preflight_widget.html:28
-#: templates/my_practice/calendar_approval_queue.html:22
+#: templates/my_practice/calendar_approval_queue.html:23
 #: templates/my_practice/inquiry_form.html:121
 #: templates/my_practice/tax_workday_audit.html:63
 msgid "Note"
@@ -2836,6 +2836,71 @@ msgstr "Error: %(error)s"
 msgid "Session on %(date)s was billed."
 msgstr "Session on %(date)s was billed."
 
+#: my_practice/utils/chart_helpers.py:17
+#: templates/my_practice/analytics.html:755
+msgid "Jan"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:18
+#: templates/my_practice/analytics.html:755
+msgid "Feb"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:19
+#: templates/my_practice/analytics.html:755
+msgid "Mar"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:20
+#: templates/my_practice/analytics.html:756
+msgid "Apr"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:21
+#: templates/my_practice/analytics.html:756
+msgid "May"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:22
+#: templates/my_practice/analytics.html:756
+msgid "Jun"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:23
+#: templates/my_practice/analytics.html:757
+msgid "Jul"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:24
+#: templates/my_practice/analytics.html:757
+msgid "Aug"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:25
+#: templates/my_practice/analytics.html:757
+msgid "Sep"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:26
+#: templates/my_practice/analytics.html:758
+msgid "Oct"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:27
+#: templates/my_practice/analytics.html:758
+msgid "Nov"
+msgstr ""
+
+#: my_practice/utils/chart_helpers.py:28
+#: templates/my_practice/analytics.html:758
+msgid "Dec"
+msgstr ""
+
+#: my_practice/utils/client_detail_builder.py:140
+#, python-format
+msgid "since %(start)s"
+msgstr ""
+
 #: my_practice/utils/dashboard_widgets.py:26
 msgid "Follow-up"
 msgstr ""
@@ -2926,9 +2991,9 @@ msgid "Operations"
 msgstr ""
 
 #: my_practice/utils/dashboard_widgets.py:465
-#: templates/my_practice/calendar_approval_queue.html:76
-#: templates/my_practice/calendar_approval_queue.html:262
-#: templates/my_practice/calendar_approval_queue.html:267
+#: templates/my_practice/calendar_approval_queue.html:77
+#: templates/my_practice/calendar_approval_queue.html:263
+#: templates/my_practice/calendar_approval_queue.html:268
 msgid "Import"
 msgstr ""
 
@@ -4226,8 +4291,8 @@ msgid "Date (invoice)"
 msgstr "Date (invoice)"
 
 #: templates/includes/calendar_preflight_widget.html:26
-#: templates/my_practice/calendar_approval_queue.html:91
-#: templates/my_practice/calendar_import.html:89
+#: templates/my_practice/calendar_approval_queue.html:92
+#: templates/my_practice/calendar_import.html:90
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/invoice_detail.html:84
 #: templates/my_practice/time_off_list.html:35
@@ -4403,7 +4468,7 @@ msgid "Approve"
 msgstr ""
 
 #: templates/includes/pending_calendar_widget_content.html:20
-#: templates/my_practice/calendar_approval_queue.html:16
+#: templates/my_practice/calendar_approval_queue.html:17
 msgid "No pending calendar events"
 msgstr ""
 
@@ -4585,7 +4650,7 @@ msgid "Focus tasks"
 msgstr ""
 
 #: templates/includes/weekly_focus_widget_content.html:41
-#: templates/my_practice/calendar_approval_queue.html:37
+#: templates/my_practice/calendar_approval_queue.html:38
 msgid "Mark as done"
 msgstr ""
 
@@ -4959,54 +5024,6 @@ msgstr ""
 
 #: templates/my_practice/analytics.html:743
 msgid "Therapy hours per calendar month (last 4 years + average)"
-msgstr ""
-
-#: templates/my_practice/analytics.html:755
-msgid "Jan"
-msgstr ""
-
-#: templates/my_practice/analytics.html:755
-msgid "Feb"
-msgstr ""
-
-#: templates/my_practice/analytics.html:755
-msgid "Mar"
-msgstr ""
-
-#: templates/my_practice/analytics.html:756
-msgid "Apr"
-msgstr ""
-
-#: templates/my_practice/analytics.html:756
-msgid "May"
-msgstr ""
-
-#: templates/my_practice/analytics.html:756
-msgid "Jun"
-msgstr ""
-
-#: templates/my_practice/analytics.html:757
-msgid "Jul"
-msgstr ""
-
-#: templates/my_practice/analytics.html:757
-msgid "Aug"
-msgstr ""
-
-#: templates/my_practice/analytics.html:757
-msgid "Sep"
-msgstr ""
-
-#: templates/my_practice/analytics.html:758
-msgid "Oct"
-msgstr ""
-
-#: templates/my_practice/analytics.html:758
-msgid "Nov"
-msgstr ""
-
-#: templates/my_practice/analytics.html:758
-msgid "Dec"
 msgstr ""
 
 #: templates/my_practice/analytics.html:827
@@ -5468,7 +5485,7 @@ msgid "Billed"
 msgstr ""
 
 #: templates/my_practice/billing_open_overview.html:59
-#: templates/my_practice/calendar_import.html:93
+#: templates/my_practice/calendar_import.html:94
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
 #: templates/my_practice/expense_list.html:85
@@ -5551,140 +5568,140 @@ msgstr ""
 msgid "Click text to copy."
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:4
 #: templates/my_practice/calendar_approval_queue.html:5
+#: templates/my_practice/calendar_approval_queue.html:6
 msgid "Approve calendar events"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:6
+#: templates/my_practice/calendar_approval_queue.html:7
 #, python-format
 msgid "%(counter)s pending event"
 msgid_plural "%(counter)s pending events"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/calendar_approval_queue.html:11
+#: templates/my_practice/calendar_approval_queue.html:12
 msgid "Manual import"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:17
+#: templates/my_practice/calendar_approval_queue.html:18
 msgid "All events have already been approved or skipped."
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:24
+#: templates/my_practice/calendar_approval_queue.html:25
 msgid "Select events and add them to an existing invoice. Events are grouped by client and billing month so multiple months don't accidentally end up on one invoice."
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:31
+#: templates/my_practice/calendar_approval_queue.html:32
 #, python-format
 msgid "%(counter)s event hidden"
 msgid_plural "%(counter)s events hidden"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/calendar_approval_queue.html:33
+#: templates/my_practice/calendar_approval_queue.html:34
 msgid "These events already have matching invoice items and are not shown."
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:54
+#: templates/my_practice/calendar_approval_queue.html:55
 msgid "Client not identified"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:58
+#: templates/my_practice/calendar_approval_queue.html:59
 #, python-format
 msgid "%(counter)s event"
 msgid_plural "%(counter)s events"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/calendar_approval_queue.html:65
+#: templates/my_practice/calendar_approval_queue.html:66
 msgid "Select invoice…"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:67
+#: templates/my_practice/calendar_approval_queue.html:68
 #, python-format
 msgid "%(counter)s item"
 msgid_plural "%(counter)s items"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/calendar_approval_queue.html:69
+#: templates/my_practice/calendar_approval_queue.html:70
 msgid "Create new invoice"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:87
+#: templates/my_practice/calendar_approval_queue.html:88
 msgid "Select all"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:94
+#: templates/my_practice/calendar_approval_queue.html:95
 msgid "Action"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:120
+#: templates/my_practice/calendar_approval_queue.html:121
 msgid "Skip event"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:134
+#: templates/my_practice/calendar_approval_queue.html:135
 #: templates/my_practice/expense_list.html:143
 msgid "Back to dashboard"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:137
+#: templates/my_practice/calendar_approval_queue.html:138
 msgid "event imported"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:138
-#: templates/my_practice/calendar_import.html:352
+#: templates/my_practice/calendar_approval_queue.html:139
+#: templates/my_practice/calendar_import.html:353
 msgid "events imported"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:148
+#: templates/my_practice/calendar_approval_queue.html:149
 msgid "Skipping…"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:158
+#: templates/my_practice/calendar_approval_queue.html:159
 msgid "Error while skipping."
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:160
-#: templates/my_practice/calendar_approval_queue.html:165
+#: templates/my_practice/calendar_approval_queue.html:161
+#: templates/my_practice/calendar_approval_queue.html:166
 msgid "Skip all duplicates"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:163
+#: templates/my_practice/calendar_approval_queue.html:164
 #: templates/my_practice/tax_quarter_overview.html:241
 #: templates/my_practice/tax_year_summary.html:413
 msgid "Network error."
 msgstr "Network error."
 
-#: templates/my_practice/calendar_approval_queue.html:196
+#: templates/my_practice/calendar_approval_queue.html:197
 msgid "Error while skipping the event."
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:216
+#: templates/my_practice/calendar_approval_queue.html:217
 msgid "Please select at least one appointment."
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:225
-#: templates/my_practice/calendar_import.html:312
+#: templates/my_practice/calendar_approval_queue.html:226
+#: templates/my_practice/calendar_import.html:313
 msgid "Importing…"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:256
-#: templates/my_practice/calendar_import.html:352
+#: templates/my_practice/calendar_approval_queue.html:257
+#: templates/my_practice/calendar_import.html:353
 msgid "skipped"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:260
-#: templates/my_practice/calendar_import.html:366
+#: templates/my_practice/calendar_approval_queue.html:261
+#: templates/my_practice/calendar_import.html:367
 msgid "Error"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:260
+#: templates/my_practice/calendar_approval_queue.html:261
 msgid "Unknown error"
 msgstr ""
 
-#: templates/my_practice/calendar_approval_queue.html:265
+#: templates/my_practice/calendar_approval_queue.html:266
 msgid "Network error while importing."
 msgstr ""
 
@@ -5750,69 +5767,69 @@ msgstr ""
 msgid "You can revoke access in your Google account at any time"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:5
+#: templates/my_practice/calendar_import.html:6
 msgid "Calendar import"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:9
+#: templates/my_practice/calendar_import.html:10
 msgid "Google Calendar import"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:11
+#: templates/my_practice/calendar_import.html:12
 msgid "Approval queue"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:17
+#: templates/my_practice/calendar_import.html:18
 msgid "From:"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:24
+#: templates/my_practice/calendar_import.html:25
 msgid "To:"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:31
+#: templates/my_practice/calendar_import.html:32
 msgid "Load"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:39
+#: templates/my_practice/calendar_import.html:40
 msgid "Total events"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:43
+#: templates/my_practice/calendar_import.html:44
 msgid "New & Ready"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:47
+#: templates/my_practice/calendar_import.html:48
 msgid "Duplicates"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:51
-#: templates/my_practice/calendar_import.html:153
+#: templates/my_practice/calendar_import.html:52
+#: templates/my_practice/calendar_import.html:154
 msgid "Unknown"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:60
+#: templates/my_practice/calendar_import.html:61
 msgid "Already imported"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:68
-#: templates/my_practice/calendar_import.html:282
+#: templates/my_practice/calendar_import.html:69
+#: templates/my_practice/calendar_import.html:283
 msgid "selected"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:70
-#: templates/my_practice/calendar_import.html:335
-#: templates/my_practice/calendar_import.html:372
+#: templates/my_practice/calendar_import.html:71
+#: templates/my_practice/calendar_import.html:336
+#: templates/my_practice/calendar_import.html:373
 msgid "Import selected"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:73
-#: templates/my_practice/calendar_import.html:171
-#: templates/my_practice/calendar_import.html:199
+#: templates/my_practice/calendar_import.html:74
+#: templates/my_practice/calendar_import.html:172
+#: templates/my_practice/calendar_import.html:200
 msgid "Hide duplicates"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:76
+#: templates/my_practice/calendar_import.html:77
 #: templates/my_practice/client_detail.html:380
 #: templates/my_practice/client_detail_documents.html:28
 #: templates/my_practice/client_gdpr_delete_confirm.html:55
@@ -5851,86 +5868,86 @@ msgstr ""
 msgid "Cancel"
 msgstr "Cancel"
 
-#: templates/my_practice/calendar_import.html:88
+#: templates/my_practice/calendar_import.html:89
 msgid "Event"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:91
+#: templates/my_practice/calendar_import.html:92
 #: templates/my_practice/invoice_detail.html:83
 #: templates/my_practice/invoice_edit.html:109
 msgid "Service"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:93
-#: templates/my_practice/calendar_import.html:157
+#: templates/my_practice/calendar_import.html:94
+#: templates/my_practice/calendar_import.html:158
 msgid "Skip event (will not be imported)"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:125
+#: templates/my_practice/calendar_import.html:126
 msgid "Select client"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:136
+#: templates/my_practice/calendar_import.html:137
 msgid "Select service"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:147
+#: templates/my_practice/calendar_import.html:148
 msgid "Already imported as invoice item"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:147
+#: templates/my_practice/calendar_import.html:148
 msgid "Duplicate"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:149
+#: templates/my_practice/calendar_import.html:150
 msgid "Client recognized, ready for import"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:149
+#: templates/my_practice/calendar_import.html:150
 msgid "Ready"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:151
+#: templates/my_practice/calendar_import.html:152
 msgid "Event was cancelled"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:153
+#: templates/my_practice/calendar_import.html:154
 msgid "Client not recognized – please assign manually"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:168
+#: templates/my_practice/calendar_import.html:169
 msgid "Import selected events"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:177
+#: templates/my_practice/calendar_import.html:178
 msgid "No events found in the selected date range."
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:178
+#: templates/my_practice/calendar_import.html:179
 msgid "Select a different date range."
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:199
+#: templates/my_practice/calendar_import.html:200
 msgid "Show duplicates"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:307
+#: templates/my_practice/calendar_import.html:308
 msgid "Please select at least one event."
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:333
+#: templates/my_practice/calendar_import.html:334
 msgid "Please select a client and service type for all events."
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:352
+#: templates/my_practice/calendar_import.html:353
 msgid "Success!"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:354
+#: templates/my_practice/calendar_import.html:355
 msgid "errors"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:369
+#: templates/my_practice/calendar_import.html:370
 msgid "Error during import"
 msgstr ""
 

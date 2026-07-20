@@ -6,22 +6,26 @@ from collections import defaultdict
 from datetime import date, datetime
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
+
 from ..utils.calculations import count_sessions
 
-# German month abbreviations (index 0 = January, index 11 = December)
-GERMAN_MONTHS_SHORT = [
-    "Jan",
-    "Feb",
-    "Mär",
-    "Apr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Okt",
-    "Nov",
-    "Dez",
+# Localized month abbreviations (index 0 = January, index 11 = December).
+# Reuses the same msgids already established for the analytics chart's
+# JS month labels (templates/my_practice/analytics.html) so both stay in sync.
+MONTH_ABBREVIATIONS = [
+    _("Jan"),
+    _("Feb"),
+    _("Mar"),
+    _("Apr"),
+    _("May"),
+    _("Jun"),
+    _("Jul"),
+    _("Aug"),
+    _("Sep"),
+    _("Oct"),
+    _("Nov"),
+    _("Dec"),
 ]
 
 

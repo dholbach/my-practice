@@ -231,6 +231,7 @@ Complete feature list for the Therapy Practice Management System.
 ## 🔧 Technical Features
 
 ### UI/UX
+- ✅ Bilingual app UI (German/English) with a DE/EN language switcher — every template, view, model, and admin label wrapped via Django i18n (P-039)
 - ✅ Dark mode with theme toggle
 - ✅ Privacy mode (blur sensitive data)
 - ✅ Responsive design
