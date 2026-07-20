@@ -1,7 +1,7 @@
 # P-039: Django i18n — Bilingual App UI
 
 **Status**: DONE (2026-07-20)
-**Priority**: Medium (contributor on-ramp, driven by external interest)
+**Priority**: Medium
 **Depends on**: P-038 ✅, P-024 ✅
 **Tracking issue**: [#69](https://github.com/dholbach/my-practice/issues/69) (closed)
 
