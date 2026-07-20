@@ -7,6 +7,8 @@ from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
 from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
 from .client import Client
@@ -46,11 +48,11 @@ class Invoice(TimestampedModel):
         WRITTEN_OFF = "written_off"
 
     STATUS_CHOICES = [
-        (Status.DRAFT, "Entwurf"),
-        (Status.SENT, "Gesendet"),
-        (Status.PAID, "Bezahlt"),
-        (Status.CANCELLED, "Storniert"),
-        (Status.WRITTEN_OFF, "Abgeschrieben"),
+        (Status.DRAFT, gettext_lazy("Draft")),
+        (Status.SENT, gettext_lazy("Sent")),
+        (Status.PAID, gettext_lazy("Paid")),
+        (Status.CANCELLED, gettext_lazy("Cancelled")),
+        (Status.WRITTEN_OFF, gettext_lazy("Written off")),
     ]
 
     # Practice relationship - inherited by InvoiceItems
@@ -58,73 +60,78 @@ class Invoice(TimestampedModel):
         "Practice",
         on_delete=models.PROTECT,
         related_name="invoices",
-        verbose_name="Praxis",
+        verbose_name=gettext_lazy("Practice"),
     )
 
     invoice_number = models.CharField(
         max_length=20,
         unique=True,
         blank=True,
-        verbose_name="Rechnungsnummer",
-        help_text="Auto-generated (e.g., JL-5) or enter manually",
+        verbose_name=gettext_lazy("Invoice number"),
+        help_text=gettext_lazy("Auto-generated (e.g., JL-5) or enter manually"),
     )
     client = models.ForeignKey(
-        Client, on_delete=models.PROTECT, related_name="invoices", verbose_name="Klient"
+        Client,
+        on_delete=models.PROTECT,
+        related_name="invoices",
+        verbose_name=gettext_lazy("Client"),
     )
 
     invoice_date = models.DateField(
-        default=date.today, verbose_name="Rechnungsdatum", help_text="Defaults to today"
+        default=date.today,
+        verbose_name=gettext_lazy("Invoice date"),
+        help_text=gettext_lazy("Defaults to today"),
     )
 
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=Status.DRAFT,
-        verbose_name="Status",
+        verbose_name=gettext_lazy("Status"),
     )
 
     paid_date = models.DateField(
         null=True,
         blank=True,
-        verbose_name="Bezahlt am",
-        help_text="Datum der Bezahlung",
+        verbose_name=gettext_lazy("Paid on"),
+        help_text=gettext_lazy("Date of payment"),
     )
 
     subtotal = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=Decimal("0.00"),
-        verbose_name="Zwischensumme",
+        verbose_name=gettext_lazy("Subtotal"),
     )
     tax_rate = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=Decimal("0.00"),
-        verbose_name="Steuersatz (%)",
-        help_text="Kleinunternehmer = 0%",
+        verbose_name=gettext_lazy("Tax rate (%)"),
+        help_text=gettext_lazy("Kleinunternehmer = 0%"),
     )
     tax_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=Decimal("0.00"),
-        verbose_name="Steuerbetrag",
+        verbose_name=gettext_lazy("Tax amount"),
     )
     total = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=Decimal("0.00"),
-        verbose_name="Gesamtbetrag",
+        verbose_name=gettext_lazy("Total amount"),
     )
 
-    notes = models.TextField(blank=True, verbose_name="Notizen")
+    notes = models.TextField(blank=True, verbose_name=gettext_lazy("Notes"))
 
     # Practice-scoped manager with InvoiceQuerySet helpers
     objects = PracticeScopedManager.from_queryset(InvoiceQuerySet)()
 
     class Meta:
         ordering = ["-invoice_date", "-invoice_number"]
-        verbose_name = "Rechnung"
-        verbose_name_plural = "Rechnungen"
+        verbose_name = gettext_lazy("Invoice")
+        verbose_name_plural = gettext_lazy("Invoices")
         indexes = [
             models.Index(fields=["invoice_date"], name="invoice_invoice_date_idx"),
             models.Index(fields=["paid_date"], name="invoice_paid_date_idx"),
@@ -136,7 +143,7 @@ class Invoice(TimestampedModel):
             models.UniqueConstraint(
                 fields=["invoice_number"],
                 name="unique_invoice_number",
-                violation_error_message="Diese Rechnungsnummer existiert bereits.",
+                violation_error_message=gettext_lazy("This invoice number already exists."),
             ),
         ]
 
@@ -159,16 +166,22 @@ class Invoice(TimestampedModel):
                 if existing:  # guard for mypy (first() can return None)
                     raise ValidationError(
                         {
-                            "invoice_number": f'Rechnungsnummer "{self.invoice_number}" existiert bereits '
-                            f"(Rechnung für {existing.client.client_code} vom "
-                            f"{existing.invoice_date.strftime('%d.%m.%Y')})"
+                            "invoice_number": _(
+                                'Invoice number "%(number)s" already exists '
+                                "(invoice for %(client_code)s dated %(date)s)"
+                            )
+                            % {
+                                "number": self.invoice_number,
+                                "client_code": existing.client.client_code,
+                                "date": existing.invoice_date.strftime("%d.%m.%Y"),
+                            }
                         }
                     )
 
         # Validate paid_date is not before invoice_date
         if self.paid_date and self.invoice_date and self.paid_date < self.invoice_date:
             raise ValidationError(
-                {"paid_date": "Zahlungsdatum darf nicht vor dem Rechnungsdatum liegen"}
+                {"paid_date": _("Payment date must not be before the invoice date")}
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -231,23 +244,31 @@ class InvoiceItem(models.Model):
     """Invoice line items"""
 
     invoice = models.ForeignKey(
-        Invoice, on_delete=models.CASCADE, related_name="items", verbose_name="Invoice"
+        Invoice,
+        on_delete=models.CASCADE,
+        related_name="items",
+        verbose_name=gettext_lazy("Invoice"),
     )
     service_type = models.ForeignKey(
-        ServiceType, on_delete=models.PROTECT, verbose_name="Service Type"
+        ServiceType, on_delete=models.PROTECT, verbose_name=gettext_lazy("Service Type")
     )
 
-    rate = models.DecimalField(max_digits=6, decimal_places=2, verbose_name="Satz")
+    rate = models.DecimalField(max_digits=6, decimal_places=2, verbose_name=gettext_lazy("Rate"))
     quantity = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal("1.00"), verbose_name="Quantity"
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("1.00"),
+        verbose_name=gettext_lazy("Quantity"),
     )
-    total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Total")
+    total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=gettext_lazy("Total"))
 
     group_size = models.PositiveSmallIntegerField(
         default=1,
-        verbose_name="Gruppengröße",
-        help_text="Anzahl Teilnehmer bei Gruppenangeboten (default 1 = Einzelsitzung). "
-        "Beeinflusst die Berechnung der Therapeutenstunden in der Analytik.",
+        verbose_name=gettext_lazy("Group size"),
+        help_text=gettext_lazy(
+            "Number of participants for group offerings (default 1 = individual session). "
+            "Affects the calculation of therapist hours in analytics."
+        ),
     )
 
     # Link to central Session object — required (NOT NULL)
@@ -257,14 +278,16 @@ class InvoiceItem(models.Model):
         null=False,
         blank=False,
         related_name="invoice_items",
-        verbose_name="Sitzung",
-        help_text="Verknüpfte Sitzung (zentrale Referenz für Klinik + Abrechnung)",
+        verbose_name=gettext_lazy("Session"),
+        help_text=gettext_lazy(
+            "Linked session (central reference for clinical documentation + billing)"
+        ),
     )
 
     class Meta:
         ordering = ["session__session_date"]
-        verbose_name = "Rechnungsposition"
-        verbose_name_plural = "Rechnungspositionen"
+        verbose_name = gettext_lazy("Invoice item")
+        verbose_name_plural = gettext_lazy("Invoice items")
         indexes = []
 
     def __str__(self) -> str:

@@ -4,6 +4,8 @@ from enum import StrEnum
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
 
 def _normalize_iban(iban: str) -> str:
@@ -31,15 +33,15 @@ class BankTransaction(models.Model):
         AUTO_CORRECTION = "auto-correction"
 
     CONFIDENCE_CHOICES = [
-        (Confidence.EXACT, "Exact Match"),
-        (Confidence.FUZZY, "Fuzzy Match (±5€)"),
-        (Confidence.MANUAL, "Manual Assignment"),
-        (Confidence.IGNORED, "Ignored (Expense/Duplicate)"),
-        (Confidence.UNMATCHED, "Unmatched"),
-        (Confidence.AUTO_WITHDRAWAL, "Auto-Created Withdrawal"),
-        (Confidence.AUTO_EXPENSE, "Auto-Created Expense"),
-        (Confidence.AUTO_CONTRIBUTION, "Auto-Created Contribution (Kapitaleinlage)"),
-        (Confidence.AUTO_CORRECTION, "Auto-Created Correction (Fehlbuchung)"),
+        (Confidence.EXACT, gettext_lazy("Exact Match")),
+        (Confidence.FUZZY, gettext_lazy("Fuzzy Match (±5€)")),
+        (Confidence.MANUAL, gettext_lazy("Manual Assignment")),
+        (Confidence.IGNORED, gettext_lazy("Ignored (Expense/Duplicate)")),
+        (Confidence.UNMATCHED, gettext_lazy("Unmatched")),
+        (Confidence.AUTO_WITHDRAWAL, gettext_lazy("Auto-Created Withdrawal")),
+        (Confidence.AUTO_EXPENSE, gettext_lazy("Auto-Created Expense")),
+        (Confidence.AUTO_CONTRIBUTION, gettext_lazy("Auto-Created Contribution (Kapitaleinlage)")),
+        (Confidence.AUTO_CORRECTION, gettext_lazy("Auto-Created Correction (Fehlbuchung)")),
     ]
 
     # Practice relationship
@@ -47,43 +49,43 @@ class BankTransaction(models.Model):
         "Practice",
         on_delete=models.CASCADE,
         related_name="bank_transactions",
-        verbose_name="Praxis",
+        verbose_name=gettext_lazy("Practice"),
     )
 
     # Transaction details (from CSV)
     transaction_date = models.DateField(
-        verbose_name="Buchungstag",
-        help_text="Transaction booking date",
+        verbose_name=gettext_lazy("Booking date"),
+        help_text=gettext_lazy("Transaction booking date"),
     )
     value_date = models.DateField(
-        verbose_name="Valutadatum",
-        help_text="Value date",
+        verbose_name=gettext_lazy("Value date"),
+        help_text=gettext_lazy("Value date"),
     )
     payer_name = models.CharField(
         max_length=200,
-        verbose_name="Name Zahlungsbeteiligter",
-        help_text="Name of payer/payee",
+        verbose_name=gettext_lazy("Payer/payee name"),
+        help_text=gettext_lazy("Name of payer/payee"),
     )
     payer_iban = models.CharField(
         max_length=34,
         blank=True,
-        verbose_name="IBAN Zahlungsbeteiligter",
+        verbose_name=gettext_lazy("Payer/payee IBAN"),
     )
     reference = models.TextField(
-        verbose_name="Verwendungszweck",
-        help_text="Payment reference text",
+        verbose_name=gettext_lazy("Payment reference"),
+        help_text=gettext_lazy("Payment reference text"),
     )
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name="Betrag",
-        help_text="Transaction amount (positive=income, negative=expense)",
+        verbose_name=gettext_lazy("Amount"),
+        help_text=gettext_lazy("Transaction amount (positive=income, negative=expense)"),
     )
     balance_after = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name="Saldo nach Buchung",
-        help_text="Account balance after transaction",
+        verbose_name=gettext_lazy("Balance after transaction"),
+        help_text=gettext_lazy("Account balance after transaction"),
     )
 
     # Matching information
@@ -93,36 +95,36 @@ class BankTransaction(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="bank_transactions",
-        verbose_name="Zugeordnete Rechnung",
-        help_text="Invoice this transaction was matched to",
+        verbose_name=gettext_lazy("Matched invoice"),
+        help_text=gettext_lazy("Invoice this transaction was matched to"),
     )
     match_confidence = models.CharField(
         max_length=20,
         choices=CONFIDENCE_CHOICES,
         default="unmatched",
-        verbose_name="Match-Genauigkeit",
+        verbose_name=gettext_lazy("Match confidence"),
     )
     extracted_invoice_number = models.CharField(
         max_length=20,
         blank=True,
-        verbose_name="Extrahierte Rechnungsnummer",
-        help_text="Invoice number extracted from reference text",
+        verbose_name=gettext_lazy("Extracted invoice number"),
+        help_text=gettext_lazy("Invoice number extracted from reference text"),
     )
 
     # Metadata
     imported_at = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="Importiert am",
+        verbose_name=gettext_lazy("Imported on"),
     )
     processed = models.BooleanField(
         default=False,
-        verbose_name="Verarbeitet",
-        help_text="Whether transaction has been processed/matched",
+        verbose_name=gettext_lazy("Processed"),
+        help_text=gettext_lazy("Whether transaction has been processed/matched"),
     )
     notes = models.TextField(
         blank=True,
-        verbose_name="Notizen",
-        help_text="Manual notes about this transaction",
+        verbose_name=gettext_lazy("Notes"),
+        help_text=gettext_lazy("Manual notes about this transaction"),
     )
 
     # Links to auto-created financial records
@@ -132,8 +134,10 @@ class BankTransaction(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="bank_transactions",
-        verbose_name="Verknüpfte Ausgabe",
-        help_text="CompanyExpense auto-created or manually assigned for this transaction",
+        verbose_name=gettext_lazy("Linked expense"),
+        help_text=gettext_lazy(
+            "CompanyExpense auto-created or manually assigned for this transaction"
+        ),
     )
     linked_withdrawal = models.ForeignKey(
         "CompanyWithdrawal",
@@ -141,23 +145,27 @@ class BankTransaction(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="bank_transactions",
-        verbose_name="Verknüpfte Entnahme",
-        help_text="CompanyWithdrawal auto-created or manually assigned for this transaction",
+        verbose_name=gettext_lazy("Linked withdrawal"),
+        help_text=gettext_lazy(
+            "CompanyWithdrawal auto-created or manually assigned for this transaction"
+        ),
     )
 
     # Source validation
     account_iban = models.CharField(
         max_length=34,
         blank=True,
-        verbose_name="Konto-IBAN",
-        help_text="IBAN des Auftragskontos aus dem CSV-Export – muss mit der Praxis-IBAN übereinstimmen",
+        verbose_name=gettext_lazy("Account IBAN"),
+        help_text=gettext_lazy(
+            "IBAN of the source account from the CSV export – must match the practice IBAN"
+        ),
     )
 
     class Meta:
         unique_together = [["practice", "transaction_date", "amount", "reference"]]
         ordering = ["-transaction_date"]
-        verbose_name = "Bank Transaction"
-        verbose_name_plural = "Bank Transactions"
+        verbose_name = gettext_lazy("Bank Transaction")
+        verbose_name_plural = gettext_lazy("Bank Transactions")
         indexes = [
             models.Index(fields=["practice", "transaction_date"]),
             models.Index(fields=["practice", "processed"]),
@@ -190,9 +198,9 @@ class BankTransaction(models.Model):
             if practice_iban and csv_iban != practice_iban:
                 raise ValidationError(
                     {
-                        "account_iban": (
-                            f"Konto-IBAN {self.account_iban} stimmt nicht mit der "
-                            f"Praxis-IBAN {self.practice.iban} überein."
+                        "account_iban": _(
+                            "Account IBAN %(csv_iban)s does not match the practice IBAN %(practice_iban)s."
                         )
+                        % {"csv_iban": self.account_iban, "practice_iban": self.practice.iban}
                     }
                 )
