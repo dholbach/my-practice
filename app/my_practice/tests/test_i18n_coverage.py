@@ -34,8 +34,6 @@ EXEMPT_TEMPLATES = {
 # wraps it with {% load i18n %} + {% trans %}/{% blocktrans %}.
 KNOWN_UNWRAPPED_TEMPLATES = {
     "my_practice/boilerplate.html",
-    "my_practice/calendar_approval_queue.html",
-    "my_practice/calendar_import.html",
     "my_practice/client_detail_documents.html",
     "my_practice/client_list.html",
     "my_practice/client_triage.html",
