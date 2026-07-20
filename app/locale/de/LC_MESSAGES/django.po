@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-19 18:13+0200\n"
+"POT-Creation-Date: 2026-07-20 10:37+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -59,13 +59,14 @@ msgid "Type"
 msgstr "Typ"
 
 #: my_practice/forms.py:183
+#: templates/my_practice/calendar_approval_queue.html:92
 #: templates/my_practice/time_off_confirm_delete.html:19
 #: templates/my_practice/time_off_list.html:31
 #: templates/my_practice/time_off_list.html:76
 msgid "Title"
 msgstr "Titel"
 
-#: my_practice/forms.py:184 my_practice/import_forms.py:64
+#: my_practice/forms.py:184 my_practice/import_forms.py:66
 #: templates/my_practice/checklist.html:119
 #: templates/my_practice/time_off_confirm_delete.html:36
 #: templates/my_practice/withdrawal_list.html:61
@@ -113,23 +114,23 @@ msgstr "Datei ist zu groß (max. 5MB)."
 msgid "Invoice(s)"
 msgstr "Rechnung(en)"
 
-#: my_practice/import_forms.py:58
+#: my_practice/import_forms.py:59
 msgid "Assign one or more invoices to the payment (for combined payments)"
 msgstr "Eine oder mehrere Rechnungen der Zahlung zuordnen (für Sammelzahlungen)"
 
-#: my_practice/import_forms.py:67
+#: my_practice/import_forms.py:69
 msgid "Optional notes for the manual match"
 msgstr "Optionale Notizen zur manuellen Zuordnung"
 
-#: my_practice/import_forms.py:104
+#: my_practice/import_forms.py:106
 msgid "Transactions"
 msgstr "Transaktionen"
 
-#: my_practice/import_forms.py:106
+#: my_practice/import_forms.py:108
 msgid "Select the transactions to group into a single expense"
 msgstr "Wähle die Transaktionen, die zu einer Ausgabe zusammengefasst werden sollen"
 
-#: my_practice/import_forms.py:111
+#: my_practice/import_forms.py:113
 #: templates/my_practice/bank_expense_review.html:31
 #: templates/my_practice/bank_withdrawal_review.html:31
 #: templates/my_practice/expense_confirm_delete.html:27
@@ -140,7 +141,7 @@ msgstr "Wähle die Transaktionen, die zu einer Ausgabe zusammengefasst werden so
 msgid "Category"
 msgstr "Kategorie"
 
-#: my_practice/import_forms.py:116
+#: my_practice/import_forms.py:118
 #: templates/my_practice/expense_confirm_delete.html:23
 #: templates/my_practice/expense_list.html:79
 #: templates/my_practice/invoice_edit.html:129
@@ -150,16 +151,16 @@ msgstr "Kategorie"
 msgid "Description"
 msgstr "Beschreibung"
 
-#: my_practice/import_forms.py:119
+#: my_practice/import_forms.py:121
 msgid "Optional: description for the grouped expense"
 msgstr "Optional: Beschreibung für die zusammengefasste Ausgabe"
 
-#: my_practice/import_forms.py:123
+#: my_practice/import_forms.py:125
 #: templates/my_practice/bank_expense_review.html:62
 msgid "Invoice available"
 msgstr "Rechnung vorhanden"
 
-#: my_practice/import_forms.py:129
+#: my_practice/import_forms.py:131
 #: templates/my_practice/bank_expense_review.html:66
 #: templates/my_practice/expense_list.html:27
 msgid "Tax deductible"
@@ -352,6 +353,7 @@ msgstr "Protokoll fehlt"
 #: my_practice/utils/dashboard_widgets.py:211
 #: my_practice/utils/dashboard_widgets.py:252
 #: templates/my_practice/billing_open_overview.html:53
+#: templates/my_practice/calendar_import.html:90
 #: templates/my_practice/client_detail.html:7
 #: templates/my_practice/invoice_confirm_delete.html:24
 #: templates/my_practice/revenue_report.html:51
@@ -448,6 +450,9 @@ msgid "Operations"
 msgstr "Betrieb"
 
 #: my_practice/utils/dashboard_widgets.py:465
+#: templates/my_practice/calendar_approval_queue.html:76
+#: templates/my_practice/calendar_approval_queue.html:262
+#: templates/my_practice/calendar_approval_queue.html:267
 msgid "Import"
 msgstr "Importieren"
 
@@ -1432,6 +1437,8 @@ msgid "Date (invoice)"
 msgstr "Datum (Rechnung)"
 
 #: templates/includes/calendar_preflight_widget.html:26
+#: templates/my_practice/calendar_approval_queue.html:91
+#: templates/my_practice/calendar_import.html:89
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/invoice_detail.html:84
 #: templates/my_practice/time_off_list.html:35
@@ -1443,6 +1450,7 @@ msgstr "Dauer"
 #: templates/my_practice/analytics.html:395
 #: templates/my_practice/bank_import.html:87
 #: templates/my_practice/billing_open_overview.html:58
+#: templates/my_practice/calendar_import.html:92
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
 #: templates/my_practice/inquiry_confirm_delete.html:30
@@ -1455,6 +1463,7 @@ msgid "Status"
 msgstr "Status"
 
 #: templates/includes/calendar_preflight_widget.html:28
+#: templates/my_practice/calendar_approval_queue.html:22
 #: templates/my_practice/inquiry_form.html:121
 msgid "Note"
 msgstr "Hinweis"
@@ -1465,6 +1474,8 @@ msgstr "Bestätigt"
 
 #: templates/includes/calendar_preflight_widget.html:44
 #: templates/my_practice/analytics.html:912
+#: templates/my_practice/calendar_import.html:55
+#: templates/my_practice/calendar_import.html:151
 #: templates/my_practice/dashboard.html:154
 #: templates/my_practice/invoice_detail.html:43
 msgid "Cancelled"
@@ -1649,6 +1660,7 @@ msgid "Approve"
 msgstr "Genehmigen"
 
 #: templates/includes/pending_calendar_widget_content.html:20
+#: templates/my_practice/calendar_approval_queue.html:16
 msgid "No pending calendar events"
 msgstr "Keine ausstehenden Kalender-Termine"
 
@@ -1848,6 +1860,7 @@ msgid "Focus tasks"
 msgstr "Fokus-Aufgaben"
 
 #: templates/includes/weekly_focus_widget_content.html:41
+#: templates/my_practice/calendar_approval_queue.html:37
 msgid "Mark as done"
 msgstr "Als erledigt markieren"
 
@@ -2551,6 +2564,8 @@ msgstr "Letzte Importe"
 
 #: templates/my_practice/bank_import.html:83
 #: templates/my_practice/bank_review.html:190
+#: templates/my_practice/calendar_approval_queue.html:89
+#: templates/my_practice/calendar_import.html:86
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
 #: templates/my_practice/expense_confirm_delete.html:19
@@ -2903,6 +2918,7 @@ msgid "Billed"
 msgstr "Abgerechnet"
 
 #: templates/my_practice/billing_open_overview.html:59
+#: templates/my_practice/calendar_import.html:93
 #: templates/my_practice/client_detail.html:642
 #: templates/my_practice/client_detail.html:686
 #: templates/my_practice/expense_list.html:85
@@ -2976,6 +2992,153 @@ msgstr "Rechnung %(number)s abschreiben?"
 msgid "Check calendar"
 msgstr "Kalender prüfen"
 
+#: templates/my_practice/calendar_approval_queue.html:4
+#: templates/my_practice/calendar_approval_queue.html:5
+msgid "Approve calendar events"
+msgstr "Kalender-Termine genehmigen"
+
+#: templates/my_practice/calendar_approval_queue.html:6
+#, python-format
+msgid "%(counter)s pending event"
+msgid_plural "%(counter)s pending events"
+msgstr[0] "%(counter)s ausstehender Termin"
+msgstr[1] "%(counter)s ausstehende Termine"
+
+#: templates/my_practice/calendar_approval_queue.html:11
+msgid "Manual import"
+msgstr "Manueller Import"
+
+#: templates/my_practice/calendar_approval_queue.html:17
+msgid "All events have already been approved or skipped."
+msgstr "Alle Termine wurden bereits genehmigt oder übersprungen."
+
+#: templates/my_practice/calendar_approval_queue.html:24
+msgid "Select events and add them to an existing invoice. Events are grouped by client and billing month so multiple months don't accidentally end up on one invoice."
+msgstr "Wählen Sie Termine aus und fügen Sie diese einer bestehenden Rechnung hinzu. Termine sind nach Klient und Abrechnungsmonat gruppiert, damit nicht versehentlich mehrere Monate auf eine Rechnung landen."
+
+#: templates/my_practice/calendar_approval_queue.html:31
+#, python-format
+msgid "%(counter)s event hidden"
+msgid_plural "%(counter)s events hidden"
+msgstr[0] "%(counter)s Termin ausgeblendet"
+msgstr[1] "%(counter)s Termine ausgeblendet"
+
+#: templates/my_practice/calendar_approval_queue.html:33
+msgid "These events already have matching invoice items and are not shown."
+msgstr "Diese Termine haben bereits passende Rechnungspositionen und werden nicht angezeigt."
+
+#: templates/my_practice/calendar_approval_queue.html:54
+msgid "Client not identified"
+msgstr "Klient nicht identifiziert"
+
+#: templates/my_practice/calendar_approval_queue.html:58
+#, python-format
+msgid "%(counter)s event"
+msgid_plural "%(counter)s events"
+msgstr[0] "%(counter)s Termin"
+msgstr[1] "%(counter)s Termine"
+
+#: templates/my_practice/calendar_approval_queue.html:65
+msgid "Select invoice…"
+msgstr "Rechnung auswählen…"
+
+#: templates/my_practice/calendar_approval_queue.html:67
+#, python-format
+msgid "%(counter)s item"
+msgid_plural "%(counter)s items"
+msgstr[0] "%(counter)s Pos."
+msgstr[1] "%(counter)s Pos."
+
+#: templates/my_practice/calendar_approval_queue.html:69
+msgid "Create new invoice"
+msgstr "Neue Rechnung erstellen"
+
+#: templates/my_practice/calendar_approval_queue.html:87
+msgid "Select all"
+msgstr "Alle auswählen"
+
+#: templates/my_practice/calendar_approval_queue.html:90
+#: templates/my_practice/calendar_import.html:87
+#: templates/my_practice/client_detail.html:642
+#: templates/my_practice/inquiry_form.html:121
+msgid "Time"
+msgstr "Zeit"
+
+#: templates/my_practice/calendar_approval_queue.html:93
+msgid "Service type"
+msgstr "Leistungsart"
+
+#: templates/my_practice/calendar_approval_queue.html:94
+msgid "Action"
+msgstr "Aktion"
+
+#: templates/my_practice/calendar_approval_queue.html:120
+msgid "Skip event"
+msgstr "Termin überspringen"
+
+#: templates/my_practice/calendar_approval_queue.html:134
+#: templates/my_practice/expense_list.html:143
+msgid "Back to dashboard"
+msgstr "Zurück zum Dashboard"
+
+#: templates/my_practice/calendar_approval_queue.html:137
+msgid "event imported"
+msgstr "Termin importiert"
+
+#: templates/my_practice/calendar_approval_queue.html:138
+#: templates/my_practice/calendar_import.html:352
+msgid "events imported"
+msgstr "Termine importiert"
+
+#: templates/my_practice/calendar_approval_queue.html:148
+msgid "Skipping…"
+msgstr "Wird übersprungen…"
+
+#: templates/my_practice/calendar_approval_queue.html:158
+msgid "Error while skipping."
+msgstr "Fehler beim Überspringen."
+
+#: templates/my_practice/calendar_approval_queue.html:160
+#: templates/my_practice/calendar_approval_queue.html:165
+msgid "Skip all duplicates"
+msgstr "Alle Duplikate überspringen"
+
+#: templates/my_practice/calendar_approval_queue.html:163
+#: templates/my_practice/tax_quarter_overview.html:241
+msgid "Network error."
+msgstr "Netzwerkfehler."
+
+#: templates/my_practice/calendar_approval_queue.html:196
+msgid "Error while skipping the event."
+msgstr "Fehler beim Überspringen des Termins."
+
+#: templates/my_practice/calendar_approval_queue.html:216
+msgid "Please select at least one appointment."
+msgstr "Bitte mindestens einen Termin auswählen."
+
+#: templates/my_practice/calendar_approval_queue.html:225
+#: templates/my_practice/calendar_import.html:312
+msgid "Importing…"
+msgstr "Importiere…"
+
+#: templates/my_practice/calendar_approval_queue.html:256
+#: templates/my_practice/calendar_import.html:352
+msgid "skipped"
+msgstr "übersprungen"
+
+#: templates/my_practice/calendar_approval_queue.html:260
+#: templates/my_practice/calendar_import.html:366
+msgid "Error"
+msgstr "Fehler"
+
+#: templates/my_practice/calendar_approval_queue.html:260
+msgid "Unknown error"
+msgstr "Unbekannter Fehler"
+
+#: templates/my_practice/calendar_approval_queue.html:265
+msgid "Network error while importing."
+msgstr "Netzwerkfehler beim Importieren."
+
 #: templates/my_practice/calendar_connect.html:4
 #: templates/my_practice/calendar_connect.html:8
 #: templates/my_practice/calendar_connect.html:11
@@ -3037,6 +3200,186 @@ msgstr "Token wird verschlüsselt in der lokalen Datenbank gespeichert"
 #: templates/my_practice/calendar_connect.html:47
 msgid "You can revoke access in your Google account at any time"
 msgstr "Du kannst den Zugriff jederzeit in deinem Google-Konto widerrufen"
+
+#: templates/my_practice/calendar_import.html:5
+msgid "Calendar import"
+msgstr "Kalender-Import"
+
+#: templates/my_practice/calendar_import.html:9
+msgid "Google Calendar import"
+msgstr "Google Calendar Import"
+
+#: templates/my_practice/calendar_import.html:11
+msgid "Approval queue"
+msgstr "Genehmigungswarteschlange"
+
+#: templates/my_practice/calendar_import.html:17
+msgid "From:"
+msgstr "Von:"
+
+#: templates/my_practice/calendar_import.html:24
+msgid "To:"
+msgstr "Bis:"
+
+#: templates/my_practice/calendar_import.html:31
+msgid "Load"
+msgstr "Laden"
+
+#: templates/my_practice/calendar_import.html:39
+msgid "Total events"
+msgstr "Events gesamt"
+
+#: templates/my_practice/calendar_import.html:43
+msgid "New & Ready"
+msgstr "Neu & Bereit"
+
+#: templates/my_practice/calendar_import.html:47
+msgid "Duplicates"
+msgstr "Duplikate"
+
+#: templates/my_practice/calendar_import.html:51
+#: templates/my_practice/calendar_import.html:153
+msgid "Unknown"
+msgstr "Unbekannt"
+
+#: templates/my_practice/calendar_import.html:60
+msgid "Already imported"
+msgstr "Bereits importiert"
+
+#: templates/my_practice/calendar_import.html:68
+#: templates/my_practice/calendar_import.html:282
+msgid "selected"
+msgstr "ausgewählt"
+
+#: templates/my_practice/calendar_import.html:70
+#: templates/my_practice/calendar_import.html:335
+#: templates/my_practice/calendar_import.html:372
+msgid "Import selected"
+msgstr "Ausgewählte importieren"
+
+#: templates/my_practice/calendar_import.html:73
+#: templates/my_practice/calendar_import.html:171
+#: templates/my_practice/calendar_import.html:199
+msgid "Hide duplicates"
+msgstr "Duplikate ausblenden"
+
+#: templates/my_practice/calendar_import.html:76
+#: templates/my_practice/client_detail.html:380
+#: templates/my_practice/client_gdpr_delete_confirm.html:55
+#: templates/my_practice/client_intake.html:123
+#: templates/my_practice/expense_confirm_delete.html:41
+#: templates/my_practice/gebueh_leistung_form.html:42
+#: templates/my_practice/inquiry_confirm_delete.html:39
+#: templates/my_practice/inquiry_convert_confirm.html:80
+#: templates/my_practice/inquiry_form.html:191
+#: templates/my_practice/invoice_confirm_delete.html:52
+#: templates/my_practice/invoice_edit.html:143
+#: templates/my_practice/invoice_form.html:132
+#: templates/my_practice/marketing_period_confirm_delete.html:35
+#: templates/my_practice/practice_confirm_delete.html:52
+#: templates/my_practice/practice_form.html:298
+#: templates/my_practice/send_contract_email.html:65
+#: templates/my_practice/send_intake_form_email.html:65
+#: templates/my_practice/send_invoice_email.html:72
+#: templates/my_practice/send_payment_reminder.html:89
+#: templates/my_practice/send_questionnaire_email.html:62
+#: templates/my_practice/send_questionnaire_pdf_email.html:65
+#: templates/my_practice/session_log_form.html:125
+#: templates/my_practice/tag_confirm_delete.html:37
+#: templates/my_practice/tag_form.html:58
+#: templates/my_practice/tax_quarter_overview.html:191
+#: templates/my_practice/time_off_confirm_delete.html:47
+#: templates/my_practice/time_off_form.html:70
+#: templates/my_practice/time_off_notice_form.html:94
+#: templates/my_practice/todo_confirm_delete.html:34
+#: templates/my_practice/todo_form.html:77
+#: templates/my_practice/withdrawal_confirm_delete.html:43
+#: templates/my_practice/withdrawal_form.html:73
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: templates/my_practice/calendar_import.html:88
+msgid "Event"
+msgstr "Event"
+
+#: templates/my_practice/calendar_import.html:91
+#: templates/my_practice/invoice_detail.html:83
+#: templates/my_practice/invoice_edit.html:109
+msgid "Service"
+msgstr "Leistung"
+
+#: templates/my_practice/calendar_import.html:93
+#: templates/my_practice/calendar_import.html:157
+msgid "Skip event (will not be imported)"
+msgstr "Termin überspringen (wird nicht importiert)"
+
+#: templates/my_practice/calendar_import.html:125
+msgid "Select client"
+msgstr "Client auswählen"
+
+#: templates/my_practice/calendar_import.html:136
+msgid "Select service"
+msgstr "Service auswählen"
+
+#: templates/my_practice/calendar_import.html:147
+msgid "Already imported as invoice item"
+msgstr "Bereits als InvoiceItem importiert"
+
+#: templates/my_practice/calendar_import.html:147
+msgid "Duplicate"
+msgstr "Duplikat"
+
+#: templates/my_practice/calendar_import.html:149
+msgid "Client recognized, ready for import"
+msgstr "Client erkannt, bereit zum Import"
+
+#: templates/my_practice/calendar_import.html:149
+msgid "Ready"
+msgstr "Bereit"
+
+#: templates/my_practice/calendar_import.html:151
+msgid "Event was cancelled"
+msgstr "Event wurde storniert"
+
+#: templates/my_practice/calendar_import.html:153
+msgid "Client not recognized – please assign manually"
+msgstr "Client nicht erkannt - bitte manuell zuordnen"
+
+#: templates/my_practice/calendar_import.html:168
+msgid "Import selected events"
+msgstr "Ausgewählte Events importieren"
+
+#: templates/my_practice/calendar_import.html:177
+msgid "No events found in the selected date range."
+msgstr "Keine Events im ausgewählten Zeitraum gefunden."
+
+#: templates/my_practice/calendar_import.html:178
+msgid "Select a different date range."
+msgstr "Wähle einen anderen Datumsbereich."
+
+#: templates/my_practice/calendar_import.html:199
+msgid "Show duplicates"
+msgstr "Duplikate anzeigen"
+
+#: templates/my_practice/calendar_import.html:307
+msgid "Please select at least one event."
+msgstr "Bitte wähle mindestens ein Event aus."
+
+#: templates/my_practice/calendar_import.html:333
+msgid "Please select a client and service type for all events."
+msgstr "Bitte wähle für alle Events einen Client und Service Type aus."
+
+#: templates/my_practice/calendar_import.html:352
+msgid "Success!"
+msgstr "Erfolgreich!"
+
+#: templates/my_practice/calendar_import.html:354
+msgid "errors"
+msgstr "Fehler"
+
+#: templates/my_practice/calendar_import.html:369
+msgid "Error during import"
+msgstr "Fehler beim Importieren"
 
 #: templates/my_practice/checklist.html:13
 msgid "Period:"
@@ -3357,40 +3700,6 @@ msgstr "Min. speichern"
 msgid "Delete supervision note?"
 msgstr "Supervisionsnotiz löschen?"
 
-#: templates/my_practice/client_detail.html:380
-#: templates/my_practice/client_gdpr_delete_confirm.html:55
-#: templates/my_practice/client_intake.html:123
-#: templates/my_practice/expense_confirm_delete.html:41
-#: templates/my_practice/gebueh_leistung_form.html:42
-#: templates/my_practice/inquiry_confirm_delete.html:39
-#: templates/my_practice/inquiry_convert_confirm.html:80
-#: templates/my_practice/inquiry_form.html:191
-#: templates/my_practice/invoice_confirm_delete.html:52
-#: templates/my_practice/invoice_edit.html:143
-#: templates/my_practice/invoice_form.html:132
-#: templates/my_practice/marketing_period_confirm_delete.html:35
-#: templates/my_practice/practice_confirm_delete.html:52
-#: templates/my_practice/practice_form.html:298
-#: templates/my_practice/send_contract_email.html:65
-#: templates/my_practice/send_intake_form_email.html:65
-#: templates/my_practice/send_invoice_email.html:72
-#: templates/my_practice/send_payment_reminder.html:89
-#: templates/my_practice/send_questionnaire_email.html:62
-#: templates/my_practice/send_questionnaire_pdf_email.html:65
-#: templates/my_practice/session_log_form.html:125
-#: templates/my_practice/tag_confirm_delete.html:37
-#: templates/my_practice/tag_form.html:58
-#: templates/my_practice/tax_quarter_overview.html:191
-#: templates/my_practice/time_off_confirm_delete.html:47
-#: templates/my_practice/time_off_form.html:70
-#: templates/my_practice/time_off_notice_form.html:94
-#: templates/my_practice/todo_confirm_delete.html:34
-#: templates/my_practice/todo_form.html:77
-#: templates/my_practice/withdrawal_confirm_delete.html:43
-#: templates/my_practice/withdrawal_form.html:73
-msgid "Cancel"
-msgstr "Abbrechen"
-
 #: templates/my_practice/client_detail.html:386
 msgid "Delete note?"
 msgstr "Notiz löschen?"
@@ -3621,11 +3930,6 @@ msgstr "Sitzung absagen"
 #: templates/my_practice/client_detail.html:639
 msgid "Pending sessions"
 msgstr "Ausstehende Sitzungen"
-
-#: templates/my_practice/client_detail.html:642
-#: templates/my_practice/inquiry_form.html:121
-msgid "Time"
-msgstr "Zeit"
 
 #: templates/my_practice/client_detail.html:655
 #, python-format
@@ -4023,10 +4327,6 @@ msgstr "Noch nicht eingetragen"
 msgid "No expenses yet"
 msgstr "Keine Ausgaben vorhanden"
 
-#: templates/my_practice/expense_list.html:143
-msgid "Back to dashboard"
-msgstr "Zurück zum Dashboard"
-
 #: templates/my_practice/gebueh_leistung_form.html:4
 #: templates/my_practice/gebueh_leistung_form.html:5
 msgid "GebüH record"
@@ -4352,11 +4652,6 @@ msgstr "Klientendaten bearbeiten →"
 #: templates/my_practice/invoice_detail.html:77
 msgid "Line items"
 msgstr "Positionen"
-
-#: templates/my_practice/invoice_detail.html:83
-#: templates/my_practice/invoice_edit.html:109
-msgid "Service"
-msgstr "Leistung"
 
 #: templates/my_practice/invoice_detail.html:85
 msgid "Rate"
@@ -5314,10 +5609,6 @@ msgstr "Entfernen"
 #: templates/my_practice/tax_quarter_overview.html:238
 msgid "Save failed."
 msgstr "Speichern fehlgeschlagen."
-
-#: templates/my_practice/tax_quarter_overview.html:241
-msgid "Network error."
-msgstr "Netzwerkfehler."
 
 #: templates/my_practice/time_off_confirm_delete.html:4
 #: templates/my_practice/time_off_confirm_delete.html:8

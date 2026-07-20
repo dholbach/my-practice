@@ -1,34 +1,34 @@
 {% extends "base.html" %}
 {% load number_filters %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Kalender Import{% endblock %}
+{% block title %}{% trans "Calendar import" %}{% endblock %}
 
 {% block content %}
 <div class="content-container">
-    <h1>📅 Google Calendar Import</h1>
+    <h1>📅 {% trans "Google Calendar import" %}</h1>
     <p class="mb-3">
-        <a href="{% url 'calendar_approval_queue' %}" class="btn btn-secondary btn-sm">→ Genehmigungswarteschlange</a>
+        <a href="{% url 'calendar_approval_queue' %}" class="btn btn-secondary btn-sm">→ {% trans "Approval queue" %}</a>
     </p>
 
     <div class="filter-controls">
         <form method="get">
             <div>
-                <label for="start_date">Von:</label>
+                <label for="start_date">{% trans "From:" %}</label>
                 <input type="date"
                        id="start_date"
                        name="start_date"
                        value="{{ start_date|date:'Y-m-d' }}">
             </div>
             <div>
-                <label for="end_date">Bis:</label>
+                <label for="end_date">{% trans "To:" %}</label>
                 <input type="date"
                        id="end_date"
                        name="end_date"
                        value="{{ end_date|date:'Y-m-d' }}">
             </div>
             <button type="submit" class="btn btn-primary">
-                🔍 Laden
+                🔍 {% trans "Load" %}
             </button>
         </form>
     </div>
@@ -36,28 +36,28 @@
     {% if events %}
     <div class="summary-cards">
         <div class="stat-card">
-            <h3>Events gesamt</h3>
+            <h3>{% trans "Total events" %}</h3>
             <div class="value">{{ total_events }}</div>
         </div>
         <div class="stat-card stat-card--success">
-            <h3>✅ Neu & Bereit</h3>
+            <h3>✅ {% trans "New & Ready" %}</h3>
             <div class="value">{{ ready_count }}</div>
         </div>
         <div class="stat-card stat-card--info">
-            <h3>🔄 Duplikate</h3>
+            <h3>🔄 {% trans "Duplicates" %}</h3>
             <div class="value">{{ duplicate_count }}</div>
         </div>
         <div class="stat-card stat-card--warning">
-            <h3>⚠️ Unbekannt</h3>
+            <h3>⚠️ {% trans "Unknown" %}</h3>
             <div class="value">{{ unknown_count }}</div>
         </div>
         <div class="stat-card stat-card--danger">
-            <h3>❌ Storniert</h3>
+            <h3>❌ {% trans "Cancelled" %}</h3>
             <div class="value">{{ cancelled_count }}</div>
         </div>
         {% if already_imported_count %}
         <div class="stat-card stat-card--muted">
-            <h3>✓ Bereits importiert</h3>
+            <h3>✓ {% trans "Already imported" %}</h3>
             <div class="value">{{ already_imported_count }}</div>
         </div>
         {% endif %}
@@ -65,15 +65,15 @@
 
     <!-- Bulk Actions Bar -->
     <div class="bulk-actions" id="bulkActions">
-        <span id="selectedCount">0 ausgewählt</span>
+        <span id="selectedCount">0 {% trans "selected" %}</span>
         <button class="action-btn primary" id="js-import-top">
-            ✅ Ausgewählte importieren
+            ✅ {% trans "Import selected" %}
         </button>
         <button class="action-btn secondary" id="toggleDuplicatesTop">
-            🚫 Duplikate ausblenden
+            🚫 {% trans "Hide duplicates" %}
         </button>
         <button class="action-btn secondary" id="js-clear-selection">
-            ❌ Abbrechen
+            ❌ {% trans "Cancel" %}
         </button>
     </div>
 
@@ -83,14 +83,14 @@
                 <th class="th-checkbox">
                     <input type="checkbox" class="select-checkbox" id="selectAll">
                 </th>
-                <th>Datum</th>
-                <th>Zeit</th>
-                <th>Event</th>
-                <th>Dauer</th>
-                <th>Client</th>
-                <th>Service</th>
-                <th>Status</th>
-                <th class="th-actions" title="Event überspringen (wird nicht importiert)">Actions</th>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "Time" %}</th>
+                <th>{% trans "Event" %}</th>
+                <th>{% trans "Duration" %}</th>
+                <th>{% trans "Client" %}</th>
+                <th>{% trans "Service" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th class="th-actions" title="{% trans 'Skip event (will not be imported)' %}">{% trans "Actions" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -122,7 +122,7 @@
                 </td>
                 <td>
                     <select class="form-control client-select" {% if event.is_duplicate %}disabled{% endif %}>
-                        <option value="">-- Client auswählen --</option>
+                        <option value="">-- {% trans "Select client" %} --</option>
                         {% for client in clients %}
                         <option value="{{ client.id }}"
                                 {% if event.matched_client and event.matched_client.id == client.id %}selected{% endif %}>
@@ -133,7 +133,7 @@
                 </td>
                 <td>
                     <select class="form-control service-select" {% if event.is_duplicate %}disabled{% endif %}>
-                        <option value="">-- Service auswählen --</option>
+                        <option value="">-- {% trans "Select service" %} --</option>
                         {% for service in service_types %}
                         <option value="{{ service.id }}"
                                 {% if event.suggested_service_type_obj and event.suggested_service_type_obj.id == service.id %}selected{% endif %}>
@@ -144,17 +144,17 @@
                 </td>
                 <td>
                     {% if event.is_duplicate %}
-                        <span class="badge badge-info" title="Bereits als InvoiceItem importiert">🔄 Duplikat</span>
+                        <span class="badge badge-info" title="{% trans 'Already imported as invoice item' %}">🔄 {% trans "Duplicate" %}</span>
                     {% elif event.matched_client and not event.is_cancelled %}
-                        <span class="badge badge-success" title="Client erkannt, bereit zum Import">✅ Bereit</span>
+                        <span class="badge badge-success" title="{% trans 'Client recognized, ready for import' %}">✅ {% trans "Ready" %}</span>
                     {% elif event.is_cancelled %}
-                        <span class="badge badge-danger" title="Event wurde storniert">❌ Storniert</span>
+                        <span class="badge badge-danger" title="{% trans 'Event was cancelled' %}">❌ {% trans "Cancelled" %}</span>
                     {% else %}
-                        <span class="badge badge-warning" title="Client nicht erkannt - bitte manuell zuordnen">⚠️ Unbekannt</span>
+                        <span class="badge badge-warning" title="{% trans 'Client not recognized – please assign manually' %}">⚠️ {% trans "Unknown" %}</span>
                     {% endif %}
                 </td>
                 <td class="td-actions">
-                    <button class="btn btn-sm btn-secondary" data-event-id="{{ event.id }}" title="Event überspringen (nicht importieren)" {% if event.is_duplicate %}disabled{% endif %}>
+                    <button class="btn btn-sm btn-secondary" data-event-id="{{ event.id }}" title="{% trans 'Skip event (will not be imported)' %}" {% if event.is_duplicate %}disabled{% endif %}>
                         ⏭️
                     </button>
                 </td>
@@ -165,17 +165,17 @@
 
     <div class="cal-import-bottom-bar">
         <button class="action-btn primary" id="js-import-bottom">
-            ✅ Ausgewählte Events importieren
+            ✅ {% trans "Import selected events" %}
         </button>
         <button class="action-btn secondary" id="toggleDuplicates">
-            🚫 Duplikate ausblenden
+            🚫 {% trans "Hide duplicates" %}
         </button>
     </div>
 
     {% else %}
     <div class="empty-state">
-        <p>Keine Events im ausgewählten Zeitraum gefunden.</p>
-        <p>Wähle einen anderen Datumsbereich.</p>
+        <p>{% trans "No events found in the selected date range." %}</p>
+        <p>{% trans "Select a different date range." %}</p>
     </div>
     {% endif %}
 </div>
@@ -196,7 +196,7 @@ function toggleDuplicates() {
         row.style.display = duplicatesHidden ? 'none' : '';
     });
 
-    const newText = duplicatesHidden ? '🔄 Duplikate anzeigen' : '🚫 Duplikate ausblenden';
+    const newText = duplicatesHidden ? '🔄 {% trans "Show duplicates" %}' : '🚫 {% trans "Hide duplicates" %}';
     if (toggleBtn) toggleBtn.textContent = newText;
     if (toggleBtnTop) toggleBtnTop.textContent = newText;
 }
@@ -279,7 +279,7 @@ function updateBulkActions() {
 
     if (count > 0) {
         bulkActions.classList.add('visible');
-        document.getElementById('selectedCount').textContent = `${count} ausgewählt`;
+        document.getElementById('selectedCount').textContent = `${count} {% trans "selected" %}`;
     } else {
         bulkActions.classList.remove('visible');
     }
@@ -304,12 +304,12 @@ function clearSelection() {
 
 async function importSelected(btnElement) {
     if (selectedEvents.size === 0) {
-        alert('Bitte wähle mindestens ein Event aus.');
+        alert('{% trans "Please select at least one event." %}');
         return;
     }
 
     btnElement.disabled = true;
-    btnElement.textContent = '⏳ Importiere...';
+    btnElement.textContent = '⏳ {% trans "Importing…" %}';
 
     // Collect event data
     const eventsData = Array.from(selectedEvents).map(eventId => {
@@ -330,9 +330,9 @@ async function importSelected(btnElement) {
     }).filter(e => e !== null);
 
     if (eventsData.length === 0) {
-        alert('Bitte wähle für alle Events einen Client und Service Type aus.');
+        alert('{% trans "Please select a client and service type for all events." %}');
         btnElement.disabled = false;
-        btnElement.textContent = '✅ Ausgewählte importieren';
+        btnElement.textContent = '✅ {% trans "Import selected" %}';
         return;
     }
 
@@ -349,9 +349,9 @@ async function importSelected(btnElement) {
         const result = await response.json();
 
         if (result.success) {
-            let message = `✅ Erfolgreich!\n\n${result.created} Events importiert\n${result.skipped} übersprungen`;
+            let message = `✅ {% trans "Success!" %}\n\n${result.created} {% trans "events imported" %}\n${result.skipped} {% trans "skipped" %}`;
             if (result.errors && result.errors.length > 0) {
-                message += `\n\n❌ ${result.errors.length} Fehler:\n\n`;
+                message += `\n\n❌ ${result.errors.length} {% trans "errors" %}:\n\n`;
                 result.errors.forEach((err, idx) => {
                     message += `${idx + 1}. ${err}\n`;
                 });
@@ -363,13 +363,13 @@ async function importSelected(btnElement) {
                 window.location.reload();
             }
         } else {
-            alert(`❌ Fehler: ${result.error}`);
+            alert(`❌ {% trans "Error" %}: ${result.error}`);
         }
     } catch (error) {
-        alert(`❌ Fehler beim Importieren: ${error.message}`);
+        alert(`❌ {% trans "Error during import" %}: ${error.message}`);
     } finally {
         btnElement.disabled = false;
-        btnElement.textContent = '✅ Ausgewählte importieren';
+        btnElement.textContent = '✅ {% trans "Import selected" %}';
     }
 }
 </script>

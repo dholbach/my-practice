@@ -1,42 +1,40 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Kalender-Termine genehmigen{% endblock %}
-{% block page_title %}Kalender-Termine genehmigen{% endblock %}
-{% block page_subtitle %}{{ total_pending }} ausstehende Termin{{ total_pending|pluralize:"e" }}{% endblock %}
+{% block title %}{% trans "Approve calendar events" %}{% endblock %}
+{% block page_title %}{% trans "Approve calendar events" %}{% endblock %}
+{% block page_subtitle %}{% blocktrans count counter=total_pending %}{{ counter }} pending event{% plural %}{{ counter }} pending events{% endblocktrans %}{% endblock %}
 
 {% block content %}
 
 <p class="mb-3">
-    <a href="{% url 'calendar_import' %}" class="btn btn-secondary btn-sm">← Manueller Import</a>
+    <a href="{% url 'calendar_import' %}" class="btn btn-secondary btn-sm">← {% trans "Manual import" %}</a>
 </p>
 
 {% if not grouped %}
 <div class="info-box">
-    <strong class="text-primary">✅ Keine ausstehenden Kalender-Termine</strong><br>
-    <span class="text-muted">Alle Termine wurden bereits genehmigt oder übersprungen.</span>
+    <strong class="text-primary">✅ {% trans "No pending calendar events" %}</strong><br>
+    <span class="text-muted">{% trans "All events have already been approved or skipped." %}</span>
 </div>
 {% else %}
 
 <div class="alert-box info mb-3">
-    <strong class="text-primary">ℹ️ Hinweis</strong><br>
+    <strong class="text-primary">ℹ️ {% trans "Note" %}</strong><br>
     <span class="text-muted">
-        Wählen Sie Termine aus und fügen Sie diese einer bestehenden Rechnung hinzu.
-        Termine sind nach Klient und Abrechnungsmonat gruppiert, damit nicht versehentlich
-        mehrere Monate auf eine Rechnung landen.
+        {% blocktrans %}Select events and add them to an existing invoice. Events are grouped by client and billing month so multiple months don't accidentally end up on one invoice.{% endblocktrans %}
     </span>
 </div>
 
 {% if stale_count > 0 %}
 <div class="alert-box info alert-box--flex mb-3">
     <span>
-        <strong>ℹ️ {{ stale_count }} Termin{{ stale_count|pluralize:"e" }} ausgeblendet</strong><br>
+        <strong>ℹ️ {% blocktrans count counter=stale_count %}{{ counter }} event hidden{% plural %}{{ counter }} events hidden{% endblocktrans %}</strong><br>
         <span class="alert-box__hint">
-            Diese Termine haben bereits passende Rechnungspositionen und werden nicht angezeigt.
+            {% trans "These events already have matching invoice items and are not shown." %}
         </span>
     </span>
     <button type="button" class="btn btn-secondary btn-sm" id="skip-duplicates-btn">
-        🚫 Als erledigt markieren
+        🚫 {% trans "Mark as done" %}
     </button>
 </div>
 {% endif %}
@@ -53,29 +51,29 @@
                         <span class="sensitive-data"> — {{ group.client.full_name }}</span>
                     </a>
                 {% else %}
-                    <span class="queue-group-header__unknown">❓ Klient nicht identifiziert</span>
+                    <span class="queue-group-header__unknown">❓ {% trans "Client not identified" %}</span>
                 {% endif %}
             </h3>
             <div class="queue-group-header__subtitle">
-                {{ group.month|date:"F Y" }} · {{ group.count }} Termin{{ group.count|pluralize:"e" }}
+                {{ group.month|date:"F Y" }} · {% blocktrans count counter=group.count %}{{ counter }} event{% plural %}{{ counter }} events{% endblocktrans %}
             </div>
         </div>
         {% if group.client %}
         <div class="queue-group-header__actions">
             <select class="form-control invoice-select invoice-select-{{ group.client.pk }}-{{ group.month|date:'Y-m' }}"
                     data-client="{{ group.client.pk }}" data-month="{{ group.month|date:'Y-m' }}">
-                <option value="">Rechnung auswählen…</option>
+                <option value="">{% trans "Select invoice…" %}</option>
                 {% for invoice in group.invoices %}
-                <option value="{{ invoice.pk }}">{{ invoice.invoice_number }} ({{ invoice.invoice_date|date:"d.m.Y" }}){% if invoice.item_count %} · {{ invoice.item_count }} Pos.{% endif %}{% if invoice.total %} · {{ invoice.total|floatformat:0 }} €{% endif %}</option>
+                <option value="{{ invoice.pk }}">{{ invoice.invoice_number }} ({{ invoice.invoice_date|date:"d.m.Y" }}){% if invoice.item_count %} · {% blocktrans count counter=invoice.item_count %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktrans %}{% endif %}{% if invoice.total %} · {{ invoice.total|floatformat:0 }} €{% endif %}</option>
                 {% endfor %}
-                <option value="new">+ Neue Rechnung erstellen</option>
+                <option value="new">+ {% trans "Create new invoice" %}</option>
             </select>
             <button type="button"
                     class="btn import-group-btn btn-import-group"
                     data-group="{{ forloop.counter }}"
                     data-client="{{ group.client.pk }}"
                     data-month="{{ group.month|date:'Y-m' }}">
-                📥 Importieren
+                📥 {% trans "Import" %}
             </button>
         </div>
         {% endif %}
@@ -86,14 +84,14 @@
             <tr>
                 <th class="th-checkbox-sm">
                     <input type="checkbox" class="select-all-{{ forloop.counter }}" checked
-                           title="Alle auswählen">
+                           title="{% trans 'Select all' %}">
                 </th>
-                <th>Datum</th>
-                <th>Uhrzeit</th>
-                <th>Dauer</th>
-                <th>Titel</th>
-                <th>Leistungsart</th>
-                <th class="th-action-sm">Aktion</th>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "Time" %}</th>
+                <th>{% trans "Duration" %}</th>
+                <th>{% trans "Title" %}</th>
+                <th>{% trans "Service type" %}</th>
+                <th class="th-action-sm">{% trans "Action" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -119,7 +117,7 @@
                 <td>
                     <button type="button" class="btn btn-skip skip-event-btn"
                             data-event-id="{{ event.pk }}"
-                            title="Termin überspringen">
+                            title="{% trans 'Skip event' %}">
                         🚫
                     </button>
                 </td>
@@ -133,9 +131,11 @@
 {% endif %}
 
 <div class="actions mt-4">
-    <a href="{% url 'dashboard' %}" class="btn btn-secondary">← Zurück zum Dashboard</a>
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">← {% trans "Back to dashboard" %}</a>
 </div>
 
+{% blocktrans asvar events_imported_singular %}event imported{% endblocktrans %}
+{% blocktrans asvar events_imported_plural %}events imported{% endblocktrans %}
 <script>
 const CSRF_TOKEN = document.cookie.split('; ')
     .find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
@@ -145,7 +145,7 @@ const skipDuplicatesBtn = document.getElementById('skip-duplicates-btn');
 if (skipDuplicatesBtn) {
     skipDuplicatesBtn.addEventListener('click', async function () {
         this.disabled = true;
-        this.textContent = 'Überspringe…';
+        this.textContent = '{% trans "Skipping…" %}';
         try {
             const res = await fetch("{% url 'calendar_queue_skip_duplicates' %}", {
                 method: 'POST',
@@ -155,14 +155,14 @@ if (skipDuplicatesBtn) {
             if (data.success) {
                 location.reload();
             } else {
-                alert('Fehler beim Überspringen.');
+                alert('{% trans "Error while skipping." %}');
                 this.disabled = false;
-                this.textContent = '🚫 Alle Duplikate überspringen';
+                this.textContent = '🚫 {% trans "Skip all duplicates" %}';
             }
         } catch (e) {
-            alert('Netzwerkfehler.');
+            alert('{% trans "Network error." %}');
             this.disabled = false;
-            this.textContent = '🚫 Alle Duplikate überspringen';
+            this.textContent = '🚫 {% trans "Skip all duplicates" %}';
         }
     });
 }
@@ -193,7 +193,7 @@ document.querySelectorAll('.skip-event-btn').forEach(btn => {
                 setTimeout(() => row.remove(), 350);
             }
         } catch (e) {
-            alert('Fehler beim Überspringen des Termins.');
+            alert('{% trans "Error while skipping the event." %}');
         }
     });
 });
@@ -213,7 +213,7 @@ document.querySelectorAll('.import-group-btn').forEach(btn => {
             `.event-checkbox-group-${groupNum}:checked`
         );
         if (checkedBoxes.length === 0) {
-            alert('Bitte mindestens einen Termin auswählen.');
+            alert('{% trans "Please select at least one appointment." %}');
             return;
         }
 
@@ -222,7 +222,7 @@ document.querySelectorAll('.import-group-btn').forEach(btn => {
         if (invoiceId && invoiceId !== 'new') body.invoice_id = parseInt(invoiceId);
 
         btn.disabled = true;
-        btn.textContent = 'Importiere…';
+        btn.textContent = '{% trans "Importing…" %}';
 
         try {
             const res = await fetch("{% url 'calendar_queue_import' %}", {
@@ -246,22 +246,25 @@ document.querySelectorAll('.import-group-btn').forEach(btn => {
                 if (remaining === 0) groupEl.remove();
 
                 // Show success toast
+                const importedLabel = data.created === 1
+                    ? '{{ events_imported_singular }}'
+                    : '{{ events_imported_plural }}';
                 const toast = document.createElement('div');
                 toast.className = 'alert-box success';
                 toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:1000;min-width:260px;';
-                toast.innerHTML = `<strong>✅ ${data.created} Termin${data.created !== 1 ? 'e' : ''} importiert</strong>` +
-                    (data.skipped ? `<br><small>${data.skipped} übersprungen</small>` : '');
+                toast.innerHTML = `<strong>✅ ${data.created} ${importedLabel}</strong>` +
+                    (data.skipped ? `<br><small>${data.skipped} {% trans "skipped" %}</small>` : '');
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 4000);
             } else {
-                alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+                alert('{% trans "Error" %}: ' + (data.error || '{% trans "Unknown error" %}'));
                 btn.disabled = false;
-                btn.textContent = '📥 Importieren';
+                btn.textContent = '📥 {% trans "Import" %}';
             }
         } catch (e) {
-            alert('Netzwerkfehler beim Importieren.');
+            alert('{% trans "Network error while importing." %}');
             btn.disabled = false;
-            btn.textContent = '📥 Importieren';
+            btn.textContent = '📥 {% trans "Import" %}';
         }
     });
 });
