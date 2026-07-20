@@ -2,6 +2,19 @@
 
 Major features and milestones in chronological order.
 
+## 2026-07-20 — v0.3.0 minor release
+
+- **Feature — full bilingual app UI** (P-039, issue #69, #236–#250): Dedicated 6-phase i18n sweep — every template, Python view/form/util, model, `admin.py`, and the small JS-string surface now wrapped via Django i18n. English msgids throughout; German lives as `.po` translations. 1,846 msgids, 0 fuzzy in either catalog. A regression guardrail (`test_i18n_coverage.py`) keeps this from rotting. Full retrospective: [docs/projects/done/P-039_DJANGO_I18N.md](projects/done/P-039_DJANGO_I18N.md).
+  - Phase 0: added the guardrail test itself, which immediately surfaced 3 real regressions in templates previously marked "done".
+  - Phase 1: all ~84 in-scope templates wrapped across 6 feature-cluster PRs; 8 templates turned out to be dead code (never `{% include %}`'d anywhere) and were deleted rather than translated.
+  - Phase 2: remaining Python view files with user-facing strings wrapped.
+  - Phase 3: ~413 model `verbose_name`/`help_text` occurrences wrapped across 16 files, in 3 batches (state-only migrations, no SQL).
+  - Phase 4: `admin.py` (1,212 lines, zero prior wrapping) — fieldsets, action/display descriptions, bulk-action messages.
+  - Phase 5: the small JS-string surface (`keyboard-nav.js`, `global-search.js`, `chart_helpers.js`) wrapped via `data-*` template attributes rather than standing up a full `JavaScriptCatalog`.
+  - Phase 6 (close-out): a bilingual click-through — rendering real pages under both locales and scanning the *output*, not just template source — found and fixed two bugs invisible to static scanning: a hardcoded German month-abbreviation list feeding 3 call sites regardless of active locale, and two admin-facing calendar pages that always showed a service type's German name instead of respecting the admin's own UI language.
+  - Found and fixed several other real (pre-existing) localization bugs along the way — German text used as a msgid instead of English, ModelForm labels shadowing already-wrapped model verbose_names, eager `gettext` frozen at process-startup instead of `gettext_lazy` — catalogued in the retrospective doc.
+- **Deps** (#241): `ruff` 0.15.22, `django-stubs` 6.0.7, `types-python-dateutil` 2.9.0.20260716.
+
 ## 2026-07-17 — v0.2.12 patch release
 
 - **Feature — time-off CRUD + client heads-up email** (P-121, #233): In-app create/edit/delete for `TimeOff` entries (`/timeoff/`, previously admin-only), list split into upcoming/current vs. past. New multi-period heads-up email flow: recipient table shows client code/language/last-next-session for quick trimming, editable bilingual (DE/EN) preview, date-only subject/body (no title leaked to clients) with per-client `{salutation}` substitution. First feature built entirely under the P-039 "English msgids" i18n convention.
