@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from ..models import CompanyExpense, CompanyWithdrawal, Invoice, TaxYearNote
+from ..models import CompanyExpense, CompanyWithdrawal, TaxYearNote
 from ..utils import DateRangeHelper, RevenueCalculator, TaxYearContextBuilder
 from ..utils.tax_context_builder import available_data_years
 from ..utils.practice_days import WorkdayAuditCalculator
@@ -124,13 +124,9 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
     for q in range(1, 5):
         start, end = DateRangeHelper.get_quarter_range(year, q)
 
-        # Paid-date filter with invoice_date fallback for null paid_date —
-        # same rule as the year summary, so quarters sum to the year total
-        revenue = Invoice.objects.filter(
-            RevenueCalculator.build_paid_date_range_filter(start, end),
-            practice=practice,
-            status="paid",
-        ).aggregate(total=Sum("total"))["total"] or Decimal("0")
+        # Same paid-date rule (with invoice_date fallback) as the year summary,
+        # so quarters sum to the year total
+        revenue = RevenueCalculator.get_paid_revenue_for_range(start, end, practice=practice)
 
         expenses = CompanyExpense.objects.filter(
             practice=practice,

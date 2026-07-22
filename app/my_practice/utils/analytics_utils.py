@@ -108,13 +108,7 @@ def _get_year_financials(
     else:
         year_end = end_date
 
-    revenue_qs = Invoice.objects.filter(
-        RevenueCalculator.build_paid_date_range_filter(year_start, year_end),
-        status="paid",
-    )
-    if practice:
-        revenue_qs = revenue_qs.filter(practice=practice)
-    revenue = revenue_qs.aggregate(total=Sum("total"))["total"] or Decimal("0")
+    revenue = RevenueCalculator.get_paid_revenue_for_range(year_start, year_end, practice=practice)
 
     # Expenses dated 31.12. each year — filter by year only
     expense_qs = CompanyExpense.objects.filter(date__year=year)

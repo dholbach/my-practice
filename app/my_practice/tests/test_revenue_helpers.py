@@ -276,6 +276,66 @@ class RevenueCalculatorTests(TestCase):
         # Clean up
         invoice_paid_2030.delete()
 
+    def test_get_paid_revenue_for_range_basic(self):
+        """Test paid revenue for a date range covering only the 2025 paid invoice."""
+        total = RevenueCalculator.get_paid_revenue_for_range(date(2025, 1, 1), date(2025, 12, 31))
+        self.assertEqual(total, Decimal("200.00"))
+
+    def test_get_paid_revenue_for_range_null_paid_date_fallback(self):
+        """Range should include invoices with null paid_date via invoice_date fallback."""
+        Invoice.objects.create(
+            client=self.client,
+            invoice_number="TEST-RANGE-NULL",
+            invoice_date=date(2025, 7, 1),
+            paid_date=None,
+            total=Decimal("400.00"),
+            status="paid",
+            practice=self.practice,
+        )
+
+        total = RevenueCalculator.get_paid_revenue_for_range(date(2025, 1, 1), date(2025, 12, 31))
+
+        # TEST-1 (200, paid_date in range) + TEST-RANGE-NULL (400, invoice_date fallback)
+        self.assertEqual(total, Decimal("600.00"))
+
+    def test_get_paid_revenue_for_range_scoped_by_practice(self):
+        """Passing a practice should exclude paid invoices from other practices."""
+        other_practice = Practice.objects.create(
+            name="Other Practice",
+            slug="revenue_helpers-2",
+            title="Other Practitioner",
+            email="other@practice.com",
+            city="Hamburg",
+        )
+        other_client = Client.objects.create(
+            client_code="OTHERP",
+            full_name="Other Practice Client",
+            email="otherp@example.com",
+            hourly_rate_60=Decimal("90.00"),
+            practice=other_practice,
+        )
+        Invoice.objects.create(
+            client=other_client,
+            invoice_number="OTHERP-1",
+            invoice_date=date(2025, 3, 10),
+            paid_date=date(2025, 3, 12),
+            total=Decimal("999.00"),
+            status="paid",
+            practice=other_practice,
+        )
+
+        total = RevenueCalculator.get_paid_revenue_for_range(
+            date(2025, 1, 1), date(2025, 12, 31), practice=self.practice
+        )
+
+        # Only TEST-1 (200) from self.practice, not OTHERP-1 (999) from other_practice
+        self.assertEqual(total, Decimal("200.00"))
+
+    def test_get_paid_revenue_for_range_no_matches(self):
+        """Range with no matching invoices should return Decimal('0'), not None."""
+        total = RevenueCalculator.get_paid_revenue_for_range(date(2020, 1, 1), date(2020, 12, 31))
+        self.assertEqual(total, Decimal("0"))
+
     def test_no_invoices(self):
         """Test calculations when no invoices exist."""
         # Delete all invoices

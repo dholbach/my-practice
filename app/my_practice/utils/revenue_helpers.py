@@ -84,6 +84,35 @@ class RevenueCalculator:
         )
 
     @staticmethod
+    def get_paid_revenue_for_range(
+        start_date: date, end_date: date, practice: "Practice" | None = None
+    ) -> Decimal:
+        """
+        Get total paid revenue within a date range (paid_date, with invoice_date
+        fallback for null paid_date — see build_paid_date_range_filter).
+
+        Shared by the tax quarter views, the dashboard tax-quarter widget, and
+        yearly financial analytics, so quarters/years stay consistent with each
+        other instead of each computing the rule independently.
+
+        Args:
+            start_date: Inclusive start date
+            end_date: Inclusive end date
+            practice: Optional Practice to scope the query to
+
+        Returns:
+            Decimal: Total paid revenue in the range
+        """
+        qs = Invoice.objects.filter(
+            RevenueCalculator.build_paid_date_range_filter(start_date, end_date),
+            status="paid",
+        )
+        if practice:
+            qs = qs.filter(practice=practice)
+        result = qs.aggregate(total=Sum("total"))["total"]
+        return result if result is not None else Decimal("0")
+
+    @staticmethod
     def get_client_revenue_subquery() -> Subquery:
         """
         Get a Subquery for safely aggregating client revenue.
