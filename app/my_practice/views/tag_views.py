@@ -2,7 +2,6 @@
 Tag management views for clients.
 """
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
@@ -10,11 +9,17 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_http_methods, require_POST
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
+from django.views.generic import ListView
 
 from ..models import Client, ClientTag
 from ..utils import sort_tags_by_category
+from .crud_mixins import (
+    PracticeScopedCreateView,
+    PracticeScopedDeleteView,
+    PracticeScopedUpdateView,
+)
 
 
 class TagListView(LoginRequiredMixin, ListView):
@@ -29,50 +34,38 @@ class TagListView(LoginRequiredMixin, ListView):
         return ClientTag.objects.annotate(client_count=Count("clients")).order_by("name")
 
 
-class TagCreateView(LoginRequiredMixin, CreateView):
-    """Create a new tag"""
+class TagCreateView(PracticeScopedCreateView):
+    """Create a new tag.
+
+    ClientTag has no practice FK (tags are deliberately global) — the
+    PracticeScopedCreateView's practice-assignment is a no-op here; it's
+    used purely for the shared success_message plumbing.
+    """
 
     model = ClientTag
     template_name = "my_practice/tag_form.html"
     fields = ["name", "color", "description"]
     success_url = reverse_lazy("tag_list")
-
-    def form_valid(self, form):
-        messages.success(
-            self.request, _("Tag '%(name)s' created successfully!") % {"name": form.instance.name}
-        )
-        return super().form_valid(form)
+    success_message = gettext_lazy("Tag '{obj.name}' created successfully!")
 
 
-class TagUpdateView(LoginRequiredMixin, UpdateView):
+class TagUpdateView(PracticeScopedUpdateView):
     """Edit an existing tag"""
 
     model = ClientTag
     template_name = "my_practice/tag_form.html"
     fields = ["name", "color", "description"]
     success_url = reverse_lazy("tag_list")
-
-    def form_valid(self, form):
-        messages.success(
-            self.request,
-            _("Tag '%(name)s' updated successfully!") % {"name": form.instance.name},
-        )
-        return super().form_valid(form)
+    success_message = gettext_lazy("Tag '{obj.name}' updated successfully!")
 
 
-class TagDeleteView(LoginRequiredMixin, DeleteView):
+class TagDeleteView(PracticeScopedDeleteView):
     """Delete a tag"""
 
     model = ClientTag
     template_name = "my_practice/tag_confirm_delete.html"
     success_url = reverse_lazy("tag_list")
-
-    def form_valid(self, form):
-        tag_name = self.object.name
-        messages.success(
-            self.request, _("Tag '%(name)s' deleted successfully!") % {"name": tag_name}
-        )
-        return super().form_valid(form)
+    success_message = gettext_lazy("Tag '{obj.name}' deleted successfully!")
 
 
 @login_required

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-20 22:59+0200\n"
+"POT-Creation-Date: 2026-07-22 21:56+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -228,7 +228,7 @@ msgstr "Klient:in"
 
 #: my_practice/admin.py:341 my_practice/admin.py:693 my_practice/forms.py:110
 #: my_practice/forms.py:186 my_practice/import_forms.py:66
-#: my_practice/models/bank_statement.py:126 my_practice/models/client.py:118
+#: my_practice/models/bank_statement.py:128 my_practice/models/client.py:118
 #: my_practice/models/client_alias.py:41 my_practice/models/financial.py:93
 #: my_practice/models/inquiry.py:123 my_practice/models/invoice.py:126
 #: my_practice/models/operational.py:57 my_practice/models/timeoff.py:49
@@ -450,7 +450,7 @@ msgid "Category"
 msgstr "Kategorie"
 
 #: my_practice/admin.py:783 my_practice/admin.py:1181
-#: my_practice/models/bank_statement.py:81 my_practice/models/financial.py:89
+#: my_practice/models/bank_statement.py:83 my_practice/models/financial.py:89
 #: my_practice/models/financial.py:177
 #: templates/my_practice/bank_import.html:86
 #: templates/my_practice/bank_review.html:194
@@ -932,44 +932,44 @@ msgstr "z.B. \"Google Ads 5 €/Tag\""
 msgid "The end date must be after the start date."
 msgstr "Das Enddatum muss nach dem Startdatum liegen."
 
-#: my_practice/models/bank_statement.py:36
+#: my_practice/models/bank_statement.py:38
 msgid "Exact Match"
 msgstr "Exakte Übereinstimmung"
 
-#: my_practice/models/bank_statement.py:37
+#: my_practice/models/bank_statement.py:39
 msgid "Fuzzy Match (±5€)"
 msgstr "Unscharfe Übereinstimmung (±5€)"
 
-#: my_practice/models/bank_statement.py:38
+#: my_practice/models/bank_statement.py:40
 msgid "Manual Assignment"
 msgstr "Manuelle Zuordnung"
 
-#: my_practice/models/bank_statement.py:39
+#: my_practice/models/bank_statement.py:41
 msgid "Ignored (Expense/Duplicate)"
 msgstr "Ignoriert (Ausgabe/Duplikat)"
 
-#: my_practice/models/bank_statement.py:40
+#: my_practice/models/bank_statement.py:42
 #: templates/my_practice/bank_expense_review.html:13
 msgid "Unmatched"
 msgstr "Nicht zugeordnet"
 
-#: my_practice/models/bank_statement.py:41
+#: my_practice/models/bank_statement.py:43
 msgid "Auto-Created Withdrawal"
 msgstr "Automatisch erstellte Entnahme"
 
-#: my_practice/models/bank_statement.py:42
+#: my_practice/models/bank_statement.py:44
 msgid "Auto-Created Expense"
 msgstr "Automatisch erstellte Ausgabe"
 
-#: my_practice/models/bank_statement.py:43
+#: my_practice/models/bank_statement.py:45
 msgid "Auto-Created Contribution (Kapitaleinlage)"
 msgstr "Automatisch erstellte Kapitaleinlage"
 
-#: my_practice/models/bank_statement.py:44
+#: my_practice/models/bank_statement.py:46
 msgid "Auto-Created Correction (Fehlbuchung)"
 msgstr "Automatisch erstellte Korrektur (Fehlbuchung)"
 
-#: my_practice/models/bank_statement.py:52 my_practice/models/calendar.py:20
+#: my_practice/models/bank_statement.py:54 my_practice/models/calendar.py:20
 #: my_practice/models/calendar.py:93 my_practice/models/client.py:91
 #: my_practice/models/financial.py:82 my_practice/models/financial.py:170
 #: my_practice/models/financial.py:265 my_practice/models/inquiry.py:96
@@ -980,121 +980,121 @@ msgstr "Automatisch erstellte Korrektur (Fehlbuchung)"
 msgid "Practice"
 msgstr "Praxis"
 
-#: my_practice/models/bank_statement.py:57
+#: my_practice/models/bank_statement.py:59
 msgid "Booking date"
 msgstr "Buchungstag"
 
-#: my_practice/models/bank_statement.py:58
+#: my_practice/models/bank_statement.py:60
 msgid "Transaction booking date"
 msgstr "Buchungstag der Transaktion"
 
-#: my_practice/models/bank_statement.py:61
-#: my_practice/models/bank_statement.py:62
+#: my_practice/models/bank_statement.py:63
+#: my_practice/models/bank_statement.py:64
 msgid "Value date"
 msgstr "Valutadatum"
 
-#: my_practice/models/bank_statement.py:66
+#: my_practice/models/bank_statement.py:68
 msgid "Payer/payee name"
 msgstr "Name Zahlungsbeteiligter"
 
-#: my_practice/models/bank_statement.py:67
+#: my_practice/models/bank_statement.py:69
 msgid "Name of payer/payee"
 msgstr "Name des Zahlungsbeteiligten"
 
-#: my_practice/models/bank_statement.py:72
+#: my_practice/models/bank_statement.py:74
 msgid "Payer/payee IBAN"
 msgstr "IBAN Zahlungsbeteiligter"
 
-#: my_practice/models/bank_statement.py:75
+#: my_practice/models/bank_statement.py:77
 #: templates/my_practice/bank_review.html:215
 msgid "Payment reference"
 msgstr "Verwendungszweck"
 
-#: my_practice/models/bank_statement.py:76
+#: my_practice/models/bank_statement.py:78
 msgid "Payment reference text"
 msgstr "Verwendungszwecktext"
 
-#: my_practice/models/bank_statement.py:82
+#: my_practice/models/bank_statement.py:84
 msgid "Transaction amount (positive=income, negative=expense)"
 msgstr "Transaktionsbetrag (positiv=Einnahme, negativ=Ausgabe)"
 
-#: my_practice/models/bank_statement.py:87
+#: my_practice/models/bank_statement.py:89
 msgid "Balance after transaction"
 msgstr "Saldo nach Buchung"
 
-#: my_practice/models/bank_statement.py:88
+#: my_practice/models/bank_statement.py:90
 msgid "Account balance after transaction"
 msgstr "Kontostand nach der Buchung"
 
-#: my_practice/models/bank_statement.py:98
+#: my_practice/models/bank_statement.py:100
 msgid "Matched invoice"
 msgstr "Zugeordnete Rechnung"
 
-#: my_practice/models/bank_statement.py:99
+#: my_practice/models/bank_statement.py:101
 msgid "Invoice this transaction was matched to"
 msgstr "Rechnung, der diese Transaktion zugeordnet wurde"
 
-#: my_practice/models/bank_statement.py:105
+#: my_practice/models/bank_statement.py:107
 msgid "Match confidence"
 msgstr "Match-Genauigkeit"
 
-#: my_practice/models/bank_statement.py:110
+#: my_practice/models/bank_statement.py:112
 msgid "Extracted invoice number"
 msgstr "Extrahierte Rechnungsnummer"
 
-#: my_practice/models/bank_statement.py:111
+#: my_practice/models/bank_statement.py:113
 msgid "Invoice number extracted from reference text"
 msgstr "Aus dem Verwendungszweck extrahierte Rechnungsnummer"
 
-#: my_practice/models/bank_statement.py:117
+#: my_practice/models/bank_statement.py:119
 msgid "Imported on"
 msgstr "Importiert am"
 
-#: my_practice/models/bank_statement.py:121
+#: my_practice/models/bank_statement.py:123
 msgid "Processed"
 msgstr "Verarbeitet"
 
-#: my_practice/models/bank_statement.py:122
+#: my_practice/models/bank_statement.py:124
 msgid "Whether transaction has been processed/matched"
 msgstr "Ob die Transaktion verarbeitet/zugeordnet wurde"
 
-#: my_practice/models/bank_statement.py:127
+#: my_practice/models/bank_statement.py:129
 msgid "Manual notes about this transaction"
 msgstr "Manuelle Notizen zu dieser Transaktion"
 
-#: my_practice/models/bank_statement.py:137
+#: my_practice/models/bank_statement.py:139
 msgid "Linked expense"
 msgstr "Verknüpfte Ausgabe"
 
-#: my_practice/models/bank_statement.py:139
+#: my_practice/models/bank_statement.py:141
 msgid "CompanyExpense auto-created or manually assigned for this transaction"
 msgstr "CompanyExpense automatisch erstellt oder manuell dieser Transaktion zugeordnet"
 
-#: my_practice/models/bank_statement.py:148
+#: my_practice/models/bank_statement.py:150
 msgid "Linked withdrawal"
 msgstr "Verknüpfte Entnahme"
 
-#: my_practice/models/bank_statement.py:150
+#: my_practice/models/bank_statement.py:152
 msgid "CompanyWithdrawal auto-created or manually assigned for this transaction"
 msgstr "CompanyWithdrawal automatisch erstellt oder manuell dieser Transaktion zugeordnet"
 
-#: my_practice/models/bank_statement.py:158
+#: my_practice/models/bank_statement.py:160
 msgid "Account IBAN"
 msgstr "Konto-IBAN"
 
-#: my_practice/models/bank_statement.py:160
+#: my_practice/models/bank_statement.py:162
 msgid "IBAN of the source account from the CSV export – must match the practice IBAN"
 msgstr "IBAN des Auftragskontos aus dem CSV-Export – muss mit der Praxis-IBAN übereinstimmen"
 
-#: my_practice/models/bank_statement.py:167
+#: my_practice/models/bank_statement.py:172
 msgid "Bank Transaction"
 msgstr "Bankbuchung"
 
-#: my_practice/models/bank_statement.py:168
+#: my_practice/models/bank_statement.py:173
 msgid "Bank Transactions"
 msgstr "Bankbuchungen"
 
-#: my_practice/models/bank_statement.py:202
+#: my_practice/models/bank_statement.py:207
 #, python-format
 msgid "Account IBAN %(csv_iban)s does not match the practice IBAN %(practice_iban)s."
 msgstr "Konto-IBAN %(csv_iban)s stimmt nicht mit der Praxis-IBAN %(practice_iban)s überein."
@@ -2827,15 +2827,15 @@ msgstr[1] "📅 Fällig in %(days)s Tagen"
 msgid "Mark as done"
 msgstr "Als erledigt markieren"
 
-#: my_practice/utils/analytics_utils.py:281
+#: my_practice/utils/analytics_utils.py:275
 msgid "60-min sessions"
 msgstr "60-Min Sitzungen"
 
-#: my_practice/utils/analytics_utils.py:289
+#: my_practice/utils/analytics_utils.py:283
 msgid "90-min sessions"
 msgstr "90-Min Sitzungen"
 
-#: my_practice/utils/analytics_utils.py:297
+#: my_practice/utils/analytics_utils.py:291
 msgid "Group sessions"
 msgstr "Gruppensitzungen"
 
@@ -3136,22 +3136,22 @@ msgstr "%(n)s %(label)s"
 msgid "View"
 msgstr "Ansehen"
 
-#: my_practice/utils/dashboard_widgets.py:695
+#: my_practice/utils/dashboard_widgets.py:688
 msgctxt "action category"
 msgid "Tax"
 msgstr "Steuer"
 
-#: my_practice/utils/dashboard_widgets.py:696
+#: my_practice/utils/dashboard_widgets.py:689
 #, python-format
 msgid "Q%(q)s %(year)s · prepayment missing"
 msgstr "Q%(q)s %(year)s · Vorauszahlung fehlt"
 
-#: my_practice/utils/dashboard_widgets.py:698
+#: my_practice/utils/dashboard_widgets.py:691
 #, python-format
 msgid "Revenue: %(amount)s"
 msgstr "Umsatz: %(amount)s"
 
-#: my_practice/utils/dashboard_widgets.py:700
+#: my_practice/utils/dashboard_widgets.py:693
 #: templates/includes/tax_quarter_widget_content.html:14
 msgid "Record"
 msgstr "Erfassen"
@@ -3169,46 +3169,6 @@ msgstr "Dateityp '%(ext)s' ist nicht erlaubt."
 #: my_practice/utils/file_processing.py:206
 msgid "unknown"
 msgstr "unbekannt"
-
-#: my_practice/utils/import_helpers.py:75
-#, python-format
-msgid "Row %(row)s: %(message)s"
-msgstr "Zeile %(row)s: %(message)s"
-
-#: my_practice/utils/import_helpers.py:96
-#, python-format
-msgid "%(count)s newly imported"
-msgstr "%(count)s neu importiert"
-
-#: my_practice/utils/import_helpers.py:98
-#, python-format
-msgid "%(count)s updated"
-msgstr "%(count)s aktualisiert"
-
-#: my_practice/utils/import_helpers.py:100
-#, python-format
-msgid "%(count)s skipped"
-msgstr "%(count)s übersprungen"
-
-#: my_practice/utils/import_helpers.py:102
-msgid "No data imported"
-msgstr "Keine Daten importiert"
-
-#: my_practice/utils/import_helpers.py:105
-#, python-format
-msgid "✓ %(summary)s!"
-msgstr "✓ %(summary)s!"
-
-#: my_practice/utils/import_helpers.py:109
-#, python-format
-msgid "Import complete: %(summary)s. %(count)s errors occurred."
-msgstr "Import abgeschlossen: %(summary)s. %(count)s Fehler aufgetreten."
-
-#: my_practice/utils/import_helpers.py:167
-#: my_practice/views/calendar_views.py:610
-#, python-format
-msgid "Import error: %(error)s"
-msgstr "Fehler beim Import: %(error)s"
 
 #: my_practice/utils/practice_analysis.py:215
 #, python-format
@@ -3345,120 +3305,120 @@ msgstr "%(count)s ignoriert"
 msgid "Import complete: %(details)s."
 msgstr "Import abgeschlossen: %(details)s."
 
-#: my_practice/views/bank_import_views.py:238
+#: my_practice/views/bank_import_views.py:247
 msgid "No transaction selected."
 msgstr "Keine Transaktion ausgewählt."
 
-#: my_practice/views/bank_import_views.py:326
+#: my_practice/views/bank_import_views.py:335
 #, python-format
 msgid "Auto-ignored: invoice %(number)s already paid"
 msgstr "Auto-ignoriert: Rechnung %(number)s bereits bezahlt"
 
-#: my_practice/views/bank_import_views.py:336
+#: my_practice/views/bank_import_views.py:345
 #, python-format
 msgid "✅ %(count)s transaction with already-paid invoice ignored."
 msgid_plural "✅ %(count)s transactions with already-paid invoices ignored."
 msgstr[0] "✅ %(count)s Transaktion mit bereits bezahlter Rechnung ignoriert."
 msgstr[1] "✅ %(count)s Transaktionen mit bereits bezahlten Rechnungen ignoriert."
 
-#: my_practice/views/bank_import_views.py:343
+#: my_practice/views/bank_import_views.py:352
 msgid "No matching transactions to ignore."
 msgstr "Keine passenden Transaktionen zum Ignorieren gefunden."
 
-#: my_practice/views/bank_import_views.py:356
+#: my_practice/views/bank_import_views.py:368
 #, python-format
 msgid "%(count)s expense ignored."
 msgid_plural "%(count)s expenses ignored."
 msgstr[0] "%(count)s Ausgabe ignoriert."
 msgstr[1] "%(count)s Ausgaben ignoriert."
 
-#: my_practice/views/bank_import_views.py:373
-#: my_practice/views/bank_import_views.py:685
-#: my_practice/views/bank_import_views.py:835
+#: my_practice/views/bank_import_views.py:388
+#: my_practice/views/bank_import_views.py:704
+#: my_practice/views/bank_import_views.py:855
 #, python-format
 msgid "%(count)s transaction ignored."
 msgid_plural "%(count)s transactions ignored."
 msgstr[0] "%(count)s Transaktion ignoriert."
 msgstr[1] "%(count)s Transaktionen ignoriert."
 
-#: my_practice/views/bank_import_views.py:387
+#: my_practice/views/bank_import_views.py:402
 msgid "Transaction ignored."
 msgstr "Transaktion ignoriert."
 
-#: my_practice/views/bank_import_views.py:411
+#: my_practice/views/bank_import_views.py:426
 #, python-format
 msgid "Transaction linked to %(number)s (already paid)."
 msgstr "Transaktion mit %(number)s verknüpft (bereits bezahlt)."
 
-#: my_practice/views/bank_import_views.py:415
+#: my_practice/views/bank_import_views.py:430
 msgid "Transaction confirmed (invoice already paid)."
 msgstr "Transaktion bestätigt (Rechnung bereits bezahlt)."
 
-#: my_practice/views/bank_import_views.py:421
+#: my_practice/views/bank_import_views.py:436
 msgid "No invoice specified."
 msgstr "Keine Rechnung angegeben."
 
-#: my_practice/views/bank_import_views.py:441
+#: my_practice/views/bank_import_views.py:456
 #, python-format
 msgid "Transaction automatically linked to %(number)s and marked as paid."
 msgstr "Transaktion automatisch mit %(number)s verknüpft und als bezahlt markiert."
 
-#: my_practice/views/bank_import_views.py:450
+#: my_practice/views/bank_import_views.py:465
 msgid "Error processing form."
 msgstr "Fehler beim Verarbeiten des Formulars."
 
-#: my_practice/views/bank_import_views.py:455
+#: my_practice/views/bank_import_views.py:470
 msgid "Please select at least one invoice."
 msgstr "Bitte wählen Sie mindestens eine Rechnung aus."
 
-#: my_practice/views/bank_import_views.py:486
+#: my_practice/views/bank_import_views.py:501
 #, python-format
 msgid "Payment successfully assigned to invoice %(number)s."
 msgstr "Zahlung erfolgreich der Rechnung %(number)s zugeordnet."
 
-#: my_practice/views/bank_import_views.py:493
+#: my_practice/views/bank_import_views.py:508
 #, python-format
 msgid "Payment successfully assigned to %(count)s invoices: %(numbers)s"
 msgstr "Zahlung erfolgreich %(count)s Rechnungen zugeordnet: %(numbers)s"
 
-#: my_practice/views/bank_import_views.py:514
+#: my_practice/views/bank_import_views.py:529
 #, python-format
 msgid "📌 Alias '%(name)s' for %(code)s saved."
 msgstr "📌 Alias '%(name)s' für %(code)s gespeichert."
 
-#: my_practice/views/bank_import_views.py:521
+#: my_practice/views/bank_import_views.py:536
 #, python-format
 msgid "Alias '%(name)s' for %(code)s saved."
 msgstr "Alias '%(name)s' für %(code)s gespeichert."
 
-#: my_practice/views/bank_import_views.py:570
+#: my_practice/views/bank_import_views.py:587
 msgid "Bank Import - Assign Expenses"
 msgstr "Bank Import - Ausgaben zuordnen"
 
-#: my_practice/views/bank_import_views.py:588
-#: my_practice/views/bank_import_views.py:670
-#: my_practice/views/bank_import_views.py:734
-#: my_practice/views/bank_import_views.py:808
+#: my_practice/views/bank_import_views.py:605
+#: my_practice/views/bank_import_views.py:686
+#: my_practice/views/bank_import_views.py:756
+#: my_practice/views/bank_import_views.py:829
 msgid "Please select at least one transaction."
 msgstr "Bitte wähle mindestens eine Transaktion aus."
 
-#: my_practice/views/bank_import_views.py:597
-#: my_practice/views/bank_import_views.py:743
+#: my_practice/views/bank_import_views.py:613
+#: my_practice/views/bank_import_views.py:764
 msgid "No transactions found."
 msgstr "Keine Transaktionen gefunden."
 
-#: my_practice/views/bank_import_views.py:658
+#: my_practice/views/bank_import_views.py:674
 #, python-format
 msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
 msgstr[0] "%(count)s Transaktion erfolgreich zu Ausgabe zusammengefasst: %(amount)s €"
 msgstr[1] "%(count)s Transaktionen erfolgreich zu Ausgabe zusammengefasst: %(amount)s €"
 
-#: my_practice/views/bank_import_views.py:717
+#: my_practice/views/bank_import_views.py:739
 msgid "Bank Import - Assign Withdrawals"
 msgstr "Bank Import - Entnahmen zuordnen"
 
-#: my_practice/views/bank_import_views.py:797
+#: my_practice/views/bank_import_views.py:818
 #, python-format
 msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
@@ -3551,6 +3511,11 @@ msgstr "Sitzung am %(date)s ist bereits abgerechnet."
 #, python-format
 msgid "Event on %(date)s added to invoice %(number)s."
 msgstr "Termin am %(date)s zu Rechnung %(number)s hinzugefügt."
+
+#: my_practice/views/calendar_views.py:610
+#, python-format
+msgid "Import error: %(error)s"
+msgstr "Fehler beim Import: %(error)s"
 
 #: my_practice/views/client_views.py:173
 #, python-brace-format
@@ -3799,29 +3764,29 @@ msgstr "Ausgabe vom {obj.date:%d.%m.%Y} erfolgreich erstellt."
 msgid "Expense from {obj.date:%d.%m.%Y} updated successfully."
 msgstr "Ausgabe vom {obj.date:%d.%m.%Y} erfolgreich aktualisiert."
 
-#: my_practice/views/expense_views.py:171
+#: my_practice/views/expense_views.py:176
 msgid "Expense from {obj.date:%d.%m.%Y} of {obj.amount}€ deleted successfully."
 msgstr "Ausgabe vom {obj.date:%d.%m.%Y} über {obj.amount}€ erfolgreich gelöscht."
 
-#: my_practice/views/expense_views.py:198
+#: my_practice/views/expense_views.py:203
 msgid "Receipt deleted successfully."
 msgstr "Beleg erfolgreich gelöscht."
 
-#: my_practice/views/expense_views.py:242
+#: my_practice/views/expense_views.py:247
 #, python-format
 msgid "Transaction from %(date)s (%(payer)s) linked."
 msgstr "Transaktion vom %(date)s (%(payer)s) verknüpft."
 
-#: my_practice/views/expense_views.py:270
+#: my_practice/views/expense_views.py:275
 msgid "Source and target must not be identical."
 msgstr "Quelle und Ziel dürfen nicht identisch sein."
 
-#: my_practice/views/expense_views.py:302
+#: my_practice/views/expense_views.py:307
 #, python-format
 msgid "Expense merged: %(txns)s transaction(s) and %(receipts)s receipt(s) taken over."
 msgstr "Ausgabe zusammengeführt: %(txns)s Buchung(en) und %(receipts)s Beleg(e) übernommen."
 
-#: my_practice/views/expense_views.py:328
+#: my_practice/views/expense_views.py:332
 #, python-format
 msgid "Link with transaction from %(date)s removed."
 msgstr "Verknüpfung mit Transaktion vom %(date)s aufgehoben."
@@ -4120,31 +4085,31 @@ msgstr "Sie haben keine Berechtigung, diese Praxis zu löschen."
 msgid "Practice '%(name)s' deactivated."
 msgstr "Praxis '%(name)s' deaktiviert."
 
-#: my_practice/views/tag_views.py:42
-#, python-format
-msgid "Tag '%(name)s' created successfully!"
-msgstr "Tag '%(name)s' erfolgreich erstellt!"
+#: my_practice/views/tag_views.py:49
+#, python-brace-format
+msgid "Tag '{obj.name}' created successfully!"
+msgstr "Tag '{obj.name}' erfolgreich erstellt!"
 
-#: my_practice/views/tag_views.py:58
-#, python-format
-msgid "Tag '%(name)s' updated successfully!"
-msgstr "Tag '%(name)s' erfolgreich aktualisiert!"
+#: my_practice/views/tag_views.py:59
+#, python-brace-format
+msgid "Tag '{obj.name}' updated successfully!"
+msgstr "Tag '{obj.name}' erfolgreich aktualisiert!"
 
-#: my_practice/views/tag_views.py:73
-#, python-format
-msgid "Tag '%(name)s' deleted successfully!"
-msgstr "Tag '%(name)s' erfolgreich gelöscht!"
+#: my_practice/views/tag_views.py:68
+#, python-brace-format
+msgid "Tag '{obj.name}' deleted successfully!"
+msgstr "Tag '{obj.name}' erfolgreich gelöscht!"
 
-#: my_practice/views/tag_views.py:86
+#: my_practice/views/tag_views.py:79
 msgid "Tag ID required"
 msgstr "Tag-ID erforderlich"
 
-#: my_practice/views/tag_views.py:94
+#: my_practice/views/tag_views.py:87
 #, python-format
 msgid "Tag '%(name)s' added"
 msgstr "Tag '%(name)s' hinzugefügt"
 
-#: my_practice/views/tag_views.py:112
+#: my_practice/views/tag_views.py:105
 #, python-format
 msgid "Tag '%(name)s' removed"
 msgstr "Tag '%(name)s' entfernt"
@@ -8889,6 +8854,33 @@ msgstr "Benutzername"
 #: templates/registration/login.html:20
 msgid "Password"
 msgstr "Passwort"
+
+#, python-format
+#~ msgid "Row %(row)s: %(message)s"
+#~ msgstr "Zeile %(row)s: %(message)s"
+
+#, python-format
+#~ msgid "%(count)s newly imported"
+#~ msgstr "%(count)s neu importiert"
+
+#, python-format
+#~ msgid "%(count)s updated"
+#~ msgstr "%(count)s aktualisiert"
+
+#, python-format
+#~ msgid "%(count)s skipped"
+#~ msgstr "%(count)s übersprungen"
+
+#~ msgid "No data imported"
+#~ msgstr "Keine Daten importiert"
+
+#, python-format
+#~ msgid "✓ %(summary)s!"
+#~ msgstr "✓ %(summary)s!"
+
+#, python-format
+#~ msgid "Import complete: %(summary)s. %(count)s errors occurred."
+#~ msgstr "Import abgeschlossen: %(summary)s. %(count)s Fehler aufgetreten."
 
 #~ msgid "Short title"
 #~ msgstr "Kurzbezeichnung"
