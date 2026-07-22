@@ -41,7 +41,7 @@ class BankImportView(FormView):
 
         # Show recent imports
         recent_transactions = (
-            BankTransaction.objects.filter(practice=self.request.current_practice)
+            BankTransaction.objects.for_current_practice(self.request)
             .select_related("matched_invoice", "matched_invoice__client")
             .order_by("-imported_at")[:10]
         )
@@ -107,8 +107,8 @@ class BankReviewView(FormMixin, ListView):
     def get_queryset(self):
         """Get unmatched transactions for current practice"""
         transactions = (
-            BankTransaction.objects.filter(
-                practice=self.request.current_practice,
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(
                 match_confidence="unmatched",
                 processed=False,
             )
@@ -168,10 +168,13 @@ class BankReviewView(FormMixin, ListView):
         context["import_results"] = import_results
 
         # Get statistics - only unprocessed transactions
-        stats = BankTransaction.objects.filter(
-            practice=self.request.current_practice,
-            processed=False,
-        ).values("match_confidence")
+        stats = (
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(
+                processed=False,
+            )
+            .values("match_confidence")
+        )
 
         confidence_counts: dict[str, int] = {}
         for stat in stats:
@@ -181,26 +184,32 @@ class BankReviewView(FormMixin, ListView):
         context["stats"] = confidence_counts
 
         # Count negative amounts (expenses) for review - includes auto-expense
-        expense_count = BankTransaction.objects.filter(
-            practice=self.request.current_practice,
-            match_confidence__in=["unmatched", "auto-expense", "ignored"],
-            processed=False,
-            amount__lt=0,
-        ).count()
+        expense_count = (
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(
+                match_confidence__in=["unmatched", "auto-expense", "ignored"],
+                processed=False,
+                amount__lt=0,
+            )
+            .count()
+        )
         context["expense_count"] = expense_count
 
         # Count auto-withdrawal transactions for review
-        withdrawal_count = BankTransaction.objects.filter(
-            practice=self.request.current_practice,
-            match_confidence="auto-withdrawal",
-            processed=False,
-        ).count()
+        withdrawal_count = (
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(
+                match_confidence="auto-withdrawal",
+                processed=False,
+            )
+            .count()
+        )
         context["withdrawal_count"] = withdrawal_count
 
         # Get recently matched transactions for reference (last 10)
         recently_matched = (
-            BankTransaction.objects.filter(
-                practice=self.request.current_practice,
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(
                 match_confidence__in=["exact", "fuzzy", "manual"],
                 matched_invoice__isnull=False,
             )
@@ -239,9 +248,8 @@ class BankReviewView(FormMixin, ListView):
             return redirect("bank_review")
 
         transaction = get_object_or_404(
-            BankTransaction,
+            BankTransaction.objects.for_current_practice(request),
             id=transaction_id,
-            practice=request.current_practice,
         )
         redirect_url = self._next_redirect_url(request, transaction)
 
@@ -283,8 +291,8 @@ class BankReviewView(FormMixin, ListView):
     def _next_redirect_url(self, request, exclude_transaction) -> str:
         """Build review URL anchored to the next unmatched transaction."""
         next_transaction = (
-            BankTransaction.objects.filter(
-                practice=request.current_practice,
+            BankTransaction.objects.for_current_practice(request)
+            .filter(
                 processed=False,
                 match_confidence="unmatched",
             )
@@ -301,11 +309,12 @@ class BankReviewView(FormMixin, ListView):
 
     def _handle_bulk_ignore_paid(self, request):
         transactions = list(
-            BankTransaction.objects.filter(
-                practice=request.current_practice,
+            BankTransaction.objects.for_current_practice(request)
+            .filter(
                 match_confidence="unmatched",
                 processed=False,
-            ).select_related("matched_invoice")
+            )
+            .select_related("matched_invoice")
         )
 
         invoice_numbers = {
@@ -344,12 +353,15 @@ class BankReviewView(FormMixin, ListView):
         return redirect("bank_review")
 
     def _handle_ignore_all_expenses(self, request):
-        updated = BankTransaction.objects.filter(
-            practice=request.current_practice,
-            match_confidence="unmatched",
-            processed=False,
-            amount__lt=0,
-        ).update(match_confidence="ignored")
+        updated = (
+            BankTransaction.objects.for_current_practice(request)
+            .filter(
+                match_confidence="unmatched",
+                processed=False,
+                amount__lt=0,
+            )
+            .update(match_confidence="ignored")
+        )
         messages.success(
             request,
             ngettext(
@@ -362,11 +374,14 @@ class BankReviewView(FormMixin, ListView):
         return redirect("bank_review")
 
     def _handle_ignore_all_unmatched(self, request):
-        updated = BankTransaction.objects.filter(
-            practice=request.current_practice,
-            match_confidence="unmatched",
-            processed=False,
-        ).update(match_confidence="ignored")
+        updated = (
+            BankTransaction.objects.for_current_practice(request)
+            .filter(
+                match_confidence="unmatched",
+                processed=False,
+            )
+            .update(match_confidence="ignored")
+        )
         messages.success(
             request,
             ngettext(
@@ -532,9 +547,8 @@ class BankReviewView(FormMixin, ListView):
 def bank_transaction_detail(request, pk):
     """Detail view for a single bank transaction"""
     transaction = get_object_or_404(
-        BankTransaction,
+        BankTransaction.objects.for_current_practice(request),
         pk=pk,
-        practice=request.current_practice,
     )
 
     context = {
@@ -558,12 +572,15 @@ class BankExpenseReviewView(ListView):
 
     def get_queryset(self):
         """Get unmatched/ignored/auto-created negative transactions (potential expenses)"""
-        return BankTransaction.objects.filter(
-            practice=self.request.current_practice,
-            amount__lt=0,  # Negative amounts
-            match_confidence__in=["unmatched", "ignored", "auto-expense"],
-            processed=False,
-        ).order_by("-transaction_date")
+        return (
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(
+                amount__lt=0,  # Negative amounts
+                match_confidence__in=["unmatched", "ignored", "auto-expense"],
+                processed=False,
+            )
+            .order_by("-transaction_date")
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -588,9 +605,8 @@ class BankExpenseReviewView(ListView):
                 messages.error(request, _("Please select at least one transaction."))
                 return redirect("bank_expense_review")
 
-            transactions = BankTransaction.objects.filter(
+            transactions = BankTransaction.objects.for_current_practice(request).filter(
                 id__in=transaction_ids,
-                practice=request.current_practice,
             )
 
             if not transactions.exists():
@@ -670,13 +686,16 @@ class BankExpenseReviewView(ListView):
                 messages.error(request, _("Please select at least one transaction."))
                 return redirect("bank_expense_review")
 
-            count = BankTransaction.objects.filter(
-                id__in=transaction_ids,
-                practice=request.current_practice,
-            ).update(
-                match_confidence="ignored",
-                notes="Manuell ignoriert",
-                processed=True,
+            count = (
+                BankTransaction.objects.for_current_practice(request)
+                .filter(
+                    id__in=transaction_ids,
+                )
+                .update(
+                    match_confidence="ignored",
+                    notes="Manuell ignoriert",
+                    processed=True,
+                )
             )
 
             messages.success(
@@ -706,11 +725,14 @@ class BankWithdrawalReviewView(ListView):
 
     def get_queryset(self):
         """Get auto-created withdrawal transactions pending review"""
-        return BankTransaction.objects.filter(
-            practice=self.request.current_practice,
-            match_confidence="auto-withdrawal",
-            processed=False,
-        ).order_by("-transaction_date")
+        return (
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(
+                match_confidence="auto-withdrawal",
+                processed=False,
+            )
+            .order_by("-transaction_date")
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -734,9 +756,8 @@ class BankWithdrawalReviewView(ListView):
                 messages.error(request, _("Please select at least one transaction."))
                 return redirect("bank_withdrawal_review")
 
-            transactions = BankTransaction.objects.filter(
+            transactions = BankTransaction.objects.for_current_practice(request).filter(
                 id__in=transaction_ids,
-                practice=request.current_practice,
             )
 
             if not transactions.exists():
@@ -808,9 +829,8 @@ class BankWithdrawalReviewView(ListView):
                 messages.error(request, _("Please select at least one transaction."))
                 return redirect("bank_withdrawal_review")
 
-            transactions_qs = BankTransaction.objects.filter(
+            transactions_qs = BankTransaction.objects.for_current_practice(request).filter(
                 id__in=transaction_ids,
-                practice=request.current_practice,
             )
 
             # Delete orphaned auto-created withdrawals before ignoring

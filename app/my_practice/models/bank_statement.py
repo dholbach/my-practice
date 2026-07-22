@@ -7,6 +7,8 @@ from django.db import models
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
+from .base import PracticeScopedManager
+
 
 def _normalize_iban(iban: str) -> str:
     """Remove spaces and uppercase for IBAN comparison."""
@@ -160,6 +162,9 @@ class BankTransaction(models.Model):
             "IBAN of the source account from the CSV export – must match the practice IBAN"
         ),
     )
+
+    # Practice-scoped manager
+    objects = PracticeScopedManager()
 
     class Meta:
         unique_together = [["practice", "transaction_date", "amount", "reference"]]

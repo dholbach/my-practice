@@ -98,9 +98,11 @@ class ExpenseUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
             .exclude(pk=expense.pk)
             .order_by("-date")[:50]
         )
-        context["linked_transactions"] = BankTransaction.objects.filter(
-            linked_expense=expense
-        ).order_by("-transaction_date")
+        context["linked_transactions"] = (
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(linked_expense=expense)
+            .order_by("-transaction_date")
+        )
 
         # Available transactions: unlinked negatives, filtered by search params
         tx_search = self.request.GET.get("tx_search", "").strip()
@@ -109,11 +111,14 @@ class ExpenseUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
         context["tx_year"] = tx_year
 
         # Base without linked_expense constraint — search path adds it back selectively.
-        _base = BankTransaction.objects.filter(
-            practice=self.request.current_practice,
-            matched_invoice__isnull=True,
-            amount__lt=0,
-        ).order_by("-transaction_date")
+        _base = (
+            BankTransaction.objects.for_current_practice(self.request)
+            .filter(
+                matched_invoice__isnull=True,
+                amount__lt=0,
+            )
+            .order_by("-transaction_date")
+        )
 
         # Strictly free rows (used for the default / no-search view)
         base_qs = _base.filter(
@@ -208,7 +213,7 @@ def expense_link_transaction(request: HttpRequest, pk: int) -> HttpResponse:
         raise PermissionDenied
     transaction_id = request.POST.get("transaction_id")
     transaction = get_object_or_404(
-        BankTransaction, pk=transaction_id, practice=request.current_practice
+        BankTransaction.objects.for_current_practice(request), pk=transaction_id
     )
     # Clean up any auto-created stub that this transaction was previously linked to.
     if transaction.linked_expense_id and transaction.linked_expense_id != expense.pk:
@@ -313,9 +318,8 @@ def expense_unlink_transaction(request: HttpRequest, pk: int, transaction_pk: in
     if expense.practice != request.current_practice:
         raise PermissionDenied
     transaction = get_object_or_404(
-        BankTransaction,
+        BankTransaction.objects.for_current_practice(request),
         pk=transaction_pk,
-        practice=request.current_practice,
         linked_expense=expense,
     )
     transaction.linked_expense = None
