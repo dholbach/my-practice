@@ -411,7 +411,7 @@ class BankImportReminderWidgetBuilder:
         """
         # Get last imported transaction
         last_transaction = (
-            BankTransaction.objects.filter(practice=self.practice).order_by("-imported_at").first()
+            BankTransaction.objects.for_practice(self.practice).order_by("-imported_at").first()
         )
 
         if not last_transaction:

@@ -140,9 +140,12 @@ class ExpenseGroupForm(StyledFormMixin, forms.Form):
         if practice:
             from .models import BankTransaction
 
-            self.fields["transactions"].queryset = BankTransaction.objects.filter(
-                practice=practice,
-                amount__lt=0,  # Negative amounts
-                match_confidence="unmatched",
-                processed=False,
-            ).order_by("-transaction_date")
+            self.fields["transactions"].queryset = (
+                BankTransaction.objects.for_practice(practice)
+                .filter(
+                    amount__lt=0,  # Negative amounts
+                    match_confidence="unmatched",
+                    processed=False,
+                )
+                .order_by("-transaction_date")
+            )

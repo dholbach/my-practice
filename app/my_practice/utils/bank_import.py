@@ -361,12 +361,15 @@ class BankStatementImporter:
 
     def _handle_negative_row(self, parsed: dict, skip_negatives: bool) -> bool:
         """Handle a negative-amount row. Returns True if fully processed (caller should continue)."""
-        existing = BankTransaction.objects.filter(
-            practice=self.practice,
-            transaction_date=parsed["transaction_date"],
-            amount=parsed["amount"],
-            reference=parsed["reference"],
-        ).first()
+        existing = (
+            BankTransaction.objects.for_practice(self.practice)
+            .filter(
+                transaction_date=parsed["transaction_date"],
+                amount=parsed["amount"],
+                reference=parsed["reference"],
+            )
+            .first()
+        )
         if existing:
             self.results["ignored"] += 1
             return True
@@ -512,12 +515,15 @@ class BankStatementImporter:
                 continue
 
             # Duplicate check for non-negative (and unhandled negative) rows
-            existing = BankTransaction.objects.filter(
-                practice=self.practice,
-                transaction_date=parsed["transaction_date"],
-                amount=parsed["amount"],
-                reference=parsed["reference"],
-            ).first()
+            existing = (
+                BankTransaction.objects.for_practice(self.practice)
+                .filter(
+                    transaction_date=parsed["transaction_date"],
+                    amount=parsed["amount"],
+                    reference=parsed["reference"],
+                )
+                .first()
+            )
             if existing:
                 self.results["ignored"] += 1
                 continue
