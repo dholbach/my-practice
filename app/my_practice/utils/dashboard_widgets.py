@@ -6,7 +6,7 @@ Additional widgets: Session Import, Client Attention, Invoice Actions, Bank Impo
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.db.models import Max, QuerySet, Sum
+from django.db.models import Max, QuerySet
 from django.urls import reverse
 from django.utils.translation import gettext, ngettext, pgettext
 from django.utils.translation import gettext_lazy as _
@@ -645,7 +645,7 @@ class TaxQuarterWidgetBuilder:
                 - quarter_overview_url: URL
                 - add_payment_url: URL (pre-fills category=tax)
         """
-        from ..models import CompanyWithdrawal, Invoice
+        from ..models import CompanyWithdrawal
         from .date_helpers import DateRangeHelper
         from .revenue_helpers import RevenueCalculator
 
@@ -653,14 +653,7 @@ class TaxQuarterWidgetBuilder:
         q, start, end = DateRangeHelper.get_quarter_for_date(today)
 
         # Same paid-date rule (with invoice_date fallback) as the tax views
-        revenue = (
-            Invoice.objects.filter(
-                RevenueCalculator.build_paid_date_range_filter(start, end),
-                practice=self.practice,
-                status="paid",
-            ).aggregate(total=Sum("total"))["total"]
-            or 0
-        )
+        revenue = RevenueCalculator.get_paid_revenue_for_range(start, end, practice=self.practice)
 
         has_tax_payment = CompanyWithdrawal.objects.filter(
             practice=self.practice,
