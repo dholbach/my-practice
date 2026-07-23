@@ -20,7 +20,7 @@ consume these rows.
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
-from django.db.models import Model
+from django.db.models import Model, Q
 from django.utils import timezone
 
 from ...models import Invoice, Practice, PracticeTodo
@@ -63,22 +63,27 @@ class Command(BaseCommand):
         """
         Ensure one open Task per object in `objects` (matched via the generic
         related_object FK), and auto-close open Tasks of this task_type whose
-        object is no longer in `objects`.
+        object is no longer in `objects` — including ones left over from a
+        previous version of this sync pointing at a different model (e.g.
+        missing_session_log used to link Client, now links Session); those
+        never match content_type+object_id for the current model, so they're
+        stale by definition and get closed regardless of what they point at.
         """
         content_type = ContentType.objects.get_for_model(model)
         current_ids = {obj.pk for obj in objects}
 
-        existing = PracticeTodo.objects.filter(
+        all_open = PracticeTodo.objects.filter(
             practice=practice,
             task_type=task_type,
-            content_type=content_type,
             completed_at__isnull=True,
         )
-        existing_ids = set(existing.values_list("object_id", flat=True))
-
-        totals["closed"] += existing.exclude(object_id__in=current_ids).update(
-            completed_at=timezone.now()
+        existing_ids = set(
+            all_open.filter(content_type=content_type).values_list("object_id", flat=True)
         )
+
+        totals["closed"] += all_open.exclude(
+            Q(content_type=content_type) & Q(object_id__in=current_ids)
+        ).update(completed_at=timezone.now())
 
         for obj in objects:
             if obj.pk in existing_ids:

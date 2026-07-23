@@ -206,16 +206,22 @@ class PracticeTodo(TimestampedModel):
     def reference_date(self):
         """
         The date most relevant to why this task exists — invoice date for
-        invoice tasks, session date for a missing session log, and the
-        task's own creation date otherwise (manual/recurring/checklist
+        an Invoice-linked task, session date for a Session-linked task, and
+        the task's own creation date otherwise (manual/recurring/checklist
         tasks, or a materialized task whose related_object was deleted).
         Shown in the Focus Queue so age is judged from the right date, not
         just "when the row was materialized."
+
+        Keyed off content_type.model rather than task_type: a task_type's
+        related model can change over time (e.g. missing_session_log moved
+        from Client to Session), and older rows may still carry the
+        previous model — this stays correct either way instead of assuming.
         """
         if self.related_object is not None:
-            if self.task_type in (self.TaskType.INVOICE_UNPAID, self.TaskType.INVOICE_UNSENT):
+            model_name = self.content_type.model
+            if model_name == "invoice":
                 return self.related_object.invoice_date
-            if self.task_type == self.TaskType.MISSING_SESSION_LOG:
+            if model_name == "session":
                 return self.related_object.session_date
         return self.created_at.date()
 

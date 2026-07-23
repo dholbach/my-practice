@@ -99,6 +99,25 @@ class SyncMissingSessionLogTests(TestCase):
             ).exists()
         )
 
+    def test_closes_orphaned_task_from_a_previous_related_model(self):
+        """
+        Regression test: a task_type's related model can change over time
+        (missing_session_log used to link Client, now links Session) —
+        older rows pointing at the old model must still get closed by the
+        next sync, not linger forever untouched because their content_type
+        no longer matches what this sync looks for.
+        """
+        stale = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="XX-1",
+            task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG,
+            related_object=self.client_obj,
+        )
+        call_command("sync_focus_queue_tasks")
+
+        stale.refresh_from_db()
+        self.assertTrue(stale.is_completed)
+
     def test_no_task_for_short_session(self):
         """Sessions at/under SESSION_LOG_MIN_DURATION (intro calls) don't need a log."""
         _make_session_missing_log(self.client_obj, duration=20)

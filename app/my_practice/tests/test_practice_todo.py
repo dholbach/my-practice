@@ -310,3 +310,24 @@ class PracticeTodoModelTests(TestCase):
     def test_reference_date_falls_back_to_created_at(self):
         todo = PracticeTodo.objects.create(practice=self.practice, title="Manual task")
         self.assertEqual(todo.reference_date, todo.created_at.date())
+
+    def test_reference_date_keyed_by_content_type_not_task_type(self):
+        """
+        Regression test: a missing_session_log task whose related_object is
+        still a Client (pre-P-050-#269 shape, before that task_type switched
+        to linking Session) must fall back to created_at rather than crash
+        trying to read session_date off a Client.
+        """
+        client = Client.objects.create(
+            practice=self.practice,
+            client_code="XX-5",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="XX-5",
+            task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG,
+            related_object=client,
+        )
+        self.assertEqual(todo.reference_date, todo.created_at.date())
