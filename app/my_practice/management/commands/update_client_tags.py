@@ -3,18 +3,12 @@ Management command to update automatic tags for clients.
 Run this periodically (e.g., daily) to maintain system tags.
 """
 
-from datetime import timedelta
-
 from django.core.management.base import BaseCommand
 from django.db.models import Max
 from django.utils import timezone
-from ...models import Client, ClientTag, InvoiceItem
+from ...models import Client, ClientTag
 from ...models.session import Session
-from ...utils.tag_helpers import (
-    RECENT_ACTIVITY_WINDOW_DAYS,
-    SESSION_LOG_MIN_DURATION,
-    SESSION_LOG_WINDOW_DAYS,
-)
+from ...utils.tag_helpers import RECENT_ACTIVITY_WINDOW_DAYS, get_sessions_missing_log
 
 
 class Command(BaseCommand):
@@ -47,7 +41,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Updating automatic client tags...")
         today = timezone.now().date()
-        cutoff = today - timedelta(days=SESSION_LOG_WINDOW_DAYS)
 
         # --- Ensure all system tags exist with correct attributes ---
         tags = {}
@@ -80,25 +73,7 @@ class Command(BaseCommand):
         }
         has_any_session = set(last_session_dates.keys())
 
-        # Sessions billed as a cancellation fee don't need a log (same rule as the UI).
-        cancellation_fee_session_ids = set(
-            InvoiceItem.objects.filter(
-                service_type__name__icontains="cancel",
-            ).values_list("session_id", flat=True)
-        )
-
-        clients_missing_logs = set(
-            Session.objects.filter(
-                client__active=True,
-                session_date__gte=cutoff,
-                session_date__lt=today,
-                cancelled=False,
-                log__isnull=True,
-                duration__gt=SESSION_LOG_MIN_DURATION,
-            )
-            .exclude(pk__in=cancellation_fee_session_ids)
-            .values_list("client_id", flat=True)
-        )
+        clients_missing_logs = set(get_sessions_missing_log().values_list("client_id", flat=True))
 
         totals = {"added": 0, "removed": 0}
 

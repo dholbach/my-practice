@@ -188,10 +188,36 @@ class PracticeTodo(TimestampedModel):
         """URL to the related object's detail page, if there is one we know how to link."""
         if self.related_object is None:
             return None
-        url_name = _RELATED_OBJECT_URL_NAMES.get(self.content_type.model)
+        model_name = self.content_type.model
+        if model_name == "session":
+            # No SessionLog exists yet — link to the create form, pre-filled
+            # with this session's date, rather than a detail/edit page.
+            session = self.related_object
+            return (
+                reverse("session_log_create", kwargs={"pk": session.client_id})
+                + f"?session_date={session.session_date.isoformat()}"
+            )
+        url_name = _RELATED_OBJECT_URL_NAMES.get(model_name)
         if not url_name:
             return None
         return reverse(url_name, kwargs={"pk": self.object_id})
+
+    @property
+    def reference_date(self):
+        """
+        The date most relevant to why this task exists — invoice date for
+        invoice tasks, session date for a missing session log, and the
+        task's own creation date otherwise (manual/recurring/checklist
+        tasks, or a materialized task whose related_object was deleted).
+        Shown in the Focus Queue so age is judged from the right date, not
+        just "when the row was materialized."
+        """
+        if self.related_object is not None:
+            if self.task_type in (self.TaskType.INVOICE_UNPAID, self.TaskType.INVOICE_UNSENT):
+                return self.related_object.invoice_date
+            if self.task_type == self.TaskType.MISSING_SESSION_LOG:
+                return self.related_object.session_date
+        return self.created_at.date()
 
     def mark_completed(self) -> None:
         """Mark task as completed with current timestamp."""

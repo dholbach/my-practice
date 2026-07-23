@@ -25,6 +25,50 @@ SESSION_LOG_MIN_DURATION = 30
 RECENT_ACTIVITY_WINDOW_DAYS = 90
 
 
+def get_sessions_missing_log(practice=None) -> QuerySet:
+    """
+    Sessions in the last SESSION_LOG_WINDOW_DAYS still missing a SessionLog.
+
+    Mirrors the missing-session-log tag rule in update_client_tags — shared
+    so the P-050 Focus Queue sync doesn't re-derive it at a different
+    granularity (that command tags at the client level; this returns the
+    actual sessions, for a per-session materialized task).
+
+    Args:
+        practice: Optional Practice to scope the query to.
+
+    Returns:
+        QuerySet of Session, select_related("client").
+    """
+    from datetime import timedelta
+
+    from ..models import InvoiceItem
+    from ..models.session import Session
+
+    today = timezone.now().date()
+    cutoff = today - timedelta(days=SESSION_LOG_WINDOW_DAYS)
+
+    cancellation_fee_session_ids = InvoiceItem.objects.filter(
+        service_type__name__icontains="cancel",
+    ).values_list("session_id", flat=True)
+
+    qs = (
+        Session.objects.filter(
+            client__active=True,
+            session_date__gte=cutoff,
+            session_date__lt=today,
+            cancelled=False,
+            log__isnull=True,
+            duration__gt=SESSION_LOG_MIN_DURATION,
+        )
+        .exclude(pk__in=cancellation_fee_session_ids)
+        .select_related("client")
+    )
+    if practice is not None:
+        qs = qs.filter(client__practice=practice)
+    return qs
+
+
 def sync_no_next_session_tag(client: "Client") -> bool | None:
     """
     Add or remove the 'no-next-session' system tag for a single client,

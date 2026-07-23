@@ -23,12 +23,10 @@ from django.core.management.base import BaseCommand
 from django.db.models import Model
 from django.utils import timezone
 
-from ...models import Client, Invoice, Practice, PracticeTodo
-from ...utils.dashboard_widgets import (
-    ChecklistWidgetBuilder,
-    ClientAttentionWidgetBuilder,
-    InvoiceActionsWidgetBuilder,
-)
+from ...models import Invoice, Practice, PracticeTodo
+from ...models.session import Session
+from ...utils.dashboard_widgets import ChecklistWidgetBuilder, InvoiceActionsWidgetBuilder
+from ...utils.tag_helpers import get_sessions_missing_log
 
 
 class Command(BaseCommand):
@@ -94,13 +92,13 @@ class Command(BaseCommand):
             totals["created"] += 1
 
     def _sync_missing_session_log(self, practice: Practice, totals: dict) -> None:
-        clients = list(ClientAttentionWidgetBuilder(practice).get_missing_session_log_clients())
+        sessions = list(get_sessions_missing_log(practice))
         self._sync_object_tasks(
             practice,
             PracticeTodo.TaskType.MISSING_SESSION_LOG,
-            Client,
-            clients,
-            lambda client: client.client_code,
+            Session,
+            sessions,
+            lambda session: session.client.client_code,
             totals,
         )
 

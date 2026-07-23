@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from my_practice.models import Client, Practice, PracticeTodo
+from my_practice.models import Client, Invoice, Practice, PracticeTodo, Session
 
 
 class PracticeTodoModelTests(TestCase):
@@ -245,3 +245,68 @@ class PracticeTodoModelTests(TestCase):
             practice=self.practice, title="Weird", related_object=other_practice
         )
         self.assertIsNone(todo.related_object_url)
+
+    def test_related_object_url_for_session_links_to_log_create(self):
+        client = Client.objects.create(
+            practice=self.practice,
+            client_code="XX-2",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        session_date = timezone.now().date() - timedelta(days=3)
+        session = Session.objects.create(client=client, session_date=session_date, duration=60)
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="XX-2",
+            task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG,
+            related_object=session,
+        )
+        expected = (
+            reverse("session_log_create", kwargs={"pk": client.pk})
+            + f"?session_date={session_date.isoformat()}"
+        )
+        self.assertEqual(todo.related_object_url, expected)
+
+    def test_reference_date_for_invoice_task_uses_invoice_date(self):
+        client = Client.objects.create(
+            practice=self.practice,
+            client_code="XX-3",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        invoice_date = timezone.now().date() - timedelta(days=10)
+        invoice = Invoice.objects.create(
+            practice=self.practice,
+            client=client,
+            invoice_number="INV-REF-1",
+            invoice_date=invoice_date,
+            status="sent",
+        )
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="INV-REF-1",
+            task_type=PracticeTodo.TaskType.INVOICE_UNPAID,
+            related_object=invoice,
+        )
+        self.assertEqual(todo.reference_date, invoice_date)
+
+    def test_reference_date_for_missing_session_log_uses_session_date(self):
+        client = Client.objects.create(
+            practice=self.practice,
+            client_code="XX-4",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        session_date = timezone.now().date() - timedelta(days=4)
+        session = Session.objects.create(client=client, session_date=session_date, duration=60)
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="XX-4",
+            task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG,
+            related_object=session,
+        )
+        self.assertEqual(todo.reference_date, session_date)
+
+    def test_reference_date_falls_back_to_created_at(self):
+        todo = PracticeTodo.objects.create(practice=self.practice, title="Manual task")
+        self.assertEqual(todo.reference_date, todo.created_at.date())

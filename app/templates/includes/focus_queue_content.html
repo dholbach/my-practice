@@ -50,6 +50,10 @@
                 <span class="todo-badge task-type-{{ task.task_type }}">{{ task.get_task_type_display }}</span>
                 <span class="todo-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
 
+                {% if task.reference_date %}
+                <span class="todo-reference-date" title="{% trans 'Invoice date, session date, or when this task was added' %}">🕓 {{ task.reference_date|date:"d.m.Y" }}</span>
+                {% endif %}
+
                 {% if task.due_date %}
                 <span class="todo-due-date {% if task.is_overdue %}overdue{% endif %}">
                     📅 {{ task.due_date|date:"d.m.Y" }}

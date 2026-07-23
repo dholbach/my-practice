@@ -9,7 +9,6 @@ from django.utils import timezone
 
 from ..models import (
     Client,
-    ClientTag,
     Invoice,
     InvoiceItem,
     OperationalChecklistCompletion,
@@ -47,6 +46,16 @@ def _make_client(practice, code="XX-1"):
     )
 
 
+def _make_session_missing_log(client, days_ago=5, duration=60):
+    """A session that matches get_sessions_missing_log()'s criteria."""
+    return Session.objects.create(
+        client=client,
+        session_date=date.today() - timedelta(days=days_ago),
+        duration=duration,
+        cancelled=False,
+    )
+
+
 def _make_invoice(practice, client, status, days_ago, number):
     inv_date = date.today() - timedelta(days=days_ago)
     invoice = Invoice.objects.create(
@@ -72,18 +81,17 @@ class SyncMissingSessionLogTests(TestCase):
     def setUp(self):
         self.practice = _make_practice()
         self.client_obj = _make_client(self.practice)
-        self.tag = ClientTag.objects.create(name="missing-session-log", color="red")
 
-    def test_creates_task_for_tagged_client(self):
-        self.client_obj.tags.add(self.tag)
+    def test_creates_task_for_session_missing_log(self):
+        session = _make_session_missing_log(self.client_obj)
         call_command("sync_focus_queue_tasks")
 
         task = PracticeTodo.objects.get(task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG)
         self.assertEqual(task.title, "XX-1")
-        self.assertEqual(task.related_object, self.client_obj)
+        self.assertEqual(task.related_object, session)
         self.assertFalse(task.is_completed)
 
-    def test_no_task_for_untagged_client(self):
+    def test_no_task_when_no_session_missing_log(self):
         call_command("sync_focus_queue_tasks")
         self.assertFalse(
             PracticeTodo.objects.filter(
@@ -91,19 +99,43 @@ class SyncMissingSessionLogTests(TestCase):
             ).exists()
         )
 
-    def test_auto_closes_when_tag_removed(self):
-        self.client_obj.tags.add(self.tag)
+    def test_no_task_for_short_session(self):
+        """Sessions at/under SESSION_LOG_MIN_DURATION (intro calls) don't need a log."""
+        _make_session_missing_log(self.client_obj, duration=20)
+        call_command("sync_focus_queue_tasks")
+        self.assertFalse(
+            PracticeTodo.objects.filter(
+                task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG
+            ).exists()
+        )
+
+    def test_auto_closes_when_log_added(self):
+        from ..models import SessionLog
+
+        session = _make_session_missing_log(self.client_obj)
         call_command("sync_focus_queue_tasks")
         task = PracticeTodo.objects.get(task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG)
 
-        self.client_obj.tags.remove(self.tag)
+        SessionLog.objects.create(session=session, content="Notes")
         call_command("sync_focus_queue_tasks")
 
         task.refresh_from_db()
         self.assertTrue(task.is_completed)
 
+    def test_two_missing_sessions_create_two_tasks(self):
+        """Each missing session gets its own task, not one per client."""
+        _make_session_missing_log(self.client_obj, days_ago=3)
+        _make_session_missing_log(self.client_obj, days_ago=6)
+        call_command("sync_focus_queue_tasks")
+        self.assertEqual(
+            PracticeTodo.objects.filter(
+                task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG
+            ).count(),
+            2,
+        )
+
     def test_idempotent_no_duplicate_task(self):
-        self.client_obj.tags.add(self.tag)
+        _make_session_missing_log(self.client_obj)
         call_command("sync_focus_queue_tasks")
         call_command("sync_focus_queue_tasks")
         self.assertEqual(
@@ -116,7 +148,7 @@ class SyncMissingSessionLogTests(TestCase):
     def test_practice_isolation(self):
         other_practice = _make_practice("Other Practice")
         other_client = _make_client(other_practice, "YY-2")
-        other_client.tags.add(self.tag)
+        _make_session_missing_log(other_client)
         call_command("sync_focus_queue_tasks")
 
         self.assertFalse(
