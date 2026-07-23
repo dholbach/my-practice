@@ -18,6 +18,7 @@ from ..forms import CapacityPeriodFormSet, PracticeEditForm
 from ..models import Practice, UserPractice
 from ..utils import get_user_practices, is_practice_owner, switch_practice
 from ..utils.file_processing import compress_image_inplace
+from .crud_mixins import PracticeOwnerRequiredMixin
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +150,7 @@ class PracticeCreateView(CreateView):
         return response
 
 
-class PracticeUpdateView(UpdateView):
+class PracticeUpdateView(PracticeOwnerRequiredMixin, UpdateView):
     """
     Update practice settings.
     Only owners can edit.
@@ -161,14 +162,7 @@ class PracticeUpdateView(UpdateView):
     success_url = reverse_lazy("practice_management")
     slug_field = "slug"
     slug_url_kwarg = "slug"
-
-    def dispatch(self, request, *args, **kwargs):
-        """Check if user is owner before allowing edit."""
-        practice = self.get_object()
-        if not is_practice_owner(request.user, practice):
-            messages.error(request, _("You don't have permission to edit this practice."))
-            return redirect("practice_management")
-        return super().dispatch(request, *args, **kwargs)
+    permission_denied_message = _("You don't have permission to edit this practice.")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -203,7 +197,7 @@ class PracticeUpdateView(UpdateView):
         return response
 
 
-class PracticeDeleteView(DeleteView):
+class PracticeDeleteView(PracticeOwnerRequiredMixin, DeleteView):
     """
     Delete practice (sets is_active=False).
     Only owners can delete.
@@ -214,14 +208,7 @@ class PracticeDeleteView(DeleteView):
     success_url = reverse_lazy("practice_management")
     slug_field = "slug"
     slug_url_kwarg = "slug"
-
-    def dispatch(self, request, *args, **kwargs):
-        """Check if user is owner before allowing delete."""
-        practice = self.get_object()
-        if not is_practice_owner(request.user, practice):
-            messages.error(request, _("You don't have permission to delete this practice."))
-            return redirect("practice_management")
-        return super().dispatch(request, *args, **kwargs)
+    permission_denied_message = _("You don't have permission to delete this practice.")
 
     def form_valid(self, form: Any) -> HttpResponse:
         """Soft delete: set is_active=False instead of deleting."""

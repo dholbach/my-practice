@@ -8,9 +8,40 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import ModelForm
 from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
+from ..utils.practice_helpers import is_practice_owner
 from ..utils.view_helpers import safe_next
+
+
+class PracticeOwnerRequiredMixin:
+    """
+    Restricts an Update/DeleteView to users who own the object's practice.
+
+    Requires self.get_object() to return something usable directly as a
+    Practice (or override permission_denied_practice() for other models).
+
+    Example:
+        class PracticeUpdateView(PracticeOwnerRequiredMixin, UpdateView):
+            model = Practice
+            permission_denied_message = _("You don't have permission to edit this practice.")
+    """
+
+    permission_denied_message: str | None = None
+    permission_denied_redirect = "practice_management"
+
+    def permission_denied_practice(self):
+        """Return the Practice to check ownership against. Override if model != Practice."""
+        return self.get_object()
+
+    def dispatch(self, request, *args, **kwargs):
+        practice = self.permission_denied_practice()
+        if not is_practice_owner(request.user, practice):
+            messages.error(request, self.permission_denied_message or _("Permission denied."))
+            return redirect(self.permission_denied_redirect)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class NextRedirectMixin:
