@@ -274,8 +274,7 @@ urlpatterns = [
         views.client_remove_tag,
         name="client_remove_tag",
     ),
-    # TODO management
-    path("todos/", views.TodoListView.as_view(), name="todo_list"),
+    # TODO management (list page retired — see Focus Queue below, P-050)
     path("todos/new/", views.TodoCreateView.as_view(), name="todo_create"),
     path("todos/<int:pk>/edit/", views.TodoUpdateView.as_view(), name="todo_edit"),
     path("todos/<int:pk>/delete/", views.TodoDeleteView.as_view(), name="todo_delete"),

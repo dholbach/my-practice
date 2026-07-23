@@ -146,9 +146,20 @@ useful on its own.
    with complete/snooze (+1d/+3d/+1w presets)/edit actions and a filter-by-`task_type`
    dropdown. Verified end-to-end against the running dev server (login, practice
    switch, filter, complete, snooze, empty state — all in German with correct
-   translations). (PR pending)
-4. **Retire `/todos/` + dashboard's "Braucht Aktion" pane** — now that the Focus
-   Queue page exists and is the merged single surface, remove `/todos/`
-   (`TodoListView` etc.) and the dashboard's `ActionQueueBuilder`/"Needs Action"
-   pane; pare the dashboard back down to pure overview. Not yet done — the Focus
-   Queue page currently coexists alongside both older surfaces.
+   translations). (PR #267)
+4. ✅ **Retire `/todos/` + dashboard's "Braucht Aktion" pane** — `/todos/` list
+   page removed (`TodoListView`, `todo_list.html`, `includes/todo_content.html`);
+   `TodoCreateView`/`TodoUpdateView`/`TodoDeleteView`/`todo_toggle_complete`/
+   `todo_toggle_focus` kept (Focus Queue reuses the create/edit form; the two
+   toggle endpoints are still used inline by the dashboard's Agenda/WeeklyFocus
+   widgets). Dashboard's `ActionQueueBuilder`/"Needs Action" pane removed —
+   along with `TaxQuarterWidgetBuilder`/`BankImportReminderWidgetBuilder`
+   (fully dead once `ActionQueueBuilder` was gone: nothing else called their
+   `build_context()`/`get_action_items()`) and the now-dead `get_action_items()`
+   methods on `InvoiceActionsWidgetBuilder`/`ClientAttentionWidgetBuilder`/
+   `ChecklistWidgetBuilder` (those three classes stay — still used by
+   `sync_focus_queue_tasks`). Dashboard's Today/This Week widgets now render as
+   plain stacked full-width blocks instead of a two-pane grid. (PR pending)
+
+P-050 is now feature-complete: unified `Task` model, materialization, and the
+Focus Queue page as the single surface for what needs doing.

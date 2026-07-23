@@ -114,7 +114,6 @@ class DashboardViewTest(TestCase):
         required_keys = [
             "total_revenue",
             "current_year",
-            "action_queue_items",
         ]
 
         for key in required_keys:

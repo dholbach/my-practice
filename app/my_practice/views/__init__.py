@@ -160,11 +160,10 @@ from .focus_queue_views import (
     focus_queue_toggle_complete,
 )
 
-# TODO views
+# TODO views (list page retired — see Focus Queue below, P-050)
 from .todo_views import (
     TodoCreateView,
     TodoDeleteView,
-    TodoListView,
     TodoUpdateView,
     todo_toggle_complete,
     todo_toggle_focus,
@@ -232,7 +231,6 @@ __all__ = [
     "PracticeUpdateView",
     "PracticeDeleteView",
     # TODO views
-    "TodoListView",
     "TodoCreateView",
     "TodoUpdateView",
     "TodoDeleteView",

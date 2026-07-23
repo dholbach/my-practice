@@ -462,52 +462,12 @@
   .widget-toggle:hover { background: var(--color-primary-hover); transform: scale(1.1); }
   .toggle-icon { transition: transform 0.3s ease; display: inline-block; font-size: 0.875rem; }
   .widget-content { padding: 1.5rem; transition: all 0.3s ease; }
-  /* Agenda widget */
-  .agenda-widget { background: var(--color-surface); border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px var(--color-shadow); margin-bottom: 2rem; }
-  .agenda-stats    { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .agenda-timeline { display: flex; flex-direction: column; gap: 1rem; }
-  .agenda-item { display: grid; grid-template-columns: auto 1fr auto; gap: 1rem; padding: 1rem; background: var(--color-bg-secondary); border-radius: 8px; border-left: 4px solid var(--color-primary); transition: all 0.2s; }
-  .agenda-item:hover { transform: translateX(4px); box-shadow: 0 2px 8px var(--color-shadow); }
-  .agenda-item.agenda-session { border-left-color: var(--color-primary); }
-  .agenda-item.agenda-task    { border-left-color: #f6ad55; }
-  .agenda-item.unscheduled    { opacity: 0.7; border-left-style: dashed; }
-  .agenda-item.due-overdue    { border-left-color: #f56565; background: rgba(245, 101, 101, 0.05); }
-  .agenda-item.due-today      { border-left-color: #f6ad55; background: rgba(246, 173, 85, 0.05); }
-  .agenda-item.due-soon       { border-left-color: #4facfe; background: rgba(79, 172, 254, 0.05); }
-  .agenda-time { display: flex; align-items: center; }
-  .time-badge { background: var(--color-primary); color: white; padding: 0.5rem 0.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; min-width: 60px; text-align: center; }
-  .time-badge.no-time { background: var(--color-badge-neutral-bg); color: var(--color-badge-neutral-text); }
-  .agenda-content { flex: 1; }
-  .agenda-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; font-size: 1rem; }
-  .agenda-title .icon  { font-size: 1.25rem; }
-  .agenda-title strong { color: var(--color-text-primary); }
-  /* scoped to avoid overriding common.css .client-code (bold monospace) */
-  .agenda-title .client-code { color: var(--color-text-secondary); font-size: 0.875rem; font-weight: 400; }
-  .priority-badge { padding: 0.125rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-  .priority-badge.priority-low    { background: var(--color-badge-blue-bg);   color: var(--color-badge-blue-text); }
-  .priority-badge.priority-medium { background: var(--color-badge-yellow-bg); color: var(--color-badge-yellow-text); }
-  .priority-badge.priority-high   { background: var(--color-badge-orange-bg); color: var(--color-badge-orange-text); }
-  .priority-badge.priority-urgent { background: var(--color-badge-red-bg);    color: var(--color-badge-red-text); }
-  .agenda-description { color: var(--color-text-secondary); font-size: 0.875rem; }
-  .agenda-action { display: flex; align-items: center; }
-  .btn-quick-action { background: var(--color-primary); color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.875rem; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
-  .btn-quick-action:hover { background: var(--color-primary-hover); transform: translateY(-1px); }
-  .agenda-empty { text-align: center; padding: 3rem 1rem; color: var(--color-text-secondary); }
-  .agenda-empty p { font-size: 1.125rem; margin: 0; }
   @media (max-width: 768px) {
     .widget-header { padding: 1rem; flex-direction: column; align-items: flex-start; gap: 1rem; }
     .widget-content { padding: 1rem; }
     .widget-title { font-size: 1.25rem; }
     .widget-title-group { gap: 0.5rem; }
-    .agenda-item { grid-template-columns: 1fr; gap: 0.75rem; }
-    .agenda-stats { width: 100%; }
   }
-  .agenda-title-link { text-decoration: none; color: var(--color-text-primary); transition: color 0.2s; }
-  .agenda-title-link:hover { color: var(--color-link); text-decoration: underline; }
-  .due-badge { padding: 0.125rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-left: 0.25rem; }
-  .due-badge.due-overdue { background: var(--color-danger-bg);  color: var(--color-danger);  }
-  .due-badge.due-today   { background: var(--color-warning-bg); color: var(--color-warning); }
-  .due-badge.due-soon    { background: var(--color-info-bg);    color: var(--color-info);    }
   /* Invoice actions widget */
   .widget-overdue-warning { font-size: 0.875rem; color: var(--color-warning); margin-bottom: 0.75rem; font-weight: 600; }
   .widget-total { font-size: 1.125rem; font-weight: 700; color: var(--color-text-primary); margin-bottom: 0.75rem; }
@@ -1308,28 +1268,6 @@
   .dashboard-quick-actions { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: flex-start; padding-top: 0.25rem; }
   @media (max-width: 640px) { .dashboard-header-row { flex-direction: column; } .dashboard-quick-actions { flex-direction: row; } }
 
-  /* Two-pane console */
-  .dashboard-console { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; align-items: start; }
-  @media (max-width: 900px) { .dashboard-console { grid-template-columns: 1fr; } }
-  .console-pane { display: flex; flex-direction: column; gap: 1rem; }
-
-  /* Action queue */
-  .action-queue { display: flex; flex-direction: column; }
-  .action-queue-row { display: flex; align-items: flex-start; gap: 0.625rem; padding: 0.625rem 0; border-bottom: 1px solid var(--color-border); }
-  .action-queue-row:last-child { border-bottom: none; }
-  .action-queue-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
-  .action-queue-dot--1 { background: var(--color-danger); }
-  .action-queue-dot--2 { background: var(--color-warning); }
-  .action-queue-dot--3 { background: var(--color-info); }
-  .action-queue-body { flex: 1; min-width: 0; }
-  .action-queue-category { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-secondary); }
-  .action-queue-summary { font-size: 0.875rem; color: var(--color-text-primary); word-break: break-word; }
-  .action-queue-sub { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.125rem; }
-  .action-queue-empty { color: var(--color-text-secondary); font-style: italic; padding: 1.5rem 0; text-align: center; margin: 0; }
-  .action-queue-sort-hint { font-size: 0.7rem; color: var(--color-text-secondary); white-space: nowrap; }
-
-  /* Extra-small button for action queue rows */
-  .btn-xs { padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
   .weekly-sessions-list { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-direction: column; gap: 0.25rem; }
   .weekly-session-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.875rem; }
   .weekly-session-item.is-today { background: rgba(102, 126, 234, 0.08); font-weight: 600; }
@@ -2152,6 +2090,18 @@
   .todo-badge.task-type-supervision         { background: #e9d8fd; color: #553c9a; }
   .todo-badge.task-type-recurring_review    { background: #bee3f8; color: #2c5282; }
   .todo-badge.task-type-operational_checklist { background: #c6f6d5; color: #22543d; }
+  /* Focus Queue type-filter pills — same palette as the task-type badges above,
+     so a pill's color matches the badge on the rows it filters to. */
+  .filter-pill { border: 2px solid transparent; }
+  .filter-pill.is-active { border-color: var(--color-link); }
+  .filter-pill.is-empty { opacity: 0.45; }
+  .filter-pill.filter-pill-manual              { background: var(--color-bg-secondary); color: var(--color-text-primary); }
+  .filter-pill.filter-pill-missing_session_log { background: #fed7d7; color: #9b2c2c; }
+  .filter-pill.filter-pill-invoice_unpaid      { background: #fbd38d; color: #7c2d12; }
+  .filter-pill.filter-pill-invoice_unsent      { background: #fbd38d; color: #7c2d12; }
+  .filter-pill.filter-pill-supervision         { background: #e9d8fd; color: #553c9a; }
+  .filter-pill.filter-pill-recurring_review    { background: #bee3f8; color: #2c5282; }
+  .filter-pill.filter-pill-operational_checklist { background: #c6f6d5; color: #22543d; }
   .todo-due-date { color: var(--color-text-secondary); font-size: 0.8125rem; }
   .todo-due-date.overdue { color: #f56565; font-weight: 600; }
   .todo-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }

@@ -3,26 +3,24 @@
 {# Partial rendered by FocusQueueView (full page) and the complete/snooze HTMX endpoints. #}
 <div id="focus-queue-content">
 
-<div class="todo-filters">
+<div class="workflow-header">
+    <div class="workflow-filters">
+        <span class="filter-label">{% trans "Type:" %}</span>
+        <a href="{% url 'focus_queue' %}" class="btn btn-sm {% if not current_type %}btn-primary{% else %}btn-secondary{% endif %}">
+            {% trans "All" %}
+        </a>
+        {% for value, label, count in task_types_with_counts %}
+        <a href="?type={{ value }}" class="btn btn-sm filter-pill filter-pill-{{ value }} {% if current_type == value %}is-active{% endif %} {% if not count %}is-empty{% endif %}">
+            {{ label }} ({{ count }})
+        </a>
+        {% endfor %}
+    </div>
     <a href="{% url 'todo_create' %}" class="btn">➕ {% trans "New task" %}</a>
-
-    <form method="get" class="flex gap-4 flex-1 items-center">
-        <label for="type-filter" class="text-muted">{% trans "Type:" %}</label>
-        <select name="type" id="type-filter" x-data x-on:change="$el.form.submit()">
-            <option value="">{% trans "All" %}</option>
-            {% for value, label in task_types %}
-            <option value="{{ value }}" {% if current_type == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-        {% if current_type %}
-        <a href="{% url 'focus_queue' %}" class="btn btn-secondary">{% trans "Reset filters" %}</a>
-        {% endif %}
-    </form>
-
-    {% if snoozed_count %}
-    <span class="text-muted">{% blocktrans count count=snoozed_count %}{{ count }} task snoozed{% plural %}{{ count }} tasks snoozed{% endblocktrans %}</span>
-    {% endif %}
 </div>
+
+{% if snoozed_count %}
+<p class="text-muted">{% blocktrans count count=snoozed_count %}{{ count }} task snoozed{% plural %}{{ count }} tasks snoozed{% endblocktrans %}</p>
+{% endif %}
 
 {% if tasks %}
 <div class="todo-list">
