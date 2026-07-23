@@ -7,7 +7,20 @@
       "Bash(./dev.py logs *)",
       "Bash(./dev.py test *)",
       "Bash(./dev.py test)",
-      "Bash(./dev.py lint)"
+      "Bash(./dev.py lint)",
+      "Bash(./dev.py lint *)",
+      "Bash(radon cc *)",
+      "Bash(git fetch *)",
+      "Bash(ruff check *)",
+      "Bash(pdftoppm *)",
+      "Bash(docker compose ps)",
+      "Bash(docker compose ps *)",
+      "Bash(dig *)",
+      "Bash(openssl dgst *)",
+      "Bash(openssl base64 *)",
+      "Bash(git grep *)",
+      "Bash(gh run watch *)",
+      "Bash(gh label list *)"
     ]
   }
 }
