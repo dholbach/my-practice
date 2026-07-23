@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-22 21:56+0200\n"
+"POT-Creation-Date: 2026-07-23 20:31+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -119,7 +119,7 @@ msgstr "Honorare"
 msgid "Standard hourly rates for this client"
 msgstr "Standard-Stundensätze für diesen Klienten"
 
-#: my_practice/admin.py:268 my_practice/admin.py:983
+#: my_practice/admin.py:268 my_practice/admin.py:985
 msgid "Organization"
 msgstr "Organisation"
 
@@ -137,8 +137,8 @@ msgstr "Zusätzliches"
 msgid "Timestamps"
 msgstr "Zeitstempel"
 
-#: my_practice/admin.py:284 my_practice/admin.py:821 my_practice/admin.py:987
-#: my_practice/admin.py:1161 my_practice/models/calendar.py:124
+#: my_practice/admin.py:284 my_practice/admin.py:821 my_practice/admin.py:989
+#: my_practice/admin.py:1172 my_practice/models/calendar.py:124
 #: my_practice/models/clinical.py:318 my_practice/models/inquiry.py:110
 #: my_practice/models/invoice.py:90
 #: templates/includes/calendar_preflight_widget.html:27
@@ -159,7 +159,7 @@ msgstr "Zeitstempel"
 msgid "Status"
 msgstr "Status"
 
-#: my_practice/admin.py:288 my_practice/admin.py:858 my_practice/admin.py:1254
+#: my_practice/admin.py:288 my_practice/admin.py:858 my_practice/admin.py:1265
 #: my_practice/models/calendar.py:47 my_practice/models/client.py:182
 #: my_practice/models/practice.py:50 templates/includes/todo_content.html:13
 #: templates/my_practice/analytics.html:415
@@ -208,7 +208,7 @@ msgid "Details"
 msgstr "Details"
 
 #: my_practice/admin.py:332 my_practice/admin.py:559 my_practice/admin.py:646
-#: my_practice/admin.py:1278 my_practice/models/calendar.py:110
+#: my_practice/admin.py:1289 my_practice/models/calendar.py:110
 #: my_practice/models/client.py:207 my_practice/models/client.py:258
 #: my_practice/models/client_alias.py:32 my_practice/models/clinical.py:170
 #: my_practice/models/clinical.py:306 my_practice/models/clinical.py:351
@@ -326,7 +326,7 @@ msgstr "Abrechnung"
 msgid "Log"
 msgstr "Protokoll"
 
-#: my_practice/admin.py:540 my_practice/admin.py:1214
+#: my_practice/admin.py:540 my_practice/admin.py:1225
 #: my_practice/models/invoice.py:133 my_practice/models/invoice.py:250
 #: templates/my_practice/bank_review.html:259
 #: templates/my_practice/billing_open_overview.html:57
@@ -433,7 +433,7 @@ msgstr "Allgemein"
 msgid "Description"
 msgstr "Beschreibung"
 
-#: my_practice/admin.py:778 my_practice/admin.py:917 my_practice/admin.py:1011
+#: my_practice/admin.py:778 my_practice/admin.py:917 my_practice/admin.py:1022
 #: my_practice/forms.py:133 my_practice/forms.py:163
 #: my_practice/import_forms.py:113 my_practice/models/financial.py:99
 #: my_practice/models/financial.py:185 my_practice/models/tag.py:77
@@ -449,7 +449,7 @@ msgstr "Beschreibung"
 msgid "Category"
 msgstr "Kategorie"
 
-#: my_practice/admin.py:783 my_practice/admin.py:1181
+#: my_practice/admin.py:783 my_practice/admin.py:1192
 #: my_practice/models/bank_statement.py:83 my_practice/models/financial.py:89
 #: my_practice/models/financial.py:177
 #: templates/my_practice/bank_import.html:86
@@ -508,99 +508,107 @@ msgid_plural "%(count)s clients"
 msgstr[0] "%(count)s Klient"
 msgstr[1] "%(count)s Klienten"
 
-#: my_practice/admin.py:979
+#: my_practice/admin.py:981
 msgid "Task Information"
 msgstr "Aufgabeninformationen"
 
-#: my_practice/admin.py:1001 my_practice/models/todo.py:100
+#: my_practice/admin.py:993
+msgid "Focus Queue (P-050)"
+msgstr "Fokus-Warteschlange (P-050)"
+
+#: my_practice/admin.py:997
+msgid "Set automatically for materialized tasks — not manually editable."
+msgstr "Wird für materialisierte Aufgaben automatisch gesetzt — nicht manuell editierbar."
+
+#: my_practice/admin.py:1012 my_practice/models/todo.py:147
 msgid "Task"
 msgstr "Aufgabe"
 
-#: my_practice/admin.py:1029 my_practice/utils/agenda_helpers.py:193
+#: my_practice/admin.py:1040 my_practice/utils/agenda_helpers.py:193
 msgid "Priority"
 msgstr "Priorität"
 
-#: my_practice/admin.py:1045 templates/includes/todo_content.html:66
+#: my_practice/admin.py:1056 templates/includes/todo_content.html:66
 msgid "Mark as completed"
 msgstr "Als erledigt markieren"
 
-#: my_practice/admin.py:1055
+#: my_practice/admin.py:1066
 #, python-format
 msgid "%(count)s task marked as completed."
 msgid_plural "%(count)s tasks marked as completed."
 msgstr[0] "%(count)s Aufgabe als erledigt markiert."
 msgstr[1] "%(count)s Aufgaben als erledigt markiert."
 
-#: my_practice/admin.py:1063
+#: my_practice/admin.py:1074
 msgid "Mark as incomplete"
 msgstr "Als unerledigt markieren"
 
-#: my_practice/admin.py:1073
+#: my_practice/admin.py:1084
 #, python-format
 msgid "%(count)s task marked as incomplete."
 msgid_plural "%(count)s tasks marked as incomplete."
 msgstr[0] "%(count)s Aufgabe als unerledigt markiert."
 msgstr[1] "%(count)s Aufgaben als unerledigt markiert."
 
-#: my_practice/admin.py:1081
+#: my_practice/admin.py:1092
 msgid "Set high priority"
 msgstr "Hohe Priorität setzen"
 
-#: my_practice/admin.py:1088
+#: my_practice/admin.py:1099
 #, python-format
 msgid "%(count)s task set to high priority."
 msgid_plural "%(count)s tasks set to high priority."
 msgstr[0] "%(count)s Aufgabe auf hohe Priorität gesetzt."
 msgstr[1] "%(count)s Aufgaben auf hohe Priorität gesetzt."
 
-#: my_practice/admin.py:1132
+#: my_practice/admin.py:1143
 msgid "Transaction Data"
 msgstr "Transaktionsdaten"
 
-#: my_practice/admin.py:1144
+#: my_practice/admin.py:1155
 msgid "Payment Partner"
 msgstr "Zahlungspartner"
 
-#: my_practice/admin.py:1150
+#: my_practice/admin.py:1161
 msgid "Matching"
 msgstr "Zuordnung"
 
-#: my_practice/admin.py:1174
+#: my_practice/admin.py:1185
 msgid "Payer"
 msgstr "Zahler"
 
-#: my_practice/admin.py:1192
+#: my_practice/admin.py:1203
 msgid "Match"
 msgstr "Zuordnung"
 
-#: my_practice/admin.py:1227
+#: my_practice/admin.py:1238
 msgid "Therapy Practice Management"
 msgstr "Praxisverwaltung"
 
-#: my_practice/admin.py:1228
+#: my_practice/admin.py:1239
 msgid "Payments Admin"
 msgstr "Zahlungsverwaltung"
 
-#: my_practice/admin.py:1229
+#: my_practice/admin.py:1240
 msgid "Welcome to Therapy Practice Management"
 msgstr "Willkommen bei der Praxisverwaltung"
 
-#: my_practice/admin.py:1282
+#: my_practice/admin.py:1293
 msgid "Mark as pending"
 msgstr "Als ausstehend markieren"
 
-#: my_practice/admin.py:1288
+#: my_practice/admin.py:1299
 #, python-format
 msgid "%(count)s event marked as pending."
 msgid_plural "%(count)s events marked as pending."
 msgstr[0] "%(count)s Termin als ausstehend markiert."
 msgstr[1] "%(count)s Termine als ausstehend markiert."
 
-#: my_practice/admin.py:1294
+#: my_practice/admin.py:1305
 msgid "Mark as skipped"
 msgstr "Als übersprungen markieren"
 
-#: my_practice/admin.py:1300
+#: my_practice/admin.py:1311
 #, python-format
 msgid "%(count)s event marked as skipped."
 msgid_plural "%(count)s events marked as skipped."
@@ -975,7 +983,7 @@ msgstr "Automatisch erstellte Korrektur (Fehlbuchung)"
 #: my_practice/models/financial.py:265 my_practice/models/inquiry.py:96
 #: my_practice/models/inquiry.py:201 my_practice/models/invoice.py:63
 #: my_practice/models/practice.py:281 my_practice/models/practice.py:317
-#: my_practice/models/service.py:17 my_practice/models/todo.py:66
+#: my_practice/models/service.py:17 my_practice/models/todo.py:87
 #: templates/base.html:83 templates/my_practice/tax_workday_audit.html:73
 msgid "Practice"
 msgstr "Praxis"
@@ -1342,7 +1350,7 @@ msgstr "Überweisung"
 
 #: my_practice/models/client.py:251 my_practice/models/financial.py:61
 #: my_practice/models/financial.py:162 my_practice/models/inquiry.py:33
-#: my_practice/models/todo.py:51 my_practice/views/inquiry_views.py:385
+#: my_practice/models/todo.py:72 my_practice/views/inquiry_views.py:385
 #: templates/my_practice/bank_expense_review.html:50
 msgid "Other"
 msgstr "Sonstiges"
@@ -1399,7 +1407,7 @@ msgstr "Klienten-Aliase"
 msgid "Heavy"
 msgstr "Schwer"
 
-#: my_practice/models/clinical.py:133 my_practice/models/todo.py:56
+#: my_practice/models/clinical.py:133 my_practice/models/todo.py:77
 msgid "Medium"
 msgstr "Mittel"
 
@@ -1614,6 +1622,7 @@ msgid "Note"
 msgstr "Hinweis"
 
 #: my_practice/models/clinical.py:345 my_practice/models/financial.py:154
+#: my_practice/models/todo.py:61
 #: templates/my_practice/bank_expense_review.html:42
 #: templates/my_practice/client_detail.html:203
 #: templates/my_practice/client_detail.html:361
@@ -2711,71 +2720,108 @@ msgstr "Urlaubszeiträume"
 msgid "End date cannot be before start date."
 msgstr "Enddatum darf nicht vor dem Startdatum liegen."
 
-#: my_practice/models/todo.py:46
+#: my_practice/models/todo.py:57 templates/my_practice/bank_import.html:112
+#: templates/my_practice/bank_review.html:127
+msgid "Manual"
+msgstr "Manuell"
+
+#: my_practice/models/todo.py:58
+msgid "Missing session log"
+msgstr "Fehlendes Sitzungsprotokoll"
+
+#: my_practice/models/todo.py:59
+msgid "Unpaid invoice"
+msgstr "Unbezahlte Rechnung"
+
+#: my_practice/models/todo.py:60
+msgid "Unsent invoice"
+msgstr "Nicht versendete Rechnung"
+
+#: my_practice/models/todo.py:62
+msgid "Recurring review"
+msgstr "Wiederkehrende Überprüfung"
+
+#: my_practice/models/todo.py:63
+msgid "Operational checklist"
+msgstr "Betriebliche Checkliste"
+
+#: my_practice/models/todo.py:67
 msgid "Administrative"
 msgstr "Verwaltung"
 
-#: my_practice/models/todo.py:47
+#: my_practice/models/todo.py:68
 msgid "Learning/Research"
 msgstr "Lernen/Recherche"
 
-#: my_practice/models/todo.py:48
+#: my_practice/models/todo.py:69
 msgid "Financial/Accounting"
 msgstr "Finanzen/Buchhaltung"
 
-#: my_practice/models/todo.py:49
+#: my_practice/models/todo.py:70
 msgid "Client-related"
 msgstr "Klientenbezogen"
 
-#: my_practice/models/todo.py:50
+#: my_practice/models/todo.py:71
 msgid "Practice Management"
 msgstr "Praxisverwaltung"
 
-#: my_practice/models/todo.py:55
+#: my_practice/models/todo.py:76
 msgid "Low"
 msgstr "Niedrig"
 
-#: my_practice/models/todo.py:57
+#: my_practice/models/todo.py:78
 msgid "High"
 msgstr "Hoch"
 
-#: my_practice/models/todo.py:58
+#: my_practice/models/todo.py:79
 msgid "Urgent"
 msgstr "Dringend"
 
-#: my_practice/models/todo.py:70
+#: my_practice/models/todo.py:91
 msgid "Short description of the task"
 msgstr "Kurze Beschreibung der Aufgabe"
 
-#: my_practice/models/todo.py:71
+#: my_practice/models/todo.py:92
 msgid "Optional detailed notes"
 msgstr "Optionale ausführliche Notizen"
 
-#: my_practice/models/todo.py:76
+#: my_practice/models/todo.py:97
 msgid "Task category for organization"
 msgstr "Aufgabenkategorie zur Organisation"
 
-#: my_practice/models/todo.py:82
+#: my_practice/models/todo.py:103
 msgid "Task priority level"
 msgstr "Aufgabenpriorität"
 
-#: my_practice/models/todo.py:86
+#: my_practice/models/todo.py:107
 msgid "Mark as a focus task for the current week"
 msgstr "Als Fokus-Aufgabe für die aktuelle Woche markieren"
 
-#: my_practice/models/todo.py:87
+#: my_practice/models/todo.py:108
 msgid "Focus task"
 msgstr "Fokus-Aufgabe"
 
-#: my_practice/models/todo.py:91
+#: my_practice/models/todo.py:112
 msgid "Optional due date"
 msgstr "Optionales Fälligkeitsdatum"
 
-#: my_practice/models/todo.py:93
+#: my_practice/models/todo.py:114
 msgid "When the task was completed"
 msgstr "Wann die Aufgabe abgeschlossen wurde"
 
-#: my_practice/models/todo.py:101 templates/base.html:58
+#: my_practice/models/todo.py:119
+msgid "Hide from the focus queue until this date"
+msgstr "Bis zu diesem Datum aus der Fokus-Warteschlange ausblenden"
+
+#: my_practice/models/todo.py:129
+msgid "Manual entry, or a materialized system signal (unpaid invoice, missing session log, etc.)"
+msgstr "Manueller Eintrag oder ein materialisiertes Systemsignal (unbezahlte Rechnung, fehlendes Sitzungsprotokoll usw.)"
+
+#: my_practice/models/todo.py:138
+msgid "Related object type, for materialized tasks (e.g. Client, Invoice)"
+msgstr "Typ des verknüpften Objekts, für materialisierte Aufgaben (z. B. Klient, Rechnung)"
+
+#: my_practice/models/todo.py:148 templates/base.html:58
 #: templates/my_practice/todo_list.html:4
 #: templates/my_practice/todo_list.html:7
 msgid "Tasks"
@@ -5271,11 +5317,6 @@ msgstr "Exakt"
 #: templates/my_practice/bank_import.html:108
 msgid "Fuzzy"
 msgstr "Fuzzy"
-
-#: templates/my_practice/bank_import.html:112
-#: templates/my_practice/bank_review.html:127
-msgid "Manual"
-msgstr "Manuell"
 
 #: templates/my_practice/bank_import.html:116
 #: templates/my_practice/bank_review.html:71

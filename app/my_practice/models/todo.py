@@ -6,6 +6,8 @@ For managing practice-related tasks, notes, and weekly planning.
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -41,6 +43,25 @@ class PracticeTodo(TimestampedModel):
         MEDIUM = "medium"
         HIGH = "high"
         URGENT = "urgent"
+
+    class TaskType(StrEnum):
+        MANUAL = "manual"
+        MISSING_SESSION_LOG = "missing_session_log"
+        INVOICE_UNPAID = "invoice_unpaid"
+        INVOICE_UNSENT = "invoice_unsent"
+        SUPERVISION = "supervision"
+        RECURRING_REVIEW = "recurring_review"
+        OPERATIONAL_CHECKLIST = "operational_checklist"
+
+    TASK_TYPE_CHOICES = [
+        (TaskType.MANUAL, _("Manual")),
+        (TaskType.MISSING_SESSION_LOG, _("Missing session log")),
+        (TaskType.INVOICE_UNPAID, _("Unpaid invoice")),
+        (TaskType.INVOICE_UNSENT, _("Unsent invoice")),
+        (TaskType.SUPERVISION, _("Supervision")),
+        (TaskType.RECURRING_REVIEW, _("Recurring review")),
+        (TaskType.OPERATIONAL_CHECKLIST, _("Operational checklist")),
+    ]
 
     CATEGORY_CHOICES = [
         (Category.ADMIN, _("Administrative")),
@@ -92,6 +113,32 @@ class PracticeTodo(TimestampedModel):
     completed_at = models.DateTimeField(
         null=True, blank=True, help_text=_("When the task was completed")
     )
+    snoozed_until = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_("Hide from the focus queue until this date"),
+    )
+
+    # Focus Queue (P-050): where this task originated from, and — for
+    # materialized/derived types — what it's about.
+    task_type = models.CharField(
+        max_length=30,
+        choices=TASK_TYPE_CHOICES,
+        default=TaskType.MANUAL,
+        help_text=_(
+            "Manual entry, or a materialized system signal (unpaid invoice, "
+            "missing session log, etc.)"
+        ),
+    )
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text=_("Related object type, for materialized tasks (e.g. Client, Invoice)"),
+    )
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    related_object = GenericForeignKey("content_type", "object_id")
 
     # Practice-scoped manager
     objects = PracticeScopedManager()
@@ -104,6 +151,7 @@ class PracticeTodo(TimestampedModel):
             models.Index(fields=["practice", "completed_at"], name="todo_prac_completed"),
             models.Index(fields=["practice", "due_date"], name="todo_prac_due"),
             models.Index(fields=["practice", "category"], name="todo_prac_category"),
+            models.Index(fields=["practice", "task_type"], name="todo_prac_task_type"),
         ]
 
     def __str__(self) -> str:
@@ -121,6 +169,11 @@ class PracticeTodo(TimestampedModel):
         if self.is_completed or not self.due_date:
             return False
         return self.due_date < timezone.now().date()
+
+    @property
+    def is_snoozed(self) -> bool:
+        """Check if task is currently snoozed."""
+        return bool(self.snoozed_until and self.snoozed_until >= timezone.now().date())
 
     def mark_completed(self) -> None:
         """Mark task as completed with current timestamp."""

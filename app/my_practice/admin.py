@@ -964,6 +964,7 @@ class PracticeTodoAdmin(admin.ModelAdmin):
         "completed_at",
         "category",
         "priority",
+        "task_type",
         "due_date",
         "practice",
         "created_at",
@@ -971,6 +972,7 @@ class PracticeTodoAdmin(admin.ModelAdmin):
     search_fields = ["title", "description"]
     date_hierarchy = "created_at"
     ordering = ["-completed_at", "-priority", "due_date", "-created_at"]
+    readonly_fields = ["task_type", "content_type", "object_id"]
 
     actions = ["mark_completed", "mark_incomplete", "set_high_priority"]
 
@@ -985,7 +987,16 @@ class PracticeTodoAdmin(admin.ModelAdmin):
         ),
         (
             gettext_lazy("Status"),
-            {"fields": ("completed_at",)},
+            {"fields": ("completed_at", "snoozed_until")},
+        ),
+        (
+            gettext_lazy("Focus Queue (P-050)"),
+            {
+                "fields": ("task_type", "content_type", "object_id"),
+                "description": gettext_lazy(
+                    "Set automatically for materialized tasks — not manually editable."
+                ),
+            },
         ),
     )
 
