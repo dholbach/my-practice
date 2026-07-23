@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-23 20:31+0200\n"
+"POT-Creation-Date: 2026-07-23 20:52+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -30,7 +30,7 @@ msgid "Address"
 msgstr "Adresse"
 
 #: my_practice/admin.py:66 my_practice/admin.py:249
-#: my_practice/utils/dashboard_widgets.py:256
+#: my_practice/utils/dashboard_widgets.py:267
 #: templates/my_practice/inquiry_list.html:182
 #: templates/my_practice/inquiry_list.html:228
 #: templates/my_practice/practice_form.html:100
@@ -213,8 +213,8 @@ msgstr "Details"
 #: my_practice/models/client_alias.py:32 my_practice/models/clinical.py:170
 #: my_practice/models/clinical.py:306 my_practice/models/clinical.py:351
 #: my_practice/models/invoice.py:77 my_practice/models/session.py:22
-#: my_practice/utils/dashboard_widgets.py:211
-#: my_practice/utils/dashboard_widgets.py:252
+#: my_practice/utils/dashboard_widgets.py:222
+#: my_practice/utils/dashboard_widgets.py:263
 #: templates/my_practice/billing_open_overview.html:53
 #: templates/my_practice/calendar_import.html:91
 #: templates/my_practice/client_detail.html:7
@@ -1591,7 +1591,7 @@ msgid "Session logs"
 msgstr "Sitzungsprotokolle"
 
 #: my_practice/models/clinical.py:299
-#: my_practice/utils/dashboard_widgets.py:215
+#: my_practice/utils/dashboard_widgets.py:226
 #: templates/my_practice/bank_import.html:128
 msgid "Open"
 msgstr "Öffnen"
@@ -2045,7 +2045,7 @@ msgstr "Marketing-Zeiträume"
 msgid "ongoing"
 msgstr "laufend"
 
-#: my_practice/models/invoice.py:51 my_practice/utils/dashboard_widgets.py:375
+#: my_practice/models/invoice.py:51 my_practice/utils/dashboard_widgets.py:399
 #: my_practice/views/invoice_views.py:750
 #: templates/my_practice/dashboard.html:139
 #: templates/my_practice/invoice_detail.html:40
@@ -2179,22 +2179,22 @@ msgid "Invoice items"
 msgstr "Rechnungspositionen"
 
 #: my_practice/models/operational.py:32
-#: my_practice/utils/dashboard_widgets.py:486
+#: my_practice/utils/dashboard_widgets.py:510
 msgid "Weekly backup"
 msgstr "Wöchentliche Sicherung"
 
 #: my_practice/models/operational.py:33
-#: my_practice/utils/dashboard_widgets.py:485
+#: my_practice/utils/dashboard_widgets.py:509
 msgid "Monthly restore test"
 msgstr "Monatlicher Restore-Test"
 
 #: my_practice/models/operational.py:36
-#: my_practice/utils/dashboard_widgets.py:487
+#: my_practice/utils/dashboard_widgets.py:511
 msgid "MicroSD offsite backup (card A/B alternating, every 2 weeks)"
 msgstr "MicroSD-Offsite-Backup (Karte A/B im Wechsel, alle 2 Wochen)"
 
 #: my_practice/models/operational.py:38
-#: my_practice/utils/dashboard_widgets.py:488
+#: my_practice/utils/dashboard_widgets.py:512
 msgid "Annual security review"
 msgstr "Jährliche Sicherheitsüberprüfung"
 
@@ -3088,116 +3088,116 @@ msgstr "Abschluss"
 msgid "Log missing"
 msgstr "Protokoll fehlt"
 
-#: my_practice/utils/dashboard_widgets.py:239
+#: my_practice/utils/dashboard_widgets.py:250
 #, python-format
 msgid "no session for %(days)s d"
 msgstr "seit %(days)s Tagen keine Sitzung"
 
-#: my_practice/utils/dashboard_widgets.py:242
+#: my_practice/utils/dashboard_widgets.py:253
 #, python-format
 msgid "last %(date)s"
 msgstr "zuletzt am %(date)s"
 
-#: my_practice/utils/dashboard_widgets.py:245
+#: my_practice/utils/dashboard_widgets.py:256
 msgid "no session yet"
 msgstr "noch keine Sitzung"
 
-#: my_practice/utils/dashboard_widgets.py:355
+#: my_practice/utils/dashboard_widgets.py:379
 msgctxt "action category"
 msgid "Invoice"
 msgstr "Rechnung"
 
-#: my_practice/utils/dashboard_widgets.py:356
+#: my_practice/utils/dashboard_widgets.py:380
 #, python-format
 msgid "%(n)s overdue · %(total)s"
 msgstr "%(n)s überfällig · %(total)s"
 
-#: my_practice/utils/dashboard_widgets.py:358
+#: my_practice/utils/dashboard_widgets.py:382
 #, python-format
 msgid "%(codes)s · >%(days)s d"
 msgstr "%(codes)s · >%(days)s Tage"
 
-#: my_practice/utils/dashboard_widgets.py:361
+#: my_practice/utils/dashboard_widgets.py:385
 msgid "Chase"
 msgstr "Mahnen"
 
-#: my_practice/utils/dashboard_widgets.py:370
+#: my_practice/utils/dashboard_widgets.py:394
 msgid "invoice ready"
 msgid_plural "invoices ready"
 msgstr[0] "Rechnung versandbereit"
 msgstr[1] "Rechnungen versandbereit"
 
-#: my_practice/utils/dashboard_widgets.py:376
+#: my_practice/utils/dashboard_widgets.py:400
 #, python-format
 msgid "%(n)s %(label)s to send"
 msgstr "%(n)s %(label)s zum Senden"
 
-#: my_practice/utils/dashboard_widgets.py:379
+#: my_practice/utils/dashboard_widgets.py:403
 msgctxt "action label"
 msgid "Complete"
 msgstr "Fertigstellen"
 
-#: my_practice/utils/dashboard_widgets.py:424
-#: my_practice/utils/dashboard_widgets.py:455
+#: my_practice/utils/dashboard_widgets.py:448
+#: my_practice/utils/dashboard_widgets.py:479
 msgid "No bank statements imported yet"
 msgstr "Noch keine Kontoauszüge importiert"
 
-#: my_practice/utils/dashboard_widgets.py:440
+#: my_practice/utils/dashboard_widgets.py:464
 #, python-format
 msgid "Last import %(days)s days ago"
 msgstr "Letzter Import vor %(days)s Tagen"
 
-#: my_practice/utils/dashboard_widgets.py:453
+#: my_practice/utils/dashboard_widgets.py:477
 #, python-format
 msgid "Last bank import %(days)s days ago"
 msgstr "Letzter Kontoauszug-Import vor %(days)s Tagen"
 
-#: my_practice/utils/dashboard_widgets.py:461
-#: my_practice/utils/dashboard_widgets.py:568
+#: my_practice/utils/dashboard_widgets.py:485
+#: my_practice/utils/dashboard_widgets.py:592
 msgctxt "action category"
 msgid "Operations"
 msgstr "Betrieb"
 
-#: my_practice/utils/dashboard_widgets.py:465
+#: my_practice/utils/dashboard_widgets.py:489
 #: templates/my_practice/calendar_approval_queue.html:77
 #: templates/my_practice/calendar_approval_queue.html:263
 #: templates/my_practice/calendar_approval_queue.html:268
 msgid "Import"
 msgstr "Importieren"
 
-#: my_practice/utils/dashboard_widgets.py:562
+#: my_practice/utils/dashboard_widgets.py:586
 msgid "checklist due"
 msgid_plural "checklists due"
 msgstr[0] "Checkliste fällig"
 msgstr[1] "Checklisten fällig"
 
-#: my_practice/utils/dashboard_widgets.py:569
+#: my_practice/utils/dashboard_widgets.py:593
 #, python-format
 msgid "%(n)s %(label)s"
 msgstr "%(n)s %(label)s"
 
-#: my_practice/utils/dashboard_widgets.py:572
+#: my_practice/utils/dashboard_widgets.py:596
 #: templates/my_practice/client_detail.html:696
 #: templates/my_practice/invoice_list.html:184
 msgid "View"
 msgstr "Ansehen"
 
-#: my_practice/utils/dashboard_widgets.py:688
+#: my_practice/utils/dashboard_widgets.py:712
 msgctxt "action category"
 msgid "Tax"
 msgstr "Steuer"
 
-#: my_practice/utils/dashboard_widgets.py:689
+#: my_practice/utils/dashboard_widgets.py:713
 #, python-format
 msgid "Q%(q)s %(year)s · prepayment missing"
 msgstr "Q%(q)s %(year)s · Vorauszahlung fehlt"
 
-#: my_practice/utils/dashboard_widgets.py:691
+#: my_practice/utils/dashboard_widgets.py:715
 #, python-format
 msgid "Revenue: %(amount)s"
 msgstr "Umsatz: %(amount)s"
 
-#: my_practice/utils/dashboard_widgets.py:693
+#: my_practice/utils/dashboard_widgets.py:717
 #: templates/includes/tax_quarter_widget_content.html:14
 msgid "Record"
 msgstr "Erfassen"
@@ -4176,17 +4176,17 @@ msgstr "Ungültiger Betrag."
 msgid "Invalid date"
 msgstr "Ungültiges Datum"
 
-#: my_practice/views/timeoff_views.py:52 my_practice/views/todo_views.py:91
+#: my_practice/views/timeoff_views.py:52 my_practice/views/todo_views.py:96
 #, python-brace-format
 msgid "'{obj.title}' created successfully."
 msgstr "„{obj.title}“ erfolgreich erstellt."
 
-#: my_practice/views/timeoff_views.py:62 my_practice/views/todo_views.py:113
+#: my_practice/views/timeoff_views.py:62 my_practice/views/todo_views.py:118
 #, python-brace-format
 msgid "'{obj.title}' updated successfully."
 msgstr "„{obj.title}“ erfolgreich aktualisiert."
 
-#: my_practice/views/timeoff_views.py:73 my_practice/views/todo_views.py:123
+#: my_practice/views/timeoff_views.py:73 my_practice/views/todo_views.py:128
 #, python-brace-format
 msgid "'{obj.title}' deleted successfully."
 msgstr "„{obj.title}“ erfolgreich gelöscht."
@@ -4201,12 +4201,12 @@ msgstr "Hinweis-E-Mail an %(count)d von %(total)d Klient:innen gesendet."
 msgid "Failed to send to: %(clients)s"
 msgstr "Versand fehlgeschlagen an: %(clients)s"
 
-#: my_practice/views/todo_views.py:179
+#: my_practice/views/todo_views.py:186
 #, python-format
 msgid "'%(title)s' marked as open."
 msgstr "'%(title)s' als offen markiert."
 
-#: my_practice/views/todo_views.py:182
+#: my_practice/views/todo_views.py:189
 #, python-format
 msgid "'%(title)s' marked as completed."
 msgstr "'%(title)s' als abgeschlossen markiert."

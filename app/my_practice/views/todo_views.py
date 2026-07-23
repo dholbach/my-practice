@@ -33,7 +33,10 @@ class TodoListView(PracticeScopedListView):
 
     def get_queryset(self):
         """Filter TODOs by status"""
-        queryset = super().get_queryset()
+        # P-050: materialized/derived tasks (missing session log, unpaid/
+        # unsent invoices, operational checklists) aren't shown here yet —
+        # they surface once the dedicated Focus Queue page (phase 3) exists.
+        queryset = super().get_queryset().filter(task_type=PracticeTodo.TaskType.MANUAL)
 
         status = self.request.GET.get("status", "active")
         if status == "completed":
@@ -64,7 +67,9 @@ class TodoListView(PracticeScopedListView):
         context["current_priority"] = self.request.GET.get("priority", "")
 
         # Calculate stats
-        all_todos = PracticeTodo.objects.for_current_practice(self.request)
+        all_todos = PracticeTodo.objects.for_current_practice(self.request).filter(
+            task_type=PracticeTodo.TaskType.MANUAL
+        )
         context["stats"] = {
             "total": all_todos.count(),
             "active": all_todos.filter(completed_at__isnull=True).count(),
@@ -128,7 +133,9 @@ def _build_todo_context(request: HttpRequest) -> dict[str, Any]:
     Build context for the todo list partial.
     Used by TodoListView and todo_toggle_complete (HTMX response).
     """
-    all_todos = PracticeTodo.objects.for_current_practice(request)
+    all_todos = PracticeTodo.objects.for_current_practice(request).filter(
+        task_type=PracticeTodo.TaskType.MANUAL
+    )
     status = request.GET.get("status", "active")
     category = request.GET.get("category", "")
     priority = request.GET.get("priority", "")

@@ -131,12 +131,16 @@ useful on its own.
 
 ## Suggested Phasing (once approved)
 
-1. **Extend `PracticeTodo` → `Task`** — add `task_type`, `snoozed_until`,
-   `related_object`; migrate existing rows to `task_type="manual"`.
-2. **Materialize derived types** — sync step creates/closes `Task` rows for
-   missing-session-log, unpaid/unsent invoices, and pending operational checklists,
-   reusing the existing widget builders' detection logic. No new UI yet, just a
-   cleaner data layer underneath.
+1. ✅ **Extend `PracticeTodo` → `Task`** — add `task_type`, `snoozed_until`,
+   `related_object`; migrate existing rows to `task_type="manual"`. (PR #265)
+2. ✅ **Materialize derived types** — `sync_focus_queue_tasks` management command
+   creates/closes `Task` rows for missing-session-log, unpaid/unsent invoices, and
+   pending operational checklists, reusing the existing widget builders' detection
+   logic (`ClientAttentionWidgetBuilder.get_missing_session_log_clients()`,
+   `InvoiceActionsWidgetBuilder.get_overdue_invoices()`/`get_draft_invoices()`,
+   `ChecklistWidgetBuilder`). `/todos/` filters to `task_type="manual"` in the
+   meantime so materialized rows stay invisible until phase 3. Not yet wired to a
+   scheduled job — run manually until the Focus Queue UI exists. (PR pending)
 3. **Focus Queue page** — new nav item, the working surface pulling from the merged
    `Task` queue (snooze/complete/notes). Retire `/todos/` and the dashboard's
    "Braucht Aktion" pane (`ActionQueueBuilder`) once this exists; pare the dashboard
