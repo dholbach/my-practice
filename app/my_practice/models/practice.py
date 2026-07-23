@@ -108,6 +108,66 @@ class Practice(models.Model):
         ),
     )
 
+    # Bank statement CSV import format (defaults match GLS Bank's export;
+    # adjust the delimiter/column names below for other banks without touching code)
+    csv_delimiter = models.CharField(
+        max_length=1,
+        default=";",
+        verbose_name=_("CSV delimiter"),
+        help_text=_("Column separator used by your bank's CSV export, e.g. ';' or ','"),
+    )
+    csv_column_date = models.CharField(
+        max_length=100,
+        default="Buchungstag",
+        verbose_name=_("CSV column: booking date"),
+        help_text=_("Header name of the booking date column in your bank's CSV export"),
+    )
+    csv_column_value_date = models.CharField(
+        max_length=100,
+        default="Valutadatum",
+        verbose_name=_("CSV column: value date"),
+        help_text=_("Header name of the value date column in your bank's CSV export"),
+    )
+    csv_column_payer_name = models.CharField(
+        max_length=100,
+        default="Name Zahlungsbeteiligter",
+        verbose_name=_("CSV column: payer/payee name"),
+        help_text=_("Header name of the payer/payee name column in your bank's CSV export"),
+    )
+    csv_column_payer_iban = models.CharField(
+        max_length=100,
+        default="IBAN Zahlungsbeteiligter",
+        verbose_name=_("CSV column: payer/payee IBAN"),
+        help_text=_("Header name of the payer/payee IBAN column in your bank's CSV export"),
+    )
+    csv_column_reference = models.CharField(
+        max_length=100,
+        default="Verwendungszweck",
+        verbose_name=_("CSV column: payment reference"),
+        help_text=_("Header name of the payment reference column in your bank's CSV export"),
+    )
+    csv_column_amount = models.CharField(
+        max_length=100,
+        default="Betrag",
+        verbose_name=_("CSV column: amount"),
+        help_text=_("Header name of the transaction amount column in your bank's CSV export"),
+    )
+    csv_column_balance = models.CharField(
+        max_length=100,
+        default="Saldo nach Buchung",
+        verbose_name=_("CSV column: balance after transaction"),
+        help_text=_("Header name of the running balance column in your bank's CSV export"),
+    )
+    csv_column_account_iban = models.CharField(
+        max_length=100,
+        default="IBAN Auftragskonto",
+        verbose_name=_("CSV column: account IBAN"),
+        help_text=_(
+            "Header name of the source account IBAN column in your bank's CSV export, "
+            "used to verify the file belongs to this practice's account"
+        ),
+    )
+
     # Tax
     tax_id = models.CharField(max_length=50, default="", verbose_name=_("Tax ID"))
 

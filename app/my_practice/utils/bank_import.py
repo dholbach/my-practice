@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from django.db import transaction
+from django.utils.translation import gettext as _
 
 from ..models import (
     BankTransaction,
@@ -25,13 +26,12 @@ class BankStatementImporter:
     """
     Import and match bank transactions from CSV files.
 
-    Built for GLS Bank's CSV export format (semicolon-delimited). Other banks
-    may work if their export uses the same column names (Buchungstag, Valutadatum,
-    Name Zahlungsbeteiligter, IBAN Zahlungsbeteiligter, Verwendungszweck, Betrag,
-    Saldo nach Buchung, IBAN Auftragskonto) but this is untested. To support a
-    different bank format, subclass and override parse_csv_row().
+    The delimiter and column headers are read from the practice's
+    csv_delimiter/csv_column_* settings (Practice model), so any bank's
+    export can be supported without touching code. Defaults match GLS
+    Bank's export format.
 
-    Format details:
+    Format details (defaults, all configurable per practice):
     - Encoding: UTF-8
     - Delimiter: Semicolon (;)
     - Decimal separator: Comma (,)
@@ -328,15 +328,16 @@ class BankStatementImporter:
         Returns:
             Dictionary with parsed transaction data or None if parsing fails
         """
+        practice = self.practice
         try:
             return {
-                "transaction_date": self.parse_german_date(row["Buchungstag"]),
-                "value_date": self.parse_german_date(row["Valutadatum"]),
-                "payer_name": row["Name Zahlungsbeteiligter"],
-                "payer_iban": row.get("IBAN Zahlungsbeteiligter", ""),
-                "reference": row["Verwendungszweck"],
-                "amount": self.parse_german_decimal(row["Betrag"]),
-                "balance_after": self.parse_german_decimal(row["Saldo nach Buchung"]),
+                "transaction_date": self.parse_german_date(row[practice.csv_column_date]),
+                "value_date": self.parse_german_date(row[practice.csv_column_value_date]),
+                "payer_name": row[practice.csv_column_payer_name],
+                "payer_iban": row.get(practice.csv_column_payer_iban, ""),
+                "reference": row[practice.csv_column_reference],
+                "amount": self.parse_german_decimal(row[practice.csv_column_amount]),
+                "balance_after": self.parse_german_decimal(row[practice.csv_column_balance]),
             }
         except KeyError, ValueError, InvalidOperation:
             return None
@@ -345,15 +346,17 @@ class BankStatementImporter:
         """Verify the CSV belongs to this practice's bank account. Returns False and sets error if mismatch."""
         if not rows:
             return True
-        csv_account_iban = rows[0].get("IBAN Auftragskonto", "").strip()
+        csv_account_iban = rows[0].get(self.practice.csv_column_account_iban, "").strip()
         self.account_iban = csv_account_iban
         practice_iban_norm = self._normalize_iban(self.practice.iban)
         csv_iban_norm = self._normalize_iban(csv_account_iban)
         if csv_iban_norm and practice_iban_norm and csv_iban_norm != practice_iban_norm:
             self.results["errors"].append(
-                f"Falsches Konto: Die CSV-Datei gehört zu IBAN {csv_account_iban}, "
-                f"erwartet wird die Praxis-IBAN {self.practice.iban}. "
-                "Import abgebrochen."
+                _(
+                    "Wrong account: the CSV file belongs to IBAN %(csv_iban)s, "
+                    "expected the practice IBAN %(practice_iban)s. Import aborted."
+                )
+                % {"csv_iban": csv_account_iban, "practice_iban": self.practice.iban}
             )
             self.results["account_mismatch"] = True
             return False
@@ -483,7 +486,7 @@ class BankStatementImporter:
             Dictionary with processing results
         """
         content = self.csv_file.read().decode("utf-8")
-        rows = list(csv.DictReader(content.splitlines(), delimiter=";"))
+        rows = list(csv.DictReader(content.splitlines(), delimiter=self.practice.csv_delimiter))
 
         if not self._validate_csv_account(rows):
             return self.results

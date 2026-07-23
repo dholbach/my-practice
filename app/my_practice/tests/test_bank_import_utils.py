@@ -382,3 +382,74 @@ class ProcessCSVTest(TestCase):
         )
         results = importer.process(skip_negatives=False)
         self.assertEqual(results["needs_review"], 1)
+
+
+class ConfigurableCsvFormatTest(TestCase):
+    """A non-GLS delimiter/column mapping (issue #11) should parse and match correctly."""
+
+    def setUp(self):
+        # Pipe delimiter (not comma): the German comma-decimal amount parsing
+        # isn't configurable, so a comma delimiter would collide with it.
+        self.practice = _make_practice(
+            slug="custom-csv-format",
+            csv_delimiter="|",
+            csv_column_date="Date",
+            csv_column_value_date="ValueDate",
+            csv_column_payer_name="Payee",
+            csv_column_payer_iban="PayeeIBAN",
+            csv_column_reference="Reference",
+            csv_column_amount="Amount",
+            csv_column_balance="Balance",
+            csv_column_account_iban="AccountIBAN",
+        )
+        self.client_obj = Client.objects.create(
+            practice=self.practice, full_name="Max Mustermann", client_code="MM"
+        )
+        self.invoice = Invoice.objects.create(
+            practice=self.practice,
+            client=self.client_obj,
+            invoice_number="MM-1",
+            status="sent",
+            invoice_date=date(2026, 1, 1),
+        )
+        _make_invoice_item(self.invoice, self.practice, self.client_obj)
+
+    def _make_custom_importer(self, rows, csv_iban=PRACTICE_IBAN):
+        header = "AccountIBAN|Date|ValueDate|Payee|PayeeIBAN|Amount|Balance|Reference"
+        lines = [header]
+        lines.extend(
+            "|".join(
+                [
+                    csv_iban,
+                    r.get("date", "15.01.2026"),
+                    r.get("date", "15.01.2026"),
+                    r.get("payer", "Test Payer"),
+                    r.get("payer_iban", ""),
+                    r.get("amount", "90,00"),
+                    "1000,00",
+                    r.get("ref", "Transfer"),
+                ]
+            )
+            for r in rows
+        )
+        content = "\n".join(lines).encode("utf-8")
+        csv_file = SimpleUploadedFile("test.csv", content, content_type="text/csv")
+        return BankStatementImporter(csv_file, self.practice)
+
+    def test_matches_invoice_with_custom_delimiter_and_columns(self):
+        importer = self._make_custom_importer(
+            [{"date": "15.01.2026", "payer": "Max Mustermann", "amount": "90,00", "ref": "MM-1"}]
+        )
+        results = importer.process(skip_negatives=False)
+        self.assertEqual(results["matched"], 1)
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.status, "paid")
+
+    def test_account_mismatch_uses_configured_iban_column(self):
+        importer = self._make_custom_importer(
+            [{"date": "15.01.2026", "payer": "Jemand", "amount": "100,00", "ref": "Test"}],
+            csv_iban="DE00000000000000000000",
+        )
+        results = importer.process()
+        self.assertTrue(results.get("account_mismatch"))
+        self.assertEqual(BankTransaction.objects.count(), 0)

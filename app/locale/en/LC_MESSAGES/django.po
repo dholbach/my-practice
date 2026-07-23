@@ -45,7 +45,15 @@ msgstr ""
 msgid "Business account for invoices. The private bank account (IBAN) is used during bank import to automatically detect withdrawals and capital contributions."
 msgstr ""
 
-#: my_practice/admin.py:85 templates/my_practice/expense_list.html:83
+#: my_practice/admin.py:85
+msgid "Bank Import (CSV format)"
+msgstr ""
+
+#: my_practice/admin.py:100
+msgid "Delimiter and column names for your bank's CSV export, used by /bank/import. Defaults match GLS Bank; adjust for other banks."
+msgstr ""
+
+#: my_practice/admin.py:106 templates/my_practice/expense_list.html:83
 msgid "Tax"
 msgstr ""
 
@@ -840,7 +848,7 @@ msgid "CSV file"
 msgstr "CSV file"
 
 #: my_practice/import_forms.py:21
-msgid "CSV bank statement in GLS bank format (semicolon-separated, UTF-8). Other banks may require adjusting the format."
+msgid "CSV bank statement matching your practice's configured CSV format (delimiter and column names, set under Practice settings). Defaults match GLS Bank's export."
 msgstr ""
 
 #: my_practice/import_forms.py:28
@@ -1093,6 +1101,10 @@ msgstr ""
 
 #: my_practice/models/bank_statement.py:162
 msgid "IBAN of the source account from the CSV export – must match the practice IBAN"
+msgstr ""
+
+#: my_practice/utils/bank_import.py:356
+msgid "Wrong account: the CSV file belongs to IBAN %(csv_iban)s, expected the practice IBAN %(practice_iban)s. Import aborted."
 msgstr ""
 
 #: my_practice/models/bank_statement.py:172
@@ -2348,6 +2360,78 @@ msgstr ""
 
 #: my_practice/models/practice.py:106
 msgid "IBAN of the private account, for automatic detection of withdrawals and capital contributions during bank import"
+msgstr ""
+
+#: my_practice/models/practice.py:116
+msgid "CSV delimiter"
+msgstr ""
+
+#: my_practice/models/practice.py:117
+msgid "Column separator used by your bank's CSV export, e.g. ';' or ','"
+msgstr ""
+
+#: my_practice/models/practice.py:122
+msgid "CSV column: booking date"
+msgstr ""
+
+#: my_practice/models/practice.py:123
+msgid "Header name of the booking date column in your bank's CSV export"
+msgstr ""
+
+#: my_practice/models/practice.py:128
+msgid "CSV column: value date"
+msgstr ""
+
+#: my_practice/models/practice.py:129
+msgid "Header name of the value date column in your bank's CSV export"
+msgstr ""
+
+#: my_practice/models/practice.py:134
+msgid "CSV column: payer/payee name"
+msgstr ""
+
+#: my_practice/models/practice.py:135
+msgid "Header name of the payer/payee name column in your bank's CSV export"
+msgstr ""
+
+#: my_practice/models/practice.py:140
+msgid "CSV column: payer/payee IBAN"
+msgstr ""
+
+#: my_practice/models/practice.py:141
+msgid "Header name of the payer/payee IBAN column in your bank's CSV export"
+msgstr ""
+
+#: my_practice/models/practice.py:146
+msgid "CSV column: payment reference"
+msgstr ""
+
+#: my_practice/models/practice.py:147
+msgid "Header name of the payment reference column in your bank's CSV export"
+msgstr ""
+
+#: my_practice/models/practice.py:152
+msgid "CSV column: amount"
+msgstr ""
+
+#: my_practice/models/practice.py:153
+msgid "Header name of the transaction amount column in your bank's CSV export"
+msgstr ""
+
+#: my_practice/models/practice.py:158
+msgid "CSV column: balance after transaction"
+msgstr ""
+
+#: my_practice/models/practice.py:160
+msgid "Header name of the running balance column in your bank's CSV export"
+msgstr ""
+
+#: my_practice/models/practice.py:166
+msgid "CSV column: account IBAN"
+msgstr ""
+
+#: my_practice/models/practice.py:168
+msgid "Header name of the source account IBAN column in your bank's CSV export, used to verify the file belongs to this practice's account"
 msgstr ""
 
 #: my_practice/models/practice.py:112
