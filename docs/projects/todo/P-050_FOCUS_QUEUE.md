@@ -108,20 +108,6 @@ useful on its own.
 
 ---
 
-## De-scoped (was in scope, now parked)
-
-- **Pomodoro/focus-session layer** — no longer core to v1. If the plain queue
-  (open → snooze/complete → done) already creates a working habit loop, this may be
-  dropped entirely rather than built. Revisit only if the queue alone doesn't pull
-  Daniel into working it.
-- **Private local-AI assist idea** — likely dropped along with pomodoro, since its
-  premise (helping use pomodoro breaks well) goes away if pomodoro isn't built. Per
-  earlier decision, this was never going to be detailed in a repo-tracked file
-  anyway (repo is public, AGPL/GitHub-visible) — this note is the full extent of
-  what belongs in this doc regardless of outcome.
-
----
-
 ## Non-Goals (v1)
 
 - No auto-spawning recurring tasks
