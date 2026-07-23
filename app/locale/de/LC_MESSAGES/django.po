@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-23 22:06+0200\n"
+"POT-Creation-Date: 2026-07-23 22:46+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -163,7 +163,7 @@ msgstr "Status"
 #: my_practice/models/practice.py:50 templates/my_practice/analytics.html:415
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/client_list_cards.html:34
-#: templates/my_practice/dashboard.html:80
+#: templates/my_practice/dashboard.html:75
 #: templates/my_practice/practice_management.html:26
 msgid "Active"
 msgstr "Aktiv"
@@ -307,8 +307,7 @@ msgstr "Gesamt"
 #: my_practice/admin.py:509 my_practice/admin.py:590
 #: my_practice/models/calendar.py:132 my_practice/models/clinical.py:222
 #: my_practice/models/gebueh.py:87 my_practice/models/invoice.py:281
-#: my_practice/models/session.py:63 my_practice/utils/agenda_helpers.py:150
-#: my_practice/utils/agenda_helpers.py:162
+#: my_practice/models/session.py:63
 msgid "Session"
 msgstr "Sitzung"
 
@@ -519,7 +518,7 @@ msgstr "Wird für materialisierte Aufgaben automatisch gesetzt — nicht manuell
 msgid "Task"
 msgstr "Aufgabe"
 
-#: my_practice/admin.py:1040 my_practice/utils/agenda_helpers.py:193
+#: my_practice/admin.py:1040
 msgid "Priority"
 msgstr "Priorität"
 
@@ -1162,7 +1161,7 @@ msgstr "Übersprungen"
 #: templates/my_practice/analytics.html:912
 #: templates/my_practice/calendar_import.html:56
 #: templates/my_practice/calendar_import.html:152
-#: templates/my_practice/dashboard.html:118
+#: templates/my_practice/dashboard.html:113
 #: templates/my_practice/invoice_detail.html:43
 msgid "Cancelled"
 msgstr "Storniert"
@@ -2040,21 +2039,21 @@ msgid "ongoing"
 msgstr "laufend"
 
 #: my_practice/models/invoice.py:51 my_practice/views/invoice_views.py:750
-#: templates/my_practice/dashboard.html:103
+#: templates/my_practice/dashboard.html:98
 #: templates/my_practice/invoice_detail.html:40
 #: templates/my_practice/invoice_list.html:26
 msgid "Draft"
 msgstr "Entwurf"
 
 #: my_practice/models/invoice.py:52 my_practice/views/invoice_views.py:752
-#: templates/my_practice/dashboard.html:108
+#: templates/my_practice/dashboard.html:103
 #: templates/my_practice/invoice_detail.html:41
 #: templates/my_practice/invoice_list.html:31
 msgid "Sent"
 msgstr "Versendet"
 
 #: my_practice/models/invoice.py:53 my_practice/views/invoice_views.py:754
-#: templates/my_practice/dashboard.html:113
+#: templates/my_practice/dashboard.html:108
 #: templates/my_practice/invoice_detail.html:42
 #: templates/my_practice/invoice_list.html:36
 msgid "Paid"
@@ -2818,52 +2817,6 @@ msgstr "Typ des verknüpften Objekts, für materialisierte Aufgaben (z. B. Klien
 msgid "Tasks"
 msgstr "Aufgaben"
 
-#: my_practice/utils/agenda_helpers.py:55
-msgid "No time"
-msgstr "Keine Uhrzeit"
-
-#: my_practice/utils/agenda_helpers.py:152
-#: templates/my_practice/client_detail.html:263
-#: templates/my_practice/client_detail.html:309
-#: templates/my_practice/client_detail.html:649
-#: templates/my_practice/gebueh_leistung_form.html:6
-#: templates/my_practice/invoice_detail.html:110
-#: templates/my_practice/invoice_detail.html:141
-msgid "min"
-msgstr "Min"
-
-#: my_practice/utils/agenda_helpers.py:155
-msgid "View invoice"
-msgstr "Rechnung anzeigen"
-
-#: my_practice/utils/agenda_helpers.py:158
-#: templates/my_practice/inquiry_list.html:193
-#: templates/my_practice/inquiry_list.html:239
-msgid "View client"
-msgstr "Klient:in anzeigen"
-
-#: my_practice/utils/agenda_helpers.py:197
-#, python-format
-msgid "⚠️ Overdue since %(date)s"
-msgstr "⚠️ Überfällig seit %(date)s"
-
-#: my_practice/utils/agenda_helpers.py:199
-msgid "📅 Due today"
-msgstr "📅 Heute fällig"
-
-#: my_practice/utils/agenda_helpers.py:203
-#, python-format
-msgid "📅 Due in %(days)s day"
-msgid_plural "📅 Due in %(days)s days"
-msgstr[0] "📅 Fällig in %(days)s Tag"
-msgstr[1] "📅 Fällig in %(days)s Tagen"
-
-#: my_practice/utils/agenda_helpers.py:224
-#: templates/includes/weekly_focus_widget_content.html:41
-#: templates/my_practice/calendar_approval_queue.html:38
-msgid "Mark as done"
-msgstr "Als erledigt markieren"
-
 #: my_practice/utils/analytics_utils.py:275
 msgid "60-min sessions"
 msgstr "60-Min Sitzungen"
@@ -3027,8 +2980,7 @@ msgstr "Anamnese"
 msgid "Intake complete"
 msgstr "Aufnahme abgeschlossen"
 
-#: my_practice/utils/dashboard_context_builder.py:129
-#: my_practice/utils/dashboard_context_builder.py:145
+#: my_practice/utils/dashboard_context_builder.py:126
 #: templates/my_practice/client_detail.html:74
 #, python-format
 msgid "%(count)s session"
@@ -3037,24 +2989,10 @@ msgstr[0] "%(count)s Sitzung"
 msgstr[1] "%(count)s Sitzungen"
 
 #: my_practice/utils/dashboard_context_builder.py:130
-#, python-format
-msgid "%(count)s task"
-msgid_plural "%(count)s tasks"
-msgstr[0] "%(count)s Aufgabe"
-msgstr[1] "%(count)s Aufgaben"
-
-#: my_practice/utils/dashboard_context_builder.py:135
-#, python-format
-msgid "%(count)s without a time"
-msgid_plural "%(count)s without a time"
-msgstr[0] "%(count)s ohne Uhrzeit"
-msgstr[1] "%(count)s ohne Uhrzeit"
-
-#: my_practice/utils/dashboard_context_builder.py:149
 msgid "Focus"
 msgstr "Fokus"
 
-#: my_practice/utils/dashboard_context_builder.py:168
+#: my_practice/utils/dashboard_context_builder.py:140
 #: templates/my_practice/analytics.html:107
 #: templates/my_practice/analytics.html:731
 msgid "Capacity"
@@ -4038,17 +3976,17 @@ msgstr "Ungültiger Betrag."
 msgid "Invalid date"
 msgstr "Ungültiges Datum"
 
-#: my_practice/views/timeoff_views.py:52 my_practice/views/todo_views.py:37
+#: my_practice/views/timeoff_views.py:52 my_practice/views/todo_views.py:36
 #, python-brace-format
 msgid "'{obj.title}' created successfully."
 msgstr "„{obj.title}“ erfolgreich erstellt."
 
-#: my_practice/views/timeoff_views.py:62 my_practice/views/todo_views.py:59
+#: my_practice/views/timeoff_views.py:62 my_practice/views/todo_views.py:58
 #, python-brace-format
 msgid "'{obj.title}' updated successfully."
 msgstr "„{obj.title}“ erfolgreich aktualisiert."
 
-#: my_practice/views/timeoff_views.py:73 my_practice/views/todo_views.py:69
+#: my_practice/views/timeoff_views.py:73 my_practice/views/todo_views.py:68
 #, python-brace-format
 msgid "'{obj.title}' deleted successfully."
 msgstr "„{obj.title}“ erfolgreich gelöscht."
@@ -4063,12 +4001,12 @@ msgstr "Hinweis-E-Mail an %(count)d von %(total)d Klient:innen gesendet."
 msgid "Failed to send to: %(clients)s"
 msgstr "Versand fehlgeschlagen an: %(clients)s"
 
-#: my_practice/views/todo_views.py:85
+#: my_practice/views/todo_views.py:84
 #, python-format
 msgid "'%(title)s' marked as open."
 msgstr "'%(title)s' als offen markiert."
 
-#: my_practice/views/todo_views.py:88
+#: my_practice/views/todo_views.py:87
 #, python-format
 msgid "'%(title)s' marked as completed."
 msgstr "'%(title)s' als abgeschlossen markiert."
@@ -4255,22 +4193,6 @@ msgstr "verfügbar"
 #: templates/base.html:128
 msgid "Close"
 msgstr "Schließen"
-
-#: templates/includes/agenda_widget_content.html:42
-msgid "Overdue"
-msgstr "Überfällig"
-
-#: templates/includes/agenda_widget_content.html:44
-msgid "Today"
-msgstr "Heute"
-
-#: templates/includes/agenda_widget_content.html:46
-msgid "Soon"
-msgstr "Bald"
-
-#: templates/includes/agenda_widget_content.html:76
-msgid "No sessions or tasks for today!"
-msgstr "Keine Sessions oder Aufgaben für heute!"
 
 #: templates/includes/calendar_preflight_widget.html:16
 msgid "Calendar match: discrepancies found"
@@ -4616,6 +4538,11 @@ msgstr "Keine Sitzungen diese Woche."
 #: templates/includes/weekly_focus_widget_content.html:31
 msgid "Focus tasks"
 msgstr "Fokus-Aufgaben"
+
+#: templates/includes/weekly_focus_widget_content.html:41
+#: templates/my_practice/calendar_approval_queue.html:38
+msgid "Mark as done"
+msgstr "Als erledigt markieren"
 
 #: templates/includes/weekly_focus_widget_content.html:46
 msgid "Remove focus"
@@ -6162,6 +6089,15 @@ msgstr "Sitzungsprotokoll löschen?"
 msgid "Delete session?"
 msgstr "Sitzung löschen?"
 
+#: templates/my_practice/client_detail.html:263
+#: templates/my_practice/client_detail.html:309
+#: templates/my_practice/client_detail.html:649
+#: templates/my_practice/gebueh_leistung_form.html:6
+#: templates/my_practice/invoice_detail.html:110
+#: templates/my_practice/invoice_detail.html:141
+msgid "min"
+msgstr "Min"
+
 #: templates/my_practice/client_detail.html:264
 #: templates/my_practice/client_detail.html:310
 msgid "Unbilled"
@@ -6690,48 +6626,44 @@ msgstr "Urlaub %(year)s"
 msgid "+ New client"
 msgstr "+ Neue Klient:in"
 
-#: templates/my_practice/dashboard.html:47
-msgid "📅 Today"
-msgstr "📅 Heute"
-
-#: templates/my_practice/dashboard.html:48
+#: templates/my_practice/dashboard.html:46
 msgid "📆 This Week"
 msgstr "📆 Diese Woche"
 
-#: templates/my_practice/dashboard.html:58
+#: templates/my_practice/dashboard.html:53
 msgid "📈 Capacity Monitoring"
 msgstr "📈 Kapazitäts-Monitoring"
 
-#: templates/my_practice/dashboard.html:68
+#: templates/my_practice/dashboard.html:63
 #, python-format
 msgid "Practices %(year)s"
 msgstr "Praxen %(year)s"
 
-#: templates/my_practice/dashboard.html:69
+#: templates/my_practice/dashboard.html:64
 msgid "Manage"
 msgstr "Verwalten"
 
-#: templates/my_practice/dashboard.html:87
+#: templates/my_practice/dashboard.html:82
 #, python-format
 msgid "%(n)s invoice"
 msgid_plural "%(n)s invoices"
 msgstr[0] "%(n)s Rechnung"
 msgstr[1] "%(n)s Rechnungen"
 
-#: templates/my_practice/dashboard.html:90
+#: templates/my_practice/dashboard.html:85
 #: templates/my_practice/practice_management.html:39
 msgid "Switch"
 msgstr "Wechseln"
 
-#: templates/my_practice/dashboard.html:100
+#: templates/my_practice/dashboard.html:95
 msgid "All-time Status Overview"
 msgstr "Status-Übersicht (All-Zeit)"
 
-#: templates/my_practice/dashboard.html:127
+#: templates/my_practice/dashboard.html:122
 msgid "Recent Invoices"
 msgstr "Aktuelle Rechnungen"
 
-#: templates/my_practice/dashboard.html:141
+#: templates/my_practice/dashboard.html:136
 msgid "No invoices yet."
 msgstr "Noch keine Rechnungen vorhanden."
 
@@ -7136,6 +7068,11 @@ msgstr "Geschlossene ausblenden"
 #, python-format
 msgid "Show closed (%(n)s)"
 msgstr "Geschlossene anzeigen (%(n)s)"
+
+#: templates/my_practice/inquiry_list.html:193
+#: templates/my_practice/inquiry_list.html:239
+msgid "View client"
+msgstr "Klient:in anzeigen"
 
 #: templates/my_practice/inquiry_list.html:205
 #: templates/my_practice/inquiry_list.html:251
@@ -8761,6 +8698,52 @@ msgstr "Benutzername"
 #: templates/registration/login.html:20
 msgid "Password"
 msgstr "Passwort"
+
+#~ msgid "No time"
+#~ msgstr "Keine Uhrzeit"
+
+#~ msgid "View invoice"
+#~ msgstr "Rechnung anzeigen"
+
+#, python-format
+#~ msgid "⚠️ Overdue since %(date)s"
+#~ msgstr "⚠️ Überfällig seit %(date)s"
+
+#~ msgid "📅 Due today"
+#~ msgstr "📅 Heute fällig"
+
+#, python-format
+#~ msgid "📅 Due in %(days)s day"
+#~ msgid_plural "📅 Due in %(days)s days"
+#~ msgstr[0] "📅 Fällig in %(days)s Tag"
+#~ msgstr[1] "📅 Fällig in %(days)s Tagen"
+
+#, python-format
+#~ msgid "%(count)s task"
+#~ msgid_plural "%(count)s tasks"
+#~ msgstr[0] "%(count)s Aufgabe"
+#~ msgstr[1] "%(count)s Aufgaben"
+
+#, python-format
+#~ msgid "%(count)s without a time"
+#~ msgid_plural "%(count)s without a time"
+#~ msgstr[0] "%(count)s ohne Uhrzeit"
+#~ msgstr[1] "%(count)s ohne Uhrzeit"
+
+#~ msgid "Overdue"
+#~ msgstr "Überfällig"
+
+#~ msgid "Today"
+#~ msgstr "Heute"
+
+#~ msgid "Soon"
+#~ msgstr "Bald"
+
+#~ msgid "No sessions or tasks for today!"
+#~ msgstr "Keine Sessions oder Aufgaben für heute!"
+
+#~ msgid "📅 Today"
+#~ msgstr "📅 Heute"
 
 #~ msgid "Follow-up"
 #~ msgstr "Follow-up"

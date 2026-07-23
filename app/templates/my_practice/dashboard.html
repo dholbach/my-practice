@@ -43,12 +43,7 @@
     </div>
 </div>
 
-{# Today / This Week — "Needs Action" was retired in favour of the dedicated Focus Queue page (P-050) #}
-{% trans "📅 Today" as agenda_widget_title %}
 {% trans "📆 This Week" as weekly_focus_widget_title %}
-{% with widget_content=agenda_widget_html %}
-    {% include 'includes/widget_base.html' with widget_id="agenda" widget_title=agenda_widget_title widget_badge=agenda_badge_html %}
-{% endwith %}
 {% with widget_content=weekly_focus_widget_html %}
     {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title=weekly_focus_widget_title widget_badge=weekly_focus_badge %}
 {% endwith %}

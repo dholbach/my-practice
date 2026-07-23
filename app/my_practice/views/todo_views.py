@@ -5,10 +5,9 @@ The standalone /todos/ list page was retired in favour of the Focus Queue
 page (P-050 phase 4), which shows manual and materialized tasks together.
 These CRUD views remain — Focus Queue reuses them for creating/editing a
 manual task — as do the two toggle endpoints, still used inline by the
-dashboard's Agenda and WeeklyFocus widgets.
+dashboard's WeeklyFocus widget.
 """
 
-from datetime import date
 from urllib.parse import urlparse
 
 from django.contrib import messages
@@ -19,7 +18,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
 from ..models import PracticeTodo
-from ..utils import AgendaWidgetBuilder, WeeklyFocusWidgetBuilder
+from ..utils import WeeklyFocusWidgetBuilder
 from .crud_mixins import (
     PracticeScopedCreateView,
     PracticeScopedDeleteView,
@@ -89,19 +88,7 @@ def todo_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse | JsonRe
 
     # Return HTMX partial
     if request.headers.get("HX-Request"):
-        if request.GET.get("ctx") == "agenda":
-            builder = AgendaWidgetBuilder(request.current_practice, target_date=date.today())
-            ctx = builder.build_context()
-            return render(
-                request,
-                "includes/agenda_widget_content.html",
-                {
-                    "agenda_items": ctx["agenda_items"],
-                    "target_date": ctx["target_date"],
-                    "is_today": ctx["is_today"],
-                },
-            )
-        elif request.GET.get("ctx") == "weekly_focus":
+        if request.GET.get("ctx") == "weekly_focus":
             builder = WeeklyFocusWidgetBuilder(request.current_practice)
             return render(
                 request, "includes/weekly_focus_widget_content.html", builder.build_context()

@@ -2,7 +2,6 @@
 Utility functions for the payments app.
 """
 
-from .agenda_helpers import AgendaItem, AgendaWidgetBuilder
 from .analytics_dashboard_builder import AnalyticsDashboardBuilder
 from .client_detail_builder import ClientDetailContextBuilder
 from .dashboard_context_builder import DashboardContextAssembler
@@ -101,8 +100,6 @@ __all__ = [
     "available_data_years",
     "FinancialListContextBuilder",
     "InvoiceFilterHelper",
-    "AgendaWidgetBuilder",
-    "AgendaItem",
     "SessionImportWidgetBuilder",
     "ClientAttentionWidgetBuilder",
     "InvoiceActionsWidgetBuilder",

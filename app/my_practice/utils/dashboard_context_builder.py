@@ -11,7 +11,6 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from ..models import Client, CompanyExpense, Invoice, TimeOff
-from .agenda_helpers import AgendaWidgetBuilder
 from .dashboard_widgets import CapacityMonitoringWidgetBuilder
 from .weekly_focus_widget import WeeklyFocusWidgetBuilder
 from .practice_helpers import get_user_practices
@@ -117,24 +116,6 @@ class DashboardContextAssembler:
 
     def _build_widgets(self) -> dict:
         practice = self.practice
-        today = self.today
-
-        agenda_ctx = AgendaWidgetBuilder(practice, target_date=today).build_context()
-        sc, tc, uc = (
-            agenda_ctx["session_count"],
-            agenda_ctx["task_count"],
-            agenda_ctx["unscheduled_count"],
-        )
-        agenda_badge_parts = [
-            f'<span class="stat-badge">{ngettext("%(count)s session", "%(count)s sessions", sc) % {"count": sc}}</span>',
-            f'<span class="stat-badge">{ngettext("%(count)s task", "%(count)s tasks", tc) % {"count": tc}}</span>',
-        ]
-        if uc > 0:
-            agenda_badge_parts.append(
-                f'<span class="stat-badge warning">'
-                f"{ngettext('%(count)s without a time', '%(count)s without a time', uc) % {'count': uc}}"
-                f"</span>"
-            )
 
         cap_ctx = CapacityMonitoringWidgetBuilder(practice).build_context()
         wf_ctx = WeeklyFocusWidgetBuilder(practice).build_context()
@@ -152,15 +133,6 @@ class DashboardContextAssembler:
             return mark_safe(render_to_string(template, ctx))
 
         return {
-            "agenda_widget_html": _html(
-                "includes/agenda_widget_content.html",
-                {
-                    "agenda_items": agenda_ctx["agenda_items"],
-                    "target_date": agenda_ctx["target_date"],
-                    "is_today": agenda_ctx["is_today"],
-                },
-            ),
-            "agenda_badge_html": mark_safe("".join(agenda_badge_parts)),
             "capacity_widget_html": _html(
                 "includes/capacity_monitoring_widget_content.html", cap_ctx
             ),
