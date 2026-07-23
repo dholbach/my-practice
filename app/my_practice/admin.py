@@ -82,6 +82,27 @@ class PracticeAdmin(admin.ModelAdmin):
             },
         ),
         (
+            gettext_lazy("Bank Import (CSV format)"),
+            {
+                "fields": (
+                    "csv_delimiter",
+                    "csv_column_date",
+                    "csv_column_value_date",
+                    "csv_column_payer_name",
+                    "csv_column_payer_iban",
+                    "csv_column_reference",
+                    "csv_column_amount",
+                    "csv_column_balance",
+                    "csv_column_account_iban",
+                ),
+                "classes": ("collapse",),
+                "description": gettext_lazy(
+                    "Delimiter and column names for your bank's CSV export, used by "
+                    "/bank/import. Defaults match GLS Bank; adjust for other banks."
+                ),
+            },
+        ),
+        (
             gettext_lazy("Tax"),
             {
                 "fields": ("tax_id", "vat_exempt_text_de", "vat_exempt_text_en"),

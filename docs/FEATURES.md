@@ -197,6 +197,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ German/US decimal parsing
 - ✅ Duplicate detection
 - ✅ Error reporting with line numbers
+- ✅ Bank statement import (`/bank/import`): delimiter and column names are configurable per practice (Practice admin settings), defaulting to GLS Bank's export format — other banks' CSV exports work without touching code (issue #11)
 
 ### Google Calendar Integration (Phase 1-5 - Complete ✅)
 
