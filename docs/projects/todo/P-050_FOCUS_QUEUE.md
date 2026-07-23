@@ -140,8 +140,15 @@ useful on its own.
    `InvoiceActionsWidgetBuilder.get_overdue_invoices()`/`get_draft_invoices()`,
    `ChecklistWidgetBuilder`). `/todos/` filters to `task_type="manual"` in the
    meantime so materialized rows stay invisible until phase 3. Not yet wired to a
-   scheduled job — run manually until the Focus Queue UI exists. (PR pending)
-3. **Focus Queue page** — new nav item, the working surface pulling from the merged
-   `Task` queue (snooze/complete/notes). Retire `/todos/` and the dashboard's
-   "Braucht Aktion" pane (`ActionQueueBuilder`) once this exists; pare the dashboard
-   back down to pure overview.
+   scheduled job — run manually until the Focus Queue UI exists. (PR #266)
+3. ✅ **Focus Queue page** — new nav item ("Im Fokus" in German), `/focus/`, a single
+   merged queue of manual + materialized `Task` rows sorted by priority then age,
+   with complete/snooze (+1d/+3d/+1w presets)/edit actions and a filter-by-`task_type`
+   dropdown. Verified end-to-end against the running dev server (login, practice
+   switch, filter, complete, snooze, empty state — all in German with correct
+   translations). (PR pending)
+4. **Retire `/todos/` + dashboard's "Braucht Aktion" pane** — now that the Focus
+   Queue page exists and is the merged single surface, remove `/todos/`
+   (`TodoListView` etc.) and the dashboard's `ActionQueueBuilder`/"Needs Action"
+   pane; pare the dashboard back down to pure overview. Not yet done — the Focus
+   Queue page currently coexists alongside both older surfaces.

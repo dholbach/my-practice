@@ -1,0 +1,88 @@
+{% load static %}
+{% load i18n %}
+{# Partial rendered by FocusQueueView (full page) and the complete/snooze HTMX endpoints. #}
+<div id="focus-queue-content">
+
+<div class="todo-filters">
+    <a href="{% url 'todo_create' %}" class="btn">➕ {% trans "New task" %}</a>
+
+    <form method="get" class="flex gap-4 flex-1 items-center">
+        <label for="type-filter" class="text-muted">{% trans "Type:" %}</label>
+        <select name="type" id="type-filter" x-data x-on:change="$el.form.submit()">
+            <option value="">{% trans "All" %}</option>
+            {% for value, label in task_types %}
+            <option value="{{ value }}" {% if current_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        {% if current_type %}
+        <a href="{% url 'focus_queue' %}" class="btn btn-secondary">{% trans "Reset filters" %}</a>
+        {% endif %}
+    </form>
+
+    {% if snoozed_count %}
+    <span class="text-muted">{% blocktrans count count=snoozed_count %}{{ count }} task snoozed{% plural %}{{ count }} tasks snoozed{% endblocktrans %}</span>
+    {% endif %}
+</div>
+
+{% if tasks %}
+<div class="todo-list">
+    {% for task in tasks %}
+    <div class="todo-item {% if task.is_overdue %}overdue{% endif %}" data-task-id="{{ task.pk }}">
+        <input type="checkbox"
+               class="todo-checkbox"
+               hx-post="{% url 'focus_queue_complete' task.pk %}?type={{ current_type }}"
+               hx-target="#focus-queue-content"
+               hx-swap="outerHTML"
+               title="{% trans 'Mark as completed' %}">
+
+        <div class="todo-content">
+            <div class="todo-title">
+                {% if task.related_object_url %}
+                <a href="{{ task.related_object_url }}">{{ task.title }}</a>
+                {% else %}
+                {{ task.title }}
+                {% endif %}
+            </div>
+
+            {% if task.description %}
+            <div class="todo-description">{{ task.description|linebreaks }}</div>
+            {% endif %}
+
+            <div class="todo-meta">
+                <span class="todo-badge task-type-{{ task.task_type }}">{{ task.get_task_type_display }}</span>
+                <span class="todo-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+
+                {% if task.due_date %}
+                <span class="todo-due-date {% if task.is_overdue %}overdue{% endif %}">
+                    📅 {{ task.due_date|date:"d.m.Y" }}
+                    {% if task.is_overdue %}({% trans "overdue!" %}){% endif %}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="todo-actions">
+            <div class="focus-queue-snooze-group">
+                <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "1"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 1 day' %}">+1d</button>
+                <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "3"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 3 days' %}">+3d</button>
+                <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "7"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 1 week' %}">+1w</button>
+            </div>
+            <a href="{% url 'todo_edit' task.pk %}" class="link-primary" title="{% trans 'Edit' %}">✏️</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+{% include 'includes/pagination.html' with page_obj=page_obj %}
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <h2>{% trans "Nothing needs your attention" %}</h2>
+    <p>{% trans "The focus queue is empty." %}</p>
+    <a href="{% url 'todo_create' %}" class="btn">➕ {% trans "Create a task" %}</a>
+</div>
+{% endif %}
+
+</div>{# /focus-queue-content #}

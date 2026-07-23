@@ -153,6 +153,13 @@ from .tag_views import (
 # Tax views
 from .tax_views import save_tax_year_note, tax_quarter_overview, tax_workday_audit, tax_year_summary
 
+# Focus Queue views (P-050)
+from .focus_queue_views import (
+    FocusQueueView,
+    focus_queue_snooze,
+    focus_queue_toggle_complete,
+)
+
 # TODO views
 from .todo_views import (
     TodoCreateView,
@@ -231,6 +238,10 @@ __all__ = [
     "TodoDeleteView",
     "todo_toggle_complete",
     "todo_toggle_focus",
+    # Focus Queue views (P-050)
+    "FocusQueueView",
+    "focus_queue_toggle_complete",
+    "focus_queue_snooze",
     # API views
     "contract_pdf",
     "intake_form_pdf",

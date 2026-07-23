@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "Focus Queue" %}{% endblock %}
+
+{% block page_icon %}🎯{% endblock %}
+{% block page_title %}{% trans "Focus Queue" %}{% endblock %}
+{% block page_subtitle %}{% trans "What needs doing" %}{% endblock %}
+
+{% block content %}
+{% include 'includes/focus_queue_content.html' %}
+{% endblock %}

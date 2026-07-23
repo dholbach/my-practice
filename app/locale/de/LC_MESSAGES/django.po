@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-23 20:52+0200\n"
+"POT-Creation-Date: 2026-07-23 21:24+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -520,7 +520,7 @@ msgstr "Fokus-Warteschlange (P-050)"
 msgid "Set automatically for materialized tasks — not manually editable."
 msgstr "Wird für materialisierte Aufgaben automatisch gesetzt — nicht manuell editierbar."
 
-#: my_practice/admin.py:1012 my_practice/models/todo.py:147
+#: my_practice/admin.py:1012 my_practice/models/todo.py:155
 msgid "Task"
 msgstr "Aufgabe"
 
@@ -528,7 +528,8 @@ msgstr "Aufgabe"
 msgid "Priority"
 msgstr "Priorität"
 
-#: my_practice/admin.py:1056 templates/includes/todo_content.html:66
+#: my_practice/admin.py:1056 templates/includes/focus_queue_content.html:36
+#: templates/includes/todo_content.html:66
 msgid "Mark as completed"
 msgstr "Als erledigt markieren"
 
@@ -983,8 +984,8 @@ msgstr "Automatisch erstellte Korrektur (Fehlbuchung)"
 #: my_practice/models/financial.py:265 my_practice/models/inquiry.py:96
 #: my_practice/models/inquiry.py:201 my_practice/models/invoice.py:63
 #: my_practice/models/practice.py:281 my_practice/models/practice.py:317
-#: my_practice/models/service.py:17 my_practice/models/todo.py:87
-#: templates/base.html:83 templates/my_practice/tax_workday_audit.html:73
+#: my_practice/models/service.py:17 my_practice/models/todo.py:95
+#: templates/base.html:84 templates/my_practice/tax_workday_audit.html:73
 msgid "Practice"
 msgstr "Praxis"
 
@@ -1350,7 +1351,7 @@ msgstr "Überweisung"
 
 #: my_practice/models/client.py:251 my_practice/models/financial.py:61
 #: my_practice/models/financial.py:162 my_practice/models/inquiry.py:33
-#: my_practice/models/todo.py:72 my_practice/views/inquiry_views.py:385
+#: my_practice/models/todo.py:80 my_practice/views/inquiry_views.py:385
 #: templates/my_practice/bank_expense_review.html:50
 msgid "Other"
 msgstr "Sonstiges"
@@ -1407,7 +1408,7 @@ msgstr "Klienten-Aliase"
 msgid "Heavy"
 msgstr "Schwer"
 
-#: my_practice/models/clinical.py:133 my_practice/models/todo.py:77
+#: my_practice/models/clinical.py:133 my_practice/models/todo.py:85
 msgid "Medium"
 msgstr "Mittel"
 
@@ -1622,7 +1623,7 @@ msgid "Note"
 msgstr "Hinweis"
 
 #: my_practice/models/clinical.py:345 my_practice/models/financial.py:154
-#: my_practice/models/todo.py:61
+#: my_practice/models/todo.py:69
 #: templates/my_practice/bank_expense_review.html:42
 #: templates/my_practice/client_detail.html:203
 #: templates/my_practice/client_detail.html:361
@@ -2720,108 +2721,108 @@ msgstr "Urlaubszeiträume"
 msgid "End date cannot be before start date."
 msgstr "Enddatum darf nicht vor dem Startdatum liegen."
 
-#: my_practice/models/todo.py:57 templates/my_practice/bank_import.html:112
+#: my_practice/models/todo.py:65 templates/my_practice/bank_import.html:112
 #: templates/my_practice/bank_review.html:127
 msgid "Manual"
 msgstr "Manuell"
 
-#: my_practice/models/todo.py:58
+#: my_practice/models/todo.py:66
 msgid "Missing session log"
 msgstr "Fehlendes Sitzungsprotokoll"
 
-#: my_practice/models/todo.py:59
+#: my_practice/models/todo.py:67
 msgid "Unpaid invoice"
 msgstr "Unbezahlte Rechnung"
 
-#: my_practice/models/todo.py:60
+#: my_practice/models/todo.py:68
 msgid "Unsent invoice"
 msgstr "Nicht versendete Rechnung"
 
-#: my_practice/models/todo.py:62
+#: my_practice/models/todo.py:70
 msgid "Recurring review"
 msgstr "Wiederkehrende Überprüfung"
 
-#: my_practice/models/todo.py:63
+#: my_practice/models/todo.py:71
 msgid "Operational checklist"
 msgstr "Betriebliche Checkliste"
 
-#: my_practice/models/todo.py:67
+#: my_practice/models/todo.py:75
 msgid "Administrative"
 msgstr "Verwaltung"
 
-#: my_practice/models/todo.py:68
+#: my_practice/models/todo.py:76
 msgid "Learning/Research"
 msgstr "Lernen/Recherche"
 
-#: my_practice/models/todo.py:69
+#: my_practice/models/todo.py:77
 msgid "Financial/Accounting"
 msgstr "Finanzen/Buchhaltung"
 
-#: my_practice/models/todo.py:70
+#: my_practice/models/todo.py:78
 msgid "Client-related"
 msgstr "Klientenbezogen"
 
-#: my_practice/models/todo.py:71
+#: my_practice/models/todo.py:79
 msgid "Practice Management"
 msgstr "Praxisverwaltung"
 
-#: my_practice/models/todo.py:76
+#: my_practice/models/todo.py:84
 msgid "Low"
 msgstr "Niedrig"
 
-#: my_practice/models/todo.py:78
+#: my_practice/models/todo.py:86
 msgid "High"
 msgstr "Hoch"
 
-#: my_practice/models/todo.py:79
+#: my_practice/models/todo.py:87
 msgid "Urgent"
 msgstr "Dringend"
 
-#: my_practice/models/todo.py:91
+#: my_practice/models/todo.py:99
 msgid "Short description of the task"
 msgstr "Kurze Beschreibung der Aufgabe"
 
-#: my_practice/models/todo.py:92
+#: my_practice/models/todo.py:100
 msgid "Optional detailed notes"
 msgstr "Optionale ausführliche Notizen"
 
-#: my_practice/models/todo.py:97
+#: my_practice/models/todo.py:105
 msgid "Task category for organization"
 msgstr "Aufgabenkategorie zur Organisation"
 
-#: my_practice/models/todo.py:103
+#: my_practice/models/todo.py:111
 msgid "Task priority level"
 msgstr "Aufgabenpriorität"
 
-#: my_practice/models/todo.py:107
+#: my_practice/models/todo.py:115
 msgid "Mark as a focus task for the current week"
 msgstr "Als Fokus-Aufgabe für die aktuelle Woche markieren"
 
-#: my_practice/models/todo.py:108
+#: my_practice/models/todo.py:116
 msgid "Focus task"
 msgstr "Fokus-Aufgabe"
 
-#: my_practice/models/todo.py:112
+#: my_practice/models/todo.py:120
 msgid "Optional due date"
 msgstr "Optionales Fälligkeitsdatum"
 
-#: my_practice/models/todo.py:114
+#: my_practice/models/todo.py:122
 msgid "When the task was completed"
 msgstr "Wann die Aufgabe abgeschlossen wurde"
 
-#: my_practice/models/todo.py:119
+#: my_practice/models/todo.py:127
 msgid "Hide from the focus queue until this date"
 msgstr "Bis zu diesem Datum aus der Fokus-Warteschlange ausblenden"
 
-#: my_practice/models/todo.py:129
+#: my_practice/models/todo.py:137
 msgid "Manual entry, or a materialized system signal (unpaid invoice, missing session log, etc.)"
 msgstr "Manueller Eintrag oder ein materialisiertes Systemsignal (unbezahlte Rechnung, fehlendes Sitzungsprotokoll usw.)"
 
-#: my_practice/models/todo.py:138
+#: my_practice/models/todo.py:146
 msgid "Related object type, for materialized tasks (e.g. Client, Invoice)"
 msgstr "Typ des verknüpften Objekts, für materialisierte Aufgaben (z. B. Klient, Rechnung)"
 
-#: my_practice/models/todo.py:148 templates/base.html:58
+#: my_practice/models/todo.py:156 templates/base.html:59
 #: templates/my_practice/todo_list.html:4
 #: templates/my_practice/todo_list.html:7
 msgid "Tasks"
@@ -3712,6 +3713,10 @@ msgstr "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von %(days)s Ta
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
 
+#: my_practice/views/crud_mixins.py:42
+msgid "Permission denied."
+msgstr "Zugriff verweigert."
+
 #: my_practice/views/email_views.py:66 my_practice/views/email_views.py:364
 #, python-format
 msgid "Email sending failed (result: %(result)s)."
@@ -4095,38 +4100,38 @@ msgstr "⏸ Element pausiert."
 msgid "▶️ Pause removed."
 msgstr "▶️ Pause aufgehoben."
 
-#: my_practice/views/practice_views.py:31
+#: my_practice/views/practice_views.py:32
 #, python-format
 msgid "Switched to practice '%(name)s'."
 msgstr "Zur Praxis '%(name)s' gewechselt."
 
-#: my_practice/views/practice_views.py:33
+#: my_practice/views/practice_views.py:34
 msgid "Practice not found or access denied."
 msgstr "Praxis nicht gefunden oder kein Zugriff."
 
-#: my_practice/views/practice_views.py:55
+#: my_practice/views/practice_views.py:56
 msgid "You don't have access to a practice. Please contact the administrator."
 msgstr "Sie haben keinen Zugriff auf eine Praxis. Bitte kontaktieren Sie den Administrator."
 
-#: my_practice/views/practice_views.py:147
+#: my_practice/views/practice_views.py:148
 #, python-format
 msgid "Practice '%(name)s' created successfully."
 msgstr "Praxis '%(name)s' erfolgreich erstellt."
 
-#: my_practice/views/practice_views.py:169
+#: my_practice/views/practice_views.py:165
 msgid "You don't have permission to edit this practice."
 msgstr "Sie haben keine Berechtigung, diese Praxis zu bearbeiten."
 
-#: my_practice/views/practice_views.py:201
+#: my_practice/views/practice_views.py:195
 #, python-format
 msgid "Practice '%(name)s' updated successfully."
 msgstr "Praxis '%(name)s' erfolgreich aktualisiert."
 
-#: my_practice/views/practice_views.py:222
+#: my_practice/views/practice_views.py:211
 msgid "You don't have permission to delete this practice."
 msgstr "Sie haben keine Berechtigung, diese Praxis zu löschen."
 
-#: my_practice/views/practice_views.py:233
+#: my_practice/views/practice_views.py:220
 #, python-format
 msgid "Practice '%(name)s' deactivated."
 msgstr "Praxis '%(name)s' deaktiviert."
@@ -4307,24 +4312,29 @@ msgstr "Praxisverwaltung"
 msgid "Overview"
 msgstr "Überblick"
 
-#: templates/base.html:60
+#: templates/base.html:58 templates/my_practice/focus_queue.html:4
+#: templates/my_practice/focus_queue.html:7
+msgid "Focus Queue"
+msgstr "Im Fokus"
+
+#: templates/base.html:61
 msgid "Finances"
 msgstr "Finanzen"
 
-#: templates/base.html:62 templates/my_practice/bank_expense_review.html:144
+#: templates/base.html:63 templates/my_practice/bank_expense_review.html:144
 #: templates/my_practice/bank_import.html:4
 #: templates/my_practice/bank_import.html:9
 msgid "Bank import"
 msgstr "Bank-Import"
 
-#: templates/base.html:63 templates/my_practice/analytics.html:142
+#: templates/base.html:64 templates/my_practice/analytics.html:142
 #: templates/my_practice/analytics.html:187
 #: templates/my_practice/bank_review.html:22
 #: templates/my_practice/withdrawal_list.html:48
 msgid "Withdrawals"
 msgstr "Entnahmen"
 
-#: templates/base.html:64 templates/my_practice/analytics.html:110
+#: templates/base.html:65 templates/my_practice/analytics.html:110
 #: templates/my_practice/analytics.html:139
 #: templates/my_practice/analytics.html:186
 #: templates/my_practice/bank_review.html:17
@@ -4334,58 +4344,58 @@ msgstr "Entnahmen"
 msgid "Expenses"
 msgstr "Ausgaben"
 
-#: templates/base.html:65
+#: templates/base.html:66
 msgid "Bank expenses"
 msgstr "Bank-Ausgaben"
 
-#: templates/base.html:66 templates/my_practice/analytics.html:6
+#: templates/base.html:67 templates/my_practice/analytics.html:6
 #: templates/my_practice/analytics.html:9
 #: templates/my_practice/inquiry_list.html:36
 #: templates/my_practice/withdrawal_list.html:16
 msgid "Analytics"
 msgstr "Analysen"
 
-#: templates/base.html:67
+#: templates/base.html:68
 msgid "Tax annual overview"
 msgstr "Steuer-Jahresübersicht"
 
-#: templates/base.html:68
+#: templates/base.html:69
 msgid "Tax quarterly overview"
 msgstr "Steuer-Quartalsübersicht"
 
-#: templates/base.html:74
+#: templates/base.html:75
 msgid "Calendar approval"
 msgstr "Kalender-Genehmigung"
 
-#: templates/base.html:75 templates/my_practice/analytics.html:662
+#: templates/base.html:76 templates/my_practice/analytics.html:662
 #: templates/my_practice/time_off_list.html:4
 #: templates/my_practice/time_off_list.html:6
 msgid "Time off"
 msgstr "Urlaub"
 
-#: templates/base.html:77 templates/my_practice/boilerplate.html:4
+#: templates/base.html:78 templates/my_practice/boilerplate.html:4
 #: templates/my_practice/boilerplate.html:9
 msgid "Email templates"
 msgstr "E-Mail-Textbausteine"
 
-#: templates/base.html:93 templates/my_practice/practice_management.html:4
+#: templates/base.html:94 templates/my_practice/practice_management.html:4
 #: templates/my_practice/practice_management.html:6
 msgid "Manage practices"
 msgstr "Praxen verwalten"
 
-#: templates/base.html:105
+#: templates/base.html:106
 msgid "Toggle dark mode"
 msgstr "Dark Mode umschalten"
 
-#: templates/base.html:108
+#: templates/base.html:109
 msgid "Click to hide sensitive data"
 msgstr "Klicken zum Verbergen sensibler Daten"
 
-#: templates/base.html:126
+#: templates/base.html:127
 msgid "available"
 msgstr "verfügbar"
 
-#: templates/base.html:128
+#: templates/base.html:129
 msgid "Close"
 msgstr "Schließen"
 
@@ -4544,6 +4554,84 @@ msgstr "Fehler beim Hinzufügen des Tags"
 msgid "Error removing tag"
 msgstr "Fehler beim Entfernen des Tags"
 
+#: templates/includes/focus_queue_content.html:7
+#: templates/includes/todo_content.html:28
+#: templates/my_practice/todo_form.html:4
+msgid "New task"
+msgstr "Neue Aufgabe"
+
+#: templates/includes/focus_queue_content.html:10
+msgid "Type:"
+msgstr "Typ:"
+
+#: templates/includes/focus_queue_content.html:12
+#: templates/includes/todo_content.html:33
+#: templates/includes/todo_content.html:41
+#: templates/my_practice/client_list_cards.html:17
+msgid "All"
+msgstr "Alle"
+
+#: templates/includes/focus_queue_content.html:18
+#: templates/includes/todo_content.html:50
+msgid "Reset filters"
+msgstr "Filter zurücksetzen"
+
+#: templates/includes/focus_queue_content.html:23
+#, python-format
+msgid "%(count)s task snoozed"
+msgid_plural "%(count)s tasks snoozed"
+msgstr[0] "%(count)s Aufgabe zurückgestellt"
+msgstr[1] "%(count)s Aufgaben zurückgestellt"
+
+#: templates/includes/focus_queue_content.html:58
+#: templates/includes/todo_content.html:82
+msgid "overdue!"
+msgstr "überfällig!"
+
+#: templates/includes/focus_queue_content.html:66
+msgid "Snooze 1 day"
+msgstr "1 Tag zurückstellen"
+
+#: templates/includes/focus_queue_content.html:67
+msgid "Snooze 3 days"
+msgstr "3 Tage zurückstellen"
+
+#: templates/includes/focus_queue_content.html:68
+msgid "Snooze 1 week"
+msgstr "1 Woche zurückstellen"
+
+#: templates/includes/focus_queue_content.html:70
+#: templates/includes/todo_content.html:100
+#: templates/my_practice/client_detail.html:288
+#: templates/my_practice/client_detail.html:317
+#: templates/my_practice/expense_list.html:127
+#: templates/my_practice/inquiry_list.html:26
+#: templates/my_practice/inquiry_list.html:203
+#: templates/my_practice/inquiry_list.html:249
+#: templates/my_practice/invoice_detail.html:189
+#: templates/my_practice/practice_management.html:44
+#: templates/my_practice/tag_list.html:62
+#: templates/my_practice/tax_quarter_overview.html:170
+#: templates/my_practice/tax_year_summary.html:215
+#: templates/my_practice/time_off_list.html:54
+#: templates/my_practice/time_off_list.html:93
+#: templates/my_practice/withdrawal_list.html:79
+#: templates/my_practice/withdrawal_list.html:128
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: templates/includes/focus_queue_content.html:82
+msgid "Nothing needs your attention"
+msgstr "Nichts erfordert deine Aufmerksamkeit"
+
+#: templates/includes/focus_queue_content.html:83
+msgid "The focus queue is empty."
+msgstr "Aktuell ist nichts im Fokus."
+
+#: templates/includes/focus_queue_content.html:84
+msgid "Create a task"
+msgstr "Aufgabe erstellen"
+
 #: templates/includes/gebueh_button.html:7
 msgid "GebüH"
 msgstr "GebüH"
@@ -4666,36 +4754,17 @@ msgstr "Steuervorauszahlung für Q%(quarter)s erfasst"
 msgid "Completed"
 msgstr "Erledigt"
 
-#: templates/includes/todo_content.html:28
-#: templates/my_practice/todo_form.html:4
-msgid "New task"
-msgstr "Neue Aufgabe"
-
 #: templates/includes/todo_content.html:31
 msgid "Category:"
 msgstr "Kategorie:"
-
-#: templates/includes/todo_content.html:33
-#: templates/includes/todo_content.html:41
-#: templates/my_practice/client_list_cards.html:17
-msgid "All"
-msgstr "Alle"
 
 #: templates/includes/todo_content.html:39
 msgid "Priority:"
 msgstr "Priorität:"
 
-#: templates/includes/todo_content.html:50
-msgid "Reset filters"
-msgstr "Filter zurücksetzen"
-
 #: templates/includes/todo_content.html:66
 msgid "Mark as not completed"
 msgstr "Als unerledigt markieren"
-
-#: templates/includes/todo_content.html:82
-msgid "overdue!"
-msgstr "überfällig!"
 
 #: templates/includes/todo_content.html:99
 #: templates/includes/weekly_focus_widget_content.html:46
@@ -4705,25 +4774,6 @@ msgstr "Fokus entfernen"
 #: templates/includes/todo_content.html:99
 msgid "Mark as focus"
 msgstr "Als Fokus markieren"
-
-#: templates/includes/todo_content.html:100
-#: templates/my_practice/client_detail.html:288
-#: templates/my_practice/client_detail.html:317
-#: templates/my_practice/expense_list.html:127
-#: templates/my_practice/inquiry_list.html:26
-#: templates/my_practice/inquiry_list.html:203
-#: templates/my_practice/inquiry_list.html:249
-#: templates/my_practice/invoice_detail.html:189
-#: templates/my_practice/practice_management.html:44
-#: templates/my_practice/tag_list.html:62
-#: templates/my_practice/tax_quarter_overview.html:170
-#: templates/my_practice/tax_year_summary.html:215
-#: templates/my_practice/time_off_list.html:54
-#: templates/my_practice/time_off_list.html:93
-#: templates/my_practice/withdrawal_list.html:79
-#: templates/my_practice/withdrawal_list.html:128
-msgid "Edit"
-msgstr "Bearbeiten"
 
 #: templates/includes/todo_content.html:101
 #: templates/my_practice/client_gdpr_delete_confirm.html:57
@@ -7034,6 +7084,10 @@ msgstr "Noch nicht eingetragen"
 #: templates/my_practice/expense_list.html:133
 msgid "No expenses yet"
 msgstr "Keine Ausgaben vorhanden"
+
+#: templates/my_practice/focus_queue.html:8
+msgid "What needs doing"
+msgstr "Was zu tun ist"
 
 #: templates/my_practice/gebueh_leistung_form.html:4
 #: templates/my_practice/gebueh_leistung_form.html:5
