@@ -2090,6 +2090,18 @@
   .todo-badge.task-type-supervision         { background: #e9d8fd; color: #553c9a; }
   .todo-badge.task-type-recurring_review    { background: #bee3f8; color: #2c5282; }
   .todo-badge.task-type-operational_checklist { background: #c6f6d5; color: #22543d; }
+  /* Focus Queue type-filter pills — same palette as the task-type badges above,
+     so a pill's color matches the badge on the rows it filters to. */
+  .filter-pill { border: 2px solid transparent; }
+  .filter-pill.is-active { border-color: var(--color-link); }
+  .filter-pill.is-empty { opacity: 0.45; }
+  .filter-pill.filter-pill-manual              { background: var(--color-bg-secondary); color: var(--color-text-primary); }
+  .filter-pill.filter-pill-missing_session_log { background: #fed7d7; color: #9b2c2c; }
+  .filter-pill.filter-pill-invoice_unpaid      { background: #fbd38d; color: #7c2d12; }
+  .filter-pill.filter-pill-invoice_unsent      { background: #fbd38d; color: #7c2d12; }
+  .filter-pill.filter-pill-supervision         { background: #e9d8fd; color: #553c9a; }
+  .filter-pill.filter-pill-recurring_review    { background: #bee3f8; color: #2c5282; }
+  .filter-pill.filter-pill-operational_checklist { background: #c6f6d5; color: #22543d; }
   .todo-due-date { color: var(--color-text-secondary); font-size: 0.8125rem; }
   .todo-due-date.overdue { color: #f56565; font-weight: 600; }
   .todo-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }

@@ -10,7 +10,7 @@
             {% trans "All" %}
         </a>
         {% for value, label, count in task_types_with_counts %}
-        <a href="?type={{ value }}" class="btn btn-sm {% if current_type == value %}btn-primary{% else %}btn-secondary{% endif %}">
+        <a href="?type={{ value }}" class="btn btn-sm filter-pill filter-pill-{{ value }} {% if current_type == value %}is-active{% endif %} {% if not count %}is-empty{% endif %}">
             {{ label }} ({{ count }})
         </a>
         {% endfor %}
