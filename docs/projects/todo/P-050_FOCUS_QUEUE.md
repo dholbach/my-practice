@@ -141,10 +141,3 @@ useful on its own.
    `Task` queue (snooze/complete/notes). Retire `/todos/` and the dashboard's
    "Braucht Aktion" pane (`ActionQueueBuilder`) once this exists; pare the dashboard
    back down to pure overview.
-
----
-
-## Notes
-
-- This doc captures a planning conversation (2026-07-20, rescoped 2026-07-23) —
-  treat as a living draft, not a committed spec.
