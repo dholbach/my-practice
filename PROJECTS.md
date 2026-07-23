@@ -26,6 +26,7 @@
 
 ### Concept / Mid-term
 
+- **P-050 Focus Queue**: extend `PracticeTodo` into a unified `Task` model (adds `task_type`, `snoozed_until`, generic `related_object`), materialize derived signals (missing session log, unpaid/unsent invoices, operational checklists) as real rows instead of live-computed/ad-hoc-tagged, then a new Focus Queue nav item replaces both `/todos/` and the dashboard's "Braucht Aktion" pane. Dashboard narrows to pure overview. → [docs/projects/todo/P-050_FOCUS_QUEUE.md](docs/projects/todo/P-050_FOCUS_QUEUE.md)
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
 - **OSS follow-ups** (post P-024): extend CI beyond lint (pytest); GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
