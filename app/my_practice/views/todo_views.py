@@ -17,17 +17,25 @@ from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
-from ..models import PracticeTodo
+from ..models import Client, PracticeTodo
 from ..utils import WeeklyFocusWidgetBuilder
 from .crud_mixins import (
+    NextRedirectMixin,
     PracticeScopedCreateView,
     PracticeScopedDeleteView,
     PracticeScopedUpdateView,
 )
 
 
-class TodoCreateView(PracticeScopedCreateView):
-    """Create new TODO"""
+class TodoCreateView(NextRedirectMixin, PracticeScopedCreateView):
+    """
+    Create new TODO.
+
+    Accepts an optional ?client=<pk> so a task can be created already linked
+    to a client (e.g. a "+ Task" button on the client detail page) — sets
+    related_object so it renders with a link back to that client in the
+    Focus Queue, the same as a materialized missing-session-log/invoice task.
+    """
 
     model = PracticeTodo
     template_name = "my_practice/todo_form.html"
@@ -35,9 +43,30 @@ class TodoCreateView(PracticeScopedCreateView):
     success_url = reverse_lazy("focus_queue")
     success_message = gettext_lazy("'{obj.title}' created successfully.")
 
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.GET.get("client"):
+            initial["category"] = PracticeTodo.Category.CLIENT
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        client_pk = self.request.GET.get("client")
+        if client_pk:
+            context["for_client"] = get_object_or_404(
+                Client.objects.for_current_practice(self.request), pk=client_pk
+            )
+        return context
+
     def form_valid(self, form):
-        """Ensure practice is set before saving"""
+        """Ensure practice is set before saving, and link the client if given"""
         form.instance.practice = self.request.current_practice
+        client_pk = self.request.GET.get("client")
+        if client_pk:
+            client = get_object_or_404(
+                Client.objects.for_current_practice(self.request), pk=client_pk
+            )
+            form.instance.related_object = client
         return super().form_valid(form)
 
 
