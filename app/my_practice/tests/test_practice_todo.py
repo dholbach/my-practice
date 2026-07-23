@@ -168,3 +168,50 @@ class PracticeTodoModelTests(TestCase):
         )
         self.assertEqual(todo_full.description, "Detailed notes here")
         self.assertIsNotNone(todo_full.due_date)
+
+    def test_task_type_defaults_to_manual(self):
+        """Existing/new plain TODOs default to task_type=manual (P-050)"""
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="Plain manual task",
+        )
+        self.assertEqual(todo.task_type, PracticeTodo.TaskType.MANUAL)
+
+    def test_task_types(self):
+        """Test all task_type values are assignable"""
+        for task_type in PracticeTodo.TaskType:
+            todo = PracticeTodo.objects.create(
+                practice=self.practice,
+                title=f"Test {task_type} task",
+                task_type=task_type,
+            )
+            self.assertEqual(todo.task_type, task_type)
+
+    def test_is_snoozed(self):
+        """Test snooze detection based on snoozed_until"""
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="Snoozable task",
+        )
+        self.assertFalse(todo.is_snoozed)
+
+        todo.snoozed_until = timezone.now().date() + timedelta(days=1)
+        self.assertTrue(todo.is_snoozed)
+
+        todo.snoozed_until = timezone.now().date() - timedelta(days=1)
+        self.assertFalse(todo.is_snoozed)
+
+    def test_related_object_generic_fk(self):
+        """Test related_object links a materialized task back to its source"""
+        other_practice = Practice.objects.create(
+            name="Related Practice",
+            title="Related Therapist",
+        )
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="Unpaid invoice follow-up",
+            task_type=PracticeTodo.TaskType.INVOICE_UNPAID,
+            related_object=other_practice,
+        )
+        todo.refresh_from_db()
+        self.assertEqual(todo.related_object, other_practice)
