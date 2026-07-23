@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-23 22:46+0200\n"
+"POT-Creation-Date: 2026-07-23 23:25+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -2171,22 +2171,22 @@ msgid "Invoice items"
 msgstr ""
 
 #: my_practice/models/operational.py:32
-#: my_practice/utils/dashboard_widgets.py:289
+#: my_practice/utils/dashboard_widgets.py:278
 msgid "Weekly backup"
 msgstr ""
 
 #: my_practice/models/operational.py:33
-#: my_practice/utils/dashboard_widgets.py:288
+#: my_practice/utils/dashboard_widgets.py:277
 msgid "Monthly restore test"
 msgstr ""
 
 #: my_practice/models/operational.py:36
-#: my_practice/utils/dashboard_widgets.py:290
+#: my_practice/utils/dashboard_widgets.py:279
 msgid "MicroSD offsite backup (card A/B alternating, every 2 weeks)"
 msgstr ""
 
 #: my_practice/models/operational.py:38
-#: my_practice/utils/dashboard_widgets.py:291
+#: my_practice/utils/dashboard_widgets.py:280
 msgid "Annual security review"
 msgstr ""
 
@@ -4358,23 +4358,27 @@ msgid_plural "%(count)s tasks snoozed"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/includes/focus_queue_content.html:56
+#: templates/includes/focus_queue_content.html:54
+msgid "Invoice date, session date, or when this task was added"
+msgstr ""
+
+#: templates/includes/focus_queue_content.html:60
 msgid "overdue!"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:64
+#: templates/includes/focus_queue_content.html:68
 msgid "Snooze 1 day"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:65
+#: templates/includes/focus_queue_content.html:69
 msgid "Snooze 3 days"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:66
+#: templates/includes/focus_queue_content.html:70
 msgid "Snooze 1 week"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:68
+#: templates/includes/focus_queue_content.html:72
 #: templates/my_practice/client_detail.html:288
 #: templates/my_practice/client_detail.html:317
 #: templates/my_practice/expense_list.html:127
@@ -4393,15 +4397,15 @@ msgstr ""
 msgid "Edit"
 msgstr "Edit"
 
-#: templates/includes/focus_queue_content.html:80
+#: templates/includes/focus_queue_content.html:84
 msgid "Nothing needs your attention"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:81
+#: templates/includes/focus_queue_content.html:85
 msgid "The focus queue is empty."
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:82
+#: templates/includes/focus_queue_content.html:86
 msgid "Create a task"
 msgstr ""
 

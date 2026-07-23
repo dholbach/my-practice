@@ -149,17 +149,6 @@ class ClientAttentionWidgetBuilder:
             if members
         }
 
-    def get_missing_session_log_clients(self) -> QuerySet:
-        """
-        Clients currently tagged "missing-session-log" (kept in sync by the
-        update_client_tags management command). Public so the P-050 Focus
-        Queue task sync can materialize a Task per client without
-        re-deriving the underlying condition.
-        """
-        return Client.objects.filter(
-            practice=self.practice, tags__name="missing-session-log"
-        ).distinct()
-
     def build_context(self) -> dict:
         """
         Build context for client attention widget.
