@@ -1,10 +1,12 @@
 """Tests for PracticeTodo model"""
 
 from datetime import timedelta
+from decimal import Decimal
 
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
-from my_practice.models import Practice, PracticeTodo
+from my_practice.models import Client, Practice, PracticeTodo
 
 
 class PracticeTodoModelTests(TestCase):
@@ -215,3 +217,31 @@ class PracticeTodoModelTests(TestCase):
         )
         todo.refresh_from_db()
         self.assertEqual(todo.related_object, other_practice)
+
+    def test_related_object_url_for_client(self):
+        client = Client.objects.create(
+            practice=self.practice,
+            client_code="XX-1",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="XX-1",
+            task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG,
+            related_object=client,
+        )
+        self.assertEqual(
+            todo.related_object_url, reverse("client_detail", kwargs={"pk": client.pk})
+        )
+
+    def test_related_object_url_none_when_no_related_object(self):
+        todo = PracticeTodo.objects.create(practice=self.practice, title="Manual task")
+        self.assertIsNone(todo.related_object_url)
+
+    def test_related_object_url_none_for_unlinkable_model(self):
+        other_practice = Practice.objects.create(name="Other", title="Other Therapeutin")
+        todo = PracticeTodo.objects.create(
+            practice=self.practice, title="Weird", related_object=other_practice
+        )
+        self.assertIsNone(todo.related_object_url)

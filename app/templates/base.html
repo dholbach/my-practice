@@ -55,6 +55,7 @@
                 </div>
                 <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' %}class="active"{% endif %}>📋 {% trans "Clients" %}</a>
                 <a href="{% url 'inquiry_list' %}" {% if 'inquiry' in request.resolver_match.url_name %}class="active"{% endif %}>📬 {% trans "Inquiries" %}</a>
+                <a href="{% url 'focus_queue' %}" {% if request.resolver_match.url_name == 'focus_queue' %}class="active"{% endif %}>🎯 {% trans "Focus Queue" %}</a>
                 <a href="{% url 'todo_list' %}" {% if 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>✅ {% trans "Tasks" %}</a>
                 <div class="dropdown">
                     <span {% if request.resolver_match.url_name == 'withdrawal_list' or request.resolver_match.url_name == 'expense_list' or request.resolver_match.url_name == 'tax_year_summary' or request.resolver_match.url_name == 'tax_quarter_overview' or request.resolver_match.url_name == 'analytics' or 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>💰 {% trans "Finances" %}{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %} ▾</span>

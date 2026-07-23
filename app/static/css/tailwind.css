@@ -2143,9 +2143,30 @@
   .todo-badge.priority-medium { background: #fff9c4; color: #f57f17; }
   .todo-badge.priority-high   { background: #ffe0b2; color: #e65100; }
   .todo-badge.priority-urgent { background: #ffebee; color: #c62828; }
+  /* Focus Queue (P-050) task_type badges — manual stays neutral, materialized
+     types get a shared "system-generated" tint distinct from category badges. */
+  .todo-badge.task-type-manual              { background: var(--color-bg-secondary); color: var(--color-text-primary); }
+  .todo-badge.task-type-missing_session_log { background: #fed7d7; color: #9b2c2c; }
+  .todo-badge.task-type-invoice_unpaid      { background: #fbd38d; color: #7c2d12; }
+  .todo-badge.task-type-invoice_unsent      { background: #fbd38d; color: #7c2d12; }
+  .todo-badge.task-type-supervision         { background: #e9d8fd; color: #553c9a; }
+  .todo-badge.task-type-recurring_review    { background: #bee3f8; color: #2c5282; }
+  .todo-badge.task-type-operational_checklist { background: #c6f6d5; color: #22543d; }
   .todo-due-date { color: var(--color-text-secondary); font-size: 0.8125rem; }
   .todo-due-date.overdue { color: #f56565; font-weight: 600; }
-  .todo-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+  .todo-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+  .focus-queue-snooze-group { display: flex; gap: 0.25rem; }
+  .btn-snooze {
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    padding: 0.125rem 0.375rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-snooze:hover { background: var(--color-link); color: white; border-color: var(--color-link); }
   .btn-focus-toggle {
     background: none;
     border: none;

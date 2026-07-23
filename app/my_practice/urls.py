@@ -281,6 +281,12 @@ urlpatterns = [
     path("todos/<int:pk>/delete/", views.TodoDeleteView.as_view(), name="todo_delete"),
     path("todos/<int:pk>/toggle/", views.todo_toggle_complete, name="todo_toggle"),
     path("todos/<int:pk>/toggle-focus/", views.todo_toggle_focus, name="todo_toggle_focus"),
+    # Focus Queue (P-050)
+    path("focus/", views.FocusQueueView.as_view(), name="focus_queue"),
+    path(
+        "focus/<int:pk>/complete/", views.focus_queue_toggle_complete, name="focus_queue_complete"
+    ),
+    path("focus/<int:pk>/snooze/", views.focus_queue_snooze, name="focus_queue_snooze"),
     # Bank statement import
     path("bank/import/", views.BankImportView.as_view(), name="bank_import"),
     path("bank/review/", views.BankReviewView.as_view(), name="bank_review"),

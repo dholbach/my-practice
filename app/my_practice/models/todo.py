@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -16,6 +17,13 @@ from .base import PracticeScopedManager, TimestampedModel
 
 if TYPE_CHECKING:
     pass
+
+# Maps a related_object's content type to the URL name for its detail page.
+# Extend as more materialized task_types gain a linkable related_object.
+_RELATED_OBJECT_URL_NAMES = {
+    "client": "client_detail",
+    "invoice": "invoice_detail",
+}
 
 
 class PracticeTodo(TimestampedModel):
@@ -174,6 +182,16 @@ class PracticeTodo(TimestampedModel):
     def is_snoozed(self) -> bool:
         """Check if task is currently snoozed."""
         return bool(self.snoozed_until and self.snoozed_until >= timezone.now().date())
+
+    @property
+    def related_object_url(self) -> str | None:
+        """URL to the related object's detail page, if there is one we know how to link."""
+        if self.related_object is None:
+            return None
+        url_name = _RELATED_OBJECT_URL_NAMES.get(self.content_type.model)
+        if not url_name:
+            return None
+        return reverse(url_name, kwargs={"pk": self.object_id})
 
     def mark_completed(self) -> None:
         """Mark task as completed with current timestamp."""
