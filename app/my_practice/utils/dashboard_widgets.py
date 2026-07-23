@@ -1,18 +1,15 @@
 """
 Widget builders for dashboard - P-003 Phase 4 + P-012
-Additional widgets: Session Import, Client Attention, Invoice Actions, Bank Import Reminder, Checklist
+Additional widgets: Session Import, Client Attention, Invoice Actions, Checklist
 """
 
 from datetime import date, timedelta
-from decimal import Decimal
 
 from django.db.models import Max, QuerySet
 from django.urls import reverse
-from django.utils.translation import gettext, ngettext, pgettext
 from django.utils.translation import gettext_lazy as _
 
 from ..models import (
-    BankTransaction,
     ChecklistItemPause,
     Client,
     GoogleCalendarToken,
@@ -20,27 +17,6 @@ from ..models import (
     OperationalChecklistCompletion,
     Session,
 )
-
-# Tag labels for action-queue display — kept here alongside the tag logic
-_TAG_LABELS: dict[str, object] = {
-    "follow-up": _("Follow-up"),
-    "pause": _("Pause"),
-    "ending": _("Completion"),
-    "missing-session-log": _("Log missing"),
-}
-
-
-def _fmt_eur(amount: Decimal) -> str:
-    formatted = f"{float(amount):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return f"{formatted} €"
-
-
-def _join_truncated(items: list[str], total: int, sep: str = ", ", max_shown: int = 4) -> str:
-    shown = [str(item) for item in items[:max_shown]]
-    result = sep.join(shown)
-    if total > len(shown):
-        result += " …"
-    return result
 
 
 class SessionImportWidgetBuilder:
@@ -208,69 +184,6 @@ class ClientAttentionWidgetBuilder:
             "total_attention_count": no_recent_count + tagged_count,
         }
 
-    def get_action_items(self, today: date | None = None) -> list[dict]:
-        """Return ActionQueueItem-shaped dicts for tagged and inactive clients."""
-        today = today or date.today()
-        items: list[dict] = []
-
-        tagged_clients = self._get_tagged_clients()
-
-        items.extend(
-            {
-                "priority": 2,
-                "category": "CLIENT",
-                "category_label": gettext("Client"),
-                "summary": f"{client.client_code} · {_TAG_LABELS.get(tag_name, tag_name)}",
-                "sub_text": "",
-                "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-                "action_label": gettext("Open"),
-                "_sort_key": client.client_code,
-            }
-            for tag_name, data in tagged_clients.items()
-            for client in data["clients"]
-        )
-
-        tagged_ids = {c.pk for data in tagged_clients.values() for c in data["clients"]}
-        inactive = [
-            c for c in self._get_clients_without_next_session()[:5] if c.pk not in tagged_ids
-        ]
-
-        if inactive:
-            client_ids = [c.pk for c in inactive]
-            last_sessions: dict = dict(
-                Session.objects.filter(client_id__in=client_ids, cancelled=False)
-                .values("client_id")
-                .annotate(last=Max("session_date"))
-                .values_list("client_id", "last")
-            )
-            for client in inactive:
-                last_date = last_sessions.get(client.pk)
-                if last_date:
-                    days = (today - last_date).days
-                    summary = f"{client.client_code} · " + gettext("no session for %(days)s d") % {
-                        "days": days
-                    }
-                    sub = gettext("last %(date)s") % {"date": last_date.strftime("%d.%m.%Y")}
-                    sort_key = f"inactive_{999 - days:04d}"
-                else:
-                    summary = f"{client.client_code} · " + gettext("no session yet")
-                    sub = ""
-                    sort_key = "inactive_9999"
-                items.append(
-                    {
-                        "priority": 2,
-                        "category": "CLIENT",
-                        "category_label": gettext("Client"),
-                        "summary": summary,
-                        "sub_text": sub,
-                        "action_url": reverse("client_detail", kwargs={"pk": client.pk}),
-                        "action_label": gettext("Contact"),
-                        "_sort_key": sort_key,
-                    }
-                )
-
-        return items
-
 
 class InvoiceActionsWidgetBuilder:
     """
@@ -357,140 +270,6 @@ class InvoiceActionsWidgetBuilder:
             "draft_count": len(drafts),
         }
 
-    def get_action_items(self, today: date | None = None) -> list[dict]:
-        """Return ActionQueueItem-shaped dicts for overdue and draft invoices."""
-        today = today or date.today()
-        items: list[dict] = []
-
-        overdue = self.get_overdue_invoices(today)
-
-        n_overdue = len(overdue)
-        if n_overdue > 0:
-            total = sum(inv.calculate_total() for inv in overdue)
-            codes = _join_truncated(
-                list(dict.fromkeys(inv.client.client_code for inv in overdue)),
-                n_overdue,
-            )
-            oldest_age = max((today - inv.invoice_date).days for inv in overdue)
-            items.append(
-                {
-                    "priority": 1,
-                    "category": "INVOICE",
-                    "category_label": pgettext("action category", "Invoice"),
-                    "summary": gettext("%(n)s overdue · %(total)s")
-                    % {"n": n_overdue, "total": _fmt_eur(total)},
-                    "sub_text": gettext("%(codes)s · >%(days)s d")
-                    % {"codes": codes, "days": oldest_age},
-                    "action_url": reverse("invoice_list") + "?status=sent",
-                    "action_label": gettext("Chase"),
-                    "_sort_key": "0_overdue",
-                }
-            )
-
-        drafts = list(self.get_draft_invoices())
-        n_drafts = len(drafts)
-        if n_drafts > 0:
-            nums = _join_truncated([inv.invoice_number for inv in drafts], n_drafts, sep=" · ")
-            label = ngettext("invoice ready", "invoices ready", n_drafts)
-            items.append(
-                {
-                    "priority": 2,
-                    "category": "DRAFT",
-                    "category_label": gettext("Draft"),
-                    "summary": gettext("%(n)s %(label)s to send") % {"n": n_drafts, "label": label},
-                    "sub_text": nums,
-                    "action_url": reverse("invoice_list") + "?status=draft",
-                    "action_label": pgettext("action label", "Complete"),
-                    "_sort_key": "1_drafts",
-                }
-            )
-
-        return items
-
-
-class BankImportReminderWidgetBuilder:
-    """
-    Builds context for Bank Import Reminder Widget (P-012).
-
-    Shows warning if last bank statement import was >30 days ago.
-
-    Usage:
-        builder = BankImportReminderWidgetBuilder(practice)
-        context = builder.build_context()
-    """
-
-    def __init__(self, practice):
-        self.practice = practice
-
-    def build_context(self) -> dict:
-        """
-        Build context for bank import reminder widget.
-
-        Returns:
-            dict with:
-                - show_reminder: Boolean (True if >30 days since last import)
-                - days_since_import: int or None
-                - last_import_date: date or None
-                - import_url: URL to bank import page
-        """
-        # Get last imported transaction
-        last_transaction = (
-            BankTransaction.objects.for_practice(self.practice).order_by("-imported_at").first()
-        )
-
-        if not last_transaction:
-            # No imports yet - show reminder
-            return {
-                "show_reminder": True,
-                "days_since_import": None,
-                "last_import_date": None,
-                "import_url": reverse("bank_import"),
-                "message": gettext("No bank statements imported yet"),
-            }
-
-        # Calculate days since last import
-        today = date.today()
-        days_since = (today - last_transaction.imported_at.date()).days
-
-        # Show reminder if >30 days
-        show_reminder = days_since > 30
-
-        return {
-            "show_reminder": show_reminder,
-            "days_since_import": days_since,
-            "last_import_date": last_transaction.imported_at.date(),
-            "import_url": reverse("bank_import"),
-            "message": (
-                gettext("Last import %(days)s days ago") % {"days": days_since}
-                if show_reminder
-                else None
-            ),
-        }
-
-    def get_action_items(self, today: date | None = None) -> list[dict]:
-        """Return an ActionQueueItem-shaped dict if a bank import reminder is due."""
-        ctx = self.build_context()
-        if not ctx["show_reminder"]:
-            return []
-        days = ctx["days_since_import"]
-        summary = (
-            gettext("Last bank import %(days)s days ago") % {"days": days}
-            if days is not None
-            else gettext("No bank statements imported yet")
-        )
-        return [
-            {
-                "priority": 3,
-                "category": "OPS",
-                "category_label": pgettext("action category", "Operations"),
-                "summary": summary,
-                "sub_text": "",
-                "action_url": ctx["import_url"],
-                "action_label": gettext("Import"),
-                "_sort_key": "",
-            }
-        ]
-
 
 class ChecklistWidgetBuilder:
     """
@@ -576,28 +355,6 @@ class ChecklistWidgetBuilder:
             "show_widget": len(pending) > 0,
         }
 
-    def get_action_items(self, today: date | None = None) -> list[dict]:
-        """Return an ActionQueueItem-shaped dict if any checklists are pending."""
-        ctx = self.build_context()
-        entries = ctx["pending_checklists"]
-        if not entries:
-            return []
-        n = len(entries)
-        label = ngettext("checklist due", "checklists due", n)
-        sub = _join_truncated([e["label"] for e in entries], n, sep=" · ", max_shown=3)
-        return [
-            {
-                "priority": 2,
-                "category": "OPS",
-                "category_label": pgettext("action category", "Operations"),
-                "summary": gettext("%(n)s %(label)s") % {"n": n, "label": label},
-                "sub_text": sub,
-                "action_url": reverse("checklist", kwargs={"checklist_type": entries[0]["type"]}),
-                "action_label": gettext("View"),
-                "_sort_key": str(entries[0]["period_start"]),
-            }
-        ]
-
 
 class PendingCalendarWidgetBuilder:
     """
@@ -637,87 +394,6 @@ class PendingCalendarWidgetBuilder:
             "show_widget": pending_count > 0,
             "approval_url": reverse("calendar_approval_queue"),
         }
-
-
-class TaxQuarterWidgetBuilder:
-    """
-    Builds context for the Tax Quarter Widget (P-013 Phase 2).
-
-    Shows the current quarter's revenue and whether a Steuervorauszahlung
-    (tax prepayment withdrawal, category='tax') has already been recorded.
-    Displays a warning badge if the quarter is more than halfway through
-    and no prepayment has been entered yet.
-
-    Usage:
-        builder = TaxQuarterWidgetBuilder(practice)
-        context = builder.build_context()
-    """
-
-    def __init__(self, practice):
-        self.practice = practice
-
-    def build_context(self) -> dict:
-        """
-        Build context for the tax quarter widget.
-
-        Returns:
-            dict with:
-                - current_quarter: int (1-4)
-                - quarter_revenue: Decimal
-                - has_tax_payment: bool
-                - show_warning: bool (quarter half over, no payment recorded)
-                - quarter_overview_url: URL
-                - add_payment_url: URL (pre-fills category=tax)
-        """
-        from ..models import CompanyWithdrawal
-        from .date_helpers import DateRangeHelper
-        from .revenue_helpers import RevenueCalculator
-
-        today = date.today()
-        q, start, end = DateRangeHelper.get_quarter_for_date(today)
-
-        # Same paid-date rule (with invoice_date fallback) as the tax views
-        revenue = RevenueCalculator.get_paid_revenue_for_range(start, end, practice=self.practice)
-
-        has_tax_payment = CompanyWithdrawal.objects.filter(
-            practice=self.practice,
-            category="tax",
-            date__range=(start, end),
-        ).exists()
-
-        days_in_quarter = (end - start).days + 1
-        days_elapsed = (today - start).days
-        show_warning = not has_tax_payment and days_elapsed >= days_in_quarter // 2
-
-        return {
-            "current_quarter": q,
-            "quarter_revenue": revenue,
-            "has_tax_payment": has_tax_payment,
-            "show_warning": show_warning,
-            "quarter_overview_url": reverse("tax_quarter_overview"),
-            "add_payment_url": reverse("withdrawal_create") + "?category=tax",
-        }
-
-    def get_action_items(self, today: date | None = None) -> list[dict]:
-        """Return an ActionQueueItem-shaped dict if a tax prepayment warning is active."""
-        ctx = self.build_context()
-        if not ctx["show_warning"]:
-            return []
-        revenue = ctx["quarter_revenue"]
-        current_year = (today or date.today()).year
-        return [
-            {
-                "priority": 1,
-                "category": "TAX",
-                "category_label": pgettext("action category", "Tax"),
-                "summary": gettext("Q%(q)s %(year)s · prepayment missing")
-                % {"q": ctx["current_quarter"], "year": current_year},
-                "sub_text": gettext("Revenue: %(amount)s") % {"amount": _fmt_eur(revenue)},
-                "action_url": ctx["add_payment_url"],
-                "action_label": gettext("Record"),
-                "_sort_key": "0_tax",
-            }
-        ]
 
 
 class CapacityMonitoringWidgetBuilder:

@@ -9,7 +9,7 @@ dashboard's "Needs Action" pane (see docs/projects/todo/P-050_FOCUS_QUEUE.md).
 from datetime import timedelta
 from typing import Any
 
-from django.db.models import Case, IntegerField, Value, When
+from django.db.models import Case, Count, IntegerField, Value, When
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -45,6 +45,21 @@ def _open_tasks_queryset(request: HttpRequest, task_type: str = ""):
     return qs.annotate(priority_rank=_PRIORITY_RANK).order_by("priority_rank", "created_at")
 
 
+def _task_types_with_counts(request: HttpRequest) -> list[tuple[str, str, int]]:
+    """
+    (value, label, count) per task_type, counted over all open tasks
+    regardless of the currently selected type filter — so pill counts stay
+    stable as the user switches between them (matches the client tag filter).
+    """
+    counts = dict(
+        _open_tasks_queryset(request)
+        .values_list("task_type")
+        .annotate(count=Count("id"))
+        .values_list("task_type", "count")
+    )
+    return [(value, label, counts.get(value, 0)) for value, label in PracticeTodo.TASK_TYPE_CHOICES]
+
+
 def _build_focus_queue_context(request: HttpRequest) -> dict[str, Any]:
     """Build context for the focus queue partial (HTMX swap target)."""
     task_type = request.GET.get("type", "")
@@ -58,7 +73,7 @@ def _build_focus_queue_context(request: HttpRequest) -> dict[str, Any]:
         "tasks": _open_tasks_queryset(request, task_type),
         "snoozed_count": snoozed_qs.count(),
         "current_type": task_type,
-        "task_types": PracticeTodo.TASK_TYPE_CHOICES,
+        "task_types_with_counts": _task_types_with_counts(request),
     }
 
 
@@ -88,7 +103,7 @@ class FocusQueueView(PracticeScopedListView):
             snoozed_qs = snoozed_qs.filter(task_type=task_type)
         context["snoozed_count"] = snoozed_qs.count()
         context["current_type"] = task_type
-        context["task_types"] = PracticeTodo.TASK_TYPE_CHOICES
+        context["task_types_with_counts"] = _task_types_with_counts(self.request)
         return context
 
 

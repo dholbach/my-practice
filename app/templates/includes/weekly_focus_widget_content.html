@@ -55,9 +55,9 @@ Shows Mon–Sun sessions and focus tasks (is_focus=True).
                 {% endfor %}
             </div>
         {% else %}
-            {% url 'todo_list' as todo_list_url %}
+            {% url 'focus_queue' as focus_queue_url %}
             <div class="weekly-focus-empty">
-                {% blocktrans %}No focus tasks. Click ⭐ on a task in the <a href="{{ todo_list_url }}">to-do list</a>.{% endblocktrans %}
+                {% blocktrans %}No focus tasks. Click ⭐ on a task in the <a href="{{ focus_queue_url }}">focus queue</a>.{% endblocktrans %}
             </div>
         {% endif %}
     </div>

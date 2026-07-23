@@ -11,7 +11,6 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from ..models import Client, CompanyExpense, Invoice, TimeOff
-from .action_queue_builder import ActionQueueBuilder
 from .agenda_helpers import AgendaWidgetBuilder
 from .dashboard_widgets import CapacityMonitoringWidgetBuilder
 from .weekly_focus_widget import WeeklyFocusWidgetBuilder
@@ -40,7 +39,6 @@ class DashboardContextAssembler:
         context.update(self._build_statistics())
         context.update(self._build_timeoff())
         context.update(self._build_widgets())
-        context.update(self._build_action_queue())
         context.update(self._build_multi_practice())
         return context
 
@@ -175,9 +173,6 @@ class DashboardContextAssembler:
             "weekly_focus_widget_html": _html("includes/weekly_focus_widget_content.html", wf_ctx),
             "weekly_focus_badge": mark_safe(" ".join(wf_badge_parts)),
         }
-
-    def _build_action_queue(self) -> dict:
-        return {"action_queue_items": ActionQueueBuilder(self.practice).build()}
 
     def _build_multi_practice(self) -> dict:
         request = self.request

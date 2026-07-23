@@ -43,51 +43,15 @@
     </div>
 </div>
 
-{# Two-pane console: Today (left) | Needs Action (right) #}
-<div class="dashboard-console">
-    <div class="console-pane">
-        {% trans "📅 Today" as agenda_widget_title %}
-        {% trans "📆 This Week" as weekly_focus_widget_title %}
-        {% with widget_content=agenda_widget_html %}
-            {% include 'includes/widget_base.html' with widget_id="agenda" widget_title=agenda_widget_title widget_badge=agenda_badge_html %}
-        {% endwith %}
-        {% with widget_content=weekly_focus_widget_html %}
-            {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title=weekly_focus_widget_title widget_badge=weekly_focus_badge %}
-        {% endwith %}
-    </div>
-
-    <div class="console-pane">
-        <div class="widget">
-            <div class="widget-header">
-                <h3>🎯 {% trans "Needs Action" %}
-                    {% if action_queue_items %}
-                        <span class="stat-badge warning">{{ action_queue_items|length }}</span>
-                    {% endif %}
-                </h3>
-                <span class="action-queue-sort-hint">{% trans "by urgency" %}</span>
-            </div>
-            <div class="widget-content">
-                {% if action_queue_items %}
-                    <div class="action-queue">
-                        {% for item in action_queue_items %}
-                            <div class="action-queue-row">
-                                <div class="action-queue-dot action-queue-dot--{{ item.priority }}"></div>
-                                <div class="action-queue-body">
-                                    <div class="action-queue-category">{{ item.category_label }}</div>
-                                    <div class="action-queue-summary">{{ item.summary }}</div>
-                                    {% if item.sub_text %}<div class="action-queue-sub">{{ item.sub_text }}</div>{% endif %}
-                                </div>
-                                <a href="{{ item.action_url }}" class="btn btn-xs">{{ item.action_label }}</a>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="action-queue-empty">{% trans "Nothing needs your attention right now." %}</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
+{# Today / This Week — "Needs Action" was retired in favour of the dedicated Focus Queue page (P-050) #}
+{% trans "📅 Today" as agenda_widget_title %}
+{% trans "📆 This Week" as weekly_focus_widget_title %}
+{% with widget_content=agenda_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="agenda" widget_title=agenda_widget_title widget_badge=agenda_badge_html %}
+{% endwith %}
+{% with widget_content=weekly_focus_widget_html %}
+    {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title=weekly_focus_widget_title widget_badge=weekly_focus_badge %}
+{% endwith %}
 
 {# Capacity monitoring (shown only when active) #}
 {% if capacity_show_widget %}

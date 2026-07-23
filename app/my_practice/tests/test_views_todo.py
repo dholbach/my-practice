@@ -32,56 +32,6 @@ def _setup_client(user, practice):
     return tc
 
 
-class TodoListViewTest(TestCase):
-    """Tests for TodoListView."""
-
-    def setUp(self):
-        self.practice = _make_practice("todo-list-1")
-        self.user = User.objects.create_user(username="todouser", password="testpass123")
-        link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
-
-        PracticeTodo.objects.create(
-            practice=self.practice,
-            title="Active Task",
-            priority="medium",
-        )
-        completed = PracticeTodo.objects.create(
-            practice=self.practice,
-            title="Done Task",
-            priority="low",
-        )
-        completed.mark_completed()
-
-    def test_get_renders(self):
-        response = self.tc.get(reverse("todo_list"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "my_practice/todo_list.html")
-
-    def test_default_status_filter_shows_active(self):
-        response = self.tc.get(reverse("todo_list"))
-        titles = [t.title for t in response.context["todos"]]
-        self.assertIn("Active Task", titles)
-        self.assertNotIn("Done Task", titles)
-
-    def test_completed_filter(self):
-        response = self.tc.get(reverse("todo_list") + "?status=completed")
-        titles = [t.title for t in response.context["todos"]]
-        self.assertIn("Done Task", titles)
-        self.assertNotIn("Active Task", titles)
-
-    def test_all_filter(self):
-        response = self.tc.get(reverse("todo_list") + "?status=all")
-        titles = [t.title for t in response.context["todos"]]
-        self.assertIn("Active Task", titles)
-        self.assertIn("Done Task", titles)
-
-    def test_stats_in_context(self):
-        response = self.tc.get(reverse("todo_list"))
-        self.assertIn("stats", response.context)
-        self.assertGreaterEqual(response.context["stats"]["total"], 2)
-
-
 class TodoCreateViewTest(TestCase):
     """Tests for TodoCreateView."""
 
