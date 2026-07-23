@@ -30,7 +30,6 @@ from .client_helpers import (
 from .dashboard_widgets import (
     CapacityMonitoringWidgetBuilder,
     ChecklistWidgetBuilder,
-    ClientAttentionWidgetBuilder,
     InvoiceActionsWidgetBuilder,
     PendingCalendarWidgetBuilder,
     SessionImportWidgetBuilder,
@@ -101,7 +100,6 @@ __all__ = [
     "FinancialListContextBuilder",
     "InvoiceFilterHelper",
     "SessionImportWidgetBuilder",
-    "ClientAttentionWidgetBuilder",
     "InvoiceActionsWidgetBuilder",
     "ChecklistWidgetBuilder",
     "CapacityMonitoringWidgetBuilder",

@@ -2,10 +2,13 @@
 Tests for todo views.
 """
 
+from decimal import Decimal
+
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
+from ..models import Client as ClientModel
 from ..models import Practice, PracticeTodo
 from ..tests.test_helpers import link_user_to_practice
 
@@ -56,6 +59,51 @@ class TodoCreateViewTest(TestCase):
         data = {"title": "", "category": "admin", "priority": "medium"}
         response = self.tc.post(reverse("todo_create"), data)
         self.assertEqual(response.status_code, 200)
+
+    def test_client_param_links_task_to_client(self):
+        client_obj = ClientModel.objects.create(
+            practice=self.practice,
+            client_code="CT-1",
+            full_name="Test Klient",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        data = {"title": "Send email reminder", "category": "client", "priority": "medium"}
+        response = self.tc.post(reverse("todo_create") + f"?client={client_obj.pk}", data)
+        self.assertEqual(response.status_code, 302)
+
+        todo = PracticeTodo.objects.get(title="Send email reminder")
+        self.assertEqual(todo.related_object, client_obj)
+        self.assertEqual(
+            todo.related_object_url, reverse("client_detail", kwargs={"pk": client_obj.pk})
+        )
+
+    def test_client_param_prefills_category(self):
+        client_obj = ClientModel.objects.create(
+            practice=self.practice,
+            client_code="CT-2",
+            full_name="Test Klient",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        response = self.tc.get(reverse("todo_create") + f"?client={client_obj.pk}")
+        self.assertEqual(response.context["form"].initial.get("category"), "client")
+        self.assertEqual(response.context["for_client"], client_obj)
+
+    def test_client_param_from_other_practice_404s(self):
+        other_practice = _make_practice("todo-create-other")
+        other_client = ClientModel.objects.create(
+            practice=other_practice,
+            client_code="CT-3",
+            full_name="Other Klient",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        data = {"title": "Should fail", "category": "client", "priority": "medium"}
+        response = self.tc.post(reverse("todo_create") + f"?client={other_client.pk}", data)
+        self.assertEqual(response.status_code, 404)
+
+    def test_next_param_used_for_redirect(self):
+        data = {"title": "Redirect test", "category": "admin", "priority": "medium"}
+        response = self.tc.post(reverse("todo_create") + "?next=/clients/", data)
+        self.assertRedirects(response, "/clients/", fetch_redirect_response=False)
 
 
 class TodoUpdateViewTest(TestCase):

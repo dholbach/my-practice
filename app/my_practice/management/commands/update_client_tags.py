@@ -8,11 +8,11 @@ from django.db.models import Max
 from django.utils import timezone
 from ...models import Client, ClientTag
 from ...models.session import Session
-from ...utils.tag_helpers import RECENT_ACTIVITY_WINDOW_DAYS, get_sessions_missing_log
+from ...utils.tag_helpers import RECENT_ACTIVITY_WINDOW_DAYS
 
 
 class Command(BaseCommand):
-    help = "Update automatic client tags (no-next-session, incomplete-intake, missing-session-log)"
+    help = "Update automatic client tags (no-next-session, incomplete-intake)"
 
     SYSTEM_TAGS = {
         "no-next-session": {
@@ -27,13 +27,6 @@ class Command(BaseCommand):
             "color": "yellow",
             "category": "attention",
             "description": "Aufnahmeprozess noch nicht abgeschlossen",
-            "is_system": True,
-        },
-        "missing-session-log": {
-            "name": "missing-session-log",
-            "color": "red",
-            "category": "attention",
-            "description": "Fehlende Sitzungsnotiz für eine kürzliche Sitzung",
             "is_system": True,
         },
     }
@@ -73,8 +66,6 @@ class Command(BaseCommand):
         }
         has_any_session = set(last_session_dates.keys())
 
-        clients_missing_logs = set(get_sessions_missing_log().values_list("client_id", flat=True))
-
         totals = {"added": 0, "removed": 0}
 
         # --- Strip system tags from inactive clients ---
@@ -113,14 +104,6 @@ class Command(BaseCommand):
                 client,
                 tags["incomplete-intake"],
                 should_have=has_started and client.onboarding_complete_date is None,
-                client_tag_pks=client_tag_pks,
-                totals=totals,
-            )
-
-            self._sync_tag(
-                client,
-                tags["missing-session-log"],
-                should_have=cid in clients_missing_logs,
                 client_tag_pks=client_tag_pks,
                 totals=totals,
             )
