@@ -173,6 +173,17 @@ class ClientAttentionWidgetBuilder:
             if members
         }
 
+    def get_missing_session_log_clients(self) -> QuerySet:
+        """
+        Clients currently tagged "missing-session-log" (kept in sync by the
+        update_client_tags management command). Public so the P-050 Focus
+        Queue task sync can materialize a Task per client without
+        re-deriving the underlying condition.
+        """
+        return Client.objects.filter(
+            practice=self.practice, tags__name="missing-session-log"
+        ).distinct()
+
     def build_context(self) -> dict:
         """
         Build context for client attention widget.
@@ -287,14 +298,30 @@ class InvoiceActionsWidgetBuilder:
             .order_by("invoice_date")  # Oldest first to prioritize overdue
         )
 
-    def _get_draft_invoices(self) -> QuerySet:
-        """Get draft invoices ready to send, annotated with last session date"""
+    def get_draft_invoices(self) -> QuerySet:
+        """
+        Get draft invoices ready to send, annotated with last session date.
+
+        Public: also the detection logic for the P-050 Focus Queue's
+        invoice_unsent materialized task.
+        """
         return (
             Invoice.objects.filter(practice=self.practice, status="draft")
             .select_related("client")
             .annotate(last_session_date=Max("items__session__session_date"))
             .order_by("last_session_date")  # Oldest sessions first
         )
+
+    def get_overdue_invoices(self, today: date | None = None) -> list[Invoice]:
+        """
+        Get sent invoices overdue by more than 30 days.
+
+        Public: also the detection logic for the P-050 Focus Queue's
+        invoice_unpaid materialized task.
+        """
+        today = today or date.today()
+        cutoff_date = today - timedelta(days=30)
+        return [inv for inv in self._get_unpaid_invoices() if inv.invoice_date < cutoff_date]
 
     def build_context(self) -> dict:
         """
@@ -313,9 +340,8 @@ class InvoiceActionsWidgetBuilder:
         # Evaluate each queryset once; overdue is a subset of unpaid, so it is
         # derived in Python instead of hitting the DB again
         unpaid = list(self._get_unpaid_invoices())
-        cutoff_date = date.today() - timedelta(days=30)
-        overdue = [inv for inv in unpaid if inv.invoice_date < cutoff_date]
-        drafts = list(self._get_draft_invoices())
+        overdue = self.get_overdue_invoices()
+        drafts = list(self.get_draft_invoices())
 
         unpaid_total = sum(inv.calculate_total() for inv in unpaid)
         overdue_total = sum(inv.calculate_total() for inv in overdue)
@@ -336,9 +362,7 @@ class InvoiceActionsWidgetBuilder:
         today = today or date.today()
         items: list[dict] = []
 
-        unpaid = list(self._get_unpaid_invoices())
-        cutoff_date = today - timedelta(days=30)
-        overdue = [inv for inv in unpaid if inv.invoice_date < cutoff_date]
+        overdue = self.get_overdue_invoices(today)
 
         n_overdue = len(overdue)
         if n_overdue > 0:
@@ -363,7 +387,7 @@ class InvoiceActionsWidgetBuilder:
                 }
             )
 
-        drafts = list(self._get_draft_invoices())
+        drafts = list(self.get_draft_invoices())
         n_drafts = len(drafts)
         if n_drafts > 0:
             nums = _join_truncated([inv.invoice_number for inv in drafts], n_drafts, sep=" · ")
