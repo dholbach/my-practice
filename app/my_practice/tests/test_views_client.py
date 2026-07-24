@@ -198,6 +198,76 @@ class ClientDetailViewTest(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
+class ReminderUrgencyTest(TestCase):
+    """
+    reminder_urgency (client_detail_builder._build_billing_context) should be
+    driven by practice.overdue_after_days / payment_terms_days rather than
+    hardcoded 30/14-day cutoffs (#195).
+    """
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="views_client-reminder",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.user = User.objects.create_user(username="testuser2", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_instance = TestClient()
+        self.client_instance.login(username="testuser2", password="testpass123")
+
+        self.test_client = Client.objects.create(
+            client_code="RU",
+            full_name="Reminder Client",
+            email="reminder@example.com",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+
+    def _make_sent_invoice(self, days_old: int) -> None:
+        Invoice.objects.create(
+            client=self.test_client,
+            invoice_number=f"RU-{days_old}",
+            invoice_date=date.today() - timedelta(days=days_old),
+            total=Decimal("90.00"),
+            status="sent",
+            practice=self.practice,
+        )
+
+    def _get_urgency(self):
+        response = self.client_instance.get(
+            reverse("client_detail", kwargs={"pk": self.test_client.pk})
+        )
+        return response.context["reminder_urgency"]
+
+    def test_no_sent_invoices_is_none(self):
+        self.assertIsNone(self._get_urgency())
+
+    def test_default_thresholds_match_previous_hardcoded_30_and_14_days(self):
+        self._make_sent_invoice(days_old=31)
+        self.assertEqual(self._get_urgency(), "high")
+
+    def test_custom_overdue_threshold_is_respected(self):
+        """An invoice at 15 days is 'medium' by default but 'high' with a lower threshold."""
+        self._make_sent_invoice(days_old=15)
+        self.assertEqual(self._get_urgency(), "medium")
+
+        self.practice.overdue_after_days = 10
+        self.practice.save()
+        self.assertEqual(self._get_urgency(), "high")
+
+    def test_custom_payment_terms_threshold_is_respected(self):
+        """An invoice at 10 days is 'low' by default but 'medium' with a lower payment term."""
+        self._make_sent_invoice(days_old=10)
+        self.assertEqual(self._get_urgency(), "low")
+
+        self.practice.payment_terms_days = 5
+        self.practice.save()
+        self.assertEqual(self._get_urgency(), "medium")
+
+
 class NoLogNeededSessionIdsTest(TestCase):
     """
     Regression tests for no_log_needed_session_ids in client_detail context.

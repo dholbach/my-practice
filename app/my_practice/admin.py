@@ -135,8 +135,13 @@ class PracticeAdmin(admin.ModelAdmin):
                     "payment_terms_days",
                     "payment_terms_text_de",
                     "payment_terms_text_en",
+                    "overdue_after_days",
                 ),
                 "classes": ("collapse",),
+                "description": gettext_lazy(
+                    "'Overdue after' controls when the dashboard, Focus Queue, and client "
+                    "payment-reminder button treat a sent invoice as overdue."
+                ),
             },
         ),
         (

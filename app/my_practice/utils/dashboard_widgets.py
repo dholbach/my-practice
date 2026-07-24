@@ -115,13 +115,13 @@ class InvoiceActionsWidgetBuilder:
 
     def get_overdue_invoices(self, today: date | None = None) -> list[Invoice]:
         """
-        Get sent invoices overdue by more than 30 days.
+        Get sent invoices overdue by more than practice.overdue_after_days.
 
         Public: also the detection logic for the P-050 Focus Queue's
         invoice_unpaid materialized task.
         """
         today = today or date.today()
-        cutoff_date = today - timedelta(days=30)
+        cutoff_date = today - timedelta(days=self.practice.overdue_after_days)
         return [inv for inv in self._get_unpaid_invoices() if inv.invoice_date < cutoff_date]
 
     def build_context(self) -> dict:
