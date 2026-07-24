@@ -622,9 +622,9 @@
             <a href="{% url 'invoice_create' %}?client={{ client.id }}" class="btn btn-invoice-create">➕ {% trans "New invoice" %}</a>
             {% if client.email %}
             {% if reminder_urgency == "high" %}
-            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-urgent" title="{% trans 'Oldest open invoice: over 30 days' %}">📧 {% trans "Payment reminder" %}</a>
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-urgent" title="{% blocktrans with days=client.practice.overdue_after_days %}Oldest open invoice: over {{ days }} days{% endblocktrans %}">📧 {% trans "Payment reminder" %}</a>
             {% elif reminder_urgency == "medium" %}
-            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-warning" title="{% trans 'Oldest open invoice: 14–30 days' %}">📧 {% trans "Payment reminder" %}</a>
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-warning" title="{% blocktrans with min_days=client.practice.payment_terms_days max_days=client.practice.overdue_after_days %}Oldest open invoice: {{ min_days }}–{{ max_days }} days{% endblocktrans %}">📧 {% trans "Payment reminder" %}</a>
             {% elif reminder_urgency == "low" %}
             <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-secondary" title="{% trans 'Open invoice exists' %}">📧 {% trans "Payment reminder" %}</a>
             {% else %}

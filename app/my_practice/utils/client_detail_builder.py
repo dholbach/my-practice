@@ -149,9 +149,10 @@ class ClientDetailContextBuilder:
         sent_invoices = [inv for inv in self.invoices if inv.status == "sent"]
         if sent_invoices:
             oldest_days = (self.today - min(inv.invoice_date for inv in sent_invoices)).days
-            if oldest_days > 30:
+            practice = self.client.practice
+            if oldest_days > practice.overdue_after_days:
                 reminder_urgency = "high"
-            elif oldest_days >= 14:
+            elif oldest_days >= practice.payment_terms_days:
                 reminder_urgency = "medium"
             else:
                 reminder_urgency = "low"

@@ -168,6 +168,16 @@ class Practice(models.Model):
         ),
     )
 
+    # Invoice follow-up
+    overdue_after_days = models.PositiveIntegerField(
+        default=30,
+        verbose_name=_("Overdue after (days)"),
+        help_text=_(
+            "Days after the invoice date before a sent invoice is flagged as "
+            "overdue (dashboard widget, Focus Queue)."
+        ),
+    )
+
     # Tax
     tax_id = models.CharField(max_length=50, default="", verbose_name=_("Tax ID"))
 

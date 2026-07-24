@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-07-20
+**Last Updated**: 2026-07-24
 
 ## 🔍 Recent Activity
 
+- **2026-07-24 — Configurable overdue-invoice threshold (issue #195)**: the "sent invoice counts as overdue" cutoff was hardcoded to 30 days in three separate places (`InvoiceActionsWidgetBuilder.get_overdue_invoices()`, feeding both the dashboard and the Focus Queue's `invoice_unpaid` task; `ClientDetailContextBuilder`'s payment-reminder urgency, which also had a hardcoded 14-day "medium" tier). Added `Practice.overdue_after_days` (default 30, admin-editable in the existing "Payment Terms" fieldset) and wired all three call sites to it; the medium tier now reuses the existing `payment_terms_days` field instead of a second hardcoded 14. The `bank_import_reminder_days` half of #195 turned out to be moot — that widget (`BankImportReminderWidgetBuilder`) was already deleted as dead code during P-050 phase 4. Also fixed a migration-graph conflict (duplicate `0015` leaves) left behind when PRs #270 and #271 merged independently.
 - **2026-07-23 — Configurable bank-import CSV format (issue #11)**: `utils/bank_import.py`'s CSV parser was hardcoded to GLS Bank's column names and semicolon delimiter. Added `csv_delimiter`/`csv_column_*` fields to `Practice` (admin-editable, GLS defaults preserved), so self-hosters on other banks can point the parser at their own export's delimiter and column headers without touching code. UI strings no longer imply GLS-only support.
-- **2026-07-20 — P-039 Django i18n sweep complete**: dedicated 6-phase sweep (issue #69) wrapped every template, Python view/form/util, model, `admin.py`, and the small JS-string surface — English msgids throughout, German as `.po` translations. Close-out click-through (real pages rendered under both locales, not just static template scanning) caught 2 more real bugs: a hardcoded German month-abbreviation list feeding 3 call sites regardless of active locale, and two admin-facing calendar pages that always showed a service type's German name instead of respecting the admin's own UI language. See [docs/projects/done/P-039_DJANGO_I18N.md](docs/projects/done/P-039_DJANGO_I18N.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

@@ -198,6 +198,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Duplicate detection
 - ✅ Error reporting with line numbers
 - ✅ Bank statement import (`/bank/import`): delimiter and column names are configurable per practice (Practice admin settings), defaulting to GLS Bank's export format — other banks' CSV exports work without touching code (issue #11)
+- ✅ "Overdue after" threshold is a per-practice setting (`Practice.overdue_after_days`, default 30) instead of a hardcoded value — controls the dashboard's overdue-invoice widget, the Focus Queue's unpaid-invoice task, and the client detail page's payment-reminder urgency (issue #195)
 
 ### Google Calendar Integration (Phase 1-5 - Complete ✅)
 
