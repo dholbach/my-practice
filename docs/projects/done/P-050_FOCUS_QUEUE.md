@@ -1,8 +1,7 @@
 # P-050: Focus Queue (Unified Task Model)
 
-**Status**: TODO (concept/planning stage — not yet scoped for implementation)
+**Status**: DONE (2026-07-24) — shipped in v0.4.0
 **Priority**: Low/Mid-term
-**Estimated effort**: TBD — likely split into sub-projects once scoped
 **Created**: July 2026 (rescoped 2026-07-23)
 
 ---
@@ -163,3 +162,31 @@ useful on its own.
 
 P-050 is now feature-complete: unified `Task` model, materialization, and the
 Focus Queue page as the single surface for what needs doing.
+
+## Post-v1 follow-ups (2026-07-23 – 2026-07-24)
+
+Shipped after the 4 core phases above, in response to real usage:
+
+- **Session-level missing-log tasks + reference dates** (PR #269): the
+  `missing_session_log` signal moved from Client-level to per-Session, so each
+  task points at the specific session missing a log rather than just flagging
+  the client. Added a `reference_date` property (invoice date / session date /
+  task creation date, whichever applies) shown on every Focus Queue row, and a
+  `related_object_url` special case linking straight to creating that session's
+  log. Also fixed a dark-mode badge-contrast issue.
+- **Retire `missing-session-log` client tag + client-linked task creation**
+  (PR #270): the tag became fully redundant once the per-session task existed,
+  so it was removed from `update_client_tags.py` (data migration deletes
+  existing tag rows). A "+ Task" button on the client detail page creates a
+  manual task pre-linked to that client (`?client=<pk>` on `TodoCreateView`),
+  covering the "quick ad-hoc reminder for this client" case the tag used to
+  half-serve. `ClientAttentionWidgetBuilder`, dead since PR #268, was deleted.
+- **Focus Queue type-filter UX**: dropdown replaced with color-coded pill
+  buttons matching each task type's badge color, with counts and a
+  greyed-out/empty state; colors tuned for dark-mode contrast.
+- **Fixed a live crash** (`'Client' object has no attribute 'session_date'`):
+  materialized tasks created before the missing-session-log signal moved to
+  Session-level still pointed at a `Client`. `reference_date` now keys off
+  `content_type.model` instead of assuming a model from `task_type`, and
+  `sync_focus_queue_tasks`'s auto-close logic now retires stale rows
+  regardless of which model they originally pointed at.
