@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-07-23 — Configurable bank-import CSV format (issue #11)**: `utils/bank_import.py`'s CSV parser was hardcoded to GLS Bank's column names and semicolon delimiter. Added `csv_delimiter`/`csv_column_*` fields to `Practice` (admin-editable, GLS defaults preserved), so self-hosters on other banks can point the parser at their own export's delimiter and column headers without touching code. UI strings no longer imply GLS-only support.
 - **2026-07-20 — P-039 Django i18n sweep complete**: dedicated 6-phase sweep (issue #69) wrapped every template, Python view/form/util, model, `admin.py`, and the small JS-string surface — English msgids throughout, German as `.po` translations. Close-out click-through (real pages rendered under both locales, not just static template scanning) caught 2 more real bugs: a hardcoded German month-abbreviation list feeding 3 call sites regardless of active locale, and two admin-facing calendar pages that always showed a service type's German name instead of respecting the admin's own UI language. See [docs/projects/done/P-039_DJANGO_I18N.md](docs/projects/done/P-039_DJANGO_I18N.md).
-- **2026-07-15 — P-121 Time-off CRUD + client heads-up email**: in-app screen for `TimeOff` entries (`/timeoff/`, previously admin-only), plus a multi-period heads-up email to clients — recipient table shows client code/language/last-next-session for quick trimming, editable bilingual (DE/EN) preview, date-only subject/body (no title leaked to clients) with per-client `{salutation}` substitution. Also the first feature built entirely under the P-039 "English msgids" i18n convention, which surfaced some gaps in how that policy was worded — see [docs/projects/done/P-121_TIMEOFF_NOTICE.md](docs/projects/done/P-121_TIMEOFF_NOTICE.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

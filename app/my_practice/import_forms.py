@@ -18,8 +18,9 @@ class BankStatementUploadForm(StyledFormMixin, forms.Form):
     csv_file = forms.FileField(
         label=gettext_lazy("CSV file"),
         help_text=gettext_lazy(
-            "CSV bank statement in GLS bank format (semicolon-separated, UTF-8). "
-            "Other banks may require adjusting the format."
+            "CSV bank statement matching your practice's configured CSV format "
+            "(delimiter and column names, set under Practice settings). "
+            "Defaults match GLS Bank's export."
         ),
         widget=forms.FileInput(attrs={"accept": ".csv"}),
     )
