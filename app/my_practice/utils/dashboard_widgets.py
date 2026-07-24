@@ -1,6 +1,6 @@
 """
 Widget builders for dashboard - P-003 Phase 4 + P-012
-Additional widgets: Session Import, Client Attention, Invoice Actions, Checklist
+Additional widgets: Session Import, Invoice Actions, Checklist
 """
 
 from datetime import date, timedelta
@@ -11,7 +11,6 @@ from django.utils.translation import gettext_lazy as _
 
 from ..models import (
     ChecklistItemPause,
-    Client,
     GoogleCalendarToken,
     Invoice,
     OperationalChecklistCompletion,
@@ -71,106 +70,6 @@ class SessionImportWidgetBuilder:
             "estimated_events_count": estimated_events_count,
             "connect_url": reverse("calendar_authorize"),
             "import_url": reverse("calendar_import"),
-        }
-
-
-class ClientAttentionWidgetBuilder:
-    """
-    Builds context for Client Attention Widget.
-
-    Shows:
-    - Clients without next session scheduled
-    - Clients with specific tags requiring attention
-    - Follow-up recommendations
-
-    Usage:
-        builder = ClientAttentionWidgetBuilder(practice)
-        context = builder.build_context()
-    """
-
-    def __init__(self, practice):
-        self.practice = practice
-
-    def _get_clients_without_next_session(self) -> QuerySet:
-        """Get active clients who haven't had a non-cancelled session in 60+ days"""
-        cutoff_date = date.today() - timedelta(days=60)
-
-        recent_session_clients = (
-            Session.objects.filter(
-                client__practice=self.practice,
-                session_date__gte=cutoff_date,
-                cancelled=False,
-            )
-            .values_list("client_id", flat=True)
-            .distinct()
-        )
-
-        # Exclude clients with recent sessions, filter only active clients
-        return (
-            Client.objects.filter(practice=self.practice, active=True)
-            .exclude(id__in=recent_session_clients)
-            .prefetch_related("tags")
-        )
-
-    def _get_tagged_clients(self) -> dict:
-        """Get clients grouped by attention-requiring tags"""
-        from ..models import ClientTag
-
-        # Tags requiring attention - shown in dashboard widget
-        attention_tags = [
-            "follow-up",
-            "pause",
-            "ending",
-            "missing-session-log",
-        ]
-
-        tags_by_name = {tag.name: tag for tag in ClientTag.objects.filter(name__in=attention_tags)}
-        clients_by_tag: dict[str, list[Client]] = {
-            name: [] for name in attention_tags if name in tags_by_name
-        }
-
-        clients = (
-            Client.objects.filter(practice=self.practice, tags__name__in=attention_tags)
-            .prefetch_related("tags")
-            .distinct()
-        )
-        for client in clients:
-            for tag in client.tags.all():
-                if tag.name in clients_by_tag:
-                    clients_by_tag[tag.name].append(client)
-
-        return {
-            name: {
-                "tag": tags_by_name[name],
-                "clients": members,
-                "count": len(members),
-            }
-            for name, members in clients_by_tag.items()
-            if members
-        }
-
-    def build_context(self) -> dict:
-        """
-        Build context for client attention widget.
-
-        Returns:
-            dict with:
-                - no_recent_session_clients: QuerySet
-                - no_recent_session_count: int
-                - tagged_clients: dict {tag_name: {tag, clients, count}}
-                - total_attention_count: int
-        """
-        no_recent_clients = self._get_clients_without_next_session()
-        tagged_clients = self._get_tagged_clients()
-
-        no_recent_count = no_recent_clients.count()
-        tagged_count = sum(data["count"] for data in tagged_clients.values())
-
-        return {
-            "no_recent_session_clients": no_recent_clients[:5],  # Limit to 5
-            "no_recent_session_count": no_recent_count,
-            "tagged_clients": tagged_clients,
-            "total_attention_count": no_recent_count + tagged_count,
         }
 
 

@@ -17,6 +17,10 @@
         </div>
         {% endif %}
 
+        {% if for_client %}
+        <p class="text-muted">{% blocktrans with code=for_client.client_code %}For client: {{ code }}{% endblocktrans %}</p>
+        {% endif %}
+
         <div class="form-group">
             <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
             {{ form.title }}
@@ -74,7 +78,7 @@
 
         <div class="form-actions">
             <button type="submit" class="btn">💾 {% trans "Save" %}</button>
-            <a href="{% url 'focus_queue' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+            <a href="{% if next %}{{ next }}{% else %}{% url 'focus_queue' %}{% endif %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
         </div>
     </form>
 </div>

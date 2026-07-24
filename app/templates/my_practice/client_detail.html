@@ -152,6 +152,7 @@
     <!-- Cockpit quick actions -->
     <div class="cockpit-actions">
         <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary">{% trans "+ Session log" %}</a>
+        <a href="{% url 'todo_create' %}?client={{ client.pk }}&next={{ request.path|urlencode }}" class="btn btn-secondary">{% trans "+ Task" %}</a>
         <button type="button" class="btn btn-secondary"
                 onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); setTimeout(function(){ var el=document.querySelector('#ptab-protokoll [x-on\\:click*=showNote]'); if(el) el.click(); }, 100);">
             {% trans "+ Note" %}
