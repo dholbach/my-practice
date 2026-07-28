@@ -1,5 +1,33 @@
--r requirements.txt
+# Kept in sync with requirements.txt by hand (no `-r` include) so Dependabot
+# can patch this file's pins directly — it doesn't resolve `-r` includes when
+# generating security-update PRs, which left every runtime CVE alert stuck
+# against this file with no way for Dependabot to fix it.
+Django==6.0.7
+psycopg[binary]==3.3.4
+cryptography==49.0.0
+markdown==3.10.2
+nh3==0.3.6
+gunicorn==26.0.0
+python-dotenv==1.2.2
+weasyprint==69.0
+pydyf==0.12.1
+pillow==12.3.0
+whitenoise==6.12.0
+python-dateutil==2.9.0.post0
+pdfplumber==0.11.10
+pypdf==6.14.2
+urllib3==2.7.0
 
+# Google Calendar API
+google-auth==2.56.2
+google-auth-oauthlib==1.4.0
+google-auth-httplib2==0.4.0
+google-api-python-client==2.198.0
+
+# Async support (Django 5.1+)
+uvicorn==0.51.0
+
+# Dev-only tools
 ruff==0.16.0
 vulture==2.16
 radon==6.0.1
