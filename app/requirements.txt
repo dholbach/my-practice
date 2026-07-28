@@ -1,3 +1,5 @@
+# requirements-dev.txt duplicates these pins instead of using `-r` (see the
+# comment there for why) — update both files together.
 Django==6.0.7
 psycopg[binary]==3.3.4
 cryptography==49.0.0
