@@ -657,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <thead>
                 <tr>
                     <th>{% trans "Year" %}</th>
-                    <th>{% trans "Days" %}</th>
+                    <th>{% trans "Workdays" %}</th>
                     <th>{% trans "Wk." %}</th>
                     <th title="{% trans "Time off" %}">🏖️</th>
                     <th title="{% trans "Training" %}">📚</th>
@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% for item in yearly_timeoff %}
                 <tr>
                     <td>{{ item.year }}</td>
-                    <td>{{ item.total_days }}</td>
+                    <td>{{ item.workdays }}</td>
                     <td class="timeoff-table__muted">{{ item.total_weeks }}</td>
                     <td class="timeoff-table__vacation">{% if item.vacation %}{{ item.vacation }}{% else %}-{% endif %}</td>
                     <td class="timeoff-table__training">{% if item.training %}{{ item.training }}{% else %}-{% endif %}</td>

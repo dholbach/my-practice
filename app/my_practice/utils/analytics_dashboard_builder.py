@@ -10,6 +10,8 @@ from django.db.models import Min
 
 from ..models import CompanyExpense, CompanyWithdrawal, Invoice, TimeOff
 from ..utils.capacity_helpers import get_capacity_trends
+from ..utils.date_helpers import DateRangeHelper
+from ..utils.practice_days import berlin_public_holidays
 from ..utils.timeoff_helpers import (
     calculate_timeoff_for_period,
     calculate_timeoff_for_year,
@@ -391,13 +393,13 @@ class AnalyticsDashboardBuilder:
         for year in timeoff_years:
             year_data = calculate_timeoff_for_year(year)
             type_breakdown = self._get_timeoff_by_type_for_year(year)
+            workdays = year_data["total_workdays"]
 
             yearly_data.append(
                 {
                     "year": year,
-                    "total_days": year_data["total_days"],
-                    "total_weeks": year_data["total_weeks"],
-                    "workdays": year_data["total_workdays"],
+                    "workdays": workdays,
+                    "total_weeks": round(workdays / 5, 1),
                     "vacation": type_breakdown.get("vacation", 0),
                     "training": type_breakdown.get("training", 0),
                     "sick": type_breakdown.get("sick", 0),
@@ -409,12 +411,13 @@ class AnalyticsDashboardBuilder:
         return yearly_data
 
     def _get_timeoff_by_type_for_year(self, year: int) -> dict:
-        """Get time-off days broken down by type for a specific year."""
+        """Get time-off workdays (Mon-Fri, excluding Berlin public holidays) broken down by type for a specific year."""
         year_start = date(year, 1, 1)
         year_end = date(year, 12, 31)
 
         # Get all timeoff that touches this year
         timeoff_periods = TimeOff.objects.filter(start_date__lte=year_end, end_date__gte=year_start)
+        holidays = berlin_public_holidays(year)
 
         type_days: dict[str, int] = defaultdict(int)
 
@@ -422,8 +425,8 @@ class AnalyticsDashboardBuilder:
             # Clamp dates to this year
             actual_start = max(t.start_date, year_start)
             actual_end = min(t.end_date, year_end)
-            days = (actual_end - actual_start).days + 1
-            type_days[t.type] += days
+            workdays = DateRangeHelper.count_working_days(actual_start, actual_end, holidays)
+            type_days[t.type] += workdays
 
         return dict(type_days)
 

@@ -538,14 +538,26 @@ class TimeOffModelTestCase(TestCase):
         self.assertIn("Summer Vacation", str(timeoff))
 
     def test_timeoff_duration_days_property(self):
-        """Test duration_days property calculation"""
+        """Test duration_days property counts working days only, excluding public holidays"""
         timeoff = TimeOff.objects.create(
             title="Test",
+            # Dec 24 2025 is a Wednesday (workday); Dec 25/26 are Berlin public holidays
             start_date=date(2025, 12, 24),
-            end_date=date(2025, 12, 26),  # 3 days inclusive
+            end_date=date(2025, 12, 26),
             type="vacation",
         )
-        self.assertEqual(timeoff.duration_days, 3)
+        self.assertEqual(timeoff.duration_days, 1)
+
+    def test_timeoff_duration_days_excludes_weekend(self):
+        """Test duration_days excludes weekend days from the count"""
+        timeoff = TimeOff.objects.create(
+            title="Test",
+            # Mon 2025-11-03 through Fri 2025-11-07: 5 workdays, no holidays
+            start_date=date(2025, 11, 3),
+            end_date=date(2025, 11, 9),  # includes the following Sat/Sun
+            type="vacation",
+        )
+        self.assertEqual(timeoff.duration_days, 5)
 
     def test_timeoff_single_day(self):
         """Test time off for single day"""

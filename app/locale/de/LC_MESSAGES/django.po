@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-24 10:21+0200\n"
+"POT-Creation-Date: 2026-07-28 13:05+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -2908,15 +2908,15 @@ msgstr "Typ des verknüpften Objekts, für materialisierte Aufgaben (z. B. Klien
 msgid "Tasks"
 msgstr "Aufgaben"
 
-#: my_practice/utils/analytics_utils.py:275
+#: my_practice/utils/analytics_utils.py:324
 msgid "60-min sessions"
 msgstr "60-Min Sitzungen"
 
-#: my_practice/utils/analytics_utils.py:283
+#: my_practice/utils/analytics_utils.py:332
 msgid "90-min sessions"
 msgstr "90-Min Sitzungen"
 
-#: my_practice/utils/analytics_utils.py:291
+#: my_practice/utils/analytics_utils.py:340
 msgid "Group sessions"
 msgstr "Gruppensitzungen"
 
@@ -3050,28 +3050,28 @@ msgstr "Nov"
 msgid "Dec"
 msgstr "Dez"
 
-#: my_practice/utils/client_detail_builder.py:140
+#: my_practice/utils/client_detail_builder.py:139
 #, python-format
 msgid "since %(start)s"
 msgstr "seit %(start)s"
 
-#: my_practice/utils/client_detail_builder.py:218
+#: my_practice/utils/client_detail_builder.py:217
 #: my_practice/views/inquiry_views.py:211
 #: templates/my_practice/client_detail.html:524
 msgid "Intake"
 msgstr "Aufnahme"
 
-#: my_practice/utils/client_detail_builder.py:219
+#: my_practice/utils/client_detail_builder.py:218
 #: templates/my_practice/client_detail.html:541
 msgid "Contract"
 msgstr "Behandlungsvertrag"
 
-#: my_practice/utils/client_detail_builder.py:220
+#: my_practice/utils/client_detail_builder.py:219
 #: templates/my_practice/client_detail.html:558
 msgid "Anamnesis"
 msgstr "Anamnese"
 
-#: my_practice/utils/client_detail_builder.py:221
+#: my_practice/utils/client_detail_builder.py:220
 #: templates/my_practice/client_detail.html:575
 msgid "Intake complete"
 msgstr "Aufnahme abgeschlossen"
@@ -3460,25 +3460,25 @@ msgstr "Fehler beim Import: %(error)s"
 msgid "Client {obj.full_name} saved successfully!"
 msgstr "Klient:in {obj.full_name} erfolgreich gespeichert!"
 
-#: my_practice/views/client_views.py:278
+#: my_practice/views/client_views.py:283
 msgid "No file selected."
 msgstr "Keine Datei ausgewählt."
 
-#: my_practice/views/client_views.py:358
+#: my_practice/views/client_views.py:363
 #, python-format
 msgid "Client %(code)s does not meet the requirements for GDPR deletion (inactive + last session more than %(years)s years ago)."
 msgstr "Klient:in %(code)s erfüllt nicht die Voraussetzungen für die DSGVO-Löschung (inaktiv + letzte Sitzung vor mehr als %(years)s Jahren)."
 
-#: my_practice/views/client_views.py:396
+#: my_practice/views/client_views.py:401
 #, python-format
 msgid "Note: The notification email to %(email)s could not be sent. Please inform the client manually."
 msgstr "Hinweis: Die Benachrichtigungs-E-Mail an %(email)s konnte nicht gesendet werden. Bitte informieren Sie die Klient:in manuell."
 
-#: my_practice/views/client_views.py:431
+#: my_practice/views/client_views.py:436
 msgid "Requirements for GDPR deletion not met."
 msgstr "Voraussetzungen für die DSGVO-Löschung nicht erfüllt."
 
-#: my_practice/views/client_views.py:452
+#: my_practice/views/client_views.py:457
 #, python-format
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr "Klient:in %(code)s wurde gemäß DSGVO Art. 17 gelöscht."
@@ -4757,8 +4757,6 @@ msgid "Average days from invoice date to payment received"
 msgstr "Durchschnittliche Tage von Rechnungsdatum bis Zahlungseingang"
 
 #: templates/my_practice/analytics.html:328
-#: templates/my_practice/time_off_list.html:47
-#: templates/my_practice/time_off_list.html:91
 msgid "days"
 msgstr "Tage"
 
@@ -4931,7 +4929,6 @@ msgid "Time off in %(label)s"
 msgstr "Urlaubszeiten in %(label)s"
 
 #: templates/my_practice/analytics.html:620
-#: templates/my_practice/analytics.html:660
 msgid "Days"
 msgstr "Tage"
 
@@ -4959,6 +4956,10 @@ msgstr "Arbeitstage frei"
 #: templates/my_practice/analytics.html:655
 msgid "Time Off by Year"
 msgstr "Urlaub nach Jahren"
+
+#: templates/my_practice/analytics.html:660
+msgid "Workdays"
+msgstr "Arbeitstage"
 
 #: templates/my_practice/analytics.html:661
 msgid "Wk."
@@ -8638,6 +8639,11 @@ msgstr "Hinweis-E-Mail für Auswahl senden"
 #: templates/my_practice/time_off_list.html:42
 msgid "Select for heads-up email"
 msgstr "Für Hinweis-E-Mail auswählen"
+
+#: templates/my_practice/time_off_list.html:47
+#: templates/my_practice/time_off_list.html:91
+msgid "workdays"
+msgstr "Arbeitstage"
 
 #: templates/my_practice/time_off_list.html:50
 msgid "Currently off"
