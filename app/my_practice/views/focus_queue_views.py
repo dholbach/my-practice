@@ -39,6 +39,8 @@ def _open_tasks_queryset(request: HttpRequest, task_type: str = ""):
         PracticeTodo.objects.for_current_practice(request)
         .filter(completed_at__isnull=True)
         .exclude(snoozed_until__gte=today)
+        .select_related("content_type")
+        .prefetch_related("related_object")
     )
     if task_type:
         qs = qs.filter(task_type=task_type)

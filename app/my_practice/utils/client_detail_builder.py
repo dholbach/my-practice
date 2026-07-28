@@ -48,13 +48,12 @@ class ClientDetailContextBuilder:
         self.client = client
         self.request = request
         self.today = date.today()
+        # client_detail() (client_views.py) prefetches invoices__items with
+        # session/service_type already select_related, so .all() below reads
+        # from that cache instead of issuing one query per invoice.
         self.invoices = client.invoices.all()
         # Built once; shared by _build_stats and _build_billing_context.
-        self.all_items = [
-            item
-            for invoice in self.invoices
-            for item in invoice.items.select_related("session").all()
-        ]
+        self.all_items = [item for invoice in self.invoices for item in invoice.items.all()]
 
     def build(self) -> dict:
         context = {"client": self.client, "invoices": self.invoices}

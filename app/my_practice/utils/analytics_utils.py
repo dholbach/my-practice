@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.db.models import Avg, Count, ExpressionWrapper, DurationField, F, Q, Sum
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import Coalesce, TruncMonth
 from django.utils.translation import gettext as _
 
 from ..models import (
@@ -28,31 +28,20 @@ from . import (
 )
 
 
-def _get_monthly_aggregation(
-    queryset_filter_func,
-    value_key="value",
-    start_year=2020,
-    end_date=None,
-    start_date=None,
-):
+def _resolve_month_range(
+    start_year: int = 2020,
+    end_date: date | None = None,
+    start_date: date | None = None,
+) -> tuple[date, date]:
     """
-    Generic helper for aggregating data by month.
+    Resolve the (start_date, end_date) bounds for a monthly trend series.
 
-    Args:
-        queryset_filter_func: Function that takes (year, month) and returns aggregated value
-        value_key: Key name for the value in output (e.g., "revenue", "expenses")
-        start_year: Starting year for data collection
-        end_date: End date (defaults to today)
-        start_date: Start date (overrides start_year if provided)
-
-    Returns:
-        list: Monthly data with {month, month_name, year, value_key, date}
+    Only shows complete months — excludes the current partial month so the
+    last data point isn't anomalously low (same guard as get_capacity_trends).
     """
     if end_date is None:
         end_date = date.today()
 
-    # Only show complete months — exclude the current partial month so the last
-    # data point isn't anomalously low (same guard as get_capacity_trends).
     from datetime import timedelta
 
     first_of_current_month = date.today().replace(day=1)
@@ -62,14 +51,30 @@ def _get_monthly_aggregation(
     if start_date is None:
         start_date = date(start_year, 1, 1)
 
+    return start_date, end_date
+
+
+def _build_monthly_series(
+    monthly_totals: dict,
+    start_date: date,
+    end_date: date,
+    value_key: str = "value",
+) -> list[dict]:
+    """
+    Build a continuous month-by-month list (gaps filled with 0) from a
+    pre-aggregated {"YYYY-MM": value} dict, so callers only need a single
+    grouped DB query instead of one query per month.
+
+    Returns:
+        list: Monthly data with {month, month_name, year, value_key, date}
+    """
     monthly_data = []
     current_date = start_date
 
     while current_date <= end_date:
-        # Get aggregated value for this month
-        value = queryset_filter_func(current_date.year, current_date.month)
-
         month_key = format_month_key(current_date)
+        value = monthly_totals.get(month_key, 0)
+
         monthly_data.append(
             {
                 "month": format_month_label(month_key, "short"),
@@ -125,6 +130,43 @@ def _get_year_financials(
     return revenue, expenses, withdrawals
 
 
+def get_yearly_financials_series(
+    start_year: int = 2020,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    practice=None,
+) -> list[dict]:
+    """
+    Per-year {year, revenue, expenses, withdrawals} series (Decimal values).
+
+    Computes each year's three queries exactly once. Callers that need both
+    RevenueAnalyzer.get_yearly_comparison() and ProfitCalculator.calculate_yearly()
+    for the same range (e.g. AnalyticsDashboardBuilder) should compute this once
+    and pass it to both via their `yearly_financials` argument, instead of each
+    method looping the years independently.
+    """
+    today = date.today()
+    if end_date is None:
+        end_date = today
+    if start_date is None:
+        start_date = date(start_year, 1, 1)
+
+    series = []
+    for year in range(start_date.year, end_date.year + 1):
+        revenue, expenses, withdrawals = _get_year_financials(
+            year, today, start_date, end_date, practice
+        )
+        series.append(
+            {
+                "year": year,
+                "revenue": revenue,
+                "expenses": expenses,
+                "withdrawals": withdrawals,
+            }
+        )
+    return series
+
+
 class RevenueAnalyzer:
     """Handles all revenue-related calculations and analysis."""
 
@@ -136,23 +178,32 @@ class RevenueAnalyzer:
         Falls back to invoice_date if paid_date is null.
         Returns list of {month, revenue, year} dicts.
 
+        Uses a single grouped query (rather than one query per month) by
+        computing an effective_date = paid_date or invoice_date per invoice.
+
         Args:
             practice: Practice instance for multi-practice filtering
         """
+        start_date, end_date = _resolve_month_range(start_year, end_date, start_date)
 
-        def get_month_revenue(year, month):
-            """Get revenue for a specific month using centralized calculator."""
-            return RevenueCalculator.get_month_revenue(
-                year, month, use_paid_date=True, practice=practice
-            )["total"]
-
-        return _get_monthly_aggregation(
-            get_month_revenue,
-            value_key="revenue",
-            start_year=start_year,
-            end_date=end_date,
-            start_date=start_date,
+        qs = (
+            Invoice.objects.filter(status="paid")
+            .annotate(effective_date=Coalesce("paid_date", "invoice_date"))
+            .filter(effective_date__gte=start_date, effective_date__lte=end_date)
         )
+        if practice:
+            qs = qs.filter(practice=practice)
+
+        rows = (
+            qs.annotate(month=TruncMonth("effective_date"))
+            .values("month")
+            .annotate(total=Sum("total"))
+        )
+        monthly_totals = {
+            row["month"].strftime("%Y-%m"): row["total"] for row in rows if row["month"]
+        }
+
+        return _build_monthly_series(monthly_totals, start_date, end_date, value_key="revenue")
 
     @staticmethod
     def get_days_to_payment_trends(months: int = 24, practice=None) -> list[dict]:
@@ -204,33 +255,31 @@ class RevenueAnalyzer:
         return result
 
     @staticmethod
-    def get_yearly_comparison(start_year=2020, start_date=None, end_date=None, practice=None):
+    def get_yearly_comparison(
+        start_year=2020, start_date=None, end_date=None, practice=None, yearly_financials=None
+    ):
         """
         Get yearly comparison of revenue vs withdrawals vs expenses.
         Returns list of {year, revenue, expenses, withdrawals, remaining} dicts.
 
         Args:
             practice: Practice instance for multi-practice filtering
+            yearly_financials: Optional pre-computed get_yearly_financials_series()
+                result, to avoid recomputing when the caller also needs
+                ProfitCalculator.calculate_yearly() for the same range
         """
-        today = date.today()
-
-        if end_date is None:
-            end_date = today
-        if start_date is None:
-            start_date = date(start_year, 1, 1)
-
-        # Get years from start_date to end_date
-        years = list(range(start_date.year, end_date.year + 1))
-        comparison_data = []
-
-        for year in years:
-            revenue, expenses, withdrawals = _get_year_financials(
-                year, today, start_date, end_date, practice
+        if yearly_financials is None:
+            yearly_financials = get_yearly_financials_series(
+                start_year, start_date, end_date, practice
             )
+
+        comparison_data = []
+        for item in yearly_financials:
+            revenue, expenses, withdrawals = item["revenue"], item["expenses"], item["withdrawals"]
             remaining = revenue - expenses - withdrawals
             comparison_data.append(
                 {
-                    "year": year,
+                    "year": item["year"],
                     "revenue": float(revenue),
                     "expenses": float(expenses),
                     "withdrawals": float(withdrawals),
@@ -326,7 +375,7 @@ class SessionAnalyzer:
         # Get from InvoiceItems - group by month first
         items_qs = InvoiceItem.objects.filter(
             session__session_date__year__gte=start_year
-        ).select_related("invoice", "session")
+        ).select_related("invoice", "session", "service_type")
         if practice:
             items_qs = items_qs.filter(invoice__practice=practice)
         invoice_items = items_qs
@@ -443,7 +492,9 @@ class ClientAnalyzer:
         result = []
         for client in clients_with_revenue:
             # Get all invoice items for this client (paid invoices only)
-            items = InvoiceItem.objects.filter(invoice__client=client, invoice__status="paid")
+            items = InvoiceItem.objects.filter(
+                invoice__client=client, invoice__status="paid"
+            ).select_related("session", "service_type")
 
             # Use centralized session counting (handles duration, quantity, and Ausfall)
             session_hours = count_sessions(items, exclude_cancellations=True)
@@ -468,34 +519,34 @@ class ExpenseAnalyzer:
         """
         Get monthly expense data from start_date (or start_year) to end_date.
         Note: All expenses are dated 31.12. of each year, so we aggregate by year
-        and distribute across all months of that year for chart display.
+        (single grouped query) and distribute equally across all months of that
+        year for chart display.
         Returns list of {month, expenses, year} dicts.
 
         Args:
             practice: Practice instance for multi-practice filtering
         """
+        start_date, end_date = _resolve_month_range(start_year, end_date, start_date)
 
-        def get_year_expenses(year, month):
-            """
-            Get all expenses for the year and distribute across months.
-            Since all expenses are dated 31.12., we filter by year only.
-            """
-            # Get total expenses for the entire year
-            expense_qs = CompanyExpense.objects.filter(date__year=year)
-            if practice:
-                expense_qs = expense_qs.filter(practice=practice)
-            year_total = expense_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0")
-
-            # Distribute equally across 12 months for chart visualization
-            return year_total / 12
-
-        return _get_monthly_aggregation(
-            get_year_expenses,
-            value_key="expenses",
-            start_year=start_year,
-            end_date=end_date,
-            start_date=start_date,
+        expense_qs = CompanyExpense.objects.filter(
+            date__year__gte=start_date.year, date__year__lte=end_date.year
         )
+        if practice:
+            expense_qs = expense_qs.filter(practice=practice)
+        year_totals = dict(
+            expense_qs.values_list("date__year")
+            .annotate(total=Sum("amount"))
+            .values_list("date__year", "total")
+        )
+
+        monthly_totals = {}
+        current_date = start_date
+        while current_date <= end_date:
+            year_total = year_totals.get(current_date.year) or Decimal("0")
+            monthly_totals[format_month_key(current_date)] = year_total / 12
+            current_date = DateRangeHelper.add_months(current_date, 1)
+
+        return _build_monthly_series(monthly_totals, start_date, end_date, value_key="expenses")
 
     @staticmethod
     def get_expense_breakdown(practice=None):
@@ -550,7 +601,12 @@ class ProfitCalculator:
 
     @staticmethod
     def calculate_yearly(
-        start_year=None, end_year=None, start_date=None, end_date=None, practice=None
+        start_year=None,
+        end_year=None,
+        start_date=None,
+        end_date=None,
+        practice=None,
+        yearly_financials=None,
     ):
         """
         Calculate profit: Revenue - Expenses
@@ -558,6 +614,9 @@ class ProfitCalculator:
 
         Args:
             practice: Practice instance for multi-practice filtering
+            yearly_financials: Optional pre-computed get_yearly_financials_series()
+                result, to avoid recomputing when the caller also needs
+                RevenueAnalyzer.get_yearly_comparison() for the same range
         """
         today = date.today()
 
@@ -570,26 +629,37 @@ class ProfitCalculator:
         if start_date is None:
             start_date = date(start_year, 1, 1)
 
+        if yearly_financials is None:
+            yearly_financials = []
+            for year in range(start_date.year, end_year + 1):
+                revenue, expenses, withdrawals = _get_year_financials(
+                    year, today, start_date, end_date, practice
+                )
+                yearly_financials.append(
+                    {
+                        "year": year,
+                        "revenue": revenue,
+                        "expenses": expenses,
+                        "withdrawals": withdrawals,
+                    }
+                )
+
         profit_data = []
         cumulative_profit: float = 0.0
 
-        years = list(range(start_date.year, end_year + 1))
-
-        for year in years:
-            revenue, expenses, withdrawals = _get_year_financials(
-                year, today, start_date, end_date, practice
-            )
+        for item in yearly_financials:
+            revenue, expenses = item["revenue"], item["expenses"]
             profit = revenue - expenses
             cumulative_profit += float(profit)
 
             profit_data.append(
                 {
-                    "year": year,
+                    "year": item["year"],
                     "revenue": float(revenue),
                     "expenses": float(expenses),
                     "profit": float(profit),
                     "cumulative_profit": round(cumulative_profit, 2),
-                    "withdrawals": float(withdrawals),
+                    "withdrawals": float(item["withdrawals"]),
                 }
             )
 

@@ -30,7 +30,7 @@ def get_sessions_for_month(month_date, practice=None):
     if practice:
         invoice_items = invoice_items.filter(invoice__practice=practice)
 
-    invoice_items = invoice_items.select_related("invoice__client", "session")
+    invoice_items = invoice_items.select_related("invoice__client", "session", "service_type")
 
     client_items: dict[str, list] = {}
     for item in invoice_items:
@@ -84,7 +84,7 @@ def get_heatmap_data(
     qs = InvoiceItem.objects.filter(
         session__session_date__range=(range_start_date, range_end_date_full),
         invoice__client__isnull=False,
-    ).select_related("invoice__client", "session")
+    ).select_related("invoice__client", "session", "service_type")
 
     if practice:
         qs = qs.filter(invoice__practice=practice)
