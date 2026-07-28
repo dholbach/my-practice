@@ -65,10 +65,16 @@ class TimeOff(TimestampedModel):
 
     @property
     def duration_days(self) -> int:
-        """Calculate duration in days"""
-        if self.start_date and self.end_date:
-            return (self.end_date - self.start_date).days + 1
-        return 0
+        """Calculate number of working days (Mon-Fri, excluding Berlin public holidays) closed"""
+        if not (self.start_date and self.end_date):
+            return 0
+        from ..utils.date_helpers import DateRangeHelper
+        from ..utils.practice_days import berlin_public_holidays
+
+        holidays: set[date] = set()
+        for yr in range(self.start_date.year, self.end_date.year + 1):
+            holidays |= berlin_public_holidays(yr)
+        return DateRangeHelper.count_working_days(self.start_date, self.end_date, holidays)
 
     @property
     def is_current(self) -> bool:
