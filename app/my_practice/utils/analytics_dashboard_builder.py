@@ -79,6 +79,7 @@ class AnalyticsDashboardBuilder:
             ProfitCalculator,
             RevenueAnalyzer,
             SessionAnalyzer,
+            get_yearly_financials_series,
         )
 
         # Store as instance variables for other methods to use
@@ -87,6 +88,7 @@ class AnalyticsDashboardBuilder:
         self.ClientAnalyzer = ClientAnalyzer
         self.ExpenseAnalyzer = ExpenseAnalyzer
         self.ProfitCalculator = ProfitCalculator
+        self.get_yearly_financials_series = get_yearly_financials_series
 
         self._parse_date_range()
 
@@ -304,9 +306,18 @@ class AnalyticsDashboardBuilder:
 
     def _get_comparison_data(self) -> dict:
         """Get financial comparison data (profit, capacity)."""
+        # Computed once and shared by both analyzers below, since they'd
+        # otherwise each independently run the same per-year revenue/expense/
+        # withdrawal queries for this identical range.
+        yearly_financials = self.get_yearly_financials_series(**self._common_kwargs)
+
         return {
-            "comparison_data": self.RevenueAnalyzer.get_yearly_comparison(**self._common_kwargs),
-            "profit_data": self.ProfitCalculator.calculate_yearly(**self._common_kwargs),
+            "comparison_data": self.RevenueAnalyzer.get_yearly_comparison(
+                **self._common_kwargs, yearly_financials=yearly_financials
+            ),
+            "profit_data": self.ProfitCalculator.calculate_yearly(
+                **self._common_kwargs, yearly_financials=yearly_financials
+            ),
             "capacity_trends": get_capacity_trends(
                 start_year=self.start_year,
                 start_date=self.start_date,

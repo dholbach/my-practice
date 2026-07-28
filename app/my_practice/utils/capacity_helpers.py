@@ -40,18 +40,23 @@ def _get_capacity_periods(practice=None) -> list[tuple[date, int]]:
     return [(cp.start_date, cp.hours_per_week) for cp in qs]
 
 
-def get_weekly_capacity_for_date(target_date: date, practice=None) -> float:
+def get_weekly_capacity_for_date(
+    target_date: date, practice=None, periods: list[tuple[date, int]] | None = None
+) -> float:
     """
     Get the weekly capacity (hours) for a specific date.
 
     Args:
         target_date: The date to get capacity for
         practice: Optional Practice instance to scope periods to
+        periods: Optional pre-fetched periods list (from _get_capacity_periods),
+            to avoid re-querying when called repeatedly (e.g. in a loop)
 
     Returns:
         Hours per week available for client sessions
     """
-    periods = _get_capacity_periods(practice)
+    if periods is None:
+        periods = _get_capacity_periods(practice)
     if not periods:
         return 0.0
     capacity = periods[0][1]
@@ -121,7 +126,12 @@ def calculate_period_capacity(
 
     # Calculate weighted capacity based on effective period
     usable_capacity = _calculate_weighted_capacity(
-        start_date, effective_end_date, available_working_days, _holidays, practice=practice
+        start_date,
+        effective_end_date,
+        available_working_days,
+        _holidays,
+        practice=practice,
+        periods=_get_capacity_periods(practice),
     )
 
     # Calculate booked hours (uses same horizon)
@@ -149,6 +159,7 @@ def _calculate_weighted_capacity(
     available_working_days: int,
     holidays: set[date] | frozenset[date] = frozenset(),
     practice=None,
+    periods: list[tuple[date, int]] | None = None,
 ) -> float:
     """
     Calculate weighted capacity for a period that may span multiple capacity configurations.
@@ -157,8 +168,13 @@ def _calculate_weighted_capacity(
     For periods spanning multiple configs, weights each config's hours/week by the
     proportion of working days in its segment. The result is always applied to
     available_working_days, so time off reduces capacity in both cases.
+
+    Args:
+        periods: Optional pre-fetched periods list, to avoid re-querying
+            CapacityPeriod when this is called repeatedly (e.g. in a loop)
     """
-    periods = _get_capacity_periods(practice)
+    if periods is None:
+        periods = _get_capacity_periods(practice)
 
     # Check if period spans a capacity change
     capacity_changes_in_period = [
@@ -169,7 +185,9 @@ def _calculate_weighted_capacity(
 
     if not capacity_changes_in_period:
         # No capacity change within period - use capacity at start
-        hours_per_week = get_weekly_capacity_for_date(start_date, practice=practice)
+        hours_per_week = get_weekly_capacity_for_date(
+            start_date, practice=practice, periods=periods
+        )
         available_weeks = available_working_days / 5
         return available_weeks * hours_per_week
 
@@ -181,7 +199,10 @@ def _calculate_weighted_capacity(
         period_end = change_date - timedelta(days=1)
         days_in_segment = DateRangeHelper.count_working_days(current_start, period_end, holidays)
         segments.append(
-            (days_in_segment, get_weekly_capacity_for_date(current_start, practice=practice))
+            (
+                days_in_segment,
+                get_weekly_capacity_for_date(current_start, practice=practice, periods=periods),
+            )
         )
         current_start = change_date
 
@@ -189,7 +210,10 @@ def _calculate_weighted_capacity(
     if current_start <= end_date:
         days_remaining = DateRangeHelper.count_working_days(current_start, end_date, holidays)
         segments.append(
-            (days_remaining, get_weekly_capacity_for_date(current_start, practice=practice))
+            (
+                days_remaining,
+                get_weekly_capacity_for_date(current_start, practice=practice, periods=periods),
+            )
         )
 
     total_working_days = sum(days for days, _ in segments)
@@ -318,6 +342,9 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
     # Pre-build holiday set covering all years in the range (used in the loop below)
     _holidays = _build_holiday_set(start_date.year, end_date.year)
 
+    # Query 3: capacity periods, fetched once and reused for every month below
+    _periods = _get_capacity_periods(practice)
+
     # Build capacity data iterating through months (no DB queries in loop)
     capacity_data = []
     current_date = start_date
@@ -344,7 +371,12 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
 
         # Delegate to the same weighted formula used by calculate_period_capacity
         usable_capacity = _calculate_weighted_capacity(
-            month_start, month_end, available_working_days, _holidays, practice=practice
+            month_start,
+            month_end,
+            available_working_days,
+            _holidays,
+            practice=practice,
+            periods=_periods,
         )
 
         # Get booked hours from cached data

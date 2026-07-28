@@ -20,7 +20,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
 
 from ..forms import ClientIntakeForm
-from ..models import Client, ClientDocument, ClientTag, Invoice
+from ..models import Client, ClientDocument, ClientTag, Invoice, InvoiceItem
 from ..utils.email_utils import get_gdpr_deletion_email_content
 from ..utils.file_processing import process_upload
 from ..utils import (
@@ -212,7 +212,12 @@ def client_detail(request, pk):
         Client.objects.for_current_practice(request).prefetch_related(
             Prefetch(
                 "invoices",
-                queryset=Invoice.objects.order_by("-invoice_date").prefetch_related("items"),
+                queryset=Invoice.objects.order_by("-invoice_date").prefetch_related(
+                    Prefetch(
+                        "items",
+                        queryset=InvoiceItem.objects.select_related("session", "service_type"),
+                    )
+                ),
             ),
             "tags",
             Prefetch(
