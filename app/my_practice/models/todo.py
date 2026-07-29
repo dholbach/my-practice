@@ -197,6 +197,10 @@ class PracticeTodo(TimestampedModel):
                 reverse("session_log_create", kwargs={"pk": session.client_id})
                 + f"?session_date={session.session_date.isoformat()}"
             )
+        if model_name == "supervisionitem":
+            # SupervisionItem has no page of its own — it lives (and gets
+            # toggled) on its client's detail page.
+            return reverse("client_detail", kwargs={"pk": self.related_object.client_id})
         url_name = _RELATED_OBJECT_URL_NAMES.get(model_name)
         if not url_name:
             return None
