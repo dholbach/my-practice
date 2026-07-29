@@ -138,8 +138,7 @@ useful on its own.
    logic (`ClientAttentionWidgetBuilder.get_missing_session_log_clients()`,
    `InvoiceActionsWidgetBuilder.get_overdue_invoices()`/`get_draft_invoices()`,
    `ChecklistWidgetBuilder`). `/todos/` filters to `task_type="manual"` in the
-   meantime so materialized rows stay invisible until phase 3. Not yet wired to a
-   scheduled job — run manually until the Focus Queue UI exists. (PR #266)
+   meantime so materialized rows stay invisible until phase 3. (PR #266)
 3. ✅ **Focus Queue page** — new nav item ("Im Fokus" in German), `/focus/`, a single
    merged queue of manual + materialized `Task` rows sorted by priority then age,
    with complete/snooze (+1d/+3d/+1w presets)/edit actions and a filter-by-`task_type`
@@ -190,3 +189,7 @@ Shipped after the 4 core phases above, in response to real usage:
   `content_type.model` instead of assuming a model from `task_type`, and
   `sync_focus_queue_tasks`'s auto-close logic now retires stale rows
   regardless of which model they originally pointed at.
+- **Wired `sync_focus_queue_tasks` to a daily systemd timer** (2026-07-29):
+  `scripts/my-practice-sync-focus-queue.timer`/`.service`, documented in
+  `docs/operations/SCRIPTS.md` — closes the one gap this doc had flagged as
+  unfinished. Materialized tasks now stay fresh without a manual run.
