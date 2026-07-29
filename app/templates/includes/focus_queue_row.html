@@ -1,0 +1,57 @@
+{% load i18n %}
+{% comment %}
+Single Focus Queue task row. Rendered both in the queue list and as the
+HTMX response of the complete-toggle checkbox (targets this row only, so
+a just-completed task stays visible — struck through, still checked — as
+an in-place undo affordance instead of vanishing on the next full swap.
+{% endcomment %}
+<div class="todo-item {% if task.is_completed %}completed{% endif %} {% if task.is_overdue %}overdue{% endif %}" data-task-id="{{ task.pk }}">
+    <input type="checkbox"
+           class="todo-checkbox"
+           {% if task.is_completed %}checked{% endif %}
+           hx-post="{% url 'focus_queue_complete' task.pk %}?type={{ current_type }}"
+           hx-target="closest .todo-item"
+           hx-swap="outerHTML"
+           title="{% if task.is_completed %}{% trans 'Mark as not done' %}{% else %}{% trans 'Mark as completed' %}{% endif %}">
+
+    <div class="todo-content">
+        <div class="todo-title">
+            {% if task.related_object_url %}
+            <a href="{{ task.related_object_url }}">{{ task.title }}</a>
+            {% else %}
+            {{ task.title }}
+            {% endif %}
+        </div>
+
+        {% if task.description %}
+        <div class="todo-description">{{ task.description|linebreaks }}</div>
+        {% endif %}
+
+        <div class="todo-meta">
+            <span class="todo-badge task-type-{{ task.task_type }}">{{ task.get_task_type_display }}</span>
+            <span class="todo-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+
+            {% if task.reference_date %}
+            <span class="todo-reference-date" title="{% trans 'Invoice date, session date, or when this task was added' %}">🕓 {{ task.reference_date|date:"d.m.Y" }}</span>
+            {% endif %}
+
+            {% if task.due_date %}
+            <span class="todo-due-date {% if task.is_overdue %}overdue{% endif %}">
+                📅 {{ task.due_date|date:"d.m.Y" }}
+                {% if task.is_overdue %}({% trans "overdue!" %}){% endif %}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="todo-actions">
+        {% if not task.is_completed %}
+        <div class="focus-queue-snooze-group">
+            <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "1"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 1 day' %}">+1d</button>
+            <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "3"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 3 days' %}">+3d</button>
+            <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "7"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 1 week' %}">+1w</button>
+        </div>
+        {% endif %}
+        <a href="{% url 'todo_edit' task.pk %}" class="link-primary" title="{% trans 'Edit' %}">✏️</a>
+    </div>
+</div>

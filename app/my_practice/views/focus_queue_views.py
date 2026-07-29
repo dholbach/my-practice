@@ -111,13 +111,25 @@ class FocusQueueView(PracticeScopedListView):
 
 @require_POST
 def focus_queue_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse:
-    """Mark a task completed. HTMX partial swap, falls back to a redirect."""
+    """
+    Toggle a task's completion status.
+
+    HTMX response swaps only this row (not the whole queue), so a
+    just-completed task stays visible in place — struck through, checkbox
+    still checked — giving an immediate way to undo an accidental click
+    instead of the row silently vanishing from the open-tasks queryset.
+    """
     task = get_object_or_404(PracticeTodo.objects.for_current_practice(request), pk=pk)
-    task.mark_completed()
+    if task.is_completed:
+        task.mark_incomplete()
+    else:
+        task.mark_completed()
 
     if request.headers.get("HX-Request"):
         return render(
-            request, "includes/focus_queue_content.html", _build_focus_queue_context(request)
+            request,
+            "includes/focus_queue_row.html",
+            {"task": task, "current_type": request.GET.get("type", "")},
         )
     return redirect(reverse("focus_queue"))
 
