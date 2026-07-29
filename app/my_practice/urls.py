@@ -286,6 +286,11 @@ urlpatterns = [
         "focus/<int:pk>/complete/", views.focus_queue_toggle_complete, name="focus_queue_complete"
     ),
     path("focus/<int:pk>/snooze/", views.focus_queue_snooze, name="focus_queue_snooze"),
+    path(
+        "focus/<int:pk>/due-today/",
+        views.focus_queue_set_due_today,
+        name="focus_queue_due_today",
+    ),
     # Bank statement import
     path("bank/import/", views.BankImportView.as_view(), name="bank_import"),
     path("bank/review/", views.BankReviewView.as_view(), name="bank_review"),

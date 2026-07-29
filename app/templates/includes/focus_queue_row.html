@@ -46,6 +46,7 @@ an in-place undo affordance instead of vanishing on the next full swap.
 
     <div class="todo-actions">
         {% if not task.is_completed %}
+        <button class="btn-due-today" hx-post="{% url 'focus_queue_due_today' task.pk %}?type={{ current_type }}" hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Set due today — bumps this task to the top of the queue' %}">📅 {% trans "Today" %}</button>
         <div class="focus-queue-snooze-group">
             <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "1"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 1 day' %}">+1d</button>
             <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "3"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 3 days' %}">+3d</button>
