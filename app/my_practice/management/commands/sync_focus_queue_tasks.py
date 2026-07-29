@@ -13,9 +13,8 @@ prose — this command runs outside any request/session, so there is no
 admin UI language to render into. Translated display formatting belongs in
 the Focus Queue UI (P-050 phase 3), not in stored data here.
 
-Not currently wired to a scheduled job (see other my-practice-*.timer units
-in scripts/) — run manually until the Focus Queue UI (phase 3) is ready to
-consume these rows.
+Wired to a daily systemd timer (scripts/my-practice-sync-focus-queue.timer,
+see docs/operations/SCRIPTS.md) — can still be run manually any time.
 """
 
 from django.contrib.contenttypes.models import ContentType

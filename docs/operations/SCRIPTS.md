@@ -67,7 +67,7 @@ Or with media files:
 
 ## 🤖 Automatic Timers (Systemd user units)
 
-Three timers run as user systemd units (no sudo needed). The unit files live in
+Four timers run as user systemd units (no sudo needed). The unit files live in
 `scripts/` (source of truth) and are installed to `~/.config/systemd/user/`.
 
 | Timer | Schedule | What it does |
@@ -75,6 +75,7 @@ Three timers run as user systemd units (no sudo needed). The unit files live in
 | `my-practice-backup` | Daily (random offset) | PostgreSQL dump + media archive |
 | `my-practice-update-client-tags` | Hourly (random offset) | Recalculate tag rules for all clients |
 | `my-practice-fetch-calendar-events` | Hourly (random offset) | Pull Google Calendar events into pending queue |
+| `my-practice-sync-focus-queue` | Daily (random offset) | Materialize/auto-close Focus Queue tasks (missing session logs, unpaid/unsent invoices, operational checklists) |
 
 ### Install / reinstall after path changes
 
@@ -86,12 +87,15 @@ cp scripts/my-practice-update-client-tags.service $DEST/
 cp scripts/my-practice-update-client-tags.timer   $DEST/
 cp scripts/my-practice-fetch-calendar-events.service $DEST/
 cp scripts/my-practice-fetch-calendar-events.timer   $DEST/
+cp scripts/my-practice-sync-focus-queue.service    $DEST/
+cp scripts/my-practice-sync-focus-queue.timer      $DEST/
 
 # Edit WorkingDirectory / ExecStart in each .service to match the actual repo path, then:
 systemctl --user daemon-reload
 systemctl --user enable --now my-practice-backup.timer
 systemctl --user enable --now my-practice-update-client-tags.timer
 systemctl --user enable --now my-practice-fetch-calendar-events.timer
+systemctl --user enable --now my-practice-sync-focus-queue.timer
 ```
 
 ### Check status
@@ -101,6 +105,7 @@ systemctl --user list-timers --all | grep my-practice
 journalctl --user -u my-practice-backup.service -n 20
 journalctl --user -u my-practice-update-client-tags.service -n 20
 journalctl --user -u my-practice-fetch-calendar-events.service -n 20
+journalctl --user -u my-practice-sync-focus-queue.service -n 20
 ```
 
 ## 📤 External Backups
