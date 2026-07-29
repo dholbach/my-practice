@@ -4,7 +4,7 @@ TODO/Task management views for practice planning.
 The standalone /todos/ list page was retired in favour of the Focus Queue
 page (P-050 phase 4), which shows manual and materialized tasks together.
 These CRUD views remain — Focus Queue reuses them for creating/editing a
-manual task — as do the two toggle endpoints, still used inline by the
+manual task — as does todo_toggle_complete, still used inline by the
 dashboard's WeeklyFocus widget.
 """
 
@@ -128,23 +128,3 @@ def todo_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse | JsonRe
     # Redirect to referrer if available, otherwise to dashboard
     referrer_path = urlparse(request.META.get("HTTP_REFERER", "")).path
     return redirect(referrer_path or reverse("dashboard"))
-
-
-def todo_toggle_focus(request: HttpRequest, pk: int) -> HttpResponse:
-    """
-    Toggle is_focus flag on a PracticeTodo.
-
-    POST only, used by the dashboard's WeeklyFocus widget. Returns an HTMX
-    partial on HTMX requests, otherwise redirects back to referrer.
-    """
-    todo = get_object_or_404(PracticeTodo.objects.for_current_practice(request), pk=pk)
-
-    todo.is_focus = not todo.is_focus
-    todo.save(update_fields=["is_focus"])
-
-    if request.headers.get("HX-Request"):
-        builder = WeeklyFocusWidgetBuilder(request.current_practice)
-        return render(request, "includes/weekly_focus_widget_content.html", builder.build_context())
-
-    referrer_path = urlparse(request.META.get("HTTP_REFERER", "")).path
-    return redirect(referrer_path or reverse("focus_queue"))

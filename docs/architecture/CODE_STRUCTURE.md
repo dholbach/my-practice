@@ -143,7 +143,7 @@ context = AnalyticsDashboardBuilder(start_date, end_date).build_context()
 
 `dashboard_views.py` is a thin dispatcher (22 lines). All data preparation lives in:
 - `DashboardContextAssembler` (`dashboard_context_builder.py`) — orchestrates widget builders
-- Eleven widget builders: eight in `dashboard_widgets.py` (`InvoiceActionsWidgetBuilder`, `ClientAttentionWidgetBuilder`, `SessionImportWidgetBuilder`, `PendingCalendarWidgetBuilder`, `ChecklistWidgetBuilder`, `CapacityMonitoringWidgetBuilder`, `TaxQuarterWidgetBuilder`, `BankImportReminderWidgetBuilder`), plus `AgendaWidgetBuilder` (`agenda_helpers.py`), `WeeklyFocusWidgetBuilder` (`weekly_focus_widget.py`), and `ActionQueueBuilder` (`action_queue_builder.py`)
+- Six widget builders: five in `dashboard_widgets.py` (`InvoiceActionsWidgetBuilder`, `SessionImportWidgetBuilder`, `PendingCalendarWidgetBuilder`, `ChecklistWidgetBuilder`, `CapacityMonitoringWidgetBuilder`), plus `WeeklyFocusWidgetBuilder` (`weekly_focus_widget.py`) — `ClientAttentionWidgetBuilder`, `TaxQuarterWidgetBuilder`, `BankImportReminderWidgetBuilder`, `AgendaWidgetBuilder`, and `ActionQueueBuilder` were removed with the P-050 phase-4 "Needs Action" pane retirement; this line was stale until now
 
 ### Session billing helpers (`utils/billing_helpers.py`)
 

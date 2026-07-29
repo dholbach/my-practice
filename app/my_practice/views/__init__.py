@@ -167,7 +167,6 @@ from .todo_views import (
     TodoDeleteView,
     TodoUpdateView,
     todo_toggle_complete,
-    todo_toggle_focus,
 )
 
 # Time-off views
@@ -236,7 +235,6 @@ __all__ = [
     "TodoUpdateView",
     "TodoDeleteView",
     "todo_toggle_complete",
-    "todo_toggle_focus",
     # Focus Queue views (P-050)
     "FocusQueueView",
     "focus_queue_toggle_complete",

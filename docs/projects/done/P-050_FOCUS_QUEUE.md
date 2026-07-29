@@ -193,3 +193,25 @@ Shipped after the 4 core phases above, in response to real usage:
   `scripts/my-practice-sync-focus-queue.timer`/`.service`, documented in
   `docs/operations/SCRIPTS.md` — closes the one gap this doc had flagged as
   unfinished. Materialized tasks now stay fresh without a manual run.
+- **Checkbox in the queue now really toggles** (2026-07-29): it previously
+  only ever called `mark_completed()`, so an accidental click had no way
+  back except Django admin. The endpoint now toggles complete/incomplete and
+  swaps just the one row (`includes/focus_queue_row.html`), so a
+  just-completed task stays visible — struck through, checkbox still
+  checked — as an immediate undo affordance.
+- **"📅 Today" quick action + due-date-aware sort** (2026-07-30): `due_date`
+  previously only decorated a row; it now also drives sort order — tasks due
+  today or overdue always rank above the rest of the queue regardless of
+  priority tier. A new button next to the snooze presets sets `due_date` to
+  today in one click.
+- **`is_focus` retired, folded into `due_date`** (2026-07-30): resolves the
+  overlap flagged in line 56 above and in issue #281. The `/todos/` list
+  page's retirement (phase 4) had already removed the only UI path to *set*
+  `is_focus` — the dashboard's weekly widget star only ever did "remove
+  focus" from then on, with no way to add a task to it. Rather than
+  restoring a second star toggle, `is_focus` was removed outright
+  (migration `0018_remove_practicetodo_is_focus`) and the dashboard widget
+  now lists `due_date <= today` tasks — the same signal the Focus Queue
+  itself sorts on. `todo_toggle_focus` and its URL are gone; see
+  [P-028_DASHBOARD_WEEKLY_FOCUS.md](P-028_DASHBOARD_WEEKLY_FOCUS.md) for the
+  widget-side detail.

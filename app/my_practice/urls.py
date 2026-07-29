@@ -279,7 +279,6 @@ urlpatterns = [
     path("todos/<int:pk>/edit/", views.TodoUpdateView.as_view(), name="todo_edit"),
     path("todos/<int:pk>/delete/", views.TodoDeleteView.as_view(), name="todo_delete"),
     path("todos/<int:pk>/toggle/", views.todo_toggle_complete, name="todo_toggle"),
-    path("todos/<int:pk>/toggle-focus/", views.todo_toggle_focus, name="todo_toggle_focus"),
     # Focus Queue (P-050)
     path("focus/", views.FocusQueueView.as_view(), name="focus_queue"),
     path(

@@ -119,15 +119,17 @@ class DashboardContextAssembler:
 
         cap_ctx = CapacityMonitoringWidgetBuilder(practice).build_context()
         wf_ctx = WeeklyFocusWidgetBuilder(practice).build_context()
-        focus_count = wf_ctx["focus_count"]
+        due_today_count = wf_ctx["due_today_count"]
         wf_session_count = wf_ctx["session_count"]
         wf_badge_parts = [
             f'<span class="stat-badge">'
             f"{ngettext('%(count)s session', '%(count)s sessions', wf_session_count) % {'count': wf_session_count}}"
             f"</span>"
         ]
-        if focus_count:
-            wf_badge_parts.append(f'<span class="stat-badge">{focus_count} {_("Focus")}</span>')
+        if due_today_count:
+            wf_badge_parts.append(
+                f'<span class="stat-badge">{due_today_count} {_("Due today")}</span>'
+            )
 
         def _html(template: str, ctx: dict) -> SafeString:
             return mark_safe(render_to_string(template, ctx))

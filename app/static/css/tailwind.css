@@ -2131,17 +2131,6 @@
     transition: background 0.15s;
   }
   .btn-due-today:hover { background: var(--color-link); color: white; }
-  .btn-focus-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0 0.25rem;
-    opacity: 0.4;
-    transition: opacity 0.15s;
-  }
-  .btn-focus-toggle:hover { opacity: 1; }
-  .btn-focus-toggle.is-focused { opacity: 1; }
 
   /* Invoice create/edit form formset — .formset-item/.deleted also driven by JS */
   .form-row {

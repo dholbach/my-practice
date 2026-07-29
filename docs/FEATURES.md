@@ -96,7 +96,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Status breakdown (Draft/Sent/Paid/Cancelled) — all-time overview
 - ✅ Recent invoices overview
 - ✅ Dark mode + Privacy mode
-- ✅ **Fokus-Aufgaben Widget** — ⭐ toggle on todos, `WeeklyFocusWidgetBuilder` shows focus tasks in dashboard (P-028)
+- ✅ **Weekly focus widget** — `WeeklyFocusWidgetBuilder` shows this week's sessions plus tasks due today or overdue, sharing the Focus Queue's `due_date` signal instead of a separate star toggle (P-028, merged into `due_date` P-050)
 
 ### Analytics Dashboard
 - ✅ Time period filters (All/Month/Quarter/Year/Custom)
@@ -346,6 +346,14 @@ Complete feature list for the Therapy Practice Management System.
 - `@theme` token system: every colour defined once; `[data-theme="dark"]` overrides flow through automatically — no per-component dark-mode CSS needed
 - Zero hardcoded hex colours in non-PDF templates; new semantic classes: `.callout-warning/danger/success/primary`, `.btn-gradient`
 - New UI features require zero new CSS files
+
+## 🚀 Recent Additions (Juli 2026)
+
+### Focus Queue improvements (30. Juli)
+
+- **Checkbox now really toggles** — previously only ever marked a task complete; an accidental click had no way back short of Django admin. It now toggles complete/incomplete, and the just-completed row stays visible in place (struck through, still checked) as an immediate undo
+- **"📅 Today" quick action** — sets a task's due date to today in one click; due-today-or-overdue tasks now always sort ahead of the rest of the queue regardless of priority
+- **`is_focus` retired, merged into `due_date`** — the dashboard's weekly widget star toggle had no working "add" path left (only "remove"); rather than restoring it, the widget now lists tasks due today or overdue, sharing the same signal the Focus Queue sorts on
 
 ## 🚀 Recent Additions (April 2026)
 
