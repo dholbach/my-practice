@@ -174,25 +174,43 @@ class FocusQueueCompleteTest(TestCase):
         self.task.refresh_from_db()
         self.assertTrue(self.task.is_completed)
 
-    def test_htmx_returns_partial(self):
+    def test_htmx_returns_row_partial(self):
         response = self.tc.post(
             reverse("focus_queue_complete", args=[self.task.pk]), HTTP_HX_REQUEST="true"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "includes/focus_queue_content.html")
+        self.assertTemplateUsed(response, "includes/focus_queue_row.html")
 
-    def test_htmx_partial_respects_type_filter_from_query_string(self):
-        other = PracticeTodo.objects.create(
-            practice=self.practice,
-            title="Unpaid",
-            task_type=PracticeTodo.TaskType.INVOICE_UNPAID,
+    def test_htmx_completed_row_stays_visible_and_checked(self):
+        """
+        The completed row swaps in place (not the whole queue) so an
+        accidental click can be undone immediately — see docstring on
+        focus_queue_toggle_complete.
+        """
+        response = self.tc.post(
+            reverse("focus_queue_complete", args=[self.task.pk]), HTTP_HX_REQUEST="true"
         )
+        self.assertEqual(response.context["task"], self.task)
+        self.assertTrue(response.context["task"].is_completed)
+        self.assertIn(b"checked", response.content)
+        self.assertIn(b"completed", response.content)
+
+    def test_post_toggles_back_to_incomplete(self):
+        self.tc.post(reverse("focus_queue_complete", args=[self.task.pk]))
+        self.task.refresh_from_db()
+        self.assertTrue(self.task.is_completed)
+
+        response = self.tc.post(reverse("focus_queue_complete", args=[self.task.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.task.refresh_from_db()
+        self.assertFalse(self.task.is_completed)
+
+    def test_htmx_partial_carries_type_filter_from_query_string(self):
         response = self.tc.post(
             reverse("focus_queue_complete", args=[self.task.pk]) + "?type=invoice_unpaid",
             HTTP_HX_REQUEST="true",
         )
-        titles = [t.title for t in response.context["tasks"]]
-        self.assertEqual(titles, [other.title])
+        self.assertIn(b"type=invoice_unpaid", response.content)
 
     def test_get_not_allowed(self):
         response = self.tc.get(reverse("focus_queue_complete", args=[self.task.pk]))
