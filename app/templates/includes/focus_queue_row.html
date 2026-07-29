@@ -1,8 +1,10 @@
 {% load i18n %}
-{# Single Focus Queue task row. Rendered both in the queue list and as the
-   HTMX response of the complete-toggle checkbox (targets this row only, so
-   a just-completed task stays visible — struck through, still checked — as
-   an in-place undo affordance instead of vanishing on the next full swap. #}
+{% comment %}
+Single Focus Queue task row. Rendered both in the queue list and as the
+HTMX response of the complete-toggle checkbox (targets this row only, so
+a just-completed task stays visible — struck through, still checked — as
+an in-place undo affordance instead of vanishing on the next full swap.
+{% endcomment %}
 <div class="todo-item {% if task.is_completed %}completed{% endif %} {% if task.is_overdue %}overdue{% endif %}" data-task-id="{{ task.pk }}">
     <input type="checkbox"
            class="todo-checkbox"
