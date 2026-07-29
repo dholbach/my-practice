@@ -1,6 +1,8 @@
 """
-Weekly Focus Widget for dashboard – shows Mon–Sun sessions plus focus tasks.
-Part of P-028 Dashboard Redesign.
+Weekly Focus Widget for dashboard – shows Mon–Sun sessions plus tasks due
+today or overdue. Part of P-028 Dashboard Redesign; the task half now shares
+its "due today" signal with the Focus Queue (P-050) instead of the retired
+is_focus flag — see docs/projects/done/P-028_DASHBOARD_WEEKLY_FOCUS.md.
 """
 
 from datetime import date, timedelta
@@ -16,7 +18,7 @@ class WeeklyFocusWidgetBuilder:
 
     Combines:
     - All sessions scheduled for the current calendar week (Mon–Sun)
-    - All incomplete focus tasks (is_focus=True)
+    - All incomplete tasks due today or overdue (due_date <= today)
 
     Usage:
         builder = WeeklyFocusWidgetBuilder(practice)
@@ -53,11 +55,11 @@ class WeeklyFocusWidgetBuilder:
             for s in sessions
         ]
 
-    def _get_focus_tasks(self) -> QuerySet:
-        """Get active focus tasks for the current practice."""
+    def _get_due_today_tasks(self) -> QuerySet:
+        """Get incomplete tasks due today or overdue for the current practice."""
         return PracticeTodo.objects.filter(
             practice=self.practice,
-            is_focus=True,
+            due_date__lte=self.today,
             completed_at__isnull=True,
         ).order_by("due_date", "-created_at")
 
@@ -67,22 +69,21 @@ class WeeklyFocusWidgetBuilder:
 
         Returns dict with:
             week_sessions: list of session dicts
-            focus_tasks: QuerySet of PracticeTodo
+            due_today_tasks: QuerySet of PracticeTodo
             week_start: date (Monday)
             week_end: date (Sunday)
             session_count: int
-            focus_count: int
+            due_today_count: int
         """
         week_sessions = self._get_week_sessions()
-        focus_tasks = self._get_focus_tasks()
+        due_today_tasks = self._get_due_today_tasks()
 
         return {
             "week_sessions": week_sessions,
-            "focus_tasks": focus_tasks,
+            "due_today_tasks": due_today_tasks,
             "week_start": self.week_start,
             "week_end": self.week_end,
             "session_count": len(week_sessions),
-            "focus_count": focus_tasks.count(),
+            "due_today_count": due_today_tasks.count(),
             "today": self.today,
-            "todo_toggle_focus_url": "todo_toggle_focus",
         }

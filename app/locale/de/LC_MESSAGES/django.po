@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-29 22:30+0200\n"
+"POT-Creation-Date: 2026-07-29 23:11+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -525,7 +525,7 @@ msgstr "Fokus-Warteschlange (P-050)"
 msgid "Set automatically for materialized tasks — not manually editable."
 msgstr "Wird für materialisierte Aufgaben automatisch gesetzt — nicht manuell editierbar."
 
-#: my_practice/admin.py:1038 my_practice/models/todo.py:155
+#: my_practice/admin.py:1038 my_practice/models/todo.py:149
 msgid "Task"
 msgstr "Aufgabe"
 
@@ -2876,35 +2876,27 @@ msgstr "Aufgabenkategorie zur Organisation"
 msgid "Task priority level"
 msgstr "Aufgabenpriorität"
 
-#: my_practice/models/todo.py:115
-msgid "Mark as a focus task for the current week"
-msgstr "Als Fokus-Aufgabe für die aktuelle Woche markieren"
-
-#: my_practice/models/todo.py:116
-msgid "Focus task"
-msgstr "Fokus-Aufgabe"
-
-#: my_practice/models/todo.py:120
+#: my_practice/models/todo.py:114
 msgid "Optional due date"
 msgstr "Optionales Fälligkeitsdatum"
 
-#: my_practice/models/todo.py:122
+#: my_practice/models/todo.py:116
 msgid "When the task was completed"
 msgstr "Wann die Aufgabe abgeschlossen wurde"
 
-#: my_practice/models/todo.py:127
+#: my_practice/models/todo.py:121
 msgid "Hide from the focus queue until this date"
 msgstr "Bis zu diesem Datum aus der Fokus-Warteschlange ausblenden"
 
-#: my_practice/models/todo.py:137
+#: my_practice/models/todo.py:131
 msgid "Manual entry, or a materialized system signal (unpaid invoice, missing session log, etc.)"
 msgstr "Manueller Eintrag oder ein materialisiertes Systemsignal (unbezahlte Rechnung, fehlendes Sitzungsprotokoll usw.)"
 
-#: my_practice/models/todo.py:146
+#: my_practice/models/todo.py:140
 msgid "Related object type, for materialized tasks (e.g. Client, Invoice)"
 msgstr "Typ des verknüpften Objekts, für materialisierte Aufgaben (z. B. Klient, Rechnung)"
 
-#: my_practice/models/todo.py:156
+#: my_practice/models/todo.py:150
 msgid "Tasks"
 msgstr "Aufgaben"
 
@@ -3084,11 +3076,12 @@ msgid_plural "%(count)s sessions"
 msgstr[0] "%(count)s Sitzung"
 msgstr[1] "%(count)s Sitzungen"
 
-#: my_practice/utils/dashboard_context_builder.py:130
-msgid "Focus"
-msgstr "Fokus"
+#: my_practice/utils/dashboard_context_builder.py:131
+#: templates/includes/weekly_focus_widget_content.html:33
+msgid "Due today"
+msgstr "Heute fällig"
 
-#: my_practice/utils/dashboard_context_builder.py:140
+#: my_practice/utils/dashboard_context_builder.py:142
 #: templates/my_practice/analytics.html:107
 #: templates/my_practice/analytics.html:731
 msgid "Capacity"
@@ -4621,31 +4614,23 @@ msgstr "Quartalsübersicht anzeigen"
 msgid "Tax prepayment recorded for Q%(quarter)s"
 msgstr "Steuervorauszahlung für Q%(quarter)s erfasst"
 
-#: templates/includes/weekly_focus_widget_content.html:11
+#: templates/includes/weekly_focus_widget_content.html:13
 msgid "Sessions this week"
 msgstr "Sitzungen diese Woche"
 
-#: templates/includes/weekly_focus_widget_content.html:25
+#: templates/includes/weekly_focus_widget_content.html:27
 msgid "No sessions this week."
 msgstr "Keine Sitzungen diese Woche."
 
-#: templates/includes/weekly_focus_widget_content.html:31
-msgid "Focus tasks"
-msgstr "Fokus-Aufgaben"
-
-#: templates/includes/weekly_focus_widget_content.html:41
+#: templates/includes/weekly_focus_widget_content.html:43
 #: templates/my_practice/calendar_approval_queue.html:38
 msgid "Mark as done"
 msgstr "Als erledigt markieren"
 
-#: templates/includes/weekly_focus_widget_content.html:46
-msgid "Remove focus"
-msgstr "Fokus entfernen"
-
-#: templates/includes/weekly_focus_widget_content.html:60
+#: templates/includes/weekly_focus_widget_content.html:57
 #, python-format
-msgid "No focus tasks. Click ⭐ on a task in the <a href=\"%(focus_queue_url)s\">focus queue</a>."
-msgstr "Keine Fokus-Aufgaben. Klicke ⭐ auf einer Aufgabe im <a href=\"%(focus_queue_url)s\">Fokus</a>."
+msgid "Nothing due today. Set a due date from the <a href=\"%(focus_queue_url)s\">focus queue</a>."
+msgstr "Nichts ist heute fällig. Setze ein Fälligkeitsdatum im <a href=\"%(focus_queue_url)s\">Fokus</a>."
 
 #: templates/includes/widget_base.html:39
 msgid "Toggle widget"
@@ -8810,6 +8795,21 @@ msgstr "Benutzername"
 msgid "Password"
 msgstr "Passwort"
 
+#~ msgid "Mark as a focus task for the current week"
+#~ msgstr "Als Fokus-Aufgabe für die aktuelle Woche markieren"
+
+#~ msgid "Focus task"
+#~ msgstr "Fokus-Aufgabe"
+
+#~ msgid "Focus"
+#~ msgstr "Fokus"
+
+#~ msgid "Focus tasks"
+#~ msgstr "Fokus-Aufgaben"
+
+#~ msgid "Remove focus"
+#~ msgstr "Fokus entfernen"
+
 #~ msgid "No sessions for 60+ days"
 #~ msgstr "Keine Sitzungen seit 60+ Tagen"
 
@@ -8832,9 +8832,6 @@ msgstr "Passwort"
 #, python-format
 #~ msgid "⚠️ Overdue since %(date)s"
 #~ msgstr "⚠️ Überfällig seit %(date)s"
-
-#~ msgid "📅 Due today"
-#~ msgstr "📅 Heute fällig"
 
 #, python-format
 #~ msgid "📅 Due in %(days)s day"

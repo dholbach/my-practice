@@ -184,33 +184,3 @@ class TodoToggleCompleteTest(TestCase):
         )
         # HTMX response: either partial HTML or redirect
         self.assertIn(response.status_code, [200, 302])
-
-
-class TodoToggleFocusTest(TestCase):
-    """Tests for todo_toggle_focus view."""
-
-    def setUp(self):
-        self.practice = _make_practice("todo-focus-1")
-        self.user = User.objects.create_user(username="todouser6", password="testpass123")
-        link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
-        self.todo = PracticeTodo.objects.create(
-            practice=self.practice, title="Focus Me", priority="medium", is_focus=False
-        )
-
-    def test_non_htmx_redirects(self):
-        response = self.tc.post(reverse("todo_toggle_focus", args=[self.todo.pk]))
-        self.assertEqual(response.status_code, 302)
-        self.todo.refresh_from_db()
-        self.assertTrue(self.todo.is_focus)
-
-    def test_htmx_post_returns_200(self):
-        response = self.tc.post(
-            reverse("todo_toggle_focus", args=[self.todo.pk]),
-            HTTP_HX_REQUEST="true",
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_nonexistent_returns_404(self):
-        response = self.tc.post(reverse("todo_toggle_focus", args=[99999]))
-        self.assertEqual(response.status_code, 404)

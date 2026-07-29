@@ -110,12 +110,6 @@ class PracticeTodo(TimestampedModel):
         default="medium",
         help_text=_("Task priority level"),
     )
-    is_focus = models.BooleanField(
-        default=False,
-        help_text=_("Mark as a focus task for the current week"),
-        verbose_name=_("Focus task"),
-    )
-
     # Dates
     due_date = models.DateField(null=True, blank=True, help_text=_("Optional due date"))
     completed_at = models.DateTimeField(
