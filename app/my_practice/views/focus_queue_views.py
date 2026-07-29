@@ -44,7 +44,19 @@ def _open_tasks_queryset(request: HttpRequest, task_type: str = ""):
     )
     if task_type:
         qs = qs.filter(task_type=task_type)
-    return qs.annotate(priority_rank=_PRIORITY_RANK).order_by("priority_rank", "created_at")
+    # Due-today-or-overdue tasks always sort ahead of everything else,
+    # regardless of priority — that's what "due_date" is for in the queue
+    # (setting it, e.g. via the "Today" quick action, is how a task gets
+    # pulled to the top). Within each of those two groups, priority/age
+    # ordering still applies.
+    due_today_rank = Case(
+        When(due_date__lte=today, then=Value(0)),
+        default=Value(1),
+        output_field=IntegerField(),
+    )
+    return qs.annotate(priority_rank=_PRIORITY_RANK, due_today_rank=due_today_rank).order_by(
+        "due_today_rank", "priority_rank", "created_at"
+    )
 
 
 def _task_types_with_counts(request: HttpRequest) -> list[tuple[str, str, int]]:
@@ -130,6 +142,20 @@ def focus_queue_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse:
             request,
             "includes/focus_queue_row.html",
             {"task": task, "current_type": request.GET.get("type", "")},
+        )
+    return redirect(reverse("focus_queue"))
+
+
+@require_POST
+def focus_queue_set_due_today(request: HttpRequest, pk: int) -> HttpResponse:
+    """Set a task's due date to today, bumping it to the top of the queue. HTMX partial swap."""
+    task = get_object_or_404(PracticeTodo.objects.for_current_practice(request), pk=pk)
+    task.due_date = timezone.now().date()
+    task.save(update_fields=["due_date"])
+
+    if request.headers.get("HX-Request"):
+        return render(
+            request, "includes/focus_queue_content.html", _build_focus_queue_context(request)
         )
     return redirect(reverse("focus_queue"))
 

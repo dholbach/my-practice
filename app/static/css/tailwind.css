@@ -2120,6 +2120,17 @@
     transition: background 0.15s;
   }
   .btn-snooze:hover { background: var(--color-link); color: white; border-color: var(--color-link); }
+  .btn-due-today {
+    background: var(--color-badge-blue-bg);
+    color: var(--color-badge-blue-text);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    padding: 0.125rem 0.375rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-due-today:hover { background: var(--color-link); color: white; }
   .btn-focus-toggle {
     background: none;
     border: none;

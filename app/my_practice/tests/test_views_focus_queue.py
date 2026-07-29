@@ -94,6 +94,42 @@ class FocusQueueViewTest(TestCase):
         titles = [t.title for t in response.context["tasks"]]
         self.assertEqual(titles, ["Urgent", "Medium", "Low"])
 
+    def test_due_today_outranks_priority(self):
+        PracticeTodo.objects.create(practice=self.practice, title="Urgent", priority="urgent")
+        PracticeTodo.objects.create(
+            practice=self.practice,
+            title="Due today",
+            priority="low",
+            due_date=timezone.now().date(),
+        )
+        response = self.tc.get(reverse("focus_queue"))
+        titles = [t.title for t in response.context["tasks"]]
+        self.assertEqual(titles, ["Due today", "Urgent"])
+
+    def test_overdue_also_outranks_priority(self):
+        PracticeTodo.objects.create(practice=self.practice, title="Urgent", priority="urgent")
+        PracticeTodo.objects.create(
+            practice=self.practice,
+            title="Overdue",
+            priority="low",
+            due_date=timezone.now().date() - timedelta(days=1),
+        )
+        response = self.tc.get(reverse("focus_queue"))
+        titles = [t.title for t in response.context["tasks"]]
+        self.assertEqual(titles, ["Overdue", "Urgent"])
+
+    def test_due_in_future_does_not_outrank_priority(self):
+        PracticeTodo.objects.create(practice=self.practice, title="Urgent", priority="urgent")
+        PracticeTodo.objects.create(
+            practice=self.practice,
+            title="Due next week",
+            priority="low",
+            due_date=timezone.now().date() + timedelta(days=7),
+        )
+        response = self.tc.get(reverse("focus_queue"))
+        titles = [t.title for t in response.context["tasks"]]
+        self.assertEqual(titles, ["Urgent", "Due next week"])
+
     def test_filter_by_type(self):
         PracticeTodo.objects.create(
             practice=self.practice, title="Manual", task_type=PracticeTodo.TaskType.MANUAL
@@ -251,3 +287,44 @@ class FocusQueueSnoozeTest(TestCase):
         response = self.tc.get(reverse("focus_queue"))
         titles = [t.title for t in response.context["tasks"]]
         self.assertNotIn("To snooze", titles)
+
+
+class FocusQueueSetDueTodayTest(TestCase):
+    def setUp(self):
+        self.practice = _make_practice("focus-queue-4")
+        self.user = User.objects.create_user(username="fquser4", password="testpass123")
+        link_user_to_practice(self.user, self.practice)
+        self.tc = _setup_client(self.user, self.practice)
+        self.task = PracticeTodo.objects.create(
+            practice=self.practice, title="Bump to today", priority="low"
+        )
+
+    def test_post_sets_due_date_to_today(self):
+        response = self.tc.post(reverse("focus_queue_due_today", args=[self.task.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.due_date, timezone.now().date())
+
+    def test_bumps_task_to_top_of_queue(self):
+        PracticeTodo.objects.create(practice=self.practice, title="Urgent", priority="urgent")
+        self.tc.post(reverse("focus_queue_due_today", args=[self.task.pk]))
+        response = self.tc.get(reverse("focus_queue"))
+        titles = [t.title for t in response.context["tasks"]]
+        self.assertEqual(titles, ["Bump to today", "Urgent"])
+
+    def test_htmx_returns_content_partial(self):
+        response = self.tc.post(
+            reverse("focus_queue_due_today", args=[self.task.pk]), HTTP_HX_REQUEST="true"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "includes/focus_queue_content.html")
+
+    def test_get_not_allowed(self):
+        response = self.tc.get(reverse("focus_queue_due_today", args=[self.task.pk]))
+        self.assertEqual(response.status_code, 405)
+
+    def test_cross_practice_404(self):
+        other_practice = _make_practice("focus-queue-other-2")
+        other_task = PracticeTodo.objects.create(practice=other_practice, title="Other")
+        response = self.tc.post(reverse("focus_queue_due_today", args=[other_task.pk]))
+        self.assertEqual(response.status_code, 404)

@@ -156,6 +156,7 @@ from .tax_views import save_tax_year_note, tax_quarter_overview, tax_workday_aud
 # Focus Queue views (P-050)
 from .focus_queue_views import (
     FocusQueueView,
+    focus_queue_set_due_today,
     focus_queue_snooze,
     focus_queue_toggle_complete,
 )
@@ -240,6 +241,7 @@ __all__ = [
     "FocusQueueView",
     "focus_queue_toggle_complete",
     "focus_queue_snooze",
+    "focus_queue_set_due_today",
     # API views
     "contract_pdf",
     "intake_form_pdf",

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-29 21:11+0200\n"
+"POT-Creation-Date: 2026-07-29 22:30+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -533,7 +533,7 @@ msgstr ""
 msgid "Priority"
 msgstr ""
 
-#: my_practice/admin.py:1082 templates/includes/focus_queue_row.html:13
+#: my_practice/admin.py:1082 templates/includes/focus_queue_row.html:15
 msgid "Mark as completed"
 msgstr ""
 
@@ -4415,64 +4415,72 @@ msgstr ""
 msgid "Error removing tag"
 msgstr "Error removing tag"
 
-#: templates/includes/focus_queue_content.html:10
+#: templates/includes/focus_queue_content.html:12
 msgid "Type:"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:12
+#: templates/includes/focus_queue_content.html:14
 #: templates/my_practice/client_list_cards.html:17
 msgid "All"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:20
+#: templates/includes/focus_queue_content.html:22
 #: templates/my_practice/todo_form.html:4
 msgid "New task"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:24
+#: templates/includes/focus_queue_content.html:26
 #, python-format
 msgid "%(count)s task snoozed"
 msgid_plural "%(count)s tasks snoozed"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/includes/focus_queue_content.html:40
+#: templates/includes/focus_queue_content.html:42
 msgid "Nothing needs your attention"
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:41
+#: templates/includes/focus_queue_content.html:43
 msgid "The focus queue is empty."
 msgstr ""
 
-#: templates/includes/focus_queue_content.html:42
+#: templates/includes/focus_queue_content.html:44
 msgid "Create a task"
 msgstr ""
 
-#: templates/includes/focus_queue_row.html:13
+#: templates/includes/focus_queue_row.html:15
 msgid "Mark as not done"
 msgstr ""
 
-#: templates/includes/focus_queue_row.html:33
+#: templates/includes/focus_queue_row.html:35
 msgid "Invoice date, session date, or when this task was added"
 msgstr ""
 
-#: templates/includes/focus_queue_row.html:39
+#: templates/includes/focus_queue_row.html:41
 msgid "overdue!"
 msgstr ""
 
-#: templates/includes/focus_queue_row.html:48
-msgid "Snooze 1 day"
+#: templates/includes/focus_queue_row.html:49
+msgid "Set due today — bumps this task to the top of the queue"
 msgstr ""
 
 #: templates/includes/focus_queue_row.html:49
+msgid "Today"
+msgstr ""
+
+#: templates/includes/focus_queue_row.html:51
+msgid "Snooze 1 day"
+msgstr ""
+
+#: templates/includes/focus_queue_row.html:52
 msgid "Snooze 3 days"
 msgstr ""
 
-#: templates/includes/focus_queue_row.html:50
+#: templates/includes/focus_queue_row.html:53
 msgid "Snooze 1 week"
 msgstr ""
 
-#: templates/includes/focus_queue_row.html:53
+#: templates/includes/focus_queue_row.html:56
 #: templates/my_practice/client_detail.html:289
 #: templates/my_practice/client_detail.html:318
 #: templates/my_practice/expense_list.html:127
