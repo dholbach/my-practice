@@ -3,10 +3,12 @@
 from datetime import timedelta
 from decimal import Decimal
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
-from my_practice.models import Client, Invoice, Practice, PracticeTodo, Session
+from my_practice.models import Client, Invoice, Practice, PracticeTodo, Session, SupervisionItem
+
+TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
 
 
 class PracticeTodoModelTests(TestCase):
@@ -266,6 +268,25 @@ class PracticeTodoModelTests(TestCase):
             + f"?session_date={session_date.isoformat()}"
         )
         self.assertEqual(todo.related_object_url, expected)
+
+    @override_settings(FERNET_KEY=TEST_FERNET_KEY)
+    def test_related_object_url_for_supervision_item_links_to_client_detail(self):
+        client = Client.objects.create(
+            practice=self.practice,
+            client_code="XX-6",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("100.00"),
+        )
+        item = SupervisionItem.objects.create(client=client, content="Question")
+        todo = PracticeTodo.objects.create(
+            practice=self.practice,
+            title="XX-6",
+            task_type=PracticeTodo.TaskType.SUPERVISION,
+            related_object=item,
+        )
+        self.assertEqual(
+            todo.related_object_url, reverse("client_detail", kwargs={"pk": client.pk})
+        )
 
     def test_reference_date_for_invoice_task_uses_invoice_date(self):
         client = Client.objects.create(

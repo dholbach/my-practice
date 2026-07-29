@@ -3,9 +3,10 @@ Management command to materialize derived Task rows for the P-050 Focus Queue.
 
 Creates a PracticeTodo (task_type != manual) for each currently-outstanding
 derived signal (missing session log, unpaid/unsent invoices, pending
-operational checklists) and auto-closes ones whose underlying signal has
-since resolved. Reuses the same detection logic as the dashboard's "Braucht
-Aktion" widget builders rather than re-deriving it.
+operational checklists, open supervision topics) and auto-closes ones whose
+underlying signal has since resolved. Reuses the same detection logic as the
+dashboard's "Braucht Aktion" widget builders (or, for supervision, the
+existing SupervisionItem model) rather than re-deriving it.
 
 Titles for materialized tasks are intentionally language-neutral (client
 codes, invoice numbers, raw checklist-type keys) rather than translated
@@ -23,6 +24,7 @@ from django.db.models import Model, Q
 from django.utils import timezone
 
 from ...models import Invoice, Practice, PracticeTodo
+from ...models.clinical import SupervisionItem
 from ...models.session import Session
 from ...utils.dashboard_widgets import ChecklistWidgetBuilder, InvoiceActionsWidgetBuilder
 from ...utils.tag_helpers import get_sessions_missing_log
@@ -31,8 +33,8 @@ from ...utils.tag_helpers import get_sessions_missing_log
 class Command(BaseCommand):
     help = (
         "Materialize derived Focus Queue Task rows (missing session log, "
-        "unpaid/unsent invoices, operational checklists) and auto-close "
-        "resolved ones."
+        "unpaid/unsent invoices, operational checklists, open supervision "
+        "topics) and auto-close resolved ones."
     )
 
     def handle(self, *args, **options):
@@ -43,6 +45,7 @@ class Command(BaseCommand):
             self._sync_invoice_unpaid(practice, totals)
             self._sync_invoice_unsent(practice, totals)
             self._sync_operational_checklist(practice, totals)
+            self._sync_supervision(practice, totals)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -125,6 +128,29 @@ class Command(BaseCommand):
             Invoice,
             invoices,
             lambda invoice: invoice.invoice_number,
+            totals,
+        )
+
+    def _sync_supervision(self, practice: Practice, totals: dict) -> None:
+        """
+        One Task per open SupervisionItem (client__practice=practice,
+        status=OFFEN), auto-closed once the item is marked besprochen via
+        the existing supervision queue / client detail page. Title is the
+        client code only — content is Fernet-encrypted precisely because it
+        can hold sensitive clinical material, so it must never end up in a
+        plaintext title field.
+        """
+        items = list(
+            SupervisionItem.objects.filter(
+                client__practice=practice, status=SupervisionItem.Status.OFFEN
+            ).select_related("client")
+        )
+        self._sync_object_tasks(
+            practice,
+            PracticeTodo.TaskType.SUPERVISION,
+            SupervisionItem,
+            items,
+            lambda item: item.client.client_code,
             totals,
         )
 

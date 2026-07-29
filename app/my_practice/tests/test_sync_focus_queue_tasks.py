@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from ..models import (
@@ -16,7 +16,10 @@ from ..models import (
     PracticeTodo,
     ServiceType,
     Session,
+    SupervisionItem,
 )
+
+TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
 
 
 def _make_practice(name="Test Practice"):
@@ -239,6 +242,68 @@ class SyncInvoiceUnsentTests(TestCase):
 
         task.refresh_from_db()
         self.assertTrue(task.is_completed)
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class SyncSupervisionTests(TestCase):
+    def setUp(self):
+        self.practice = _make_practice()
+        self.client_obj = _make_client(self.practice)
+
+    def test_creates_task_for_open_supervision_item(self):
+        item = SupervisionItem.objects.create(client=self.client_obj, content="Question")
+        call_command("sync_focus_queue_tasks")
+
+        task = PracticeTodo.objects.get(task_type=PracticeTodo.TaskType.SUPERVISION)
+        self.assertEqual(task.title, "XX-1")
+        self.assertEqual(task.related_object, item)
+
+    def test_no_task_for_already_discussed_item(self):
+        SupervisionItem.objects.create(
+            client=self.client_obj, content="Question", status=SupervisionItem.Status.BESPROCHEN
+        )
+        call_command("sync_focus_queue_tasks")
+        self.assertFalse(
+            PracticeTodo.objects.filter(task_type=PracticeTodo.TaskType.SUPERVISION).exists()
+        )
+
+    def test_auto_closes_when_marked_discussed(self):
+        item = SupervisionItem.objects.create(client=self.client_obj, content="Question")
+        call_command("sync_focus_queue_tasks")
+        task = PracticeTodo.objects.get(task_type=PracticeTodo.TaskType.SUPERVISION)
+
+        item.status = SupervisionItem.Status.BESPROCHEN
+        item.save(update_fields=["status"])
+        call_command("sync_focus_queue_tasks")
+
+        task.refresh_from_db()
+        self.assertTrue(task.is_completed)
+
+    def test_idempotent_no_duplicate_task(self):
+        SupervisionItem.objects.create(client=self.client_obj, content="Question")
+        call_command("sync_focus_queue_tasks")
+        call_command("sync_focus_queue_tasks")
+        self.assertEqual(
+            PracticeTodo.objects.filter(task_type=PracticeTodo.TaskType.SUPERVISION).count(),
+            1,
+        )
+
+    def test_practice_isolation(self):
+        other_practice = _make_practice("Other Practice")
+        other_client = _make_client(other_practice, "YY-2")
+        SupervisionItem.objects.create(client=other_client, content="Question")
+        call_command("sync_focus_queue_tasks")
+
+        self.assertFalse(
+            PracticeTodo.objects.filter(
+                practice=self.practice, task_type=PracticeTodo.TaskType.SUPERVISION
+            ).exists()
+        )
+        self.assertTrue(
+            PracticeTodo.objects.filter(
+                practice=other_practice, task_type=PracticeTodo.TaskType.SUPERVISION
+            ).exists()
+        )
 
 
 class SyncOperationalChecklistTests(TestCase):
