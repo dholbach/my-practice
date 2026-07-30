@@ -69,6 +69,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Invoice detail page (web view) mirrors the same headline-row + collapsed detail-line layout as the PDF, instead of a separate row per code plus subtotal/remaining rows; totals block also shows the running "GebüH gesamt" alongside the invoice grand total, matching the PDF
 - ✅ Recorded Ziffer amount capped at what's actually charged (`min(satz_max, vereinbarter_betrag)`) rather than always showing the code's ceiling rate
 - ✅ Probatorik callout — Profil tab hint when diagnosis not yet set; escalates to warning badge after 5+ diagnostic Ziffern recorded
+- ✅ `Client.gebueh_no_diagnosis` opt-out — per-client checkbox to omit the diagnosis line from GebüH invoices (PDF and web invoice detail) while keeping the Ziffern/fee-schedule breakdown
 
 ### Session Tracking
 - ✅ Historical session data import
@@ -177,7 +178,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Vacation/Sick leave/Holiday tracking
 - ✅ Date range with duration calculation
 - ✅ Year-spanning periods supported
-- ✅ Workday calculations (5/7 formula)
+- ✅ Workday calculations — real Berlin public holidays (`DateRangeHelper.count_working_days`), not the old 5/7 calendar approximation; "Duration"/"Wk." columns relabeled "workdays"/"Arbeitstage" to match
 - ✅ Capacity impact analysis
 - ✅ Period-based calculations
 - ✅ Calendar integration
@@ -349,8 +350,10 @@ Complete feature list for the Therapy Practice Management System.
 
 ## 🚀 Recent Additions (Juli 2026)
 
-### Focus Queue improvements (30. Juli)
+### Focus Queue improvements (29.–30. Juli)
 
+- **Open supervision topics materialized as tasks** — `sync_focus_queue_tasks` now creates a Focus Queue task per open (`offen`) `SupervisionItem`, auto-closed once marked `besprochen`; the dedicated `/supervision/` queue is unchanged, the Focus Queue just also surfaces the same open items
+- **Sync runs on a daily timer** — `sync_focus_queue_tasks` (materializes missing session logs, unpaid/unsent invoices, checklists, supervision topics) now has its own systemd timer, matching the other periodic jobs, instead of only refreshing when run manually
 - **Checkbox now really toggles** — previously only ever marked a task complete; an accidental click had no way back short of Django admin. It now toggles complete/incomplete, and the just-completed row stays visible in place (struck through, still checked) as an immediate undo
 - **"📅 Today" quick action** — sets a task's due date to today in one click; due-today-or-overdue tasks now always sort ahead of the rest of the queue regardless of priority
 - **`is_focus` retired, merged into `due_date`** — the dashboard's weekly widget star toggle had no working "add" path left (only "remove"); rather than restoring it, the widget now lists tasks due today or overdue, sharing the same signal the Focus Queue sorts on
