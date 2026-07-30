@@ -299,7 +299,15 @@ class ClientAdmin(admin.ModelAdmin):
         ),
         (
             gettext_lazy("Additional"),
-            {"fields": ("notes", "active", "is_online_client", "needs_gebueh_invoice")},
+            {
+                "fields": (
+                    "notes",
+                    "active",
+                    "is_online_client",
+                    "needs_gebueh_invoice",
+                    "gebueh_no_diagnosis",
+                )
+            },
         ),
         (
             gettext_lazy("Timestamps"),
