@@ -88,7 +88,7 @@
     </thead>
     <tbody>
         {% if gebueh_blocks %}
-        {% if arbeitsdiagnose %}
+        {% if arbeitsdiagnose and not invoice.client.gebueh_no_diagnosis %}
         <tr>
             <td colspan="5" class="text-secondary italic">
                 {% trans "Diagnosis" %}: {{ arbeitsdiagnose }}

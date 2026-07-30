@@ -503,6 +503,17 @@ class GebuhPdfTemplateTest(TestCase):
         html = self._render()
         self.assertNotIn("GebüH gesamt", html)
 
+    def test_diagnosis_line_shown_by_default(self):
+        html = self._render()
+        self.assertIn("gebueh-diagnose", html)
+        self.assertIn("Probatorik", html)
+
+    def test_diagnosis_line_hidden_when_gebueh_no_diagnosis_set(self):
+        self.client_obj.gebueh_no_diagnosis = True
+        self.client_obj.save()
+        html = self._render()
+        self.assertNotIn("gebueh-diagnose", html)
+
 
 class GebuhInvoiceDetailViewTest(TestCase):
     """Tests the tightened GebüH block on the web invoice_detail.html view:

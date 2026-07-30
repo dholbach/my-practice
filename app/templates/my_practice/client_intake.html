@@ -69,6 +69,15 @@
     </div>
 
     <div class="form-group">
+        {{ form.gebueh_no_diagnosis.label_tag }}
+        {{ form.gebueh_no_diagnosis }}
+        {{ form.gebueh_no_diagnosis.errors }}
+        <div class="helptext">
+            {% trans "Omit the diagnosis line from this client's GebüH invoices." %}
+        </div>
+    </div>
+
+    <div class="form-group">
         {{ form.full_name.label_tag }}
         {{ form.full_name }}
         {{ form.full_name.errors }}

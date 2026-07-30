@@ -46,10 +46,12 @@
 
 <!-- Line items -->
 {% if invoice.client.needs_gebueh_invoice and gebueh_blocks %}
+{% if not invoice.client.gebueh_no_diagnosis %}
 {% if arbeitsdiagnose %}
 <div class="gebueh-diagnose"><strong>Diagnose:</strong> {{ arbeitsdiagnose }}</div>
 {% else %}
 <div class="gebueh-diagnose"><strong>Diagnose:</strong> Probatorik</div>
+{% endif %}
 {% endif %}
 <table class="items">
   <thead>

@@ -185,6 +185,11 @@ class Client(TimestampedModel):
         verbose_name=_("GebüH-Rechnung"),
         help_text=_("GebüH-Ziffern und Diagnose auf der Rechnung ausweisen (PKV / Beihilfe)"),
     )
+    gebueh_no_diagnosis = models.BooleanField(
+        default=False,
+        verbose_name=_("No diagnosis on invoice"),
+        help_text=_("Omit the diagnosis line from GebüH invoices for this client"),
+    )
     is_online_client = models.BooleanField(
         default=False,
         verbose_name=_("Online client"),
