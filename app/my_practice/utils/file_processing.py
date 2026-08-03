@@ -23,6 +23,7 @@ from PIL import Image, ImageOps
 
 logger = logging.getLogger(__name__)
 
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB — generous for scanned documents, bounds worst case
 MAX_IMAGE_PX = 2400  # longest side in pixels — approx A4 at 300 DPI
 JPEG_QUALITY = 85
 GS_PDF_PRESET = "/ebook"  # base preset; explicit downsampling flags override resolution
@@ -196,14 +197,23 @@ def process_upload(upload) -> ContentFile:
     Non-image/PDF types in the allowlist (e.g. .docx) are passed through unchanged.
 
     Raises ValueError for any extension not in _ALLOWED_EXTENSIONS so that
-    active-content types (.svg, .html, .js, …) are never silently stored.
+    active-content types (.svg, .html, .js, …) are never silently stored, and
+    for any upload over MAX_UPLOAD_BYTES so a huge file can't be handed to
+    Pillow/Ghostscript before we've even checked it's a reasonable size.
     """
     name = getattr(upload, "name", "") or ""
     ext = Path(name).suffix.lower()
     content_type = getattr(upload, "content_type", "") or ""
+    size = getattr(upload, "size", None)
 
     if ext not in _ALLOWED_EXTENSIONS:
         raise ValueError(_("File type '%(ext)s' is not allowed.") % {"ext": ext or _("unknown")})
+
+    if size is not None and size > MAX_UPLOAD_BYTES:
+        raise ValueError(
+            _("File '%(name)s' is too large (max %(max_mb)s MB).")
+            % {"name": name, "max_mb": MAX_UPLOAD_BYTES // (1024 * 1024)}
+        )
 
     if content_type.startswith("image/") or ext in _IMAGE_EXTENSIONS:
         return _process_image_upload(upload, name)

@@ -20,6 +20,7 @@ is loaded automatically.
 - `DJANGO_SECRET_KEY`: Secret key for Django (at least 50 characters, random)
 - `DJANGO_DEBUG`: `True` for development, `False` for production
 - `DJANGO_ALLOWED_HOSTS`: Comma-separated list of allowed hosts (e.g. `example.com,www.example.com`)
+- `SECURE_SSL_REDIRECT`: `true` if this instance is reachable over HTTPS (public deployment, or behind a TLS-terminating reverse proxy) — enables HTTPS redirect, secure cookies, and HSTS. Leave `false` (default) for a plain-HTTP LAN deployment. Only takes effect when `DJANGO_DEBUG=False`.
 
 #### Database
 - `POSTGRES_DB`: Database name (default: `my_practice`)
@@ -55,6 +56,7 @@ is loaded automatically.
    DJANGO_SECRET_KEY=<generated-secret-key>
    DJANGO_DEBUG=False
    DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+   SECURE_SSL_REDIRECT=true  # only if this instance is reachable over HTTPS
    POSTGRES_PASSWORD=<secure-random-password>
    ```
 
@@ -66,15 +68,21 @@ is loaded automatically.
 
 ### Automatic Production Security Settings
 
-When `DEBUG=False`, the following are automatically enabled:
+When `DEBUG=False`, the following are always enabled:
 
-- ✅ **HTTPS Redirect**: `SECURE_SSL_REDIRECT = True`
-- ✅ **Secure Cookies**: `SESSION_COOKIE_SECURE = True`, `CSRF_COOKIE_SECURE = True`
-- ✅ **HSTS**: `SECURE_HSTS_SECONDS = 31536000` (1 year)
-- ✅ **Security Headers**:
-  - `SECURE_CONTENT_TYPE_NOSNIFF = True`
-  - `SECURE_BROWSER_XSS_FILTER = True`
-  - `X_FRAME_OPTIONS = "DENY"`
+- ✅ **Security Headers**: `SECURE_CONTENT_TYPE_NOSNIFF = True`, `X_FRAME_OPTIONS = "DENY"`
+
+HTTPS-dependent settings are gated behind `SECURE_SSL_REDIRECT` (env var, default `false`) instead
+of being tied to `DEBUG=False` directly — the app is commonly run on a plain-HTTP LAN or behind a
+reverse proxy that terminates TLS itself, where redirecting to HTTPS or marking cookies `Secure`
+would break the app. **If this instance is reachable over HTTPS** (public deployment, or a
+TLS-terminating reverse proxy in front of it), set `SECURE_SSL_REDIRECT=true` in `.env` to enable:
+
+- **HTTPS Redirect**: `SECURE_SSL_REDIRECT = True`
+- **Secure Cookies**: `SESSION_COOKIE_SECURE = True`, `CSRF_COOKIE_SECURE = True`
+- **HSTS**: `SECURE_HSTS_SECONDS = 31536000` (1 year), `SECURE_HSTS_INCLUDE_SUBDOMAINS = True`, `SECURE_HSTS_PRELOAD = True`
+
+Left unset (the default), the app assumes plain HTTP and none of the above apply.
 
 ### Database Constraints
 
