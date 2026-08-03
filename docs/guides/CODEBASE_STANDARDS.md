@@ -15,7 +15,6 @@ and provides the anti-patterns checklist used during periodic reviews
 | Revenue totals or breakdowns | `RevenueCalculator.get_total_revenue()` / `get_status_breakdown()` |
 | Client revenue subquery | `RevenueCalculator.get_client_revenue_subquery()` |
 | Invoice filtering (search, year, status, amount) | `InvoiceFilterHelper(qs).apply_filters(...)` |
-| Client map (code → object) | `build_client_map()` — uses `.only()`, no N+1 |
 | Practice-scoped queryset | inherit `PracticeScopedListView` or call `.for_current_practice(request)` |
 | Date ranges | `DateRangeHelper(start, end)` |
 | Working days with holidays | `DateRangeHelper.count_working_days(start, end, holidays)` — never `round(days*5/7)` |

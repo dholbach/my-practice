@@ -36,7 +36,6 @@ from .dashboard_widgets import (
 )
 from .date_helpers import DateRangeHelper
 from .financial_list_context_builder import FinancialListContextBuilder
-from .import_helpers import build_client_map
 from .invoice_filter_helper import InvoiceFilterHelper
 from .billing_helpers import (
     build_service_type_map,
@@ -90,7 +89,6 @@ __all__ = [
     "RECENT_ACTIVITY_WINDOW_DAYS",
     "SESSION_LOG_WINDOW_DAYS",
     "SESSION_LOG_MIN_DURATION",
-    "build_client_map",
     "BankStatementImporter",
     "AnalyticsDashboardBuilder",
     "ClientDetailContextBuilder",
