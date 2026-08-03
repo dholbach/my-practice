@@ -18,12 +18,12 @@ from .billing_helpers import resolve_session_rate
 # ── Private resolution helpers ────────────────────────────────────────────────
 
 
-def _resolve_client(event: dict, overrides: dict) -> tuple[Client | None, str | None]:
+def _resolve_client(event: dict, overrides: dict, practice) -> tuple[Client | None, str | None]:
     """Return (client, None) or (None, error_message)."""
     client_id = overrides.get("client_id")
     if client_id:
         try:
-            return Client.objects.get(id=client_id), None
+            return Client.objects.for_practice(practice).get(id=client_id), None
         except Client.DoesNotExist:
             return None, _("Client ID %(id)s not found for event %(summary)s") % {
                 "id": client_id,
@@ -40,10 +40,12 @@ def _resolve_service_type(
     """Return (service_type, None) or (None, error_message)."""
     service_type_id = overrides.get("service_type_id")
     if service_type_id:
-        try:
-            return ServiceType.objects.get(id=service_type_id), None
-        except ServiceType.DoesNotExist:
+        service_type = ServiceType.objects.filter(
+            Q(practice=practice) | Q(practice__isnull=True), id=service_type_id
+        ).first()
+        if service_type is None:
             return None, _("Service type ID %(id)s not found") % {"id": service_type_id}
+        return service_type, None
     if event.get("suggested_service_type_obj"):
         return event["suggested_service_type_obj"], None
     default = ServiceType.objects.filter(
@@ -108,7 +110,7 @@ def create_invoice_items_from_events(
             skipped += 1
             continue
 
-        client, err = _resolve_client(event, overrides)
+        client, err = _resolve_client(event, overrides, request.current_practice)
         if err:
             errors.append(err)
             if not client:

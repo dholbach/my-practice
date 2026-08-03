@@ -12,9 +12,6 @@
 <form method="post" id="invoice-form">
     {% csrf_token %}
 
-    {# Hidden field for practice - set by view #}
-    {{ form.practice.as_hidden }}
-
     <div class="form-row">
         <div class="form-group sensitive-data">
             {{ form.client.label_tag }}

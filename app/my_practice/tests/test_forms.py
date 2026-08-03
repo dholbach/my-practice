@@ -49,7 +49,6 @@ class InvoiceFormTestCase(TestCase):
             "status": "draft",
             "tax_rate": "0.00",
             "notes": "Test notes",
-            "practice": self.practice.id,
         }
         form = InvoiceForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -62,7 +61,6 @@ class InvoiceFormTestCase(TestCase):
             "invoice_date": "2025-12-24",
             "status": "draft",
             "tax_rate": "0.00",
-            "practice": self.practice.id,
         }
         form = InvoiceForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -252,11 +250,12 @@ class InvoiceFormIntegrationTestCase(TestCase):
             "invoice_date": "2025-12-24",
             "status": "draft",
             "tax_rate": "0.00",
-            "practice": self.practice.id,
         }
         invoice_form = InvoiceForm(data=invoice_data)
         self.assertTrue(invoice_form.is_valid())
-        invoice = invoice_form.save()
+        invoice = invoice_form.save(commit=False)
+        invoice.practice = self.practice
+        invoice.save()
 
         # Create invoice item
         session_obj = Session.objects.create(

@@ -36,7 +36,6 @@ class InvoiceForm(StyledFormMixin, forms.ModelForm):
             "status",
             "tax_rate",
             "notes",
-            "practice",
         ]
         widgets = {
             "client": forms.Select(attrs={"id": "id_client"}),
@@ -91,8 +90,13 @@ class InvoiceForm(StyledFormMixin, forms.ModelForm):
             initial_client = self.initial.get("client")
             # Also check if client is already set in the form data
             if not initial_client and "client" in self.data:
+                client_lookup = (
+                    Client.objects.for_current_practice(self.request)
+                    if self.request
+                    else Client.objects.all()
+                )
                 try:
-                    initial_client = Client.objects.get(pk=self.data.get("client") or "")
+                    initial_client = client_lookup.get(pk=self.data.get("client") or "")
                 except Client.DoesNotExist, ValueError, TypeError:
                     initial_client = None
 
