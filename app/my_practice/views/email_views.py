@@ -9,7 +9,7 @@ from django.core.mail import EmailMessage
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.views import View
 
@@ -44,6 +44,18 @@ def _make_from_email(practice: Practice) -> str:
     return practice.email
 
 
+def _success_html(text: str, recipient: str):
+    """
+    Build a safe HTML success-flash message with the recipient wrapped in a
+    sensitive-data span. Uses format_html so `recipient` (client-controlled
+    data, not guaranteed to be a validated email string at this point) is
+    HTML-escaped rather than blindly trusted via mark_safe.
+    """
+    return format_html(
+        text, recipient=format_html('<span class="sensitive-data">{}</span>', recipient)
+    )
+
+
 def _dispatch_email(
     request: HttpRequest,
     msg: "EmailMessage",
@@ -60,7 +72,7 @@ def _dispatch_email(
     try:
         result = msg.send()
         if result == 1:
-            messages.success(request, mark_safe(success_html))
+            messages.success(request, success_html)
         else:
             messages.error(
                 request, _("Email sending failed (result: %(result)s).") % {"result": result}
@@ -94,7 +106,7 @@ class BaseClientEmailView(View):
         raise NotImplementedError
 
     def get_success_html(self, recipient: str) -> str:
-        """Return safe HTML for the success flash message."""
+        """Return safe HTML for the success flash message (use _success_html())."""
         raise NotImplementedError
 
     def get_extra_context(self, client: Client, practice: Practice) -> dict:
@@ -353,10 +365,7 @@ class SendInvoiceEmailView(View):
                 logger.info("Invoice status updated to 'sent'")
             messages.success(
                 request,
-                mark_safe(
-                    _("✅ Invoice successfully sent to %(recipient)s")
-                    % {"recipient": f'<span class="sensitive-data">{recipient}</span>'}
-                ),
+                _success_html(_("✅ Invoice successfully sent to {recipient}"), recipient),
             )
         else:
             logger.error(f"Email send failed with result: {result}")
@@ -417,9 +426,7 @@ class SendPaymentReminderView(BaseClientEmailView):
         }
 
     def get_success_html(self, recipient: str) -> str:
-        return _("✅ Payment reminder sent to %(recipient)s") % {
-            "recipient": f'<span class="sensitive-data">{recipient}</span>'
-        }
+        return _success_html(_("✅ Payment reminder sent to {recipient}"), recipient)
 
     def _build_email_content(
         self, client: Client, practice: Practice, open_invoices: list[Invoice]
@@ -544,9 +551,7 @@ class SendCancellationEmailView(BaseClientEmailView):
         return subject, "\n".join(lines)
 
     def get_success_html(self, recipient: str) -> str:
-        return _("✅ Cancellation sent to %(recipient)s") % {
-            "recipient": f'<span class="sensitive-data">{recipient}</span>'
-        }
+        return _success_html(_("✅ Cancellation sent to {recipient}"), recipient)
 
 
 class SendQuestionnaireEmailView(BaseClientEmailView):
@@ -607,9 +612,7 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
         client.save(update_fields=["questionnaire_sent_date"])
 
     def get_success_html(self, recipient: str) -> str:
-        return _("✅ Questionnaire sent to %(recipient)s") % {
-            "recipient": f'<span class="sensitive-data">{recipient}</span>'
-        }
+        return _success_html(_("✅ Questionnaire sent to {recipient}"), recipient)
 
 
 class SendContractEmailView(BaseClientEmailView):
@@ -638,9 +641,7 @@ class SendContractEmailView(BaseClientEmailView):
         return (self._get_filename(client), pdf_bytes, "application/pdf")
 
     def get_success_html(self, recipient: str) -> str:
-        return _("✅ Treatment contract sent to %(recipient)s") % {
-            "recipient": f'<span class="sensitive-data">{recipient}</span>'
-        }
+        return _success_html(_("✅ Treatment contract sent to {recipient}"), recipient)
 
 
 class SendIntakeFormEmailView(BaseClientEmailView):
@@ -669,9 +670,7 @@ class SendIntakeFormEmailView(BaseClientEmailView):
         client.save(update_fields=["intake_sent_date"])
 
     def get_success_html(self, recipient: str) -> str:
-        return _("✅ Intake form sent to %(recipient)s") % {
-            "recipient": f'<span class="sensitive-data">{recipient}</span>'
-        }
+        return _success_html(_("✅ Intake form sent to {recipient}"), recipient)
 
 
 class SendQuestionnairePdfEmailView(BaseClientEmailView):
@@ -723,6 +722,4 @@ class SendQuestionnairePdfEmailView(BaseClientEmailView):
         return (self._get_filename(client), pdf_bytes, "application/pdf")
 
     def get_success_html(self, recipient: str) -> str:
-        return _("✅ Questionnaire sent to %(recipient)s") % {
-            "recipient": f'<span class="sensitive-data">{recipient}</span>'
-        }
+        return _success_html(_("✅ Questionnaire sent to {recipient}"), recipient)

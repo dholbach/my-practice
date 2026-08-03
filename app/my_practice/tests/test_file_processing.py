@@ -14,6 +14,7 @@ from PIL import Image
 
 from ..utils.file_processing import (
     IMAGE_SKIP_BYTES,
+    MAX_UPLOAD_BYTES,
     PDF_SKIP_BYTES,
     _compress_pdf_bytes,
     _read_page_rotations,
@@ -85,6 +86,18 @@ class ProcessUploadTest(TestCase):
         )
         result = process_upload(upload)
         self.assertIs(result, upload)
+
+    def test_rejects_oversized_upload_before_processing(self):
+        upload = SimpleUploadedFile("photo.jpg", b"x", content_type="image/jpeg")
+        upload.size = MAX_UPLOAD_BYTES + 1
+        with self.assertRaises(ValueError):
+            process_upload(upload)
+
+    def test_allows_upload_at_exactly_the_size_limit(self):
+        upload = SimpleUploadedFile("doc.pdf", _make_pdf_bytes(), content_type="application/pdf")
+        upload.size = MAX_UPLOAD_BYTES
+        result = process_upload(upload)
+        self.assertEqual(result.name, "doc.pdf")
 
 
 class PageRotationTest(TestCase):
