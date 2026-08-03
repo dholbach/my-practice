@@ -482,8 +482,7 @@ def add_sessions_to_invoice(request, pk):
     else:
         messages.warning(request, _("No new sessions added (already billed?)."))
 
-    next_url = request.POST.get("next")
-    return redirect(next_url or "invoice_detail", pk=pk)
+    return redirect(safe_next(request, fallback=reverse("invoice_detail", kwargs={"pk": pk})))
 
 
 @login_required
@@ -510,8 +509,7 @@ def create_invoice_with_sessions(request):
     )
     if not sessions:
         messages.warning(request, _("No sessions specified."))
-        next_url = request.POST.get("next")
-        return redirect(next_url or "invoice_list")
+        return redirect(safe_next(request, fallback=reverse("invoice_list")))
 
     service_type_map = build_service_type_map(practice)
     fallback_service_type = next(iter(service_type_map.values()), None)
@@ -547,8 +545,9 @@ def create_invoice_with_sessions(request):
             added,
         ),
     )
-    next_url = request.POST.get("next")
-    return redirect(next_url or "invoice_detail", pk=invoice.pk)
+    return redirect(
+        safe_next(request, fallback=reverse("invoice_detail", kwargs={"pk": invoice.pk}))
+    )
 
 
 def _parse_billing_month(month: str) -> date | None:

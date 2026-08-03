@@ -13,9 +13,6 @@
     {% csrf_token %}
     {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
-    {# Hidden field for practice - set by view #}
-    {{ form.practice.as_hidden }}
-
     <div class="form-row">
         <div class="form-group">
             <label for="{{ form.client.id_for_label }}">{{ form.client.label }}</label>

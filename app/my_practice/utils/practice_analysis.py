@@ -5,14 +5,15 @@ Provides analysis tools for practice planning, capacity management,
 and client overview for a given time period.
 """
 
+from decimal import Decimal
+
 from dateutil.relativedelta import relativedelta
-from django.db.models import FloatField, Sum
+from django.db.models import Count, FloatField, OuterRef, Subquery, Sum
 from django.db.models.functions import Cast
 from django.utils.translation import gettext as _, ngettext
 
-from ..models import Client
+from ..models import Client, Invoice
 from ..models.session import Session
-from .revenue_helpers import RevenueCalculator
 
 
 class ClientClassification:
@@ -56,6 +57,7 @@ class PracticeAnalyzer:
         clients = (
             Client.objects.filter(practice=self.practice) if self.practice else Client.objects.all()
         )
+        clients = self._annotate_clients(clients)
 
         # Get session data for period
         period_sessions = self._get_period_sessions()
@@ -147,6 +149,46 @@ class PracticeAnalyzer:
             )
         return hours_by_client
 
+    def _annotate_clients(self, clients):
+        """
+        Annotate a Client queryset with the per-client aggregates _analyze_client needs,
+        computed via Subquery so all clients are covered in one query each instead of
+        three extra queries per client (revenue, invoice count, session hours).
+        """
+        paid_revenue_subquery = (
+            Invoice.objects.filter(
+                client=OuterRef("pk"),
+                status="paid",
+                invoice_date__gte=self.start_date,
+                invoice_date__lte=self.end_date,
+            )
+            .values("client")
+            .annotate(total=Sum("total"))
+            .values("total")[:1]
+        )
+        invoice_count_subquery = (
+            Invoice.objects.filter(
+                client=OuterRef("pk"),
+                invoice_date__gte=self.start_date,
+                invoice_date__lte=self.end_date,
+            )
+            .values("client")
+            .annotate(count=Count("id"))
+            .values("count")[:1]
+        )
+        session_minutes_subquery = (
+            Session.objects.filter(client=OuterRef("pk"), cancelled=False)
+            .values("client")
+            .annotate(total=Sum(Cast("duration", FloatField())))
+            .values("total")[:1]
+        )
+
+        return clients.annotate(
+            _revenue_in_period=Subquery(paid_revenue_subquery),
+            _invoices_count_in_period=Subquery(invoice_count_subquery),
+            _total_session_minutes_ever=Subquery(session_minutes_subquery),
+        )
+
     def _analyze_client(self, client, period_sessions):
         """Analyze a single client for the period."""
 
@@ -160,12 +202,8 @@ class PracticeAnalyzer:
 
         # Classify and gather data
         classification = self._classify_client(sessions_in_period, total_sessions_ever)
-        revenue_in_period = RevenueCalculator.get_client_revenue(
-            client, start_date=self.start_date, end_date=self.end_date
-        )["total"]
-        invoices_count = RevenueCalculator.get_client_revenue(
-            client, include_unpaid=True, start_date=self.start_date, end_date=self.end_date
-        )["count"]
+        revenue_in_period = client._revenue_in_period or Decimal("0")
+        invoices_count = client._invoices_count_in_period or 0
 
         return {
             "client": client,
@@ -181,10 +219,7 @@ class PracticeAnalyzer:
 
     def _get_total_sessions_for_client(self, client) -> float:
         """Get total non-cancelled session hours ever for a client."""
-        result = Session.objects.filter(client=client, cancelled=False).aggregate(
-            total=Sum(Cast("duration", FloatField()))
-        )
-        return (result["total"] or 0.0) / 60.0
+        return (client._total_session_minutes_ever or 0.0) / 60.0
 
     def _classify_client(self, sessions_in_period: float, total_sessions: float) -> str:
         """

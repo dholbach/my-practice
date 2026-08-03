@@ -25,6 +25,7 @@ from ..utils.contract_form import add_contract_form_fields
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks, get_arbeitsdiagnose
 from ..utils.practice_helpers import require_practice
 from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
+from ..utils.view_helpers import safe_next
 
 
 def next_invoice_number(request: HttpRequest) -> JsonResponse:
@@ -340,6 +341,8 @@ def invoice_batch_download(request: HttpRequest) -> HttpResponse:
 
     year = int(year_raw)
 
+    # Deliberately not InvoiceFilterHelper: that filters paid invoices by paid_date__year
+    # (M-PAT-02), but this endpoint archives by invoice_date year regardless of status.
     invoices = (
         Invoice.objects.for_current_practice(request)
         .filter(invoice_date__year=year, status=status)
@@ -421,7 +424,7 @@ def update_invoice_status(request, pk):
         _("Status changed to: %(status)s") % {"status": invoice.get_status_display()},
     )
 
-    next_url = request.POST.get("next")
+    next_url = safe_next(request, fallback="")
     if next_url:
         return redirect(next_url)
 
