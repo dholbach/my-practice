@@ -177,7 +177,6 @@ templates as `context["next"]`. `InvoiceFormsetMixin` handles inline `InvoiceIte
 | `available_data_years(practice)` | `tax_context_builder.py` | Year-selector dropdowns in tax views |
 | `count_sessions(items)` | `calculations.py` | Session count with duration normalization |
 | `get_next_invoice_number(client)` | `invoice_helpers.py` | Invoice number generation |
-| `build_client_map()` | `import_helpers.py` | Optimized code→client mapping |
 
 ### Capacity periods (v0.2.9)
 

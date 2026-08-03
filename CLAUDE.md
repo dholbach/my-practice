@@ -168,10 +168,6 @@ breakdown = RevenueCalculator.get_status_breakdown(year=2026)
 from my_practice.utils import DateRangeHelper
 helper = DateRangeHelper(start_date, end_date)
 months = helper.get_month_list()
-
-# Client helpers
-from my_practice.utils import build_client_map
-client_map = build_client_map()  # Optimized with .only()
 ```
 
 #### Error Handling Patterns (M-PAT-01)
@@ -492,7 +488,6 @@ days = DateRangeHelper.count_working_days(start, end, holidays)
 - `InvoiceFilterHelper` - Invoice queryset filtering
 - `RevenueCalculator` - All revenue calculations
 - `DateRangeHelper` - Date range utilities
-- `build_client_map()` - Optimized client code→client mapping
 
 See [docs/architecture/CODE_STRUCTURE.md](docs/architecture/CODE_STRUCTURE.md) for complete reference.
 
