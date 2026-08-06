@@ -18,9 +18,11 @@ class GebuhZiffer(models.Model):
     """
     A single entry in the GebüH fee schedule (Gebührenverzeichnis für Heilpraktiker).
 
-    satz_max is always billed (Höchstsatz); satz_min is stored for reference only.
-    Frequency constraints (max_haeufigkeit / bezugszeitraum_tage) drive soft warnings
-    in the quick-entry UI but never hard-block saving.
+    satz_max (Höchstsatz) is the ceiling billed per code, capped further by what's
+    left of the session's agreed fee when multiple codes are combined; satz_min is
+    stored for reference only. Frequency constraints (max_haeufigkeit /
+    bezugszeitraum_tage) drive soft warnings in the quick-entry UI but never
+    hard-block saving.
     """
 
     nummer = models.CharField(max_length=10, unique=True, verbose_name=_("Code"))
