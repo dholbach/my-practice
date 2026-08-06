@@ -107,7 +107,8 @@ class BankStatementImporter:
         Parse German decimal format to Decimal.
 
         Args:
-            value: String like "90,00" or "-300,00"
+            value: String like "90,00", "-300,00", or "1.234,56" (with a "." thousands
+                separator, as German bank exports use for amounts >= 1000)
 
         Returns:
             Decimal object
@@ -115,8 +116,8 @@ class BankStatementImporter:
         Raises:
             InvalidOperation: If parsing fails
         """
-        # Replace comma with dot for Decimal parsing
-        normalized = value.replace(",", ".")
+        # German format uses "." as thousands separator and "," as decimal separator.
+        normalized = value.replace(".", "").replace(",", ".")
         return Decimal(normalized)
 
     def parse_german_date(self, value: str) -> "date":

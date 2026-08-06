@@ -280,6 +280,26 @@ class TaxYearNoteViewTest(TestCase):
         note = TaxYearNote.objects.get(practice=self.practice, year=2025)
         self.assertEqual(note.allocation_note, "Updated note")
 
+    def test_save_settlement_without_note_preserves_existing_note(self):
+        """POST with settlement_amount/settlement_date but no 'note' key must not clear the stored note.
+
+        Mirrors the settlement-editing widget on tax_quarter_overview.html, which posts
+        settlement_amount/settlement_date only and never includes a 'note' field.
+        """
+        from my_practice.models import TaxYearNote
+
+        self.client_http.post(
+            reverse("save_tax_year_note"), {"year": "2025", "note": "Einnahmenanteil 95/5"}
+        )
+        response = self.client_http.post(
+            reverse("save_tax_year_note"),
+            {"year": "2025", "settlement_amount": "123.45", "settlement_date": "2025-06-01"},
+        )
+        self.assertEqual(response.status_code, 200)
+        note = TaxYearNote.objects.get(practice=self.practice, year=2025)
+        self.assertEqual(note.allocation_note, "Einnahmenanteil 95/5")
+        self.assertEqual(note.settlement_amount, Decimal("123.45"))
+
     def test_save_note_rejects_invalid_year(self):
         """POST with an out-of-range year returns 400."""
         response = self.client_http.post(

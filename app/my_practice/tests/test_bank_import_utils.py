@@ -106,6 +106,12 @@ class ParseGermanDecimalTest(TestCase):
     def test_zero(self):
         self.assertEqual(self.importer.parse_german_decimal("0,00"), Decimal("0.00"))
 
+    def test_thousands_separator(self):
+        self.assertEqual(self.importer.parse_german_decimal("1.234,56"), Decimal("1234.56"))
+
+    def test_negative_thousands_separator(self):
+        self.assertEqual(self.importer.parse_german_decimal("-2.500,00"), Decimal("-2500.00"))
+
     def test_invalid_raises(self):
         with self.assertRaises(InvalidOperation):
             self.importer.parse_german_decimal("nicht-eine-zahl")

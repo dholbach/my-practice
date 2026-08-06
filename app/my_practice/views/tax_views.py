@@ -52,9 +52,9 @@ def save_tax_year_note(request: HttpRequest) -> JsonResponse:
     if not (1900 <= year <= 2100):
         return JsonResponse({"error": _("Invalid year")}, status=400)
 
-    note_text = request.POST.get("note", "").strip()
-
-    defaults: dict = {"allocation_note": note_text}
+    defaults: dict = {}
+    if "note" in request.POST:
+        defaults["allocation_note"] = request.POST.get("note", "").strip()
 
     raw_amount = request.POST.get("settlement_amount", "").strip()
     if raw_amount != "":
