@@ -10,7 +10,7 @@ from ..models import Client, Invoice
 def get_arbeitsdiagnose(client: Client) -> str:
     """Return the Arbeitsdiagnose from ClientProfile, or empty string if not set."""
     try:
-        return client.clientprofile.arbeitsdiagnose or ""
+        return client.profile.arbeitsdiagnose or ""
     except Exception:
         return ""
 

@@ -394,11 +394,9 @@ class GebuhPdfBlocksTest(TestCase):
     def test_get_arbeitsdiagnose_with_profile(self):
         from ..models import ClientProfile
 
-        # arbeitsdiagnose is Fernet-encrypted; just verify no exception is raised
-        # and the result is a string (decrypted value or empty if no key in test env)
         ClientProfile.objects.create(client=self.client_obj, arbeitsdiagnose="F32.1")
         result = self._diagnose(self.client_obj)
-        self.assertIsInstance(result, str)
+        self.assertEqual(result, "F32.1")
 
 
 class GebuhPdfTemplateTest(TestCase):
