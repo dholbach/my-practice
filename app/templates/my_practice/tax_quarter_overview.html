@@ -225,7 +225,6 @@ function taxSettlement() {
             this.error = "";
             const data = new FormData();
             data.append("year", "{{ year }}");
-            data.append("note", "");
             data.append("settlement_amount", this.amount);
             data.append("settlement_date", this.settlementDate);
             data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
