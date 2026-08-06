@@ -643,13 +643,18 @@ def gebueh_leistung_create(request, client_pk, session_pk):
         # ── Replace existing entries ───────────────────────────────────────────
         session.gebueh_leistungen.all().delete()
         vereinbarter_betrag = Leistungserfassung.compute_vereinbarter_betrag(session)
+        remaining = vereinbarter_betrag
         for ziffer in selected_ziffern:
             # Ziffer.satz_max is only the fee schedule's ceiling for this code —
-            # never bill more than what's actually charged for the session.
+            # never bill more than what's actually charged for the session. When
+            # several codes are selected, each one draws from what's left of the
+            # agreed fee (in sort_order) so the combined total never exceeds it.
+            betrag = min(ziffer.satz_max, remaining)
+            remaining -= betrag
             Leistungserfassung.objects.create(
                 session=session,
                 ziffer=ziffer,
-                betrag=min(ziffer.satz_max, vereinbarter_betrag),
+                betrag=betrag,
                 vereinbarter_betrag=vereinbarter_betrag,
             )
 

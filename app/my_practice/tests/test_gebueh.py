@@ -149,6 +149,36 @@ class GebuhLeistungViewTest(TestCase):
         le = Leistungserfassung.objects.get(session=short_session)
         self.assertEqual(le.betrag, Decimal("22.50"))
 
+    def test_post_caps_combined_betrag_at_session_fee(self):
+        """
+        Multiple codes on one session must not sum above the session's agreed
+        fee — each additional code draws from what's left of it (in sort_order),
+        not its own independent satz_max.
+        """
+        ziffer2, _ = GebuhZiffer.objects.get_or_create(
+            nummer="19.5",
+            defaults={
+                "bezeichnung": "Exploration",
+                "satz_max": Decimal("46.00"),
+                "satz_min": Decimal("15.50"),
+                "sort_order": 20,
+            },
+        )
+        # client hourly_rate_60=90.00 × 60 min = 90.00 agreed fee.
+        # self.ziffer (19.2) + ziffer2 (19.5) would sum to 92.00 (46.00 + 46.00)
+        # if billed independently. Seeded catalogue sort_order puts 19.5 (20)
+        # ahead of 19.2 (40), so 19.5 draws first and 19.2 gets what's left.
+        self.http.post(self._url(), {"ziffern": [self.ziffer.pk, ziffer2.pk]})
+        entries = {
+            le.ziffer.nummer: le.betrag
+            for le in Leistungserfassung.objects.filter(session=self.session).select_related(
+                "ziffer"
+            )
+        }
+        self.assertEqual(entries["19.5"], Decimal("46.00"))
+        self.assertEqual(entries["19.2"], Decimal("44.00"))
+        self.assertEqual(sum(entries.values()), Decimal("90.00"))
+
     def test_post_replaces_existing_entries(self):
         ziffer2, _ = GebuhZiffer.objects.get_or_create(
             nummer="19.5",
