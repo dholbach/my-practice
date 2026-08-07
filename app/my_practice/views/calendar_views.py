@@ -317,7 +317,8 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
     Import selected pending calendar events as invoice items (P-013).
 
     Expects JSON: {"event_ids": [1, 2, 3], "invoice_id": 42}
-    If invoice_id is omitted, events are marked as pending for manual assignment.
+    If invoice_id is omitted, events go onto each client's current draft
+    invoice (or a newly created one).
 
     Returns JSON with counts of created/skipped/errors.
     """

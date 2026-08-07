@@ -197,6 +197,24 @@ class ClientDetailViewTest(TestCase):
         response = self.client_instance.get(reverse("client_detail", kwargs={"pk": 99999}))
         self.assertEqual(response.status_code, 404)
 
+    def test_open_amount_is_exact_decimal_not_float_rounded(self):
+        """open_amount must stay Decimal-exact; summing as float can introduce rounding drift."""
+        for i in range(3):
+            Invoice.objects.create(
+                client=self.test_client,
+                invoice_number=f"TC-OPEN-{i}",
+                invoice_date=date.today(),
+                total=Decimal("0.10"),
+                status="sent",
+                practice=self.practice,
+            )
+        response = self.client_instance.get(
+            reverse("client_detail", kwargs={"pk": self.test_client.pk})
+        )
+        open_amount = response.context["stats"]["open_amount"]
+        self.assertEqual(open_amount, Decimal("0.30"))
+        self.assertIsInstance(open_amount, Decimal)
+
 
 class ReminderUrgencyTest(TestCase):
     """

@@ -6,9 +6,6 @@
 {% block page_title %}🤒 {% trans "Send cancellation email" %}{% endblock %}
 {% block page_subtitle %}<span class="sensitive-data">{{ client.full_name }}</span> ({{ client.client_code }}) &mdash; {% if client.language == 'en' %}🇬🇧 {% trans "English" %}{% else %}🇩🇪 {% trans "German" %}{% endif %}{% endblock %}
 
-{% block extra_css %}
-{% endblock %}
-
 {% block content %}
 
 <div class="email-preview">

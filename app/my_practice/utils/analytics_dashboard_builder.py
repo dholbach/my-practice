@@ -7,6 +7,7 @@ from collections import defaultdict
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from django.db.models import Min
+from django.utils import timezone
 
 from ..models import CompanyExpense, CompanyWithdrawal, Invoice, TimeOff
 from ..utils.capacity_helpers import get_capacity_trends
@@ -59,7 +60,7 @@ class AnalyticsDashboardBuilder:
         self.period = period
         self.custom_start = custom_start
         self.custom_end = custom_end
-        self.today = date.today()
+        self.today = timezone.localdate()
 
         # Will be set by _parse_date_range()
         self.start_date: date | None = None

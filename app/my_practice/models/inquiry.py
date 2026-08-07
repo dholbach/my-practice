@@ -1,10 +1,10 @@
 """Client inquiry / lead tracking model."""
 
-from datetime import date
 from enum import StrEnum
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
 
@@ -110,7 +110,7 @@ class ClientInquiry(TimestampedModel):
         verbose_name=_("Status"),
     )
     inquiry_date = models.DateField(
-        default=date.today,
+        default=timezone.localdate,
         verbose_name=_("Date received"),
     )
     language = models.CharField(
@@ -224,5 +224,5 @@ class MarketingPeriod(TimestampedModel):
 
     def is_active(self) -> bool:
         """Return True if this period covers today."""
-        today = date.today()
+        today = timezone.localdate()
         return self.start_date <= today and (self.end_date is None or self.end_date >= today)

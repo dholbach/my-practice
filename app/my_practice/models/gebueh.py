@@ -111,12 +111,6 @@ class Leistungserfassung(TimestampedModel):
         ordering = ["session__session_date", "ziffer__sort_order"]
         verbose_name = _("Service entry")
         verbose_name_plural = _("Service entries")
-        indexes = [
-            models.Index(
-                fields=["session"],
-                name="leistung_session_idx",
-            ),
-        ]
 
     def __str__(self) -> str:
         return f"{self.session} – Ziffer {self.ziffer.nummer}"

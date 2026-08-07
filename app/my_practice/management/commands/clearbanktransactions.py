@@ -6,6 +6,7 @@ import sys
 from datetime import date
 
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 from ...models import BankTransaction, CompanyExpense, CompanyWithdrawal
 
 
@@ -96,7 +97,7 @@ class Command(BaseCommand):
             )
 
         if options.get("today"):
-            today = date.today()
+            today = timezone.localdate()
             self.stdout.write(f"ℹ️  Deleting transactions imported on {today}")
             self._print_financials_tip(with_financials)
             return (
@@ -167,7 +168,7 @@ class Command(BaseCommand):
 
         if use_today or imported_on_str:
             # Fall back to created_at date for --imported-on (covers pre-FK records)
-            import_date = date.today() if use_today else date.fromisoformat(imported_on_str)
+            import_date = timezone.localdate() if use_today else date.fromisoformat(imported_on_str)
             return (
                 CompanyExpense.objects.filter(created_at__date=import_date),
                 CompanyWithdrawal.objects.filter(created_at__date=import_date),

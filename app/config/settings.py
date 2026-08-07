@@ -172,6 +172,10 @@ MY_PRACTICE_DATA_DIR = Path(
     os.environ.get("MY_PRACTICE_DATA_DIR", str(BASE_DIR.parent / "my-practice-data"))
 )
 
+# Backup files directory — fixed container-internal mount point (see docker-compose*.yml,
+# which bind-mounts the host-side MY_PRACTICE_DATA_DIR/backups here).
+BACKUP_DIR = "/app/backups"
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

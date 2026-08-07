@@ -22,7 +22,7 @@ class DashboardContextAssembler:
     Builds the full context dict for the main dashboard view.
 
     Usage:
-        assembler = DashboardContextAssembler(request, today=date.today())
+        assembler = DashboardContextAssembler(request, today=timezone.localdate())
         context = assembler.build()
     """
 

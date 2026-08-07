@@ -181,6 +181,66 @@ class CreateInvoiceItemsFromEventsTest(TestCase):
         item = InvoiceItem.objects.get()
         self.assertEqual(item.invoice.client, other_client)
 
+    def test_invoice_id_override_uses_specified_invoice(self):
+        """An explicit invoice_id override must be used instead of the client's current draft."""
+        default_draft = get_or_create_invoice_for_month(self.client_obj, datetime(2026, 4, 1))
+        other_draft = Invoice.objects.create(
+            client=self.client_obj,
+            practice=self.practice,
+            invoice_date=date_cls(2026, 3, 1),
+            invoice_number="OTHER-1",
+            status="draft",
+        )
+        event = self._make_event(event_id="ev-inv-override")
+        created, skipped, errors = create_invoice_items_from_events(
+            approved_events=[event],
+            user_overrides={"ev-inv-override": {"invoice_id": other_draft.pk}},
+            request=self.request,
+        )
+
+        self.assertEqual(created, 1)
+        self.assertEqual(errors, [])
+        item = InvoiceItem.objects.get()
+        self.assertEqual(item.invoice_id, other_draft.pk)
+        self.assertNotEqual(item.invoice_id, default_draft.pk)
+
+    def test_invoice_id_new_creates_new_invoice_despite_existing_draft(self):
+        """invoice_id='new' must create a fresh invoice, not merge into an existing draft."""
+        existing_draft = get_or_create_invoice_for_month(self.client_obj, datetime(2026, 4, 1))
+        event = self._make_event(event_id="ev-inv-new")
+        created, skipped, errors = create_invoice_items_from_events(
+            approved_events=[event],
+            user_overrides={"ev-inv-new": {"invoice_id": "new"}},
+            request=self.request,
+        )
+
+        self.assertEqual(created, 1)
+        self.assertEqual(errors, [])
+        item = InvoiceItem.objects.get()
+        self.assertNotEqual(item.invoice_id, existing_draft.pk)
+        self.assertEqual(Invoice.objects.filter(client=self.client_obj).count(), 2)
+
+    def test_invoice_id_override_for_another_client_errors(self):
+        """An invoice_id belonging to a different client must not be usable."""
+        other_client = _make_client(self.practice, code="OTH")
+        other_invoice = Invoice.objects.create(
+            client=other_client,
+            practice=self.practice,
+            invoice_date=date_cls(2026, 4, 1),
+            invoice_number="OTH-1",
+            status="draft",
+        )
+        event = self._make_event(event_id="ev-inv-wrong-client")
+        created, skipped, errors = create_invoice_items_from_events(
+            approved_events=[event],
+            user_overrides={"ev-inv-wrong-client": {"invoice_id": other_invoice.pk}},
+            request=self.request,
+        )
+
+        self.assertEqual(created, 0)
+        self.assertEqual(skipped, 1)
+        self.assertTrue(errors)
+
     def test_no_rate_set_skips_with_error(self):
         penniless = Client.objects.create(
             client_code="NR",

@@ -2,10 +2,9 @@
 Dashboard views for the payments application.
 """
 
-from datetime import date
-
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
 from ..utils import DashboardContextAssembler
 
@@ -17,6 +16,6 @@ def home(_request: HttpRequest) -> HttpResponse:
 
 def dashboard(request: HttpRequest) -> HttpResponse:
     """Dashboard with statistics, widgets, and session heatmap."""
-    today = date.today()
+    today = timezone.localdate()
     context = DashboardContextAssembler(request, today=today).build()
     return render(request, "my_practice/dashboard.html", context)

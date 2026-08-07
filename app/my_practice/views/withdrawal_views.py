@@ -6,6 +6,7 @@ from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy
 
 from ..forms import CompanyWithdrawalForm
 from ..models import CompanyWithdrawal
@@ -67,7 +68,7 @@ class WithdrawalCreateView(PracticeScopedCreateView):
     form_class = CompanyWithdrawalForm
     template_name = "my_practice/withdrawal_form.html"
     success_url = reverse_lazy("withdrawal_list")
-    success_message = "Entnahme vom {obj.date:%d.%m.%Y} erfolgreich erstellt."
+    success_message = gettext_lazy("Withdrawal from {obj.date:%d.%m.%Y} created successfully.")
 
     def get_initial(self):
         """Pre-fill category from ?category= query param (e.g. ?category=tax)."""
@@ -78,11 +79,6 @@ class WithdrawalCreateView(PracticeScopedCreateView):
             initial["category"] = category
         return initial
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["action"] = "Erstellen"
-        return context
-
 
 class WithdrawalUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
     """Update an existing withdrawal"""
@@ -91,13 +87,8 @@ class WithdrawalUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
     form_class = CompanyWithdrawalForm
     template_name = "my_practice/withdrawal_form.html"
     success_url = reverse_lazy("withdrawal_list")
-    success_message = "Entnahme vom {obj.date:%d.%m.%Y} erfolgreich aktualisiert."
+    success_message = gettext_lazy("Withdrawal from {obj.date:%d.%m.%Y} updated successfully.")
     context_object_name = "withdrawal"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["action"] = "Bearbeiten"
-        return context
 
 
 class WithdrawalDeleteView(NextRedirectMixin, PracticeScopedDeleteView):
@@ -107,4 +98,6 @@ class WithdrawalDeleteView(NextRedirectMixin, PracticeScopedDeleteView):
     template_name = "my_practice/withdrawal_confirm_delete.html"
     success_url = reverse_lazy("withdrawal_list")
     context_object_name = "withdrawal"
-    success_message = "Entnahme vom {obj.date:%d.%m.%Y} über {obj.amount}€ erfolgreich gelöscht."
+    success_message = gettext_lazy(
+        "Withdrawal from {obj.date:%d.%m.%Y} of {obj.amount}€ deleted successfully."
+    )

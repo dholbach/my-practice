@@ -1,10 +1,12 @@
 """Builder for the client_detail view context."""
 
 from datetime import date, timedelta
+from decimal import Decimal
 from itertools import chain
 
 from dateutil.relativedelta import relativedelta
 from django.utils.translation import gettext as _
+from django.utils import timezone
 
 from ..models import (
     ClientDocument,
@@ -47,7 +49,7 @@ class ClientDetailContextBuilder:
     def __init__(self, client, request):
         self.client = client
         self.request = request
-        self.today = date.today()
+        self.today = timezone.localdate()
         # client_detail() (client_views.py) prefetches invoices__items with
         # session/service_type already select_related, so .all() below reads
         # from that cache instead of issuing one query per invoice.
@@ -95,7 +97,9 @@ class ClientDetailContextBuilder:
         activity_period = self._format_activity_period(
             first_session_date, last_session_date, is_recently_active
         )
-        open_amount = sum(float(inv.total) for inv in self.invoices if inv.status == "sent")
+        open_amount = sum(
+            (inv.total for inv in self.invoices if inv.status == "sent"), Decimal("0")
+        )
 
         monthly_aggregation = aggregate_invoice_items_by_month(
             self.all_items, exclude_cancellations=True

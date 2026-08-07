@@ -10,36 +10,6 @@ from django.utils.translation import gettext_lazy as _
 from .base import PracticeScopedManager, TimestampedModel
 
 
-def expense_receipt_upload_path(instance: "CompanyExpense", filename: str) -> str:
-    """Store receipts under taxes/<year>/<slug>.<ext> using the expense description.
-
-    If a file with the same name already exists, appends " #2", " #3", etc.
-    e.g. supervision.pdf → supervision #2.pdf → supervision #3.pdf
-    """
-    from django.conf import settings
-
-    year = instance.date.year if instance.date else "unknown"
-    # Prefer the expense description as the filename; fall back to original filename stem
-    title = instance.description or Path(filename).stem
-    stem = slugify(title)[:50] or "receipt"
-    ext = Path(filename).suffix.lower()
-
-    # Enumerate if a file with this name already exists in MEDIA_ROOT.
-    # Exception: if the file belongs to THIS instance (update/replace), allow
-    # overwriting in place rather than creating a new enumerated filename.
-    candidate = f"taxes/{year}/{stem}{ext}"
-    media_root = Path(settings.MEDIA_ROOT)
-    existing_name = instance.receipt.name if instance.receipt else None
-    counter = 2
-    while (media_root / candidate).exists():
-        if existing_name and candidate == existing_name:
-            break  # File belongs to this instance — overwrite in place
-        candidate = f"taxes/{year}/{stem} #{counter}{ext}"
-        counter += 1
-
-    return candidate
-
-
 class CompanyWithdrawal(TimestampedModel):
     """Track money withdrawn from company account for personal use"""
 

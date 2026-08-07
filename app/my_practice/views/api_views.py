@@ -5,7 +5,6 @@ API views for the payments application.
 import base64
 import os
 import zipfile
-from datetime import date
 from io import BytesIO
 
 from django.conf import settings
@@ -15,6 +14,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 from PIL import Image
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
@@ -403,7 +403,7 @@ def update_invoice_status(request, pk):
 
     # Automatically set paid_date when status changes to paid
     if new_status == Invoice.Status.PAID and not invoice.paid_date:
-        invoice.paid_date = date.today()
+        invoice.paid_date = timezone.localdate()
     # Clear paid_date if status is changed from paid to something else
     elif new_status != Invoice.Status.PAID and invoice.paid_date:
         invoice.paid_date = None

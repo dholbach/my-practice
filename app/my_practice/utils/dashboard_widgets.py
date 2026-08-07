@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from django.db.models import Max, QuerySet
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from ..models import (
     ChecklistItemPause,
@@ -120,7 +121,7 @@ class InvoiceActionsWidgetBuilder:
         Public: also the detection logic for the P-050 Focus Queue's
         invoice_unpaid materialized task.
         """
-        today = today or date.today()
+        today = today or timezone.localdate()
         cutoff_date = today - timedelta(days=self.practice.overdue_after_days)
         return [inv for inv in self._get_unpaid_invoices() if inv.invoice_date < cutoff_date]
 
@@ -181,7 +182,7 @@ class ChecklistWidgetBuilder:
 
     def _get_period_start(self, checklist_type: str) -> date:
         """Calculate the first day of the current period for a checklist type."""
-        today = date.today()
+        today = timezone.localdate()
         if checklist_type == "weekly":
             return today - timedelta(days=today.weekday())  # Monday
         elif checklist_type == "monthly":
@@ -327,7 +328,7 @@ class CapacityMonitoringWidgetBuilder:
         if not has_targets:
             return {"show_widget": False}
 
-        today = date.today()
+        today = timezone.localdate()
 
         # Build stats for current month and 2 previous months (oldest → newest)
         months = []

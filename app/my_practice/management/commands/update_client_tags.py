@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write("Updating automatic client tags...")
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         # --- Ensure all system tags exist with correct attributes ---
         tags = {}

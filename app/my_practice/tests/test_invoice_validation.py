@@ -46,15 +46,6 @@ class InvoiceValidationTests(TestCase):
 
     def test_duplicate_invoice_number_raises_error(self):
         """Test that duplicate invoice numbers raise ValidationError"""
-        # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
-
         # Create first invoice
         Invoice.objects.create(
             client=self.client,

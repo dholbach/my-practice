@@ -1,6 +1,5 @@
 """Client model for managing therapy clients"""
 
-from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -11,6 +10,7 @@ from django.db import models
 from django.db.models import Max, Prefetch
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from .base import PracticeScopedQuerySet, TimestampedModel
 
@@ -221,7 +221,7 @@ def client_document_upload_path(instance: "ClientDocument", filename: str) -> st
     from django.conf import settings
 
     client_code = instance.client.client_code.lower()
-    doc_date = instance.document_date or date.today()
+    doc_date = instance.document_date or timezone.localdate()
     year = doc_date.year
     doc_type = instance.document_type
     date_str = doc_date.isoformat()
@@ -279,7 +279,7 @@ class ClientDocument(TimestampedModel):
         verbose_name=_("Description"),
     )
     document_date = models.DateField(
-        default=date.today,
+        default=timezone.localdate,
         verbose_name=_("Document date"),
         help_text=_("Date of the document (e.g. signing date)"),
     )

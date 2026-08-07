@@ -225,6 +225,26 @@ class BankReviewViewGetTest(BankReviewViewBase):
         self.assertContains(response, "create_alias")
 
 
+class BankReviewPaginationTest(BankReviewViewBase):
+    def test_paid_invoice_count_includes_matches_beyond_first_page(self):
+        """paid_invoice_count must count matches across all pages, not just page 1 (20/page)."""
+        # 20 unrelated unmatched transactions, sorted after the match by -transaction_date
+        # (later date = earlier page), so the paid match (transaction 21) lands on page 2.
+        for i in range(20):
+            self._make_unmatched(ref=f"Filler {i}", payer=f"Filler {i}")
+        self._make_invoice(number="PG-1", status="paid", total=Decimal("90.00"), payer="Page Payer")
+        trans = self._make_unmatched(ref="PG-1", amount="90,00", payer="Page Payer")
+        trans.extracted_invoice_number = "PG-1"
+        trans.transaction_date = date(2026, 1, 1)  # oldest -> sorts onto page 2
+        trans.value_date = date(2026, 1, 1)
+        trans.save()
+
+        response = self.http.get(reverse("bank_review"))
+        self.assertEqual(response.context["page_obj"].number, 1)
+        self.assertEqual(len(response.context["transactions"]), 20)
+        self.assertEqual(response.context["paid_invoice_count"], 1)
+
+
 class BankReviewBulkActionsTest(BankReviewViewBase):
     def test_ignore_all_unmatched(self):
         self._make_unmatched(ref="Ref A")

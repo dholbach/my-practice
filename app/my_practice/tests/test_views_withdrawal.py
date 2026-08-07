@@ -140,6 +140,33 @@ class WithdrawalCreateViewTest(TestCase):
             # If there are form errors, at least verify the form was returned
             self.assertIn("form", response.context)
 
+    def test_withdrawal_create_success_message_is_translated(self):
+        """success_message must be gettext_lazy-wrapped, not a raw German literal.
+
+        Regression test: a raw literal freezes to one language regardless of the
+        admin's UI language setting. Language is switched via Accept-Language,
+        same mechanism LocaleMiddleware uses in production.
+        """
+        data = {
+            "description": "Bilingual Check DE",
+            "amount": "42.00",
+            "category": "salary",
+            "date": "2024-12-23",
+        }
+        response = self.client_instance.post(
+            reverse("withdrawal_create"), data, follow=True, HTTP_ACCEPT_LANGUAGE="de"
+        )
+        de_messages = [str(m) for m in response.context["messages"]]
+
+        data["description"] = "Bilingual Check EN"
+        response = self.client_instance.post(
+            reverse("withdrawal_create"), data, follow=True, HTTP_ACCEPT_LANGUAGE="en"
+        )
+        en_messages = [str(m) for m in response.context["messages"]]
+
+        self.assertTrue(any("erfolgreich erstellt" in m for m in de_messages), de_messages)
+        self.assertTrue(any("created successfully" in m for m in en_messages), en_messages)
+
     def test_withdrawal_create_post_invalid_amount(self):
         """Test POST with invalid amount."""
         data = {

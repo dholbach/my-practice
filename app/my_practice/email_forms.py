@@ -2,11 +2,10 @@
 Forms for email sending.
 """
 
-from datetime import date
-
 from django import forms
 from django.db.models import OuterRef, Subquery
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from .forms import StyledFormMixin
 from .models import Client, Practice, Session
@@ -53,7 +52,7 @@ class TimeOffNoticeForm(StyledFormMixin, forms.Form):
 
     def __init__(self, *args, practice: Practice, **kwargs):
         super().__init__(*args, **kwargs)
-        today = date.today()
+        today = timezone.localdate()
         # Separate, non-overlapping subqueries — a plain Max("sessions__session_date")
         # would return a future session as "last session" too, since it's just the
         # overall max regardless of whether it's in the past.

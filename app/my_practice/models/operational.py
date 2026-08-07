@@ -3,7 +3,6 @@ Operational checklist models for tracking backup/recovery procedure completions.
 Part of P-012: Operational Checklist (Backup & Recovery Automation)
 """
 
-from datetime import date
 from enum import StrEnum
 
 from django.db import models
@@ -132,4 +131,4 @@ class ChecklistItemPause(TimestampedModel):
         """Return True if this pause is still in effect today."""
         if self.paused_until is None:
             return True
-        return date.today() <= self.paused_until
+        return timezone.localdate() <= self.paused_until

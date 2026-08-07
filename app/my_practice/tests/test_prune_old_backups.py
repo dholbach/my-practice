@@ -31,7 +31,7 @@ class PruneOldBackupsTest(TestCase):
     def test_missing_backup_dir_warns_and_exits(self):
         out = StringIO()
         call_command("prune_old_backups", "--backup-dir", "/nonexistent/path/xyz", stdout=out)
-        self.assertIn("nicht gefunden", out.getvalue())
+        self.assertIn("not found", out.getvalue())
 
     def test_deletes_files_older_than_cutoff(self):
         old_path = self._make_backup("db_backup_old.sql.gz", age_days=40)
@@ -41,7 +41,7 @@ class PruneOldBackupsTest(TestCase):
 
         self.assertFalse(os.path.exists(old_path))
         self.assertTrue(os.path.exists(recent_path))
-        self.assertIn("Gelöscht: 1 Datei(en)", output)
+        self.assertIn("Deleted: 1 file(s)", output)
 
     def test_dry_run_does_not_delete(self):
         old_path = self._make_backup("db_backup_old.sql.gz", age_days=40)
@@ -50,7 +50,7 @@ class PruneOldBackupsTest(TestCase):
 
         self.assertTrue(os.path.exists(old_path))
         self.assertIn("[dry-run]", output)
-        self.assertIn("Würde löschen: 1 Datei(en)", output)
+        self.assertIn("Would delete: 1 file(s)", output)
 
     def test_custom_days_threshold(self):
         path = self._make_backup("db_backup_a.sql.gz", age_days=10)
@@ -78,4 +78,4 @@ class PruneOldBackupsTest(TestCase):
         output = self._run()
 
         self.assertTrue(os.path.exists(other_path))
-        self.assertIn("Gelöscht: 0 Datei(en)", output)
+        self.assertIn("Deleted: 0 file(s)", output)

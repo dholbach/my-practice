@@ -536,6 +536,14 @@
   .session-types-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--color-border); }
   .session-types-list li:last-child { border-bottom: none; }
   .type-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 0.5rem; }
+  .type-indicator.chart-dot-1 { background: var(--color-chart-1); }
+  .type-indicator.chart-dot-2 { background: var(--color-chart-2); }
+  .type-indicator.chart-dot-3 { background: var(--color-chart-3); }
+  .type-indicator.chart-dot-4 { background: var(--color-chart-4); }
+  .type-indicator.chart-dot-5 { background: var(--color-chart-5); }
+  .type-indicator.chart-dot-6 { background: var(--color-chart-6); }
+  .type-indicator.chart-dot-7 { background: var(--color-chart-7); }
+  .type-indicator.chart-dot-8 { background: var(--color-chart-8); }
   .busiest-months li { display: grid; grid-template-columns: 52px 80px 1fr 52px 90px; align-items: center; gap: 0.75rem; padding: 0.5rem 0; }
   .month-bar-track, .seasonality-bar-track, .bar-track { height: 8px; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.06); }
   .month-bar { height: 100%; background: linear-gradient(to right, #667eea, #764ba2); border-radius: 4px; min-width: 0; }
@@ -2593,6 +2601,10 @@
   --color-badge-purple-bg:  #f3e8ff; --color-badge-purple-text:  #7e22ce; --color-badge-purple-border:  #e9d5ff;
   --color-badge-violet-bg:  #ede9fe; --color-badge-violet-text:  #5b21b6; --color-badge-violet-border:  #ddd6fe;
   --color-badge-red-bg:     #fee2e2; --color-badge-red-text:     #991b1b; --color-badge-red-border:     #fca5a5;
+
+  /* ── Chart cycle (type-indicator dots, {% cycle %} over class names) ────── */
+  --color-chart-1: #667eea; --color-chart-2: #48bb78; --color-chart-3: #f6ad55; --color-chart-4: #fc8181;
+  --color-chart-5: #ed8936; --color-chart-6: #f56565; --color-chart-7: #9f7aea; --color-chart-8: #38b2ac;
 }
 
 /* ============================================================

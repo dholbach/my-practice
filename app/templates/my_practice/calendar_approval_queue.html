@@ -220,7 +220,11 @@ document.querySelectorAll('.import-group-btn').forEach(btn => {
 
         const eventIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
         const body = {event_ids: eventIds};
-        if (invoiceId && invoiceId !== 'new') body.invoice_id = parseInt(invoiceId);
+        if (invoiceId === 'new') {
+            body.invoice_id = 'new';
+        } else if (invoiceId) {
+            body.invoice_id = parseInt(invoiceId);
+        }
 
         btn.disabled = true;
         btn.textContent = '{% trans "Importing…" %}';

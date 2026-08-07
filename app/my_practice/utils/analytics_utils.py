@@ -10,6 +10,7 @@ from decimal import Decimal
 from django.db.models import Avg, Count, ExpressionWrapper, DurationField, F, Q, Sum
 from django.db.models.functions import Coalesce, TruncMonth
 from django.utils.translation import gettext as _
+from django.utils import timezone
 
 from ..models import (
     Client,
@@ -40,11 +41,11 @@ def _resolve_month_range(
     last data point isn't anomalously low (same guard as get_capacity_trends).
     """
     if end_date is None:
-        end_date = date.today()
+        end_date = timezone.localdate()
 
     from datetime import timedelta
 
-    first_of_current_month = date.today().replace(day=1)
+    first_of_current_month = timezone.localdate().replace(day=1)
     if end_date >= first_of_current_month:
         end_date = first_of_current_month - timedelta(days=1)
 
@@ -145,7 +146,7 @@ def get_yearly_financials_series(
     and pass it to both via their `yearly_financials` argument, instead of each
     method looping the years independently.
     """
-    today = date.today()
+    today = timezone.localdate()
     if end_date is None:
         end_date = today
     if start_date is None:
@@ -217,7 +218,7 @@ class RevenueAnalyzer:
             months: How many months back to look (default 24)
             practice: Practice instance for multi-practice filtering
         """
-        today = date.today()
+        today = timezone.localdate()
         start = DateRangeHelper.add_months(date(today.year, today.month, 1), -(months - 1))
 
         qs = Invoice.objects.filter(
@@ -429,7 +430,7 @@ class SessionAnalyzer:
             months: How many months back to look (default 24)
             practice: Practice instance for multi-practice filtering
         """
-        today = date.today()
+        today = timezone.localdate()
         start = DateRangeHelper.add_months(date(today.year, today.month, 1), -(months - 1))
 
         qs = Session.objects.filter(session_date__gte=start).annotate(
@@ -618,7 +619,7 @@ class ProfitCalculator:
                 result, to avoid recomputing when the caller also needs
                 RevenueAnalyzer.get_yearly_comparison() for the same range
         """
-        today = date.today()
+        today = timezone.localdate()
 
         if end_date is None:
             end_date = today

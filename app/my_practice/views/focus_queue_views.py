@@ -34,7 +34,7 @@ SNOOZE_PRESET_DAYS = {"1": 1, "3": 3, "7": 7}
 
 
 def _open_tasks_queryset(request: HttpRequest, task_type: str = ""):
-    today = timezone.now().date()
+    today = timezone.localdate()
     qs = (
         PracticeTodo.objects.for_current_practice(request)
         .filter(completed_at__isnull=True)
@@ -77,7 +77,7 @@ def _task_types_with_counts(request: HttpRequest) -> list[tuple[str, str, int]]:
 def _build_focus_queue_context(request: HttpRequest) -> dict[str, Any]:
     """Build context for the focus queue partial (HTMX swap target)."""
     task_type = request.GET.get("type", "")
-    today = timezone.now().date()
+    today = timezone.localdate()
     snoozed_qs = PracticeTodo.objects.for_current_practice(request).filter(
         completed_at__isnull=True, snoozed_until__gte=today
     )
@@ -109,7 +109,7 @@ class FocusQueueView(PracticeScopedListView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         task_type = self.request.GET.get("type", "")
-        today = timezone.now().date()
+        today = timezone.localdate()
         snoozed_qs = PracticeTodo.objects.for_current_practice(self.request).filter(
             completed_at__isnull=True, snoozed_until__gte=today
         )
@@ -150,7 +150,7 @@ def focus_queue_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse:
 def focus_queue_set_due_today(request: HttpRequest, pk: int) -> HttpResponse:
     """Set a task's due date to today, bumping it to the top of the queue. HTMX partial swap."""
     task = get_object_or_404(PracticeTodo.objects.for_current_practice(request), pk=pk)
-    task.due_date = timezone.now().date()
+    task.due_date = timezone.localdate()
     task.save(update_fields=["due_date"])
 
     if request.headers.get("HX-Request"):
@@ -165,7 +165,7 @@ def focus_queue_snooze(request: HttpRequest, pk: int) -> HttpResponse:
     """Snooze a task by a preset number of days. HTMX partial swap."""
     task = get_object_or_404(PracticeTodo.objects.for_current_practice(request), pk=pk)
     days = SNOOZE_PRESET_DAYS.get(request.POST.get("days"), 1)
-    task.snoozed_until = timezone.now().date() + timedelta(days=days)
+    task.snoozed_until = timezone.localdate() + timedelta(days=days)
     task.save(update_fields=["snoozed_until"])
 
     if request.headers.get("HX-Request"):
