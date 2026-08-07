@@ -40,15 +40,6 @@ class InvoiceSignalTests(TestCase):
 
     def test_total_calculated_on_item_save(self):
         """Test that invoice total is recalculated when an item is saved."""
-        # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
-
         invoice = Invoice.objects.create(
             client=self.client,
             invoice_number="TEST-001",

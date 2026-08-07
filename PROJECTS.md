@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-07-30
+**Last Updated**: 2026-08-07
 
 ## 🔍 Recent Activity
 
+- **2026-08-07 — v0.4.2 patch release**: Fix-only release, six PRs merged since v0.4.1. Two security hardenings: closed cross-tenant IDOR gaps + an open-redirect hole in invoice/calendar-import scoping (#295), and hardened email HTML building, capped upload size, documented already-active SSL settings (#297). Plus a GebüH multi-code cap so combined codes can't exceed a session's agreed fee (#302), a GebüH diagnosis-line `related_name` bug that silently fell back to a placeholder (#303), a tax-note-wiped-on-settlement-save fix + bank CSV thousands-separator parsing (#304), and a broader batch (#316) covering calendar-import invoice selection, bank-review pagination, defense-in-depth practice-scoping guards, a UTC/Berlin date bug, i18n gaps, and dead-code cleanup (issues #305–#315). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 - **2026-07-30 — v0.4.1 patch release**: GebüH invoices gained a per-client `gebueh_no_diagnosis` opt-out (checkbox on the client edit page) to suppress the diagnosis line while keeping the Ziffern breakdown — came up as a special case for one client. Bundled with the rest of the week's Focus Queue/P-050 follow-ups (supervision topics materialized as tasks, daily sync timer, real undo + "due today" + `is_focus` retirement), a time-off workday-counting fix (#278), and an analytics/client-detail/Focus-Queue N+1 query cleanup (4,088 → 87 queries on `/analytics/`, #276). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
-- **2026-07-29–30 — Focus Queue: supervision materialization, daily sync, real undo, "due today," `is_focus` retirement (issue #280, #281)**: `sync_focus_queue_tasks` now also materializes open (`offen`) `SupervisionItem`s as tasks (auto-closed on `besprochen`) and runs on its own daily systemd timer instead of only on manual invocation. Separately, three fixes to `/focus/` itself: (1) the complete checkbox only ever called `mark_completed()` — an accidental click had no way back; it now toggles complete/incomplete and swaps just that row so a just-completed task stays visible (struck through, still checked) as an immediate undo. (2) `due_date` used to only decorate a row; a new "📅 Today" button sets it, and due-today-or-overdue tasks now always sort ahead of the rest of the queue regardless of priority. (3) `is_focus` (P-028, week-scoped, dashboard-only) is retired — its only "add to focus" UI path was lost back in P-050 phase 4, leaving no way to set it at all. Rather than restoring a second star toggle, the dashboard's weekly widget now lists `due_date <= today` tasks, sharing the Focus Queue's own signal (migration `0018_remove_practicetodo_is_focus`); resolves the overlap issue #281 flagged. `RECURRING_REVIEW` (the other half of #280) remains undesigned.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
