@@ -2,12 +2,12 @@
 Analytics views for the payments application.
 """
 
-from datetime import date
 from decimal import Decimal
 from typing import Any
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
 from ..models import Invoice, Session
 from ..utils import AnalyticsDashboardBuilder, RevenueCalculator
@@ -69,7 +69,7 @@ def analytics_dashboard(request: HttpRequest) -> HttpResponse:
 
     # Heatmap data — only built when the clients tab is active
     if active_tab == "clients":
-        today = date.today()
+        today = timezone.localdate()
         try:
             months_to_show = int(request.GET.get("months", 12))
         except ValueError, TypeError:

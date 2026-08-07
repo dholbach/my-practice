@@ -1,8 +1,10 @@
 """Tests for date helper utilities."""
 
-from datetime import date
+from datetime import date, datetime, timezone as dt_timezone
+from unittest.mock import patch
 
 from django.test import TestCase
+from django.utils import timezone
 from my_practice.utils import DateRangeHelper
 
 
@@ -343,3 +345,22 @@ class TestDateRangeHelper(TestCase):
     # - is_same_month()
     # - is_same_year()
     # - datetime_to_date()
+
+
+class TimezoneLocaldateBoundaryTest(TestCase):
+    """Regression: date.today()/timezone.now().date() read the OS clock's UTC date,
+    ignoring Django's TIME_ZONE ("Europe/Berlin") — wrong near UTC midnight, when
+    Berlin has already rolled over to the next day. timezone.localdate() is correct."""
+
+    def test_get_current_year_start_uses_berlin_local_date_not_utc(self):
+        # 2025-12-31 23:30 UTC == 2026-01-01 00:30 in Berlin (CET, UTC+1)
+        fake_utc_now = datetime(2025, 12, 31, 23, 30, tzinfo=dt_timezone.utc)
+        with patch("django.utils.timezone.now", return_value=fake_utc_now):
+            self.assertEqual(timezone.localdate(), date(2026, 1, 1))
+            self.assertEqual(DateRangeHelper.get_current_year_start(), date(2026, 1, 1))
+
+    def test_get_current_month_first_uses_berlin_local_date_not_utc(self):
+        # 2026-01-31 23:15 UTC == 2026-02-01 00:15 in Berlin (CET, UTC+1)
+        fake_utc_now = datetime(2026, 1, 31, 23, 15, tzinfo=dt_timezone.utc)
+        with patch("django.utils.timezone.now", return_value=fake_utc_now):
+            self.assertEqual(DateRangeHelper.get_current_month_first(), date(2026, 2, 1))

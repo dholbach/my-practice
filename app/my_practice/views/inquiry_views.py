@@ -20,6 +20,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views import View
+from django.utils import timezone
 
 from ..inquiry_forms import InquiryConvertForm, InquiryForm, MarketingPeriodForm
 from ..models import Client, ClientInquiry, InquiryStatus, MarketingPeriod
@@ -283,7 +284,9 @@ def _build_inquiry_analytics(request) -> dict:
     ]
 
     # --- Monthly trend (last 12 months, by inquiry_date) ---
-    range_start = DateRangeHelper.add_months(date(date.today().year, date.today().month, 1), -11)
+    range_start = DateRangeHelper.add_months(
+        date(timezone.localdate().year, timezone.localdate().month, 1), -11
+    )
     monthly_raw = (
         base_qs.filter(inquiry_date__gte=range_start)
         .annotate(month=TruncMonth("inquiry_date"))
@@ -364,7 +367,7 @@ class InquiryListView(PracticeScopedListView):
 
         # Group inquiries by pipeline stage for the section-header layout.
         # Items are already ordered by status_priority then -created_at.
-        thirty_days_ago = date.today() - timedelta(days=30)
+        thirty_days_ago = timezone.localdate() - timedelta(days=30)
         _group_labels = {
             0: _("New"),
             1: _("Contacted"),
@@ -529,7 +532,7 @@ class InquiryConvertView(LoginRequiredMixin, View):
         inquiry.converted_client = client
         inquiry.status = InquiryStatus.CONVERTED
         if not inquiry.converted_date:
-            inquiry.converted_date = date.today()
+            inquiry.converted_date = timezone.localdate()
         inquiry.save(update_fields=["converted_client", "status", "converted_date", "updated_at"])
 
         messages.success(

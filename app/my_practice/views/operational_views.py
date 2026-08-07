@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.generic import TemplateView
+from django.utils import timezone
 
 from ..models import ChecklistItemPause, OperationalChecklistCompletion
 
@@ -114,7 +115,7 @@ CHECKLIST_ITEMS: dict[str, list[dict[str, str]]] = {
 
 def _get_period_start(checklist_type: str) -> date:
     """Calculate the first day of the current period for a checklist type."""
-    today = date.today()
+    today = timezone.localdate()
     if checklist_type == "weekly":
         return today - timedelta(days=today.weekday())  # Monday
     elif checklist_type == "monthly":

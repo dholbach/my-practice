@@ -1,7 +1,7 @@
 """Helper functions for client-related operations"""
 
-from datetime import date
 from typing import Any
+from django.utils import timezone
 
 
 def annotate_activity_status(clients, today=None):
@@ -21,7 +21,7 @@ def annotate_activity_status(clients, today=None):
         Same clients iterable with added attributes
     """
     if today is None:
-        today = date.today()
+        today = timezone.localdate()
 
     for client in clients:
         if hasattr(client, "last_session_date") and client.last_session_date:

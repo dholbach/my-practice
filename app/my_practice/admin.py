@@ -6,6 +6,7 @@ from django.contrib import admin, messages
 from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy, ngettext
+from django.utils import timezone
 
 from .models import (
     BankTransaction,
@@ -455,13 +456,11 @@ class InvoiceAdmin(admin.ModelAdmin):
 
     @admin.action(description=gettext_lazy("Mark as paid"))
     def mark_as_paid(self, request, queryset):
-        from datetime import date
-
         updated = 0
         for invoice in queryset:
             invoice.status = "paid"
             if not invoice.paid_date:
-                invoice.paid_date = date.today()
+                invoice.paid_date = timezone.localdate()
             invoice.save()
             updated += 1
         self.message_user(
@@ -709,9 +708,7 @@ class CompanyWithdrawalAdmin(admin.ModelAdmin):
 
     @admin.action(description=gettext_lazy("Flag for current tax year"))
     def mark_as_tax_year(self, request, queryset):
-        from datetime import date
-
-        current_year = date.today().year
+        current_year = timezone.localdate().year
         updated = queryset.filter(date__year=current_year).count()
         self.message_user(
             request,

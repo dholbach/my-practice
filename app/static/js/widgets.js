@@ -63,45 +63,6 @@ function toggleWidget(widgetId) {
     }));
 }
 
-/**
- * Expand all widgets
- */
-function expandAllWidgets() {
-    document.querySelectorAll('.dashboard-widget').forEach(widget => {
-        widget.classList.remove('collapsed');
-        const widgetId = widget.dataset.widgetId;
-        if (widgetId) {
-            localStorage.setItem(WIDGET_STATE_PREFIX + widgetId, 'expanded');
-        }
-    });
-}
-
-/**
- * Collapse all widgets
- */
-function collapseAllWidgets() {
-    document.querySelectorAll('.dashboard-widget').forEach(widget => {
-        widget.classList.add('collapsed');
-        const widgetId = widget.dataset.widgetId;
-        if (widgetId) {
-            localStorage.setItem(WIDGET_STATE_PREFIX + widgetId, 'collapsed');
-        }
-    });
-}
-
-/**
- * Reset all widget states (clear LocalStorage)
- */
-function resetWidgetStates() {
-    document.querySelectorAll('.dashboard-widget').forEach(widget => {
-        const widgetId = widget.dataset.widgetId;
-        if (widgetId) {
-            localStorage.removeItem(WIDGET_STATE_PREFIX + widgetId);
-        }
-        widget.classList.remove('collapsed');
-    });
-}
-
 // Initialize on DOMContentLoaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeWidgets);

@@ -18,6 +18,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 
 from ..forms import ClientIntakeForm
 from ..models import Client, ClientDocument, ClientTag, Invoice, InvoiceItem
@@ -80,7 +81,7 @@ class ClientListView(PracticeScopedListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        today = date.today()
+        today = timezone.localdate()
         all_clients = list(context["clients"])
         annotate_activity_status(all_clients, today=today)
 
@@ -141,7 +142,7 @@ class ClientListView(PracticeScopedListView):
         from ..models import Session
         from ..utils import SESSION_LOG_MIN_DURATION, SESSION_LOG_WINDOW_DAYS
 
-        today_date = date.today()
+        today_date = timezone.localdate()
         cutoff = today_date - timedelta(days=SESSION_LOG_WINDOW_DAYS)
         clients_needing_log = set(
             Session.objects.filter(
@@ -233,7 +234,6 @@ def client_detail(request, pk):
 
 def client_onboarding_step(request, pk):
     """Mark or reset a single onboarding step for a client (POST only)."""
-    from datetime import date
 
     from django.http import HttpResponseNotAllowed
 
@@ -253,7 +253,7 @@ def client_onboarding_step(request, pk):
     }
 
     if step in field_map:
-        setattr(client, field_map[step], None if reset else date.today())
+        setattr(client, field_map[step], None if reset else timezone.localdate())
         client.save(update_fields=[field_map[step]])
 
     if step == "complete" and not reset:
@@ -347,7 +347,7 @@ def client_document_delete(request: HttpRequest, pk: int) -> JsonResponse:
 
 
 def _gdpr_cutoff() -> date:
-    return date.today() - timedelta(days=365 * GDPR_RETENTION_YEARS + 2)
+    return timezone.localdate() - timedelta(days=365 * GDPR_RETENTION_YEARS + 2)
 
 
 def client_gdpr_delete_confirm(request: HttpRequest, pk: int) -> HttpResponse:

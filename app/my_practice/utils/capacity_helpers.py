@@ -12,6 +12,7 @@ from datetime import date, timedelta
 
 from django.db.models import FloatField, Sum
 from django.db.models.functions import Cast
+from django.utils import timezone
 
 from ..models import CapacityPeriod, Session
 from .date_helpers import DateRangeHelper
@@ -91,7 +92,7 @@ def calculate_period_capacity(
     """
     from datetime import timedelta
 
-    today = date.today()
+    today = timezone.localdate()
     two_weeks_ahead = today + timedelta(weeks=2)
 
     # Determine if we should apply the 2-week horizon limit
@@ -233,7 +234,7 @@ def _get_booked_hours(start_date: date, end_date: date) -> float:
 
     Excludes cancelled sessions; divides by group_size for therapist-hour normalisation.
     """
-    today = date.today()
+    today = timezone.localdate()
 
     # For forward-looking capacity, only consider the next 2 weeks
     if end_date > today:
@@ -300,11 +301,11 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
     from . import format_month_key, format_month_label
 
     if end_date is None:
-        end_date = date.today()
+        end_date = timezone.localdate()
 
     # Only show complete months — exclude the current partial month so the last
     # data point isn't anomalously low (e.g. 2 working days = 8h capacity).
-    first_of_current_month = date.today().replace(day=1)
+    first_of_current_month = timezone.localdate().replace(day=1)
     if end_date >= first_of_current_month:
         end_date = first_of_current_month - timedelta(days=1)
 

@@ -6,12 +6,18 @@ from enum import StrEnum
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from .base import TimestampedModel
 
 
 class TimeOff(TimestampedModel):
-    """Track holidays, vacation time, and other periods when practice is closed"""
+    """Track holidays, vacation time, and other periods when practice is closed.
+
+    Deliberately has no `practice` FK: this is the practitioner's own time off,
+    shared across every practice they run (mirrors how a single person can't be
+    on holiday from one business but not another). Visible/usable from any of the
+    user's practices by design — this is not a missed practice-scoping case."""
 
     class Type(StrEnum):
         VACATION = "vacation"
@@ -79,15 +85,15 @@ class TimeOff(TimestampedModel):
     @property
     def is_current(self) -> bool:
         """Check if time off period includes today"""
-        today = date.today()
+        today = timezone.localdate()
         return self.start_date <= today <= self.end_date
 
     @property
     def is_upcoming(self) -> bool:
         """Check if time off is in the future"""
-        return self.start_date > date.today()
+        return self.start_date > timezone.localdate()
 
     @property
     def is_past(self) -> bool:
         """Check if time off is in the past"""
-        return self.end_date < date.today()
+        return self.end_date < timezone.localdate()

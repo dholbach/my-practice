@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
+from django.utils import timezone
 
 from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
 from .client import Client
@@ -78,7 +79,7 @@ class Invoice(TimestampedModel):
     )
 
     invoice_date = models.DateField(
-        default=date.today,
+        default=timezone.localdate,
         verbose_name=gettext_lazy("Invoice date"),
         help_text=gettext_lazy("Defaults to today"),
     )
@@ -184,11 +185,16 @@ class Invoice(TimestampedModel):
                 {"paid_date": _("Payment date must not be before the invoice date")}
             )
 
+        # Defense in depth: client and practice are independent FKs, so nothing else
+        # guarantees they agree — catch a cross-practice mismatch before it's saved.
+        if self.client_id and self.practice_id and self.client.practice_id != self.practice_id:
+            raise ValidationError({"client": _("Client does not belong to the selected practice")})
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Set invoice_date on creation, then allow manual changes"""
         # Only auto-set date on initial creation, not on every save
         if self.status == Invoice.Status.DRAFT and not self.pk:
-            self.invoice_date = date.today()
+            self.invoice_date = timezone.localdate()
 
         # Run validation before saving (unless explicitly skipped)
         skip_validation = kwargs.pop("skip_validation", False)
@@ -199,7 +205,7 @@ class Invoice(TimestampedModel):
 
     def computed_invoice_date(self) -> date:
         """Return the correct invoice_date for a draft: max(today, latest_session_date)."""
-        today = date.today()
+        today = timezone.localdate()
         item_dates = [
             item.session.session_date
             for item in self.items.select_related("session").all()

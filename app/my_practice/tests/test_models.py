@@ -14,6 +14,7 @@ from my_practice.models import (
     GoogleCalendarToken,
     Invoice,
     InvoiceItem,
+    PendingCalendarEvent,
     Practice,
     ServiceType,
     Session,
@@ -215,15 +216,6 @@ class InvoiceModelTestCase(TestCase):
 
     def test_invoice_creation(self):
         """Test creating an invoice"""
-        # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
-
         invoice = Invoice.objects.create(
             client=self.client,
             invoice_number="TC-1",
@@ -258,6 +250,29 @@ class InvoiceModelTestCase(TestCase):
             Invoice.objects.create(
                 client=self.client,
                 invoice_number="TC-1",
+                invoice_date=date.today(),
+                practice=self.practice,
+            )
+
+    def test_invoice_client_practice_mismatch_rejected(self):
+        """A client belonging to another practice must not be assignable to an invoice."""
+        other_practice = Practice.objects.create(
+            name="Other Practice",
+            slug="models-other",
+            title="Other Practitioner",
+            email="other@practice.com",
+            city="Berlin",
+        )
+        other_client = Client.objects.create(
+            client_code="OC",
+            full_name="Other Client",
+            email="other@example.com",
+            practice=other_practice,
+        )
+        with self.assertRaises(ValidationError):
+            Invoice.objects.create(
+                client=other_client,
+                invoice_number="TC-MISMATCH",
                 invoice_date=date.today(),
                 practice=self.practice,
             )
@@ -621,6 +636,62 @@ class GoogleCalendarTokenModelTestCase(TestCase):
         # Check it returns something
         self.assertIsNotNone(str(token))
         self.assertTrue(len(str(token)) > 0)
+
+
+class PendingCalendarEventModelTestCase(TestCase):
+    """Tests for PendingCalendarEvent model"""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="models-pce",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.client_obj = Client.objects.create(
+            client_code="TC",
+            full_name="Test Client",
+            email="test@example.com",
+            practice=self.practice,
+        )
+
+    def test_matched_client_practice_mismatch_rejected(self):
+        """A matched_client from another practice must fail validation (clean())."""
+        other_practice = Practice.objects.create(
+            name="Other Practice",
+            slug="models-pce-other",
+            title="Other Practitioner",
+            email="other@practice.com",
+            city="Berlin",
+        )
+        other_client = Client.objects.create(
+            client_code="OC",
+            full_name="Other Client",
+            email="other@example.com",
+            practice=other_practice,
+        )
+        event = PendingCalendarEvent(
+            practice=self.practice,
+            google_event_id="evt-mismatch",
+            summary="Test event",
+            event_date=date.today(),
+            duration_minutes=60,
+            matched_client=other_client,
+        )
+        with self.assertRaises(ValidationError):
+            event.full_clean()
+
+    def test_matched_client_same_practice_valid(self):
+        event = PendingCalendarEvent(
+            practice=self.practice,
+            google_event_id="evt-ok",
+            summary="Test event",
+            event_date=date.today(),
+            duration_minutes=60,
+            matched_client=self.client_obj,
+        )
+        event.full_clean()  # should not raise
 
 
 class ClientTagModelTestCase(TestCase):

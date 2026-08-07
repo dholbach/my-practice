@@ -3,6 +3,7 @@
 from datetime import date
 from enum import StrEnum
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -12,13 +13,17 @@ from .base import PracticeScopedManager, TimestampedModel
 class GoogleCalendarToken(TimestampedModel):
     """Store Google Calendar OAuth2 tokens for calendar import"""
 
-    # Practice relationship - each practice has its own calendar token
+    # Practice relationship - each practice has its own calendar token.
+    # Nullable by design, not a migration leftover: single-practice setups can
+    # save/fetch a token with practice=None (see GoogleCalendarService.save_token/
+    # get_service), and that token is used as the fallback when no practice is
+    # given. Multi-practice setups pass an explicit practice for each token.
     practice = models.ForeignKey(
         "Practice",
         on_delete=models.CASCADE,
         related_name="calendar_tokens",
         verbose_name=_("Practice"),
-        null=True,  # Temporary - will be required after migration
+        null=True,
     )
 
     # OAuth2 tokens (stored as JSON)
@@ -151,6 +156,22 @@ class PendingCalendarEvent(models.Model):
     def __str__(self) -> str:
         client = self.matched_client.client_code if self.matched_client else "?"
         return f"{client} — {self.event_date} ({self.duration_minutes} min) [{self.get_status_display()}]"
+
+    def clean(self) -> None:
+        """Defense in depth: practice and matched_client are independent FKs, so
+        nothing else guarantees they agree — catch a cross-practice mismatch
+        before it's saved."""
+        super().clean()
+        from django.utils.translation import gettext
+
+        if (
+            self.matched_client_id
+            and self.practice_id
+            and self.matched_client.practice_id != self.practice_id
+        ):
+            raise ValidationError(
+                {"matched_client": gettext("Client does not belong to the selected practice")}
+            )
 
     @property
     def billing_month(self) -> "date":

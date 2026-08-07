@@ -3,10 +3,10 @@ Financial List Context Builder - Shared logic for expense/withdrawal list views.
 Eliminates duplication in context preparation for financial tracking views.
 """
 
-from datetime import date
 from typing import Any
 
 from django.db.models import Q, QuerySet
+from django.utils import timezone
 
 
 class FinancialListContextBuilder:
@@ -117,6 +117,6 @@ class FinancialListContextBuilder:
         """Get monthly breakdown for current year."""
         from ..utils.aggregation_helpers import get_monthly_breakdown
 
-        current_year = date.today().year
+        current_year = timezone.localdate().year
         monthly_data = get_monthly_breakdown(queryset, current_year)
         return dict(monthly_data)

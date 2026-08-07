@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
             {% for type_name, data in session_distribution.types.items %}
             <li>
                 <span class="text-primary">
-                    <span class="type-indicator" style="background: {% cycle '#667eea' '#48bb78' '#f6ad55' '#fc8181' %};"></span>
+                    <span class="type-indicator {% cycle 'chart-dot-1' 'chart-dot-2' 'chart-dot-3' 'chart-dot-4' %}"></span>
                     {{ type_name }}
                 </span>
                 <span>
@@ -949,7 +949,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% for category in expense_distribution.categories %}
                 <li class="expense-category-item">
                     <span class="expense-category-item__label">
-                        <span class="type-indicator shrink-0" style="background: {% cycle '#ed8936' '#f56565' '#9f7aea' '#38b2ac' '#667eea' '#48bb78' %};"></span>
+                        <span class="type-indicator shrink-0 {% cycle 'chart-dot-5' 'chart-dot-6' 'chart-dot-7' 'chart-dot-8' 'chart-dot-1' 'chart-dot-2' %}"></span>
                         <span class="text-break">{{ category.category }}</span>
                     </span>
                     <span class="expense-category-item__amount">

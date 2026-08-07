@@ -218,11 +218,13 @@ class BankReviewView(FormMixin, ListView):
         )
         context["recently_matched"] = recently_matched
 
-        # Count transactions with already-paid invoices (for bulk ignore button)
-
+        # Count transactions with already-paid invoices (for bulk ignore button).
+        # Use self.object_list (the full, unpaginated queryset from get_queryset()),
+        # not context["transactions"] (the paginated page) — otherwise the banner and
+        # count are wrong on any page beyond the first, and don't match what
+        # _handle_bulk_ignore_paid actually acts on.
         paid_invoice_count = 0
-        transactions_list = context.get("transactions", [])
-        for trans in transactions_list:
+        for trans in self.object_list:
             if hasattr(trans, "matching_paid_invoice") and trans.matching_paid_invoice:
                 paid_invoice_count += 1
         context["paid_invoice_count"] = paid_invoice_count

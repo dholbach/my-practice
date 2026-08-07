@@ -170,12 +170,12 @@ class PracticeTodo(TimestampedModel):
         """Check if task is overdue."""
         if self.is_completed or not self.due_date:
             return False
-        return self.due_date < timezone.now().date()
+        return self.due_date < timezone.localdate()
 
     @property
     def is_snoozed(self) -> bool:
         """Check if task is currently snoozed."""
-        return bool(self.snoozed_until and self.snoozed_until >= timezone.now().date())
+        return bool(self.snoozed_until and self.snoozed_until >= timezone.localdate())
 
     @property
     def related_object_url(self) -> str | None:

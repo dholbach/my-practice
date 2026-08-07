@@ -7,6 +7,7 @@ import calendar
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 
 
 class DateRangeHelper:
@@ -202,7 +203,7 @@ class DateRangeHelper:
             >>> DateRangeHelper.get_current_month_first()
             date(2025, 12, 1)
         """
-        return DateRangeHelper.get_first_of_month(date.today())
+        return DateRangeHelper.get_first_of_month(timezone.localdate())
 
     @staticmethod
     def get_current_year_start() -> date:
@@ -217,7 +218,7 @@ class DateRangeHelper:
             >>> DateRangeHelper.get_current_year_start()
             date(2025, 1, 1)
         """
-        return date(date.today().year, 1, 1)
+        return date(timezone.localdate().year, 1, 1)
 
     @staticmethod
     def is_leap_year(year: int) -> bool:

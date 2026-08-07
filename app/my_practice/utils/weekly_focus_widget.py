@@ -8,6 +8,7 @@ is_focus flag — see docs/projects/done/P-028_DASHBOARD_WEEKLY_FOCUS.md.
 from datetime import date, timedelta
 
 from django.db.models import QuerySet
+from django.utils import timezone
 
 from ..models import PracticeTodo, Session
 
@@ -27,7 +28,7 @@ class WeeklyFocusWidgetBuilder:
 
     def __init__(self, practice, today: date | None = None):
         self.practice = practice
-        self.today = today or date.today()
+        self.today = today or timezone.localdate()
         # Monday and Sunday of current week
         self.week_start = self.today - timedelta(days=self.today.weekday())
         self.week_end = self.week_start + timedelta(days=6)

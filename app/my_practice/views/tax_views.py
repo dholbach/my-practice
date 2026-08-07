@@ -2,7 +2,6 @@
 Tax year summary view - provides comprehensive financial overview for tax purposes.
 """
 
-from datetime import date
 from decimal import Decimal
 from typing import cast
 
@@ -12,6 +11,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 
 from ..models import CompanyExpense, CompanyWithdrawal, TaxYearNote
 from ..utils import DateRangeHelper, RevenueCalculator, TaxYearContextBuilder
@@ -22,7 +22,10 @@ from ..utils.view_helpers import get_year_from_request
 
 def tax_year_summary(request: HttpRequest) -> HttpResponse:
     """Generate comprehensive tax year summary with revenue, expenses, and deductions."""
-    year = get_year_from_request(request, "year", date.today().year) or date.today().year
+    year = (
+        get_year_from_request(request, "year", timezone.localdate().year)
+        or timezone.localdate().year
+    )
     context = TaxYearContextBuilder(year, request.current_practice, request.user).build(
         expense_sort=request.GET.get("sort", "date")
     )
@@ -93,7 +96,10 @@ def tax_workday_audit(request: HttpRequest) -> HttpResponse:
     Classifies every Mon–Fri as: practice day, home-office day, public holiday,
     or time-off. Includes session count per day for verification.
     """
-    year = get_year_from_request(request, "year", date.today().year) or date.today().year
+    year = (
+        get_year_from_request(request, "year", timezone.localdate().year)
+        or timezone.localdate().year
+    )
     practice = request.current_practice
 
     audit = WorkdayAuditCalculator(practice, year).calculate() if practice else None
@@ -115,9 +121,12 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
     selected year, plus a history of tax prepayment withdrawals (category='tax').
     Provides a quick-add link to record a new prepayment.
     """
-    year = get_year_from_request(request, "year", date.today().year) or date.today().year
+    year = (
+        get_year_from_request(request, "year", timezone.localdate().year)
+        or timezone.localdate().year
+    )
     practice = request.current_practice
-    today = date.today()
+    today = timezone.localdate()
     current_quarter = DateRangeHelper.get_quarter_for_date(today)[0]
 
     quarters = []

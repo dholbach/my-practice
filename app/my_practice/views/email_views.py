@@ -1,7 +1,6 @@
 """Email sending views for invoices."""
 
 import logging
-from datetime import date
 
 from django.conf import settings
 from django.contrib import messages
@@ -12,6 +11,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.views import View
+from django.utils import timezone
 
 from ..email_forms import InvoiceEmailForm
 from ..models import Client, Invoice, Practice
@@ -608,7 +608,7 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
         )
 
     def after_send(self, client: Client) -> None:
-        client.questionnaire_sent_date = date.today()
+        client.questionnaire_sent_date = timezone.localdate()
         client.save(update_fields=["questionnaire_sent_date"])
 
     def get_success_html(self, recipient: str) -> str:
@@ -666,7 +666,7 @@ class SendIntakeFormEmailView(BaseClientEmailView):
         return (self._get_filename(client), pdf_bytes, "application/pdf")
 
     def after_send(self, client: Client) -> None:
-        client.intake_sent_date = date.today()
+        client.intake_sent_date = timezone.localdate()
         client.save(update_fields=["intake_sent_date"])
 
     def get_success_html(self, recipient: str) -> str:

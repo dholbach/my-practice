@@ -5,6 +5,7 @@ from typing import Any
 
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from .forms import DateFormField, StyledFormMixin
 from .models import Client, ClientInquiry, InquiryStatus, MarketingPeriod
@@ -46,7 +47,7 @@ class InquiryForm(StyledFormMixin, forms.ModelForm):
     def save(self, commit: bool = True) -> Any:
         """Auto-fill milestone dates when status reaches the corresponding stage."""
         instance = super().save(commit=False)
-        today = date.today()
+        today = timezone.localdate()
         status = instance.status
         if status == InquiryStatus.CONTACTED and not instance.contacted_date:
             instance.contacted_date = today

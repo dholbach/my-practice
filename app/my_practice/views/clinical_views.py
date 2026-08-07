@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 
 from ..utils.view_helpers import safe_next
 
@@ -489,7 +490,6 @@ def client_triage_summary(request):
     Uses ONLY unencrypted fields — no Fernet access required.
     Sorted by client code; highlights clients with recent crisis mood tags.
     """
-    from datetime import date
 
     from django.db.models import Prefetch
 
@@ -531,7 +531,7 @@ def client_triage_summary(request):
 
     context = {
         "triage_data": triage_data,
-        "generated_date": date.today(),
+        "generated_date": timezone.localdate(),
     }
     return render(request, "my_practice/client_triage.html", context)
 
@@ -611,7 +611,7 @@ def gebueh_leistung_create(request, client_pk, session_pk):
             )
 
         # Frequency check for Ziffern with bezugszeitraum_tage
-        today = date.today()
+        today = timezone.localdate()
         for ziffer in selected_ziffern:
             if ziffer.max_haeufigkeit and ziffer.bezugszeitraum_tage:
                 since = today - timedelta(days=ziffer.bezugszeitraum_tage)

@@ -58,6 +58,30 @@ def _resolve_service_type(
     return default, None
 
 
+def _resolve_invoice(
+    client: Client, event_date: datetime, overrides: dict
+) -> tuple[Invoice | None, str | None]:
+    """Return (invoice, None) or (None, error_message).
+
+    Honors an explicit invoice_id override (e.g. the invoice picked in the
+    calendar approval queue's dropdown) instead of always falling back to the
+    client's current draft invoice. Scoped to the resolved client so a
+    user-supplied id can't reference another client's/practice's invoice.
+    """
+    invoice_id = overrides.get("invoice_id")
+    if invoice_id == "new":
+        return create_draft_invoice(client, event_date), None
+    if invoice_id:
+        try:
+            return Invoice.objects.get(pk=invoice_id, client=client), None
+        except Invoice.DoesNotExist:
+            return None, _("Invoice ID %(id)s not found for client %(code)s") % {
+                "id": invoice_id,
+                "code": client.client_code,
+            }
+    return get_or_create_invoice_for_month(client, event_date), None
+
+
 def _resolve_rate(client: Client, service_type: ServiceType) -> tuple[Decimal | None, str | None]:
     """Return (rate, None) or (None, error_message).
 
@@ -90,9 +114,12 @@ def create_invoice_items_from_events(
                 'event_id': {
                     'client_id': int,
                     'service_type_id': int,
+                    'invoice_id': int,
                     'action': 'import' | 'skip'
                 }
             }
+            When invoice_id is omitted, the client's current draft invoice is
+            used (or a new one is created).
         request: HttpRequest with current_practice
 
     Returns:
@@ -127,7 +154,11 @@ def create_invoice_items_from_events(
             errors.append(_("No date for event: %(summary)s") % {"summary": event.get("summary")})
             continue
 
-        invoice = get_or_create_invoice_for_month(client, event_date)
+        invoice, err = _resolve_invoice(client, event_date, overrides)
+        if err:
+            errors.append(err)
+            skipped += 1
+            continue
 
         if InvoiceItem.objects.filter(
             invoice=invoice,
@@ -199,18 +230,20 @@ def get_or_create_invoice_for_month(client: Client, date: datetime) -> Invoice:
     if existing:
         return existing
 
-    # Create new draft invoice with first day of month as invoice_date
+    return create_draft_invoice(client, date)
+
+
+def create_draft_invoice(client: Client, date: datetime) -> Invoice:
+    """Create a new draft invoice, first day of the given date's month as invoice_date."""
     first_day = date.replace(day=1)
     invoice_number = get_next_invoice_number(client)
-    invoice = Invoice.objects.create(
+    return Invoice.objects.create(
         client=client,
         invoice_date=first_day,
         invoice_number=invoice_number,
         status="draft",
         practice=client.practice,
     )
-
-    return invoice
 
 
 def bill_session(session: "Session", practice) -> tuple[bool, str]:

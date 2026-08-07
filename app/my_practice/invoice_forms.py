@@ -2,11 +2,11 @@
 Additional forms for invoices.
 """
 
-from datetime import date
 from typing import Any, cast
 
 from django import forms
 from django.forms import ModelChoiceField, inlineformset_factory
+from django.utils import timezone
 
 from .forms import DateFormField, StyledFormMixin
 from .models import Client, Invoice, InvoiceItem
@@ -109,7 +109,7 @@ class InvoiceForm(StyledFormMixin, forms.ModelForm):
                 cast(ModelChoiceField, self.fields["client"]).queryset = active_clients
         # Set initial values if creating new
         if not self.instance.pk:
-            cast(ModelChoiceField, self.fields["invoice_date"]).initial = date.today()
+            cast(ModelChoiceField, self.fields["invoice_date"]).initial = timezone.localdate()
 
 
 class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
@@ -180,7 +180,7 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
             if default_service:
                 cast(ModelChoiceField, self.fields["service_type"]).initial = default_service
 
-            self.initial["session_date"] = date.today()
+            self.initial["session_date"] = timezone.localdate()
 
 
 # Base formset for invoice items

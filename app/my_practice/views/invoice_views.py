@@ -16,6 +16,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _, ngettext
 from django.views.generic import DetailView
+from django.utils import timezone
 
 from ..invoice_forms import InvoiceForm
 from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, Session
@@ -520,7 +521,7 @@ def create_invoice_with_sessions(request):
             client=client,
             invoice_number=get_next_invoice_number(client),
             status=Invoice.Status.DRAFT,
-            invoice_date=date.today(),
+            invoice_date=timezone.localdate(),
         )
         added = sum(
             1
@@ -757,7 +758,7 @@ def _determine_client_billing_status(
 @login_required
 def monthly_billing_redirect(request):
     """Redirect to the current month's billing overview."""
-    today = date.today()
+    today = timezone.localdate()
     return redirect("monthly_billing_overview", month=f"{today.year}-{today.month:02d}")
 
 
@@ -883,7 +884,7 @@ def monthly_billing_overview(request, month):
         messages.error(request, _("No active practice found."))
         return redirect("dashboard")
 
-    today = date.today()
+    today = timezone.localdate()
     year, month_num = billing_month_start.year, billing_month_start.month
     (
         invoices_by_client,

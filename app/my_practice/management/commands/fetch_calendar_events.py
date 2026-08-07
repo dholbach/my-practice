@@ -7,7 +7,7 @@ if they no longer appear in Google Calendar.
 """
 
 import logging
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -232,7 +232,7 @@ class Command(BaseCommand):
         existing = PendingCalendarEvent.objects.filter(
             practice=practice,
             event_date__range=(start_dt.date(), end_dt.date()),
-            event_date__gt=date.today(),
+            event_date__gt=timezone.localdate(),
             status=PendingCalendarEvent.Status.PENDING,
         )
         for db_event in existing:

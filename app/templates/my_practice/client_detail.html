@@ -23,7 +23,6 @@
 {% endblock %}
 
 {% block content %}
-{% csrf_token %}
 
 {% if client.full_name|slice:":7" == "Klient " and "@example.com" in client.email %}
 <div class="placeholder-warning">

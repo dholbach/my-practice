@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.text import slugify
+from django.utils import timezone
 
 from ...models import (
     Client,
@@ -614,7 +615,7 @@ class Command(BaseCommand):
         tags: dict[str, ClientTag],
         rng: random.Random,
     ) -> tuple[list[Client], dict[int, tuple]]:
-        today = date.today()
+        today = timezone.localdate()
         two_years_ago = today - timedelta(days=730)
         rate_presets = [
             (Decimal("90.00"), Decimal("130.00")),  # standard (80%)
@@ -692,7 +693,7 @@ class Command(BaseCommand):
         char_map: dict[int, tuple],
         rng: random.Random,
     ) -> dict[int, list[Session]]:
-        today = date.today()
+        today = timezone.localdate()
         sessions_by_client: dict[int, list[Session]] = {}
 
         for client in clients:
@@ -858,7 +859,7 @@ class Command(BaseCommand):
         service_90: ServiceType,
         rng: random.Random,
     ) -> None:
-        today = date.today()
+        today = timezone.localdate()
         invoice_count = 0
 
         for client_pk, sessions in sessions_by_client.items():
@@ -947,7 +948,7 @@ class Command(BaseCommand):
     ) -> None:
         from datetime import time as dt_time
 
-        today = date.today()
+        today = timezone.localdate()
         active_clients = [c for c in clients if c.active]
         # Pick 6 active clients for pending events in the current billing period
         event_clients = rng.sample(active_clients, min(6, len(active_clients)))
@@ -993,7 +994,7 @@ class Command(BaseCommand):
     # ── Inquiries ─────────────────────────────────────────────────────────────
 
     def _create_inquiries(self, practice: Practice, rng: random.Random) -> None:
-        today = date.today()
+        today = timezone.localdate()
         for full_name, source, status, notes, days_ago in INQUIRIES:
             ClientInquiry.objects.create(
                 practice=practice,
@@ -1029,7 +1030,7 @@ class Command(BaseCommand):
     # ── Expenses ──────────────────────────────────────────────────────────────
 
     def _create_expenses(self, practice: Practice) -> None:
-        today = date.today()
+        today = timezone.localdate()
         two_years_ago = today - timedelta(days=730)
         expense_count = 0
         existing_count = 0

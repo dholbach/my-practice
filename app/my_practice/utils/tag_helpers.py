@@ -45,7 +45,7 @@ def get_sessions_missing_log(practice=None) -> QuerySet:
     from ..models import InvoiceItem
     from ..models.session import Session
 
-    today = timezone.now().date()
+    today = timezone.localdate()
     cutoff = today - timedelta(days=SESSION_LOG_WINDOW_DAYS)
 
     cancellation_fee_session_ids = InvoiceItem.objects.filter(
@@ -99,7 +99,7 @@ def sync_no_next_session_tag(client: "Client") -> bool | None:
     if tag is None:
         return None
 
-    today = timezone.now().date()
+    today = timezone.localdate()
     has_future_sessions = Session.objects.filter(
         client=client,
         session_date__gte=today,
