@@ -741,10 +741,24 @@
 function pageTab(tabName, btn) {
     document.querySelectorAll('.page-tab-content').forEach(el => el.classList.remove('page-tab-active'));
     document.querySelectorAll('.page-tab-btn').forEach(el => el.classList.remove('page-tab-active'));
-    document.getElementById('ptab-' + tabName).classList.add('page-tab-active');
+    const tabContainer = document.getElementById('ptab-' + tabName);
+    tabContainer.classList.add('page-tab-active');
     if (btn) btn.classList.add('page-tab-active');
 
     if (history.replaceState) history.replaceState(null, '', '#ptab-' + tabName);
+
+    // M-PAT-03: charts drawn while their tab was display:none get zero-sized
+    // canvases; redraw once the tab (and its real dimensions) are visible.
+    setTimeout(function() {
+        tabContainer.querySelectorAll('canvas').forEach(canvas => {
+            const canvasId = canvas.id;
+            if (canvasId && typeof chartRegistry !== 'undefined' && chartRegistry[canvasId]) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                chartRegistry[canvasId](canvas);
+            }
+        });
+    }, 50);
 }
 
 // Restore tab from URL hash on load
