@@ -4,7 +4,7 @@
 # against this file with no way for Dependabot to fix it.
 Django==6.0.7
 psycopg[binary]==3.3.4
-cryptography==49.0.0
+cryptography==50.0.0
 markdown==3.10.2
 nh3==0.3.6
 gunicorn==26.0.0
