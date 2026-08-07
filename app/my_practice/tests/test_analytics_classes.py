@@ -53,15 +53,6 @@ class RevenueAnalyzerTests(TestCase):
 
     def test_get_monthly_trends_returns_correct_format(self):
         """Test that get_monthly_trends returns properly formatted data"""
-        # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
-
         # Create test invoice
         Invoice.objects.create(
             client=self.client,
