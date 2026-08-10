@@ -185,13 +185,14 @@ last 12 months, today's agenda, active client list, and a weekly focus widget.
 
 The dashboard is the daily starting point. It shows:
 
-- **Heute & Diese Woche** — today's agenda (sessions from the calendar) + this week's sessions
-- **Revenue chart** — last 12 months, paid vs. sent vs. draft
-- **Fokus-Aufgaben** — starred to-do items pinned for the week
-- **Steuer-Quartal** — a running tax-quarter overview (Einnahmen-Überschussrechnung)
+- **Stats strip** — this year's revenue and profit, outstanding invoice total, and time off used
+- **This Week** — this week's sessions (Mon–Sun) plus any tasks due today or overdue
+- **Capacity Monitoring** — session utilisation vs. target hours (only shown once a monthly target is set in Practice settings)
+- **All-time status overview** — invoice counts by Draft/Sent/Paid/Cancelled, plus the 10 most recent invoices
 
-Switch to **Privacy mode** (toggle in the top bar) to blur client names — useful when
-working in a shared space.
+Revenue charts and trend breakdowns live on the **Analytics** page, not the dashboard —
+see below. Switch to **Privacy mode** (toggle in the top bar) to blur client names — useful
+when working in a shared space.
 
 ### Client list (`/clients/`)
 
@@ -225,14 +226,14 @@ clients with unbilled sessions in one go. Select the month, review the cards
 
 ### Analytics (`/analytics/`)
 
-The analytics dashboard has three tabs:
+The analytics dashboard has four tabs:
 
-- **Übersicht** — revenue vs. expenses vs. withdrawals, top clients by revenue,
-  profit trend
-- **Kapazität** — session capacity utilisation, cancellation rate trend, target
+- **Revenue** — revenue vs. expenses vs. withdrawals, profit trend, year-over-year
+  comparison
+- **Clients** — top clients by revenue, session heatmap
+- **Capacity** — session capacity utilisation, cancellation rate trend, target
   hours vs. actual (holiday-aware, Berlin public holidays)
-- **Zeit** — year-over-year revenue comparison, busiest months, session type
-  distribution
+- **Expenses** — expense breakdown by category
 
 Use the time-period filter at the top to zoom into a quarter or custom date range.
 

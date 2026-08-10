@@ -1,6 +1,6 @@
 # my_practice — Code Structure
 
-**Last updated: 2026-07-15**
+**Last updated: 2026-08-10**
 
 ## Overview
 
@@ -42,6 +42,7 @@ app/my_practice/
 │   ├── dashboard_views.py     # Dashboard (delegates to DashboardContextAssembler)
 │   ├── email_views.py         # Email compose + send (invoice, reminder, contract, …)
 │   ├── expense_views.py       # Expense CRUD + list
+│   ├── focus_queue_views.py   # Focus Queue (P-050) — unified manual + materialized task list
 │   ├── inquiry_views.py       # Lead tracking + funnel analytics
 │   ├── invoice_views.py       # Invoice CRUD + billing overview + monthly batch billing
 │   ├── operational_views.py   # Operational checklist
@@ -49,17 +50,16 @@ app/my_practice/
 │   ├── search_views.py        # Global search
 │   ├── tag_views.py           # Client tag management
 │   ├── tax_views.py           # Tax year summary, quarterly overview, workday audit
+│   ├── timeoff_views.py       # Time-off CRUD + client heads-up email
 │   ├── todo_views.py          # Practice todo list
 │   └── withdrawal_views.py    # Withdrawal CRUD + list
 │
-├── utils/                      # Utility functions (39 modules)
+├── utils/                      # Utility functions (35 modules)
 │   ├── __init__.py            # Central exports
-│   ├── action_queue_builder.py     # ActionQueueBuilder (dashboard action queue)
-│   ├── agenda_helpers.py           # AgendaWidgetBuilder (daily/weekly agenda)
 │   ├── aggregation_helpers.py      # Reusable DB aggregation patterns
 │   ├── analytics_dashboard_builder.py  # AnalyticsDashboardBuilder
 │   ├── analytics_utils.py          # Analytics computations
-│   ├── bank_import.py              # Bank statement CSV parsing
+│   ├── bank_import.py              # Bank statement CSV parsing (delimiter/columns configurable per practice)
 │   ├── billing_helpers.py          # Session→InvoiceItem: build_service_type_map,
 │   │                               #   resolve_session_rate, is_session_already_billed,
 │   │                               #   create_invoice_item_for_session
@@ -72,9 +72,8 @@ app/my_practice/
 │   ├── client_detail_builder.py    # ClientDetailContextBuilder
 │   ├── client_helpers.py           # Client convenience helpers
 │   ├── contract_form.py            # Contract PDF generation helpers
-│   ├── csv_parser.py               # German/US decimal parsing
 │   ├── dashboard_context_builder.py # DashboardContextAssembler
-│   ├── dashboard_widgets.py        # Dashboard widget data builders (9 builders)
+│   ├── dashboard_widgets.py        # Dashboard widget data builders
 │   ├── date_helpers.py             # DateRangeHelper, working-day counts,
 │   │                               #   get_quarter_range, get_quarter_for_date
 │   ├── email_utils.py              # Email composition helpers
@@ -83,7 +82,6 @@ app/my_practice/
 │   ├── gebueh_helpers.py           # GebüH block building shared by PDF + invoice detail
 │   ├── google_calendar.py          # Google Calendar API wrapper
 │   ├── heatmap_utils.py            # Session heatmap generation
-│   ├── import_helpers.py           # CSV import base classes
 │   ├── invoice_filter_helper.py    # InvoiceFilterHelper
 │   ├── invoice_helpers.py          # get_next_invoice_number()
 │   ├── practice_analysis.py        # PracticeAnalyzer
@@ -106,7 +104,7 @@ app/my_practice/
 ├── management/
 │   └── commands/              # Management commands (see docs/operations/SCRIPTS.md)
 │
-├── tests/                      # Test suite (~1340+ tests)
+├── tests/                      # Test suite (1,400+ tests)
 │   └── ...                    # One file per module; see test_*.py files
 │
 ├── static/
@@ -143,7 +141,7 @@ context = AnalyticsDashboardBuilder(start_date, end_date).build_context()
 
 `dashboard_views.py` is a thin dispatcher (22 lines). All data preparation lives in:
 - `DashboardContextAssembler` (`dashboard_context_builder.py`) — orchestrates widget builders
-- Six widget builders: five in `dashboard_widgets.py` (`InvoiceActionsWidgetBuilder`, `SessionImportWidgetBuilder`, `PendingCalendarWidgetBuilder`, `ChecklistWidgetBuilder`, `CapacityMonitoringWidgetBuilder`), plus `WeeklyFocusWidgetBuilder` (`weekly_focus_widget.py`) — `ClientAttentionWidgetBuilder`, `TaxQuarterWidgetBuilder`, `BankImportReminderWidgetBuilder`, `AgendaWidgetBuilder`, and `ActionQueueBuilder` were removed with the P-050 phase-4 "Needs Action" pane retirement; this line was stale until now
+- Six widget builders: five in `dashboard_widgets.py` (`InvoiceActionsWidgetBuilder`, `SessionImportWidgetBuilder`, `PendingCalendarWidgetBuilder`, `ChecklistWidgetBuilder`, `CapacityMonitoringWidgetBuilder`), plus `WeeklyFocusWidgetBuilder` (`weekly_focus_widget.py`) — `ClientAttentionWidgetBuilder`, `TaxQuarterWidgetBuilder`, `BankImportReminderWidgetBuilder`, `AgendaWidgetBuilder`, and `ActionQueueBuilder` were removed with the P-050 phase-4 "Needs Action" pane retirement
 
 ### Session billing helpers (`utils/billing_helpers.py`)
 

@@ -36,7 +36,7 @@ Full walkthrough: [docs/guides/GETTING_STARTED.md](docs/guides/GETTING_STARTED.m
 
 ## Code conventions
 
-- **Language**: code and comments in English; UI text (labels, buttons, messages) stays in German until i18n is done ([P-039](docs/projects/todo/P-039_I18N.md))
+- **Language**: code and comments in English. UI text is bilingual via Django i18n (P-039) — every user-facing string must be wrapped with an English msgid (`{% trans %}` / `gettext`/`gettext_lazy`), never written as literal German or English directly in a template or view. German translations go in `locale/de/LC_MESSAGES/django.po`. See the "i18n Conventions" section in [CLAUDE.md](CLAUDE.md) for the full rules (including the class-body-vs-function-scope `gettext_lazy` vs `gettext` distinction) and run `./dev.py i18n` after touching any user-facing string.
 - **Style**: `./dev.py quality` runs ruff format + ruff lint + tests — must pass before a PR
 - **Patterns**: check [docs/architecture/CODE_STRUCTURE.md](docs/architecture/CODE_STRUCTURE.md) before adding new views or utils; there are builder classes and helpers for most common tasks
 - **Tests**: add a test for new behaviour; run the relevant test file during development, full suite before opening a PR

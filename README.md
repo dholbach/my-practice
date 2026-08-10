@@ -8,7 +8,7 @@
 **Self-hosted practice management for independent, private-pay practices** — therapy, coaching, and similar.  
 Invoicing, session tracking, notes, analytics — on your own hardware, under your own control.
 
-> **Pre-release.** The code is production-grade — 945 tests, used daily since early 2026. But it has only been tested on one setup (Germany, GLS Bank, Berlin public holidays, single practitioner). No stable API is promised and there are no support guarantees. Issues and PRs welcome.
+> **Pre-release.** The code is production-grade — 1,400+ tests, used daily since early 2026. But it has only been tested on one setup (Germany, GLS Bank, Berlin public holidays, single practitioner). No stable API is promised and there are no support guarantees. Issues and PRs welcome.
 
 ---
 
@@ -101,7 +101,7 @@ A Verzeichnis von Verarbeitungstätigkeiten as required under GDPR Art. 30 — t
 
 **Integrations**
 - Google Calendar import — maps events to sessions, detects reschedules and cancellations
-- Bank statement CSV import with auto-matching to invoices (GLS Bank semicolon-delimited format; other banks will need format adaption)
+- Bank statement CSV import with auto-matching to invoices — delimiter and column names are configurable per practice (defaults match GLS Bank; other banks: adjust in admin settings, no code changes needed)
 - Operational backup checklist with completion tracking
 
 Full feature list: [docs/FEATURES.md](docs/FEATURES.md)
@@ -166,10 +166,10 @@ See [UPGRADING.md](UPGRADING.md) for the standard upgrade procedure and any vers
 
 ## Status and limitations
 
-- **Daily driver** — used in production for one practice since early 2026; ~945 tests
-- **German UI** — the interface is in German. Full i18n via Django `{% trans %}` is on the roadmap — see [P-039](docs/projects/todo/P-039_I18N.md). If you'd like to help translate, PRs are very welcome.
+- **Daily driver** — used in production for one practice since early 2026; 1,400+ tests
+- **Bilingual UI** — German (default) and English throughout, via Django i18n. A few document-facing exceptions are per-client/per-document by design (e.g. PDFs, invoice emails) rather than following the admin's UI-language toggle — see [P-039](docs/projects/done/P-039_DJANGO_I18N.md)
 - **One practice, one setup** — multi-practice support exists in the data model but the UX assumes a solo practitioner
-- **Some parts are mine** — the backup checklist items, bank CSV parser, and treatment contract template reflect my specific setup; see [CUSTOMISATION.md](docs/guides/CUSTOMISATION.md)
+- **Some parts are mine** — the backup checklist items and treatment contract template reflect my specific setup; see [CUSTOMISATION.md](docs/guides/CUSTOMISATION.md)
 - **AGPL-3.0** — Using it for your own practice: no restrictions. Offering it as a service to others: AGPL applies.
 
 ---
