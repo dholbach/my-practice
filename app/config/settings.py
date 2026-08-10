@@ -21,7 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # to undo a FileField's actual filesystem write, so without this every test
 # run that uploads an image leaves an orphaned file behind in production
 # storage.
-RUNNING_TESTS = "test" in sys.argv
+# "PYTEST_VERSION" covers `./dev.py test --smart` (pytest-testmon), which
+# never puts "test" in sys.argv.
+RUNNING_TESTS = "test" in sys.argv or "PYTEST_VERSION" in os.environ
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-dev-key-change-in-production")
 
@@ -158,6 +160,12 @@ else:
 # Auth
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
+
+# Tests don't need PBKDF2's deliberately slow iteration count — MD5 is
+# insecure but fine for throwaway test users, and cuts time on every test
+# that calls create_user()/set_password().
+if RUNNING_TESTS:
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # Media files
 MEDIA_URL = "/media/"
