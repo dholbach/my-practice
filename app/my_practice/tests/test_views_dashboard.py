@@ -219,6 +219,40 @@ class DashboardViewTest(TestCase):
             # First client should be HV with highest revenue
             self.assertEqual(top_clients[0]["client__client_code"], "HV")
 
+    def test_dashboard_multi_practice_revenue_falls_back_to_invoice_date(self):
+        """Practice switcher revenue must count paid invoices with a null paid_date
+        (falling back to invoice_date), same as the single-practice stats above."""
+        second_practice = Practice.objects.create(
+            name="Second Practice",
+            slug="views_dashboard-2",
+            title="Test Practitioner",
+            email="second@practice.com",
+            city="Berlin",
+        )
+        UserPractice.objects.create(user=self.user, practice=second_practice, is_owner=True)
+
+        other_client = Client.objects.create(
+            client_code="OP",
+            full_name="Other Practice Client",
+            email="op@example.com",
+            hourly_rate_60=Decimal("100.00"),
+            practice=second_practice,
+        )
+        Invoice.objects.create(
+            client=other_client,
+            invoice_number="OP-1",
+            invoice_date=date.today(),
+            status="paid",
+            paid_date=None,
+            total=Decimal("250.00"),
+            practice=second_practice,
+        )
+
+        response = self.client_instance.get(reverse("dashboard"))
+        practice_stats = {row["practice"].id: row for row in response.context["practice_stats"]}
+
+        self.assertEqual(practice_stats[second_practice.id]["revenue"], Decimal("250.00"))
+
 
 class DashboardPerformanceTest(TestCase):
     """Test dashboard performance with larger datasets."""

@@ -7,6 +7,7 @@ Requirements: Python 3, Docker with the Compose plugin.
 import json
 import os
 import secrets
+import shutil
 import subprocess
 import sys
 import time
@@ -43,6 +44,49 @@ def abort(msg):
 
 def step(msg):
     print(f"\n── {msg}")
+
+
+def _is_metered_connection():
+    """Best-effort NetworkManager check for a metered connection (e.g. mobile hotspot).
+
+    Returns True/False when nmcli gives a definite answer, None when it can't be
+    determined (no NetworkManager, no default route, non-Linux host, ...).
+    Callers should treat None as "unknown" and not block on it.
+    """
+    if not shutil.which("nmcli"):
+        return None
+    try:
+        route = subprocess.run(
+            ["ip", "route", "show", "default"], capture_output=True, text=True, timeout=3
+        )
+        parts = route.stdout.split()
+        device = parts[parts.index("dev") + 1] if "dev" in parts else None
+        if not device:
+            return None
+        out = subprocess.run(
+            ["nmcli", "-t", "-f", "GENERAL.METERED", "device", "show", device],
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        value = out.stdout.strip().split(":", 1)[-1]
+        return value.startswith("yes")
+    except Exception:
+        return None
+
+
+def _confirm_metered_download(action):
+    """Ask before a data-heavy operation if the active connection looks metered.
+
+    Returns True if it's fine to proceed (not metered, unknown, or user confirmed).
+    """
+    if _is_metered_connection() is not True:
+        return True
+    print(f"⚠️  Active network connection is metered (e.g. mobile hotspot). {action} can pull a lot of data.")
+    if not sys.stdin.isatty():
+        print("   Not an interactive terminal — pass --yes to proceed anyway.")
+        return False
+    return input("   Continue anyway? [y/N] ").strip().lower() == "y"
 
 
 # ── setup ────────────────────────────────────────────────────────────────────
@@ -167,10 +211,16 @@ def _wait_for_healthy(timeout=120):
     return False
 
 
-def cmd_setup(_args):
-    """First-time setup: generate secrets, pull image, start, create login."""
+def cmd_setup(args):
+    """First-time setup: generate secrets, pull image, start, create login.
+
+    Pass --yes to skip the metered-connection prompt before the image pull.
+    """
     print("my-practice setup")
     print("=" * 50)
+
+    if "--yes" not in args and not _confirm_metered_download("Pulling the image"):
+        abort("Aborted — pass --yes to ./prod.py setup to proceed anyway.")
 
     # 1. Preflight
     step("Checking Docker")
@@ -318,8 +368,12 @@ def cmd_restart(_args):
     return compose("restart", "django")
 
 
-def cmd_update(_args):
-    """Pull the latest image and restart."""
+def cmd_update(args):
+    """Pull the latest image and restart. Pass --yes to skip the metered-connection prompt."""
+    if "--yes" not in args and not _confirm_metered_download("Pulling the latest image"):
+        print("Aborted.")
+        return subprocess.CompletedProcess(args=[], returncode=1)
+
     try:
         with urllib.request.urlopen(RELEASES_API, timeout=5) as r:
             latest = json.loads(r.read())["tag_name"]
