@@ -10,7 +10,6 @@ from typing import cast
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-from django.core.exceptions import PermissionDenied
 from django.core.mail import EmailMessage
 from django.db import models, transaction
 from django.db.models import Max, QuerySet
@@ -24,6 +23,7 @@ from ..forms import ClientIntakeForm
 from ..models import Client, ClientDocument, ClientTag, Invoice, InvoiceItem
 from ..utils.email_utils import get_gdpr_deletion_email_content
 from ..utils.file_processing import process_upload
+from ..utils.view_helpers import get_object_or_403
 from ..utils import (
     RevenueCalculator,
     annotate_activity_status,
@@ -338,9 +338,9 @@ def client_document_upload(request: HttpRequest, pk: int) -> JsonResponse:
 @require_POST
 def client_document_delete(request: HttpRequest, pk: int) -> JsonResponse:
     """Delete a client document. Returns JSON."""
-    doc = get_object_or_404(ClientDocument, pk=pk)
-    if doc.client.practice != request.current_practice:
-        raise PermissionDenied
+    doc = get_object_or_403(
+        ClientDocument, request, pk=pk, practice_getter=lambda d: d.client.practice
+    )
     doc.file.delete(save=False)
     doc.delete()
     return JsonResponse({"success": True})

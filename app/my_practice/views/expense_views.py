@@ -6,7 +6,6 @@ import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -19,7 +18,7 @@ from ..forms import CompanyExpenseForm
 from ..models import BankTransaction, CompanyExpense, ExpenseReceipt
 from ..utils.file_processing import process_upload
 from ..utils.financial_list_context_builder import FinancialListContextBuilder
-from ..utils.view_helpers import get_year_from_request
+from ..utils.view_helpers import get_object_or_403, get_year_from_request
 from .crud_mixins import (
     NextRedirectMixin,
     PracticeScopedCreateView,
@@ -194,9 +193,9 @@ def _sync_expense_amount(expense: CompanyExpense) -> None:
 @require_POST
 def expense_receipt_delete(request: HttpRequest, pk: int) -> HttpResponse:
     """Delete a single receipt attachment from an expense."""
-    receipt = get_object_or_404(ExpenseReceipt, pk=pk)
-    if receipt.expense.practice != request.current_practice:
-        raise PermissionDenied
+    receipt = get_object_or_403(
+        ExpenseReceipt, request, pk=pk, practice_getter=lambda r: r.expense.practice
+    )
     expense_pk = receipt.expense_id
     receipt.file.delete(save=False)
     receipt.delete()
@@ -208,9 +207,7 @@ def expense_receipt_delete(request: HttpRequest, pk: int) -> HttpResponse:
 @require_POST
 def expense_link_transaction(request: HttpRequest, pk: int) -> HttpResponse:
     """Link a bank transaction to this expense and sync the expense amount."""
-    expense = get_object_or_404(CompanyExpense, pk=pk)
-    if expense.practice != request.current_practice:
-        raise PermissionDenied
+    expense = get_object_or_403(CompanyExpense, request, pk=pk)
     transaction_id = request.POST.get("transaction_id")
     transaction = get_object_or_404(
         BankTransaction.objects.for_current_practice(request), pk=transaction_id
@@ -264,9 +261,7 @@ def expense_merge(request: HttpRequest, pk: int) -> HttpResponse:
     """
     from django.db import transaction as db_transaction
 
-    target = get_object_or_404(CompanyExpense, pk=pk)
-    if target.practice != request.current_practice:
-        raise PermissionDenied
+    target = get_object_or_403(CompanyExpense, request, pk=pk)
 
     source_pk = request.POST.get("source_id")
     source = get_object_or_404(CompanyExpense, pk=source_pk, practice=request.current_practice)
@@ -314,9 +309,7 @@ def expense_merge(request: HttpRequest, pk: int) -> HttpResponse:
 @require_POST
 def expense_unlink_transaction(request: HttpRequest, pk: int, transaction_pk: int) -> HttpResponse:
     """Remove the link between a bank transaction and this expense and sync the amount."""
-    expense = get_object_or_404(CompanyExpense, pk=pk)
-    if expense.practice != request.current_practice:
-        raise PermissionDenied
+    expense = get_object_or_403(CompanyExpense, request, pk=pk)
     transaction = get_object_or_404(
         BankTransaction.objects.for_current_practice(request),
         pk=transaction_pk,
