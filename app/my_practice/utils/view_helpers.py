@@ -2,7 +2,11 @@
 Reusable view helper functions.
 """
 
+from typing import Any, Callable
+
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
 from django.utils.http import url_has_allowed_host_and_scheme
 
 
@@ -47,3 +51,28 @@ def safe_next(request: HttpRequest, fallback: str = "/") -> str:
     ):
         return url
     return fallback
+
+
+def get_object_or_403(
+    model: Any,
+    request: HttpRequest,
+    practice_getter: Callable[[Any], Any] | None = None,
+    **lookup: Any,
+) -> Any:
+    """
+    Fetch an object by `lookup`, then enforce it belongs to the current practice.
+
+    Raises Http404 if no object matches `lookup`, or PermissionDenied if it
+    exists but belongs to a different practice. `practice_getter` extracts the
+    practice from the object; defaults to `obj.practice` — pass e.g.
+    `lambda doc: doc.client.practice` when the model has no direct FK.
+
+    Example:
+        doc = get_object_or_403(ClientDocument, request, pk=pk, practice_getter=lambda d: d.client.practice)
+        expense = get_object_or_403(CompanyExpense, request, pk=pk)
+    """
+    obj = get_object_or_404(model, **lookup)
+    practice = practice_getter(obj) if practice_getter else obj.practice
+    if practice != request.current_practice:
+        raise PermissionDenied
+    return obj
