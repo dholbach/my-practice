@@ -165,7 +165,7 @@ Available base classes: `PracticeScopedListView`, `PracticeScopedCreateView`, `P
 ```python
 # Revenue calculations
 from my_practice.utils import RevenueCalculator
-revenue = RevenueCalculator.get_total_revenue(year=2026, status='paid')
+revenue = RevenueCalculator.get_year_revenue(2026, use_paid_date=True)["total"]
 breakdown = RevenueCalculator.get_status_breakdown(year=2026)
 
 # Date ranges
@@ -221,12 +221,12 @@ Always use RevenueCalculator methods for consistent date filtering:
 ```python
 # Good - Use RevenueCalculator
 from my_practice.utils import RevenueCalculator
-revenue = RevenueCalculator.get_total_revenue(
-    year=2026,
-    status='paid',
+year_stats = RevenueCalculator.get_year_revenue(
+    2026,
     use_paid_date=True,  # Use invoice.paid_date instead of invoice_date
-    practice=request.current_practice
+    practice=request.current_practice,
 )
+revenue = year_stats["total"]
 
 # Avoid - Manual filter building
 # invoice_qs = Invoice.objects.filter(invoice_date__year=year, status='paid')

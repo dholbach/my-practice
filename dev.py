@@ -69,6 +69,54 @@ def compose_base_cmd():
     return ["docker-compose"]
 
 
+def _default_route_device():
+    """Return the network interface used for the default route, or None."""
+    try:
+        cmd = ["flatpak-spawn", "--host"] if needs_flatpak() else []
+        cmd += ["ip", "route", "show", "default"]
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
+        parts = out.stdout.split()
+        return parts[parts.index("dev") + 1] if "dev" in parts else None
+    except Exception:
+        return None
+
+
+def _is_metered_connection():
+    """Best-effort NetworkManager check for a metered connection (e.g. mobile hotspot).
+
+    Returns True/False when nmcli gives a definite answer, None when it can't be
+    determined (no NetworkManager, no default route, non-Linux host, ...).
+    Callers should treat None as "unknown" and not block on it.
+    """
+    if not shutil.which("nmcli"):
+        return None
+    device = _default_route_device()
+    if not device:
+        return None
+    try:
+        cmd = ["flatpak-spawn", "--host"] if needs_flatpak() else []
+        cmd += ["nmcli", "-t", "-f", "GENERAL.METERED", "device", "show", device]
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
+        value = out.stdout.strip().split(":", 1)[-1]
+        return value.startswith("yes")
+    except Exception:
+        return None
+
+
+def _confirm_metered_download(action):
+    """Ask before a data-heavy operation if the active connection looks metered.
+
+    Returns True if it's fine to proceed (not metered, unknown, or user confirmed).
+    """
+    if _is_metered_connection() is not True:
+        return True
+    print(f"⚠️  Active network connection is metered (e.g. mobile hotspot). {action} can pull a lot of data.")
+    if not sys.stdin.isatty():
+        print("   Not an interactive terminal — pass --yes to proceed anyway.")
+        return False
+    return input("   Continue anyway? [y/N] ").strip().lower() == "y"
+
+
 def cmd_restart(args):
     """Restart the Django container (or do full restart with --force)"""
     # Check if --force flag is present
@@ -356,8 +404,14 @@ def cmd_build(args):
 
     Options:
         --no-cache   Force full rebuild (ignore layer cache)
+        --yes        Skip the metered-connection confirmation prompt
         <service>    Build only a specific service (default: all)
     """
+    skip_confirm = "--yes" in args
+    args = [a for a in args if a != "--yes"]
+    if not skip_confirm and not _confirm_metered_download("Rebuilding the image"):
+        print("Aborted.")
+        return subprocess.CompletedProcess(args=[], returncode=1)
     print("Building Docker image(s)...")
     cmd = []
     if needs_flatpak():
@@ -898,6 +952,7 @@ def cmd_smoke(args):
         --keep      Leave the stack running for manual inspection
         --no-pull   Skip the explicit pull (use a locally cached image)
         --down      Tear down a stack left running by a previous --keep run
+        --yes       Skip the metered-connection confirmation prompt
     """
     import base64
     import re
@@ -907,7 +962,13 @@ def cmd_smoke(args):
     keep = "--keep" in args
     no_pull = "--no-pull" in args
     down_only = "--down" in args
+    skip_confirm = "--yes" in args
     positional = [a for a in args if not a.startswith("-")]
+
+    if not no_pull and not down_only and not skip_confirm:
+        if not _confirm_metered_download("Pulling the smoke-test image"):
+            print("Aborted.")
+            return subprocess.CompletedProcess(args=[], returncode=1)
 
     repo_dir = os.path.dirname(os.path.abspath(__file__))
     if positional:

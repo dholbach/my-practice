@@ -157,9 +157,9 @@ class DashboardContextAssembler:
             practice_stats.extend(
                 {
                     "practice": p,
-                    "revenue": RevenueCalculator.get_total_revenue(
-                        {"practice": p, "paid_date__year": current_year}
-                    ),
+                    "revenue": RevenueCalculator.get_year_revenue(
+                        current_year, use_paid_date=True, practice=p
+                    )["total"],
                     "invoice_count": Invoice.objects.filter(
                         practice=p, invoice_date__year=current_year
                     ).count(),
