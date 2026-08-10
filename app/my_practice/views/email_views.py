@@ -474,7 +474,7 @@ class SendPaymentReminderView(BaseClientEmailView):
             subject = f"Payment Reminder – {count} outstanding {invoice_word}"
         else:
             # German (default)
-            rechnung_pl = "Rechnungen" if count != 1 else "Rechnung"
+            invoice_word_plural = "Rechnungen" if count != 1 else "Rechnung"
             lines.append(client.salutation + "," if client.salutation else "Hallo,")
             lines.append("")
             lines.append(
@@ -498,7 +498,7 @@ class SendPaymentReminderView(BaseClientEmailView):
             lines.append("Liebe Grüße,")
             lines.append("-- ")
             lines.append(practice.email_signature)
-            subject = f"Zahlungserinnerung – {count} offene {rechnung_pl}"
+            subject = f"Zahlungserinnerung – {count} offene {invoice_word_plural}"
 
         return subject, "\n".join(lines)
 

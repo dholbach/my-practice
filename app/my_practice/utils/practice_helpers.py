@@ -56,7 +56,7 @@ def switch_practice(request, practice_slug):
     Returns:
         True if successful, False if practice not found or user has no access
     """
-    from my_practice.models import Practice
+    from ..models import Practice
 
     if not request.user.is_authenticated:
         return False
@@ -103,6 +103,6 @@ def is_practice_owner(user, practice):
     if not user.is_authenticated or not practice:
         return False
 
-    from my_practice.models import UserPractice
+    from ..models import UserPractice
 
     return UserPractice.objects.filter(user=user, practice=practice, is_owner=True).exists()

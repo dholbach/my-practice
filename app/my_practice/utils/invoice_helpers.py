@@ -6,7 +6,7 @@ Centralized logic for invoice numbering and related operations.
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from my_practice.models import Client
+    from ..models import Client
 
 from ..models import Invoice
 
