@@ -49,6 +49,8 @@ See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TO
 ./dev.py start              # Start containers
 ./dev.py test               # Run Django + JS tests
 ./dev.py test my_practice.tests.test_calculations  # Specific test
+./dev.py test --smart        # Only tests affected by recent changes (pytest + testmon)
+./dev.py test --fast         # Full suite, parallel workers + failfast
 ./dev.py shell              # Django shell (interactive)
 ./dev.py manage <cmd>       # Django management commands
 ./dev.py run <script.py>    # Run script with Django environment
@@ -87,9 +89,11 @@ Match test scope to change scope — don't run the full suite for every edit:
   ./dev.py test my_practice.tests.test_invoice my_practice.tests.test_calculations
   ```
 - **Before committing**: broaden slightly to cover shared code touched (models, utils)
-- **Full suite** (`./dev.py test`): once per session when work is done, or before a release
+- **Full suite** (`./dev.py test --fast`, or plain `./dev.py test` if you want full non-parallel `-v 2` output): once per session when work is done, or before a release
 
 If you touch a shared utility or model used across many views, run a wider set. If you touch one view/form, run its test file.
+
+`--smart` (pytest-testmon) is a good middle ground when you're not sure what your change touched — it maps changed files/lines to the tests that cover them, so it's cheaper than a scoped guess and much cheaper than the full suite. First run on a fresh checkout builds the mapping (runs everything once); subsequent runs are fast. Rebuild the mapping (`./dev.py test --smart` again) after a rebase or pulling unrelated changes, since testmon's map can go stale.
 
 ## Architecture
 

@@ -574,7 +574,7 @@ def cmd_quality(args):
         print("-" * 30)
 
         # Note: Using --keepdb to reuse test database between runs
-        cmd = ["python", "manage.py", "test", "my_practice", "--keepdb"]
+        cmd = ["python", "manage.py", "test", "my_practice", "--keepdb", "--parallel"]
         if not verbose:
             cmd.append("--verbosity=1")
         test_result = run_docker_command(cmd)
