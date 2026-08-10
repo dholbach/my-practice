@@ -253,26 +253,6 @@ def _get_booked_hours(start_date: date, end_date: date) -> float:
     return (result["total_minutes"] or 0) / 60
 
 
-def get_monthly_capacity_for_date(target_date: date) -> float:
-    """
-    Get the monthly capacity (hours) for a specific month.
-
-    Convenience function that calculates capacity for the full month
-    containing target_date.
-
-    Args:
-        target_date: Any date within the target month
-
-    Returns:
-        Hours available for client sessions in that month
-    """
-    month_start = DateRangeHelper.get_first_of_month(target_date)
-    month_end = DateRangeHelper.get_last_of_month(target_date)
-
-    result = calculate_period_capacity(month_start, month_end)
-    return float(result["usable_capacity_hours"])
-
-
 def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practice=None):
     """
     Calculate capacity utilization trends over time (monthly).

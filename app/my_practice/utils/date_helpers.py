@@ -221,25 +221,6 @@ class DateRangeHelper:
         return date(timezone.localdate().year, 1, 1)
 
     @staticmethod
-    def is_leap_year(year: int) -> bool:
-        """
-        Check if a year is a leap year.
-
-        Args:
-            year: int year
-
-        Returns:
-            bool: True if leap year, False otherwise
-
-        Example:
-            >>> DateRangeHelper.is_leap_year(2024)
-            True
-            >>> DateRangeHelper.is_leap_year(2025)
-            False
-        """
-        return calendar.isleap(year)
-
-    @staticmethod
     def format_month_year(month_date: date, short: bool = False) -> str:
         """
         Format a date as month-year string.
