@@ -114,7 +114,7 @@
     {% for client in clients_deletion_eligible %}
     <tr>
       <td>{{ client.client_code }}</td>
-      <td>{{ client.full_name }}</td>
+      <td><span class="sensitive-data">{{ client.full_name }}</span></td>
       <td>{{ client.last_session_date|date:"d.m.Y" }}</td>
       <td>{% if client.email %}✓{% else %}—{% endif %}</td>
       <td>

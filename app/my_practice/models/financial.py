@@ -219,7 +219,7 @@ class ExpenseReceipt(models.Model):
         return f"{self.expense} — {Path(self.file.name or '').name}"
 
 
-class TaxYearNote(models.Model):
+class TaxYearNote(TimestampedModel):
     """
     Per-year tax record: allocation note, and the annual settlement result.
 
@@ -259,7 +259,6 @@ class TaxYearNote(models.Model):
         verbose_name=_("Assessment date"),
         help_text=_("Date of the tax assessment notice"),
     )
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = [("practice", "year")]
