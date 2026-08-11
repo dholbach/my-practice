@@ -79,11 +79,12 @@ body {
 }
 .brand-text-sub {
   font-size: 7pt;
-  letter-spacing: .18em;
+  letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--teal);
   line-height: 1.3;
   margin-top: 5pt;
+  white-space: nowrap;
 }
 
 /* Title (right side) */
@@ -274,13 +275,30 @@ table.items tbody.gebueh-block { break-inside: avoid; page-break-inside: avoid; 
   margin-bottom: 5pt;
 }
 .foot-cols {
-  display: flex;
-  justify-content: space-between;
-  gap: 14pt;
+  /* Table, not flex: WeasyPrint's flexbox doesn't shrink items to wrap
+     long unbroken tokens (the spaceless IBAN) even with min-width:0 and
+     overflow-wrap set — a table's cells reliably wrap within their width. */
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
   font-size: 7pt;
 }
+.foot-cols td {
+  width: 33.33%;
+  padding: 0 7pt;
+  overflow-wrap: anywhere;
+}
+.foot-cols td:first-child { padding-left: 0; }
+.foot-cols td:last-child { padding-right: 0; }
 .foot-cols b { color: var(--body); font-weight: 600; }
 .foot-cols .col-center { text-align: center; }
 .foot-cols .col-right  { text-align: right; }
 
-@page { @bottom-center { content: element(footer); } }
+@page {
+  @bottom-center {
+    content: element(footer);
+    /* Widen the footer beyond the body's 22mm side margins so long values
+       (IBAN, Steuernummer) don't word-wrap mid-value. */
+    margin: 0 -10mm;
+  }
+}
