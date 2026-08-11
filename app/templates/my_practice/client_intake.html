@@ -31,6 +31,7 @@
         </div>
     </div>
 
+    {% if form.salutation %}
     <div class="form-group">
         {{ form.salutation.label_tag }}
         {{ form.salutation }}
@@ -40,6 +41,7 @@
             If left empty, a generic salutation will be used. <strong>Highly recommended for better client experience!</strong>{% endblocktrans %}
         </div>
     </div>
+    {% endif %}
 
     <div class="form-group">
         {{ form.active.label_tag }}
@@ -50,6 +52,7 @@
         </div>
     </div>
 
+    {% if form.is_online_client %}
     <div class="form-group">
         {{ form.is_online_client.label_tag }}
         {{ form.is_online_client }}
@@ -58,7 +61,9 @@
             {% trans "💻 For clients whose sessions are primarily conducted online (video)." %}
         </div>
     </div>
+    {% endif %}
 
+    {% if form.needs_gebueh_invoice %}
     <div class="form-group">
         {{ form.needs_gebueh_invoice.label_tag }}
         {{ form.needs_gebueh_invoice }}
@@ -67,7 +72,9 @@
             {% trans "Enable GebüH billing (official German fee schedule for licensed alternative practitioners) for this client." %}
         </div>
     </div>
+    {% endif %}
 
+    {% if form.gebueh_no_diagnosis %}
     <div class="form-group">
         {{ form.gebueh_no_diagnosis.label_tag }}
         {{ form.gebueh_no_diagnosis }}
@@ -76,6 +83,7 @@
             {% trans "Omit the diagnosis line from this client's GebüH invoices." %}
         </div>
     </div>
+    {% endif %}
 
     <div class="form-group">
         {{ form.full_name.label_tag }}
@@ -84,11 +92,13 @@
     </div>
 
     <div class="form-row">
+        {% if form.date_of_birth %}
         <div class="form-group">
             {{ form.date_of_birth.label_tag }}
             {{ form.date_of_birth }}
             {{ form.date_of_birth.errors }}
         </div>
+        {% endif %}
         <div class="form-group">
             {{ form.email.label_tag }}
             {{ form.email }}
@@ -108,6 +118,7 @@
         {{ form.address.errors }}
     </div>
 
+    {% if form.hourly_rate_60 %}
     <div class="form-row">
         <div class="form-group">
             {{ form.hourly_rate_60.label_tag }}
@@ -120,6 +131,7 @@
             {{ form.hourly_rate_90.errors }}
         </div>
     </div>
+    {% endif %}
 
     <div class="form-group">
         {{ form.notes.label_tag }}

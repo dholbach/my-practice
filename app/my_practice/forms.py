@@ -54,6 +54,20 @@ class StyledFormMixin:
 class ClientIntakeForm(StyledFormMixin, forms.ModelForm):
     """Client intake form"""
 
+    # Fields that only make sense for an individual therapy/coaching client,
+    # not a company counterparty billed via free-form invoice items (P-122)
+    # — see __init__ below.
+    THERAPY_ONLY_FIELDS = (
+        "date_of_birth",
+        "cost_carrier",
+        "hourly_rate_60",
+        "hourly_rate_90",
+        "needs_gebueh_invoice",
+        "gebueh_no_diagnosis",
+        "is_online_client",
+        "salutation",
+    )
+
     date_of_birth = DateFormField(required=False, label=_("Date of birth"))
 
     class Meta:
@@ -111,6 +125,18 @@ class ClientIntakeForm(StyledFormMixin, forms.ModelForm):
             "hourly_rate_90": _("Fee 90 min (€)"),
             "notes": _("Notes"),
         }
+
+    def __init__(self, *args, **kwargs):
+        """Hide therapy-only fields for free-form-items (P-122) practices —
+        a company counterparty has no date of birth, insurance carrier, or
+        per-session rate."""
+        request = kwargs.pop("request", None)
+        super().__init__(*args, **kwargs)
+
+        practice = getattr(request, "current_practice", None) if request else None
+        if practice and practice.allows_free_form_items:
+            for field_name in self.THERAPY_ONLY_FIELDS:
+                self.fields.pop(field_name, None)
 
 
 class CompanyWithdrawalForm(StyledFormMixin, forms.ModelForm):

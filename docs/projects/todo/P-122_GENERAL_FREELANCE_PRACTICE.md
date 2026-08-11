@@ -1,9 +1,52 @@
 # P-122: General Freelance Practice Type
 
-**Status**: Phase 1 DONE (free-form invoice items) — Phase 2 (standard VAT + advance-payment report) still concept-only, no real trigger yet
+**Status**: Phase 1 DONE (free-form invoice items + counterparty-as-client follow-up) — Phase 2 (standard VAT + advance-payment report) still concept-only, no real trigger yet
 **Priority**: Medium (Phase 1, done) / Low (Phase 2)
 **Created**: August 2026
-**Updated**: August 2026 — Phase 1 implemented
+**Updated**: August 2026 — Phase 1 implemented, plus a follow-up round after the
+first real free-form invoice went out (see "Billing a company counterparty" below)
+
+---
+
+## Billing a company counterparty (not an individual)
+
+The first real use of `allows_free_form_items` was billing a company (e.g. a
+training institute) rather than an individual therapy client. `Invoice.client`
+is still a required FK to `Client` — there's no separate "counterparty" or
+"payer" model — so a company is represented as a `Client` row too: fill in
+`client_code` and `full_name` (the company name), leave the rest.
+
+This works, but the `Client` model was designed for individual therapy
+clients, and two rough edges from that showed up in practice and have since
+been fixed:
+
+- **`ClientIntakeForm` no longer shows therapy-only fields** (date of birth,
+  cost carrier/insurance, hourly rate 60/90min, GebüH billing flags, "online
+  client") when the current practice has `allows_free_form_items=True` — same
+  request-scoped field-hiding pattern `InvoiceItemForm` already used for the
+  `description` field (`forms.py`, `ClientIntakeForm.THERAPY_ONLY_FIELDS`).
+- **The client dashboard no longer flags a session-less client as
+  "needs attention" forever.** `group_clients_by_activity()` used to treat
+  `days_since_session > 90` as an attention signal; a free-form-items client
+  never has a session, so `days_since_session` is permanently `9999` and the
+  client got stuck in "needs attention" from day one. `ClientListView` now
+  passes `track_session_inactivity=False` for free-form-items practices —
+  tag-based attention (e.g. an "urgent" tag) still applies, only the
+  inactivity heuristic is skipped (`utils/client_helpers.py`,
+  `views/client_views.py`).
+
+**Known pre-existing gap, not fixed here**: `Client.cost_carrier` is in
+`ClientIntakeForm.Meta.fields` but was never actually rendered in
+`client_intake.html` even before this change — unrelated to free-form items,
+not touched.
+
+**Not done, deliberately**: no separate `Counterparty`/`Payer` model. One
+freelance practice with occasional company invoices doesn't justify a new
+concept alongside `Client`; the field-hiding + dashboard fix above removes
+the practical friction without a schema change. Revisit only if a second,
+meaningfully different non-individual billing scenario shows up (the P-122
+doc's original "book sales" example would still fit the same `Client` row —
+`full_name` = shop/customer name, no session).
 
 ---
 

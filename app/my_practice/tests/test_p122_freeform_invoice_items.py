@@ -2,12 +2,15 @@
 Tests for free-form (non-session) invoice items — P-122 Phase 1.
 
 Covers: InvoiceItem model validation (session/description XOR, practice
-gating), InvoiceItemForm behavior, count_sessions() exclusion, and the
-create/edit view formset flow.
+gating), InvoiceItemForm behavior, count_sessions() exclusion, the
+create/edit view formset flow, and the P-122 follow-up fixes for billing
+a non-individual counterparty (ClientIntakeForm field visibility,
+client-dashboard activity grouping).
 """
 
 from datetime import date
 from decimal import Decimal
+from types import SimpleNamespace
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -15,9 +18,11 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
+from ..forms import ClientIntakeForm
 from ..invoice_forms import InvoiceItemForm
 from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
 from ..utils.calculations import count_sessions
+from ..utils.client_helpers import annotate_activity_status, group_clients_by_activity
 
 
 def _make_practice(**kwargs):
@@ -561,3 +566,75 @@ class InvoiceEditFreeFormViewTests(TestCase):
         self.item.refresh_from_db()
         self.assertEqual(self.item.quantity, Decimal("3.00"))
         self.assertEqual(self.item.total, Decimal("2550.00"))
+
+
+class ClientIntakeFormFreeFormPracticeTests(TestCase):
+    """A company counterparty billed via free-form items shouldn't be asked
+    for therapy-only details (date of birth, hourly rate, insurance, ...)."""
+
+    def setUp(self):
+        self.allowing_practice = _make_practice(
+            slug="p122-client-form-yes", allows_free_form_items=True
+        )
+        self.strict_practice = _make_practice(
+            slug="p122-client-form-no", allows_free_form_items=False
+        )
+
+    def test_therapy_only_fields_hidden_for_free_form_practice(self):
+        request = SimpleNamespace(current_practice=self.allowing_practice)
+        form = ClientIntakeForm(request=request)
+        for field_name in ClientIntakeForm.THERAPY_ONLY_FIELDS:
+            self.assertNotIn(field_name, form.fields)
+        self.assertIn("full_name", form.fields)
+        self.assertIn("client_code", form.fields)
+
+    def test_therapy_only_fields_shown_for_strict_practice(self):
+        request = SimpleNamespace(current_practice=self.strict_practice)
+        form = ClientIntakeForm(request=request)
+        for field_name in ClientIntakeForm.THERAPY_ONLY_FIELDS:
+            self.assertIn(field_name, form.fields)
+
+    def test_therapy_only_fields_shown_without_request(self):
+        """No request (e.g. shell/script usage) keeps the full field set."""
+        form = ClientIntakeForm()
+        for field_name in ClientIntakeForm.THERAPY_ONLY_FIELDS:
+            self.assertIn(field_name, form.fields)
+
+
+class GroupClientsByActivityFreeFormTests(TestCase):
+    """A session-less client (free-form-items practice) shouldn't be stuck
+    in "needs attention" forever just for never having a session."""
+
+    def test_track_session_inactivity_false_skips_the_inactivity_flag(self):
+        practice = _make_practice(slug="p122-group-activity", allows_free_form_items=True)
+        client_obj = Client.objects.create(
+            client_code="CO",
+            full_name="Training Institute GmbH",
+            practice=practice,
+        )
+        annotate_activity_status([client_obj])
+        self.assertEqual(client_obj.days_since_session, 9999)  # never had a session
+
+        grouped_default = group_clients_by_activity([client_obj], track_session_inactivity=True)
+        self.assertIn(client_obj, grouped_default["needs_attention"])
+
+        grouped_free_form = group_clients_by_activity([client_obj], track_session_inactivity=False)
+        self.assertIn(client_obj, grouped_free_form["active_ok"])
+        self.assertNotIn(client_obj, grouped_free_form["needs_attention"])
+
+    def test_tag_based_attention_still_applies_when_ignoring_inactivity(self):
+        """Skipping the inactivity check must not swallow real attention tags."""
+        from ..models import ClientTag
+
+        practice = _make_practice(slug="p122-group-activity-tag", allows_free_form_items=True)
+        client_obj = Client.objects.create(
+            client_code="CO2",
+            full_name="Another Corp",
+            practice=practice,
+        )
+        tag = ClientTag.objects.create(name="Urgent", slug="urgent-p122", category="attention")
+        client_obj.tags.add(tag)
+        annotate_activity_status([client_obj])
+
+        grouped = group_clients_by_activity([client_obj], track_session_inactivity=False)
+        self.assertIn(client_obj, grouped["needs_attention"])

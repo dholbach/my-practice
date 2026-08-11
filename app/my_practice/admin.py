@@ -408,11 +408,12 @@ class ServiceTypeAdmin(admin.ModelAdmin):
 
 
 class InvoiceItemAdminForm(forms.ModelForm):
-    """Mirrors InvoiceItem.save()'s session/description XOR as a form-level
-    check — session is blank=True on the model (P-122), so without this the
-    admin would only find out about a missing session/description via a raw
-    ValidationError raised inside save(), producing an unhandled 500 instead
-    of a normal form error."""
+    """Runs InvoiceItem's session/description checks as form-level checks —
+    session is blank=True on the model (P-122), so without this the admin
+    would only find out about a violation via a raw ValidationError raised
+    inside save(), producing an unhandled 500 instead of a normal form
+    error. Reuses InvoiceItem.validate_*() (models/invoice.py) rather than
+    re-deriving the same rules here."""
 
     class Meta:
         model = InvoiceItem
@@ -422,13 +423,12 @@ class InvoiceItemAdminForm(forms.ModelForm):
         cleaned_data = super().clean()
         has_session = bool(cleaned_data.get("session"))
         has_description = bool(cleaned_data.get("description"))
-        if has_session == has_description:
-            raise forms.ValidationError(
-                _(
-                    "Invoice item needs either a linked session or a description, "
-                    "not both or neither."
-                )
-            )
+        InvoiceItem.validate_exclusive_session_or_description(has_session, has_description)
+        # self.instance.invoice_id: set for edits and admin-inline creates
+        # under an already-saved Invoice; still None while creating a new
+        # Invoice + items together, same limitation as InvoiceItem.clean().
+        if self.instance.invoice_id:
+            InvoiceItem.validate_free_form_allowed(has_description, self.instance.invoice.practice)
         return cleaned_data
 
 

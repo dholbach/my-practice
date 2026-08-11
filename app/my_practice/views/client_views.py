@@ -88,7 +88,15 @@ class ClientListView(PracticeScopedListView):
         # Use centralized grouping function from client_helpers
         from ..utils.client_helpers import group_clients_by_activity
 
-        grouped = group_clients_by_activity(all_clients, use_attention_category=True)
+        # Free-form-items practices (P-122) bill without sessions, so their
+        # clients never have a last_session_date — don't flag them as
+        # needing attention purely for being session-inactive.
+        track_session_inactivity = not self.request.current_practice.allows_free_form_items
+        grouped = group_clients_by_activity(
+            all_clients,
+            use_attention_category=True,
+            track_session_inactivity=track_session_inactivity,
+        )
 
         clients_needs_attention = grouped["needs_attention"]
         clients_active_ok = grouped["active_ok"]
@@ -172,6 +180,13 @@ class ClientIntakeView(NextRedirectMixin, PracticeScopedUpdateView):
     template_name = "my_practice/client_intake.html"
     success_url = reverse_lazy("client_list")
     success_message = _("Client {obj.full_name} saved successfully!")
+
+    def get_form_kwargs(self):
+        """Pass request so the form can hide therapy-only fields for
+        free-form-items (P-122) practices."""
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def get_object(self, queryset=None):
         """Get existing client if pk is provided, else return new instance"""

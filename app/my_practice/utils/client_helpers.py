@@ -87,7 +87,7 @@ def calculate_client_session_stats(items) -> dict[str, Any]:
     }
 
 
-def group_clients_by_activity(clients, use_attention_category=True):
+def group_clients_by_activity(clients, use_attention_category=True, track_session_inactivity=True):
     """
     Group clients into workflow categories.
 
@@ -100,6 +100,12 @@ def group_clients_by_activity(clients, use_attention_category=True):
         clients: List of Client objects with required attributes
         use_attention_category: If True, uses tag.category=='attention' to determine priority.
                                If False, falls back to hardcoded slug list.
+        track_session_inactivity: If False, skips the days-since-last-session
+            check entirely — only tag-based attention applies. Pass False for
+            practices where clients aren't session-based (Practice.allows_free_form_items,
+            P-122): those clients never have a session, so days_since_session
+            is permanently 9999 and would otherwise flag them as needing
+            attention forever.
 
     Returns:
         dict: {
@@ -138,7 +144,7 @@ def group_clients_by_activity(clients, use_attention_category=True):
                 needs_attention = any(slug in client_tag_slugs for slug in attention_tag_slugs)
 
             # Also check days since session
-            if needs_attention or client.days_since_session > 90:
+            if needs_attention or (track_session_inactivity and client.days_since_session > 90):
                 clients_needs_attention.append(client)
             else:
                 clients_active_ok.append(client)
