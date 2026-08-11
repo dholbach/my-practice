@@ -127,14 +127,14 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
     # Not required at the field level — a free-form row leaves these blank instead;
     # clean() enforces "session fields XOR description" per row.
     session_date = DateFormField(
-        label="Sitzungsdatum",
+        label=gettext_lazy("Session date"),
         required=False,
     )
 
     duration = forms.IntegerField(
         widget=forms.NumberInput(attrs={"min": "1", "value": "60"}),
         initial=60,
-        label="Dauer (Minuten)",
+        label=gettext_lazy("Duration (minutes)"),
         required=False,
     )
 
@@ -170,12 +170,15 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
         # it, matching the model's own default=1.00 (see clean()).
         self.fields["quantity"].required = False
 
-        # Hide the free-form description field entirely unless this practice opted in —
-        # keeps the form honest even if a client tampers with the POST data.
+        # Hide the free-form description/quantity fields entirely unless this
+        # practice opted in — keeps the form honest even if a client tampers
+        # with the POST data. Session items always bill at quantity 1;
+        # quantity > 1 only makes sense for day-rate/project billing.
         practice = getattr(self.request, "current_practice", None) if self.request else None
         self.allows_free_form_items = bool(practice and practice.allows_free_form_items)
         if not self.allows_free_form_items:
             del self.fields["description"]
+            del self.fields["quantity"]
 
         # Filter ServiceTypes by current practice + globals
         if self.request:
@@ -217,7 +220,12 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
         session_date = cleaned_data.get("session_date")
         description = cleaned_data.get("description") if self.allows_free_form_items else ""
 
-        if cleaned_data.get("quantity") is None:
+        # Only touch cleaned_data["quantity"] when the field actually exists on
+        # the form (allows_free_form_items) — otherwise construct_instance()
+        # tries to look up the (deleted) field via form["quantity"] and raises
+        # KeyError. When the field is absent, the model's own default (or the
+        # existing instance value, on edit) applies untouched.
+        if self.allows_free_form_items and cleaned_data.get("quantity") is None:
             cleaned_data["quantity"] = Decimal("1.00")
 
         if session_date and description:
@@ -227,6 +235,20 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
         if not session_date and not description:
             raise forms.ValidationError(
                 gettext_lazy("Enter either a session date or a free-text description.")
+            )
+        if self.instance.pk and self.instance.session_id and not session_date and description:
+            # Blanking session_date on a row that already has a linked Session
+            # would orphan that Session — no InvoiceItem would reference it
+            # anymore, so it starts showing up as "unbilled" even though it's
+            # already accounted for in this invoice's total. Deleting/detaching
+            # the Session automatically risks losing clinical documentation
+            # (SessionLog etc.) attached to it, so require an explicit new row
+            # instead of a silent conversion.
+            raise forms.ValidationError(
+                gettext_lazy(
+                    "Converting a session-linked item to a free-form item isn't "
+                    "supported — delete this item and add a new free-form item instead."
+                )
             )
         if session_date and not cleaned_data.get("duration"):
             self.add_error("duration", gettext_lazy("Duration is required for a session item."))

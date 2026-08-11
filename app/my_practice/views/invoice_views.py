@@ -203,7 +203,7 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
 
                 self.object = form.save()
                 items.instance = self.object
-                self._attach_sessions_to_items(items, self.object.client)
+                self.attach_sessions_to_formset(items, self.object.client)
                 items.save()  # signals handle total + date recalculation
                 self.object.refresh_from_db()
         except Exception as e:
@@ -219,26 +219,6 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
             _("Invoice %(num)s created successfully!") % {"num": self.object.invoice_number},
         )
         return redirect(self.success_url)
-
-    @staticmethod
-    def _attach_sessions_to_items(items, client):
-        """Create/get a Session for each session-linked formset item from its
-        session_date + duration. Free-form items (description, no session_date)
-        are left without a session — see Practice.allows_free_form_items."""
-        for item_form in items.forms:
-            if not item_form.cleaned_data or item_form.cleaned_data.get("DELETE"):
-                continue
-            session_date = item_form.cleaned_data.get("session_date")
-            if not session_date:
-                item_form.instance.session = None
-                continue
-            duration = item_form.cleaned_data.get("duration") or 60
-            session, _created = Session.objects.get_or_create(
-                client=client,
-                session_date=session_date,
-                defaults={"duration": duration},
-            )
-            item_form.instance.session = session
 
     def _add_item_formset_errors(self, items):
         """Surface per-row and non-form errors from the item formset as messages."""
@@ -339,46 +319,34 @@ class InvoiceEditView(NextRedirectMixin, InvoiceFormsetMixin, PracticeScopedUpda
             # so don't emit them here too (would show every error twice).
             return self.form_invalid(form)
 
-        with transaction.atomic():
-            invoice = form.save()
-            self._attach_sessions_to_formset(formset, invoice)
+        try:
+            with transaction.atomic():
+                invoice = form.save()
+                self.attach_sessions_to_formset(formset, invoice.client)
 
-            # Save formset (this will trigger signals for each item)
-            formset.instance = invoice
-            formset.save()
+                # Save formset (this will trigger signals for each item)
+                formset.instance = invoice
+                formset.save()
 
-            # Signals handle total/date recalculation when items change.
-            # For DRAFT invoices where no items changed, ensure the date is
-            # still refreshed to max(today, latest_session_date).
-            if invoice.status == Invoice.Status.DRAFT:
-                recalculate_invoice_total(invoice)
+                # Signals handle total/date recalculation when items change.
+                # For DRAFT invoices where no items changed, ensure the date is
+                # still refreshed to max(today, latest_session_date).
+                if invoice.status == Invoice.Status.DRAFT:
+                    recalculate_invoice_total(invoice)
 
-            # Refresh invoice from DB to get updated values
-            invoice.refresh_from_db()
+                # Refresh invoice from DB to get updated values
+                invoice.refresh_from_db()
+        except Exception as e:
+            logger.exception("Error updating invoice")
+            messages.error(
+                self.request,
+                _("Error updating invoice: %(error)s") % {"error": str(e)},
+            )
+            return self.form_invalid(form)
 
         self.object = invoice
         # Success message handled by PracticeScopedUpdateView
         return redirect(self.get_success_url())
-
-    @staticmethod
-    def _attach_sessions_to_formset(formset, invoice):
-        """Create/get a Session for each session-linked formset item from its
-        session_date + duration. Free-form items (description, no session_date)
-        are left without a session — see Practice.allows_free_form_items."""
-        for f in formset.forms:
-            if not f.cleaned_data or f.cleaned_data.get("DELETE"):
-                continue
-            session_date = f.cleaned_data.get("session_date")
-            if not session_date:
-                f.instance.session = None
-                continue
-            duration = f.cleaned_data.get("duration") or 60
-            session, _created = Session.objects.get_or_create(
-                client=invoice.client,
-                session_date=session_date,
-                defaults={"duration": duration},
-            )
-            f.instance.session = session
 
     def _emit_formset_errors(self, formset):
         """Report per-field and non-form errors from the item formset as messages."""

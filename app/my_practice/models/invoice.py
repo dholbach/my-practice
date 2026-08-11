@@ -6,6 +6,7 @@ from enum import StrEnum
 from typing import Any
 
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
@@ -264,6 +265,7 @@ class InvoiceItem(models.Model):
         max_digits=5,
         decimal_places=2,
         default=Decimal("1.00"),
+        validators=[MinValueValidator(Decimal("0.01"))],
         verbose_name=gettext_lazy("Quantity"),
     )
     total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=gettext_lazy("Total"))
@@ -302,7 +304,10 @@ class InvoiceItem(models.Model):
     )
 
     class Meta:
-        ordering = ["session__session_date"]
+        # "pk" tiebreaker: free-form items have session=None, so
+        # session__session_date alone leaves them in undefined relative order
+        # (Postgres doesn't guarantee stable ordering across NULL-tied rows).
+        ordering = ["session__session_date", "pk"]
         verbose_name = gettext_lazy("Invoice item")
         verbose_name_plural = gettext_lazy("Invoice items")
         indexes = []
@@ -314,6 +319,10 @@ class InvoiceItem(models.Model):
 
     def clean(self) -> None:
         """Description-only items require the practice's free-form-items flag.
+
+        This only catches the case for items whose invoice is already
+        persisted (edits, admin operations on an existing item) — see the
+        save()-time check below for the create-path backstop.
 
         The "exactly one of session/description" structural check lives in
         save(), not here: at model-clean time inside the invoice formset,
@@ -332,7 +341,16 @@ class InvoiceItem(models.Model):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        """Auto-calculate total; enforce exactly one of session/description."""
+        """Auto-calculate total; enforce exactly one of session/description.
+
+        Also re-checks the practice's free-form-items flag here, not just in
+        clean(): on the invoice-creation path, the formset attaches this
+        item's invoice_id only in save_new() (right before this save() call),
+        so clean() — run earlier, during formset validation — never sees a
+        usable invoice_id and can't reach self.invoice.practice. By save()
+        time the FK is always set, making this the one check that actually
+        runs on every path (create, edit, admin).
+        """
         has_session = self.session_id is not None
         has_description = bool(self.description)
         if has_session == has_description:
@@ -341,6 +359,10 @@ class InvoiceItem(models.Model):
                     "Invoice item needs either a linked session or a description, "
                     "not both or neither."
                 )
+            )
+        if has_description and not self.invoice.practice.allows_free_form_items:
+            raise ValidationError(
+                {"description": _("This practice doesn't allow free-form invoice items.")}
             )
         self.total = self.rate * self.quantity
         super().save(*args, **kwargs)

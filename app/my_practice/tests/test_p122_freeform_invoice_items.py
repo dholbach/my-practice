@@ -68,6 +68,33 @@ class InvoiceItemFreeFormModelTests(TestCase):
         self.assertIsNone(item.session_id)
         self.assertEqual(item.total, Decimal("2400.00"))
 
+    def test_free_form_items_sort_deterministically(self):
+        """Multiple free-form items all have session=None, so ordering by
+        session__session_date alone leaves them tied with no tiebreaker —
+        Meta.ordering must include a secondary key (pk)."""
+        first = InvoiceItem.objects.create(
+            invoice=self.invoice,
+            service_type=self.service_type,
+            description="Day 1",
+            rate=Decimal("800.00"),
+        )
+        second = InvoiceItem.objects.create(
+            invoice=self.invoice,
+            service_type=self.service_type,
+            description="Day 2",
+            rate=Decimal("800.00"),
+        )
+        third = InvoiceItem.objects.create(
+            invoice=self.invoice,
+            service_type=self.service_type,
+            description="Day 3",
+            rate=Decimal("800.00"),
+        )
+        self.assertEqual(
+            list(self.invoice.items.all()),
+            [first, second, third],
+        )
+
     def test_neither_session_nor_description_raises(self):
         item = InvoiceItem(
             invoice=self.invoice,
@@ -116,6 +143,41 @@ class InvoiceItemFreeFormModelTests(TestCase):
         )
         with self.assertRaises(ValidationError):
             item.full_clean()
+
+    def test_description_only_rejected_on_create_path(self):
+        """Mirrors what InvoiceFormsetMixin/save_new() actually do on create:
+        the item's invoice FK isn't attached until immediately before save(),
+        so clean() alone (invoice_id still None) can't catch this — save()
+        must be the backstop that fires."""
+        client_obj = Client.objects.create(
+            client_code="SC",
+            full_name="Anna Schmidt",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.strict_practice,
+        )
+        service_type = ServiceType.objects.create(
+            code="therapy2", name="Therapy", practice=self.strict_practice
+        )
+        invoice = Invoice.objects.create(
+            client=client_obj,
+            invoice_number="SC-2",
+            invoice_date=date(2026, 1, 1),
+            status="draft",
+            practice=self.strict_practice,
+        )
+        item = InvoiceItem(
+            service_type=service_type,
+            description="Not allowed here",
+            rate=Decimal("90.00"),
+        )
+        # No invoice attached yet — same as during formset validation on
+        # create. clean() alone can't see the practice, so it must NOT raise.
+        item.clean()
+
+        # Attach the invoice the way save_new() does, right before save().
+        item.invoice = invoice
+        with self.assertRaises(ValidationError):
+            item.save()
 
     def test_str_falls_back_to_description(self):
         item = InvoiceItem.objects.create(
@@ -193,6 +255,18 @@ class InvoiceItemFormFreeFormTests(TestCase):
         form = InvoiceItemForm(request=self._request_for(self.strict_practice))
         self.assertNotIn("description", form.fields)
 
+    def test_quantity_field_present_when_allowed(self):
+        form = InvoiceItemForm(request=self._request_for(self.allowing_practice))
+        self.assertIn("quantity", form.fields)
+
+    def test_quantity_field_absent_when_disallowed(self):
+        """quantity > 1 only makes sense for free-form/day-rate billing — a
+        session-linked item always bills at quantity 1, so the field is
+        removed entirely for practices that haven't opted in, same as
+        description."""
+        form = InvoiceItemForm(request=self._request_for(self.strict_practice))
+        self.assertNotIn("quantity", form.fields)
+
     def test_valid_free_form_row(self):
         service_type = ServiceType.objects.create(
             code="day_rate", name="Day rate", practice=self.allowing_practice
@@ -209,6 +283,27 @@ class InvoiceItemFormFreeFormTests(TestCase):
             request=self._request_for(self.allowing_practice),
         )
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_zero_quantity_is_rejected_server_side(self):
+        """The widget's min="0.01" is a client-side hint only — a crafted POST
+        must still be rejected server-side (MinValueValidator on the model
+        field), not silently saved as a zero-total line item."""
+        service_type = ServiceType.objects.create(
+            code="day_rate2", name="Day rate", practice=self.allowing_practice
+        )
+        form = InvoiceItemForm(
+            data={
+                "service_type": service_type.pk,
+                "rate": "800.00",
+                "quantity": "0",
+                "description": "2 consulting days",
+                "session_date": "",
+                "duration": "",
+            },
+            request=self._request_for(self.allowing_practice),
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("quantity", form.errors)
 
     def test_neither_session_nor_description_is_invalid(self):
         service_type = ServiceType.objects.create(
@@ -243,6 +338,53 @@ class InvoiceItemFormFreeFormTests(TestCase):
             request=self._request_for(self.allowing_practice),
         )
         self.assertFalse(form.is_valid())
+
+    def test_converting_session_item_to_free_form_is_rejected(self):
+        """Blanking session_date on a row that already has a linked Session
+        would orphan that Session (no InvoiceItem left pointing to it, so it
+        starts showing up as unbilled) — must be rejected, not silently
+        allowed."""
+        client_obj = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.allowing_practice,
+        )
+        service_type = ServiceType.objects.create(
+            code="therapy_60", name="60 Min", practice=self.allowing_practice
+        )
+        invoice = Invoice.objects.create(
+            client=client_obj,
+            invoice_number="TC-1",
+            invoice_date=date(2026, 1, 1),
+            status="draft",
+            practice=self.allowing_practice,
+        )
+        session_obj = Session.objects.create(
+            client=client_obj, session_date=date(2026, 1, 5), duration=60
+        )
+        item = InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=service_type,
+            session=session_obj,
+            rate=Decimal("90.00"),
+            total=Decimal("90.00"),
+        )
+        form = InvoiceItemForm(
+            data={
+                "service_type": service_type.pk,
+                "rate": "800.00",
+                "quantity": "1.00",
+                "description": "Switched to free-form",
+                "session_date": "",
+                "duration": "",
+            },
+            instance=item,
+            request=self._request_for(self.allowing_practice),
+        )
+        self.assertFalse(form.is_valid())
+        session_obj.refresh_from_db()
+        self.assertTrue(Session.objects.filter(pk=session_obj.pk).exists())
 
 
 class InvoiceCreateFreeFormViewTests(TestCase):
@@ -345,3 +487,77 @@ class InvoiceCreateFreeFormDisallowedTests(TestCase):
         response = self.client_instance.post(reverse("invoice_create"), data)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Invoice.objects.filter(client=self.test_client).exists())
+
+
+class InvoiceEditFreeFormViewTests(TestCase):
+    """invoice_edit.html must round-trip quantity for free-form items —
+    a missing field here silently resets quantity/total on every edit."""
+
+    def setUp(self):
+        self.practice = _make_practice(slug="p122-view-edit", allows_free_form_items=True)
+        self.user = User.objects.create_user(username="testuser3", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_instance = TestClient()
+        self.client_instance.login(username="testuser3", password="testpass123")
+
+        self.service_type = ServiceType.objects.create(
+            code="day_rate", name="Consulting (day rate)", practice=self.practice
+        )
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+            active=True,
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date.today(),
+            status=Invoice.Status.DRAFT,
+            total=Decimal("2400.00"),
+            practice=self.practice,
+        )
+        self.item = InvoiceItem.objects.create(
+            invoice=self.invoice,
+            service_type=self.service_type,
+            description="IT consulting, 3 days",
+            rate=Decimal("800.00"),
+            quantity=Decimal("3.00"),
+            total=Decimal("2400.00"),
+        )
+
+    def test_edit_form_renders_quantity_input(self):
+        response = self.client_instance.get(reverse("invoice_edit", kwargs={"pk": self.invoice.pk}))
+        self.assertContains(response, 'name="items-0-quantity"')
+        self.assertContains(response, 'value="3.00"')
+
+    def test_edit_preserves_quantity_on_unrelated_change(self):
+        """Editing an unrelated field (rate) must not reset quantity to 1.00."""
+        data = {
+            "client": str(self.test_client.pk),
+            "invoice_number": self.invoice.invoice_number,
+            "invoice_date": self.invoice.invoice_date.isoformat(),
+            "status": Invoice.Status.DRAFT,
+            "tax_rate": "0.00",
+            "notes": "",
+            "practice": str(self.practice.pk),
+            "items-TOTAL_FORMS": "1",
+            "items-INITIAL_FORMS": "1",
+            "items-MIN_NUM_FORMS": "1",
+            "items-MAX_NUM_FORMS": "1000",
+            "items-0-id": str(self.item.pk),
+            "items-0-service_type": str(self.service_type.pk),
+            "items-0-rate": "850.00",
+            "items-0-quantity": "3.00",
+            "items-0-description": "IT consulting, 3 days",
+            "items-0-session_date": "",
+            "items-0-duration": "",
+        }
+        response = self.client_instance.post(
+            reverse("invoice_edit", kwargs={"pk": self.invoice.pk}), data
+        )
+        self.assertRedirects(response, reverse("invoice_detail", kwargs={"pk": self.invoice.pk}))
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.quantity, Decimal("3.00"))
+        self.assertEqual(self.item.total, Decimal("2550.00"))

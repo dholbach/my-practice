@@ -114,6 +114,28 @@ class InvoiceFormsetMixin:
         context[formset_key] = self.get_formset(invoice_instance)
         return context
 
+    @staticmethod
+    def attach_sessions_to_formset(formset, client) -> None:
+        """Create/get a Session for each session-linked formset item from its
+        session_date + duration. Free-form items (description, no session_date)
+        are left without a session — see Practice.allows_free_form_items."""
+        from ..models import Session
+
+        for item_form in formset.forms:
+            if not item_form.cleaned_data or item_form.cleaned_data.get("DELETE"):
+                continue
+            session_date = item_form.cleaned_data.get("session_date")
+            if not session_date:
+                item_form.instance.session = None
+                continue
+            duration = item_form.cleaned_data.get("duration") or 60
+            session, _created = Session.objects.get_or_create(
+                client=client,
+                session_date=session_date,
+                defaults={"duration": duration},
+            )
+            item_form.instance.session = session
+
 
 class PracticeScopedListView(LoginRequiredMixin, ListView):
     """

@@ -2,6 +2,7 @@
 Django Admin configuration for payments app.
 """
 
+from django import forms
 from django.contrib import admin, messages
 from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext as _
@@ -406,10 +407,36 @@ class ServiceTypeAdmin(admin.ModelAdmin):
         )
 
 
+class InvoiceItemAdminForm(forms.ModelForm):
+    """Mirrors InvoiceItem.save()'s session/description XOR as a form-level
+    check — session is blank=True on the model (P-122), so without this the
+    admin would only find out about a missing session/description via a raw
+    ValidationError raised inside save(), producing an unhandled 500 instead
+    of a normal form error."""
+
+    class Meta:
+        model = InvoiceItem
+        fields = "__all__"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        has_session = bool(cleaned_data.get("session"))
+        has_description = bool(cleaned_data.get("description"))
+        if has_session == has_description:
+            raise forms.ValidationError(
+                _(
+                    "Invoice item needs either a linked session or a description, "
+                    "not both or neither."
+                )
+            )
+        return cleaned_data
+
+
 class InvoiceItemInline(admin.TabularInline):
     model = InvoiceItem
+    form = InvoiceItemAdminForm
     extra = 1
-    fields = ["session", "service_type", "rate", "quantity", "group_size", "total"]
+    fields = ["session", "description", "service_type", "rate", "quantity", "group_size", "total"]
     readonly_fields = ["total"]
 
 
@@ -527,6 +554,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 
 @admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
+    form = InvoiceItemAdminForm
     list_display = [
         "invoice",
         "session",
