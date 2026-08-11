@@ -3,6 +3,7 @@ Views for multi-practice management.
 """
 
 import logging
+import re
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -41,6 +42,15 @@ def practice_switch(request, slug):
 
     # Extract path only to prevent open redirect via HTTP_REFERER
     referer_path = urlparse(referer).path
+
+    # A referer pointing at a specific object (e.g. /invoices/5451/) almost
+    # always 404s after switching practice — that pk belongs to exactly one
+    # practice, and it's rarely the one just switched to. Bounce up to the
+    # list view instead of sending the user into a 404.
+    detail_page = re.match(r"^(/[a-z][\w-]*/)\d+/", referer_path)
+    if detail_page:
+        referer_path = detail_page.group(1)
+
     return redirect(referer_path or "dashboard")
 
 

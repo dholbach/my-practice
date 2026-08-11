@@ -11,11 +11,13 @@
 <div class="foot">
   <div class="foot-legal">{% if practice.is_kleinunternehmer %}{{ practice.kleinunternehmer_text_en }}{% else %}{{ practice.vat_exempt_text_en }}{% endif %}</div>
   {% if practice.memberships_en %}<div class="foot-legal">{{ practice.memberships_en }}</div>{% endif %}
-  <div class="foot-cols">
-    <div><b>{{ practice.name }}</b><br>{{ practice.title }}<br>{{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}</div>
-    <div class="col-center"><b>Bank Details</b><br>IBAN: {{ practice.iban }}<br>BIC: {{ practice.bic }}</div>
-    <div class="col-right"><b>Contact</b><br>{{ practice.email }}<br>Tax ID: {{ practice.tax_id }}</div>
-  </div>
+  <table class="foot-cols">
+    <tr>
+      <td><b>{{ practice.name }}</b><br>{{ practice.title }}<br>{{ practice.street }}, {{ practice.postal_code }} {{ practice.city }}</td>
+      <td class="col-center"><b>Bank Details</b><br>IBAN: {{ practice.iban|cut:" " }}<br>BIC: {{ practice.bic }}</td>
+      <td class="col-right"><b>Contact</b><br>{{ practice.email }}<br>Tax ID: {{ practice.tax_id }}</td>
+    </tr>
+  </table>
 </div>
 
 <!-- Header -->

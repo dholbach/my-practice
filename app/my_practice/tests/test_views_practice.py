@@ -2,12 +2,15 @@
 Tests for practice management views.
 """
 
+from datetime import date
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import Practice, UserPractice
+from ..models import Client, Invoice, Practice, UserPractice
 from ..tests.test_helpers import link_user_to_practice
 
 
@@ -64,6 +67,60 @@ class PracticeSwitchTest(TestCase):
         location = response["Location"]
         # Must not redirect to an external domain
         self.assertFalse(location.startswith("https://evil.example.com"))
+
+    def test_switch_from_object_detail_page_goes_up_a_level(self):
+        """A referer like /invoices/5451/ almost always 404s for the newly
+        switched practice (that pk belongs to exactly one practice) — redirect
+        to the list view instead of bouncing the user into a 404."""
+        client_obj = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice1,
+        )
+        invoice = Invoice.objects.create(
+            client=client_obj,
+            invoice_number="TC-1",
+            invoice_date=date.today(),
+            status=Invoice.Status.DRAFT,
+            practice=self.practice1,
+        )
+        response = self.tc.get(
+            reverse("practice_switch", args=[self.practice2.slug]),
+            HTTP_REFERER=f"http://testserver/invoices/{invoice.pk}/",
+        )
+        self.assertEqual(response["Location"], "/invoices/")
+
+    def test_switch_from_edit_subpage_goes_up_a_level(self):
+        """/invoices/5451/edit/ must also collapse to /invoices/, not just
+        the bare detail page — same reasoning, one level further."""
+        client_obj = Client.objects.create(
+            client_code="TC2",
+            full_name="Anna Schmidt",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice1,
+        )
+        invoice = Invoice.objects.create(
+            client=client_obj,
+            invoice_number="TC2-1",
+            invoice_date=date.today(),
+            status=Invoice.Status.DRAFT,
+            practice=self.practice1,
+        )
+        response = self.tc.get(
+            reverse("practice_switch", args=[self.practice2.slug]),
+            HTTP_REFERER=f"http://testserver/invoices/{invoice.pk}/edit/",
+        )
+        self.assertEqual(response["Location"], "/invoices/")
+
+    def test_switch_from_list_page_is_unaffected(self):
+        """A referer with no numeric id (e.g. the list view itself) should
+        redirect back to itself unchanged."""
+        response = self.tc.get(
+            reverse("practice_switch", args=[self.practice2.slug]),
+            HTTP_REFERER="http://testserver/invoices/",
+        )
+        self.assertEqual(response["Location"], "/invoices/")
 
 
 class PracticeSelectTest(TestCase):
