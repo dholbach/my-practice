@@ -186,6 +186,13 @@
                 <div class="help-text">{% trans "Alternative text if exempt from VAT" %}</div>
             </div>
         </div>
+        <div class="form-group checkbox-group">
+            {{ form.allows_free_form_items }}
+            <label for="{{ form.allows_free_form_items.id_for_label }}" class="mb-0">
+                {% trans "Allow free-form invoice items (no linked session)" %}
+            </label>
+        </div>
+        <div class="help-text">{% trans "For day-rate or project billing not tied to a therapy/coaching session. Leave off for therapy/coaching practices." %}</div>
     </div>
 
     <div class="form-section">

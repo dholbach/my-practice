@@ -4,6 +4,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase
+from django.utils import translation
 from my_practice.email_forms import InvoiceEmailForm
 from my_practice.invoice_forms import InvoiceForm, InvoiceItemForm
 from my_practice.models import Client, Practice, ServiceType, Session
@@ -151,15 +152,20 @@ class InvoiceItemFormTestCase(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_form_requires_session_date(self):
-        """Test that session_date is required"""
+        """Test that a row needs a session_date (or, for practices that allow
+        it, a free-text description — see P-122). Neither -> invalid."""
         form_data = {
             "service_type": self.service_type.id,
             "duration": 60,
             "rate": "90.00",
         }
-        form = InvoiceItemForm(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("session_date", form.errors)
+        with translation.override("en"):
+            form = InvoiceItemForm(data=form_data)
+            self.assertFalse(form.is_valid())
+            self.assertIn(
+                "Enter either a session date or a free-text description.",
+                form.errors.get("__all__", []),
+            )
 
     def test_form_sets_default_duration(self):
         """Test that duration defaults to 60"""

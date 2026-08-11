@@ -107,11 +107,14 @@
                     </div>
                 </div>
 
+                {% if item_form.allows_free_form_items %}
                 <div class="form-group">
                     {{ item_form.description.label_tag }}
                     {{ item_form.description }}
+                    <div class="help-text">{% trans "Fill in instead of a session date, for day-rate/project billing" %}</div>
                     {{ item_form.description.errors }}
                 </div>
+                {% endif %}
 
                 {{ item_form.id }}
                 {{ item_form.invoice }}

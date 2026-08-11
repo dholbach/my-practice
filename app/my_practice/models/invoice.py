@@ -277,16 +277,27 @@ class InvoiceItem(models.Model):
         ),
     )
 
-    # Link to central Session object — required (NOT NULL)
+    # Link to central Session object — required for therapy/coaching items.
+    # Nullable for free-form items (day-rate/project billing, P-122) — see description below.
     session = models.ForeignKey(
         "Session",
         on_delete=models.PROTECT,
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
         related_name="invoice_items",
         verbose_name=gettext_lazy("Session"),
         help_text=gettext_lazy(
             "Linked session (central reference for clinical documentation + billing)"
+        ),
+    )
+    description = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=gettext_lazy("Description"),
+        help_text=gettext_lazy(
+            "Free-text line item label, used instead of a linked session "
+            "(day-rate/project billing) — only available when the practice "
+            "allows free-form invoice items"
         ),
     )
 
@@ -297,9 +308,39 @@ class InvoiceItem(models.Model):
         indexes = []
 
     def __str__(self) -> str:
-        return f"{self.invoice.invoice_number} - {self.session.session_date}"
+        if self.session_id:
+            return f"{self.invoice.invoice_number} - {self.session.session_date}"
+        return f"{self.invoice.invoice_number} - {self.description}"
+
+    def clean(self) -> None:
+        """Description-only items require the practice's free-form-items flag.
+
+        The "exactly one of session/description" structural check lives in
+        save(), not here: at model-clean time inside the invoice formset,
+        session-linked rows haven't had their Session attached yet (the view
+        resolves session_date -> Session only after the formset validates,
+        see InvoiceFormsetMixin) — checking session_id here would reject
+        every ordinary session row before it ever gets a session.
+        """
+        if (
+            self.description
+            and self.invoice_id
+            and not self.invoice.practice.allows_free_form_items
+        ):
+            raise ValidationError(
+                {"description": _("This practice doesn't allow free-form invoice items.")}
+            )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        """Auto-calculate total"""
+        """Auto-calculate total; enforce exactly one of session/description."""
+        has_session = self.session_id is not None
+        has_description = bool(self.description)
+        if has_session == has_description:
+            raise ValidationError(
+                _(
+                    "Invoice item needs either a linked session or a description, "
+                    "not both or neither."
+                )
+            )
         self.total = self.rate * self.quantity
         super().save(*args, **kwargs)

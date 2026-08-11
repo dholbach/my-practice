@@ -1,9 +1,28 @@
 # P-122: General Freelance Practice Type
 
-**Status**: Concept — Phase 1 has a real near-term trigger, Phase 2 does not
-**Priority**: Medium (Phase 1) / Low (Phase 2)
+**Status**: Phase 1 DONE (free-form invoice items) — Phase 2 (standard VAT + advance-payment report) still concept-only, no real trigger yet
+**Priority**: Medium (Phase 1, done) / Low (Phase 2)
 **Created**: August 2026
-**Updated**: August 2026 — a concrete third practice is now planned; see below
+**Updated**: August 2026 — Phase 1 implemented
+
+---
+
+## Phase 1 implementation summary
+
+Implemented as specified below: `Practice.allows_free_form_items` (default `False`,
+self-service setting alongside `is_kleinunternehmer`), `InvoiceItem.session` made
+nullable with a new `description` field, and validation enforcing exactly one of
+session/description per item (`InvoiceItem.save()`, mirrored in
+`InvoiceItemForm.clean()` for proper per-field UX). `count_sessions()` excludes
+free-form items entirely rather than guessing a duration for them, and the
+invoice PDF/detail templates fall back to `description` (and show `quantity ×
+rate` when quantity isn't 1) when there's no linked session. The `description`
+field/UI only appears at all for practices with the flag enabled — therapy/coaching
+practices see no change.
+
+Not done (deliberately, per Non-Goals below): no new `ServiceType` row seeded
+(admin-configurable, practice-specific, not code) and no actual `setup_practice`
+run for a real practice (that's a deployment step, not a code change).
 
 ---
 

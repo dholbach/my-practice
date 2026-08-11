@@ -2,11 +2,13 @@
 Additional forms for invoices.
 """
 
+from decimal import Decimal
 from typing import Any, cast
 
 from django import forms
 from django.forms import ModelChoiceField, inlineformset_factory
 from django.utils import timezone
+from django.utils.translation import gettext_lazy
 
 from .forms import DateFormField, StyledFormMixin
 from .models import Client, Invoice, InvoiceItem
@@ -113,17 +115,27 @@ class InvoiceForm(StyledFormMixin, forms.ModelForm):
 
 
 class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
-    """Invoice item form for inline formset with default duration."""
+    """
+    Invoice item form for inline formset with default duration.
 
-    # Non-model fields: data goes to the linked Session, not to InvoiceItem directly
+    A row is either session-linked (session_date + duration, the default) or
+    free-form (description only, no session) — the latter only accepted when
+    the current practice has Practice.allows_free_form_items set (P-122).
+    """
+
+    # Non-model fields: data goes to the linked Session, not to InvoiceItem directly.
+    # Not required at the field level — a free-form row leaves these blank instead;
+    # clean() enforces "session fields XOR description" per row.
     session_date = DateFormField(
         label="Sitzungsdatum",
+        required=False,
     )
 
     duration = forms.IntegerField(
         widget=forms.NumberInput(attrs={"min": "1", "value": "60"}),
         initial=60,
         label="Dauer (Minuten)",
+        required=False,
     )
 
     class Meta:
@@ -131,6 +143,8 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
         fields = [
             "service_type",
             "rate",
+            "quantity",
+            "description",
         ]
         widgets = {
             "service_type": forms.Select(attrs={"data-item-service": "true"}),
@@ -140,6 +154,10 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
                     "data-item-rate": "true",
                 }
             ),
+            "quantity": forms.NumberInput(attrs={"step": "0.01", "min": "0.01"}),
+            "description": forms.TextInput(
+                attrs={"placeholder": gettext_lazy("Free-text line item — no linked session")}
+            ),
         }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -147,6 +165,17 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
         # Extract request for practice-scoped queries
         self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
+
+        # Not required at the field level: existing forms/tests don't submit
+        # it, matching the model's own default=1.00 (see clean()).
+        self.fields["quantity"].required = False
+
+        # Hide the free-form description field entirely unless this practice opted in —
+        # keeps the form honest even if a client tampers with the POST data.
+        practice = getattr(self.request, "current_practice", None) if self.request else None
+        self.allows_free_form_items = bool(practice and practice.allows_free_form_items)
+        if not self.allows_free_form_items:
+            del self.fields["description"]
 
         # Filter ServiceTypes by current practice + globals
         if self.request:
@@ -181,6 +210,28 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
                 cast(ModelChoiceField, self.fields["service_type"]).initial = default_service
 
             self.initial["session_date"] = timezone.localdate()
+
+    def clean(self) -> dict[str, Any]:
+        """Enforce "session_date XOR description" per row."""
+        cleaned_data = super().clean()
+        session_date = cleaned_data.get("session_date")
+        description = cleaned_data.get("description") if self.allows_free_form_items else ""
+
+        if cleaned_data.get("quantity") is None:
+            cleaned_data["quantity"] = Decimal("1.00")
+
+        if session_date and description:
+            raise forms.ValidationError(
+                gettext_lazy("Choose either a session date or a free-text description, not both.")
+            )
+        if not session_date and not description:
+            raise forms.ValidationError(
+                gettext_lazy("Enter either a session date or a free-text description.")
+            )
+        if session_date and not cleaned_data.get("duration"):
+            self.add_error("duration", gettext_lazy("Duration is required for a session item."))
+
+        return cleaned_data
 
 
 # Base formset for invoice items

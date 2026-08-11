@@ -92,9 +92,12 @@
     <tr>
       <td>
         {{ item.service_type.name_en|default:item.service_type.name }}
-        <div class="item-sub">{{ item.session.session_date|date:"d.m.Y" }}</div>
+        <div class="item-sub">
+          {% if item.session_id %}{{ item.session.session_date|date:"d.m.Y" }}{% else %}{{ item.description }}{% endif %}
+          {% if item.quantity != 1 %} · {{ item.quantity }} × {{ item.rate|currency }}{% endif %}
+        </div>
       </td>
-      <td class="r">{{ item.rate|currency }}</td>
+      <td class="r">{{ item.total|currency }}</td>
     </tr>
     {% endfor %}
   </tbody>

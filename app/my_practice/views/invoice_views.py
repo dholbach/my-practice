@@ -222,12 +222,17 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
 
     @staticmethod
     def _attach_sessions_to_items(items, client):
-        """Create/get a Session for each formset item from its session_date + duration."""
+        """Create/get a Session for each session-linked formset item from its
+        session_date + duration. Free-form items (description, no session_date)
+        are left without a session — see Practice.allows_free_form_items."""
         for item_form in items.forms:
             if not item_form.cleaned_data or item_form.cleaned_data.get("DELETE"):
                 continue
-            session_date = item_form.cleaned_data["session_date"]
-            duration = item_form.cleaned_data.get("duration", 60)
+            session_date = item_form.cleaned_data.get("session_date")
+            if not session_date:
+                item_form.instance.session = None
+                continue
+            duration = item_form.cleaned_data.get("duration") or 60
             session, _created = Session.objects.get_or_create(
                 client=client,
                 session_date=session_date,
@@ -357,12 +362,17 @@ class InvoiceEditView(NextRedirectMixin, InvoiceFormsetMixin, PracticeScopedUpda
 
     @staticmethod
     def _attach_sessions_to_formset(formset, invoice):
-        """Create/get a Session for each formset item from its session_date + duration."""
+        """Create/get a Session for each session-linked formset item from its
+        session_date + duration. Free-form items (description, no session_date)
+        are left without a session — see Practice.allows_free_form_items."""
         for f in formset.forms:
             if not f.cleaned_data or f.cleaned_data.get("DELETE"):
                 continue
-            session_date = f.cleaned_data["session_date"]
-            duration = f.cleaned_data.get("duration", 60)
+            session_date = f.cleaned_data.get("session_date")
+            if not session_date:
+                f.instance.session = None
+                continue
+            duration = f.cleaned_data.get("duration") or 60
             session, _created = Session.objects.get_or_create(
                 client=invoice.client,
                 session_date=session_date,
