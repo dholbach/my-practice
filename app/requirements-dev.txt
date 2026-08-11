@@ -34,7 +34,7 @@ radon==6.0.1
 pip-audit==2.10.1
 pytest==9.1.1
 pytest-asyncio==1.4.0
-pytest-django==4.12.0
+pytest-django==4.13.0
 pytest-testmon==2.2.0
 mypy==2.3.0
 django-stubs==6.0.7
