@@ -89,23 +89,37 @@ narrow band of code that inspects item internals needs a branch.
 
 ## Technical Specification (draft)
 
-### Phase 1 (near-term — before first invoice; ~4-6h)
+### Phase 1 (near-term — before first invoice; ~4.5-6.5h)
 
 #### New `Practice` row
 - `setup_practice.py` with the IT practice's own name/slug/address/bank/`tax_id`
   (from the new registration)
 - `is_kleinunternehmer = True` — reuses the existing field, identical to coaching
   today. No `vat_treatment` field needed yet (see Phase 2).
+- `allows_free_form_items = True` — see guardrail flag below; stays `False` for
+  therapy/coaching
+
+#### New `Practice.allows_free_form_items` flag (guardrail)
+- `BooleanField(default=False)`, same pattern as `is_kleinunternehmer`
+- Gates whether a practice's invoice formset offers the free-text row type at
+  all, and whether `InvoiceItem.clean()` accepts a description-only item
+- Purpose: therapy/coaching keep today's UI and validation completely
+  unchanged — a session-less item would silently undercount
+  `count_sessions()`-driven analytics and break the clinical-documentation
+  link, so it should be structurally impossible there, not just avoided by
+  convention
 
 #### `InvoiceItem` changes
 - `session` FK: `null=False` → `null=True`
 - New `description` field (`CharField` or `TextField`, blank unless `session` is null)
-- `save()` / `clean()`: require exactly one of `session` or `description`
+- `save()` / `clean()`: require exactly one of `session` or `description`;
+  reject a description-only item unless `self.invoice.practice.allows_free_form_items`
 - `__str__`: fall back to `description` when `session_id` is None
 
 #### Ripple points (session-aware code needs a `session_id is None` branch/skip)
 - `count_sessions()` (`utils/calculations.py`) — skip items with no session
-- Invoice formset UI — per-row branch: session-linked row vs. free-text row
+- Invoice formset UI — per-row branch: session-linked row vs. free-text row,
+  free-text row type only offered when `practice.allows_free_form_items`
 - PDF line-item rendering (`invoice_pdf_*.html`) — label from `description` when
   no session
 - Focus Queue / clinical linkage (`SessionLog`) — already tolerate a `Session`
