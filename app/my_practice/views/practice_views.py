@@ -109,26 +109,7 @@ class PracticeCreateView(CreateView):
 
     model = Practice
     template_name = "my_practice/practice_form.html"
-    fields = [
-        "name",
-        "short_title_de",
-        "short_title_en",
-        "title",
-        "subtitle_de",
-        "subtitle_en",
-        "street",
-        "postal_code",
-        "city",
-        "country",
-        "email",
-        "email_from_name",
-        "website",
-        "phone",
-        "bank_name",
-        "iban",
-        "bic",
-        "tax_id",
-    ]
+    form_class = PracticeEditForm
     success_url = reverse_lazy("practice_management")
 
     def form_valid(self, form: Any) -> HttpResponse:

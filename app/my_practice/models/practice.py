@@ -228,6 +228,7 @@ class Practice(models.Model):
     memberships_de = models.TextField(
         default="",
         verbose_name=_("Memberships (German)"),
+        blank=True,
     )
     memberships_en = models.TextField(
         default="",
