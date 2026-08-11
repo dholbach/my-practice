@@ -114,6 +114,14 @@
                         {{ item_form.duration.errors }}
                     </div>
 
+                    {% if item_form.allows_free_form_items %}
+                    <div class="form-group">
+                        <label for="{{ item_form.quantity.id_for_label }}">{% trans "Quantity" %}</label>
+                        {{ item_form.quantity }}
+                        {{ item_form.quantity.errors }}
+                    </div>
+                    {% endif %}
+
                     <div class="form-group">
                         <label for="{{ item_form.rate.id_for_label }}">{% trans "Hourly rate (€)" %} *</label>
                         {{ item_form.rate }}
@@ -121,13 +129,16 @@
                     </div>
                 </div>
 
+                {% if item_form.allows_free_form_items %}
                 <div class="item-grid-wide">
                     <div class="form-group">
                         <label for="{{ item_form.description.id_for_label }}">{% trans "Description" %}</label>
                         {{ item_form.description }}
+                        <div class="help-text">{% trans "Fill in instead of a session date, for day-rate/project billing" %}</div>
                         {{ item_form.description.errors }}
                     </div>
                 </div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>

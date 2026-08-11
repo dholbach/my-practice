@@ -92,9 +92,12 @@
     <tr>
       <td>
         {{ item.service_type.name_de|default:item.service_type.name }}
-        <div class="item-sub">{{ item.session.session_date|date:"d.m.Y" }}</div>
+        <div class="item-sub">
+          {% if item.session_id %}{{ item.session.session_date|date:"d.m.Y" }}{% else %}{{ item.description }}{% endif %}
+          {% if item.quantity != 1 %} · {{ item.quantity }} × {{ item.rate|currency }}{% endif %}
+        </div>
       </td>
-      <td class="r">{{ item.rate|currency }}</td>
+      <td class="r">{{ item.total|currency }}</td>
     </tr>
     {% endfor %}
   </tbody>
@@ -116,7 +119,11 @@
   </div>
 
   <div class="client-note">
+    {% if invoice.client.date_of_birth %}
     Alle Leistungen wurden für {{ invoice.client.full_name }}, geb. {{ invoice.client.date_of_birth|date:"d.m.Y" }}, erbracht.
+    {% else %}
+    Alle Leistungen wurden für {{ invoice.client.full_name }} erbracht.
+    {% endif %}
   </div>
 
   <div class="signature-section">

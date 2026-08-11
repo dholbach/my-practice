@@ -236,6 +236,7 @@ class PracticeEditForm(StyledFormMixin, forms.ModelForm):
             "kleinunternehmer_text_en",
             "vat_exempt_text_de",
             "vat_exempt_text_en",
+            "allows_free_form_items",
             "logo",
             "signature",
             "memberships_de",

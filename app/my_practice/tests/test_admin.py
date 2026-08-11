@@ -1,6 +1,7 @@
 """Tests for Django admin configuration."""
 
 from datetime import date
+from decimal import Decimal
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
@@ -11,6 +12,7 @@ from my_practice.admin import (
     CompanyExpenseAdmin,
     CompanyWithdrawalAdmin,
     InvoiceAdmin,
+    InvoiceItemAdminForm,
     PracticeAdmin,
     ServiceTypeAdmin,
     TimeOffAdmin,
@@ -22,6 +24,7 @@ from my_practice.models import (
     Invoice,
     Practice,
     ServiceType,
+    Session,
     TimeOff,
 )
 
@@ -232,3 +235,83 @@ class AdminIntegrationTestCase(TestCase):
         self.assertEqual(Client.objects.count(), 1)
         client = Client.objects.first()
         self.assertEqual(client.client_code, "TC")
+
+
+class InvoiceItemAdminFormTests(TestCase):
+    """InvoiceItem.session became blank=True (P-122), so the admin form must
+    enforce "session XOR description" itself — otherwise a blank row only
+    fails inside InvoiceItem.save(), producing an unhandled 500 instead of a
+    normal form error (used by both InvoiceItemInline and InvoiceItemAdmin)."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="admin-invoiceitem-form",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.service_type = ServiceType.objects.create(
+            code="individual", name="60 Min Session", practice=self.practice
+        )
+        self.client_obj = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.client_obj,
+            invoice_number="TC-1",
+            invoice_date=date.today(),
+            status=Invoice.Status.DRAFT,
+            practice=self.practice,
+        )
+
+    def test_neither_session_nor_description_is_invalid(self):
+        form = InvoiceItemAdminForm(
+            data={
+                "invoice": str(self.invoice.pk),
+                "service_type": str(self.service_type.pk),
+                "rate": "90.00",
+                "quantity": "1.00",
+                "group_size": "1",
+                "total": "90.00",
+                "description": "",
+            }
+        )
+        self.assertFalse(form.is_valid())
+
+    def test_both_session_and_description_is_invalid(self):
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date.today(), duration=60
+        )
+        form = InvoiceItemAdminForm(
+            data={
+                "invoice": str(self.invoice.pk),
+                "session": str(session.pk),
+                "service_type": str(self.service_type.pk),
+                "rate": "90.00",
+                "quantity": "1.00",
+                "group_size": "1",
+                "total": "90.00",
+                "description": "Consulting",
+            }
+        )
+        self.assertFalse(form.is_valid())
+
+    def test_description_only_is_valid(self):
+        self.practice.allows_free_form_items = True
+        self.practice.save()
+        form = InvoiceItemAdminForm(
+            data={
+                "invoice": str(self.invoice.pk),
+                "service_type": str(self.service_type.pk),
+                "rate": "800.00",
+                "quantity": "1.00",
+                "group_size": "1",
+                "total": "800.00",
+                "description": "Consulting",
+            }
+        )
+        self.assertTrue(form.is_valid(), form.errors)

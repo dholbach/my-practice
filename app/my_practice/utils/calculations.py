@@ -72,9 +72,14 @@ def count_sessions(
             if st and "cancel" in st.code.lower():
                 continue
 
+        # Free-form items (day-rate/project billing, no linked session) aren't
+        # therapy sessions — exclude them from session-based counts entirely
+        # rather than guessing a duration for them.
+        if not item.session_id:
+            continue
+
         # Normalize to 60-minute base: (duration / 60) * quantity
-        duration = item.session.duration if item.session_id else 60
-        sessions = (to_float(duration) / 60.0) * to_float(item.quantity)
+        sessions = (to_float(item.session.duration) / 60.0) * to_float(item.quantity)
 
         if therapist_hours:
             group_size = to_float(getattr(item, "group_size", 1) or 1)

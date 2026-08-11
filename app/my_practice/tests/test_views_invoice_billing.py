@@ -5,8 +5,10 @@ delete, add-sessions helpers, and the monthly billing overview.
 
 from datetime import date, timedelta
 from decimal import Decimal
+from unittest import mock
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
@@ -330,6 +332,23 @@ class InvoiceEditFormValidTests(TestCase):
         self.assertEqual(response.status_code, 200)
         messages = list(response.context["messages"])
         self.assertTrue(len(messages) > 0)
+
+    def test_edit_save_exception_is_handled_gracefully(self):
+        """form_valid() must catch exceptions raised inside the save
+        transaction (e.g. a save()-time model ValidationError) the same way
+        InvoiceCreateView does, instead of letting a raw 500 through."""
+        with mock.patch(
+            "my_practice.views.crud_mixins.InvoiceFormsetMixin.attach_sessions_to_formset",
+            side_effect=ValidationError("boom"),
+        ):
+            response = self.client_instance.post(
+                reverse("invoice_edit", kwargs={"pk": self.invoice.pk}), self._formset_data()
+            )
+        self.assertEqual(response.status_code, 200)
+        messages = list(response.context["messages"])
+        self.assertTrue(any("boom" in str(m) for m in messages))
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.rate, Decimal("90.00"))  # unchanged — rollback worked
 
 
 class InvoiceDeleteTests(TestCase):

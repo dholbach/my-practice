@@ -139,6 +139,19 @@ class PracticeCreateViewTest(TestCase):
             "iban": "DE89370400440532013000",
             "bic": "COBADEFFXXX",
             "tax_id": "123/456/78901",
+            "kleinunternehmer_text_de": "Der Betrag ist umsatzsteuerfrei nach § 19 UStG (Kleinunternehmerregelung).",
+            "kleinunternehmer_text_en": "",
+            "vat_exempt_text_de": "Der Betrag ist umsatzsteuerfrei nach § 4 Nr. 14 UStG",
+            "vat_exempt_text_en": "This amount is exempt from VAT according to § 4 No. 14 UStG",
+            "payment_terms_days": "14",
+            "payment_terms_text_de": (
+                "Bitte überweisen Sie den Rechnungsbetrag unter Angabe der "
+                "Rechnungsnummer innerhalb von 14 Tagen auf das unten genannte Konto."
+            ),
+            "payment_terms_text_en": (
+                "Please transfer the invoice amount stating the invoice number "
+                "within 14 days to the account mentioned below."
+            ),
         }
         response = self.tc.post(reverse("practice_create"), data)
         self.assertEqual(response.status_code, 302)

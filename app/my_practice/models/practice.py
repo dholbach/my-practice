@@ -212,10 +212,23 @@ class Practice(models.Model):
         help_text=_("Used when 'Kleinunternehmer regulation' is NOT enabled"),
     )
 
+    # Free-form (non-session) invoice items — day-rate/project billing (P-122)
+    allows_free_form_items = models.BooleanField(
+        default=False,
+        verbose_name=_("Allow free-form invoice items"),
+        help_text=_(
+            "Lets invoice items skip the linked session and use a free-text "
+            "description instead — for day-rate or project billing that isn't "
+            "tied to a therapy/coaching session. Leave off for therapy/coaching "
+            "practices, where every invoice item must stay linked to a session."
+        ),
+    )
+
     # Memberships
     memberships_de = models.TextField(
         default="",
         verbose_name=_("Memberships (German)"),
+        blank=True,
     )
     memberships_en = models.TextField(
         default="",
