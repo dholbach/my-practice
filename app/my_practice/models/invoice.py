@@ -3,7 +3,7 @@
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -15,6 +15,9 @@ from django.utils import timezone
 from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
 from .client import Client
 from .service import ServiceType
+
+if TYPE_CHECKING:
+    from .practice import Practice
 
 
 class InvoiceQuerySet(PracticeScopedQuerySet):
@@ -280,7 +283,8 @@ class InvoiceItem(models.Model):
     )
 
     # Link to central Session object — required for therapy/coaching items.
-    # Nullable for free-form items (day-rate/project billing, P-122) — see description below.
+    # Nullable for free-form items (day-rate/project billing, P-122); the
+    # `description` field below carries the free-text label instead.
     session = models.ForeignKey(
         "Session",
         on_delete=models.PROTECT,
@@ -317,42 +321,16 @@ class InvoiceItem(models.Model):
             return f"{self.invoice.invoice_number} - {self.session.session_date}"
         return f"{self.invoice.invoice_number} - {self.description}"
 
-    def clean(self) -> None:
-        """Description-only items require the practice's free-form-items flag.
+    @property
+    def is_free_form(self) -> bool:
+        """True for description-only items with no linked session (P-122)."""
+        return self.session_id is None
 
-        This only catches the case for items whose invoice is already
-        persisted (edits, admin operations on an existing item) — see the
-        save()-time check below for the create-path backstop.
-
-        The "exactly one of session/description" structural check lives in
-        save(), not here: at model-clean time inside the invoice formset,
-        session-linked rows haven't had their Session attached yet (the view
-        resolves session_date -> Session only after the formset validates,
-        see InvoiceFormsetMixin) — checking session_id here would reject
-        every ordinary session row before it ever gets a session.
-        """
-        if (
-            self.description
-            and self.invoice_id
-            and not self.invoice.practice.allows_free_form_items
-        ):
-            raise ValidationError(
-                {"description": _("This practice doesn't allow free-form invoice items.")}
-            )
-
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        """Auto-calculate total; enforce exactly one of session/description.
-
-        Also re-checks the practice's free-form-items flag here, not just in
-        clean(): on the invoice-creation path, the formset attaches this
-        item's invoice_id only in save_new() (right before this save() call),
-        so clean() — run earlier, during formset validation — never sees a
-        usable invoice_id and can't reach self.invoice.practice. By save()
-        time the FK is always set, making this the one check that actually
-        runs on every path (create, edit, admin).
-        """
-        has_session = self.session_id is not None
-        has_description = bool(self.description)
+    @staticmethod
+    def validate_exclusive_session_or_description(has_session: bool, has_description: bool) -> None:
+        """Exactly one of session/description must be set. Shared by save()
+        below and InvoiceItemAdminForm (admin.py) so the rule and its
+        message live in one place."""
         if has_session == has_description:
             raise ValidationError(
                 _(
@@ -360,9 +338,48 @@ class InvoiceItem(models.Model):
                     "not both or neither."
                 )
             )
-        if has_description and not self.invoice.practice.allows_free_form_items:
+
+    @staticmethod
+    def validate_free_form_allowed(has_description: bool, practice: "Practice") -> None:
+        """Description-only items require the practice's free-form-items
+        flag. Shared by clean()/save() below and InvoiceItemAdminForm
+        (admin.py)."""
+        if has_description and not practice.allows_free_form_items:
             raise ValidationError(
                 {"description": _("This practice doesn't allow free-form invoice items.")}
             )
+
+    def clean(self) -> None:
+        """Check the free-form-items flag, when reachable.
+
+        Only the free-form-permission half of validation runs here — the
+        "exactly one of session/description" structural check lives in
+        save() instead: at model-clean time inside the invoice formset,
+        session-linked rows haven't had their Session attached yet (the view
+        resolves session_date -> Session only after the formset validates,
+        see InvoiceFormsetMixin) — checking session_id here would reject
+        every ordinary session row before it ever gets a session.
+
+        This also only fires once self.invoice_id is set, i.e. for edits and
+        admin operations on an existing item — on create, the formset's
+        placeholder Invoice has no pk yet, so invoice_id is still None here.
+        save() below re-checks unconditionally and is the backstop for the
+        create path.
+        """
+        if self.invoice_id:
+            self.validate_free_form_allowed(bool(self.description), self.invoice.practice)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Auto-calculate total; enforce exactly one of session/description.
+
+        Runs both checks unconditionally: by save() time the invoice FK is
+        always set, making this the one point that reliably sees a complete
+        instance on every path (create, edit, admin) — see clean()'s
+        docstring for why it can only cover part of this at that point.
+        """
+        has_session = self.session_id is not None
+        has_description = bool(self.description)
+        self.validate_exclusive_session_or_description(has_session, has_description)
+        self.validate_free_form_allowed(has_description, self.invoice.practice)
         self.total = self.rate * self.quantity
         super().save(*args, **kwargs)

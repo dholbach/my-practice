@@ -236,24 +236,27 @@ class InvoiceItemForm(StyledFormMixin, forms.ModelForm):
             raise forms.ValidationError(
                 gettext_lazy("Enter either a session date or a free-text description.")
             )
+        self._reject_session_to_free_form_conversion(session_date, description)
+        if session_date and not cleaned_data.get("duration"):
+            self.add_error("duration", gettext_lazy("Duration is required for a session item."))
+
+        return cleaned_data
+
+    def _reject_session_to_free_form_conversion(self, session_date, description) -> None:
+        """Blanking session_date on a row that already has a linked Session
+        would orphan that Session — no InvoiceItem would reference it anymore,
+        so it starts showing up as "unbilled" even though it's already
+        accounted for in this invoice's total. Deleting/detaching the Session
+        automatically risks losing clinical documentation (SessionLog etc.)
+        attached to it, so require an explicit new row instead of a silent
+        conversion."""
         if self.instance.pk and self.instance.session_id and not session_date and description:
-            # Blanking session_date on a row that already has a linked Session
-            # would orphan that Session — no InvoiceItem would reference it
-            # anymore, so it starts showing up as "unbilled" even though it's
-            # already accounted for in this invoice's total. Deleting/detaching
-            # the Session automatically risks losing clinical documentation
-            # (SessionLog etc.) attached to it, so require an explicit new row
-            # instead of a silent conversion.
             raise forms.ValidationError(
                 gettext_lazy(
                     "Converting a session-linked item to a free-form item isn't "
                     "supported — delete this item and add a new free-form item instead."
                 )
             )
-        if session_date and not cleaned_data.get("duration"):
-            self.add_error("duration", gettext_lazy("Duration is required for a session item."))
-
-        return cleaned_data
 
 
 # Base formset for invoice items
