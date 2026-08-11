@@ -119,7 +119,11 @@
   </div>
 
   <div class="client-note">
+    {% if invoice.client.date_of_birth %}
     Alle Leistungen wurden für {{ invoice.client.full_name }}, geb. {{ invoice.client.date_of_birth|date:"d.m.Y" }}, erbracht.
+    {% else %}
+    Alle Leistungen wurden für {{ invoice.client.full_name }} erbracht.
+    {% endif %}
   </div>
 
   <div class="signature-section">

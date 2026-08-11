@@ -119,7 +119,11 @@
   </div>
 
   <div class="client-note">
+    {% if invoice.client.date_of_birth %}
     All services were provided to {{ invoice.client.full_name }}, born {{ invoice.client.date_of_birth|date:"d.m.Y" }}.
+    {% else %}
+    All services were provided to {{ invoice.client.full_name }}.
+    {% endif %}
   </div>
 
   <div class="signature-section">
