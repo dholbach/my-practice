@@ -25,7 +25,6 @@ so you know what you're taking on.
 
 | Item | Location | Notes |
 |------|----------|-------|
-| Bank CSV format | `app/my_practice/utils/bank_import.py` | Expects semicolon-delimited GLS Bank export. Other banks will need the delimiter and column mapping adjusted. |
 | Calendar duration → service code mapping | `app/my_practice/utils/google_calendar.py` → `DURATION_TO_SERVICE_CODE` | Maps event lengths to service type codes seeded by `seed_sample_data`. If your service types differ, update this dict or configure service types via the admin. |
 | Public holidays | `app/my_practice/utils/practice_days.py` → `berlin_public_holidays()` | Capacity utilisation is calculated against Berlin/Brandenburg public holidays. Other states or countries will need the holiday set replaced. |
 
@@ -41,5 +40,6 @@ Everything below is set via the setup wizard or the admin interface.
 | Hourly rates per client | `Client.hourly_rate` |
 | Email templates (payment reminder, contract cover letter) | Stored in the database via `Practice`; editable in the settings UI |
 | Logo, signature image | `Practice.logo` / `Practice.signature` file fields |
-| Tax settings (USt, Kleinunternehmer) | `Practice.tax_rate` / `Practice.is_kleinunternehmer` |
+| Tax settings (Kleinunternehmer vs. Heilpraktiker VAT exemption) | `Practice.is_kleinunternehmer` |
 | Session / service types | Seeded by `seed_sample_data`, then fully editable in the admin |
+| Bank CSV format | `Practice.csv_delimiter` / `csv_column_*` fields, set in the Django admin. Defaults match GLS Bank's export; other banks: adjust delimiter and column names to match your export, no code changes needed |

@@ -1,6 +1,27 @@
 # Features Overview
 
-Complete feature list for the Therapy Practice Management System.
+**New here?** This is a self-hosted practice-management app for independent, private-pay
+practices (therapy, coaching, and similar) — client records, session tracking, invoicing,
+analytics, and a few clinical-documentation tools, built to keep client data on hardware
+you control instead of a third-party SaaS. It's a Django app you run yourself; see
+[GETTING_STARTED.md](guides/GETTING_STARTED.md) for the fastest way to click through a
+populated demo, or the [README](../README.md) for the "why" and a five-minute overview.
+
+This document is the exhaustive reference — every feature that's shipped, grouped by area.
+If you just want the highlights, the README's "What it does" section is shorter and a
+better starting point. Jump to a section:
+
+- [Core Features](#core-features) — clinical documentation, client management, invoicing, GebüH billing, sessions
+- [Analytics & Reporting](#analytics--reporting) — dashboard, analytics tabs, tax reports, inquiry pipeline
+- [Financial Management](#financial-management) — withdrawals, expenses, time off
+- [Data Import & Integration](#data-import--integration) — CSV import, Google Calendar
+- [Technical Features](#technical-features) — UI/UX, performance, security, testing, DevOps
+- [Self-hosting](#self-hosting) — Docker image, update checks
+
+For what's changed recently, see [CHANGELOG.md](CHANGELOG.md) — that's the dated,
+chronological record; this document only tracks current state.
+
+---
 
 ## 🏠 Core Features
 
@@ -20,6 +41,16 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ `SessionLog.summary` — unencrypted one-liner field (max 120 chars) shown in Überblick without Fernet decryption; editable in session log form
 - ✅ Client tags shown in Überblick tab strip; tag add/remove UI in Profil tab; duplicate tags removed from page header
 - ✅ "Details in Profil-Tab" onboarding link switches to the Profil tab and scrolls to the onboarding section
+
+### Focus Queue (P-050)
+- ✅ Unified task list (`/focus/`) — replaces the old `/todos/` list and the dashboard's "Needs Action" pane; manual tasks and materialized system signals (missing session log, unpaid/unsent invoice, pending checklist, open supervision topic) live side by side as real, closeable rows
+- ✅ `sync_focus_queue_tasks` management command materializes and auto-closes derived tasks; runs on its own daily systemd timer
+- ✅ Type filter — colour-coded pill buttons matching each task type's badge colour
+- ✅ Reference date per row — invoice date, session date, or task creation date, whichever is most relevant
+- ✅ Real undo — the complete checkbox toggles complete/incomplete instead of only marking done; the just-completed row stays visible in place, struck through
+- ✅ "📅 Today" quick action — sets a task's due date to today in one click; due-today-or-overdue tasks always sort ahead of the rest of the queue
+- ✅ "+ Task" button on the client detail page creates a task pre-linked to that client
+- ✅ Dashboard's "This Week" widget shares the same `due_date` signal, so due-today/overdue tasks show up in both places
 
 ### Client Management
 - ✅ Client database with full details
@@ -88,16 +119,16 @@ Complete feature list for the Therapy Practice Management System.
 
 ## 📊 Analytics & Reporting
 
-### Dashboard (P-117)
+### Dashboard (P-117, narrowed further in P-050 phase 4)
 - ✅ Stats strip — year revenue, year profit, outstanding invoices (count + total, highlights in red), time off with current/upcoming holiday hint
-- ✅ Quick-action buttons — "+ Neue Rechnung" / "+ Neue Klient:in" top-right of stats strip
-- ✅ Two-pane console — left: Heute (agenda) + Diese Woche (weekly focus); right: Braucht Aktion queue
-- ✅ **Braucht Aktion queue** — ranked by urgency; grouped rows: overdue invoices (N · total · client codes · age), drafts ready to send, checklists due; individual rows for each client needing attention (with days-since + last-session date)
-- ✅ Capacity monitoring widget — conditional, only shown when a capacity warning is active
+- ✅ Quick-action buttons — "+ New invoice" / "+ New client" top-right of stats strip
+- ✅ **This Week widget** — `WeeklyFocusWidgetBuilder` shows this week's sessions (Mon–Sun) plus tasks due today or overdue, sharing the Focus Queue's `due_date` signal (P-028, merged into `due_date` in P-050)
+- ✅ Capacity monitoring widget — conditional, only shown once a monthly target is configured
 - ✅ Status breakdown (Draft/Sent/Paid/Cancelled) — all-time overview
 - ✅ Recent invoices overview
+- ✅ Multi-practice overview cards — shown only when the user has access to more than one practice
 - ✅ Dark mode + Privacy mode
-- ✅ **Weekly focus widget** — `WeeklyFocusWidgetBuilder` shows this week's sessions plus tasks due today or overdue, sharing the Focus Queue's `due_date` signal instead of a separate star toggle (P-028, merged into `due_date` P-050)
+- ℹ️ The dashboard is a pure overview now — the old "Needs Action" queue and separate daily-agenda pane were retired in P-050 phase 4; that working surface is the [Focus Queue](#focus-queue-p-050) (`/focus/`), and revenue trends live on the Analytics page
 
 ### Analytics Dashboard
 - ✅ Time period filters (All/Month/Quarter/Year/Custom)
@@ -270,8 +301,7 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ Responsible-disclosure policy (`SECURITY.md`)
 
 ### Testing
-- ✅ 200+ automated tests
-- ✅ ~70% code coverage
+- ✅ 1,400+ automated tests
 - ✅ Model tests
 - ✅ View tests
 - ✅ Utility tests
@@ -304,7 +334,6 @@ Complete feature list for the Therapy Practice Management System.
 - ✅ CHANGELOG.md (comprehensive)
 - ✅ CODE_STRUCTURE.md
 - ✅ PERFORMANCE.md
-- ✅ IMPORT_VIEWS.md
 - ✅ SCRIPTS.md
 - ✅ FEATURES.md (this document)
 
@@ -316,117 +345,13 @@ Complete feature list for the Therapy Practice Management System.
 
 ---
 
-## 🚀 Recent Additions (Mai 2026)
-
-### OSS Release Prep (6. Mai)
-
-- **AGPL-3.0 license**: `LICENSE` file added; README updated with copyright notice
-- **`setup_practice` management command**: interactive wizard prompting for name, address, bank details, and tax status; creates `Practice` + assigns all superusers as owners — no Django admin knowledge required for first-run setup (`./dev.py manage setup_practice`)
-- **PII removed from codebase**: hardcoded name + booking URL replaced with `[Ihr Name]` / `[booking URL]` placeholders in inquiry email templates; migration defaults anonymised (0011, 0012, 0027)
-- **Seed data: clinical notes**: `seed_sample_data` now creates 2–4 `ClientNote` entries per client using archetype-based `NOTE_TEMPLATES`; skipped gracefully if `FERNET_KEY` is not set
-- **Seed data: client code safety**: SG→SAG (Samwise Gamgee), PT→PEK (Peregrin Took) to avoid potential clashes with real client codes
-
-## 🚀 Recent Additions (Juni 2026)
-
-### Seed Data & UI Polish (16. Juni)
-- **Seed data: session logs** — `seed_sample_data` creates `SessionLog` entries for ~75% of sessions per client: archetype-specific content, interventions, therapist reflection, mood tags; first session marked as Erstgespräch
-- **Seed data: client profiles** — `ClientProfile` created per client with ICD-10 working diagnosis, intake notes, and case formulation; skipped if `FERNET_KEY` not set
-- **Seed data: time-off entries** — 8 realistic `TimeOff` records (vacation, training) across 2025–2026 so the Kapazität & Auslastung widget shows real data
-- **Seed data: cancelled sessions** — ~8% of sessions seeded as cancelled; populates the Ausfallquote chart
-- **Seed data: invoice fixes** — quantities fixed to `1.00` (flat session rate, not hourly multiplication); random 20%-skip removed so invoice numbers are strictly sequential
-- **README screenshots** — 5 views added to `docs/screenshots/` (dashboard, invoice detail, analytics, client detail, batch invoicing)
-- **Nav emoji alignment** — `nav a` set to `inline-flex; align-items: center` so emoji and text stay on the same line
-- **Bank Import badge** — "None Tage" replaced by "Kein Import" when no bank transactions have ever been imported
-- **Ausfallquote chart** — fixed: all-zero cancellation rates now render as a flat 0% line instead of "Keine gültigen Daten vorhanden"; `showChartEmptyState` now sizes canvas before drawing text
-- **Session log layout** — interventions moved from narrow left column (90px) into right content column, eliminating empty space below short session notes
-- **Invoice detail** — tax line `0.00 €` (wrong decimal) replaced with `{{ invoice.tax_amount|currency }}`; salutation warning removed (already present on all email-send forms)
-
-### Tailwind CSS + Dark Mode — P-045 (16. Juni)
-
-- Single CSS source file (`tailwind.css` → `tailwind.out.css`); all 29 per-page CSS files and `common.css` deleted
-- `@theme` token system: every colour defined once; `[data-theme="dark"]` overrides flow through automatically — no per-component dark-mode CSS needed
-- Zero hardcoded hex colours in non-PDF templates; new semantic classes: `.callout-warning/danger/success/primary`, `.btn-gradient`
-- New UI features require zero new CSS files
-
-## 🚀 Recent Additions (Juli 2026)
-
-### Focus Queue improvements (29.–30. Juli)
-
-- **Open supervision topics materialized as tasks** — `sync_focus_queue_tasks` now creates a Focus Queue task per open (`offen`) `SupervisionItem`, auto-closed once marked `besprochen`; the dedicated `/supervision/` queue is unchanged, the Focus Queue just also surfaces the same open items
-- **Sync runs on a daily timer** — `sync_focus_queue_tasks` (materializes missing session logs, unpaid/unsent invoices, checklists, supervision topics) now has its own systemd timer, matching the other periodic jobs, instead of only refreshing when run manually
-- **Checkbox now really toggles** — previously only ever marked a task complete; an accidental click had no way back short of Django admin. It now toggles complete/incomplete, and the just-completed row stays visible in place (struck through, still checked) as an immediate undo
-- **"📅 Today" quick action** — sets a task's due date to today in one click; due-today-or-overdue tasks now always sort ahead of the rest of the queue regardless of priority
-- **`is_focus` retired, merged into `due_date`** — the dashboard's weekly widget star toggle had no working "add" path left (only "remove"); rather than restoring it, the widget now lists tasks due today or overdue, sharing the same signal the Focus Queue sorts on
-
-## 🚀 Recent Additions (April 2026)
-
-### P-040 Sample Data + Bank Import Cleanup (28. April)
-
-- **`seed_sample_data` management command** (`./dev.py manage seed_sample_data`): seeds 45 fictional clients (Tolkien / Le Guin / Greek myth), 900+ sessions with realistic 2-year seasonality, invoices (paid/sent/draft mix), 8 pipeline inquiries, todos, and expenses; `--clear` removes seeded data cleanly; idempotent (no-op if already seeded); `--seed N` for reproducibility; auto-assigns all superusers to the demo practice so it is immediately accessible after login
-- **Sample-data isolation**: seeding always uses a dedicated demo practice (slug `demo`); fictional client codes chosen to avoid clashes with real client codes (e.g. Orm Irian uses `OIR`)
-- **Getting-started guide**: `docs/guides/GETTING_STARTED.md` — 5-step first-run walkthrough (clone → start → superuser → seed → explore) with a narrated tour of every major feature area
-
-### Bank-Withdrawal-Review + P-028 + P-037 (14. April)
-
-- **Bank-Withdrawal-Review** (`/bank/withdrawals/`): Analog zu `/bank/expenses/` — `auto-withdrawal`-Transaktionen zu `CompanyWithdrawal` gruppieren oder ignorieren; Link vom Bank-Review-Dashboard
-- **Fokus-Aufgaben (P-028 Ph-1)**: `is_focus` BooleanField auf `PracticeTodo`; ⭐/☆ HTMX-Toggle in der Todo-Liste; `WeeklyFocusWidgetBuilder` zeigt Sitzungen der Woche + Fokus-Tasks; 2-col "Heute & Diese Woche" Grid im Dashboard
-- **Fokus-Aufgaben direkt abhaken (P-028 Ph-2)**: ☐-Knopf im Weekly-Focus-Widget;
-  beide Buttons (`☐`, `⭐`) refreshen das gesamte Widget-Fragment via HTMX (`outerHTML`-Swap)
-- **Erstgespräch-Guide (P-037 Ph-1/2)**: `initial_contact_notes`-Feld auf `ClientInquiry` + Formular-Integration; aufklappbarer Leitfaden (Zeitplan + Hinweise) im Anfragen-Bearbeitungs-Formular
-- **Stage-E-Mail-Vorlagen (P-037 Ph-3)**: Context-sensitive Copy-Paste-Panel im Anfragen-Formular — je nach Status eine passende Vorlage (Betreff + Text, Kopieren-Buttons, 8 Status abgedeckt)
-
-### Feiertags-bereinigte Werktags-Berechnung (13. April)
-
-- Ø Wartezeit in Anfragen-Analytics jetzt in **Werktagen** (Mo–Fr, ohne Berliner Feiertage) statt Kalendertagen
-- Kapazitäts- und Ausfall-Berechnungen in Analytics-Dashboard ebenfalls feiertags-bereinigt
-
-### Anfragen-Analytics + Meilenstein-Dates — P-034 (12. April)
-
-- 4 optionale Meilenstein-Datumsfelder auf `ClientInquiry`: `contacted_date`, `intro_date`, `intake_date`, `converted_date`
-- Auto-Fill: bei Statuswechsel zu Kontaktiert / Vorgespräch / Aufnahme läuft wird das Datum automatisch auf heute gesetzt (überschreibbar)
-- `InquiryConvertView` setzt `converted_date` automatisch beim Aufnehmen
-- Auswertungs-Panel auf `/inquiries/` (einklappbar): Pipeline-Funnel mit Anzahl pro Stage, Ø Wartezeit in Tagen pro Transition, Quellen-Breakdown mit Balken, Monats-Trend (letzte 12 Monate)
-
-## 🚀 Recent Additions (März 2026)
-
-### Client Inquiries / Lead Tracking — P-031 (30. März)
-- `/inquiries/` list with source + status badges (dark mode aware)
-- Create, edit, delete, convert-to-client workflow
-- Sources: Google Ads, Google Organic, Website, Referral, Directory, Network, It's Complicated, Other
-- Statuses: New → Contacted → Intro Meeting → Waitlist → In Intake → Converted / Declined / Unreachable / Kein Match
-- Active Marketing Periods bar showing current campaigns
-- Sensitive data (name, email, phone) respects global privacy mode; 🔒 column header icons
-- PII scrubbed from 500 error tracebacks (`PIIExceptionReporterFilter`)
-
-### Fahrtkosten / Entfernungspauschale — P-027 (27. März)
-- Automatische Berechnung steuerlich absetzbarer Fahrtkosten (§ 9 Abs. 1 Nr. 4 EStG)
-- Konfiguration: Pendelentfernung (km) + Praxiswochentage in den Praxiseinstellungen
-- `PracticeDayCalculator`: zählt Praxistage (Wochentage − Feiertage Berlin − Urlaub)
-- Neuer Abschnitt „🚗 Fahrtkosten" auf `/reports/steuerjahr/` mit Detailaufschlüsselung
-
-### Klientendokument-Upload — P-026 (März)
-- `ClientDocument` Modell: Typ (Behandlungsvertrag / Aufnahmebogen / Überweisung / Sonstiges)
-- Drag-and-Drop-Upload auf der Klienten-Detailseite (AJAX, kein Seitenreload)
-- Dateiname-Inferenz: erkennt Datum, Typ und Beschreibung automatisch
-- Speicherpfad: `clients/<code>/<year>/<type>-<date>-<slug>.<ext>`; Löschen via AJAX
-- Aufnahmeprozess-Auto-Completion: Upload von Aufnahmebogen / Behandlungsvertrag / Anamnesebogen setzt den jeweiligen Onboarding-Schritt automatisch auf erledigt
-
-### InvoiceItem-Normalisierung — P-025 (März)
-- Sitzungsfelder (`session_date`, `duration`, `session_type`) in separates `Session`-Modell ausgelagert
-- `InvoiceItem.session` FK → `Session`; Felder werden beim Speichern automatisch in `Session` geschrieben
-- Saubere Trennung: Rechnungsposten vs. klinische Sitzungsdaten; Kalender-Import aktualisiert
-
----
-
 ## ❌ Not Planned
 
 Features explicitly out of scope:
 - Complex accounting (use dedicated software)
-- Multi-practice support
 - Insurance billing (German system)
 - Video conferencing
 - Payment processing (online payments)
-- Multi-language UI (German only, until P-039)
 
 For planned and in-progress work see [PROJECTS.md](../PROJECTS.md) and [docs/projects/](projects/).
 
@@ -440,4 +365,4 @@ For planned and in-progress work see [PROJECTS.md](../PROJECTS.md) and [docs/pro
 - ✅ Version-pinned: `prod.py` and `docker-compose.prod.yml` always match; `update` notifies when a newer `prod.py` is available
 - ✅ In-app update banner — checks GitHub releases once per day; shows a dismissible banner when a newer release is available; opt-out via `UPDATE_CHECK_DISABLED=true`
 
-Last Updated: 17. Juni 2026
+Last Updated: 10 August 2026

@@ -3,7 +3,7 @@ Focus Queue views (P-050 phase 3).
 
 Single merged queue of manual and materialized Task rows — the working
 surface that answers "what should I do next," replacing /todos/ and the
-dashboard's "Needs Action" pane (see docs/projects/todo/P-050_FOCUS_QUEUE.md).
+dashboard's "Needs Action" pane (see docs/projects/done/P-050_FOCUS_QUEUE.md).
 """
 
 from datetime import timedelta
