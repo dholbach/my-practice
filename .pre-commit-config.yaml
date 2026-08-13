@@ -43,6 +43,17 @@ repos:
     hooks:
       - id: gitleaks
 
+  # .env is gitignored, so pre-commit's normal file-discovery never sees it —
+  # this hook reads it straight off disk instead of relying on staged files.
+  - repo: local
+    hooks:
+      - id: check-env
+        name: check .env against .env.example
+        entry: python3 scripts/check_env.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
 # Run specific hooks only
 default_stages: [pre-commit]
 fail_fast: false
