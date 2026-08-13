@@ -20,6 +20,7 @@ from ..models import (
     ClientAlias,
     CompanyExpense,
     CompanyWithdrawal,
+    ExpenseCategoryRule,
     Invoice,
     InvoiceItem,
     Practice,
@@ -412,6 +413,62 @@ class BankExpenseReviewViewTest(BankImportViewBase):
         trans.refresh_from_db()
         self.assertEqual(trans.match_confidence, "ignored")
         self.assertTrue(trans.processed)
+
+    def test_group_learns_category_rule_by_name(self):
+        trans = self._make_expense_transaction()
+        self.http.post(
+            reverse("bank_expense_review"),
+            {
+                "action": "group",
+                "transactions": [trans.id],
+                "category": "miete",
+                "description": "Praxismiete Januar",
+            },
+        )
+        rule = ExpenseCategoryRule.objects.get(practice=self.practice, match_key="name:vermieter")
+        self.assertEqual(rule.category, "miete")
+
+    def test_group_learns_one_rule_per_distinct_counterparty(self):
+        trans_a = self._make_expense_transaction(ref="Miete Jan")
+        trans_b = BankTransaction.objects.create(
+            practice=self.practice,
+            transaction_date=date(2026, 1, 20),
+            value_date=date(2026, 1, 20),
+            payer_name="Anderer Vermieter",
+            payer_iban="",
+            reference="Miete Feb",
+            amount=Decimal("-120.00"),
+            balance_after=Decimal("760.00"),
+            account_iban=PRACTICE_IBAN,
+            match_confidence="unmatched",
+            processed=False,
+        )
+        self.http.post(
+            reverse("bank_expense_review"),
+            {
+                "action": "group",
+                "transactions": [trans_a.id, trans_b.id],
+                "category": "miete",
+            },
+        )
+        self.assertEqual(ExpenseCategoryRule.objects.filter(practice=self.practice).count(), 2)
+
+    def test_group_re_learning_updates_existing_rule(self):
+        trans = self._make_expense_transaction()
+        ExpenseCategoryRule.objects.create(
+            practice=self.practice, match_key="name:vermieter", category="other"
+        )
+        self.http.post(
+            reverse("bank_expense_review"),
+            {
+                "action": "group",
+                "transactions": [trans.id],
+                "category": "miete",
+            },
+        )
+        self.assertEqual(ExpenseCategoryRule.objects.filter(practice=self.practice).count(), 1)
+        rule = ExpenseCategoryRule.objects.get(practice=self.practice, match_key="name:vermieter")
+        self.assertEqual(rule.category, "miete")
 
 
 # ── BankWithdrawalReviewView ──────────────────────────────────────────────────

@@ -16,6 +16,7 @@ from .inquiry import (
 )
 from .client_alias import ClientAlias
 from .clinical import ClientNote, ClientProfile, MoodTag, SessionLog, SupervisionItem
+from .expense_category_rule import ExpenseCategoryRule
 from .financial import CompanyExpense, CompanyWithdrawal, ExpenseReceipt, TaxYearNote
 from .gebueh import GebuhZiffer, Leistungserfassung
 from .invoice import Invoice, InvoiceItem, InvoiceQuerySet
@@ -52,6 +53,7 @@ __all__ = [
     "MoodTag",
     "CompanyWithdrawal",
     "CompanyExpense",
+    "ExpenseCategoryRule",
     "ExpenseReceipt",
     "TaxYearNote",
     "GoogleCalendarToken",

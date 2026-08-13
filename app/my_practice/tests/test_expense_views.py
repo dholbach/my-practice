@@ -10,7 +10,14 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
-from my_practice.models import CompanyExpense, ExpenseReceipt, Practice, UserPractice
+from my_practice.models import (
+    BankTransaction,
+    CompanyExpense,
+    ExpenseCategoryRule,
+    ExpenseReceipt,
+    Practice,
+    UserPractice,
+)
 
 User = get_user_model()
 
@@ -237,6 +244,73 @@ class ExpenseUpdateViewTest(TestCase):
         response = self.client.get(reverse("expense_update", kwargs={"pk": 99999}))
 
         self.assertEqual(response.status_code, 404)
+
+    def test_category_change_on_manual_expense_creates_no_rule(self):
+        """Manually-created expenses have no linked transaction to learn a counterparty from."""
+        data = {
+            "date": "2025-01-20",
+            "description": "Updated description",
+            "category": "miete",
+            "amount": "200.00",
+            "is_tax_deductible": True,
+        }
+        self.client.post(reverse("expense_update", kwargs={"pk": self.expense.pk}), data)
+        self.assertEqual(ExpenseCategoryRule.objects.filter(practice=self.practice).count(), 0)
+
+    def test_category_change_on_bank_linked_expense_learns_rule(self):
+        """Correcting a bank-sourced expense's category should learn the counterparty mapping."""
+        BankTransaction.objects.create(
+            practice=self.practice,
+            transaction_date=date(2025, 1, 15),
+            value_date=date(2025, 1, 15),
+            payer_name="Vermieter GmbH",
+            payer_iban="",
+            reference="Miete",
+            amount=Decimal("-100.00"),
+            balance_after=Decimal("900.00"),
+            account_iban="",
+            match_confidence="auto-expense",
+            linked_expense=self.expense,
+            processed=False,
+        )
+        data = {
+            "date": "2025-01-20",
+            "description": "Updated description",
+            "category": "miete",
+            "amount": "200.00",
+            "is_tax_deductible": True,
+        }
+        self.client.post(reverse("expense_update", kwargs={"pk": self.expense.pk}), data)
+        rule = ExpenseCategoryRule.objects.get(
+            practice=self.practice, match_key="name:vermieter gmbh"
+        )
+        self.assertEqual(rule.category, "miete")
+
+    def test_update_without_category_change_does_not_create_rule(self):
+        """Saving the form without actually changing category shouldn't churn a rule."""
+        BankTransaction.objects.create(
+            practice=self.practice,
+            transaction_date=date(2025, 1, 15),
+            value_date=date(2025, 1, 15),
+            payer_name="Vermieter GmbH",
+            payer_iban="",
+            reference="Miete",
+            amount=Decimal("-100.00"),
+            balance_after=Decimal("900.00"),
+            account_iban="",
+            match_confidence="auto-expense",
+            linked_expense=self.expense,
+            processed=False,
+        )
+        data = {
+            "date": "2025-01-20",
+            "description": "Updated description",
+            "category": "materialien",  # same category as setUp
+            "amount": "200.00",
+            "is_tax_deductible": True,
+        }
+        self.client.post(reverse("expense_update", kwargs={"pk": self.expense.pk}), data)
+        self.assertEqual(ExpenseCategoryRule.objects.filter(practice=self.practice).count(), 0)
 
 
 class ExpenseDeleteViewTest(TestCase):

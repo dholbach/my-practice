@@ -6,7 +6,7 @@ from .analytics_dashboard_builder import AnalyticsDashboardBuilder
 from .client_detail_builder import ClientDetailContextBuilder
 from .dashboard_context_builder import DashboardContextAssembler
 from .tax_context_builder import TaxYearContextBuilder, available_data_years
-from .bank_import import BankStatementImporter
+from .bank_import import BankStatementImporter, build_counterparty_key
 from .calculations import (
     apply_remainder_distribution,
     count_session_hours,
@@ -90,6 +90,7 @@ __all__ = [
     "SESSION_LOG_WINDOW_DAYS",
     "SESSION_LOG_MIN_DURATION",
     "BankStatementImporter",
+    "build_counterparty_key",
     "AnalyticsDashboardBuilder",
     "ClientDetailContextBuilder",
     "DashboardContextAssembler",
