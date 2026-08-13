@@ -21,9 +21,10 @@ from ..models import (
     ClientAlias,
     CompanyExpense,
     CompanyWithdrawal,
+    ExpenseCategoryRule,
     Invoice,
 )
-from ..utils import BankStatementImporter
+from ..utils import BankStatementImporter, build_counterparty_key
 
 
 class BankImportView(FormView):
@@ -656,14 +657,26 @@ class BankExpenseReviewView(ListView):
                 is_tax_deductible=is_tax_deductible,
             )
 
-            # Mark transactions as processed and link to grouped expense
+            # Mark transactions as processed and link to grouped expense, and learn
+            # a category rule per distinct counterparty in the selection so future
+            # imports from the same payer are pre-categorized.
             transaction_notes = f"Zu Ausgabe zusammengefasst: {expense} (ID: {expense.id})"
+            learned_keys = set()
             for trans in transactions:
                 trans.match_confidence = "ignored"
                 trans.linked_expense = expense
                 trans.notes = transaction_notes
                 trans.processed = True
                 trans.save()
+
+                match_key = build_counterparty_key(trans.payer_iban, trans.payer_name)
+                if match_key and match_key not in learned_keys:
+                    learned_keys.add(match_key)
+                    ExpenseCategoryRule.objects.update_or_create(
+                        practice=request.current_practice,
+                        match_key=match_key,
+                        defaults={"category": category},
+                    )
 
             # Clean up orphaned per-transaction auto-created expenses
             if orphan_expense_ids:

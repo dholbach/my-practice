@@ -21,6 +21,7 @@ from .models import (
     ClientTag,
     CompanyExpense,
     CompanyWithdrawal,
+    ExpenseCategoryRule,
     GebuhZiffer,
     Invoice,
     InvoiceItem,
@@ -844,6 +845,22 @@ class CompanyExpenseAdmin(admin.ModelAdmin):
         """Format amount with Euro symbol"""
         amount_str = f"{float(obj.amount):.2f}"
         return format_html("<strong>{} €</strong>", amount_str)
+
+
+@admin.register(ExpenseCategoryRule)
+class ExpenseCategoryRuleAdmin(admin.ModelAdmin):
+    """Admin interface for learned counterparty -> expense category rules."""
+
+    list_display = ["match_key", "category_display", "practice", "updated_at"]
+    list_filter = ["category", "practice"]
+    search_fields = ["match_key"]
+    ordering = ["match_key"]
+    readonly_fields = ["created_at", "updated_at"]
+
+    @admin.display(description=gettext_lazy("Category"), ordering="category")
+    def category_display(self, obj):
+        """Display category with label"""
+        return obj.get_category_display()
 
 
 @admin.register(TimeOff)

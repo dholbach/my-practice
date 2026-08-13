@@ -18,6 +18,7 @@ from ..models import (
     ClientAlias,
     CompanyExpense,
     CompanyWithdrawal,
+    ExpenseCategoryRule,
     Invoice,
 )
 
@@ -216,7 +217,7 @@ class BankStatementImporter:
             return None
 
     def detect_and_create_financial_record(
-        self, transaction_date, amount, reference, payer_iban: str = ""
+        self, transaction_date, amount, reference, payer_iban: str = "", payer_name: str = ""
     ) -> dict | None:
         """
         Detect if a negative transaction is a withdrawal or expense and create it.
@@ -227,13 +228,15 @@ class BankStatementImporter:
         - IBAN match, no keywords         → CompanyWithdrawal(private_transfer)
         - No IBAN configured, correction keywords → CompanyWithdrawal(correction)
         - No IBAN configured, salary keywords    → CompanyWithdrawal(salary)
-        - Otherwise                              → CompanyExpense(other)
+        - Otherwise → CompanyExpense, category from a learned ExpenseCategoryRule
+          for this counterparty if one exists, else "other"
 
         Args:
             transaction_date: Date of transaction
             amount: Transaction amount (negative)
             reference: Transaction reference text
             payer_iban: IBAN of the counterparty (recipient for outgoing payments)
+            payer_name: Name of the counterparty, used as a fallback categorization key
 
         Returns:
             Dictionary with type and created record, or None if not auto-created
@@ -307,13 +310,22 @@ class BankStatementImporter:
             if existing_expense:
                 return {"type": "CompanyExpense", "record": existing_expense}
 
-            # Create CompanyExpense for other negative amounts
+            # Create CompanyExpense for other negative amounts, using a learned
+            # category for this counterparty when one is on file.
+            match_key = build_counterparty_key(payer_iban, payer_name)
+            rule = (
+                ExpenseCategoryRule.objects.filter(
+                    practice=self.practice, match_key=match_key
+                ).first()
+                if match_key
+                else None
+            )
             expense = CompanyExpense.objects.create(
                 practice=self.practice,
                 date=transaction_date,
                 amount=abs_amount,
                 description=reference,
-                category="other",
+                category=rule.category if rule else "other",
                 has_invoice=False,
                 is_tax_deductible=True,
             )
@@ -383,6 +395,7 @@ class BankStatementImporter:
             parsed["amount"],
             parsed["reference"],
             payer_iban=parsed["payer_iban"],
+            payer_name=parsed["payer_name"],
         )
         if withdrawal_or_expense:
             record_type = withdrawal_or_expense["type"]
@@ -563,3 +576,18 @@ class BankStatementImporter:
             self.results["transactions"].append(bank_transaction)
 
         return self.results
+
+
+def build_counterparty_key(payer_iban: str, payer_name: str) -> str | None:
+    """
+    Build the ExpenseCategoryRule.match_key for a bank counterparty.
+
+    IBAN is preferred when present (more reliable than free-text names on
+    statements); falls back to the normalized payer name. Returns None when
+    neither is available.
+    """
+    normalized_iban = BankStatementImporter._normalize_iban(payer_iban) if payer_iban else ""
+    if normalized_iban:
+        return f"iban:{normalized_iban}"
+    normalized_name = payer_name.strip().lower()
+    return f"name:{normalized_name}" if normalized_name else None

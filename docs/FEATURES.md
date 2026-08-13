@@ -206,6 +206,7 @@ chronological record; this document only tracks current state.
 - ✅ Year filtering
 - ✅ CRUD operations
 - ✅ CSV import support
+- ✅ Learned auto-categorization — bank-sourced expenses are pre-filled with the category last assigned to the same counterparty (by IBAN, falling back to payer name); the mapping is learned automatically whenever a category is assigned or corrected via the bank-import review screen or the expense edit form
 
 ### Time Off Management
 - ✅ Vacation/Sick leave/Holiday tracking

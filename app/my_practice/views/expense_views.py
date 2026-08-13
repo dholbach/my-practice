@@ -15,7 +15,8 @@ from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_POST
 
 from ..forms import CompanyExpenseForm
-from ..models import BankTransaction, CompanyExpense, ExpenseReceipt
+from ..models import BankTransaction, CompanyExpense, ExpenseCategoryRule, ExpenseReceipt
+from ..utils.bank_import import build_counterparty_key
 from ..utils.file_processing import process_upload
 from ..utils.financial_list_context_builder import FinancialListContextBuilder
 from ..utils.view_helpers import get_object_or_403, get_year_from_request
@@ -77,12 +78,38 @@ class ExpenseUpdateView(NextRedirectMixin, PracticeScopedUpdateView):
     context_object_name = "expense"
 
     def form_valid(self, form: CompanyExpenseForm) -> HttpResponse:  # type: ignore[override]
+        old_category = (
+            CompanyExpense.objects.filter(pk=self.object.pk)
+            .values_list("category", flat=True)
+            .first()
+        )
         response = super().form_valid(form)
         for f in self.request.FILES.getlist("receipts"):
             try:
                 ExpenseReceipt.objects.create(expense=self.object, file=process_upload(f))
             except ValueError as exc:
                 messages.error(self.request, str(exc))
+
+        # Learn a category rule from the correction so future imports from the
+        # same bank counterparty are pre-categorized. Manually-created expenses
+        # have no linked transaction, so there's nothing to learn from.
+        if old_category and old_category != self.object.category:
+            linked_transaction = (
+                BankTransaction.objects.for_current_practice(self.request)
+                .filter(linked_expense=self.object)
+                .exclude(payer_name="")
+                .first()
+            )
+            if linked_transaction:
+                match_key = build_counterparty_key(
+                    linked_transaction.payer_iban, linked_transaction.payer_name
+                )
+                if match_key:
+                    ExpenseCategoryRule.objects.update_or_create(
+                        practice=self.request.current_practice,
+                        match_key=match_key,
+                        defaults={"category": self.object.category},
+                    )
         return response
 
     def get_context_data(self, **kwargs):

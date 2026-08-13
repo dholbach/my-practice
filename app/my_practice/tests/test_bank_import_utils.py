@@ -17,13 +17,14 @@ from ..models import (
     ClientAlias,
     CompanyExpense,
     CompanyWithdrawal,
+    ExpenseCategoryRule,
     Invoice,
     InvoiceItem,
     Practice,
     ServiceType,
     Session,
 )
-from ..utils import BankStatementImporter
+from ..utils import BankStatementImporter, build_counterparty_key
 
 PRACTICE_IBAN = "DE89370400440532013000"
 PRIVATE_IBAN = "DE73200400600056789000"
@@ -295,6 +296,72 @@ class DetectFinancialRecordTest(TestCase):
         )
         self.assertEqual(r1["record"].id, r2["record"].id)
         self.assertEqual(CompanyWithdrawal.objects.filter(practice=self.practice).count(), 1)
+
+    def test_expense_uses_learned_rule_by_iban(self):
+        practice_no_iban = _make_practice(slug="learned-rule-iban")
+        landlord_iban = "DE12500105170648489890"
+        ExpenseCategoryRule.objects.create(
+            practice=practice_no_iban,
+            match_key=build_counterparty_key(landlord_iban, ""),
+            category="miete",
+        )
+        importer = _make_importer(practice_no_iban, [])
+        result = importer.detect_and_create_financial_record(
+            self.txn_date, Decimal("-800.00"), "Miete August", payer_iban=landlord_iban
+        )
+        self.assertEqual(result["record"].category, "miete")
+
+    def test_expense_uses_learned_rule_by_name_fallback(self):
+        practice_no_iban = _make_practice(slug="learned-rule-name")
+        ExpenseCategoryRule.objects.create(
+            practice=practice_no_iban,
+            match_key=build_counterparty_key("", "Telekom Deutschland"),
+            category="telefon",
+        )
+        importer = _make_importer(practice_no_iban, [])
+        result = importer.detect_and_create_financial_record(
+            self.txn_date,
+            Decimal("-40.00"),
+            "Rechnung",
+            payer_name="Telekom Deutschland",
+        )
+        self.assertEqual(result["record"].category, "telefon")
+
+    def test_no_rule_still_defaults_to_other(self):
+        practice_no_iban = _make_practice(slug="no-learned-rule")
+        importer = _make_importer(practice_no_iban, [])
+        result = importer.detect_and_create_financial_record(
+            self.txn_date, Decimal("-40.00"), "Unbekannt", payer_name="Irgendwer GmbH"
+        )
+        self.assertEqual(result["record"].category, "other")
+
+    def test_rule_from_other_practice_is_ignored(self):
+        landlord_iban = "DE12500105170648489890"
+        other_practice = _make_practice(slug="other-practice-rule")
+        ExpenseCategoryRule.objects.create(
+            practice=other_practice,
+            match_key=build_counterparty_key(landlord_iban, ""),
+            category="miete",
+        )
+        practice_no_iban = _make_practice(slug="my-practice-no-rule")
+        importer = _make_importer(practice_no_iban, [])
+        result = importer.detect_and_create_financial_record(
+            self.txn_date, Decimal("-800.00"), "Miete August", payer_iban=landlord_iban
+        )
+        self.assertEqual(result["record"].category, "other")
+
+
+class BuildCounterpartyKeyTest(TestCase):
+    def test_iban_takes_priority(self):
+        key = build_counterparty_key("DE89 3704 0044 0532 0130 00", "Some Name")
+        self.assertEqual(key, "iban:DE89370400440532013000")
+
+    def test_falls_back_to_normalized_name(self):
+        key = build_counterparty_key("", "  Max Mustermann  ")
+        self.assertEqual(key, "name:max mustermann")
+
+    def test_blank_inputs_return_none(self):
+        self.assertIsNone(build_counterparty_key("", ""))
 
 
 # ── process (end-to-end CSV) ──────────────────────────────────────────────────
