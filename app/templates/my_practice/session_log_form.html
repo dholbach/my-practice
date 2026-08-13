@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load static %}
 {% load i18n %}
 {% load markdown_filters %}
 
@@ -11,10 +10,14 @@
 {% block content %}
 <div class="section-card">
     {% if is_edit %}
-    <form method="post" action="{% url 'session_log_edit' client.pk log.pk %}">
+    <form method="post" action="{% url 'session_log_edit' client.pk log.pk %}" id="session-log-form"
     {% else %}
-    <form method="post" action="{% url 'session_log_create' client.pk %}">
+    <form method="post" action="{% url 'session_log_create' client.pk %}" id="session-log-form"
     {% endif %}
+          data-draft-guard
+          data-draft-message="{% trans "You have an unsaved draft from an earlier attempt." %}"
+          data-draft-restore-label="{% trans "Restore draft" %}"
+          data-draft-discard-label="{% trans "Discard" %}">
     {% csrf_token %}
 
     <div class="cn-field flex gap-6 items-end flex-wrap">

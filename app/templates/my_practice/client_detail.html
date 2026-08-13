@@ -429,7 +429,11 @@
     </div>
     {% endif %}
 
-    <form method="post" action="{% url 'client_profile_save' client.pk %}">
+    <form method="post" action="{% url 'client_profile_save' client.pk %}" id="client-profile-form"
+          data-draft-guard
+          data-draft-message="{% trans "You have an unsaved draft from an earlier attempt." %}"
+          data-draft-restore-label="{% trans "Restore draft" %}"
+          data-draft-discard-label="{% trans "Discard" %}">
         {% csrf_token %}
         <div class="section-card">
             <div class="cn-field">
