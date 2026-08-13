@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-08-11
+**Last Updated**: 2026-08-13
 
 ## 🔍 Recent Activity
 
+- **2026-08-13 — Form draft guard (M-PAT-06)**: new reusable `form_draft_guard.js`, loaded globally, opt-in per form via `data-draft-guard` — autosaves long-text fields to `localStorage` and warns via `beforeunload` before an accidental navigation (e.g. Alt+Left/Right) can wipe out unsaved typing. Wired up on the session log form and the client profile tab (`intake_notes`/`case_notes`); documented in CLAUDE.md for reuse on future long-text forms.
 - **2026-08-13 — Learned expense categorization**: new `ExpenseCategoryRule` model remembers which `CompanyExpense` category a bank counterparty (matched by IBAN, falling back to normalized payer name) maps to, learned automatically whenever a category is assigned via the bank-import grouping screen (`BankExpenseReviewView`) or corrected via the expense edit form (`ExpenseUpdateView`) — `BankStatementImporter.detect_and_create_financial_record` now consults the rule table instead of always defaulting negative-amount auto-created expenses to `"other"`. No new UI; reuses the existing grouping/edit flows as the input mechanism.
-- **2026-08-11 — P-122 Phase 1: free-form invoice items, + counterparty follow-up**: `InvoiceItem.session` is now nullable with a new `description` field, gated by a new per-practice `Practice.allows_free_form_items` setting (default off) — lets a day-rate/project-billing practice (e.g. IT consulting) issue invoice line items that aren't tied to a therapy/coaching session, while therapy/coaching practices see no change at all. `count_sessions()` excludes free-form items from session-based analytics entirely rather than guessing a duration; PDF/invoice-detail templates fall back to the description (and show `quantity × rate`) when there's no linked session. Follow-up after the first real invoice: billing a company (not an individual) still means creating a `Client` row, so `ClientIntakeForm` now hides therapy-only fields (DOB, hourly rate, insurance, GebüH) for free-form-items practices, and the client dashboard no longer flags a permanently session-less client as "needs attention". Also consolidated the session/description XOR + free-form-permission validation, which had drifted into three separate copies (model `save()`, model `clean()`, admin form), into shared validators on `InvoiceItem` — the admin copy had silently lost the permission check. Phase 2 (standard VAT + advance-payment report) stays deferred until the practice actually drops Kleinunternehmer status. See [docs/projects/todo/P-122_GENERAL_FREELANCE_PRACTICE.md](docs/projects/todo/P-122_GENERAL_FREELANCE_PRACTICE.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

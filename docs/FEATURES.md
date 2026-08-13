@@ -279,6 +279,7 @@ chronological record; this document only tracks current state.
 - ✅ Form validation
 - ✅ Loading states
 - ✅ E-Mail-Textbausteine (`/tools/boilerplate/`) — 6 copyable DE/EN templates for common practice email scenarios
+- ✅ Draft autosave + unsaved-changes warning on long-text forms (session logs, client case notes) — protects against accidental back/forward navigation wiping out typed content
 
 ### Performance
 - ✅ N+1 query elimination (73-94% reduction)

@@ -267,6 +267,28 @@ function switchTab(tabName) {
 - Use 50-100ms delay to ensure DOM is rendered
 - Leverage `chartRegistry` from chart_core.js for redraws
 
+#### Form Draft Guard (M-PAT-06)
+Long-text forms (session logs, case notes) lose typed content if the user accidentally navigates away (e.g. Alt+Left/Right browser back/forward) before submitting. `app/static/js/form_draft_guard.js` is a reusable, opt-in guard loaded globally in `base.html` (like `widgets.js`) — no per-template `extra_js` needed.
+
+```html
+<form method="post" action="..." id="my-form"
+      data-draft-guard
+      data-draft-message="{% trans "You have an unsaved draft from an earlier attempt." %}"
+      data-draft-restore-label="{% trans "Restore draft" %}"
+      data-draft-discard-label="{% trans "Discard" %}">
+    {% csrf_token %}
+    ...
+</form>
+```
+
+**Key Points**:
+- Opt in per form with `data-draft-guard` — a stable `id` on the form keeps drafts scoped correctly if a page ever has more than one guarded form
+- Autosaves all named fields (text/textarea/select/checkbox/radio) to `localStorage` on input/change (debounced), keyed by URL path + form id
+- Offers a restore-or-discard banner (`.draft-restore-banner` in `tailwind.css`) on page load if a draft exists
+- Warns via the native `beforeunload` dialog while the form is dirty and unsubmitted
+- Clears the draft on successful submit
+- The three `data-draft-*` label strings are reused verbatim across forms (see `session_log_form.html`, `client_detail.html`) — reuse the same msgids rather than minting new ones
+
 ## Code Style & Patterns
 
 ### Import Organization

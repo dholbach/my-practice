@@ -246,6 +246,9 @@
     <!-- Widget System (P-003 Phase 3) -->
     <script src="{% static 'js/widgets.js' %}"></script>
 
+    <!-- Draft autosave + unsaved-changes guard, opt-in via data-draft-guard -->
+    <script src="{% static 'js/form_draft_guard.js' %}"></script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
