@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 16:05+0200\n"
+"POT-Creation-Date: 2026-08-13 17:37+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -310,7 +310,7 @@ msgstr "Beträge werden automatisch aus den Rechnungspositionen berechnet"
 
 #: my_practice/admin.py:546 my_practice/models/invoice.py:274
 #: templates/my_practice/bank_review.html:75
-#: templates/my_practice/invoice_detail.html:86
+#: templates/my_practice/invoice_detail.html:87
 #: templates/my_practice/invoice_list.html:21
 #: templates/my_practice/withdrawal_list.html:31
 msgid "Total"
@@ -745,7 +745,7 @@ msgstr "Honorar 90 Min (€)"
 #: templates/my_practice/inquiry_list.html:224
 #: templates/my_practice/invoice_confirm_delete.html:28
 #: templates/my_practice/invoice_detail.html:19
-#: templates/my_practice/invoice_detail.html:82
+#: templates/my_practice/invoice_detail.html:83
 #: templates/my_practice/invoice_list.html:167
 #: templates/my_practice/send_payment_reminder.html:20
 #: templates/my_practice/tax_workday_audit.html:59
@@ -1879,7 +1879,7 @@ msgstr "Steuer-Jahresnotizen"
 #: templates/my_practice/analytics.html:349
 #: templates/my_practice/analytics.html:393
 #: templates/my_practice/client_list_cards.html:106
-#: templates/my_practice/invoice_detail.html:118
+#: templates/my_practice/invoice_detail.html:119
 #: templates/my_practice/time_off_notice_form.html:28
 msgid "Code"
 msgstr "Code"
@@ -2131,6 +2131,7 @@ msgid "Paid"
 msgstr "Bezahlt"
 
 #: my_practice/models/invoice.py:60
+#: templates/my_practice/invoice_detail.html:44
 msgid "Written off"
 msgstr "Abgeschrieben"
 
@@ -2155,7 +2156,7 @@ msgstr "Standardmäßig heute"
 
 #: my_practice/models/invoice.py:101
 #: templates/my_practice/invoice_detail.html:23
-#: templates/my_practice/invoice_detail.html:210
+#: templates/my_practice/invoice_detail.html:211
 #: templates/my_practice/tax_year_summary.html:128
 msgid "Paid on"
 msgstr "Bezahlt am"
@@ -2212,7 +2213,7 @@ msgid "Payment date must not be before the invoice date"
 msgstr "Zahlungsdatum darf nicht vor dem Rechnungsdatum liegen"
 
 #: my_practice/models/invoice.py:266
-#: templates/my_practice/invoice_detail.html:85
+#: templates/my_practice/invoice_detail.html:86
 msgid "Rate"
 msgstr "Honorar"
 
@@ -4400,7 +4401,7 @@ msgstr "Datum (Rechnung)"
 #: templates/my_practice/calendar_approval_queue.html:92
 #: templates/my_practice/calendar_import.html:90
 #: templates/my_practice/client_detail.html:646
-#: templates/my_practice/invoice_detail.html:84
+#: templates/my_practice/invoice_detail.html:85
 #: templates/my_practice/time_off_list.html:35
 #: templates/my_practice/time_off_list.html:80
 msgid "Duration"
@@ -4581,7 +4582,7 @@ msgstr "1 Woche zurückstellen"
 #: templates/my_practice/inquiry_list.html:26
 #: templates/my_practice/inquiry_list.html:203
 #: templates/my_practice/inquiry_list.html:249
-#: templates/my_practice/invoice_detail.html:192
+#: templates/my_practice/invoice_detail.html:193
 #: templates/my_practice/practice_management.html:44
 #: templates/my_practice/tag_list.html:62
 #: templates/my_practice/tax_quarter_overview.html:170
@@ -5862,7 +5863,7 @@ msgid "Event"
 msgstr "Event"
 
 #: templates/my_practice/calendar_import.html:92
-#: templates/my_practice/invoice_detail.html:83
+#: templates/my_practice/invoice_detail.html:84
 #: templates/my_practice/invoice_edit.html:106
 msgid "Service"
 msgstr "Leistung"
@@ -5950,7 +5951,7 @@ msgid "Completed on %(date)s at %(time)s"
 msgstr "Abgeschlossen am %(date)s um %(time)s Uhr"
 
 #: templates/my_practice/checklist.html:34
-#: templates/my_practice/invoice_detail.html:183
+#: templates/my_practice/invoice_detail.html:184
 msgid "Notes:"
 msgstr "Notizen:"
 
@@ -6017,7 +6018,7 @@ msgid "📋 Imported client data - needs updating"
 msgstr "📋 Importierte Klientendaten – bitte aktualisieren"
 
 #: templates/my_practice/client_detail.html:30
-#: templates/my_practice/invoice_detail.html:67
+#: templates/my_practice/invoice_detail.html:68
 msgid "This client was imported with placeholder data. Please update with real information:"
 msgstr "Diese Klient:in wurde mit Platzhalterdaten importiert. Bitte mit echten Daten ergänzen:"
 
@@ -6196,8 +6197,8 @@ msgstr "Sitzung löschen?"
 #: templates/my_practice/client_detail.html:309
 #: templates/my_practice/client_detail.html:653
 #: templates/my_practice/gebueh_leistung_form.html:6
-#: templates/my_practice/invoice_detail.html:110
-#: templates/my_practice/invoice_detail.html:142
+#: templates/my_practice/invoice_detail.html:111
+#: templates/my_practice/invoice_detail.html:143
 msgid "min"
 msgstr "Min"
 
@@ -6583,7 +6584,7 @@ msgstr "Keine E-Mail-Adresse hinterlegt — es wird keine Benachrichtigung gesen
 #: templates/my_practice/inquiry_list.html:27
 #: templates/my_practice/inquiry_list.html:207
 #: templates/my_practice/inquiry_list.html:253
-#: templates/my_practice/invoice_detail.html:204
+#: templates/my_practice/invoice_detail.html:205
 #: templates/my_practice/invoice_edit.html:90
 #: templates/my_practice/invoice_form.html:77
 #: templates/my_practice/practice_form.html:301
@@ -7243,89 +7244,89 @@ msgstr "Rechnungsnummer"
 msgid "Change status…"
 msgstr "Status ändern…"
 
-#: templates/my_practice/invoice_detail.html:50
+#: templates/my_practice/invoice_detail.html:51
 msgid "Client:"
 msgstr "Klient:"
 
-#: templates/my_practice/invoice_detail.html:52
+#: templates/my_practice/invoice_detail.html:53
 msgid "View details →"
 msgstr "Details anzeigen →"
 
-#: templates/my_practice/invoice_detail.html:66
+#: templates/my_practice/invoice_detail.html:67
 msgid "Imported client data — needs updating"
 msgstr "Importierte Klientendaten – bitte aktualisieren"
 
-#: templates/my_practice/invoice_detail.html:69
+#: templates/my_practice/invoice_detail.html:70
 msgid "Edit client data →"
 msgstr "Klientendaten bearbeiten →"
 
-#: templates/my_practice/invoice_detail.html:77
+#: templates/my_practice/invoice_detail.html:78
 msgid "Line items"
 msgstr "Positionen"
 
-#: templates/my_practice/invoice_detail.html:94
+#: templates/my_practice/invoice_detail.html:95
 msgid "Diagnosis"
 msgstr "Diagnose"
 
-#: templates/my_practice/invoice_detail.html:118
+#: templates/my_practice/invoice_detail.html:119
 msgid "Remaining amount"
 msgstr "Restbetrag"
 
-#: templates/my_practice/invoice_detail.html:135
+#: templates/my_practice/invoice_detail.html:136
 msgid "No service type"
 msgstr "Kein Leistungstyp"
 
-#: templates/my_practice/invoice_detail.html:155
+#: templates/my_practice/invoice_detail.html:156
 msgid "Subtotal:"
 msgstr "Zwischensumme:"
 
-#: templates/my_practice/invoice_detail.html:160
+#: templates/my_practice/invoice_detail.html:161
 #, python-format
 msgid "VAT (%(rate)s%%):"
 msgstr "MwSt. (%(rate)s%%):"
 
-#: templates/my_practice/invoice_detail.html:165
+#: templates/my_practice/invoice_detail.html:166
 msgid "Kleinunternehmerregelung § 19 UStG — no tax"
 msgstr "Kleinunternehmerregelung § 19 UStG – keine Steuer"
 
-#: templates/my_practice/invoice_detail.html:171
+#: templates/my_practice/invoice_detail.html:172
 msgid "GebüH total:"
 msgstr "GebüH gesamt:"
 
-#: templates/my_practice/invoice_detail.html:171
+#: templates/my_practice/invoice_detail.html:172
 msgid "official fee schedule"
 msgstr "offizielle Gebührenordnung"
 
-#: templates/my_practice/invoice_detail.html:176
+#: templates/my_practice/invoice_detail.html:177
 #: templates/my_practice/revenue_report.html:93
 msgid "Total:"
 msgstr "Gesamt:"
 
-#: templates/my_practice/invoice_detail.html:191
+#: templates/my_practice/invoice_detail.html:192
 msgid "Back to list"
 msgstr "Zurück zur Liste"
 
-#: templates/my_practice/invoice_detail.html:193
+#: templates/my_practice/invoice_detail.html:194
 msgid "View PDF"
 msgstr "PDF anzeigen"
 
-#: templates/my_practice/invoice_detail.html:196
+#: templates/my_practice/invoice_detail.html:197
 msgid "Send by email"
 msgstr "Per E-Mail versenden"
 
-#: templates/my_practice/invoice_detail.html:199
+#: templates/my_practice/invoice_detail.html:200
 msgid "Email already sent"
 msgstr "E-Mail bereits versendet"
 
-#: templates/my_practice/invoice_detail.html:203
+#: templates/my_practice/invoice_detail.html:204
 msgid "Do you really want to delete this invoice? This action cannot be undone."
 msgstr "Möchten Sie diese Rechnung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: templates/my_practice/invoice_detail.html:208
+#: templates/my_practice/invoice_detail.html:209
 msgid "Status changed to:"
 msgstr "Status geändert zu:"
 
-#: templates/my_practice/invoice_detail.html:209
+#: templates/my_practice/invoice_detail.html:210
 msgid "Error changing status"
 msgstr "Fehler beim Ändern des Status"
 
