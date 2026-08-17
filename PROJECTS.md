@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-08-13
+**Last Updated**: 2026-08-17
 
 ## 🔍 Recent Activity
 
+- **2026-08-17 — Codebase review + cleanup**: `admin.py` (1,416 lines, 25 registrations) split into a domain-scoped `admin/` package mirroring `models/`, matching the project's own modular convention; `bank_import_views.py`'s three review views now inherit `PracticeScopedListView` instead of manually repeating `.for_current_practice()`; `client_detail.html`/`analytics.html`'s misnamed `extra_css` block (it held `<script>` tags, not CSS) renamed to `extra_head_scripts` — CLAUDE.md updated to describe the real `extra_head_scripts`/`extra_js` split. Docs: `docs/architecture/PERFORMANCE.md` refreshed (stale references to a removed `reconciliation_views.py` and a since-packaged `models.py`; stale test count); P-010 moved back to `docs/projects/todo/` — its crisis-contact fields were rolled back pre-release as too partial to be useful and don't exist in the current model, docs previously claimed otherwise. Filed #343 (login throttling + optional 2FA, for when hosted/public demand grows).
 - **2026-08-13 — Form draft guard (M-PAT-06)**: new reusable `form_draft_guard.js`, loaded globally, opt-in per form via `data-draft-guard` — autosaves long-text fields to `localStorage` and warns via `beforeunload` before an accidental navigation (e.g. Alt+Left/Right) can wipe out unsaved typing. Wired up on the session log form and the client profile tab (`intake_notes`/`case_notes`); documented in CLAUDE.md for reuse on future long-text forms.
-- **2026-08-13 — Learned expense categorization**: new `ExpenseCategoryRule` model remembers which `CompanyExpense` category a bank counterparty (matched by IBAN, falling back to normalized payer name) maps to, learned automatically whenever a category is assigned via the bank-import grouping screen (`BankExpenseReviewView`) or corrected via the expense edit form (`ExpenseUpdateView`) — `BankStatementImporter.detect_and_create_financial_record` now consults the rule table instead of always defaulting negative-amount auto-created expenses to `"other"`. No new UI; reuses the existing grouping/edit flows as the input mechanism.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -16,7 +16,7 @@
 
 ### Open / Short-term
 
-- **P-010 done (code)**: Crisis fields on `Client` model; org plan in `memory/PERSONAL_TODO.md` — see `docs/guides/EMERGENCY_ACCESS_PLANNING.md`
+- **P-010 Emergency Access Plan**: earlier crisis-field implementation was rolled back (too partial, was blocking other work) — redo needed → [docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md](docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md)
 - **P-011 operational remainder**: Backup timer + secrets rotation — see `memory/PERSONAL_TODO.md`
 
 ### Stack / Infrastructure
@@ -78,7 +78,6 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 | P-013 | Workflow Dashboard (Phasen 1–3) | Feb 2026 |
 | P-012 | Operational Checklist + Pause | Feb 2026 |
 | P-011 | Security Foundation (LUKS + Yubikey + DPIA) | Feb 2026 |
-| P-010 | Emergency Access Plan (code done: crisis fields on Client model; org plan personal) | März 2026 |
 | P-005 | PostgreSQL 17 Upgrade | März 2026 |
 | P-004 | Analytics Consolidation | Feb 2026 |
 | P-003 | Workflow-Driven Dashboard | Feb 2026 |
