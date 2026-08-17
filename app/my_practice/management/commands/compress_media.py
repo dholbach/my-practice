@@ -130,35 +130,17 @@ class Command(BaseCommand):
                 self.stdout.write(f"  [{label}] {rel}  {original_size / 1024:.0f} KB{flag}")
                 continue
 
-            try:
-                if ext in _IMAGE_EXTENSIONS:
-                    saved = compress_image_inplace(str(filepath), force=force)
-                else:
-                    saved = compress_pdf_inplace(str(filepath))
-
-                if saved > 0:
-                    total_compressed += 1
-                    total_saved += saved
-                    new_size = filepath.stat().st_size
-                    self.stdout.write(
-                        f"  ✓ {rel}"
-                        f"  {original_size / 1024:.0f} → {new_size / 1024:.0f} KB"
-                        f"  (-{saved / 1024:.0f} KB)"
-                    )
-                else:
-                    total_skipped += 1
-                    skip_threshold = (
-                        IMAGE_SKIP_BYTES if ext in _IMAGE_EXTENSIONS else PDF_SKIP_BYTES
-                    )
-                    if original_size <= skip_threshold:
-                        reason = f"under {skip_threshold // 1024} KB threshold"
-                    else:
-                        reason = f"gs found no improvement ({original_size / 1024:.0f} KB)"
-                    self.stdout.write(f"  – {rel}  ({reason})")
-
-            except Exception as exc:
+            status, message, saved = self._process_file(filepath, rel, ext, original_size, force)
+            if status == "compressed":
+                total_compressed += 1
+                total_saved += saved
+                self.stdout.write(message)
+            elif status == "skipped":
+                total_skipped += 1
+                self.stdout.write(message)
+            else:
                 total_errors += 1
-                self.stdout.write(self.style.ERROR(f"  ✗ {rel}: {exc}"))
+                self.stdout.write(self.style.ERROR(message))
 
         if dry_run:
             self.stdout.write(f"\n{total_files} processable files found.")
@@ -183,6 +165,37 @@ class Command(BaseCommand):
 
         if total_errors:
             self.stdout.write(self.style.WARNING("Check logs above for error details."))
+
+    @staticmethod
+    def _process_file(
+        filepath: Path, rel: Path, ext: str, original_size: int, force: bool
+    ) -> tuple[str, str, int]:
+        """Compress a single file. Returns (status, message, bytes_saved) where
+        status is "compressed", "skipped", or "error"."""
+        try:
+            if ext in _IMAGE_EXTENSIONS:
+                saved = compress_image_inplace(str(filepath), force=force)
+            else:
+                saved = compress_pdf_inplace(str(filepath))
+
+            if saved > 0:
+                new_size = filepath.stat().st_size
+                message = (
+                    f"  ✓ {rel}"
+                    f"  {original_size / 1024:.0f} → {new_size / 1024:.0f} KB"
+                    f"  (-{saved / 1024:.0f} KB)"
+                )
+                return "compressed", message, saved
+
+            skip_threshold = IMAGE_SKIP_BYTES if ext in _IMAGE_EXTENSIONS else PDF_SKIP_BYTES
+            if original_size <= skip_threshold:
+                reason = f"under {skip_threshold // 1024} KB threshold"
+            else:
+                reason = f"gs found no improvement ({original_size / 1024:.0f} KB)"
+            return "skipped", f"  – {rel}  ({reason})", 0
+
+        except Exception as exc:
+            return "error", f"  ✗ {rel}: {exc}", 0
 
     def _handle_rotate(self, root: Path, media_root: Path, degrees: int, dry_run: bool) -> None:
         if dry_run:
