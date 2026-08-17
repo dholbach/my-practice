@@ -356,17 +356,17 @@ Put new component classes in `tailwind.css` under `@layer components`:
 
 Use `--color-*` tokens for all colours — they automatically adapt to dark mode via `[data-theme="dark"]` overrides. Never use hardcoded hex values.
 
-Do **not** create a new `.css` file. Do **not** add `{% block extra_css %}` link tags for page-specific CSS.
+Do **not** create a new `.css` file. Do **not** add a block for page-specific CSS `<link>`/`<style>` tags — there deliberately isn't one; all CSS goes in `tailwind.css`.
 
 Never add bare `<style>` blocks:
 ```html
 {# BAD — do not do this #}
-{% block extra_css %}
 <style>
     .my-class { ... }
 </style>
-{% endblock %}
 ```
+
+`base.html` has two blocks for page-specific `<script>` tags, neither for CSS: `extra_head_scripts` (in `<head>`, for scripts an inline script further down the page calls synchronously — e.g. chart libs) and `extra_js` (near the end of `<body>`, for everything else). Pick whichever matches your load-order need; don't repurpose either for CSS.
 
 ### Forms
 - Use `StyledFormMixin` for all ModelForms — no manual `attrs={"class": "form-control"}` on field widgets

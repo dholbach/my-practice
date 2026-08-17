@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
-from django.views.generic import FormView, ListView
+from django.views.generic import FormView
 from django.views.generic.edit import FormMixin
 
 from ..import_forms import BankStatementUploadForm, TransactionMatchForm
@@ -25,6 +25,7 @@ from ..models import (
     Invoice,
 )
 from ..utils import BankStatementImporter, build_counterparty_key
+from .crud_mixins import PracticeScopedListView
 
 
 class BankImportView(FormView):
@@ -93,13 +94,14 @@ class BankImportView(FormView):
         return redirect("bank_review")
 
 
-class BankReviewView(FormMixin, ListView):
+class BankReviewView(FormMixin, PracticeScopedListView):
     """
     Review and manually match unmatched transactions.
 
     Shows unmatched transactions with form to assign invoices.
     """
 
+    model = BankTransaction
     template_name = "my_practice/bank_review.html"
     context_object_name = "transactions"
     paginate_by = 20
@@ -108,7 +110,8 @@ class BankReviewView(FormMixin, ListView):
     def get_queryset(self):
         """Get unmatched transactions for current practice"""
         transactions = (
-            BankTransaction.objects.for_current_practice(self.request)
+            super()
+            .get_queryset()
             .filter(
                 match_confidence="unmatched",
                 processed=False,
@@ -562,13 +565,14 @@ def bank_transaction_detail(request, pk):
     return render(request, "my_practice/bank_transaction_detail.html", context)
 
 
-class BankExpenseReviewView(ListView):
+class BankExpenseReviewView(PracticeScopedListView):
     """
     Review and group negative bank transactions into expenses.
 
     Shows unmatched negative transactions with form to group them into CompanyExpenses.
     """
 
+    model = BankTransaction
     template_name = "my_practice/bank_expense_review.html"
     context_object_name = "transactions"
     paginate_by = 50
@@ -576,7 +580,8 @@ class BankExpenseReviewView(ListView):
     def get_queryset(self):
         """Get unmatched/ignored/auto-created negative transactions (potential expenses)"""
         return (
-            BankTransaction.objects.for_current_practice(self.request)
+            super()
+            .get_queryset()
             .filter(
                 amount__lt=0,  # Negative amounts
                 match_confidence__in=["unmatched", "ignored", "auto-expense"],
@@ -727,13 +732,14 @@ class BankExpenseReviewView(ListView):
         return redirect("bank_expense_review")
 
 
-class BankWithdrawalReviewView(ListView):
+class BankWithdrawalReviewView(PracticeScopedListView):
     """
     Review and group auto-created withdrawal transactions.
 
     Shows auto-withdrawal transactions for confirmation and grouping into CompanyWithdrawals.
     """
 
+    model = BankTransaction
     template_name = "my_practice/bank_withdrawal_review.html"
     context_object_name = "transactions"
     paginate_by = 50
@@ -741,7 +747,8 @@ class BankWithdrawalReviewView(ListView):
     def get_queryset(self):
         """Get auto-created withdrawal transactions pending review"""
         return (
-            BankTransaction.objects.for_current_practice(self.request)
+            super()
+            .get_queryset()
             .filter(
                 match_confidence="auto-withdrawal",
                 processed=False,
