@@ -17,7 +17,7 @@
 {% if profile.arbeitsdiagnose %} · <span class="sensitive-data">{{ profile.arbeitsdiagnose }}</span>{% endif %}
 {% endblock %}
 
-{% block extra_css %}
+{% block extra_head_scripts %}
 <script src="{% static 'js/charts/chart_core.js' %}"></script>
 <script src="{% static 'js/charts/chart_canvas.js' %}"></script>
 {% endblock %}

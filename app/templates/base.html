@@ -6,7 +6,12 @@
     <title>{% block title %}Therapy Practice{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/tailwind.out.css' %}">
-    {% block extra_css %}{% endblock %}
+    <!-- For page-specific scripts that an inline script further down the page calls
+         synchronously (e.g. chart libs an initChart(...) call needs already loaded) —
+         must run before body content parses. Page-specific CSS goes in tailwind.css
+         instead (see CLAUDE.md CSS Architecture); non-blocking JS that doesn't need to
+         run before body content belongs in the extra_js block near the end of body. -->
+    {% block extra_head_scripts %}{% endblock %}
     <script src="{% static 'js/htmx.min.js' %}" defer></script>
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
 </head>
