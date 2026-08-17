@@ -1,7 +1,13 @@
 # Performance Optimizations
 
+**Last updated: 2026-08-17** — corrected stale references (see note below); the
+optimizations themselves are historical and still in effect.
+
 ## Overview
 This document describes the performance optimizations implemented for the payments application.
+It's a log of what was done and why, not a live dashboard — some referenced views/files have
+since been renamed or removed as the app evolved (see [CODE_STRUCTURE.md](CODE_STRUCTURE.md) for
+the current module layout).
 
 ## Database Indexes (Migration 0013)
 
@@ -124,7 +130,9 @@ if year_filter:
 
 ### N+1 Query Elimination
 
-**reconciliation_overview** (`reconciliation_views.py`):
+**reconciliation_overview** (formerly `reconciliation_views.py`, since superseded by the
+bank-statement-import reconciliation flow in `bank_import_views.py` / `BankTransaction` —
+the query pattern below applied to the retired view):
 ```python
 clients = Client.objects.prefetch_related(
     Prefetch('invoices', queryset=Invoice.objects.prefetch_related('items'))
@@ -160,7 +168,7 @@ Client.objects.annotate(
 
 ### Database Aggregation
 
-**Invoice.calculate_total** (`models.py`):
+**Invoice.calculate_total** (`models/invoice.py`):
 ```python
 # Before: Python loop
 subtotal_sum = sum(item.total for item in self.items.all())
@@ -220,11 +228,9 @@ ORDER BY idx_scan DESC;
 5. **Lazy Loading**: For large result sets in analytics
 
 ## Testing
-All optimizations verified with existing test suite:
-- ✅ 32 Django tests passing
-- ✅ 28 JavaScript tests passing
-- ✅ No regressions introduced
-- ✅ Backward compatible
+All optimizations verified with existing test suite at the time they landed. The suite has
+grown substantially since (1,400+ Django tests as of 2026-08; see [CODE_STRUCTURE.md](CODE_STRUCTURE.md))
+— run `./dev.py test` for current counts rather than trusting numbers in this doc.
 
 ## Related Commits
 - Initial optimization: Query optimization with select_related/prefetch_related

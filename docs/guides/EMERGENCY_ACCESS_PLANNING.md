@@ -35,21 +35,20 @@ These can be the same person, but splitting the roles reduces the access footpri
 
 ## What This App Provides
 
-The `Client` model has built-in emergency fields (added in the initial migration):
-
-- `crisis_risk` — boolean flag for clients with active crisis risk
-- `emergency_contact_1` / `emergency_contact_2` — name + phone (free text)
-- `referring_psychiatrist` — name + contact
-- `backup_therapist` — designated handover colleague
-
-These appear in the admin as a collapsible "Notfallkontakte" fieldset
-and in the client detail page when populated.
+**Not yet implemented.** An earlier pass added `crisis_risk`, `emergency_contact_1/2`,
+`referring_psychiatrist`, and `backup_therapist` fields on `Client`, plus an admin
+"Notfallkontakte" fieldset. That implementation was rolled back before release — it was
+too partial to be useful and was blocking other work at the time — so the current
+`Client` model has none of this. See [P-010](../projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md)
+for the redo. Until then, this guide's "what you must set up yourself" section below
+still applies in full — the credentials-vault approach doesn't depend on the app fields.
 
 ---
 
 ## What You Must Set Up Yourself
 
-The app provides the data model; the access and continuity infrastructure is yours to build:
+None of this depends on the app fields above (which don't exist yet) — it's all
+external process, and worth doing regardless of when P-010 lands:
 
 1. **Recruit buddies** — find colleagues or a trusted accountant willing to commit to
    quarterly updates and an annual test of vault access.
@@ -65,8 +64,9 @@ The app provides the data model; the access and continuity infrastructure is you
 4. **Client disclosure** — clients should know about the arrangement before it's needed.
    Add a paragraph to your intake/Terms of Care document (see DSGVO Art. 13).
 
-5. **Fill the app fields** — go through your active client list and populate
-   `crisis_risk` + `emergency_contact_*` for any clients who need it.
+5. **Track crisis contacts outside the app for now** — until P-010 lands, keep
+   `emergency_contact_*` / `referring_psychiatrist` / `backup_therapist` info for
+   at-risk clients in the credentials vault rather than in the app.
 
 ---
 
@@ -99,7 +99,6 @@ Django permissions.
 
 ## Related
 
-- App emergency fields: `models/client.py` (`crisis_risk`, `emergency_contact_1/2`,
-  `referring_psychiatrist`, `backup_therapist`)
+- App emergency fields: not yet implemented — see [P-010](../projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md)
 - Clinical data security: [CLINICAL_DATA_SECURITY.md](CLINICAL_DATA_SECURITY.md)
 - DPIA template: [../operations/DPIA-template.md](../operations/DPIA-template.md)
