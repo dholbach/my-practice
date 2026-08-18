@@ -307,6 +307,52 @@ class TaxYearNoteViewTest(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_save_settlement_accepts_comma_decimal_amount(self):
+        """A German-formatted "123,45" amount is normalized like a plain "123.45" one."""
+        from my_practice.models import TaxYearNote
+
+        response = self.client_http.post(
+            reverse("save_tax_year_note"),
+            {"year": "2025", "settlement_amount": "123,45", "settlement_date": "2025-06-01"},
+        )
+        self.assertEqual(response.status_code, 200)
+        note = TaxYearNote.objects.get(practice=self.practice, year=2025)
+        self.assertEqual(note.settlement_amount, Decimal("123.45"))
+
+    def test_save_settlement_rejects_invalid_amount(self):
+        """A non-numeric settlement_amount returns 400 without touching the record."""
+        response = self.client_http.post(
+            reverse("save_tax_year_note"),
+            {"year": "2025", "settlement_amount": "not-a-number"},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.json())
+
+    def test_save_settlement_rejects_invalid_date(self):
+        """A non-ISO settlement_date returns 400 without touching the record."""
+        response = self.client_http.post(
+            reverse("save_tax_year_note"),
+            {"year": "2025", "settlement_date": "01.06.2025"},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.json())
+
+    def test_save_settlement_empty_amount_clears_it(self):
+        """Posting settlement_amount as an empty string clears a previously saved value."""
+        from my_practice.models import TaxYearNote
+
+        self.client_http.post(
+            reverse("save_tax_year_note"),
+            {"year": "2025", "settlement_amount": "123.45"},
+        )
+        response = self.client_http.post(
+            reverse("save_tax_year_note"),
+            {"year": "2025", "settlement_amount": ""},
+        )
+        self.assertEqual(response.status_code, 200)
+        note = TaxYearNote.objects.get(practice=self.practice, year=2025)
+        self.assertIsNone(note.settlement_amount)
+
     def test_tax_year_note_in_summary_context(self):
         """tax_year_note context variable is populated after saving a note."""
         from my_practice.models import TaxYearNote

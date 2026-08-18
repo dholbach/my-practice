@@ -5,7 +5,15 @@ Forms for the payments application.
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from .models import CapacityPeriod, Client, CompanyExpense, CompanyWithdrawal, Practice, TimeOff
+from .models import (
+    CapacityPeriod,
+    Client,
+    CompanyExpense,
+    CompanyWithdrawal,
+    Practice,
+    TaxYearNote,
+    TimeOff,
+)
 
 
 class DateFormField(forms.DateField):
@@ -302,3 +310,36 @@ CapacityPeriodFormSet = forms.inlineformset_factory(
     extra=1,
     can_delete=True,
 )
+
+
+class TaxYearNoteForm(StyledFormMixin, forms.ModelForm):
+    """Field-level validation for the save_tax_year_note AJAX endpoint.
+
+    Two independent widgets share that endpoint (the allocation-note
+    textarea on tax_year_summary.html, and the settlement amount/date
+    fields on tax_quarter_overview.html), each POSTing only its own
+    field(s) and expecting the other(s) left untouched. The view applies
+    fields individually via .fields[name].clean(raw_value) rather than
+    calling form.save(), so this form is never bound to the full instance
+    or rendered — it exists to reuse Django's field parsing/validation
+    instead of hand-rolled Decimal/date parsing.
+    """
+
+    settlement_amount = forms.DecimalField(
+        required=False,
+        localize=False,  # HTML5 <input type="number"> always sends "." as decimal separator
+        max_digits=10,
+        decimal_places=2,
+        label=_("Tax back payment / refund"),
+    )
+    settlement_date = DateFormField(required=False, label=_("Assessment date"))
+
+    class Meta:
+        model = TaxYearNote
+        fields = ["allocation_note", "settlement_amount", "settlement_date"]
+        widgets = {
+            "allocation_note": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "allocation_note": _("Allocation note"),
+        }
