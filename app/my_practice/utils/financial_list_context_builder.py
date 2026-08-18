@@ -58,7 +58,7 @@ class FinancialListContextBuilder:
         )
 
         # Apply year filter if provided
-        filtered_qs = self._apply_year_filter()
+        filtered_qs = self.apply_year_filter(self.base_queryset, self.year_filter)
 
         # Get ordered items
         items = filtered_qs.order_by("-date")
@@ -95,11 +95,17 @@ class FinancialListContextBuilder:
 
         return context, items
 
-    def _apply_year_filter(self) -> QuerySet:
-        """Apply year filter to base queryset if specified."""
-        if self.year_filter:
-            return self.base_queryset.filter(date__year=self.year_filter)
-        return self.base_queryset
+    @staticmethod
+    def apply_year_filter(queryset: QuerySet, year: int | None) -> QuerySet:
+        """Filter a queryset by date__year if year is given, otherwise return it unchanged.
+
+        Public/static so callers with a second queryset that needs the same
+        year filter (e.g. an "incoming" queryset alongside the builder's own
+        "outgoing" one) can reuse this instead of re-deriving the filter.
+        """
+        if year:
+            return queryset.filter(date__year=year)
+        return queryset
 
     def _get_category_breakdown(self, queryset: QuerySet) -> list[dict[str, Any]]:
         """Get category breakdown with human-readable names."""

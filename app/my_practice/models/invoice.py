@@ -220,6 +220,16 @@ class Invoice(TimestampedModel):
             return latest if latest >= today else today
         return today
 
+    @staticmethod
+    def days_overdue(invoice_date: date, today: date | None = None) -> int:
+        """Days elapsed since invoice_date, for comparing against practice.overdue_after_days
+        (or any other threshold). Shared by InvoiceActionsWidgetBuilder.get_overdue_invoices
+        (dashboard_widgets.py) and ClientDetailContextBuilder._build_billing_context
+        (client_detail_builder.py) so the two don't independently re-derive the same
+        elapsed-days calculation."""
+        today = today or timezone.localdate()
+        return (today - invoice_date).days
+
     def sync_invoice_date(self) -> bool:
         """Persist computed_invoice_date() if it differs from the stored value. Returns True if saved."""
         if self.status != Invoice.Status.DRAFT:
