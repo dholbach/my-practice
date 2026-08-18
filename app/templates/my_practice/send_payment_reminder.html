@@ -32,7 +32,7 @@
                     </a>
                 </td>
                 <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
-                <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
+                <td>{% include 'includes/invoice_status_badge.html' with invoice=invoice static_only=True %}</td>
                 <td class="text-right font-semibold">{{ invoice.total|currency }}</td>
             </tr>
             {% endfor %}

@@ -110,21 +110,7 @@
 
     <!-- Pagination -->
     {% if is_paginated %}
-    <div class="pagination-bar">
-        {% if page_obj.has_previous %}
-            <a href="?page=1" class="btn btn-secondary">{% trans "« First" %}</a>
-            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary">{% trans "‹ Previous" %}</a>
-        {% endif %}
-
-        <span class="text-muted p-1">
-            {% blocktrans with page=page_obj.number pages=page_obj.paginator.num_pages %}Page {{ page }} of {{ pages }}{% endblocktrans %}
-        </span>
-
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">{% trans "Next ›" %}</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-secondary">{% trans "Last »" %}</a>
-        {% endif %}
-    </div>
+    {% include 'includes/pagination_bar.html' with page_obj=page_obj %}
     {% endif %}
 
     {% else %}
