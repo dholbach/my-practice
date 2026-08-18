@@ -9,7 +9,14 @@ It's a log of what was done and why, not a live dashboard — some referenced vi
 since been renamed or removed as the app evolved (see [CODE_STRUCTURE.md](CODE_STRUCTURE.md) for
 the current module layout).
 
-## Database Indexes (Migration 0013)
+## Database Indexes (originally Migration 0013, now squashed into `0001_initial.py`)
+
+Migrations were squashed at some point after these landed — the migration numbers below are
+historical (what shipped them originally), not what you'll find at that number in the current
+migration history. The indexes themselves are still in effect; see `0001_initial.py`'s
+`AddIndex` operations for the current source of truth (e.g. `invoice_invoice_date_idx`,
+`invoice_paid_date_idx`, `invoice_status_idx`, `invoice_client_status_idx`,
+`invoice_date_status_idx`, `withdrawal_date_idx`, `expense_date_idx`, `expense_category_idx`).
 
 ### Invoice Model
 - **`invoice_date`**: Single-column index for date range queries
@@ -123,10 +130,14 @@ if year_filter:
 
 ## Phase 2 Optimizations (21 Dec 2025)
 
-### InvoiceItem.session_date Index (Migration 0014)
-- **New index**: `item_session_date_idx` on `session_date` field
+### InvoiceItem.session_date Index (originally Migration 0014, now removed)
+- **New index (at the time)**: `item_session_date_idx` on `session_date` field
 - **Impact**: 50-60% faster date-range queries
 - **Affected views**: heatmap, reconciliation, analytics
+- **Status**: `InvoiceItem.session_date` no longer exists as a direct field — session data is
+  now reached via the `session` FK to `Session` (`session__session_date`), and
+  `InvoiceItem.Meta.indexes` is empty today. This subsection is kept for historical record only;
+  there is no equivalent index to look up in the current migrations.
 
 ### N+1 Query Elimination
 
@@ -234,5 +245,5 @@ grown substantially since (1,400+ Django tests as of 2026-08; see [CODE_STRUCTUR
 
 ## Related Commits
 - Initial optimization: Query optimization with select_related/prefetch_related
-- Database indexes: Migration 0013 - Performance indexes
+- Database indexes: originally Migration 0013 (Performance indexes), now squashed into `0001_initial.py`
 - View helpers: Centralized year/date handling

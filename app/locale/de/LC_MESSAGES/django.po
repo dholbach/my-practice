@@ -180,6 +180,10 @@ msgstr "Status"
 msgid "Active"
 msgstr "Aktiv"
 
+#: my_practice/models/calendar.py:103
+msgid "Google Event ID"
+msgstr "Google Event ID"
+
 #: my_practice/admin.py:327 my_practice/models/calendar.py:52
 #: templates/my_practice/client_detail.html:11
 #: templates/my_practice/client_list_cards.html:42
@@ -6900,7 +6904,11 @@ msgstr "(ohne Beschreibung)"
 msgid "— Select source …"
 msgstr "— Quelle auswählen …"
 
-#: templates/my_practice/expense_list.html:6
+#: my_practice/models/financial.py:168
+msgid "Company Expense"
+msgstr "Unternehmensausgabe"
+
+#: my_practice/models/financial.py:169 templates/my_practice/expense_list.html:6
 #: templates/my_practice/expense_list.html:11
 msgid "Company Expenses"
 msgstr "Unternehmensausgaben"
@@ -8801,7 +8809,11 @@ msgstr "Entnahme vom %(date)s bearbeiten"
 msgid "Record a new withdrawal"
 msgstr "Neue Entnahme erfassen"
 
-#: templates/my_practice/withdrawal_list.html:2
+#: my_practice/models/financial.py:77
+msgid "Company Withdrawal"
+msgstr "Firmen-Entnahme"
+
+#: my_practice/models/financial.py:78 templates/my_practice/withdrawal_list.html:2
 #: templates/my_practice/withdrawal_list.html:4
 msgid "Company Withdrawals"
 msgstr "Firmen-Entnahmen"

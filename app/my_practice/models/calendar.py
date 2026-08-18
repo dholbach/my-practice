@@ -100,7 +100,7 @@ class PendingCalendarEvent(models.Model):
     google_event_id = models.CharField(
         max_length=255,
         unique=True,
-        verbose_name="Google Event ID",
+        verbose_name=_("Google Event ID"),
     )
     summary = models.CharField(max_length=500, verbose_name=_("Summary"))
     event_date = models.DateField(verbose_name=_("Date"))

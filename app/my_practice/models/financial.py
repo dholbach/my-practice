@@ -74,8 +74,8 @@ class CompanyWithdrawal(TimestampedModel):
 
     class Meta:
         ordering = ["-date"]
-        verbose_name = "Company Withdrawal / Entnahme"
-        verbose_name_plural = "Company Withdrawals / Entnahmen"
+        verbose_name = _("Company Withdrawal")
+        verbose_name_plural = _("Company Withdrawals")
         indexes = [
             models.Index(fields=["date"], name="withdrawal_date_idx"),
         ]
@@ -165,8 +165,8 @@ class CompanyExpense(TimestampedModel):
 
     class Meta:
         ordering = ["-date"]
-        verbose_name = "Company Expense / Ausgabe"
-        verbose_name_plural = "Company Expenses / Ausgaben"
+        verbose_name = _("Company Expense")
+        verbose_name_plural = _("Company Expenses")
         indexes = [
             models.Index(fields=["date"], name="expense_date_idx"),
             models.Index(fields=["category"], name="expense_category_idx"),
