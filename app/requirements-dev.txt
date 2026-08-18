@@ -25,7 +25,7 @@ google-auth-httplib2==0.4.1
 google-api-python-client==2.198.0
 
 # Async support (Django 5.1+)
-uvicorn==0.52.2
+uvicorn==0.52.3
 
 # Dev-only tools
 ruff==0.16.3
