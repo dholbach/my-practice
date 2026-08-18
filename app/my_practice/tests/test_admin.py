@@ -8,23 +8,58 @@ from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from my_practice.admin import (
+    BankTransactionAdmin,
+    ChecklistItemPauseAdmin,
     ClientAdmin,
+    ClientAliasAdmin,
+    ClientInquiryAdmin,
+    ClientNoteAdmin,
+    ClientProfileAdmin,
+    ClientTagAdmin,
     CompanyExpenseAdmin,
     CompanyWithdrawalAdmin,
+    ExpenseCategoryRuleAdmin,
+    GebuhZifferAdmin,
     InvoiceAdmin,
+    InvoiceItemAdmin,
     InvoiceItemAdminForm,
+    LeistungserfassungAdmin,
+    MarketingPeriodAdmin,
+    OperationalChecklistCompletionAdmin,
+    PendingCalendarEventAdmin,
     PracticeAdmin,
+    PracticeTodoAdmin,
     ServiceTypeAdmin,
+    SessionAdmin,
+    SessionLogAdmin,
+    SupervisionItemAdmin,
     TimeOffAdmin,
 )
 from my_practice.models import (
+    BankTransaction,
+    ChecklistItemPause,
     Client,
+    ClientAlias,
+    ClientInquiry,
+    ClientNote,
+    ClientProfile,
+    ClientTag,
     CompanyExpense,
     CompanyWithdrawal,
+    ExpenseCategoryRule,
+    GebuhZiffer,
     Invoice,
+    InvoiceItem,
+    Leistungserfassung,
+    MarketingPeriod,
+    OperationalChecklistCompletion,
+    PendingCalendarEvent,
     Practice,
+    PracticeTodo,
     ServiceType,
     Session,
+    SessionLog,
+    SupervisionItem,
     TimeOff,
 )
 
@@ -111,6 +146,120 @@ class AdminConfigTestCase(TestCase):
         self.assertIn("title", admin_instance.list_display)
         self.assertIn("start_date", admin_instance.list_display)
         self.assertIn("end_date", admin_instance.list_display)
+
+
+class RemainingAdminConfigTestCase(TestCase):
+    """Configuration smoke tests for the admin classes not covered above.
+
+    Mirrors AdminConfigTestCase's pattern: instantiate AdminClass(Model, site)
+    and check list_display/list_filter — catches typos/renames in field names
+    without needing DB fixtures.
+    """
+
+    def setUp(self):
+        self.site = AdminSite()
+
+    def test_client_alias_admin_registered(self):
+        admin_instance = ClientAliasAdmin(ClientAlias, self.site)
+        self.assertIn("alias_name", admin_instance.list_display)
+        self.assertIn("client_link", admin_instance.list_display)
+        self.assertIn("client", admin_instance.list_filter)
+
+    def test_client_inquiry_admin_registered(self):
+        admin_instance = ClientInquiryAdmin(ClientInquiry, self.site)
+        self.assertIn("full_name", admin_instance.list_display)
+        self.assertIn("status", admin_instance.list_display)
+        self.assertIn("status", admin_instance.list_filter)
+
+    def test_marketing_period_admin_registered(self):
+        admin_instance = MarketingPeriodAdmin(MarketingPeriod, self.site)
+        self.assertIn("description", admin_instance.list_display)
+        self.assertIn("is_active_badge", admin_instance.list_display)
+
+    def test_pending_calendar_event_admin_registered(self):
+        admin_instance = PendingCalendarEventAdmin(PendingCalendarEvent, self.site)
+        self.assertIn("status", admin_instance.list_display)
+        self.assertIn("status", admin_instance.list_filter)
+        self.assertIn("mark_pending", admin_instance.actions)
+        self.assertIn("mark_skipped", admin_instance.actions)
+
+    def test_expense_category_rule_admin_registered(self):
+        admin_instance = ExpenseCategoryRuleAdmin(ExpenseCategoryRule, self.site)
+        self.assertIn("match_key", admin_instance.list_display)
+        self.assertIn("category", admin_instance.list_filter)
+
+    def test_client_profile_admin_registered(self):
+        admin_instance = ClientProfileAdmin(ClientProfile, self.site)
+        self.assertIn("client", admin_instance.list_display)
+        self.assertIn("arbeitsdiagnose_preview", admin_instance.list_display)
+
+    def test_session_log_admin_registered(self):
+        admin_instance = SessionLogAdmin(SessionLog, self.site)
+        self.assertIn("session", admin_instance.list_display)
+        self.assertIn("session_type", admin_instance.list_filter)
+
+    def test_supervision_item_admin_registered(self):
+        admin_instance = SupervisionItemAdmin(SupervisionItem, self.site)
+        self.assertIn("client", admin_instance.list_display)
+        self.assertIn("status", admin_instance.list_display)
+
+    def test_client_note_admin_registered(self):
+        admin_instance = ClientNoteAdmin(ClientNote, self.site)
+        self.assertIn("client", admin_instance.list_display)
+        self.assertIn("note_date", admin_instance.list_display)
+
+    def test_invoice_item_admin_registered(self):
+        admin_instance = InvoiceItemAdmin(InvoiceItem, self.site)
+        self.assertIn("invoice", admin_instance.list_display)
+        self.assertIn("service_type", admin_instance.list_display)
+        self.assertEqual(admin_instance.form, InvoiceItemAdminForm)
+
+    def test_practice_todo_admin_registered(self):
+        admin_instance = PracticeTodoAdmin(PracticeTodo, self.site)
+        self.assertIn("title_display", admin_instance.list_display)
+        self.assertIn("mark_completed", admin_instance.actions)
+        self.assertIn("mark_incomplete", admin_instance.actions)
+        self.assertIn("set_high_priority", admin_instance.actions)
+
+    def test_client_tag_admin_registered(self):
+        admin_instance = ClientTagAdmin(ClientTag, self.site)
+        self.assertIn("name", admin_instance.list_display)
+        self.assertIn("category_badge", admin_instance.list_display)
+        self.assertIn("is_system", admin_instance.list_filter)
+
+    def test_bank_transaction_admin_registered(self):
+        admin_instance = BankTransactionAdmin(BankTransaction, self.site)
+        self.assertIn("transaction_date", admin_instance.list_display)
+        self.assertIn("matched_invoice_link", admin_instance.list_display)
+        self.assertIn("match_confidence", admin_instance.list_filter)
+
+    def test_session_admin_registered(self):
+        admin_instance = SessionAdmin(Session, self.site)
+        self.assertIn("client", admin_instance.list_display)
+        self.assertIn("has_log", admin_instance.list_display)
+        self.assertIn("has_invoice_item", admin_instance.list_display)
+
+    def test_gebuh_ziffer_admin_registered(self):
+        admin_instance = GebuhZifferAdmin(GebuhZiffer, self.site)
+        self.assertIn("nummer", admin_instance.list_display)
+        self.assertIn("sort_order", admin_instance.list_editable)
+
+    def test_leistungserfassung_admin_registered(self):
+        admin_instance = LeistungserfassungAdmin(Leistungserfassung, self.site)
+        self.assertIn("session", admin_instance.list_display)
+        self.assertIn("ziffer", admin_instance.list_display)
+
+    def test_operational_checklist_completion_admin_registered(self):
+        admin_instance = OperationalChecklistCompletionAdmin(
+            OperationalChecklistCompletion, self.site
+        )
+        self.assertIn("checklist_type", admin_instance.list_display)
+        self.assertIn("year_month", admin_instance.list_display)
+
+    def test_checklist_item_pause_admin_registered(self):
+        admin_instance = ChecklistItemPauseAdmin(ChecklistItemPause, self.site)
+        self.assertIn("checklist_type", admin_instance.list_display)
+        self.assertIn("is_active", admin_instance.list_display)
 
 
 class AdminDisplayMethodsTestCase(TestCase):
