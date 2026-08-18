@@ -146,7 +146,7 @@ class ExpenseCreateView(PracticeScopedCreateView):
     form_class = CompanyExpenseForm
     template_name = "my_practice/expense_form.html"
     success_url = reverse_lazy("expense_list")
-    success_message = "Ausgabe vom {obj.date:%d.%m.%Y} erfolgreich erstellt."
+    success_message = gettext_lazy("Expense from {obj.date:%d.%m.%Y} created successfully.")
 
 # ?next= redirect support (success_url honors ?next=, exposes context["next"])
 class ExpenseDeleteView(NextRedirectMixin, PracticeScopedDeleteView):

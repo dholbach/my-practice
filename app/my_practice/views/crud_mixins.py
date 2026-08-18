@@ -173,7 +173,7 @@ class PracticeScopedCreateView(LoginRequiredMixin, CreateView):
             form_class = ClientForm
             template_name = "my_practice/client_form.html"
             success_url = reverse_lazy("client_list")
-            success_message = "Client {obj.full_name} created successfully!"
+            success_message = gettext_lazy("Client {obj.full_name} created successfully!")
     """
 
     success_message: str | None = None  # Override in subclass, supports .format(obj=instance)
@@ -208,7 +208,7 @@ class PracticeScopedUpdateView(LoginRequiredMixin, UpdateView):
             form_class = ClientForm
             template_name = "my_practice/client_form.html"
             success_url = reverse_lazy("client_list")
-            success_message = "Client {obj.full_name} updated successfully!"
+            success_message = gettext_lazy("Client {obj.full_name} updated successfully!")
     """
 
     success_message: str | None = None  # Override in subclass, supports .format(obj=instance)
@@ -249,7 +249,7 @@ class PracticeScopedDeleteView(LoginRequiredMixin, DeleteView):
             template_name = "my_practice/expense_confirm_delete.html"
             success_url = reverse_lazy("expense_list")
             context_object_name = "expense"
-            success_message = "Ausgabe vom {obj.date:%d.%m.%Y} gelöscht."
+            success_message = gettext_lazy("Expense from {obj.date:%d.%m.%Y} deleted successfully.")
     """
 
     success_message: str | None = None

@@ -2,6 +2,7 @@
 Google Calendar API utilities for OAuth2 and event parsing.
 """
 
+import logging
 from datetime import datetime
 from typing import cast
 
@@ -12,6 +13,8 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
 from ..models import Client, GoogleCalendarToken, ServiceType
+
+logger = logging.getLogger(__name__)
 
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
@@ -150,9 +153,6 @@ class GoogleCalendarOAuth:
                     # has been revoked (Google limits unverified-app refresh tokens
                     # to 7 days).  Leave the token active so subsequent runs report
                     # the same clear error rather than "no active tokens found".
-                    import logging
-
-                    logger = logging.getLogger(__name__)
                     logger.error(f"Token refresh failed: {e}")
                     return None
 
@@ -384,6 +384,9 @@ def find_calendar_by_name(service, calendar_name: str) -> str | None:
             if calendar_entry.get("summary", "").lower() == calendar_name_lower:
                 return cast(str, calendar_entry["id"])
     except Exception:
-        pass
+        # Distinguish "API call failed" from "no calendar with that name" in logs —
+        # the caller treats both the same (falls back to the primary calendar), but
+        # only the former is worth investigating.
+        logger.exception("Failed to list calendars while looking up '%s'", calendar_name)
 
     return None

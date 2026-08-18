@@ -5,12 +5,15 @@ Handles event fetching, pagination, duplicate detection, session-cache
 serialization and rehydration — so calendar_views can focus on HTTP.
 """
 
+import logging
 from datetime import datetime, timedelta
 
 from django.utils import timezone
 
 from ..models import Client, InvoiceItem, PendingCalendarEvent, ServiceType
 from .google_calendar import CalendarEventParser
+
+logger = logging.getLogger(__name__)
 
 
 class CalendarImportProcessor:
@@ -180,7 +183,7 @@ class CalendarImportProcessor:
                 event = service.events().get(calendarId=calendar_id, eventId=event_id).execute()
                 fetched.append(event)
             except Exception:
-                pass  # Skip events that can't be fetched
+                logger.warning("Could not fetch calendar event %s; skipping", event_id)
         return CalendarEventParser.parse_events(fetched)
 
 

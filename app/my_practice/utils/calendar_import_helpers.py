@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 
-from ..models import Client, Invoice, InvoiceItem, ServiceType
+from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, ServiceType
 from ..models import Session
 from ..utils import get_next_invoice_number, sync_no_next_session_tag
 from .billing_helpers import resolve_session_rate
@@ -264,7 +264,7 @@ def bill_session(session: "Session", practice) -> tuple[bool, str]:
         pce = session.pending_calendar_event
         if pce and pce.suggested_service_type:
             service_type = pce.suggested_service_type
-    except Exception:
+    except PendingCalendarEvent.DoesNotExist:
         pass
 
     if service_type is None:
@@ -291,12 +291,6 @@ def bill_session(session: "Session", practice) -> tuple[bool, str]:
     try:
         with transaction.atomic():
             invoice = get_or_create_invoice_for_month(client, session_dt)
-            try:
-                pce = session.pending_calendar_event
-                if pce:
-                    pass
-            except Exception:
-                pass
 
             InvoiceItem.objects.create(
                 invoice=invoice,
