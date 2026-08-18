@@ -127,7 +127,7 @@
                 <div class="invoice-info">
                     <span class="invoice-number">{{ invoice.invoice_number }}</span>
                     <span class="invoice-client sensitive-data">{{ invoice.client.full_name }}</span>
-                    <span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display }}</span>
+                    {% include 'includes/invoice_status_badge.html' with invoice=invoice static_only=True %}
                 </div>
                 <div class="invoice-amount">{{ invoice.total|currency }}</div>
             </div>

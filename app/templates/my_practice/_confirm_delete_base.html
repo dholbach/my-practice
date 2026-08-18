@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{# Shared wrapper for delete-confirmation pages. Child templates provide: #}
+{#   title (block, also used for <title>), heading (block, h1 text) #}
+{#   warning_text (block, required), warning_subtext (block, optional) #}
+{#   detail_rows (block, required — the field-by-field summary) #}
+{#   cancel_url (block, required) #}
+{# The {% if next %} hidden field is always present — a no-op when the view #}
+{# doesn't pass `next` (not every delete view uses NextRedirectMixin). #}
+
+{% block content %}
+<div class="mx-auto max-w-[600px] p-2.5 sm:p-5">
+    <h1>🗑️ {% block heading %}{% endblock %}</h1>
+
+    <div class="bg-surface border border-border rounded-lg p-5 sm:p-8 shadow">
+        <div class="flex flex-col items-center p-5 bg-red-600/10 border-2 border-red-600 rounded-lg mb-8">
+            <span class="text-5xl mb-2.5">⚠️</span>
+            <p class="m-0 text-lg font-semibold text-center">{% block warning_text %}{% endblock %}</p>
+            {% block warning_subtext %}{% endblock %}
+        </div>
+
+        <div class="mb-8">
+            {% block detail_rows %}{% endblock %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <div class="flex flex-col sm:flex-row gap-4 justify-center pt-5 border-t border-border">
+                <button type="submit" class="btn-danger w-full sm:w-auto">{% trans "Yes, delete" %}</button>
+                <a href="{% block cancel_url %}{% endblock %}" class="btn-secondary w-full sm:w-auto">{% trans "Cancel" %}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

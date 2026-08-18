@@ -106,7 +106,7 @@
                     <a href="{% url 'invoice_detail' row.primary_invoice.pk %}">
                         {{ row.primary_invoice.invoice_number }}
                     </a>
-                    <span class="status-badge {{ row.primary_invoice.status }}">{{ row.primary_invoice.get_status_display|upper }}</span>
+                    {% include 'includes/invoice_status_badge.html' with invoice=row.primary_invoice static_only=True %}
                     {% if row.invoices|length > 1 %}
                     <span class="text-muted" title="{% blocktrans with count=row.invoices|length %}{{ count }} invoices{% endblocktrans %}">+{{ row.invoices|length|add:"-1" }}</span>
                     {% endif %}
