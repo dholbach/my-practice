@@ -168,6 +168,9 @@ class ClientInquiry(TimestampedModel):
         ordering = ["-inquiry_date", "-created_at"]
         verbose_name = _("Inquiry")
         verbose_name_plural = _("Inquiries")
+        indexes = [
+            models.Index(fields=["status"], name="inquiry_status_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.full_name} ({self.get_status_display()})"
