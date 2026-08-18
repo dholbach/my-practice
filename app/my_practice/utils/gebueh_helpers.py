@@ -4,14 +4,14 @@ GebüH billing helpers shared between the PDF API view and the invoice detail vi
 
 from decimal import Decimal
 
-from ..models import Client, Invoice
+from ..models import Client, ClientProfile, Invoice
 
 
 def get_arbeitsdiagnose(client: Client) -> str:
     """Return the Arbeitsdiagnose from ClientProfile, or empty string if not set."""
     try:
         return client.profile.arbeitsdiagnose or ""
-    except Exception:
+    except ClientProfile.DoesNotExist:
         return ""
 
 
