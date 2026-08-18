@@ -510,7 +510,7 @@ class BankStatementImporter:
 
             parsed = self.parse_csv_row(row)
             if not parsed:
-                self.results["errors"].append(f"Failed to parse row: {row}")
+                self.results["errors"].append(_("Failed to parse row: %(row)s") % {"row": row})
                 continue
 
             payer_name_lower = parsed["payer_name"].lower().strip()
