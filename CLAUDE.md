@@ -42,7 +42,7 @@ Therapy practice payment/invoicing system built with Django, PostgreSQL, running
 - Don't leave dead context variables (e.g. a template context key no template references) as a shortcut to avoid wrapping a string — delete unused code per the no-dead-code rule instead.
 - After changing templates or Python user-facing strings, run `./dev.py i18n` (extracts + compiles). **Check the diff of `locale/de/LC_MESSAGES/django.po` for `#, fuzzy` entries and for new msgids with an empty `msgstr ""`** — `makemessages` guesses a translation from a similarly-worded existing msgid when a string is new (frequently wrong — fix and un-fuzzy it), and leaves genuinely novel strings with no guess at all (empty, no warning). Both need a real German translation before committing. `en.po` msgstrs are deliberately left empty across the board — gettext falls back to the (English) msgid, which is already correct, so there's nothing to fill in there.
 
-See [PROJECTS.md](../PROJECTS.md) for numbered projects with status tracking (TODO/WIP/DONE).
+See [PROJECTS.md](PROJECTS.md) for numbered projects with status tracking (TODO/WIP/DONE).
 
 ## Development Commands (use `./dev.py` for everything)
 ```bash

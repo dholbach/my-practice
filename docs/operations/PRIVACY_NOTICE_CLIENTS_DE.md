@@ -161,4 +161,4 @@ Anfragen richten Sie bitte direkt an die Praxis.
 
 ---
 
-*Dieses Dokument basiert auf dem internen Datenschutzverzeichnis der Praxis ([DATA_REGISTER.md](DATA_REGISTER.md)) und dem DSFA ([DPIA.md](DPIA.md)).*
+*Dieses Dokument basiert auf dem internen Datenschutzverzeichnis der Praxis ([DATA_REGISTER.md](DATA_REGISTER.md)) und dem DSFA ([DPIA-template.md](DPIA-template.md)).*

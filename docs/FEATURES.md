@@ -63,7 +63,7 @@ chronological record; this document only tracks current state.
 - ✅ Client classification (Probatoric/Active/Established/Dormant)
 - ✅ First seen date tracking (Ersttermin)
 - ✅ Client detail Zeitraum card shows session-based date range; collapses to single month when all sessions fall in the same month; "seit …" only shown for genuinely active clients
-- ✅ Client tagging system — manual tags + auto-managed system tags (`no-next-session`, `incomplete-intake`, `missing-session-log`)
+- ✅ Client tagging system — manual tags + auto-managed system tags (`no-next-session`, `incomplete-intake`)
 - ✅ System tags automatically stripped from inactive clients on each `update_client_tags` run
 - ✅ `no-next-session` tag correctly suppressed when Google-Cal-imported sessions exist but are not yet invoiced
 - ✅ "Sammelrechnung" quick-action button on client detail when unbilled sessions exist — links to batch invoice pre-filtered to the relevant month
@@ -111,7 +111,6 @@ chronological record; this document only tracks current state.
 - ✅ Service type classification
 - ✅ Cancellation tracking (`Session.cancelled` field — source of truth for capacity analytics)
 - ✅ Group session support (`Session.group_size` — therapist-hour normalisation)
-- ✅ Session-to-invoice reconciliation
 - ✅ Short sessions (e.g. 15-min Check-In) billed pro-rata from the 60-min rate (`hourly_rate_60 * duration/60`) instead of the full hourly rate; 90-min+ sessions keep their own negotiated flat rate
 - ✅ Billable toggle (`Session.billable`) — excludes intro calls or non-billable sessions from all billing calculations; toggle button in protocol tab
 - ✅ Interactive heatmap visualization
@@ -166,7 +165,6 @@ chronological record; this document only tracks current state.
 - ✅ Annual tax settlement (Steuerbescheid) tracking on the quarterly tax page
 - ✅ Revenue Report with filters
 - ✅ Client detail reports
-- ✅ Session reconciliation report
 
 ### Client Inquiries & Lead Tracking
 
@@ -332,7 +330,7 @@ chronological record; this document only tracks current state.
 - ✅ EMAIL_IMPLEMENTATION.md
 - ✅ BACKUP_SETUP.md
 - ✅ SECURITY.md
-- ✅ [P-042 Multi-practice tax allocation](../projects/done/P-042_TAX_MULTI_PRACTICE_ALLOCATION.md) — guide + in-app split calculator for splitting daily pauschalen across multiple EÜR
+- ✅ [P-042 Multi-practice tax allocation](projects/done/P-042_TAX_MULTI_PRACTICE_ALLOCATION.md) — guide + in-app split calculator for splitting daily pauschalen across multiple EÜR
 
 ### Developer Documentation
 - ✅ CHANGELOG.md (comprehensive)

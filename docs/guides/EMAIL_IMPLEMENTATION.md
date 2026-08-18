@@ -1,6 +1,8 @@
 # Email Feature Implementation - Session Summary
 **Date:** December 18, 2025
 
+> **Historical snapshot** — this describes the codebase as it was on the date above (e.g. `models.py`/`admin.py` were still single files; both are packages now). Treat file paths here as historical, not current — see [CODE_STRUCTURE.md](../architecture/CODE_STRUCTURE.md) for the current layout.
+
 ## Overview
 Complete implementation of invoice email sending functionality with Proton Bridge SMTP integration.
 

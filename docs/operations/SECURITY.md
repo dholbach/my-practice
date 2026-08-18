@@ -157,7 +157,7 @@ server {
 
 ## Backup & Disaster Recovery
 
-See [BACKUP_SETUP.md](BACKUP_SETUP.md) for:
+See [BACKUP_SETUP.md](../guides/BACKUP_SETUP.md) for:
 - Automatic backups (DB + media)
 - Retention policy (30 days rolling)
 - Restore process
@@ -173,8 +173,8 @@ Run periodically:
 # Python dependency check
 pip list --outdated
 
-# Database integrity
-./dev.py manage verify_session_alignment
+# Database integrity (dry run — reports without deleting)
+./dev.py manage remove_financial_duplicates --dry-run
 ```
 
 ## Further Resources

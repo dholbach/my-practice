@@ -159,4 +159,4 @@ Please direct any requests directly to the practice.
 
 ---
 
-*This document is based on the practice's internal data register ([DATA_REGISTER.md](DATA_REGISTER.md)) and DPIA ([DPIA.md](DPIA.md)).*
+*This document is based on the practice's internal data register ([DATA_REGISTER.md](DATA_REGISTER.md)) and DPIA ([DPIA-template.md](DPIA-template.md)).*

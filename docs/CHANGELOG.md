@@ -761,7 +761,7 @@ Major features and milestones in chronological order.
 - Better documentation organization
 - Easier onboarding for future developers
 
-**See:** [docs/CLEANUP_2026-01-31.md](CLEANUP_2026-01-31.md) for complete details
+**See:** docs/CLEANUP_2026-01-31.md for complete details (superseded/removed since — see git history if needed)
 
 ---
 
@@ -1907,7 +1907,7 @@ new ChartBuilder(canvas)
 - **Salutation Warnings**: UI hints when client has no custom salutation set
 - **Imported Client Detection**: Warnings for placeholder data (Klient XX, xx@example.com)
 - **Development Tool**: `./dev.py restart --force` for .env variable reload
-- **See**: [EMAIL_IMPLEMENTATION.md](EMAIL_IMPLEMENTATION.md) for full details
+- **See**: [EMAIL_IMPLEMENTATION.md](guides/EMAIL_IMPLEMENTATION.md) for full details
 
 ### Financial Accuracy Fix (Dec 18)
 - **Profit Calculation Standardization**: Dashboard now matches Analytics

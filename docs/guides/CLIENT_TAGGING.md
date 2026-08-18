@@ -1,6 +1,6 @@
 # Client Tagging System - User Guide
 
-**Last Updated**: 2 February 2026
+**Last Updated**: 17 August 2026
 
 ## Overview
 
@@ -22,6 +22,10 @@ Create tags for different purposes:
   - Invoice in the last 90 days (recently active)
   - NO future sessions scheduled
   - Helps with follow-up scheduling
+- **`incomplete-intake`**: Automatically applied once intake has started but isn't finished
+  - Onboarding started (intake sent, contract signed, etc.)
+  - `onboarding_complete_date` still unset
+  - Helps surface clients stuck mid-intake
 
 ---
 
@@ -140,20 +144,21 @@ static/css/
 
 ### Model
 ```python
-class ClientTag(models.Model):
+class ClientTag(TimestampedModel):
     name = models.CharField(max_length=50, unique=True)
     slug = models.SlugField(max_length=50, unique=True)
-    color = models.CharField(max_length=20, choices=COLOR_CHOICES)
+    color = models.CharField(max_length=20, choices=TAG_COLORS)
+    category = models.CharField(max_length=20, choices=TAG_CATEGORIES)  # general / attention / exit
     description = models.TextField(blank=True)
-    is_system_tag = models.BooleanField(default=False)
+    is_system = models.BooleanField(default=False)
 ```
 
-### Management Command
-```python
-# Create default tags
-./dev.py manage create_default_tags
+### Commands
+```bash
+# Seed the default tag set (standalone script, not a management command)
+./dev.py run scripts/create_default_tags.py
 
-# Update automatic tags
+# Update automatic tags (no-next-session, incomplete-intake)
 ./dev.py manage update_client_tags
 ```
 
