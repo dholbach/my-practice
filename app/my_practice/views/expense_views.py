@@ -291,7 +291,7 @@ def expense_merge(request: HttpRequest, pk: int) -> HttpResponse:
     target = get_object_or_403(CompanyExpense, request, pk=pk)
 
     source_pk = request.POST.get("source_id")
-    source = get_object_or_404(CompanyExpense, pk=source_pk, practice=request.current_practice)
+    source = get_object_or_404(CompanyExpense.objects.for_current_practice(request), pk=source_pk)
 
     if source.pk == target.pk:
         messages.error(request, _("Source and target must not be identical."))

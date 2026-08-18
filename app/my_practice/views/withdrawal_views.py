@@ -35,8 +35,7 @@ def withdrawal_list(request: HttpRequest) -> HttpResponse:
 
     # Incoming / adjustments come from the full queryset with the same year filter
     incoming_qs = all_qs.filter(category__in=CompanyWithdrawal.INCOMING_CATEGORIES)
-    if year_filter:
-        incoming_qs = incoming_qs.filter(date__year=year_filter)
+    incoming_qs = FinancialListContextBuilder.apply_year_filter(incoming_qs, year_filter)
     incoming = incoming_qs.order_by("-date")
 
     outgoing_total = outgoing.aggregate(t=Sum("amount"))["t"] or 0

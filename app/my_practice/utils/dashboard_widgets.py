@@ -122,8 +122,11 @@ class InvoiceActionsWidgetBuilder:
         invoice_unpaid materialized task.
         """
         today = today or timezone.localdate()
-        cutoff_date = today - timedelta(days=self.practice.overdue_after_days)
-        return [inv for inv in self._get_unpaid_invoices() if inv.invoice_date < cutoff_date]
+        return [
+            inv
+            for inv in self._get_unpaid_invoices()
+            if Invoice.days_overdue(inv.invoice_date, today) > self.practice.overdue_after_days
+        ]
 
     def build_context(self) -> dict:
         """
