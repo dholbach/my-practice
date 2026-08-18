@@ -183,9 +183,7 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
         if not parsed_events:
             service = GoogleCalendarOAuth.get_service()
             if not service:
-                return JsonResponse(
-                    {"error": _("Google Calendar not connected")}, status=401
-                )
+                return JsonResponse({"error": _("Google Calendar not connected")}, status=401)
             praxis_calendar_id = find_calendar_by_name(service, "Praxis")
             if not praxis_calendar_id:
                 return JsonResponse({"error": _("Calendar 'Praxis' not found")}, status=404)
