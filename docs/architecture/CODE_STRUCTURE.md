@@ -1,6 +1,6 @@
 # my_practice — Code Structure
 
-**Last updated: 2026-08-10**
+**Last updated: 2026-08-17**
 
 ## Overview
 
@@ -9,8 +9,34 @@ The application was refactored from a monolithic `views.py` into a modular struc
 ## Directory Structure
 
 ```
+app/
+├── my_practice/
+├── static/                     # See "Static assets" below — sibling of my_practice/, not nested in it
+├── templates/                   # Sibling of my_practice/ too
+└── ...
+
 app/my_practice/
-├── models/                     # Domain models package (17 modules)
+├── admin/                       # Admin package (18 modules), mirrors models/ 1:1
+│   ├── __init__.py             # Imports every submodule (registers @admin.register) + re-exports
+│   ├── bank_statement.py       # BankTransactionAdmin
+│   ├── calendar.py             # PendingCalendarEventAdmin
+│   ├── client.py               # ClientAdmin
+│   ├── client_alias.py         # ClientAliasAdmin
+│   ├── clinical.py             # ClientProfileAdmin, SessionLogAdmin, SupervisionItemAdmin, ClientNoteAdmin
+│   ├── expense_category_rule.py # ExpenseCategoryRuleAdmin
+│   ├── financial.py            # CompanyWithdrawalAdmin, CompanyExpenseAdmin
+│   ├── gebueh.py               # GebuhZifferAdmin, LeistungserfassungAdmin
+│   ├── inquiry.py              # ClientInquiryAdmin, MarketingPeriodAdmin
+│   ├── invoice.py              # InvoiceAdmin, InvoiceItemAdmin
+│   ├── operational.py          # OperationalChecklistCompletionAdmin, ChecklistItemPauseAdmin
+│   ├── practice.py             # PracticeAdmin
+│   ├── service.py              # ServiceTypeAdmin
+│   ├── session.py              # SessionAdmin
+│   ├── tag.py                  # ClientTagAdmin
+│   ├── timeoff.py              # TimeOffAdmin
+│   └── todo.py                 # PracticeTodoAdmin
+│
+├── models/                     # Domain models package (18 modules)
 │   ├── __init__.py            # Package exports with __all__
 │   ├── base.py                # TimestampedModel base class, PracticeScopedManager
 │   ├── bank_statement.py      # BankTransaction
@@ -18,6 +44,7 @@ app/my_practice/
 │   ├── client.py              # Client management
 │   ├── client_alias.py        # ClientAlias / search name
 │   ├── clinical.py            # ClientProfile, SessionLog, SupervisionItem, ClientNote
+│   ├── expense_category_rule.py # ExpenseCategoryRule — learned counterparty→category mapping
 │   ├── financial.py           # CompanyWithdrawal, CompanyExpense
 │   ├── gebueh.py              # GebuhZiffer, Leistungserfassung (P-046)
 │   ├── inquiry.py             # ClientInquiry lead tracking
@@ -104,17 +131,20 @@ app/my_practice/
 ├── management/
 │   └── commands/              # Management commands (see docs/operations/SCRIPTS.md)
 │
-├── tests/                      # Test suite (1,400+ tests)
-│   └── ...                    # One file per module; see test_*.py files
-│
-├── static/
-│   ├── js/
-│   │   ├── charts/            # Modular vanilla-JS chart system (11 modules)
-│   │   └── tests/             # JavaScript test suite
-│   └── css/
-│       ├── tailwind.css       # Single CSS source — all styles live here
-│       └── tailwind.out.css   # Compiled output (gitignored)
-└── ...
+└── tests/                      # Test suite (1,400+ tests)
+    └── ...                    # One file per module; see test_*.py files
+```
+
+### Static assets (`app/static/`, sibling of `app/my_practice/`)
+
+```
+app/static/
+├── js/
+│   ├── charts/                # Modular vanilla-JS chart system (10 modules)
+│   └── tests/                 # JavaScript test suite
+└── css/
+    ├── tailwind.css            # Single CSS source — all styles live here
+    └── tailwind.out.css        # Compiled output (gitignored)
 ```
 
 ## Key Architectural Patterns

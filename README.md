@@ -110,7 +110,7 @@ Full feature list: [docs/FEATURES.md](docs/FEATURES.md)
 
 ## Architecture
 
-A conventional Django 6 monolith backed by PostgreSQL (psycopg3, async-capable), ~950 tests, no external services required beyond the database. A few non-obvious choices:
+A conventional Django 6 monolith backed by PostgreSQL (psycopg3, async-capable), 1,400+ tests, no external services required beyond the database. A few non-obvious choices:
 
 **Encrypted clinical fields**  
 Session notes and sensitive client data use a custom [`EncryptedTextField`](app/my_practice/fields.py) backed by Fernet symmetric encryption (`cryptography` library). The key lives in `FERNET_KEY` (env var), separate from the LUKS full-disk-encryption key — two independent keys, two independent attack surfaces. A plain SQL `SELECT` on an encrypted column returns `gAAAAA...` ciphertext; the ORM is the only path to plaintext. Trade-off: no `.filter()`/`.exclude()` on encrypted columns — navigate clinical records by client, date, and tags instead.

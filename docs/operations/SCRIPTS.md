@@ -141,4 +141,4 @@ In an emergency (e.g. data loss):
 - **Before Django migrations**: Create a backup
 - **Test regularly**: Perform a restore on a test system monthly
 - **Monitoring**: Check `backups/backup.log` for errors
-- **Retention**: Default 30 days, configurable in `backup.sh` (line 67)
+- **Retention**: Default 30 days, configurable in `backup.sh` (line 95, `-mtime +30`)
