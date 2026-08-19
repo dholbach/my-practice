@@ -12,6 +12,16 @@
 (function () {
     "use strict";
 
+    /* Translated strings come from data-* attributes on this file's own <script>
+       tag (see bank_review.html), so they stay inside the template surface the
+       i18n coverage guardrail actually scans. Looked up lazily: the script runs
+       before DOMContentLoaded, and document.currentScript is null by the time
+       the tally callbacks fire. */
+    function i18n() {
+        const tag = document.getElementById("bank-review-js");
+        return tag ? tag.dataset : {};
+    }
+
     function parseOptionAmount(optionText) {
         // Extract the amount from "XX-1 (2025-12-15): 1 234.56 €"
         const match = optionText.match(/:\s*([\d\s]+\.?\d*)\s*€\s*$/);
@@ -60,20 +70,21 @@
         if (!isNaN(transactionAmount)) {
             if (matches) {
                 icon = "✅";
-                extraInfo = " — passt zur Transaktion";
+                extraInfo = ` — ${i18n().tallyMatches}`;
             } else {
                 const diffFormatted = formatAmount(Math.abs(total - transactionAmount));
                 const sign = total > transactionAmount ? "+" : "−";
                 icon = "⚠️";
-                extraInfo = ` — Differenz: ${sign}${diffFormatted} €`;
+                extraInfo = ` — ${i18n().tallyDifference} ${sign}${diffFormatted} €`;
             }
         } else {
             icon = "📊";
             extraInfo = "";
         }
 
-        const countLabel =
-            selected.length === 1 ? "1 Rechnung" : `${selected.length} Rechnungen`;
+        const noun =
+            selected.length === 1 ? i18n().tallyInvoice : i18n().tallyInvoices;
+        const countLabel = `${selected.length} ${noun}`;
 
         tally.innerHTML = `${icon} <strong>${countLabel}:</strong> ${formattedTotal} €<span style="font-size:0.8em;opacity:0.85;">${extraInfo}</span>`;
         tally.style.display = "block";

@@ -338,5 +338,12 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/bank_review.js' %}"></script>
+{# The tally strings live here rather than in the .js: the i18n coverage guardrail
+   only scans templates, so a translated string hardcoded in JS goes unnoticed. #}
+<script src="{% static 'js/bank_review.js' %}"
+        id="bank-review-js"
+        data-tally-matches="{% trans "matches the transaction" %}"
+        data-tally-difference="{% trans "Difference:" %}"
+        data-tally-invoice="{% trans "Invoice" %}"
+        data-tally-invoices="{% trans "Invoices" %}"></script>
 {% endblock %}
