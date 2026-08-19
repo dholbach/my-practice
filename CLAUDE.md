@@ -288,6 +288,16 @@ Long-text forms (session logs, case notes) lose typed content if the user accide
 - Warns via the native `beforeunload` dialog while the form is dirty and unsubmitted
 - Clears the draft on successful submit
 - The three `data-draft-*` label strings are reused verbatim across forms (see `session_log_form.html`, `client_detail.html`) — reuse the same msgids rather than minting new ones
+- Emits a bubbling `draftguard:dirty` CustomEvent on the form whenever its dirty state flips, with `event.detail.dirty` as a boolean. Use it when the form can be scrolled or tabbed out of view, since `beforeunload` alone can't tell the user *where* the unsaved edit is. `client_detail.html` listens for it and toggles `.page-tab-btn--dirty` (a dot indicator, `tailwind.css`) plus a "Unsaved changes" `title` on the owning tab button:
+
+```javascript
+document.addEventListener('draftguard:dirty', function (e) {
+    const tabContent = e.target.closest('.page-tab-content');
+    if (!tabContent) return;
+    const btn = document.querySelector('.page-tab-btn[data-tab="' + tabContent.id.replace('ptab-', '') + '"]');
+    if (btn) btn.classList.toggle('page-tab-btn--dirty', e.detail.dirty);
+});
+```
 
 ## Code Style & Patterns
 
