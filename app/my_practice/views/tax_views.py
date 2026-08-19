@@ -5,6 +5,7 @@ Tax year summary view - provides comprehensive financial overview for tax purpos
 from decimal import Decimal
 from typing import cast
 
+from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -13,6 +14,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 
+from ..forms import TaxYearNoteForm
 from ..models import CompanyExpense, CompanyWithdrawal, TaxYearNote
 from ..utils import DateRangeHelper, RevenueCalculator, TaxYearContextBuilder
 from ..utils.tax_context_builder import available_data_years
@@ -55,6 +57,8 @@ def save_tax_year_note(request: HttpRequest) -> JsonResponse:
     if not (1900 <= year <= 2100):
         return JsonResponse({"error": _("Invalid year")}, status=400)
 
+    note_form = TaxYearNoteForm()
+
     defaults: dict = {}
     if "note" in request.POST:
         defaults["allocation_note"] = request.POST.get("note", "").strip()
@@ -62,21 +66,19 @@ def save_tax_year_note(request: HttpRequest) -> JsonResponse:
     raw_amount = request.POST.get("settlement_amount", "").strip()
     if raw_amount != "":
         try:
-            from decimal import Decimal, InvalidOperation
-
-            defaults["settlement_amount"] = Decimal(raw_amount.replace(",", "."))
-        except InvalidOperation:
+            defaults["settlement_amount"] = note_form.fields["settlement_amount"].clean(
+                raw_amount.replace(",", ".")
+            )
+        except ValidationError:
             return JsonResponse({"error": _("Invalid amount")}, status=400)
     elif "settlement_amount" in request.POST:
         defaults["settlement_amount"] = None
 
     raw_date = request.POST.get("settlement_date", "").strip()
     if raw_date != "":
-        from datetime import date as _date
-
         try:
-            defaults["settlement_date"] = _date.fromisoformat(raw_date)
-        except ValueError:
+            defaults["settlement_date"] = note_form.fields["settlement_date"].clean(raw_date)
+        except ValidationError:
             return JsonResponse({"error": _("Invalid date")}, status=400)
     elif "settlement_date" in request.POST:
         defaults["settlement_date"] = None
