@@ -385,8 +385,8 @@ msgstr "Für aktuelles Steuerjahr markieren"
 #, python-format
 msgid "%(count)s withdrawal found for tax year %(year)s."
 msgid_plural "%(count)s withdrawals found for tax year %(year)s."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(count)s Entnahme für Steuerjahr %(year)s gefunden."
+msgstr[1] "%(count)s Entnahmen für Steuerjahr %(year)s gefunden."
 
 #: my_practice/admin.py:778
 msgid "Mark as tax deductible"
@@ -2993,6 +2993,11 @@ msgstr "Gruppensitzungen"
 msgid "Wrong account: the CSV file belongs to IBAN %(csv_iban)s, expected the practice IBAN %(practice_iban)s. Import aborted."
 msgstr "Falsches Konto: Die CSV-Datei gehört zu IBAN %(csv_iban)s, erwartet wird die Praxis-IBAN %(practice_iban)s. Import abgebrochen."
 
+#: my_practice/utils/bank_import.py:513
+#, python-format
+msgid "Failed to parse row: %(row)s"
+msgstr "Zeile konnte nicht verarbeitet werden: %(row)s"
+
 #: my_practice/utils/calendar_import_helpers.py:28
 #, python-format
 msgid "Client ID %(id)s not found for event %(summary)s"
@@ -3827,6 +3832,38 @@ msgstr "Vorgespräch → Entscheidung"
 #: my_practice/views/inquiry_views.py:256
 msgid "Decision → onboarded"
 msgstr "Entscheidung → Aufgenommen"
+
+#: my_practice/views/inquiry_views.py:45
+msgid "Acknowledge receipt"
+msgstr "Eingangsbestätigung"
+
+#: my_practice/views/inquiry_views.py:77
+msgid "Propose intro meeting"
+msgstr "Terminvorschlag Vorgespräch"
+
+#: my_practice/views/inquiry_views.py:93
+msgid "After intro meeting"
+msgstr "Nach dem Vorgespräch"
+
+#: my_practice/views/inquiry_views.py:106
+msgid "Waitlist spot available"
+msgstr "Platz frei — Wartelistenmeldung"
+
+#: my_practice/views/inquiry_views.py:118
+msgid "Intake documents"
+msgstr "Aufnahme — Unterlagen"
+
+#: my_practice/views/inquiry_views.py:131
+msgid "Friendly decline"
+msgstr "Freundliche Absage"
+
+#: my_practice/views/inquiry_views.py:147
+msgid "Friendly decline (not a match)"
+msgstr "Freundliche Absage (kein Match)"
+
+#: my_practice/views/inquiry_views.py:163
+msgid "Closing — unreachable"
+msgstr "Abschluss — nicht erreichbar"
 
 #: my_practice/views/inquiry_views.py:375
 msgid "Waitlist / intake"

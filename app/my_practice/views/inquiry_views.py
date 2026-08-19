@@ -2,7 +2,7 @@
 
 from datetime import date, timedelta
 from itertools import groupby
-from typing import cast
+from typing import Any, cast
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -36,10 +36,13 @@ from .crud_mixins import (
 # Source display labels keyed by value — used in analytics
 _SOURCE_LABELS = dict(ClientInquiry._meta.get_field("source").choices)
 
-# Stage-appropriate copy-paste email templates (P-037 Ph-3)
-_STAGE_EMAIL_TEMPLATES: dict[str, dict[str, str]] = {
+# Stage-appropriate copy-paste email templates (P-037 Ph-3).
+# "label" is UI chrome (the template picker), translated via gettext_lazy; subject/body/
+# subject_en/body_en are authored bilingual email content per client-language, not
+# Django-i18n UI text — same exemption as utils/email_utils.py (see CLAUDE.md i18n rules).
+_STAGE_EMAIL_TEMPLATES: dict[str, dict[str, Any]] = {
     InquiryStatus.NEW: {
-        "label": "Eingangsbestätigung",
+        "label": gettext_lazy("Acknowledge receipt"),
         "subject": "Ihre Anfrage — Eingangsbestätigung",
         "body": (
             "Hallo <..>,\n\n"
@@ -71,7 +74,7 @@ _STAGE_EMAIL_TEMPLATES: dict[str, dict[str, str]] = {
         ),
     },
     InquiryStatus.CONTACTED: {
-        "label": "Terminvorschlag Vorgespräch",
+        "label": gettext_lazy("Propose intro meeting"),
         "subject": "Terminvorschlag: Vorgespräch",
         "body": (
             "Guten Tag,\n\n"
@@ -87,7 +90,7 @@ _STAGE_EMAIL_TEMPLATES: dict[str, dict[str, str]] = {
         ),
     },
     InquiryStatus.INTRO_MEETING: {
-        "label": "Nach dem Vorgespräch",
+        "label": gettext_lazy("After intro meeting"),
         "subject": "Nächster Schritt nach unserem Vorgespräch",
         "body": (
             "Guten Tag,\n\n"
@@ -100,7 +103,7 @@ _STAGE_EMAIL_TEMPLATES: dict[str, dict[str, str]] = {
         ),
     },
     InquiryStatus.WAITLIST: {
-        "label": "Platz frei — Wartelistenmeldung",
+        "label": gettext_lazy("Waitlist spot available"),
         "subject": "Freier Therapieplatz — Meldung von der Warteliste",
         "body": (
             "Guten Tag,\n\n"
@@ -112,7 +115,7 @@ _STAGE_EMAIL_TEMPLATES: dict[str, dict[str, str]] = {
         ),
     },
     InquiryStatus.IN_INTAKE: {
-        "label": "Aufnahme — Unterlagen",
+        "label": gettext_lazy("Intake documents"),
         "subject": "Unterlagen für den Aufnahmeprozess",
         "body": (
             "Guten Tag,\n\n"
@@ -125,7 +128,7 @@ _STAGE_EMAIL_TEMPLATES: dict[str, dict[str, str]] = {
         ),
     },
     InquiryStatus.DECLINED: {
-        "label": "Freundliche Absage",
+        "label": gettext_lazy("Friendly decline"),
         "subject": "Rückmeldung zu Ihrer Anfrage",
         "body": (
             "Guten Tag,\n\n"
@@ -141,7 +144,7 @@ _STAGE_EMAIL_TEMPLATES: dict[str, dict[str, str]] = {
         ),
     },
     InquiryStatus.NOT_SUITABLE: {
-        "label": "Freundliche Absage (kein Match)",
+        "label": gettext_lazy("Friendly decline (not a match)"),
         "subject": "Rückmeldung zu Ihrer Anfrage",
         "body": (
             "Guten Tag,\n\n"
@@ -157,7 +160,7 @@ _STAGE_EMAIL_TEMPLATES: dict[str, dict[str, str]] = {
         ),
     },
     InquiryStatus.UNREACHABLE: {
-        "label": "Abschluss — nicht erreichbar",
+        "label": gettext_lazy("Closing — unreachable"),
         "subject": "Letzte Nachricht — Schließung der Anfrage",
         "body": (
             "Guten Tag,\n\n"
