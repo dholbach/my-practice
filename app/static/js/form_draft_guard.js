@@ -15,6 +15,18 @@
     const SKIP_TYPES = new Set(["hidden", "submit", "button", "reset", "file"]);
     const dirtyForms = new Set();
 
+    function markDirty(form) {
+        if (dirtyForms.has(form)) return;
+        dirtyForms.add(form);
+        form.dispatchEvent(new CustomEvent("draftguard:dirty", { bubbles: true, detail: { dirty: true } }));
+    }
+
+    function markClean(form) {
+        if (!dirtyForms.has(form)) return;
+        dirtyForms.delete(form);
+        form.dispatchEvent(new CustomEvent("draftguard:dirty", { bubbles: true, detail: { dirty: false } }));
+    }
+
     function isTracked(el) {
         return el.name && el.name !== "csrfmiddlewaretoken" && !SKIP_TYPES.has((el.type || "").toLowerCase());
     }
@@ -91,7 +103,7 @@
 
         banner.querySelector('[data-action="restore"]').addEventListener("click", function () {
             applyFields(form, draft.fields);
-            dirtyForms.add(form);
+            markDirty(form);
             banner.remove();
         });
         banner.querySelector('[data-action="discard"]').addEventListener("click", function () {
@@ -119,19 +131,19 @@
 
         let saveTimer = null;
         form.addEventListener("input", function () {
-            dirtyForms.add(form);
+            markDirty(form);
             clearTimeout(saveTimer);
             saveTimer = setTimeout(function () {
                 saveDraft(form, key);
             }, 500);
         });
         form.addEventListener("change", function () {
-            dirtyForms.add(form);
+            markDirty(form);
             saveDraft(form, key);
         });
 
         form.addEventListener("submit", function () {
-            dirtyForms.delete(form);
+            markClean(form);
             clearDraft(key);
         });
     }

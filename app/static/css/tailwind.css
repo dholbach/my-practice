@@ -1036,6 +1036,7 @@
   .page-tab-btn { padding: 0.5rem 1.25rem; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; cursor: pointer; font-size: 0.95rem; color: var(--color-text-secondary); border-radius: 4px 4px 0 0; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
   .page-tab-btn:hover { color: var(--color-text-primary); background: var(--color-bg-secondary); }
   .page-tab-btn.page-tab-active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+  .page-tab-btn--dirty::after { content: "●"; margin-left: 0.35rem; font-size: 0.55rem; color: var(--color-warning); vertical-align: middle; }
   .page-tab-content { display: none; }
   .page-tab-content.page-tab-active { display: block; }
   .cn-badge-warn { background: var(--color-warning-bg); color: var(--color-warning); }
@@ -1072,16 +1073,6 @@
   [data-theme="dark"] .cockpit-intake-step.step-done { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success); }
   .cockpit-intake-detail-link { margin-top: 0.25rem; }
 
-  .cockpit-tag-strip { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-  .cockpit-tag { display: inline-flex; align-items: center; padding: 0.35rem 1rem; border-radius: 14px; font-size: 0.8rem; font-weight: 700; color: white; letter-spacing: 0.01em; }
-  .cockpit-tag.red    { background: var(--color-tag-red); }
-  .cockpit-tag.orange { background: var(--color-tag-orange); }
-  .cockpit-tag.yellow { background: var(--color-tag-yellow); color: var(--color-text-primary); }
-  .cockpit-tag.green  { background: var(--color-tag-green); }
-  .cockpit-tag.blue   { background: var(--color-tag-blue); }
-  .cockpit-tag.purple { background: var(--color-tag-purple); }
-  .cockpit-tag.pink   { background: var(--color-tag-pink); }
-  .cockpit-tag.gray   { background: var(--color-tag-gray); }
   .cockpit-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
 
   /* Supervision section, above the chronological timeline in the Protokoll tab */
@@ -2214,7 +2205,7 @@
 
   .header {
     background: var(--color-surface);
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     border-radius: 12px;
     box-shadow: 0 4px 6px var(--color-shadow);
     margin-bottom: 1rem;
@@ -2230,10 +2221,10 @@
     display: inline-block;
   }
   .practice-logo {
-    height: 80px;
+    height: 48px;
     width: auto;
     vertical-align: middle;
-    margin-right: 1rem;
+    margin-right: 0.75rem;
     display: inline-block;
   }
 

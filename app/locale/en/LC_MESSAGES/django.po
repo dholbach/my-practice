@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 17:37+0200\n"
+"POT-Creation-Date: 2026-08-19 11:01+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -14,153 +14,43 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: my_practice/admin.py:48 my_practice/admin.py:267
-msgid "Basic Information"
+#: my_practice/admin/__init__.py:105
+msgid "Therapy Practice Management"
 msgstr ""
 
-#: my_practice/admin.py:58
-msgid "Basic information about the practice"
+#: my_practice/admin/__init__.py:106
+msgid "Payments Admin"
 msgstr ""
 
-#: my_practice/admin.py:62 my_practice/forms.py:116
-#: my_practice/models/client.py:111
-#: templates/my_practice/client_detail.html:486
-#: templates/my_practice/practice_form.html:78
-msgid "Address"
+#: my_practice/admin/__init__.py:107
+msgid "Welcome to Therapy Practice Management"
 msgstr ""
 
-#: my_practice/admin.py:69 my_practice/admin.py:278
-#: templates/my_practice/inquiry_list.html:182
-#: templates/my_practice/inquiry_list.html:228
-#: templates/my_practice/practice_form.html:100
-msgid "Contact"
+#: my_practice/admin/bank_statement.py:45
+msgid "Transaction Data"
 msgstr ""
 
-#: my_practice/admin.py:76
-msgid "Bank Details"
+#: my_practice/admin/bank_statement.py:57
+msgid "Payment Partner"
 msgstr ""
 
-#: my_practice/admin.py:81
-msgid "Business account for invoices. The private bank account (IBAN) is used during bank import to automatically detect withdrawals and capital contributions."
+#: my_practice/admin/bank_statement.py:63
+msgid "Matching"
 msgstr ""
 
-#: my_practice/admin.py:88
-msgid "Bank Import (CSV format)"
-msgstr ""
-
-#: my_practice/admin.py:103
-msgid "Delimiter and column names for your bank's CSV export, used by /bank/import. Defaults match GLS Bank; adjust for other banks."
-msgstr ""
-
-#: my_practice/admin.py:109 templates/my_practice/expense_list.html:83
-msgid "Tax"
-msgstr ""
-
-#: my_practice/admin.py:116
-msgid "Memberships"
-msgstr ""
-
-#: my_practice/admin.py:123
-msgid "Images"
-msgstr ""
-
-#: my_practice/admin.py:135
-msgid "Payment Terms"
-msgstr ""
-
-#: my_practice/admin.py:145
-msgid "'Overdue after' controls when the dashboard, Focus Queue, and client payment-reminder button treat a sent invoice as overdue."
-msgstr ""
-
-#: my_practice/admin.py:151
-msgid "Email Templates for Invoices"
-msgstr ""
-
-#: my_practice/admin.py:162
-#, python-brace-format
-msgid "Templates for invoice emails. Available placeholders: {salutation}, {invoice_number}, {amount}, {date}, {client_name}"
-msgstr ""
-
-#: my_practice/admin.py:168
-msgid "Capacity Monitoring (P-013)"
-msgstr ""
-
-#: my_practice/admin.py:176
-msgid "Monthly targets for hours and revenue. When set, the dashboard shows warnings for declining numbers."
-msgstr ""
-
-#: my_practice/admin.py:182
-msgid "Travel Costs (P-027)"
-msgstr ""
-
-#: my_practice/admin.py:190
-msgid "Distance allowance (§9 (1) no. 4 EStG). One-way distance in km + weekdays on which the practice is attended (JSON list, e.g. [0, 1, 2, 3, 4] for Mon–Fri)."
-msgstr ""
-
-#: my_practice/admin.py:200
-msgid "Logo Preview"
-msgstr ""
-
-#: my_practice/admin.py:204
-msgid "No logo uploaded"
-msgstr ""
-
-#: my_practice/admin.py:206
-msgid "Signature Preview"
-msgstr ""
-
-#: my_practice/admin.py:210
-msgid "No signature uploaded"
-msgstr ""
-
-#: my_practice/admin.py:280
-msgid "Email Settings"
-msgstr ""
-
-#: my_practice/admin.py:284
-#, python-brace-format
-msgid "Custom email salutation (e.g., 'Dear John', 'Liebe Maria'). If empty, defaults to 'Dear {name}' (EN) or 'Liebe:r {name}' (DE)"
-msgstr ""
-
-#: my_practice/admin.py:290
-msgid "Rates"
-msgstr ""
-
-#: my_practice/admin.py:293
-msgid "Standard hourly rates for this client"
-msgstr ""
-
-#: my_practice/admin.py:297 my_practice/admin.py:1061
-msgid "Organization"
-msgstr ""
-
-#: my_practice/admin.py:300 my_practice/models/client.py:204
-msgid "Tags for organizing and categorizing clients"
-msgstr ""
-
-#: my_practice/admin.py:304 my_practice/admin.py:539
-msgid "Additional"
-msgstr ""
-
-#: my_practice/admin.py:316 my_practice/admin.py:541 my_practice/admin.py:627
-#: my_practice/admin.py:659 my_practice/admin.py:685 my_practice/admin.py:712
-#: my_practice/admin.py:964
-msgid "Timestamps"
-msgstr ""
-
-#: my_practice/admin.py:321 my_practice/admin.py:897 my_practice/admin.py:1065
-#: my_practice/admin.py:1248 my_practice/models/calendar.py:129
-#: my_practice/models/clinical.py:318 my_practice/models/inquiry.py:110
-#: my_practice/models/invoice.py:95
+#: my_practice/admin/bank_statement.py:74 my_practice/admin/client.py:111
+#: my_practice/admin/timeoff.py:42 my_practice/admin/todo.py:49
+#: my_practice/models/calendar.py:129 my_practice/models/clinical.py:318
+#: my_practice/models/inquiry.py:110 my_practice/models/invoice.py:95
 #: templates/includes/calendar_preflight_widget.html:27
 #: templates/my_practice/analytics.html:395
 #: templates/my_practice/bank_import.html:87
 #: templates/my_practice/billing_open_overview.html:58
 #: templates/my_practice/calendar_import.html:93
-#: templates/my_practice/client_detail.html:646
-#: templates/my_practice/client_detail.html:690
-#: templates/my_practice/inquiry_confirm_delete.html:30
-#: templates/my_practice/invoice_confirm_delete.html:32
+#: templates/my_practice/client_detail.html:626
+#: templates/my_practice/client_detail.html:670
+#: templates/my_practice/inquiry_confirm_delete.html:22
+#: templates/my_practice/invoice_confirm_delete.html:24
 #: templates/my_practice/invoice_detail.html:33
 #: templates/my_practice/invoice_list.html:168
 #: templates/my_practice/monthly_billing_overview.html:52
@@ -170,174 +60,37 @@ msgstr ""
 msgid "Status"
 msgstr "Status"
 
-#: my_practice/admin.py:325 my_practice/admin.py:934 my_practice/admin.py:1341
-#: my_practice/models/calendar.py:52 my_practice/models/client.py:182
-#: my_practice/models/practice.py:50 templates/my_practice/analytics.html:415
-#: templates/my_practice/client_detail.html:11
-#: templates/my_practice/client_list_cards.html:34
-#: templates/my_practice/dashboard.html:75
-#: templates/my_practice/practice_management.html:26
-msgid "Active"
-msgstr "Active"
-
-#: my_practice/models/calendar.py:103
-msgid "Google Event ID"
+#: my_practice/admin/bank_statement.py:87
+msgid "Payer"
 msgstr ""
 
-#: my_practice/admin.py:327 my_practice/models/calendar.py:52
-#: templates/my_practice/client_detail.html:11
-#: templates/my_practice/client_list_cards.html:42
-#: templates/my_practice/client_list_cards.html:76
-#: templates/my_practice/practice_management.html:27
-msgid "Inactive"
-msgstr "Inactive"
-
-#: my_practice/admin.py:329
-msgid "Format"
+#: my_practice/admin/bank_statement.py:94 my_practice/admin/financial.py:131
+#: my_practice/models/bank_statement.py:83 my_practice/models/financial.py:59
+#: my_practice/models/financial.py:147
+#: templates/my_practice/bank_import.html:86
+#: templates/my_practice/bank_review.html:194
+#: templates/my_practice/client_detail.html:670
+#: templates/my_practice/expense_confirm_delete.html:23
+#: templates/my_practice/expense_list.html:81
+#: templates/my_practice/invoice_list.html:169
+#: templates/my_practice/revenue_report.html:56
+#: templates/my_practice/send_payment_reminder.html:22
+#: templates/my_practice/tax_year_summary.html:103
+#: templates/my_practice/tax_year_summary.html:129
+#: templates/my_practice/tax_year_summary.html:165
+#: templates/my_practice/tax_year_summary.html:200
+#: templates/my_practice/withdrawal_confirm_delete.html:15
+#: templates/my_practice/withdrawal_list.html:59
+#: templates/my_practice/withdrawal_list.html:108
+msgid "Amount"
 msgstr ""
 
-#: my_practice/admin.py:332 my_practice/models/clinical.py:145
-msgid "Online"
+#: my_practice/admin/bank_statement.py:105
+msgid "Match"
 msgstr ""
 
-#: my_practice/admin.py:333
-msgid "On-site"
-msgstr ""
-
-#: my_practice/admin.py:335 my_practice/admin.py:664
-#: my_practice/models/client.py:203
-#: templates/my_practice/client_detail.html:417
-#: templates/my_practice/client_list_cards.html:26
-#: templates/my_practice/tag_list.html:6
-msgid "Tags"
-msgstr ""
-
-#: my_practice/admin.py:356
-msgid "Assignment"
-msgstr ""
-
-#: my_practice/admin.py:362 my_practice/admin.py:573 my_practice/admin.py:733
-#: my_practice/admin.py:826
-msgid "Details"
-msgstr ""
-
-#: my_practice/admin.py:369 my_practice/admin.py:621 my_practice/admin.py:708
-#: my_practice/admin.py:1365 my_practice/models/calendar.py:115
-#: my_practice/models/client.py:212 my_practice/models/client.py:263
-#: my_practice/models/client_alias.py:32 my_practice/models/clinical.py:170
-#: my_practice/models/clinical.py:306 my_practice/models/clinical.py:351
-#: my_practice/models/invoice.py:82 my_practice/models/session.py:22
-#: templates/my_practice/billing_open_overview.html:53
-#: templates/my_practice/calendar_import.html:91
-#: templates/my_practice/client_detail.html:7
-#: templates/my_practice/invoice_confirm_delete.html:24
-#: templates/my_practice/invoice_list.html:166
-#: templates/my_practice/monthly_billing_overview.html:47
-#: templates/my_practice/revenue_report.html:51
-#: templates/my_practice/tax_year_summary.html:126
-msgid "Client"
-msgstr ""
-
-#: my_practice/admin.py:378 my_practice/admin.py:753 my_practice/forms.py:126
-#: my_practice/forms.py:214 my_practice/import_forms.py:67
-#: my_practice/models/bank_statement.py:128 my_practice/models/client.py:118
-#: my_practice/models/client_alias.py:41 my_practice/models/financial.py:63
-#: my_practice/models/inquiry.py:123 my_practice/models/invoice.py:131
-#: my_practice/models/operational.py:56 my_practice/models/timeoff.py:55
-#: templates/my_practice/checklist.html:119
-#: templates/my_practice/time_off_confirm_delete.html:36
-#: templates/my_practice/withdrawal_list.html:61
-#: templates/my_practice/withdrawal_list.html:110
-msgid "Notes"
-msgstr ""
-
-#: my_practice/admin.py:396 my_practice/models/invoice.py:263
-msgid "Service Type"
-msgstr ""
-
-#: my_practice/admin.py:399 my_practice/admin.py:960
-msgid "Settings"
-msgstr ""
-
-#: my_practice/admin.py:402
-msgid "Scope"
-msgstr ""
-
-#: my_practice/admin.py:407
-msgid "GLOBAL"
-msgstr ""
-
-#: my_practice/admin.py:473
-msgid "Mark as sent"
-msgstr ""
-
-#: my_practice/admin.py:479
-#, python-format
-msgid "%(count)s invoice marked as sent."
-msgid_plural "%(count)s invoices marked as sent."
-msgstr[0] ""
-msgstr[1] ""
-
-#: my_practice/admin.py:485
-msgid "Mark as paid"
-msgstr ""
-
-#: my_practice/admin.py:497
-#, python-format
-msgid "%(count)s invoice marked as paid."
-msgid_plural "%(count)s invoices marked as paid."
-msgstr[0] ""
-msgstr[1] ""
-
-#: my_practice/admin.py:503
-msgid "Mark as cancelled"
-msgstr ""
-
-#: my_practice/admin.py:509
-#, python-format
-msgid "%(count)s invoice marked as cancelled."
-msgid_plural "%(count)s invoices marked as cancelled."
-msgstr[0] ""
-msgstr[1] ""
-
-#: my_practice/admin.py:519
-msgid "Invoice Information"
-msgstr ""
-
-#: my_practice/admin.py:531
-msgid "Amounts"
-msgstr ""
-
-#: my_practice/admin.py:535
-msgid "Amounts are calculated automatically from invoice items"
-msgstr ""
-
-#: my_practice/admin.py:546 my_practice/models/invoice.py:274
-#: templates/my_practice/bank_review.html:75
-#: templates/my_practice/invoice_detail.html:87
-#: templates/my_practice/invoice_list.html:21
-#: templates/my_practice/withdrawal_list.html:31
-msgid "Total"
-msgstr ""
-
-#: my_practice/admin.py:571 my_practice/admin.py:652
-#: my_practice/models/calendar.py:137 my_practice/models/clinical.py:222
-#: my_practice/models/gebueh.py:89 my_practice/models/invoice.py:294
-#: my_practice/models/session.py:63
-msgid "Session"
-msgstr ""
-
-#: my_practice/admin.py:572 templates/base.html:53
-#: templates/my_practice/client_detail.html:50
-msgid "Billing"
-msgstr ""
-
-#: my_practice/admin.py:598
-msgid "Log"
-msgstr ""
-
-#: my_practice/admin.py:602 my_practice/admin.py:1301
-#: my_practice/models/invoice.py:138 my_practice/models/invoice.py:260
+#: my_practice/admin/bank_statement.py:127 my_practice/admin/session.py:34
+#: my_practice/models/invoice.py:138 my_practice/models/invoice.py:270
 #: templates/my_practice/bank_review.html:259
 #: templates/my_practice/billing_open_overview.html:57
 #: templates/my_practice/invoice_detail.html:6
@@ -348,170 +101,457 @@ msgstr ""
 msgid "Invoice"
 msgstr ""
 
-#: my_practice/admin.py:623
+#: my_practice/admin/calendar.py:28 my_practice/admin/client_alias.py:36
+#: my_practice/admin/clinical.py:23 my_practice/admin/clinical.py:110
+#: my_practice/models/calendar.py:115 my_practice/models/client.py:212
+#: my_practice/models/client.py:263 my_practice/models/client_alias.py:32
+#: my_practice/models/clinical.py:170 my_practice/models/clinical.py:306
+#: my_practice/models/clinical.py:351 my_practice/models/invoice.py:82
+#: my_practice/models/session.py:22
+#: templates/my_practice/billing_open_overview.html:53
+#: templates/my_practice/calendar_import.html:91
+#: templates/my_practice/client_detail.html:7
+#: templates/my_practice/invoice_confirm_delete.html:16
+#: templates/my_practice/invoice_list.html:166
+#: templates/my_practice/monthly_billing_overview.html:47
+#: templates/my_practice/revenue_report.html:51
+#: templates/my_practice/tax_year_summary.html:126
+msgid "Client"
+msgstr ""
+
+#: my_practice/admin/calendar.py:32
+msgid "Mark as pending"
+msgstr ""
+
+#: my_practice/admin/calendar.py:38
+#, python-format
+msgid "%(count)s event marked as pending."
+msgid_plural "%(count)s events marked as pending."
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/admin/calendar.py:44
+msgid "Mark as skipped"
+msgstr ""
+
+#: my_practice/admin/calendar.py:50
+#, python-format
+msgid "%(count)s event marked as skipped."
+msgid_plural "%(count)s events marked as skipped."
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/admin/client.py:57 my_practice/admin/practice.py:17
+msgid "Basic Information"
+msgstr ""
+
+#: my_practice/admin/client.py:68 my_practice/admin/practice.py:38
+#: templates/my_practice/inquiry_list.html:182
+#: templates/my_practice/inquiry_list.html:228
+#: templates/my_practice/practice_form.html:100
+msgid "Contact"
+msgstr ""
+
+#: my_practice/admin/client.py:70
+msgid "Email Settings"
+msgstr ""
+
+#: my_practice/admin/client.py:74
+#, python-brace-format
+msgid "Custom email salutation (e.g., 'Dear John', 'Liebe Maria'). If empty, defaults to 'Dear {name}' (EN) or 'Liebe:r {name}' (DE)"
+msgstr ""
+
+#: my_practice/admin/client.py:80
+msgid "Rates"
+msgstr ""
+
+#: my_practice/admin/client.py:83
+msgid "Standard hourly rates for this client"
+msgstr ""
+
+#: my_practice/admin/client.py:87 my_practice/admin/todo.py:45
+msgid "Organization"
+msgstr ""
+
+#: my_practice/admin/client.py:90 my_practice/models/client.py:204
+msgid "Tags for organizing and categorizing clients"
+msgstr ""
+
+#: my_practice/admin/client.py:94 my_practice/admin/invoice.py:140
+msgid "Additional"
+msgstr ""
+
+#: my_practice/admin/client.py:106 my_practice/admin/clinical.py:29
+#: my_practice/admin/clinical.py:61 my_practice/admin/clinical.py:87
+#: my_practice/admin/clinical.py:114 my_practice/admin/invoice.py:142
+#: my_practice/admin/tag.py:35
+msgid "Timestamps"
+msgstr ""
+
+#: my_practice/admin/client.py:115 my_practice/admin/inquiry.py:25
+#: my_practice/admin/operational.py:31 my_practice/models/calendar.py:52
+#: my_practice/models/client.py:182 my_practice/models/practice.py:50
+#: templates/my_practice/analytics.html:415
+#: templates/my_practice/client_detail.html:11
+#: templates/my_practice/client_list_cards.html:34
+#: templates/my_practice/dashboard.html:75
+#: templates/my_practice/practice_management.html:26
+msgid "Active"
+msgstr "Active"
+
+#: my_practice/admin/client.py:117 my_practice/models/calendar.py:52
+#: templates/my_practice/client_detail.html:11
+#: templates/my_practice/client_list_cards.html:42
+#: templates/my_practice/client_list_cards.html:76
+#: templates/my_practice/practice_management.html:27
+msgid "Inactive"
+msgstr "Inactive"
+
+#: my_practice/admin/client.py:119
+msgid "Format"
+msgstr ""
+
+#: my_practice/admin/client.py:122 my_practice/models/clinical.py:145
+msgid "Online"
+msgstr ""
+
+#: my_practice/admin/client.py:123
+msgid "On-site"
+msgstr ""
+
+#: my_practice/admin/client.py:125 my_practice/admin/clinical.py:66
+#: my_practice/models/client.py:203
+#: templates/my_practice/client_detail.html:397
+#: templates/my_practice/client_list_cards.html:26
+#: templates/my_practice/tag_list.html:6
+msgid "Tags"
+msgstr ""
+
+#: my_practice/admin/client_alias.py:23
+msgid "Assignment"
+msgstr ""
+
+#: my_practice/admin/client_alias.py:29 my_practice/admin/financial.py:21
+#: my_practice/admin/financial.py:114 my_practice/admin/invoice.py:174
+#: templates/my_practice/client_detail.html:131
+msgid "Details"
+msgstr ""
+
+#: my_practice/admin/client_alias.py:45 my_practice/admin/financial.py:41
+#: my_practice/forms.py:134 my_practice/forms.py:222
+#: my_practice/import_forms.py:67 my_practice/models/bank_statement.py:128
+#: my_practice/models/client.py:118 my_practice/models/client_alias.py:41
+#: my_practice/models/financial.py:63 my_practice/models/inquiry.py:123
+#: my_practice/models/invoice.py:131 my_practice/models/operational.py:56
+#: my_practice/models/timeoff.py:55 templates/my_practice/checklist.html:119
+#: templates/my_practice/time_off_confirm_delete.html:28
+#: templates/my_practice/withdrawal_list.html:61
+#: templates/my_practice/withdrawal_list.html:110
+msgid "Notes"
+msgstr ""
+
+#: my_practice/admin/clinical.py:25
 msgid "Clinical Fields (Fernet-encrypted)"
 msgstr ""
 
-#: my_practice/admin.py:632
+#: my_practice/admin/clinical.py:34
 msgid "Working Diagnosis"
 msgstr ""
 
-#: my_practice/admin.py:653
+#: my_practice/admin/clinical.py:54 my_practice/admin/invoice.py:172
+#: my_practice/models/calendar.py:137 my_practice/models/clinical.py:222
+#: my_practice/models/gebueh.py:89 my_practice/models/invoice.py:304
+#: my_practice/models/session.py:63
+msgid "Session"
+msgstr ""
+
+#: my_practice/admin/clinical.py:55
 msgid "Metadata (unencrypted)"
 msgstr ""
 
-#: my_practice/admin.py:655 my_practice/admin.py:683 my_practice/admin.py:710
+#: my_practice/admin/clinical.py:57 my_practice/admin/clinical.py:85
+#: my_practice/admin/clinical.py:112
 msgid "Content (Fernet-encrypted)"
 msgstr ""
 
-#: my_practice/admin.py:682
+#: my_practice/admin/clinical.py:84
 msgid "Client & Status"
 msgstr ""
 
-#: my_practice/admin.py:690 my_practice/admin.py:717
+#: my_practice/admin/clinical.py:92 my_practice/admin/clinical.py:119
 #: my_practice/models/clinical.py:310 my_practice/models/clinical.py:360
 msgid "Content"
 msgstr ""
 
-#: my_practice/admin.py:709
+#: my_practice/admin/clinical.py:111
 msgid "Metadata"
 msgstr ""
 
-#: my_practice/admin.py:732 templates/my_practice/bank_import.html:120
+#: my_practice/admin/expense_category_rule.py:19
+#: my_practice/admin/financial.py:126 my_practice/admin/tag.py:64
+#: my_practice/admin/todo.py:82 my_practice/forms.py:169
+#: my_practice/forms.py:199 my_practice/import_forms.py:114
+#: my_practice/models/expense_category_rule.py:39
+#: my_practice/models/financial.py:69 my_practice/models/financial.py:155
+#: my_practice/models/tag.py:77
+#: templates/my_practice/bank_expense_review.html:31
+#: templates/my_practice/bank_withdrawal_review.html:31
+#: templates/my_practice/expense_confirm_delete.html:19
+#: templates/my_practice/expense_list.html:80
+#: templates/my_practice/tax_year_summary.html:163
+#: templates/my_practice/tax_year_summary.html:191
+#: templates/my_practice/withdrawal_confirm_delete.html:19
+#: templates/my_practice/withdrawal_list.html:60
+#: templates/my_practice/withdrawal_list.html:109
+msgid "Category"
+msgstr ""
+
+#: my_practice/admin/financial.py:20 templates/my_practice/bank_import.html:120
 msgid "Withdrawal"
 msgstr ""
 
-#: my_practice/admin.py:738
+#: my_practice/admin/financial.py:26
 msgid "Flag for current tax year"
 msgstr ""
 
-#: my_practice/admin.py:745
+#: my_practice/admin/financial.py:33
 #, python-format
 msgid "%(count)s withdrawal found for tax year %(year)s."
 msgid_plural "%(count)s withdrawals found for tax year %(year)s."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin.py:778
+#: my_practice/admin/financial.py:66
 msgid "Mark as tax deductible"
 msgstr ""
 
-#: my_practice/admin.py:784
+#: my_practice/admin/financial.py:72
 #, python-format
 msgid "%(count)s expense marked as tax deductible."
 msgid_plural "%(count)s expenses marked as tax deductible."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin.py:792
+#: my_practice/admin/financial.py:80
 msgid "Not tax deductible"
 msgstr ""
 
-#: my_practice/admin.py:798
+#: my_practice/admin/financial.py:86
 #, python-format
 msgid "%(count)s expense marked as not deductible."
 msgid_plural "%(count)s expenses marked as not deductible."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin.py:806
+#: my_practice/admin/financial.py:94
 msgid "Mark as invoice available"
 msgstr ""
 
-#: my_practice/admin.py:812
+#: my_practice/admin/financial.py:100
 #, python-format
 msgid "%(count)s expense marked with invoice."
 msgid_plural "%(count)s expenses marked with invoice."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin.py:822 my_practice/models/tag.py:49
+#: my_practice/admin/financial.py:110 my_practice/models/tag.py:49
 msgid "General"
 msgstr ""
 
-#: my_practice/admin.py:831 my_practice/forms.py:162 my_practice/forms.py:190
-#: my_practice/import_forms.py:119 my_practice/models/client.py:279
-#: my_practice/models/financial.py:150 my_practice/models/gebueh.py:29
-#: my_practice/models/inquiry.py:212 my_practice/models/invoice.py:302
-#: my_practice/models/tag.py:84
-#: templates/my_practice/expense_confirm_delete.html:23
+#: my_practice/admin/financial.py:119 my_practice/forms.py:170
+#: my_practice/forms.py:198 my_practice/import_forms.py:119
+#: my_practice/models/client.py:279 my_practice/models/financial.py:150
+#: my_practice/models/gebueh.py:29 my_practice/models/inquiry.py:215
+#: my_practice/models/invoice.py:312 my_practice/models/tag.py:84
+#: templates/my_practice/expense_confirm_delete.html:15
 #: templates/my_practice/expense_list.html:79
 #: templates/my_practice/invoice_edit.html:135
-#: templates/my_practice/marketing_period_confirm_delete.html:18
+#: templates/my_practice/marketing_period_confirm_delete.html:10
 #: templates/my_practice/tag_list.html:26
 #: templates/my_practice/tax_year_summary.html:190
-#: templates/my_practice/withdrawal_confirm_delete.html:32
+#: templates/my_practice/withdrawal_confirm_delete.html:24
 msgid "Description"
 msgstr ""
 
-#: my_practice/admin.py:838 my_practice/admin.py:860 my_practice/admin.py:993
-#: my_practice/admin.py:1098 my_practice/forms.py:161 my_practice/forms.py:191
-#: my_practice/import_forms.py:114
-#: my_practice/models/expense_category_rule.py:39
-#: my_practice/models/financial.py:69 my_practice/models/financial.py:155
-#: my_practice/models/tag.py:77
-#: templates/my_practice/bank_expense_review.html:31
-#: templates/my_practice/bank_withdrawal_review.html:31
-#: templates/my_practice/expense_confirm_delete.html:27
-#: templates/my_practice/expense_list.html:80
-#: templates/my_practice/tax_year_summary.html:163
-#: templates/my_practice/tax_year_summary.html:191
-#: templates/my_practice/withdrawal_confirm_delete.html:27
-#: templates/my_practice/withdrawal_list.html:60
-#: templates/my_practice/withdrawal_list.html:109
-msgid "Category"
+#: my_practice/admin/invoice.py:74
+msgid "Mark as sent"
 msgstr ""
 
-#: my_practice/admin.py:843 my_practice/admin.py:1268
-#: my_practice/models/bank_statement.py:83 my_practice/models/financial.py:59
-#: my_practice/models/financial.py:147
-#: templates/my_practice/bank_import.html:86
-#: templates/my_practice/bank_review.html:194
-#: templates/my_practice/client_detail.html:690
-#: templates/my_practice/expense_confirm_delete.html:31
-#: templates/my_practice/expense_list.html:81
-#: templates/my_practice/invoice_list.html:169
-#: templates/my_practice/revenue_report.html:56
-#: templates/my_practice/send_payment_reminder.html:22
-#: templates/my_practice/tax_year_summary.html:103
-#: templates/my_practice/tax_year_summary.html:129
-#: templates/my_practice/tax_year_summary.html:165
-#: templates/my_practice/tax_year_summary.html:200
-#: templates/my_practice/withdrawal_confirm_delete.html:23
-#: templates/my_practice/withdrawal_list.html:59
-#: templates/my_practice/withdrawal_list.html:108
-msgid "Amount"
+#: my_practice/admin/invoice.py:80
+#, python-format
+msgid "%(count)s invoice marked as sent."
+msgid_plural "%(count)s invoices marked as sent."
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/admin/invoice.py:86
+msgid "Mark as paid"
 msgstr ""
 
-#: my_practice/admin.py:889
-msgid "Additional Information"
+#: my_practice/admin/invoice.py:98
+#, python-format
+msgid "%(count)s invoice marked as paid."
+msgid_plural "%(count)s invoices marked as paid."
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/admin/invoice.py:104
+msgid "Mark as cancelled"
 msgstr ""
 
-#: my_practice/admin.py:902
-msgid "Currently Off"
+#: my_practice/admin/invoice.py:110
+#, python-format
+msgid "%(count)s invoice marked as cancelled."
+msgid_plural "%(count)s invoices marked as cancelled."
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/admin/invoice.py:120
+msgid "Invoice Information"
 msgstr ""
 
-#: my_practice/admin.py:905 templates/my_practice/time_off_list.html:52
-msgid "Upcoming"
+#: my_practice/admin/invoice.py:132
+msgid "Amounts"
 msgstr ""
 
-#: my_practice/admin.py:908 templates/my_practice/time_off_list.html:70
-msgid "Past"
+#: my_practice/admin/invoice.py:136
+msgid "Amounts are calculated automatically from invoice items"
 msgstr ""
 
-#: my_practice/admin.py:956
+#: my_practice/admin/invoice.py:147 my_practice/models/invoice.py:284
+#: templates/my_practice/bank_review.html:75
+#: templates/my_practice/invoice_detail.html:87
+#: templates/my_practice/invoice_list.html:21
+#: templates/my_practice/withdrawal_list.html:31
+msgid "Total"
+msgstr ""
+
+#: my_practice/admin/invoice.py:173 templates/base.html:58
+#: templates/my_practice/client_detail.html:49
+msgid "Billing"
+msgstr ""
+
+#: my_practice/admin/practice.py:27
+msgid "Basic information about the practice"
+msgstr ""
+
+#: my_practice/admin/practice.py:31 my_practice/forms.py:124
+#: my_practice/models/client.py:111
+#: templates/my_practice/client_detail.html:466
+#: templates/my_practice/practice_form.html:78
+msgid "Address"
+msgstr ""
+
+#: my_practice/admin/practice.py:45
+msgid "Bank Details"
+msgstr ""
+
+#: my_practice/admin/practice.py:50
+msgid "Business account for invoices. The private bank account (IBAN) is used during bank import to automatically detect withdrawals and capital contributions."
+msgstr ""
+
+#: my_practice/admin/practice.py:57
+msgid "Bank Import (CSV format)"
+msgstr ""
+
+#: my_practice/admin/practice.py:72
+msgid "Delimiter and column names for your bank's CSV export, used by /bank/import. Defaults match GLS Bank; adjust for other banks."
+msgstr ""
+
+#: my_practice/admin/practice.py:78 templates/my_practice/expense_list.html:83
+msgid "Tax"
+msgstr ""
+
+#: my_practice/admin/practice.py:85
+msgid "Memberships"
+msgstr ""
+
+#: my_practice/admin/practice.py:92
+msgid "Images"
+msgstr ""
+
+#: my_practice/admin/practice.py:104
+msgid "Payment Terms"
+msgstr ""
+
+#: my_practice/admin/practice.py:114
+msgid "'Overdue after' controls when the dashboard, Focus Queue, and client payment-reminder button treat a sent invoice as overdue."
+msgstr ""
+
+#: my_practice/admin/practice.py:120
+msgid "Email Templates for Invoices"
+msgstr ""
+
+#: my_practice/admin/practice.py:131
+#, python-brace-format
+msgid "Templates for invoice emails. Available placeholders: {salutation}, {invoice_number}, {amount}, {date}, {client_name}"
+msgstr ""
+
+#: my_practice/admin/practice.py:137
+msgid "Capacity Monitoring (P-013)"
+msgstr ""
+
+#: my_practice/admin/practice.py:145
+msgid "Monthly targets for hours and revenue. When set, the dashboard shows warnings for declining numbers."
+msgstr ""
+
+#: my_practice/admin/practice.py:151
+msgid "Travel Costs (P-027)"
+msgstr ""
+
+#: my_practice/admin/practice.py:159
+msgid "Distance allowance (§9 (1) no. 4 EStG). One-way distance in km + weekdays on which the practice is attended (JSON list, e.g. [0, 1, 2, 3, 4] for Mon–Fri)."
+msgstr ""
+
+#: my_practice/admin/practice.py:169
+msgid "Logo Preview"
+msgstr ""
+
+#: my_practice/admin/practice.py:173
+msgid "No logo uploaded"
+msgstr ""
+
+#: my_practice/admin/practice.py:175
+msgid "Signature Preview"
+msgstr ""
+
+#: my_practice/admin/practice.py:179
+msgid "No signature uploaded"
+msgstr ""
+
+#: my_practice/admin/service.py:19 my_practice/models/invoice.py:273
+msgid "Service Type"
+msgstr ""
+
+#: my_practice/admin/service.py:22 my_practice/admin/tag.py:31
+msgid "Settings"
+msgstr ""
+
+#: my_practice/admin/service.py:25
+msgid "Scope"
+msgstr ""
+
+#: my_practice/admin/service.py:30
+msgid "GLOBAL"
+msgstr ""
+
+#: my_practice/admin/session.py:30
+msgid "Log"
+msgstr ""
+
+#: my_practice/admin/tag.py:27
 msgid "Tag Information"
 msgstr ""
 
-#: my_practice/admin.py:969
+#: my_practice/admin/tag.py:40
 msgid "Tag"
 msgstr ""
 
-#: my_practice/admin.py:1008
+#: my_practice/admin/tag.py:79
 msgid "Used By"
 msgstr ""
 
-#: my_practice/admin.py:1014
+#: my_practice/admin/tag.py:85
 #: templates/my_practice/monthly_billing_overview.html:39
 #: templates/my_practice/tag_list.html:56
 #, python-format
@@ -520,110 +560,72 @@ msgid_plural "%(count)s clients"
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin.py:1057
+#: my_practice/admin/timeoff.py:34
+msgid "Additional Information"
+msgstr ""
+
+#: my_practice/admin/timeoff.py:47
+msgid "Currently Off"
+msgstr ""
+
+#: my_practice/admin/timeoff.py:50 templates/my_practice/time_off_list.html:52
+msgid "Upcoming"
+msgstr ""
+
+#: my_practice/admin/timeoff.py:53 templates/my_practice/time_off_list.html:70
+msgid "Past"
+msgstr ""
+
+#: my_practice/admin/todo.py:41
 msgid "Task Information"
 msgstr ""
 
-#: my_practice/admin.py:1069
+#: my_practice/admin/todo.py:53
 msgid "Focus Queue (P-050)"
 msgstr ""
 
-#: my_practice/admin.py:1073
+#: my_practice/admin/todo.py:57
 msgid "Set automatically for materialized tasks — not manually editable."
 msgstr ""
 
-#: my_practice/admin.py:1088 my_practice/models/todo.py:149
+#: my_practice/admin/todo.py:72 my_practice/models/todo.py:149
 msgid "Task"
 msgstr ""
 
-#: my_practice/admin.py:1116
+#: my_practice/admin/todo.py:100
 msgid "Priority"
 msgstr ""
 
-#: my_practice/admin.py:1132 templates/includes/focus_queue_row.html:15
+#: my_practice/admin/todo.py:116 templates/includes/focus_queue_row.html:15
 msgid "Mark as completed"
 msgstr ""
 
-#: my_practice/admin.py:1142
+#: my_practice/admin/todo.py:126
 #, python-format
 msgid "%(count)s task marked as completed."
 msgid_plural "%(count)s tasks marked as completed."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin.py:1150
+#: my_practice/admin/todo.py:134
 msgid "Mark as incomplete"
 msgstr ""
 
-#: my_practice/admin.py:1160
+#: my_practice/admin/todo.py:144
 #, python-format
 msgid "%(count)s task marked as incomplete."
 msgid_plural "%(count)s tasks marked as incomplete."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin.py:1168
+#: my_practice/admin/todo.py:152
 msgid "Set high priority"
 msgstr ""
 
-#: my_practice/admin.py:1175
+#: my_practice/admin/todo.py:159
 #, python-format
 msgid "%(count)s task set to high priority."
 msgid_plural "%(count)s tasks set to high priority."
-msgstr[0] ""
-msgstr[1] ""
-
-#: my_practice/admin.py:1219
-msgid "Transaction Data"
-msgstr ""
-
-#: my_practice/admin.py:1231
-msgid "Payment Partner"
-msgstr ""
-
-#: my_practice/admin.py:1237
-msgid "Matching"
-msgstr ""
-
-#: my_practice/admin.py:1261
-msgid "Payer"
-msgstr ""
-
-#: my_practice/admin.py:1279
-msgid "Match"
-msgstr ""
-
-#: my_practice/admin.py:1314
-msgid "Therapy Practice Management"
-msgstr ""
-
-#: my_practice/admin.py:1315
-msgid "Payments Admin"
-msgstr ""
-
-#: my_practice/admin.py:1316
-msgid "Welcome to Therapy Practice Management"
-msgstr ""
-
-#: my_practice/admin.py:1369
-msgid "Mark as pending"
-msgstr ""
-
-#: my_practice/admin.py:1375
-#, python-format
-msgid "%(count)s event marked as pending."
-msgid_plural "%(count)s events marked as pending."
-msgstr[0] ""
-msgstr[1] ""
-
-#: my_practice/admin.py:1381
-msgid "Mark as skipped"
-msgstr ""
-
-#: my_practice/admin.py:1387
-#, python-format
-msgid "%(count)s event marked as skipped."
-msgid_plural "%(count)s events marked as skipped."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -648,39 +650,39 @@ msgstr ""
 msgid "Message (English)"
 msgstr ""
 
-#: my_practice/forms.py:71 my_practice/models/client.py:102
+#: my_practice/forms.py:79 my_practice/models/client.py:102
 msgid "Date of birth"
 msgstr ""
 
-#: my_practice/forms.py:94
+#: my_practice/forms.py:102
 msgid "e.g. DE, JM"
 msgstr ""
 
-#: my_practice/forms.py:95 my_practice/forms.py:113
+#: my_practice/forms.py:103 my_practice/forms.py:121
 #: my_practice/models/client.py:101
 msgid "Full name"
 msgstr ""
 
-#: my_practice/forms.py:99
+#: my_practice/forms.py:107
 msgid "Street, postal code city"
 msgstr ""
 
-#: my_practice/forms.py:102
+#: my_practice/forms.py:110
 msgid "e.g. self-pay, Allianz PKV, Beihilfe"
 msgstr ""
 
-#: my_practice/forms.py:109
+#: my_practice/forms.py:117
 msgid "Additional notes"
 msgstr ""
 
-#: my_practice/forms.py:112 my_practice/inquiry_forms.py:80
+#: my_practice/forms.py:120 my_practice/inquiry_forms.py:80
 #: my_practice/models/client.py:98
 msgid "Client code"
 msgstr ""
 
-#: my_practice/forms.py:114 my_practice/models/client.py:109
-#: my_practice/models/inquiry.py:99
-#: templates/my_practice/client_detail.html:477
+#: my_practice/forms.py:122 my_practice/models/client.py:109
+#: my_practice/models/inquiry.py:99 my_practice/models/practice.py:80
+#: templates/my_practice/client_detail.html:457
 #: templates/my_practice/client_list_cards.html:109
 #: templates/my_practice/inquiry_convert_confirm.html:20
 #: templates/my_practice/practice_confirm_delete.html:36
@@ -688,166 +690,180 @@ msgstr ""
 msgid "Email"
 msgstr ""
 
-#: my_practice/forms.py:115 my_practice/models/client.py:110
+#: my_practice/forms.py:123 my_practice/models/client.py:110
 #: my_practice/models/financial.py:116 my_practice/models/inquiry.py:100
+#: my_practice/models/practice.py:97
 #: templates/my_practice/bank_expense_review.html:34
-#: templates/my_practice/client_detail.html:481
+#: templates/my_practice/client_detail.html:461
 #: templates/my_practice/inquiry_convert_confirm.html:24
 #: templates/my_practice/practice_form.html:120
 msgid "Phone"
 msgstr ""
 
-#: my_practice/forms.py:117 my_practice/models/client.py:115
-#: templates/my_practice/client_detail.html:491
+#: my_practice/forms.py:125 my_practice/models/client.py:115
+#: templates/my_practice/client_detail.html:471
 msgid "Cost carrier"
 msgstr ""
 
-#: my_practice/forms.py:118 my_practice/models/client.py:171
+#: my_practice/forms.py:126 my_practice/models/client.py:171
 msgid "Preferred language"
 msgstr ""
 
-#: my_practice/forms.py:119
+#: my_practice/forms.py:127
 msgid "Custom Email Salutation"
 msgstr ""
 
-#: my_practice/forms.py:120
+#: my_practice/forms.py:128
 msgid "Active client"
 msgstr ""
 
-#: my_practice/forms.py:121
+#: my_practice/forms.py:129
 msgid "Online client (video sessions)"
 msgstr ""
 
-#: my_practice/forms.py:122
+#: my_practice/forms.py:130
 msgid "GebüH-Abrechnung"
 msgstr ""
 
-#: my_practice/forms.py:123 my_practice/models/client.py:190
+#: my_practice/forms.py:131 my_practice/models/client.py:190
 msgid "No diagnosis on invoice"
 msgstr ""
 
-#: my_practice/forms.py:124
+#: my_practice/forms.py:132
 msgid "Fee 60 min (€)"
 msgstr ""
 
-#: my_practice/forms.py:125
+#: my_practice/forms.py:133
 msgid "Fee 90 min (€)"
 msgstr ""
 
-#: my_practice/forms.py:145 my_practice/forms.py:169
+#: my_practice/forms.py:153 my_practice/forms.py:177
 #: my_practice/models/calendar.py:106 my_practice/models/clinical.py:355
 #: my_practice/models/financial.py:55 my_practice/models/financial.py:143
 #: templates/my_practice/bank_import.html:83
 #: templates/my_practice/bank_review.html:190
 #: templates/my_practice/calendar_approval_queue.html:90
 #: templates/my_practice/calendar_import.html:87
-#: templates/my_practice/client_detail.html:646
-#: templates/my_practice/client_detail.html:690
-#: templates/my_practice/expense_confirm_delete.html:19
+#: templates/my_practice/client_detail.html:626
+#: templates/my_practice/client_detail.html:670
+#: templates/my_practice/expense_confirm_delete.html:11
 #: templates/my_practice/expense_list.html:78
 #: templates/my_practice/inquiry_list.html:178
 #: templates/my_practice/inquiry_list.html:224
-#: templates/my_practice/invoice_confirm_delete.html:28
+#: templates/my_practice/invoice_confirm_delete.html:20
 #: templates/my_practice/invoice_detail.html:19
 #: templates/my_practice/invoice_detail.html:83
 #: templates/my_practice/invoice_list.html:167
 #: templates/my_practice/send_payment_reminder.html:20
 #: templates/my_practice/tax_workday_audit.html:59
 #: templates/my_practice/tax_year_summary.html:189
-#: templates/my_practice/withdrawal_confirm_delete.html:19
+#: templates/my_practice/withdrawal_confirm_delete.html:11
 #: templates/my_practice/withdrawal_list.html:58
 #: templates/my_practice/withdrawal_list.html:107
 msgid "Date"
 msgstr ""
 
-#: my_practice/forms.py:155
+#: my_practice/forms.py:163
 msgid "Optional: purpose or notes"
 msgstr ""
 
-#: my_practice/forms.py:160 my_practice/forms.py:192
+#: my_practice/forms.py:168 my_practice/forms.py:200
 msgid "Amount (€)"
 msgstr ""
 
-#: my_practice/forms.py:184
+#: my_practice/forms.py:192
 msgid "Description of the expense"
 msgstr ""
 
-#: my_practice/forms.py:193 my_practice/import_forms.py:132
+#: my_practice/forms.py:201 my_practice/import_forms.py:132
 #: my_practice/models/financial.py:158
 #: templates/my_practice/bank_expense_review.html:66
 #: templates/my_practice/expense_list.html:27
 msgid "Tax deductible"
 msgstr ""
 
-#: my_practice/forms.py:194 my_practice/import_forms.py:126
+#: my_practice/forms.py:202 my_practice/import_forms.py:126
 #: my_practice/models/financial.py:157
 #: templates/my_practice/bank_expense_review.html:62
 msgid "Invoice available"
 msgstr ""
 
-#: my_practice/forms.py:195 my_practice/models/financial.py:160
+#: my_practice/forms.py:203 my_practice/models/financial.py:160
 #: templates/my_practice/expense_list.html:84
 #: templates/my_practice/expense_list.html:121
 msgid "Filed in tax return"
 msgstr ""
 
-#: my_practice/forms.py:202 my_practice/models/timeoff.py:40
+#: my_practice/forms.py:210 my_practice/models/timeoff.py:40
 msgid "Start Date"
 msgstr ""
 
-#: my_practice/forms.py:203 my_practice/models/timeoff.py:41
+#: my_practice/forms.py:211 my_practice/models/timeoff.py:41
 msgid "End Date"
 msgstr ""
 
-#: my_practice/forms.py:212 my_practice/models/clinical.py:368
+#: my_practice/forms.py:220 my_practice/models/clinical.py:368
 #: my_practice/models/timeoff.py:46 templates/my_practice/analytics.html:398
 #: templates/my_practice/tax_workday_audit.html:61
-#: templates/my_practice/time_off_confirm_delete.html:23
+#: templates/my_practice/time_off_confirm_delete.html:15
 #: templates/my_practice/time_off_list.html:32
 #: templates/my_practice/time_off_list.html:77
 msgid "Type"
 msgstr ""
 
-#: my_practice/forms.py:213 my_practice/models/timeoff.py:50
+#: my_practice/forms.py:221 my_practice/models/timeoff.py:50
 #: templates/my_practice/calendar_approval_queue.html:93
-#: templates/my_practice/time_off_confirm_delete.html:19
+#: templates/my_practice/time_off_confirm_delete.html:11
 #: templates/my_practice/time_off_list.html:31
 #: templates/my_practice/time_off_list.html:76
 msgid "Title"
 msgstr ""
 
-#: my_practice/forms.py:219
+#: my_practice/forms.py:227
 msgid "Monday"
 msgstr ""
 
-#: my_practice/forms.py:220
+#: my_practice/forms.py:228
 msgid "Tuesday"
 msgstr ""
 
-#: my_practice/forms.py:221
+#: my_practice/forms.py:229
 msgid "Wednesday"
 msgstr ""
 
-#: my_practice/forms.py:222
+#: my_practice/forms.py:230
 msgid "Thursday"
 msgstr ""
 
-#: my_practice/forms.py:223
+#: my_practice/forms.py:231
 msgid "Friday"
 msgstr ""
 
-#: my_practice/forms.py:234 my_practice/models/practice.py:308
+#: my_practice/forms.py:242 my_practice/models/practice.py:310
 #: templates/my_practice/practice_form.html:268
 msgid "Practice days (weekdays)"
 msgstr ""
 
-#: my_practice/forms.py:235 templates/my_practice/practice_form.html:276
+#: my_practice/forms.py:243 templates/my_practice/practice_form.html:276
 msgid "Weekdays on which you commute to the practice."
 msgstr ""
 
-#: my_practice/forms.py:291 my_practice/models/practice.py:366
+#: my_practice/forms.py:299 my_practice/models/practice.py:368
 #: templates/my_practice/practice_form.html:291
 msgid "Valid from"
+msgstr ""
+
+#: my_practice/forms.py:333 my_practice/models/financial.py:251
+msgid "Tax back payment / refund"
+msgstr ""
+
+#: my_practice/forms.py:335 my_practice/models/financial.py:259
+#: templates/my_practice/tax_quarter_overview.html:184
+msgid "Assessment date"
+msgstr "Assessment date"
+
+#: my_practice/forms.py:344 my_practice/models/financial.py:240
+msgid "Allocation note"
 msgstr ""
 
 #: my_practice/import_forms.py:19
@@ -899,7 +915,7 @@ msgid "Optional: description for the grouped expense"
 msgstr ""
 
 #: my_practice/inquiry_forms.py:17 my_practice/models/inquiry.py:114
-#: templates/my_practice/inquiry_confirm_delete.html:22
+#: templates/my_practice/inquiry_confirm_delete.html:14
 msgid "Date received"
 msgstr "Date received"
 
@@ -936,15 +952,15 @@ msgstr ""
 msgid "Code \"%(code)s\" is already taken."
 msgstr ""
 
-#: my_practice/inquiry_forms.py:104 my_practice/models/inquiry.py:203
+#: my_practice/inquiry_forms.py:104 my_practice/models/inquiry.py:206
 #: templates/my_practice/analytics.html:56
-#: templates/my_practice/marketing_period_confirm_delete.html:22
+#: templates/my_practice/marketing_period_confirm_delete.html:14
 msgid "From"
 msgstr ""
 
-#: my_practice/inquiry_forms.py:105 my_practice/models/inquiry.py:207
+#: my_practice/inquiry_forms.py:105 my_practice/models/inquiry.py:210
 #: templates/my_practice/analytics.html:62
-#: templates/my_practice/marketing_period_confirm_delete.html:26
+#: templates/my_practice/marketing_period_confirm_delete.html:18
 msgid "To"
 msgstr ""
 
@@ -1031,10 +1047,10 @@ msgstr ""
 #: my_practice/models/expense_category_rule.py:26
 #: my_practice/models/financial.py:52 my_practice/models/financial.py:140
 #: my_practice/models/financial.py:235 my_practice/models/inquiry.py:96
-#: my_practice/models/inquiry.py:201 my_practice/models/invoice.py:68
-#: my_practice/models/practice.py:364 my_practice/models/practice.py:400
+#: my_practice/models/inquiry.py:204 my_practice/models/invoice.py:68
+#: my_practice/models/practice.py:366 my_practice/models/practice.py:402
 #: my_practice/models/service.py:17 my_practice/models/todo.py:95
-#: templates/base.html:83 templates/my_practice/tax_workday_audit.html:73
+#: templates/base.html:88 templates/my_practice/tax_workday_audit.html:73
 msgid "Practice"
 msgstr ""
 
@@ -1199,7 +1215,7 @@ msgstr ""
 
 #: my_practice/models/calendar.py:88
 #: templates/my_practice/bank_withdrawal_review.html:13
-#: templates/my_practice/client_detail.html:654
+#: templates/my_practice/client_detail.html:634
 msgid "Pending"
 msgstr ""
 
@@ -1222,6 +1238,10 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
+#: my_practice/models/calendar.py:103
+msgid "Google Event ID"
+msgstr ""
+
 #: my_practice/models/calendar.py:105
 msgid "Summary"
 msgstr ""
@@ -1229,7 +1249,7 @@ msgstr ""
 #: my_practice/models/calendar.py:107 my_practice/models/session.py:28
 #: templates/my_practice/calendar_approval_queue.html:91
 #: templates/my_practice/calendar_import.html:88
-#: templates/my_practice/client_detail.html:646
+#: templates/my_practice/client_detail.html:626
 #: templates/my_practice/inquiry_form.html:121
 msgid "Time"
 msgstr ""
@@ -1264,14 +1284,14 @@ msgid "Client does not belong to the selected practice"
 msgstr ""
 
 #: my_practice/models/client.py:80 my_practice/models/inquiry.py:79
-#: my_practice/views/inquiry_views.py:275
+#: my_practice/views/inquiry_views.py:278
 #: templates/my_practice/send_cancellation_email.html:7
 #: templates/my_practice/time_off_notice_form.html:52
 msgid "German"
 msgstr ""
 
 #: my_practice/models/client.py:81 my_practice/models/inquiry.py:80
-#: my_practice/views/inquiry_views.py:275
+#: my_practice/views/inquiry_views.py:278
 #: templates/my_practice/send_cancellation_email.html:7
 #: templates/my_practice/time_off_notice_form.html:71
 msgid "English"
@@ -1374,8 +1394,8 @@ msgstr ""
 msgid "Check if this client primarily has online sessions"
 msgstr ""
 
-#: my_practice/models/client.py:213 templates/base.html:14
-#: templates/base.html:56 templates/my_practice/analytics.html:104
+#: my_practice/models/client.py:213 templates/base.html:19
+#: templates/base.html:61 templates/my_practice/analytics.html:104
 #: templates/my_practice/analytics.html:592
 #: templates/my_practice/client_list_cards.html:8
 msgid "Clients"
@@ -1403,7 +1423,7 @@ msgstr ""
 
 #: my_practice/models/client.py:256 my_practice/models/financial.py:31
 #: my_practice/models/financial.py:132 my_practice/models/inquiry.py:33
-#: my_practice/models/todo.py:80 my_practice/views/inquiry_views.py:388
+#: my_practice/models/todo.py:80 my_practice/views/inquiry_views.py:391
 #: templates/my_practice/bank_expense_review.html:50
 msgid "Other"
 msgstr ""
@@ -1436,7 +1456,7 @@ msgstr ""
 msgid "Client documents"
 msgstr ""
 
-#: my_practice/models/client_alias.py:36
+#: my_practice/models/client_alias.py:36 my_practice/models/practice.py:100
 msgid "Bank name"
 msgstr ""
 
@@ -1521,8 +1541,7 @@ msgid "Initial session + clinical assessment (encrypted)"
 msgstr ""
 
 #: my_practice/models/clinical.py:183
-#: templates/my_practice/client_detail.html:125
-#: templates/my_practice/client_detail.html:456
+#: templates/my_practice/client_detail.html:436
 msgid "Case notes"
 msgstr "Case notes"
 
@@ -1531,8 +1550,8 @@ msgid "Themes, dynamics, challenges, future work (encrypted)"
 msgstr ""
 
 #: my_practice/models/clinical.py:190
-#: templates/my_practice/client_detail.html:62
-#: templates/my_practice/client_detail.html:440
+#: templates/my_practice/client_detail.html:63
+#: templates/my_practice/client_detail.html:420
 msgid "Working diagnosis"
 msgstr "Working diagnosis"
 
@@ -1549,7 +1568,6 @@ msgid "Client profiles"
 msgstr ""
 
 #: my_practice/models/clinical.py:199
-#: templates/my_practice/client_detail.html:49
 msgid "Profile"
 msgstr "Profile"
 
@@ -1614,7 +1632,7 @@ msgid "Techniques and interventions applied (encrypted)"
 msgstr ""
 
 #: my_practice/models/clinical.py:265
-#: templates/my_practice/client_detail.html:275
+#: templates/my_practice/client_detail.html:259
 #: templates/my_practice/session_log_form.html:79
 msgid "Own reflection"
 msgstr "Own reflection"
@@ -1624,7 +1642,7 @@ msgid "How I felt about it — countertransference (encrypted, separate)"
 msgstr ""
 
 #: my_practice/models/clinical.py:271
-#: templates/my_practice/client_detail.html:281
+#: templates/my_practice/client_detail.html:265
 #: templates/my_practice/session_log_form.html:111
 msgid "Ideas for next session"
 msgstr ""
@@ -1676,8 +1694,8 @@ msgstr ""
 #: my_practice/models/clinical.py:345 my_practice/models/financial.py:124
 #: my_practice/models/todo.py:69
 #: templates/my_practice/bank_expense_review.html:42
-#: templates/my_practice/client_detail.html:203
-#: templates/my_practice/client_detail.html:361
+#: templates/my_practice/client_detail.html:187
+#: templates/my_practice/client_detail.html:345
 #: templates/my_practice/supervision_queue.html:5
 msgid "Supervision"
 msgstr "Supervision"
@@ -1741,6 +1759,16 @@ msgstr ""
 
 #: my_practice/models/financial.py:63
 msgid "Optional: purpose"
+msgstr ""
+
+#: my_practice/models/financial.py:77
+msgid "Company Withdrawal"
+msgstr ""
+
+#: my_practice/models/financial.py:78
+#: templates/my_practice/withdrawal_list.html:2
+#: templates/my_practice/withdrawal_list.html:4
+msgid "Company Withdrawals"
 msgstr ""
 
 #: my_practice/models/financial.py:115
@@ -1822,6 +1850,16 @@ msgstr ""
 msgid "Enter amount as a positive number"
 msgstr ""
 
+#: my_practice/models/financial.py:168
+msgid "Company Expense"
+msgstr ""
+
+#: my_practice/models/financial.py:169
+#: templates/my_practice/expense_list.html:6
+#: templates/my_practice/expense_list.html:11
+msgid "Company Expenses"
+msgstr ""
+
 #: my_practice/models/financial.py:204
 #: templates/my_practice/bank_import.html:124
 #: templates/my_practice/bank_review.html:200
@@ -1846,26 +1884,13 @@ msgstr ""
 msgid "Tax year"
 msgstr ""
 
-#: my_practice/models/financial.py:240
-msgid "Allocation note"
-msgstr ""
-
 #: my_practice/models/financial.py:242
 msgid "Documented split key, e.g. \"Revenue share 95/5 for 2025 — HO allowance and commuter allowance split accordingly.\""
-msgstr ""
-
-#: my_practice/models/financial.py:251
-msgid "Tax back payment / refund"
 msgstr ""
 
 #: my_practice/models/financial.py:253
 msgid "Positive = back payment to the tax office, negative = refund from the tax office"
 msgstr ""
-
-#: my_practice/models/financial.py:259
-#: templates/my_practice/tax_quarter_overview.html:184
-msgid "Assessment date"
-msgstr "Assessment date"
 
 #: my_practice/models/financial.py:260
 msgid "Date of the tax assessment notice"
@@ -1976,22 +2001,22 @@ msgstr ""
 msgid "Network / colleagues"
 msgstr ""
 
-#: my_practice/models/inquiry.py:52 my_practice/views/inquiry_views.py:208
-#: my_practice/views/inquiry_views.py:372
+#: my_practice/models/inquiry.py:52 my_practice/views/inquiry_views.py:211
+#: my_practice/views/inquiry_views.py:375
 msgid "New"
 msgstr ""
 
-#: my_practice/models/inquiry.py:53 my_practice/views/inquiry_views.py:209
-#: my_practice/views/inquiry_views.py:373
+#: my_practice/models/inquiry.py:53 my_practice/views/inquiry_views.py:212
+#: my_practice/views/inquiry_views.py:376
 msgid "Contacted"
 msgstr ""
 
-#: my_practice/models/inquiry.py:54 my_practice/views/inquiry_views.py:210
-#: my_practice/views/inquiry_views.py:374
+#: my_practice/models/inquiry.py:54 my_practice/views/inquiry_views.py:213
+#: my_practice/views/inquiry_views.py:377
 msgid "Intro meeting"
 msgstr ""
 
-#: my_practice/models/inquiry.py:55 my_practice/views/inquiry_views.py:211
+#: my_practice/models/inquiry.py:55 my_practice/views/inquiry_views.py:214
 msgid "Waitlist"
 msgstr ""
 
@@ -1999,8 +2024,8 @@ msgstr ""
 msgid "Intake in progress"
 msgstr ""
 
-#: my_practice/models/inquiry.py:57 my_practice/views/inquiry_views.py:213
-#: my_practice/views/inquiry_views.py:376
+#: my_practice/models/inquiry.py:57 my_practice/views/inquiry_views.py:216
+#: my_practice/views/inquiry_views.py:379
 msgid "Onboarded"
 msgstr ""
 
@@ -2021,7 +2046,7 @@ msgstr ""
 #: templates/my_practice/bank_import.html:84
 #: templates/my_practice/bank_review.html:208
 #: templates/my_practice/client_list_cards.html:107
-#: templates/my_practice/inquiry_confirm_delete.html:18
+#: templates/my_practice/inquiry_confirm_delete.html:10
 #: templates/my_practice/inquiry_convert_confirm.html:16
 #: templates/my_practice/inquiry_list.html:179
 #: templates/my_practice/inquiry_list.html:225
@@ -2032,7 +2057,7 @@ msgid "Name"
 msgstr "Name"
 
 #: my_practice/models/inquiry.py:104
-#: templates/my_practice/inquiry_confirm_delete.html:26
+#: templates/my_practice/inquiry_confirm_delete.html:18
 #: templates/my_practice/inquiry_convert_confirm.html:28
 #: templates/my_practice/inquiry_list.html:180
 #: templates/my_practice/inquiry_list.html:226
@@ -2040,7 +2065,7 @@ msgid "Source"
 msgstr "Source"
 
 #: my_practice/models/inquiry.py:120
-#: templates/my_practice/client_detail.html:495
+#: templates/my_practice/client_detail.html:475
 #: templates/my_practice/inquiry_list.html:100
 #: templates/my_practice/inquiry_list.html:181
 #: templates/my_practice/inquiry_list.html:227
@@ -2085,31 +2110,31 @@ msgstr ""
 msgid "Inquiry"
 msgstr ""
 
-#: my_practice/models/inquiry.py:170 templates/base.html:57
+#: my_practice/models/inquiry.py:170 templates/base.html:62
 #: templates/my_practice/inquiry_list.html:6
 #: templates/my_practice/inquiry_list.html:9
 #: templates/my_practice/inquiry_list.html:15
 msgid "Inquiries"
 msgstr ""
 
-#: my_practice/models/inquiry.py:208
+#: my_practice/models/inquiry.py:211
 msgid "Leave empty if still active"
 msgstr ""
 
-#: my_practice/models/inquiry.py:213
+#: my_practice/models/inquiry.py:216
 msgid "e.g. \"Google Ads €5/day\" or \"It's Complicated Premium\""
 msgstr ""
 
-#: my_practice/models/inquiry.py:218
+#: my_practice/models/inquiry.py:221
 msgid "Marketing period"
 msgstr ""
 
-#: my_practice/models/inquiry.py:219
+#: my_practice/models/inquiry.py:222
 msgid "Marketing periods"
 msgstr ""
 
-#: my_practice/models/inquiry.py:222
-#: templates/my_practice/marketing_period_confirm_delete.html:27
+#: my_practice/models/inquiry.py:225
+#: templates/my_practice/marketing_period_confirm_delete.html:19
 msgid "ongoing"
 msgstr ""
 
@@ -2140,7 +2165,7 @@ msgid "Written off"
 msgstr ""
 
 #: my_practice/models/invoice.py:75
-#: templates/my_practice/invoice_confirm_delete.html:20
+#: templates/my_practice/invoice_confirm_delete.html:12
 msgid "Invoice number"
 msgstr ""
 
@@ -2188,12 +2213,12 @@ msgstr ""
 #: my_practice/models/invoice.py:128
 #: templates/my_practice/bank_expense_review.html:17
 #: templates/my_practice/bank_withdrawal_review.html:17
-#: templates/my_practice/invoice_confirm_delete.html:38
+#: templates/my_practice/invoice_confirm_delete.html:30
 msgid "Total amount"
 msgstr "Total amount"
 
-#: my_practice/models/invoice.py:139 templates/base.html:15
-#: templates/base.html:50 templates/base.html:52
+#: my_practice/models/invoice.py:139 templates/base.html:20
+#: templates/base.html:55 templates/base.html:57
 #: templates/my_practice/analytics.html:329
 #: templates/my_practice/analytics.html:350
 #: templates/my_practice/analytics.html:399
@@ -2216,66 +2241,66 @@ msgstr ""
 msgid "Payment date must not be before the invoice date"
 msgstr ""
 
-#: my_practice/models/invoice.py:266
+#: my_practice/models/invoice.py:276
 #: templates/my_practice/invoice_detail.html:86
 msgid "Rate"
 msgstr ""
 
-#: my_practice/models/invoice.py:272
+#: my_practice/models/invoice.py:282
 #: templates/my_practice/invoice_edit.html:119
 msgid "Quantity"
 msgstr ""
 
-#: my_practice/models/invoice.py:278 my_practice/models/session.py:43
+#: my_practice/models/invoice.py:288 my_practice/models/session.py:43
 msgid "Group size"
 msgstr ""
 
-#: my_practice/models/invoice.py:280
+#: my_practice/models/invoice.py:290
 msgid "Number of participants for group offerings (default 1 = individual session). Affects the calculation of therapist hours in analytics."
 msgstr ""
 
-#: my_practice/models/invoice.py:296
+#: my_practice/models/invoice.py:306
 msgid "Linked session (central reference for clinical documentation + billing)"
 msgstr ""
 
-#: my_practice/models/invoice.py:304
+#: my_practice/models/invoice.py:314
 msgid "Free-text line item label, used instead of a linked session (day-rate/project billing) — only available when the practice allows free-form invoice items"
 msgstr ""
 
-#: my_practice/models/invoice.py:315
+#: my_practice/models/invoice.py:325
 msgid "Invoice item"
 msgstr ""
 
-#: my_practice/models/invoice.py:316 templates/my_practice/invoice_edit.html:67
+#: my_practice/models/invoice.py:326 templates/my_practice/invoice_edit.html:67
 #: templates/my_practice/invoice_form.html:64
 msgid "Invoice items"
 msgstr ""
 
-#: my_practice/models/invoice.py:337
+#: my_practice/models/invoice.py:347
 msgid "Invoice item needs either a linked session or a description, not both or neither."
 msgstr ""
 
-#: my_practice/models/invoice.py:349
+#: my_practice/models/invoice.py:359
 msgid "This practice doesn't allow free-form invoice items."
 msgstr ""
 
 #: my_practice/models/operational.py:31
-#: my_practice/utils/dashboard_widgets.py:178
+#: my_practice/utils/dashboard_widgets.py:181
 msgid "Weekly backup"
 msgstr ""
 
 #: my_practice/models/operational.py:32
-#: my_practice/utils/dashboard_widgets.py:177
+#: my_practice/utils/dashboard_widgets.py:180
 msgid "Monthly restore test"
 msgstr ""
 
 #: my_practice/models/operational.py:35
-#: my_practice/utils/dashboard_widgets.py:179
+#: my_practice/utils/dashboard_widgets.py:182
 msgid "MicroSD offsite backup (card A/B alternating, every 2 weeks)"
 msgstr ""
 
 #: my_practice/models/operational.py:37
-#: my_practice/utils/dashboard_widgets.py:180
+#: my_practice/utils/dashboard_widgets.py:183
 msgid "Annual security review"
 msgstr ""
 
@@ -2404,303 +2429,339 @@ msgstr ""
 msgid "Subtitle (English)"
 msgstr ""
 
-#: my_practice/models/practice.py:82
+#: my_practice/models/practice.py:72
+#: templates/my_practice/practice_form.html:80
+msgid "Street and house number"
+msgstr ""
+
+#: my_practice/models/practice.py:73
+#: templates/my_practice/practice_form.html:85
+msgid "Postal code"
+msgstr ""
+
+#: my_practice/models/practice.py:74
+#: templates/my_practice/practice_confirm_delete.html:32
+#: templates/my_practice/practice_form.html:89
+msgid "City"
+msgstr ""
+
+#: my_practice/models/practice.py:76
+#: templates/my_practice/practice_form.html:94
+msgid "Country"
+msgstr ""
+
+#: my_practice/models/practice.py:84
 #: templates/my_practice/practice_form.html:107
 msgid "Email sender name"
 msgstr ""
 
-#: my_practice/models/practice.py:83
+#: my_practice/models/practice.py:85
 msgid "Name displayed in 'From' field of outgoing emails"
 msgstr ""
 
-#: my_practice/models/practice.py:89
+#: my_practice/models/practice.py:87
+#: templates/my_practice/practice_form.html:116
+msgid "Website"
+msgstr ""
+
+#: my_practice/models/practice.py:91
 #: templates/my_practice/practice_form.html:126
 msgid "Booking URL"
 msgstr ""
 
-#: my_practice/models/practice.py:91
+#: my_practice/models/practice.py:93
 msgid "Link to online appointment booking (e.g. Calendly). Automatically inserted into inquiry email templates."
 msgstr ""
 
-#: my_practice/models/practice.py:104
-msgid "Private bank account (IBAN)"
+#: my_practice/models/practice.py:101
+#: templates/my_practice/practice_form.html:143
+msgid "IBAN"
+msgstr ""
+
+#: my_practice/models/practice.py:102
+#: templates/my_practice/practice_form.html:147
+msgid "BIC"
 msgstr ""
 
 #: my_practice/models/practice.py:106
+msgid "Private bank account (IBAN)"
+msgstr ""
+
+#: my_practice/models/practice.py:108
 msgid "IBAN of the private account, for automatic detection of withdrawals and capital contributions during bank import"
 msgstr ""
 
-#: my_practice/models/practice.py:116
+#: my_practice/models/practice.py:118
 msgid "CSV delimiter"
 msgstr ""
 
-#: my_practice/models/practice.py:117
+#: my_practice/models/practice.py:119
 msgid "Column separator used by your bank's CSV export, e.g. ';' or ','"
 msgstr ""
 
-#: my_practice/models/practice.py:122
+#: my_practice/models/practice.py:124
 msgid "CSV column: booking date"
 msgstr ""
 
-#: my_practice/models/practice.py:123
+#: my_practice/models/practice.py:125
 msgid "Header name of the booking date column in your bank's CSV export"
 msgstr ""
 
-#: my_practice/models/practice.py:128
+#: my_practice/models/practice.py:130
 msgid "CSV column: value date"
 msgstr ""
 
-#: my_practice/models/practice.py:129
+#: my_practice/models/practice.py:131
 msgid "Header name of the value date column in your bank's CSV export"
 msgstr ""
 
-#: my_practice/models/practice.py:134
+#: my_practice/models/practice.py:136
 msgid "CSV column: payer/payee name"
 msgstr ""
 
-#: my_practice/models/practice.py:135
+#: my_practice/models/practice.py:137
 msgid "Header name of the payer/payee name column in your bank's CSV export"
 msgstr ""
 
-#: my_practice/models/practice.py:140
+#: my_practice/models/practice.py:142
 msgid "CSV column: payer/payee IBAN"
 msgstr ""
 
-#: my_practice/models/practice.py:141
+#: my_practice/models/practice.py:143
 msgid "Header name of the payer/payee IBAN column in your bank's CSV export"
 msgstr ""
 
-#: my_practice/models/practice.py:146
+#: my_practice/models/practice.py:148
 msgid "CSV column: payment reference"
 msgstr ""
 
-#: my_practice/models/practice.py:147
+#: my_practice/models/practice.py:149
 msgid "Header name of the payment reference column in your bank's CSV export"
 msgstr ""
 
-#: my_practice/models/practice.py:152
+#: my_practice/models/practice.py:154
 msgid "CSV column: amount"
 msgstr ""
 
-#: my_practice/models/practice.py:153
+#: my_practice/models/practice.py:155
 msgid "Header name of the transaction amount column in your bank's CSV export"
 msgstr ""
 
-#: my_practice/models/practice.py:158
+#: my_practice/models/practice.py:160
 msgid "CSV column: balance after transaction"
 msgstr ""
 
-#: my_practice/models/practice.py:159
+#: my_practice/models/practice.py:161
 msgid "Header name of the running balance column in your bank's CSV export"
 msgstr ""
 
-#: my_practice/models/practice.py:164
+#: my_practice/models/practice.py:166
 msgid "CSV column: account IBAN"
 msgstr ""
 
-#: my_practice/models/practice.py:166
+#: my_practice/models/practice.py:168
 msgid "Header name of the source account IBAN column in your bank's CSV export, used to verify the file belongs to this practice's account"
 msgstr ""
 
-#: my_practice/models/practice.py:174
+#: my_practice/models/practice.py:176
 msgid "Overdue after (days)"
 msgstr ""
 
-#: my_practice/models/practice.py:176
+#: my_practice/models/practice.py:178
 msgid "Days after the invoice date before a sent invoice is flagged as overdue (dashboard widget, Focus Queue)."
 msgstr ""
 
-#: my_practice/models/practice.py:182
+#: my_practice/models/practice.py:184
 #: templates/my_practice/practice_form.html:156
 msgid "Tax ID"
 msgstr ""
 
-#: my_practice/models/practice.py:187
+#: my_practice/models/practice.py:189
 msgid "Kleinunternehmer regulation"
 msgstr ""
 
-#: my_practice/models/practice.py:189
+#: my_practice/models/practice.py:191
 msgid "When enabled: § 19 UStG (small business) instead of § 4 No. 14 UStG (Heilpraktiker)"
 msgstr ""
 
-#: my_practice/models/practice.py:194
+#: my_practice/models/practice.py:196
 msgid "Kleinunternehmer text (German)"
 msgstr ""
 
-#: my_practice/models/practice.py:195 my_practice/models/practice.py:201
+#: my_practice/models/practice.py:197 my_practice/models/practice.py:203
 msgid "Used when 'Kleinunternehmer regulation' is enabled"
 msgstr ""
 
-#: my_practice/models/practice.py:199
+#: my_practice/models/practice.py:201
 msgid "Kleinunternehmer text (English)"
 msgstr ""
 
-#: my_practice/models/practice.py:206
+#: my_practice/models/practice.py:208
 #: templates/my_practice/practice_form.html:179
 msgid "VAT exemption text (German)"
 msgstr ""
 
-#: my_practice/models/practice.py:207 my_practice/models/practice.py:212
+#: my_practice/models/practice.py:209 my_practice/models/practice.py:214
 msgid "Used when 'Kleinunternehmer regulation' is NOT enabled"
 msgstr ""
 
-#: my_practice/models/practice.py:211
+#: my_practice/models/practice.py:213
 #: templates/my_practice/practice_form.html:184
 msgid "VAT exemption text (English)"
 msgstr ""
 
-#: my_practice/models/practice.py:218
+#: my_practice/models/practice.py:220
 msgid "Allow free-form invoice items"
 msgstr ""
 
-#: my_practice/models/practice.py:220
+#: my_practice/models/practice.py:222
 msgid "Lets invoice items skip the linked session and use a free-text description instead — for day-rate or project billing that isn't tied to a therapy/coaching session. Leave off for therapy/coaching practices, where every invoice item must stay linked to a session."
 msgstr ""
 
-#: my_practice/models/practice.py:230
+#: my_practice/models/practice.py:232
 #: templates/my_practice/practice_form.html:221
 msgid "Memberships (German)"
 msgstr ""
 
-#: my_practice/models/practice.py:235
+#: my_practice/models/practice.py:237
 #: templates/my_practice/practice_form.html:226
 msgid "Memberships (English)"
 msgstr ""
 
-#: my_practice/models/practice.py:240
+#: my_practice/models/practice.py:242
 #: templates/my_practice/practice_form.html:237
 #: templates/my_practice/practice_form.html:242
 msgid "Logo"
 msgstr ""
 
-#: my_practice/models/practice.py:242
+#: my_practice/models/practice.py:244
 #: templates/my_practice/practice_form.html:247
 #: templates/my_practice/practice_form.html:252
 msgid "Signature"
 msgstr ""
 
-#: my_practice/models/practice.py:246
+#: my_practice/models/practice.py:248
 msgid "Payment term (days)"
 msgstr ""
 
-#: my_practice/models/practice.py:250
+#: my_practice/models/practice.py:252
 msgid "Payment terms (German)"
 msgstr ""
 
-#: my_practice/models/practice.py:255
+#: my_practice/models/practice.py:257
 msgid "Payment terms (English)"
 msgstr ""
 
-#: my_practice/models/practice.py:262
+#: my_practice/models/practice.py:264
 msgid "Email subject (German)"
 msgstr ""
 
-#: my_practice/models/practice.py:263 my_practice/models/practice.py:269
+#: my_practice/models/practice.py:265 my_practice/models/practice.py:271
 #, python-brace-format
 msgid "Placeholders: {invoice_number}, {amount}, {date}, {client_name}"
 msgstr ""
 
-#: my_practice/models/practice.py:268
+#: my_practice/models/practice.py:270
 msgid "Email subject (English)"
 msgstr ""
 
-#: my_practice/models/practice.py:275
+#: my_practice/models/practice.py:277
 msgid "Email body (German)"
 msgstr ""
 
-#: my_practice/models/practice.py:277 my_practice/models/practice.py:286
+#: my_practice/models/practice.py:279 my_practice/models/practice.py:288
 #, python-brace-format
 msgid "Placeholders: {salutation}, {sessions_intro}, {invoice_number}, {amount}, {date}, {client_name}"
 msgstr ""
 
-#: my_practice/models/practice.py:284
+#: my_practice/models/practice.py:286
 msgid "Email body (English)"
 msgstr ""
 
-#: my_practice/models/practice.py:291
+#: my_practice/models/practice.py:293
 msgid "Email signature"
 msgstr ""
 
-#: my_practice/models/practice.py:292
+#: my_practice/models/practice.py:294
 msgid "Used for all outgoing emails"
 msgstr ""
 
-#: my_practice/models/practice.py:299
+#: my_practice/models/practice.py:301
 #: templates/my_practice/practice_form.html:263
 msgid "Distance to practice (km)"
 msgstr ""
 
-#: my_practice/models/practice.py:301
+#: my_practice/models/practice.py:303
 msgid "One-way distance in km (e.g. 12). Used for the distance allowance on the tax year summary."
 msgstr ""
 
-#: my_practice/models/practice.py:310
+#: my_practice/models/practice.py:312
 msgid "Weekdays on which the practice is attended (0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri)."
 msgstr ""
 
-#: my_practice/models/practice.py:320
+#: my_practice/models/practice.py:322
 msgid "Monthly target: hours"
 msgstr ""
 
-#: my_practice/models/practice.py:322
+#: my_practice/models/practice.py:324
 msgid "Target hours (sessions) per month, e.g. 60.0. Enables capacity monitoring on the dashboard."
 msgstr ""
 
-#: my_practice/models/practice.py:331
+#: my_practice/models/practice.py:333
 msgid "Monthly target: revenue (€)"
 msgstr ""
 
-#: my_practice/models/practice.py:333
+#: my_practice/models/practice.py:335
 msgid "Target revenue per month in €, e.g. 3000.00. Enables capacity monitoring on the dashboard."
 msgstr ""
 
-#: my_practice/models/practice.py:339 my_practice/models/practice.py:340
+#: my_practice/models/practice.py:341 my_practice/models/practice.py:342
 msgid "Practice settings"
 msgstr ""
 
-#: my_practice/models/practice.py:368
+#: my_practice/models/practice.py:370
 msgid "Hours/week"
 msgstr ""
 
-#: my_practice/models/practice.py:369
+#: my_practice/models/practice.py:371
 msgid "Available therapy hours per week from this date"
 msgstr ""
 
-#: my_practice/models/practice.py:373
+#: my_practice/models/practice.py:375
 msgid "Capacity period"
 msgstr ""
 
-#: my_practice/models/practice.py:374
+#: my_practice/models/practice.py:376
 #: templates/my_practice/practice_form.html:283
 msgid "Capacity periods"
 msgstr ""
 
-#: my_practice/models/practice.py:379
+#: my_practice/models/practice.py:381
 msgid "week"
 msgstr ""
 
-#: my_practice/models/practice.py:394
+#: my_practice/models/practice.py:396
 msgid "User"
 msgstr ""
 
-#: my_practice/models/practice.py:404 my_practice/models/practice.py:416
+#: my_practice/models/practice.py:406 my_practice/models/practice.py:418
 #: templates/my_practice/practice_management.html:25
 msgid "Owner"
 msgstr "Owner"
 
-#: my_practice/models/practice.py:405
+#: my_practice/models/practice.py:407
 msgid "Owners have full administrative rights"
 msgstr ""
 
-#: my_practice/models/practice.py:407
+#: my_practice/models/practice.py:409
 msgid "Created on"
 msgstr ""
 
-#: my_practice/models/practice.py:410
+#: my_practice/models/practice.py:412
 msgid "User-practice assignment"
 msgstr ""
 
-#: my_practice/models/practice.py:411
+#: my_practice/models/practice.py:413
 msgid "User-practice assignments"
 msgstr ""
 
@@ -2770,7 +2831,7 @@ msgstr ""
 
 #: my_practice/models/session.py:64 templates/includes/client_card.html:19
 #: templates/my_practice/billing_open_overview.html:55
-#: templates/my_practice/client_detail.html:690
+#: templates/my_practice/client_detail.html:670
 #: templates/my_practice/includes/heatmap.html:13
 #: templates/my_practice/monthly_billing_overview.html:49
 #: templates/my_practice/tax_workday_audit.html:62
@@ -3048,12 +3109,12 @@ msgid "Error creating %(summary)s: %(error)s"
 msgstr "Error creating %(summary)s: %(error)s"
 
 #: my_practice/utils/calendar_import_helpers.py:277
-#: my_practice/views/calendar_views.py:473
+#: my_practice/views/calendar_views.py:466
 msgid "No matching service type found."
 msgstr "No matching service type found."
 
 #: my_practice/utils/calendar_import_helpers.py:281
-#: my_practice/views/calendar_views.py:480
+#: my_practice/views/calendar_views.py:473
 #, python-format
 msgid "No hourly rate set for %(code)s."
 msgstr "No hourly rate set for %(code)s."
@@ -3062,12 +3123,12 @@ msgstr "No hourly rate set for %(code)s."
 msgid "Session is already billed."
 msgstr "Session is already billed."
 
-#: my_practice/utils/calendar_import_helpers.py:310
+#: my_practice/utils/calendar_import_helpers.py:304
 #, python-format
 msgid "Error: %(error)s"
 msgstr "Error: %(error)s"
 
-#: my_practice/utils/calendar_import_helpers.py:312
+#: my_practice/utils/calendar_import_helpers.py:306
 #, python-format
 msgid "Session on %(date)s was billed."
 msgstr "Session on %(date)s was billed."
@@ -3132,34 +3193,34 @@ msgstr ""
 msgid "Dec"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:143
+#: my_practice/utils/client_detail_builder.py:141
 #, python-format
 msgid "since %(start)s"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:221
-#: my_practice/views/inquiry_views.py:212
-#: templates/my_practice/client_detail.html:527
+#: my_practice/utils/client_detail_builder.py:220
+#: my_practice/views/inquiry_views.py:215
+#: templates/my_practice/client_detail.html:507
 msgid "Intake"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:222
-#: templates/my_practice/client_detail.html:544
+#: my_practice/utils/client_detail_builder.py:221
+#: templates/my_practice/client_detail.html:524
 msgid "Contract"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:223
-#: templates/my_practice/client_detail.html:561
+#: my_practice/utils/client_detail_builder.py:222
+#: templates/my_practice/client_detail.html:541
 msgid "Anamnesis"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:224
-#: templates/my_practice/client_detail.html:578
+#: my_practice/utils/client_detail_builder.py:223
+#: templates/my_practice/client_detail.html:558
 msgid "Intake complete"
 msgstr ""
 
 #: my_practice/utils/dashboard_context_builder.py:126
-#: templates/my_practice/client_detail.html:73
+#: templates/my_practice/client_detail.html:74
 #, python-format
 msgid "%(count)s session"
 msgid_plural "%(count)s sessions"
@@ -3306,145 +3367,145 @@ msgstr "Invalid status"
 msgid "Status changed to: %(status)s"
 msgstr "Status changed to: %(status)s"
 
-#: my_practice/views/bank_import_views.py:79
+#: my_practice/views/bank_import_views.py:80
 #, python-format
 msgid "%(count)s automatically matched"
 msgstr "%(count)s automatically matched"
 
-#: my_practice/views/bank_import_views.py:80
+#: my_practice/views/bank_import_views.py:81
 #, python-format
 msgid "%(count)s require manual review"
 msgstr "%(count)s require manual review"
 
-#: my_practice/views/bank_import_views.py:84
+#: my_practice/views/bank_import_views.py:85
 #, python-format
 msgid "%(count)s expenses detected automatically"
 msgstr "%(count)s expenses detected automatically"
 
-#: my_practice/views/bank_import_views.py:86
+#: my_practice/views/bank_import_views.py:87
 #, python-format
 msgid "%(count)s ignored"
 msgstr "%(count)s ignored"
 
-#: my_practice/views/bank_import_views.py:89
+#: my_practice/views/bank_import_views.py:90
 #, python-format
 msgid "Import complete: %(details)s."
 msgstr "Import complete: %(details)s."
 
-#: my_practice/views/bank_import_views.py:250
+#: my_practice/views/bank_import_views.py:253
 msgid "No transaction selected."
 msgstr "No transaction selected."
 
-#: my_practice/views/bank_import_views.py:338
+#: my_practice/views/bank_import_views.py:341
 #, python-format
 msgid "Auto-ignored: invoice %(number)s already paid"
 msgstr "Auto-ignored: invoice %(number)s already paid"
 
-#: my_practice/views/bank_import_views.py:348
+#: my_practice/views/bank_import_views.py:351
 #, python-format
 msgid "✅ %(count)s transaction with already-paid invoice ignored."
 msgid_plural "✅ %(count)s transactions with already-paid invoices ignored."
 msgstr[0] "✅ %(count)s transaction with already-paid invoice ignored."
 msgstr[1] "✅ %(count)s transactions with already-paid invoices ignored."
 
-#: my_practice/views/bank_import_views.py:355
+#: my_practice/views/bank_import_views.py:358
 msgid "No matching transactions to ignore."
 msgstr "No matching transactions to ignore."
 
-#: my_practice/views/bank_import_views.py:371
+#: my_practice/views/bank_import_views.py:374
 #, python-format
 msgid "%(count)s expense ignored."
 msgid_plural "%(count)s expenses ignored."
 msgstr[0] "%(count)s expense ignored."
 msgstr[1] "%(count)s expenses ignored."
 
-#: my_practice/views/bank_import_views.py:391
-#: my_practice/views/bank_import_views.py:719
-#: my_practice/views/bank_import_views.py:870
+#: my_practice/views/bank_import_views.py:394
+#: my_practice/views/bank_import_views.py:724
+#: my_practice/views/bank_import_views.py:877
 #, python-format
 msgid "%(count)s transaction ignored."
 msgid_plural "%(count)s transactions ignored."
 msgstr[0] "%(count)s transaction ignored."
 msgstr[1] "%(count)s transactions ignored."
 
-#: my_practice/views/bank_import_views.py:405
+#: my_practice/views/bank_import_views.py:408
 msgid "Transaction ignored."
 msgstr "Transaction ignored."
 
-#: my_practice/views/bank_import_views.py:429
+#: my_practice/views/bank_import_views.py:432
 #, python-format
 msgid "Transaction linked to %(number)s (already paid)."
 msgstr "Transaction linked to %(number)s (already paid)."
 
-#: my_practice/views/bank_import_views.py:433
+#: my_practice/views/bank_import_views.py:436
 msgid "Transaction confirmed (invoice already paid)."
 msgstr "Transaction confirmed (invoice already paid)."
 
-#: my_practice/views/bank_import_views.py:439
+#: my_practice/views/bank_import_views.py:442
 msgid "No invoice specified."
 msgstr "No invoice specified."
 
-#: my_practice/views/bank_import_views.py:459
+#: my_practice/views/bank_import_views.py:462
 #, python-format
 msgid "Transaction automatically linked to %(number)s and marked as paid."
 msgstr "Transaction automatically linked to %(number)s and marked as paid."
 
-#: my_practice/views/bank_import_views.py:468
+#: my_practice/views/bank_import_views.py:471
 msgid "Error processing form."
 msgstr "Error processing form."
 
-#: my_practice/views/bank_import_views.py:473
+#: my_practice/views/bank_import_views.py:476
 msgid "Please select at least one invoice."
 msgstr "Please select at least one invoice."
 
-#: my_practice/views/bank_import_views.py:504
+#: my_practice/views/bank_import_views.py:507
 #, python-format
 msgid "Payment successfully assigned to invoice %(number)s."
 msgstr "Payment successfully assigned to invoice %(number)s."
 
-#: my_practice/views/bank_import_views.py:511
+#: my_practice/views/bank_import_views.py:514
 #, python-format
 msgid "Payment successfully assigned to %(count)s invoices: %(numbers)s"
 msgstr "Payment successfully assigned to %(count)s invoices: %(numbers)s"
 
-#: my_practice/views/bank_import_views.py:532
+#: my_practice/views/bank_import_views.py:535
 #, python-format
 msgid "📌 Alias '%(name)s' for %(code)s saved."
 msgstr "📌 Alias '%(name)s' for %(code)s saved."
 
-#: my_practice/views/bank_import_views.py:539
+#: my_practice/views/bank_import_views.py:542
 #, python-format
 msgid "Alias '%(name)s' for %(code)s saved."
 msgstr "Alias '%(name)s' for %(code)s saved."
 
-#: my_practice/views/bank_import_views.py:590
+#: my_practice/views/bank_import_views.py:595
 msgid "Bank Import - Assign Expenses"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:608
-#: my_practice/views/bank_import_views.py:701
-#: my_practice/views/bank_import_views.py:771
-#: my_practice/views/bank_import_views.py:844
+#: my_practice/views/bank_import_views.py:613
+#: my_practice/views/bank_import_views.py:706
+#: my_practice/views/bank_import_views.py:778
+#: my_practice/views/bank_import_views.py:851
 msgid "Please select at least one transaction."
 msgstr "Please select at least one transaction."
 
-#: my_practice/views/bank_import_views.py:616
-#: my_practice/views/bank_import_views.py:779
+#: my_practice/views/bank_import_views.py:621
+#: my_practice/views/bank_import_views.py:786
 msgid "No transactions found."
 msgstr "No transactions found."
 
-#: my_practice/views/bank_import_views.py:689
+#: my_practice/views/bank_import_views.py:694
 #, python-format
 msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
 msgstr[0] "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgstr[1] "%(count)s transactions successfully grouped into expense: %(amount)s €"
 
-#: my_practice/views/bank_import_views.py:754
+#: my_practice/views/bank_import_views.py:761
 msgid "Bank Import - Assign Withdrawals"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:833
+#: my_practice/views/bank_import_views.py:840
 #, python-format
 msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
@@ -3481,64 +3542,64 @@ msgstr "Error loading calendar events: %(error)s"
 msgid "No events selected"
 msgstr "No events selected"
 
-#: my_practice/views/calendar_views.py:187
+#: my_practice/views/calendar_views.py:186
 msgid "Google Calendar not connected"
 msgstr "Google Calendar not connected"
 
-#: my_practice/views/calendar_views.py:192
+#: my_practice/views/calendar_views.py:189
 msgid "Calendar 'Praxis' not found"
 msgstr "Calendar 'Praxis' not found"
 
-#: my_practice/views/calendar_views.py:202
+#: my_practice/views/calendar_views.py:196
 #, python-format
 msgid "Error loading events: %(error)s"
 msgstr "Error loading events: %(error)s"
 
-#: my_practice/views/calendar_views.py:217
-#: my_practice/views/calendar_views.py:377
+#: my_practice/views/calendar_views.py:210
+#: my_practice/views/calendar_views.py:370
 msgid "Invalid JSON"
 msgstr "Invalid JSON"
 
-#: my_practice/views/calendar_views.py:238
+#: my_practice/views/calendar_views.py:231
 #: my_practice/views/invoice_views.py:475
 #: my_practice/views/invoice_views.py:748
 #: my_practice/views/invoice_views.py:862
 msgid "No active practice found."
 msgstr "No active practice found."
 
-#: my_practice/views/calendar_views.py:331
+#: my_practice/views/calendar_views.py:324
 msgid "No events selected."
 msgstr "No events selected."
 
-#: my_practice/views/calendar_views.py:427
-#: my_practice/views/calendar_views.py:570
+#: my_practice/views/calendar_views.py:420
+#: my_practice/views/calendar_views.py:563
 msgid "Event not found."
 msgstr "Event not found."
 
-#: my_practice/views/calendar_views.py:444
+#: my_practice/views/calendar_views.py:437
 #, python-format
 msgid "Event on %(date)s skipped."
 msgstr "Event on %(date)s skipped."
 
-#: my_practice/views/calendar_views.py:582
+#: my_practice/views/calendar_views.py:575
 msgid "Unknown action."
 msgstr "Unknown action."
 
-#: my_practice/views/calendar_views.py:586
+#: my_practice/views/calendar_views.py:579
 msgid "No client assigned to this event."
 msgstr "No client assigned to this event."
 
-#: my_practice/views/calendar_views.py:597
+#: my_practice/views/calendar_views.py:590
 #, python-format
 msgid "Session on %(date)s is already billed."
 msgstr "Session on %(date)s is already billed."
 
-#: my_practice/views/calendar_views.py:607
+#: my_practice/views/calendar_views.py:600
 #, python-format
 msgid "Event on %(date)s added to invoice %(number)s."
 msgstr "Event on %(date)s added to invoice %(number)s."
 
-#: my_practice/views/calendar_views.py:611
+#: my_practice/views/calendar_views.py:604
 #, python-format
 msgid "Import error: %(error)s"
 msgstr "Import error: %(error)s"
@@ -3821,22 +3882,6 @@ msgstr ""
 msgid "Link with transaction from %(date)s removed."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:253
-msgid "Received → response"
-msgstr ""
-
-#: my_practice/views/inquiry_views.py:254
-msgid "Response → intro meeting"
-msgstr ""
-
-#: my_practice/views/inquiry_views.py:255
-msgid "Intro meeting → decision"
-msgstr ""
-
-#: my_practice/views/inquiry_views.py:256
-msgid "Decision → onboarded"
-msgstr ""
-
 #: my_practice/views/inquiry_views.py:45
 msgid "Acknowledge receipt"
 msgstr ""
@@ -3869,42 +3914,58 @@ msgstr ""
 msgid "Closing — unreachable"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:375
+#: my_practice/views/inquiry_views.py:256
+msgid "Received → response"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:257
+msgid "Response → intro meeting"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:258
+msgid "Intro meeting → decision"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:259
+msgid "Decision → onboarded"
+msgstr ""
+
+#: my_practice/views/inquiry_views.py:378
 msgid "Waitlist / intake"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:377
+#: my_practice/views/inquiry_views.py:380
 msgid "Closed"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:407
+#: my_practice/views/inquiry_views.py:410
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} recorded."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:417
+#: my_practice/views/inquiry_views.py:420
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} saved."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:450
+#: my_practice/views/inquiry_views.py:453
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} deleted."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:460
+#: my_practice/views/inquiry_views.py:463
 msgid "Marketing period recorded."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:470
+#: my_practice/views/inquiry_views.py:473
 msgid "Marketing period saved."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:480
+#: my_practice/views/inquiry_views.py:483
 msgid "Marketing period deleted."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:540
+#: my_practice/views/inquiry_views.py:543
 #, python-format
 msgid "Client %(name)s (%(code)s) created successfully."
 msgstr ""
@@ -4181,19 +4242,19 @@ msgstr ""
 msgid "Tag '%(name)s' removed"
 msgstr ""
 
-#: my_practice/views/tax_views.py:48
+#: my_practice/views/tax_views.py:50
 msgid "No practice selected"
 msgstr ""
 
-#: my_practice/views/tax_views.py:53 my_practice/views/tax_views.py:56
+#: my_practice/views/tax_views.py:55 my_practice/views/tax_views.py:58
 msgid "Invalid year"
 msgstr ""
 
-#: my_practice/views/tax_views.py:69
+#: my_practice/views/tax_views.py:73
 msgid "Invalid amount"
 msgstr "Invalid amount"
 
-#: my_practice/views/tax_views.py:80
+#: my_practice/views/tax_views.py:82
 msgid "Invalid date"
 msgstr "Invalid date"
 
@@ -4232,197 +4293,197 @@ msgstr ""
 msgid "'%(title)s' marked as completed."
 msgstr ""
 
-#: my_practice/views/withdrawal_views.py:71
+#: my_practice/views/withdrawal_views.py:70
 msgid "Withdrawal from {obj.date:%d.%m.%Y} created successfully."
 msgstr ""
 
-#: my_practice/views/withdrawal_views.py:90
+#: my_practice/views/withdrawal_views.py:89
 msgid "Withdrawal from {obj.date:%d.%m.%Y} updated successfully."
 msgstr ""
 
-#: my_practice/views/withdrawal_views.py:102
+#: my_practice/views/withdrawal_views.py:101
 msgid "Withdrawal from {obj.date:%d.%m.%Y} of {obj.amount}€ deleted successfully."
 msgstr ""
 
-#: templates/base.html:16
+#: templates/base.html:21
 msgid "Help"
 msgstr ""
 
-#: templates/base.html:17 templates/my_practice/client_intake.html:4
+#: templates/base.html:22 templates/my_practice/client_intake.html:4
 #: templates/my_practice/client_intake.html:6
 #: templates/my_practice/client_list_cards.html:29
 msgid "New client"
 msgstr ""
 
-#: templates/base.html:18 templates/my_practice/client_detail.html:625
+#: templates/base.html:23 templates/my_practice/client_detail.html:605
 #: templates/my_practice/invoice_list.html:136
 msgid "New invoice"
 msgstr ""
 
-#: templates/base.html:19 templates/my_practice/client_intake.html:4
+#: templates/base.html:24 templates/my_practice/client_intake.html:4
 #: templates/my_practice/client_intake.html:6
 msgid "Edit client"
 msgstr ""
 
-#: templates/base.html:20 templates/my_practice/billing_open_overview.html:136
+#: templates/base.html:25 templates/my_practice/billing_open_overview.html:136
 #: templates/my_practice/invoice_edit.html:6
 #: templates/my_practice/invoice_edit.html:8
 #: templates/my_practice/monthly_billing_overview.html:130
 msgid "Edit invoice"
 msgstr ""
 
-#: templates/base.html:21
+#: templates/base.html:26
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-#: templates/base.html:22
+#: templates/base.html:27
 msgid "These shortcuts work everywhere (except in input fields)."
 msgstr ""
 
-#: templates/base.html:23
+#: templates/base.html:28
 msgid "Global Navigation"
 msgstr ""
 
-#: templates/base.html:24
+#: templates/base.html:29
 msgid "On This Page"
 msgstr ""
 
-#: templates/base.html:25
+#: templates/base.html:30
 msgid "Press"
 msgstr ""
 
-#: templates/base.html:26
+#: templates/base.html:31
 msgid "or"
 msgstr ""
 
-#: templates/base.html:27
+#: templates/base.html:32
 msgid "to close"
 msgstr ""
 
-#: templates/base.html:28
+#: templates/base.html:33
 msgid "for keyboard shortcuts"
 msgstr ""
 
-#: templates/base.html:29
+#: templates/base.html:34
 msgid "for search"
 msgstr ""
 
-#: templates/base.html:30
+#: templates/base.html:35
 msgid "Shortcut"
 msgstr ""
 
-#: templates/base.html:31
+#: templates/base.html:36
 msgid "Search... (c:client/inquiry, i:invoice)"
 msgstr ""
 
-#: templates/base.html:32
+#: templates/base.html:37
 msgid "Searching…"
 msgstr ""
 
-#: templates/base.html:33
+#: templates/base.html:38
 msgid "Error while searching"
 msgstr ""
 
-#: templates/base.html:34
+#: templates/base.html:39
 msgid "No results"
 msgstr ""
 
-#: templates/base.html:44 templates/base.html:46
+#: templates/base.html:49 templates/base.html:51
 #: templates/registration/login.html:6
 msgid "Practice management"
 msgstr ""
 
-#: templates/base.html:48 templates/my_practice/bank_expense_review.html:146
-#: templates/my_practice/bank_withdrawal_review.html:126
+#: templates/base.html:53 templates/my_practice/bank_expense_review.html:132
+#: templates/my_practice/bank_withdrawal_review.html:112
 #: templates/my_practice/checklist.html:16
 #: templates/my_practice/client_detail.html:44
 msgid "Overview"
 msgstr ""
 
-#: templates/base.html:58 templates/my_practice/focus_queue.html:4
+#: templates/base.html:63 templates/my_practice/focus_queue.html:4
 #: templates/my_practice/focus_queue.html:7
 msgid "Focus Queue"
 msgstr ""
 
-#: templates/base.html:60
+#: templates/base.html:65
 msgid "Finances"
 msgstr ""
 
-#: templates/base.html:62 templates/my_practice/bank_expense_review.html:144
+#: templates/base.html:67 templates/my_practice/bank_expense_review.html:130
 #: templates/my_practice/bank_import.html:4
 #: templates/my_practice/bank_import.html:9
 msgid "Bank import"
 msgstr ""
 
-#: templates/base.html:63 templates/my_practice/analytics.html:142
+#: templates/base.html:68 templates/my_practice/analytics.html:142
 #: templates/my_practice/analytics.html:187
 #: templates/my_practice/bank_review.html:22
 #: templates/my_practice/withdrawal_list.html:48
 msgid "Withdrawals"
 msgstr ""
 
-#: templates/base.html:64 templates/my_practice/analytics.html:110
+#: templates/base.html:69 templates/my_practice/analytics.html:110
 #: templates/my_practice/analytics.html:139
 #: templates/my_practice/analytics.html:186
 #: templates/my_practice/bank_review.html:17
-#: templates/my_practice/bank_withdrawal_review.html:124
+#: templates/my_practice/bank_withdrawal_review.html:110
 #: templates/my_practice/expense_list.html:66
 #: templates/my_practice/tax_quarter_overview.html:78
 msgid "Expenses"
 msgstr ""
 
-#: templates/base.html:65
+#: templates/base.html:70
 msgid "Bank expenses"
 msgstr ""
 
-#: templates/base.html:66 templates/my_practice/analytics.html:6
+#: templates/base.html:71 templates/my_practice/analytics.html:6
 #: templates/my_practice/analytics.html:9
 #: templates/my_practice/inquiry_list.html:36
 #: templates/my_practice/withdrawal_list.html:16
 msgid "Analytics"
 msgstr ""
 
-#: templates/base.html:67
+#: templates/base.html:72
 msgid "Tax annual overview"
 msgstr ""
 
-#: templates/base.html:68
+#: templates/base.html:73
 msgid "Tax quarterly overview"
 msgstr ""
 
-#: templates/base.html:74
+#: templates/base.html:79
 msgid "Calendar approval"
 msgstr ""
 
-#: templates/base.html:75 templates/my_practice/analytics.html:662
+#: templates/base.html:80 templates/my_practice/analytics.html:662
 #: templates/my_practice/time_off_list.html:4
 #: templates/my_practice/time_off_list.html:6
 msgid "Time off"
 msgstr ""
 
-#: templates/base.html:77 templates/my_practice/boilerplate.html:4
+#: templates/base.html:82 templates/my_practice/boilerplate.html:4
 #: templates/my_practice/boilerplate.html:9
 msgid "Email templates"
 msgstr ""
 
-#: templates/base.html:93 templates/my_practice/practice_management.html:4
+#: templates/base.html:98 templates/my_practice/practice_management.html:4
 #: templates/my_practice/practice_management.html:6
 msgid "Manage practices"
 msgstr "Manage practices"
 
-#: templates/base.html:105
+#: templates/base.html:110
 msgid "Toggle dark mode"
 msgstr ""
 
-#: templates/base.html:108
+#: templates/base.html:113
 msgid "Click to hide sensitive data"
 msgstr ""
 
-#: templates/base.html:126
+#: templates/base.html:131
 msgid "available"
 msgstr ""
 
-#: templates/base.html:128
+#: templates/base.html:133
 msgid "Close"
 msgstr ""
 
@@ -4441,7 +4502,7 @@ msgstr "Date (invoice)"
 #: templates/includes/calendar_preflight_widget.html:26
 #: templates/my_practice/calendar_approval_queue.html:92
 #: templates/my_practice/calendar_import.html:90
-#: templates/my_practice/client_detail.html:646
+#: templates/my_practice/client_detail.html:626
 #: templates/my_practice/invoice_detail.html:85
 #: templates/my_practice/time_off_list.html:35
 #: templates/my_practice/time_off_list.html:80
@@ -4515,7 +4576,7 @@ msgid "Revenue this month: %(current)s € / %(target)s €"
 msgstr ""
 
 #: templates/includes/client_card.html:11
-#: templates/my_practice/client_detail.html:311
+#: templates/my_practice/client_detail.html:295
 msgid "Log missing"
 msgstr "Log missing"
 
@@ -4617,8 +4678,8 @@ msgid "Snooze 1 week"
 msgstr ""
 
 #: templates/includes/focus_queue_row.html:56
-#: templates/my_practice/client_detail.html:288
-#: templates/my_practice/client_detail.html:317
+#: templates/my_practice/client_detail.html:272
+#: templates/my_practice/client_detail.html:301
 #: templates/my_practice/expense_list.html:127
 #: templates/my_practice/inquiry_list.html:26
 #: templates/my_practice/inquiry_list.html:203
@@ -4639,19 +4700,19 @@ msgstr "Edit"
 msgid "GebüH"
 msgstr ""
 
-#: templates/includes/invoice_status_badge.html:10
+#: templates/includes/invoice_status_badge.html:12
 msgid "Click to mark as sent"
 msgstr ""
 
-#: templates/includes/invoice_status_badge.html:11
+#: templates/includes/invoice_status_badge.html:13
 msgid "DRAFT →"
 msgstr ""
 
-#: templates/includes/invoice_status_badge.html:19
+#: templates/includes/invoice_status_badge.html:21
 msgid "Click to mark as paid"
 msgstr ""
 
-#: templates/includes/invoice_status_badge.html:20
+#: templates/includes/invoice_status_badge.html:22
 msgid "SENT →"
 msgstr ""
 
@@ -4660,15 +4721,29 @@ msgid "← Previous"
 msgstr ""
 
 #: templates/includes/pagination.html:19
-#: templates/my_practice/bank_expense_review.html:120
-#: templates/my_practice/bank_review.html:334
-#: templates/my_practice/bank_withdrawal_review.html:100
+#: templates/includes/pagination_bar.html:24
 #, python-format
 msgid "Page %(page)s of %(pages)s"
 msgstr ""
 
 #: templates/includes/pagination.html:21
 msgid "Next →"
+msgstr ""
+
+#: templates/includes/pagination_bar.html:19
+msgid "« First"
+msgstr ""
+
+#: templates/includes/pagination_bar.html:20
+msgid "‹ Previous"
+msgstr ""
+
+#: templates/includes/pagination_bar.html:28
+msgid "Next ›"
+msgstr ""
+
+#: templates/includes/pagination_bar.html:29
+msgid "Last »"
 msgstr ""
 
 #: templates/includes/weekly_focus_widget_content.html:13
@@ -4692,6 +4767,46 @@ msgstr ""
 #: templates/includes/widget_base.html:39
 msgid "Toggle widget"
 msgstr ""
+
+#: templates/my_practice/_confirm_delete_base.html:30
+#: templates/my_practice/tag_confirm_delete.html:34
+#: templates/my_practice/todo_confirm_delete.html:33
+msgid "Yes, delete"
+msgstr "Yes, delete"
+
+#: templates/my_practice/_confirm_delete_base.html:31
+#: templates/my_practice/calendar_import.html:77
+#: templates/my_practice/client_detail.html:364
+#: templates/my_practice/client_detail_documents.html:28
+#: templates/my_practice/client_gdpr_delete_confirm.html:55
+#: templates/my_practice/client_intake.html:144
+#: templates/my_practice/expense_form.html:100
+#: templates/my_practice/gebueh_leistung_form.html:42
+#: templates/my_practice/inquiry_convert_confirm.html:80
+#: templates/my_practice/inquiry_form.html:191
+#: templates/my_practice/invoice_edit.html:151
+#: templates/my_practice/invoice_form.html:134
+#: templates/my_practice/marketing_period_form.html:53
+#: templates/my_practice/practice_confirm_delete.html:52
+#: templates/my_practice/practice_form.html:314
+#: templates/my_practice/send_cancellation_email.html:50
+#: templates/my_practice/send_contract_email.html:65
+#: templates/my_practice/send_intake_form_email.html:65
+#: templates/my_practice/send_invoice_email.html:72
+#: templates/my_practice/send_payment_reminder.html:89
+#: templates/my_practice/send_questionnaire_email.html:62
+#: templates/my_practice/send_questionnaire_pdf_email.html:65
+#: templates/my_practice/session_log_form.html:128
+#: templates/my_practice/tag_confirm_delete.html:37
+#: templates/my_practice/tag_form.html:58
+#: templates/my_practice/tax_quarter_overview.html:191
+#: templates/my_practice/time_off_form.html:70
+#: templates/my_practice/time_off_notice_form.html:94
+#: templates/my_practice/todo_confirm_delete.html:34
+#: templates/my_practice/todo_form.html:81
+#: templates/my_practice/withdrawal_form.html:73
+msgid "Cancel"
+msgstr "Cancel"
 
 #: templates/my_practice/analytics.html:10
 msgid "Revenue, Clients, Capacity & Expenses"
@@ -4833,7 +4948,7 @@ msgid "Hours"
 msgstr ""
 
 #: templates/my_practice/analytics.html:352
-#: templates/my_practice/client_detail.html:507
+#: templates/my_practice/client_detail.html:487
 #: templates/my_practice/revenue_report.html:28
 #: templates/my_practice/tax_year_summary.html:37
 #: templates/my_practice/tax_year_summary.html:354
@@ -4874,7 +4989,7 @@ msgid "Dormant"
 msgstr ""
 
 #: templates/my_practice/analytics.html:426
-#: templates/my_practice/client_detail.html:500
+#: templates/my_practice/client_detail.html:480
 msgid "💻 Online"
 msgstr ""
 
@@ -5136,44 +5251,24 @@ msgstr "Group into expense"
 #: templates/my_practice/bank_review.html:286
 #: templates/my_practice/bank_review.html:317
 #: templates/my_practice/bank_withdrawal_review.html:50
-#: templates/my_practice/client_detail.html:666
+#: templates/my_practice/client_detail.html:646
 msgid "Ignore"
 msgstr ""
 
-#: templates/my_practice/bank_expense_review.html:115
-#: templates/my_practice/bank_withdrawal_review.html:95
-msgid "« First"
-msgstr ""
-
-#: templates/my_practice/bank_expense_review.html:116
-#: templates/my_practice/bank_withdrawal_review.html:96
-msgid "‹ Previous"
-msgstr ""
-
-#: templates/my_practice/bank_expense_review.html:124
-#: templates/my_practice/bank_withdrawal_review.html:104
-msgid "Next ›"
-msgstr ""
-
-#: templates/my_practice/bank_expense_review.html:125
-#: templates/my_practice/bank_withdrawal_review.html:105
-msgid "Last »"
-msgstr ""
-
-#: templates/my_practice/bank_expense_review.html:133
+#: templates/my_practice/bank_expense_review.html:119
 msgid "All transactions matched"
 msgstr "All transactions matched"
 
-#: templates/my_practice/bank_expense_review.html:136
+#: templates/my_practice/bank_expense_review.html:122
 msgid "There are no unmatched negative transactions."
 msgstr ""
 
-#: templates/my_practice/bank_expense_review.html:143
-#: templates/my_practice/bank_withdrawal_review.html:123
+#: templates/my_practice/bank_expense_review.html:129
+#: templates/my_practice/bank_withdrawal_review.html:109
 msgid "← Review invoices"
 msgstr "← Review invoices"
 
-#: templates/my_practice/bank_expense_review.html:145
+#: templates/my_practice/bank_expense_review.html:131
 msgid "Expense list"
 msgstr ""
 
@@ -5398,27 +5493,11 @@ msgstr ""
 msgid "Assign manually"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:329
-msgid "First"
-msgstr ""
-
-#: templates/my_practice/bank_review.html:330
-msgid "Previous"
-msgstr ""
-
-#: templates/my_practice/bank_review.html:338
-msgid "Next"
-msgstr ""
-
-#: templates/my_practice/bank_review.html:339
-msgid "Last"
-msgstr ""
-
-#: templates/my_practice/bank_review.html:347
+#: templates/my_practice/bank_review.html:333
 msgid "All transactions are matched!"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:348
+#: templates/my_practice/bank_review.html:334
 msgid "No open transactions remaining."
 msgstr ""
 
@@ -5431,15 +5510,15 @@ msgstr ""
 msgid "Auto-withdrawal: %(linked_withdrawal)s"
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:113
+#: templates/my_practice/bank_withdrawal_review.html:99
 msgid "All withdrawals matched"
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:116
+#: templates/my_practice/bank_withdrawal_review.html:102
 msgid "There are no pending automatically detected withdrawals."
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:125
+#: templates/my_practice/bank_withdrawal_review.html:111
 msgid "Withdrawal list"
 msgstr ""
 
@@ -5507,8 +5586,8 @@ msgstr ""
 
 #: templates/my_practice/billing_open_overview.html:59
 #: templates/my_practice/calendar_import.html:94
-#: templates/my_practice/client_detail.html:646
-#: templates/my_practice/client_detail.html:690
+#: templates/my_practice/client_detail.html:626
+#: templates/my_practice/client_detail.html:670
 #: templates/my_practice/expense_list.html:85
 #: templates/my_practice/inquiry_list.html:183
 #: templates/my_practice/inquiry_list.html:229
@@ -5860,45 +5939,6 @@ msgstr ""
 msgid "Hide duplicates"
 msgstr ""
 
-#: templates/my_practice/calendar_import.html:77
-#: templates/my_practice/client_detail.html:380
-#: templates/my_practice/client_detail_documents.html:28
-#: templates/my_practice/client_gdpr_delete_confirm.html:55
-#: templates/my_practice/client_intake.html:144
-#: templates/my_practice/expense_confirm_delete.html:41
-#: templates/my_practice/expense_form.html:100
-#: templates/my_practice/gebueh_leistung_form.html:42
-#: templates/my_practice/inquiry_confirm_delete.html:39
-#: templates/my_practice/inquiry_convert_confirm.html:80
-#: templates/my_practice/inquiry_form.html:191
-#: templates/my_practice/invoice_confirm_delete.html:52
-#: templates/my_practice/invoice_edit.html:151
-#: templates/my_practice/invoice_form.html:134
-#: templates/my_practice/marketing_period_confirm_delete.html:35
-#: templates/my_practice/marketing_period_form.html:53
-#: templates/my_practice/practice_confirm_delete.html:52
-#: templates/my_practice/practice_form.html:314
-#: templates/my_practice/send_cancellation_email.html:50
-#: templates/my_practice/send_contract_email.html:65
-#: templates/my_practice/send_intake_form_email.html:65
-#: templates/my_practice/send_invoice_email.html:72
-#: templates/my_practice/send_payment_reminder.html:89
-#: templates/my_practice/send_questionnaire_email.html:62
-#: templates/my_practice/send_questionnaire_pdf_email.html:65
-#: templates/my_practice/session_log_form.html:128
-#: templates/my_practice/tag_confirm_delete.html:37
-#: templates/my_practice/tag_form.html:58
-#: templates/my_practice/tax_quarter_overview.html:191
-#: templates/my_practice/time_off_confirm_delete.html:47
-#: templates/my_practice/time_off_form.html:70
-#: templates/my_practice/time_off_notice_form.html:94
-#: templates/my_practice/todo_confirm_delete.html:34
-#: templates/my_practice/todo_form.html:81
-#: templates/my_practice/withdrawal_confirm_delete.html:43
-#: templates/my_practice/withdrawal_form.html:73
-msgid "Cancel"
-msgstr "Cancel"
-
 #: templates/my_practice/calendar_import.html:89
 msgid "Event"
 msgstr ""
@@ -6075,6 +6115,10 @@ msgstr ""
 msgid "✏️ Edit"
 msgstr ""
 
+#: templates/my_practice/client_detail.html:43
+msgid "Unsaved changes"
+msgstr ""
+
 #: templates/my_practice/client_detail.html:45
 msgid "Protocol"
 msgstr "Protocol"
@@ -6083,73 +6127,69 @@ msgstr "Protocol"
 msgid "Open supervision topics"
 msgstr "Open supervision topics"
 
-#: templates/my_practice/client_detail.html:53
+#: templates/my_practice/client_detail.html:52
 #: templates/my_practice/client_detail_documents.html:4
 msgid "Documents"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:66
+#: templates/my_practice/client_detail.html:67
 #: templates/my_practice/client_list_cards.html:108
 #: templates/my_practice/time_off_notice_form.html:30
 msgid "Last session"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:68
+#: templates/my_practice/client_detail.html:69
 #, python-format
 msgid "%(ago)s ago"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:71
+#: templates/my_practice/client_detail.html:72
 msgid "Session hours"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:76
+#: templates/my_practice/client_detail.html:77
 msgid "Open balance"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:99
+#: templates/my_practice/client_detail.html:92
 msgid "Recent sessions"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:100
+#: templates/my_practice/client_detail.html:93
 msgid "full protocol →"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:117
+#: templates/my_practice/client_detail.html:110
 msgid "No sessions with log yet."
 msgstr ""
 
-#: templates/my_practice/client_detail.html:132
-#: templates/my_practice/client_detail.html:520
+#: templates/my_practice/client_detail.html:118
+#: templates/my_practice/client_detail.html:500
 msgid "Intake process"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:145
-msgid "Details in profile tab →"
-msgstr ""
-
-#: templates/my_practice/client_detail.html:153
-#: templates/my_practice/client_detail.html:173
+#: templates/my_practice/client_detail.html:139
+#: templates/my_practice/client_detail.html:157
 msgid "+ Session log"
 msgstr "+ Session log"
 
-#: templates/my_practice/client_detail.html:154
+#: templates/my_practice/client_detail.html:140
 msgid "+ Task"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:157
-#: templates/my_practice/client_detail.html:174
+#: templates/my_practice/client_detail.html:143
+#: templates/my_practice/client_detail.html:158
 msgid "+ Note"
 msgstr "+ Note"
 
-#: templates/my_practice/client_detail.html:161
-#: templates/my_practice/client_detail.html:175
+#: templates/my_practice/client_detail.html:147
+#: templates/my_practice/client_detail.html:159
 msgid "+ Supervision"
 msgstr "+ Supervision"
 
-#: templates/my_practice/client_detail.html:183
-#: templates/my_practice/client_detail.html:195
-#: templates/my_practice/client_detail.html:379
+#: templates/my_practice/client_detail.html:167
+#: templates/my_practice/client_detail.html:179
+#: templates/my_practice/client_detail.html:363
 #: templates/my_practice/expense_form.html:99
 #: templates/my_practice/gebueh_leistung_form.html:41
 #: templates/my_practice/inquiry_form.html:190
@@ -6163,201 +6203,201 @@ msgstr "+ Supervision"
 msgid "Save"
 msgstr "Save"
 
-#: templates/my_practice/client_detail.html:185
+#: templates/my_practice/client_detail.html:169
 msgid "Note (Markdown supported)…"
 msgstr "Note (Markdown supported)…"
 
-#: templates/my_practice/client_detail.html:197
+#: templates/my_practice/client_detail.html:181
 msgid "Supervision feedback and recommendations (Markdown)…"
 msgstr "Supervision feedback and recommendations (Markdown)…"
 
-#: templates/my_practice/client_detail.html:207
+#: templates/my_practice/client_detail.html:191
 msgid "Supervision topic or question…"
 msgstr "Supervision topic or question…"
 
-#: templates/my_practice/client_detail.html:208
+#: templates/my_practice/client_detail.html:192
 #: templates/my_practice/inquiry_list.html:30
 msgid "Add"
 msgstr "Add"
 
-#: templates/my_practice/client_detail.html:213
+#: templates/my_practice/client_detail.html:197
 #: templates/my_practice/supervision_queue.html:31
 msgid "Delete supervision topic?"
 msgstr "Delete supervision topic?"
 
-#: templates/my_practice/client_detail.html:214
+#: templates/my_practice/client_detail.html:198
 msgid "↩ Reopen"
 msgstr "↩ Reopen"
 
-#: templates/my_practice/client_detail.html:214
+#: templates/my_practice/client_detail.html:198
 #: templates/my_practice/supervision_queue.html:28
 msgid "✓ Discussed"
 msgstr "✓ Discussed"
 
-#: templates/my_practice/client_detail.html:231
+#: templates/my_practice/client_detail.html:215
 msgid "No supervision topics for this client yet."
 msgstr "No supervision topics for this client yet."
 
-#: templates/my_practice/client_detail.html:236
+#: templates/my_practice/client_detail.html:220
 msgid "▴ Collapse"
 msgstr "▴ Collapse"
 
-#: templates/my_practice/client_detail.html:237
+#: templates/my_practice/client_detail.html:221
 msgid "▾ Show older entries"
 msgstr "▾ Show older entries"
 
-#: templates/my_practice/client_detail.html:238
+#: templates/my_practice/client_detail.html:222
 msgid "more"
 msgstr "more"
 
-#: templates/my_practice/client_detail.html:252
+#: templates/my_practice/client_detail.html:236
 msgid "🧾 To invoice"
 msgstr "🧾 To invoice"
 
-#: templates/my_practice/client_detail.html:253
+#: templates/my_practice/client_detail.html:237
 msgid "🚷 Non-billable"
 msgstr "🚷 Non-billable"
 
-#: templates/my_practice/client_detail.html:254
+#: templates/my_practice/client_detail.html:238
 msgid "✅ Billable"
 msgstr "✅ Billable"
 
-#: templates/my_practice/client_detail.html:255
+#: templates/my_practice/client_detail.html:239
 msgid "🚫 No-show"
 msgstr "🚫 No-show"
 
-#: templates/my_practice/client_detail.html:256
+#: templates/my_practice/client_detail.html:240
 msgid "Delete session log?"
 msgstr "Delete session log?"
 
-#: templates/my_practice/client_detail.html:257
+#: templates/my_practice/client_detail.html:241
 msgid "Delete session?"
 msgstr "Delete session?"
 
-#: templates/my_practice/client_detail.html:263
-#: templates/my_practice/client_detail.html:309
-#: templates/my_practice/client_detail.html:653
+#: templates/my_practice/client_detail.html:247
+#: templates/my_practice/client_detail.html:293
+#: templates/my_practice/client_detail.html:633
 #: templates/my_practice/gebueh_leistung_form.html:6
 #: templates/my_practice/invoice_detail.html:111
 #: templates/my_practice/invoice_detail.html:143
 msgid "min"
 msgstr "min"
 
-#: templates/my_practice/client_detail.html:264
-#: templates/my_practice/client_detail.html:310
+#: templates/my_practice/client_detail.html:248
+#: templates/my_practice/client_detail.html:294
 msgid "Unbilled"
 msgstr "Unbilled"
 
-#: templates/my_practice/client_detail.html:264
-#: templates/my_practice/client_detail.html:310
+#: templates/my_practice/client_detail.html:248
+#: templates/my_practice/client_detail.html:294
 msgid "Non-billable"
 msgstr "Non-billable"
 
-#: templates/my_practice/client_detail.html:338
+#: templates/my_practice/client_detail.html:322
 msgid "+ Log"
 msgstr "+ Log"
 
-#: templates/my_practice/client_detail.html:342
+#: templates/my_practice/client_detail.html:326
 msgid "Duration in minutes"
 msgstr "Duration in minutes"
 
-#: templates/my_practice/client_detail.html:343
+#: templates/my_practice/client_detail.html:327
 msgid "Save min."
 msgstr "Save min."
 
-#: templates/my_practice/client_detail.html:357
+#: templates/my_practice/client_detail.html:341
 msgid "Delete supervision note?"
 msgstr "Delete supervision note?"
 
-#: templates/my_practice/client_detail.html:386
+#: templates/my_practice/client_detail.html:370
 msgid "Delete note?"
 msgstr "Delete note?"
 
-#: templates/my_practice/client_detail.html:406
+#: templates/my_practice/client_detail.html:390
 msgid "No entries yet. Session logs are created when adding new entries."
 msgstr "No entries yet. Session logs are created when adding new entries."
 
-#: templates/my_practice/client_detail.html:424
+#: templates/my_practice/client_detail.html:404
 msgid "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis."
 msgstr ""
 
-#: templates/my_practice/client_detail.html:426
+#: templates/my_practice/client_detail.html:406
 msgid "Diagnosis not yet set — invoices currently show \"Probationary phase\". Please update once the probationary phase is complete."
 msgstr ""
 
-#: templates/my_practice/client_detail.html:428
+#: templates/my_practice/client_detail.html:408
 msgid "Edit →"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:434
+#: templates/my_practice/client_detail.html:414
 #: templates/my_practice/session_log_form.html:18
 msgid "You have an unsaved draft from an earlier attempt."
 msgstr ""
 
-#: templates/my_practice/client_detail.html:435
+#: templates/my_practice/client_detail.html:415
 #: templates/my_practice/session_log_form.html:19
 msgid "Restore draft"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:436
+#: templates/my_practice/client_detail.html:416
 #: templates/my_practice/session_log_form.html:20
 msgid "Discard"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:445
+#: templates/my_practice/client_detail.html:425
 msgid "Intake & Anamnesis"
 msgstr "Intake & Anamnesis"
 
-#: templates/my_practice/client_detail.html:447
+#: templates/my_practice/client_detail.html:427
 msgid "Clinical initial assessment…"
 msgstr "Clinical initial assessment…"
 
-#: templates/my_practice/client_detail.html:450
-#: templates/my_practice/client_detail.html:461
+#: templates/my_practice/client_detail.html:430
+#: templates/my_practice/client_detail.html:441
 msgid "Preview"
 msgstr "Preview"
 
-#: templates/my_practice/client_detail.html:458
+#: templates/my_practice/client_detail.html:438
 msgid "Topics, dynamics, challenges…"
 msgstr "Topics, dynamics, challenges…"
 
-#: templates/my_practice/client_detail.html:467
+#: templates/my_practice/client_detail.html:447
 msgid "Save profile"
 msgstr "Save profile"
 
-#: templates/my_practice/client_detail.html:474
+#: templates/my_practice/client_detail.html:454
 msgid "Contact & Conditions"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:499
+#: templates/my_practice/client_detail.html:479
 msgid "Session format"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:500
+#: templates/my_practice/client_detail.html:480
 msgid "🏢 In-person"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:503
+#: templates/my_practice/client_detail.html:483
 msgid "Hourly rate"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:518
+#: templates/my_practice/client_detail.html:498
 #, python-format
 msgid "✅ Intake completed on %(date)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:528
+#: templates/my_practice/client_detail.html:508
 #, python-format
 msgid "Handed out on %(date)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:529
+#: templates/my_practice/client_detail.html:509
 msgid "Send by email or download the PDF and hand it out"
 msgstr "Send by email or download the PDF and hand it out"
 
-#: templates/my_practice/client_detail.html:532
-#: templates/my_practice/client_detail.html:549
-#: templates/my_practice/client_detail.html:566
+#: templates/my_practice/client_detail.html:512
+#: templates/my_practice/client_detail.html:529
+#: templates/my_practice/client_detail.html:546
 #: templates/my_practice/send_contract_email.html:62
 #: templates/my_practice/send_intake_form_email.html:62
 #: templates/my_practice/send_invoice_email.html:69
@@ -6366,163 +6406,163 @@ msgstr "Send by email or download the PDF and hand it out"
 msgid "Send"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:534
-#: templates/my_practice/client_detail.html:551
-#: templates/my_practice/client_detail.html:568
-#: templates/my_practice/client_detail.html:583
+#: templates/my_practice/client_detail.html:514
+#: templates/my_practice/client_detail.html:531
+#: templates/my_practice/client_detail.html:548
+#: templates/my_practice/client_detail.html:563
 msgid "undo"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:535
-#: templates/my_practice/client_detail.html:552
-#: templates/my_practice/client_detail.html:569
+#: templates/my_practice/client_detail.html:515
+#: templates/my_practice/client_detail.html:532
+#: templates/my_practice/client_detail.html:549
 msgid "✓ Done"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:545
+#: templates/my_practice/client_detail.html:525
 #, python-format
 msgid "Signed on %(date)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:546
+#: templates/my_practice/client_detail.html:526
 msgid "Send contract by email, receive signed copy back"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:550
-#: templates/my_practice/client_detail.html:567
-#: templates/my_practice/client_detail.html:601
+#: templates/my_practice/client_detail.html:530
+#: templates/my_practice/client_detail.html:547
+#: templates/my_practice/client_detail.html:581
 msgid "no email"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:562
+#: templates/my_practice/client_detail.html:542
 #, python-format
 msgid "Sent on %(date)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:563
+#: templates/my_practice/client_detail.html:543
 msgid "Send questionnaire by email"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:579
+#: templates/my_practice/client_detail.html:559
 #, python-format
 msgid "Completed on %(date)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:580
+#: templates/my_practice/client_detail.html:560
 msgid "All documents complete — finalise intake"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:584
+#: templates/my_practice/client_detail.html:564
 msgid "✓ Finalise"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:597
+#: templates/my_practice/client_detail.html:577
 msgid "Assessments"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:600
+#: templates/my_practice/client_detail.html:580
 #, python-format
 msgid "Send %(title)s"
 msgstr "Send %(title)s"
 
-#: templates/my_practice/client_detail.html:610
+#: templates/my_practice/client_detail.html:590
 msgid "Source inquiry"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:628
+#: templates/my_practice/client_detail.html:608
 #, python-format
 msgid "Oldest open invoice: over %(days)s days"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:628
-#: templates/my_practice/client_detail.html:630
-#: templates/my_practice/client_detail.html:632
-#: templates/my_practice/client_detail.html:634
+#: templates/my_practice/client_detail.html:608
+#: templates/my_practice/client_detail.html:610
+#: templates/my_practice/client_detail.html:612
+#: templates/my_practice/client_detail.html:614
 msgid "Payment reminder"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:630
+#: templates/my_practice/client_detail.html:610
 #, python-format
 msgid "Oldest open invoice: %(min_days)s–%(max_days)s days"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:632
+#: templates/my_practice/client_detail.html:612
 msgid "Open invoice exists"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:634
+#: templates/my_practice/client_detail.html:614
 msgid "No outstanding sent invoices"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:636
+#: templates/my_practice/client_detail.html:616
 msgid "Prepare cancellation email due to illness"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:636
+#: templates/my_practice/client_detail.html:616
 msgid "Cancel session"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:643
+#: templates/my_practice/client_detail.html:623
 msgid "Pending sessions"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:659
+#: templates/my_practice/client_detail.html:639
 #, python-format
 msgid "+ Invoice %(num)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:660
+#: templates/my_practice/client_detail.html:640
 #, python-format
 msgid "Add to invoice %(num)s"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:662
+#: templates/my_practice/client_detail.html:642
 msgid "+ Separate invoice"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:664
+#: templates/my_practice/client_detail.html:644
 #: templates/my_practice/dashboard.html:41
 msgid "+ New invoice"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:678
+#: templates/my_practice/client_detail.html:658
 msgid "Invoice history"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:681
+#: templates/my_practice/client_detail.html:661
 #, python-format
 msgid "⚠️ %(count)s appointment pending"
 msgid_plural "⚠️ %(count)s appointments pending"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/client_detail.html:683
+#: templates/my_practice/client_detail.html:663
 #, python-format
 msgid "📝 %(count)s session open"
 msgid_plural "📝 %(count)s sessions open"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/client_detail.html:690
+#: templates/my_practice/client_detail.html:670
 #: templates/my_practice/send_payment_reminder.html:19
 #: templates/my_practice/tax_year_summary.html:125
 msgid "Invoice no."
 msgstr ""
 
-#: templates/my_practice/client_detail.html:700
+#: templates/my_practice/client_detail.html:680
 #: templates/my_practice/invoice_list.html:184
 msgid "View"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:706
+#: templates/my_practice/client_detail.html:686
 msgid "No invoices for this client yet."
 msgstr ""
 
-#: templates/my_practice/client_detail.html:712
+#: templates/my_practice/client_detail.html:692
 msgid "Session activity"
 msgstr ""
 
-#: templates/my_practice/client_detail.html:727
+#: templates/my_practice/client_detail.html:707
 msgid "Uploaded documents"
 msgstr ""
 
@@ -6832,24 +6872,13 @@ msgid "No invoices yet."
 msgstr ""
 
 #: templates/my_practice/expense_confirm_delete.html:5
-#: templates/my_practice/expense_confirm_delete.html:9
+#: templates/my_practice/expense_confirm_delete.html:6
 msgid "Delete expense"
 msgstr "Delete expense"
 
-#: templates/my_practice/expense_confirm_delete.html:14
+#: templates/my_practice/expense_confirm_delete.html:7
 msgid "Are you sure you want to delete this expense?"
 msgstr "Are you sure you want to delete this expense?"
-
-#: templates/my_practice/expense_confirm_delete.html:40
-#: templates/my_practice/inquiry_confirm_delete.html:38
-#: templates/my_practice/invoice_confirm_delete.html:51
-#: templates/my_practice/marketing_period_confirm_delete.html:34
-#: templates/my_practice/tag_confirm_delete.html:34
-#: templates/my_practice/time_off_confirm_delete.html:46
-#: templates/my_practice/todo_confirm_delete.html:33
-#: templates/my_practice/withdrawal_confirm_delete.html:42
-msgid "Yes, delete"
-msgstr "Yes, delete"
 
 #: templates/my_practice/expense_form.html:4
 #: templates/my_practice/expense_form.html:7
@@ -6937,15 +6966,6 @@ msgstr ""
 
 #: templates/my_practice/expense_form.html:224
 msgid "— Select source …"
-msgstr ""
-
-#: my_practice/models/financial.py:168
-msgid "Company Expense"
-msgstr ""
-
-#: my_practice/models/financial.py:169 templates/my_practice/expense_list.html:6
-#: templates/my_practice/expense_list.html:11
-msgid "Company Expenses"
 msgstr ""
 
 #: templates/my_practice/expense_list.html:22
@@ -7044,11 +7064,11 @@ msgid "Later →"
 msgstr ""
 
 #: templates/my_practice/inquiry_confirm_delete.html:4
-#: templates/my_practice/inquiry_confirm_delete.html:8
+#: templates/my_practice/inquiry_confirm_delete.html:5
 msgid "Delete inquiry"
 msgstr "Delete inquiry"
 
-#: templates/my_practice/inquiry_confirm_delete.html:13
+#: templates/my_practice/inquiry_confirm_delete.html:6
 msgid "Are you sure you want to delete this inquiry?"
 msgstr "Are you sure you want to delete this inquiry?"
 
@@ -7261,21 +7281,21 @@ msgid "Record first inquiry"
 msgstr ""
 
 #: templates/my_practice/invoice_confirm_delete.html:5
-#: templates/my_practice/invoice_confirm_delete.html:9
+#: templates/my_practice/invoice_confirm_delete.html:6
 msgid "Delete invoice"
 msgstr "Delete invoice"
 
-#: templates/my_practice/invoice_confirm_delete.html:14
+#: templates/my_practice/invoice_confirm_delete.html:7
 msgid "Are you sure you want to delete this invoice?"
 msgstr "Are you sure you want to delete this invoice?"
 
-#: templates/my_practice/invoice_confirm_delete.html:15
-#: templates/my_practice/time_off_confirm_delete.html:14
-#: templates/my_practice/withdrawal_confirm_delete.html:14
+#: templates/my_practice/invoice_confirm_delete.html:8
+#: templates/my_practice/time_off_confirm_delete.html:7
+#: templates/my_practice/withdrawal_confirm_delete.html:7
 msgid "This action cannot be undone."
 msgstr ""
 
-#: templates/my_practice/invoice_confirm_delete.html:42
+#: templates/my_practice/invoice_confirm_delete.html:34
 msgid "Number of items"
 msgstr ""
 
@@ -7539,11 +7559,11 @@ msgid "No invoices have been created yet."
 msgstr ""
 
 #: templates/my_practice/marketing_period_confirm_delete.html:4
-#: templates/my_practice/marketing_period_confirm_delete.html:8
+#: templates/my_practice/marketing_period_confirm_delete.html:5
 msgid "Delete marketing period"
 msgstr ""
 
-#: templates/my_practice/marketing_period_confirm_delete.html:13
+#: templates/my_practice/marketing_period_confirm_delete.html:6
 msgid "Are you sure you want to delete this marketing period?"
 msgstr "Are you sure you want to delete this marketing period?"
 
@@ -7626,11 +7646,6 @@ msgstr "You can reactivate the practice later"
 msgid "Practice details"
 msgstr ""
 
-#: templates/my_practice/practice_confirm_delete.html:32
-#: templates/my_practice/practice_form.html:89
-msgid "City"
-msgstr ""
-
 #: templates/my_practice/practice_confirm_delete.html:50
 msgid "Yes, deactivate practice"
 msgstr "Yes, deactivate practice"
@@ -7665,36 +7680,12 @@ msgstr ""
 msgid "Practice is active"
 msgstr ""
 
-#: templates/my_practice/practice_form.html:80
-msgid "Street and house number"
-msgstr ""
-
-#: templates/my_practice/practice_form.html:85
-msgid "Postal code"
-msgstr ""
-
-#: templates/my_practice/practice_form.html:94
-msgid "Country"
-msgstr ""
-
-#: templates/my_practice/practice_form.html:116
-msgid "Website"
-msgstr ""
-
 #: templates/my_practice/practice_form.html:136
 msgid "Bank account"
 msgstr ""
 
 #: templates/my_practice/practice_form.html:138
 msgid "Bank"
-msgstr ""
-
-#: templates/my_practice/practice_form.html:143
-msgid "IBAN"
-msgstr ""
-
-#: templates/my_practice/practice_form.html:147
-msgid "BIC"
 msgstr ""
 
 #: templates/my_practice/practice_form.html:154
@@ -8681,21 +8672,21 @@ msgid "Error saving."
 msgstr ""
 
 #: templates/my_practice/time_off_confirm_delete.html:4
-#: templates/my_practice/time_off_confirm_delete.html:8
+#: templates/my_practice/time_off_confirm_delete.html:5
 msgid "Delete time off"
 msgstr "Delete time off"
 
-#: templates/my_practice/time_off_confirm_delete.html:13
+#: templates/my_practice/time_off_confirm_delete.html:6
 msgid "Do you really want to delete this time-off period?"
 msgstr "Do you really want to delete this time-off period?"
 
-#: templates/my_practice/time_off_confirm_delete.html:27
+#: templates/my_practice/time_off_confirm_delete.html:19
 #: templates/my_practice/time_off_list.html:33
 #: templates/my_practice/time_off_list.html:78
 msgid "Start"
 msgstr ""
 
-#: templates/my_practice/time_off_confirm_delete.html:31
+#: templates/my_practice/time_off_confirm_delete.html:23
 #: templates/my_practice/time_off_list.html:34
 #: templates/my_practice/time_off_list.html:79
 msgid "End"
@@ -8817,11 +8808,11 @@ msgid "Leave empty for \"not completed\""
 msgstr ""
 
 #: templates/my_practice/withdrawal_confirm_delete.html:4
-#: templates/my_practice/withdrawal_confirm_delete.html:8
+#: templates/my_practice/withdrawal_confirm_delete.html:5
 msgid "Delete withdrawal"
 msgstr ""
 
-#: templates/my_practice/withdrawal_confirm_delete.html:13
+#: templates/my_practice/withdrawal_confirm_delete.html:6
 msgid "Are you sure you want to delete this withdrawal?"
 msgstr "Are you sure you want to delete this withdrawal?"
 
@@ -8842,15 +8833,6 @@ msgstr ""
 
 #: templates/my_practice/withdrawal_form.html:7
 msgid "Record a new withdrawal"
-msgstr ""
-
-#: my_practice/models/financial.py:77
-msgid "Company Withdrawal"
-msgstr ""
-
-#: my_practice/models/financial.py:78 templates/my_practice/withdrawal_list.html:2
-#: templates/my_practice/withdrawal_list.html:4
-msgid "Company Withdrawals"
 msgstr ""
 
 #: templates/my_practice/withdrawal_list.html:5
