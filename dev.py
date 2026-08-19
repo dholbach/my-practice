@@ -4,12 +4,19 @@ Development helper script for the my-practice Django project.
 Automatically detects if running in VS Code on Silverblue and prepends flatpak-spawn.
 """
 
+import glob
 import os
 import shutil
 import subprocess
 import sys
 
 CONTAINER_NAME = "my-practice-django"
+
+# Python that lives outside ./app and so is invisible to the container's
+# `ruff format .` (docker-compose mounts only ./app at /app). These are piped
+# through the container's ruff over stdin instead — see _ruff_root_python —
+# so they're held to the same pinned ruff version and config as the app.
+ROOT_PYTHON_GLOBS = ("dev.py", "prod.py", "scripts/*.py")
 
 
 def is_vscode():
@@ -62,6 +69,62 @@ def run_docker_command(args, interactive=False):
     return subprocess.run(cmd)
 
 
+def _root_python_files():
+    """Repo-root Python files that the container can't see (see ROOT_PYTHON_GLOBS)."""
+    files = []
+    for pattern in ROOT_PYTHON_GLOBS:
+        files.extend(sorted(glob.glob(pattern)))
+    return files
+
+
+def _run_ruff_stdin(ruff_args, source):
+    """Run the container's ruff against source text piped over stdin."""
+    cmd = []
+    if needs_flatpak():
+        cmd.extend(["flatpak-spawn", "--host"])
+    cmd.extend(["docker", "exec", "-i", CONTAINER_NAME, "python", "-m", "ruff"])
+    cmd.extend(ruff_args)
+    return subprocess.run(cmd, input=source, capture_output=True, text=True)
+
+
+def _ruff_root_python(write=False, verbose=False):
+    """Format-check (or rewrite) and lint the repo-root Python files.
+
+    Returns 0 if everything is clean, 1 otherwise. In write mode the formatted
+    output is written back, mirroring what `ruff format .` does inside /app.
+    """
+    problems = []
+
+    for path in _root_python_files():
+        with open(path, encoding="utf-8") as fh:
+            source = fh.read()
+
+        if write:
+            result = _run_ruff_stdin(["format", "-", "--stdin-filename", path], source)
+            if result.returncode != 0:
+                problems.append(f"{path}: {result.stderr.strip()}")
+            elif result.stdout != source:
+                with open(path, "w", encoding="utf-8") as fh:
+                    fh.write(result.stdout)
+                print(f"   reformatted {path}")
+        else:
+            result = _run_ruff_stdin(
+                ["format", "--check", "-", "--stdin-filename", path], source
+            )
+            if result.returncode != 0:
+                problems.append(f"{path}: needs formatting")
+
+        lint = _run_ruff_stdin(["check", "--stdin-filename", path, "-"], source)
+        if lint.returncode != 0:
+            problems.append(f"{path}: {lint.stdout.strip() or lint.stderr.strip()}")
+
+    if problems:
+        for problem in problems:
+            print(f"   {problem}" if verbose else f"   {problem.splitlines()[0]}")
+        return 1
+    return 0
+
+
 def compose_base_cmd():
     """Return compose command, preferring `docker compose` over `docker-compose`."""
     if shutil.which("docker"):
@@ -110,7 +173,9 @@ def _confirm_metered_download(action):
     """
     if _is_metered_connection() is not True:
         return True
-    print(f"⚠️  Active network connection is metered (e.g. mobile hotspot). {action} can pull a lot of data.")
+    print(
+        f"⚠️  Active network connection is metered (e.g. mobile hotspot). {action} can pull a lot of data."
+    )
     if not sys.stdin.isatty():
         print("   Not an interactive terminal — pass --yes to proceed anyway.")
         return False
@@ -285,7 +350,9 @@ def cmd_test_js(args):
 
         # Run form draft guard tests (M-PAT-06)
         print("\n--- Form Draft Guard Tests ---")
-        guard_result = run_docker_command(["node", "/app/static/js/form_draft_guard.test.js"])
+        guard_result = run_docker_command(
+            ["node", "/app/static/js/form_draft_guard.test.js"]
+        )
         results.append(("JS DraftGuard", guard_result.returncode))
 
     # Show browser test info (if not node-only)
@@ -341,7 +408,14 @@ def cmd_manage(args):
                 cp_cmd = []
                 if needs_flatpak():
                     cp_cmd.extend(["flatpak-spawn", "--host"])
-                cp_cmd.extend(["docker", "cp", host_path, f"{CONTAINER_NAME}:{container_tmp_path}"])
+                cp_cmd.extend(
+                    [
+                        "docker",
+                        "cp",
+                        host_path,
+                        f"{CONTAINER_NAME}:{container_tmp_path}",
+                    ]
+                )
                 print(f"Copying {host_path} → container:{container_tmp_path}")
                 result = subprocess.run(cp_cmd)
                 if result.returncode != 0:
@@ -357,7 +431,9 @@ def cmd_manage(args):
         rm_cmd = []
         if needs_flatpak():
             rm_cmd.extend(["flatpak-spawn", "--host"])
-        rm_cmd.extend(["docker", "exec", CONTAINER_NAME, "rm", "-f", container_tmp_path])
+        rm_cmd.extend(
+            ["docker", "exec", CONTAINER_NAME, "rm", "-f", container_tmp_path]
+        )
         subprocess.run(rm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     return result
@@ -446,8 +522,11 @@ def cmd_start(args):
     wait_cmd = []
     if needs_flatpak():
         wait_cmd.extend(["flatpak-spawn", "--host"])
-    wait_cmd.extend(["docker", "inspect", "--format", "{{.State.Health.Status}}", CONTAINER_NAME])
+    wait_cmd.extend(
+        ["docker", "inspect", "--format", "{{.State.Health.Status}}", CONTAINER_NAME]
+    )
     import time
+
     for _ in range(60):
         out = subprocess.run(wait_cmd, capture_output=True, text=True)
         status = out.stdout.strip()
@@ -588,7 +667,9 @@ def cmd_quality(args):
         if not verbose:
             cmd.append("--quiet")
         fmt_result = run_docker_command(cmd)
-        if fmt_result.returncode == 0:
+        # ./app is all the container can see; check the repo-root scripts too.
+        root_result = _ruff_root_python(verbose=verbose)
+        if fmt_result.returncode == 0 and root_result == 0:
             print("✅ Ruff format OK")
             results.append(("Ruff format", 0))
         else:
@@ -707,15 +788,14 @@ def _print_outdated_dev_packages():
         print("  (failed to parse pip3 output)")
         return
 
-    relevant = [
-        p for p in packages
-        if p["name"].lower().replace("_", "-") in dev_names
-    ]
+    relevant = [p for p in packages if p["name"].lower().replace("_", "-") in dev_names]
     if relevant:
         print(f"  {'Package':<30} {'Version':<16} {'Latest':<16} Type")
-        print(f"  {'-'*30} {'-'*16} {'-'*16} ----")
+        print(f"  {'-' * 30} {'-' * 16} {'-' * 16} ----")
         for p in relevant:
-            print(f"  {p['name']:<30} {p['version']:<16} {p['latest_version']:<16} {p['latest_filetype']}")
+            print(
+                f"  {p['name']:<30} {p['version']:<16} {p['latest_version']:<16} {p['latest_filetype']}"
+            )
     else:
         print("  All dev packages up to date")
 
@@ -824,13 +904,25 @@ def cmd_review(args):
         print("⏭️  Skipped (--no-tests)")
         results.append(("Coverage", None))
     else:
-        run_docker_command([
-            "python", "-m", "coverage", "run",
-            "--source=my_practice",
-            "manage.py", "test", "my_practice", "--keepdb", "--verbosity=0",
-        ])
+        run_docker_command(
+            [
+                "python",
+                "-m",
+                "coverage",
+                "run",
+                "--source=my_practice",
+                "manage.py",
+                "test",
+                "my_practice",
+                "--keepdb",
+                "--verbosity=0",
+            ]
+        )
         cov_cmd = [
-            "python", "-m", "coverage", "report",
+            "python",
+            "-m",
+            "coverage",
+            "report",
             "--skip-covered",
             "--skip-empty",
             "--omit=*/migrations/*,*/tests/*",
@@ -851,12 +943,19 @@ def cmd_review(args):
             print("   Rebuild the container to install it: ./dev.py build")
             results.append(("Complexity (radon)", None))
         else:
-            radon_result = run_docker_command([
-                "python", "-m", "radon", "cc", "my_practice",
-                "--min", "C",   # C = complex, D/E/F = very complex
-                "--show-complexity",
-                "--average",
-            ])
+            radon_result = run_docker_command(
+                [
+                    "python",
+                    "-m",
+                    "radon",
+                    "cc",
+                    "my_practice",
+                    "--min",
+                    "C",  # C = complex, D/E/F = very complex
+                    "--show-complexity",
+                    "--average",
+                ]
+            )
             results.append(("Complexity (radon)", radon_result.returncode))
         print()
 
@@ -865,7 +964,9 @@ def cmd_review(args):
     print("Automated Check Summary:")
     print("=" * 55)
     for name, code in results:
-        status = "⏭️  Skipped" if code is None else ("✅ OK" if code == 0 else "⚠️  Review")
+        status = (
+            "⏭️  Skipped" if code is None else ("✅ OK" if code == 0 else "⚠️  Review")
+        )
         print(f"  {name:<30} {status}")
     print()
 
@@ -895,7 +996,9 @@ def cmd_review(args):
         for item in quarterly_items:
             print(f"  [ ] {item}")
     print()
-    print("See docs/guides/CODEBASE_STANDARDS.md for the full scan checklist and canonical patterns.")
+    print(
+        "See docs/guides/CODEBASE_STANDARDS.md for the full scan checklist and canonical patterns."
+    )
 
     return subprocess.CompletedProcess(args=[], returncode=0)
 
@@ -909,7 +1012,10 @@ def cmd_format(args):
     lint issues and fix them manually.
     """
     print("🎨 Formatting code with ruff...")
-    return run_docker_command(["python", "-m", "ruff", "format", "."])
+    result = run_docker_command(["python", "-m", "ruff", "format", "."])
+    # ./app is all the container can see; format the repo-root scripts too.
+    _ruff_root_python(write=True)
+    return result
 
 
 def cmd_lint(args):
@@ -1037,17 +1143,28 @@ def cmd_smoke(args):
 
         print("── verifying ──")
         result = compose(
-            "exec", "-T", "django", "python", "-c",
+            "exec",
+            "-T",
+            "django",
+            "python",
+            "-c",
             "from my_practice.version import VERSION; print(VERSION)",
             capture=True,
         )
         reported = result.stdout.strip()
         if result.returncode != 0 or reported != version:
-            return fail(result, f"Image reports version {reported!r}, expected {version!r}.")
+            return fail(
+                result, f"Image reports version {reported!r}, expected {version!r}."
+            )
         print(f"  ✓ image reports {reported}")
 
         result = compose(
-            "exec", "-T", "django", "curl", "-sf", "http://localhost:8000/admin/login/",
+            "exec",
+            "-T",
+            "django",
+            "curl",
+            "-sf",
+            "http://localhost:8000/admin/login/",
             capture=True,
         )
         if result.returncode != 0 or "csrfmiddlewaretoken" not in result.stdout:
@@ -1234,25 +1351,41 @@ def print_help():
     print("  ps                   - Show container status")
     print("  migrate [args]       - Run migrations")
     print("  makemigrations [args]- Create new migrations")
-    print("  i18n [sub]           - Extract/compile translations (makemessages + compilemessages)")
+    print(
+        "  i18n [sub]           - Extract/compile translations (makemessages + compilemessages)"
+    )
     print("  runserver            - Info about development server")
-    print("  lint                 - Fast lint check: ruff format + ruff check (no tests, ~seconds)")
+    print(
+        "  lint                 - Fast lint check: ruff format + ruff check (no tests, ~seconds)"
+    )
     print("  lint --verbose       - Lint with full output")
-    print("  quality              - Full pre-release check: lint + full test suite (~minutes)")
+    print(
+        "  quality              - Full pre-release check: lint + full test suite (~minutes)"
+    )
     print("  quality --no-tests   - Run quality checks without tests")
     print("  quality --only-tests - Run only tests")
     print("  quality --verbose    - Show full output from all tools")
-    print("  review               - Monthly codebase health check (dead code, CVEs, coverage)")
+    print(
+        "  review               - Monthly codebase health check (dead code, CVEs, coverage)"
+    )
     print("  review --full        - Quarterly review (adds complexity analysis)")
     print("  review --verbose     - Show full tool output during review")
     print(
         "  format               - Auto-format code with ruff format + ruff check --fix"
     )
-    print("  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)")
-    print("  smoke [vX.Y.Z]       - Boot a released GHCR image with a throwaway DB and verify it serves")
-    print("  smoke --keep         - Leave the smoke stack running for manual inspection")
+    print(
+        "  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)"
+    )
+    print(
+        "  smoke [vX.Y.Z]       - Boot a released GHCR image with a throwaway DB and verify it serves"
+    )
+    print(
+        "  smoke --keep         - Leave the smoke stack running for manual inspection"
+    )
     print("  smoke --down         - Tear down a smoke stack left running by --keep")
-    print("  install-hooks        - Configure git to use .githooks/ (run once after clone)")
+    print(
+        "  install-hooks        - Configure git to use .githooks/ (run once after clone)"
+    )
     print("\nExamples:")
     print("  ./dev.py start                                # Start all containers")
     print("  ./dev.py start --build                        # Rebuild and start")

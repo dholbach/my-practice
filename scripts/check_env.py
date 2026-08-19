@@ -29,7 +29,9 @@ def parse_env_file(path: Path) -> tuple[dict[str, list[tuple[int, str]]], set[st
     """Return {key: [(lineno, value), ...]} and the set of keys marked CHANGE ME."""
     entries: dict[str, list[tuple[int, str]]] = {}
     change_me_keys: set[str] = set()
-    for lineno, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for lineno, raw_line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
         line = raw_line.strip()
         if not line or line.startswith("#"):
             continue
@@ -63,7 +65,9 @@ def main() -> int:
     for key, occurrences in env_entries.items():
         if len(occurrences) > 1:
             lines = ", ".join(str(lineno) for lineno, _ in occurrences)
-            failures.append(f"{key} is defined {len(occurrences)}x in .env (lines {lines}) — later one silently wins")
+            failures.append(
+                f"{key} is defined {len(occurrences)}x in .env (lines {lines}) — later one silently wins"
+            )
 
     for key in change_me_keys:
         example_value = example_entries[key][-1][1]
@@ -72,7 +76,9 @@ def main() -> int:
             continue  # covered by the missing-key warning below
         env_lineno, env_value = env_occurrences[-1]
         if env_value == example_value:
-            failures.append(f"{key} (line {env_lineno}) still has its .env.example placeholder value — fill in a real value")
+            failures.append(
+                f"{key} (line {env_lineno}) still has its .env.example placeholder value — fill in a real value"
+            )
 
     missing = sorted(set(example_entries) - set(env_entries))
     if missing:
@@ -80,7 +86,9 @@ def main() -> int:
 
     extra = sorted(set(env_entries) - set(example_entries))
     if extra:
-        warnings.append(f"in .env but not .env.example: {', '.join(extra)} — consider documenting in .env.example")
+        warnings.append(
+            f"in .env but not .env.example: {', '.join(extra)} — consider documenting in .env.example"
+        )
 
     for warning in warnings:
         print(f"  ⚠ {warning}")
@@ -88,7 +96,9 @@ def main() -> int:
         print(f"  ✗ {failure}")
 
     if failures:
-        print(f"\n.env check failed ({len(failures)} issue{'s' if len(failures) != 1 else ''}) — see above.")
+        print(
+            f"\n.env check failed ({len(failures)} issue{'s' if len(failures) != 1 else ''}) — see above."
+        )
         return 1
     return 0
 

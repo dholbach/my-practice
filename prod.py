@@ -13,9 +13,13 @@ import sys
 import time
 import urllib.request
 
-VERSION = "v0.5.0"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
+VERSION = (
+    "v0.5.0"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
+)
 
-COMPOSE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docker-compose.prod.yml")
+COMPOSE_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docker-compose.prod.yml"
+)
 COMPOSE = ["docker", "compose", "-f", COMPOSE_FILE]
 IMAGE = f"ghcr.io/dholbach/my-practice:{VERSION}"
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
@@ -57,7 +61,10 @@ def _is_metered_connection():
         return None
     try:
         route = subprocess.run(
-            ["ip", "route", "show", "default"], capture_output=True, text=True, timeout=3
+            ["ip", "route", "show", "default"],
+            capture_output=True,
+            text=True,
+            timeout=3,
         )
         parts = route.stdout.split()
         device = parts[parts.index("dev") + 1] if "dev" in parts else None
@@ -82,7 +89,9 @@ def _confirm_metered_download(action):
     """
     if _is_metered_connection() is not True:
         return True
-    print(f"⚠️  Active network connection is metered (e.g. mobile hotspot). {action} can pull a lot of data.")
+    print(
+        f"⚠️  Active network connection is metered (e.g. mobile hotspot). {action} can pull a lot of data."
+    )
     if not sys.stdin.isatty():
         print("   Not an interactive terminal — pass --yes to proceed anyway.")
         return False
@@ -90,6 +99,7 @@ def _confirm_metered_download(action):
 
 
 # ── setup ────────────────────────────────────────────────────────────────────
+
 
 def _check_docker():
     """Verify Docker and the Compose plugin are available."""
@@ -99,7 +109,10 @@ def _check_docker():
             "  Install Docker Desktop: https://docs.docker.com/get-docker/\n"
             "  Then start it and re-run ./prod.py setup"
         )
-    if subprocess.run(["docker", "compose", "version"], capture_output=True).returncode != 0:
+    if (
+        subprocess.run(["docker", "compose", "version"], capture_output=True).returncode
+        != 0
+    ):
         abort(
             "The Docker Compose plugin is missing.\n"
             "  Docker Desktop includes it automatically.\n"
@@ -111,10 +124,17 @@ def _check_docker():
 def _generate_fernet_key():
     """Generate a Fernet key using the already-pulled image (no host deps needed)."""
     result = subprocess.run(
-        ["docker", "run", "--rm", IMAGE,
-         "python", "-c",
-         "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"],
-        capture_output=True, text=True,
+        [
+            "docker",
+            "run",
+            "--rm",
+            IMAGE,
+            "python",
+            "-c",
+            "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())",
+        ],
+        capture_output=True,
+        text=True,
     )
     if result.returncode != 0 or not result.stdout.strip():
         abort(
@@ -122,7 +142,7 @@ def _generate_fernet_key():
             "  Make sure the image pulled successfully, then re-run ./prod.py setup\n"
             "  Or generate it manually:\n"
             "    pip install cryptography\n"
-            "    python3 -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\"\n"
+            '    python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"\n'
             "  and add it to .env as FERNET_KEY=<value>"
         )
     return result.stdout.strip()
@@ -174,7 +194,9 @@ def _write_env(env: dict):
 
 def _ensure_gitignore():
     """Add .env to .gitignore next to prod.py (create the file if needed)."""
-    gitignore_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".gitignore")
+    gitignore_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), ".gitignore"
+    )
     entry = ".env"
     if os.path.exists(gitignore_path):
         with open(gitignore_path) as f:
@@ -195,8 +217,15 @@ def _wait_for_healthy(timeout=120):
     deadline = time.time() + timeout
     while time.time() < deadline:
         out = subprocess.run(
-            ["docker", "inspect", "--format", "{{.State.Health.Status}}", "my-practice-django"],
-            capture_output=True, text=True,
+            [
+                "docker",
+                "inspect",
+                "--format",
+                "{{.State.Health.Status}}",
+                "my-practice-django",
+            ],
+            capture_output=True,
+            text=True,
         )
         status = out.stdout.strip()
         if status == "healthy":
@@ -339,7 +368,9 @@ def cmd_setup(args):
     print("  Open the app: http://localhost:8000")
     print()
     print("  ⚠  Back up your .env file before anything else.")
-    print("     It contains FERNET_KEY, which encrypts clinical notes (Art. 9 GDPR data).")
+    print(
+        "     It contains FERNET_KEY, which encrypts clinical notes (Art. 9 GDPR data)."
+    )
     print("     Losing it means that encrypted content cannot be recovered.")
     print("     Copy .env to a safe location now — USB drive or password manager.")
     print()
@@ -347,11 +378,14 @@ def cmd_setup(args):
     print("    ./prod.py logs          — check everything looks healthy")
     print("    ./prod.py update        — upgrade to a new release when one is out")
     print(f"    {ENV_DOCS}")
-    print("                            — full .env reference (email, calendar, backups, ...)")
+    print(
+        "                            — full .env reference (email, calendar, backups, ...)"
+    )
     return subprocess.CompletedProcess(args=[], returncode=0)
 
 
 # ── commands ────────────────────────────────────────────────────────────────
+
 
 def cmd_start(_args):
     """Start the stack."""
@@ -370,7 +404,9 @@ def cmd_restart(_args):
 
 def cmd_update(args):
     """Pull the latest image and restart. Pass --yes to skip the metered-connection prompt."""
-    if "--yes" not in args and not _confirm_metered_download("Pulling the latest image"):
+    if "--yes" not in args and not _confirm_metered_download(
+        "Pulling the latest image"
+    ):
         print("Aborted.")
         return subprocess.CompletedProcess(args=[], returncode=1)
 
@@ -421,15 +457,15 @@ def cmd_shell(_args):
 # ── dispatch ─────────────────────────────────────────────────────────────────
 
 COMMANDS = {
-    "setup":   (cmd_setup,   "First-time setup: secrets, pull, start, create login"),
-    "start":   (cmd_start,   "Start the stack"),
-    "stop":    (cmd_stop,    "Stop the stack"),
+    "setup": (cmd_setup, "First-time setup: secrets, pull, start, create login"),
+    "start": (cmd_start, "Start the stack"),
+    "stop": (cmd_stop, "Stop the stack"),
     "restart": (cmd_restart, "Restart the Django container"),
-    "update":  (cmd_update,  "Pull the latest image and restart"),
-    "logs":    (cmd_logs,    "Follow Django logs"),
-    "status":  (cmd_status,  "Show container status"),
-    "manage":  (cmd_manage,  "Run a Django management command"),
-    "shell":   (cmd_shell,   "Open an interactive Django shell"),
+    "update": (cmd_update, "Pull the latest image and restart"),
+    "logs": (cmd_logs, "Follow Django logs"),
+    "status": (cmd_status, "Show container status"),
+    "manage": (cmd_manage, "Run a Django management command"),
+    "shell": (cmd_shell, "Open an interactive Django shell"),
 }
 
 

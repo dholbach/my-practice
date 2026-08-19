@@ -40,15 +40,20 @@
 >
     <div class="container">
         <div class="header">
-            <h1>
-                {% if request.current_practice and request.current_practice.logo %}
-                    <img src="{{ request.current_practice.logo.url }}" alt="{{ request.current_practice.name }}" class="practice-logo">
-                {% else %}
-                    {% block page_icon %}🏥{% endblock %}
-                {% endif %}
-                {% block page_title %}{% if request.current_practice and request.current_practice.short_title_de %}{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de }}{% else %}{{ request.current_practice.short_title_de }}{% endif %}{% else %}{% trans "Practice management" %}{% endif %}{% endblock %}
-            </h1>
-            <p class="subtitle">{% block page_subtitle %}{% trans "Practice management" %}{% endblock %}</p>
+            <!-- Title and subtitle share a line when they fit; the row wraps the
+                 subtitle onto its own line when it's long (some pages build a
+                 subtitle from a loop, so it can be arbitrarily wide). -->
+            <div class="header-titlebar">
+                <h1>
+                    {% if request.current_practice and request.current_practice.logo %}
+                        <img src="{{ request.current_practice.logo.url }}" alt="{{ request.current_practice.name }}" class="practice-logo">
+                    {% else %}
+                        {% block page_icon %}🏥{% endblock %}
+                    {% endif %}
+                    {% block page_title %}{% if request.current_practice and request.current_practice.short_title_de %}{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de }}{% else %}{{ request.current_practice.short_title_de }}{% endif %}{% else %}{% trans "Practice management" %}{% endif %}{% endblock %}
+                </h1>
+                <p class="subtitle">{% block page_subtitle %}{% trans "Practice management" %}{% endblock %}</p>
+            </div>
             <nav>
                 <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 {% trans "Overview" %}</a>
                 <div class="dropdown">

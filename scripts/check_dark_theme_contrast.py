@@ -46,7 +46,12 @@ def parse_css_file(filepath):
         selector = selector.strip()
 
         # Skip media queries, keyframes, etc.
-        if "@" in selector or ":" in selector and "::" not in selector and ":not" not in selector:
+        if (
+            "@" in selector
+            or ":" in selector
+            and "::" not in selector
+            and ":not" not in selector
+        ):
             continue
 
         # Extract color-related properties
@@ -110,7 +115,10 @@ def analyze_potential_issues():
                         if "@" in selector:
                             continue
                         has_color = "color:" in properties
-                        has_bg = "background:" in properties or "background-color:" in properties
+                        has_bg = (
+                            "background:" in properties
+                            or "background-color:" in properties
+                        )
                         vars_used = re.findall(r"var\(([^)]+)\)", properties)
                         all_selectors[selector] = {
                             "has_color": has_color,

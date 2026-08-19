@@ -30,9 +30,6 @@
         </div>
         <div class="doc-upload-progress" id="docProgress">{% trans "Uploading…" %}</div>
     </div>
-
-    <!-- Hidden list: populated by JS after upload; full list lives in sidebar -->
-    <ul class="doc-list doc-upload-hidden" id="docList"></ul>
 </div>
 
 {% blocktrans asvar doc_drop_zone_hint %}Drag file here or <strong>click</strong> to select{% endblocktrans %}
@@ -41,9 +38,7 @@
 {% trans "Delete failed." as doc_delete_failed_msg %}
 <script>
 (function() {
-    const clientPk = {{ client.pk }};
     const uploadUrl = "{% url 'client_document_upload' client.pk %}";
-    const deleteUrlBase = "/documents/";
     const csrfToken = "{{ csrf_token }}";
 
     const dropZone = document.getElementById('docDropZone');
@@ -52,8 +47,6 @@
     const uploadBtn = document.getElementById('docUploadBtn');
     const cancelBtn = document.getElementById('docCancelBtn');
     const progress = document.getElementById('docProgress');
-    const docList = document.getElementById('docList');
-    const emptyState = null;  // list lives in sidebar now
     const dateInput = document.getElementById('docDate');
 
     // Set date default to today
@@ -158,25 +151,47 @@
             });
     });
 
+    /* Append the freshly uploaded file to the visible list in the Dokumente tab,
+       mirroring the server-rendered <li> in client_detail.html (same id and delete
+       button, so docDelete() works on it without a reload). Built with DOM calls
+       rather than innerHTML: description and filename are user-supplied. */
     function appendDocRow(doc) {
-        // Mirror into sidebar
-        const sbList = document.querySelector('#client-documents ~ * .cd-sidebar ul, .cd-sidebar ul');
-        const sidebarWidget = document.querySelector('.cd-sidebar .section-card ul');
-        if (sidebarWidget) {
-            const sbLi = document.createElement('li');
-            sbLi.id = 'sb-doc-' + doc.id;
-            sbLi.className = 'sidebar-doc-item';
-            sbLi.innerHTML = `
-                <span class="doc-type-badge sidebar-doc-badge">${doc.document_type_display}</span>
-                <a href="${doc.url}" target="_blank" class="sidebar-doc-name">
-                   ${doc.description || doc.filename}</a>
-                <span class="sidebar-doc-date">${formatDate(doc.document_date)}</span>
-            `;
-            sidebarWidget.appendChild(sbLi);
-            // Make sure the sidebar widget is visible
-            const sbCard = sidebarWidget.closest('.section-card');
-            if (sbCard) sbCard.style.display = '';
+        const list = document.querySelector('.sidebar-doc-list');
+        if (!list) {
+            // No list yet — this is the client's first document, and the section
+            // around it is only rendered when documents exist. Let the server draw it.
+            location.reload();
+            return;
         }
+
+        const li = document.createElement('li');
+        li.id = 'doc-' + doc.id;
+        li.className = 'sidebar-doc-item';
+
+        const badge = document.createElement('span');
+        badge.className = 'doc-type-badge sidebar-doc-badge';
+        badge.textContent = doc.document_type_display;
+
+        const link = document.createElement('a');
+        link.className = 'sidebar-doc-name';
+        link.href = doc.url;
+        link.target = '_blank';
+        link.title = doc.filename;
+        link.textContent = doc.description || doc.filename;
+
+        const date = document.createElement('span');
+        date.className = 'sidebar-doc-date';
+        date.textContent = formatDate(doc.document_date);
+
+        const del = document.createElement('button');
+        del.className = 'btn btn-danger btn-sm';
+        del.textContent = '🗑️';
+        del.dataset.docId = doc.id;
+        del.dataset.csrf = csrfToken;
+        del.addEventListener('click', function () { docDelete(del); });
+
+        li.append(badge, link, date, del);
+        list.appendChild(li);
     }
 
     function formatDate(iso) {
@@ -198,8 +213,6 @@ function docDelete(btn) {
         if (data.success) {
             const li = document.getElementById('doc-' + docId);
             if (li) li.remove();
-            const sbLi = document.getElementById('sb-doc-' + docId);
-            if (sbLi) sbLi.remove();
         }
     })
     .catch(() => alert('{{ doc_delete_failed_msg|escapejs }}'));
