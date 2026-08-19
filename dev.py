@@ -268,7 +268,7 @@ def cmd_test_js(args):
 
     # Run Node.js-based tests (if not browser-only)
     if not browser_only:
-        print("📊 Running Node.js-based Chart Tests...")
+        print("📊 Running Node.js-based JS Tests...")
 
         # Run basic tests
         print("\n--- Basic Chart Utils Tests ---")
@@ -282,6 +282,11 @@ def cmd_test_js(args):
                 ["node", "/app/static/js/chart_utils.test.extended.js"]
             )
             results.append(("JS Extended", js_ext_result.returncode))
+
+        # Run form draft guard tests (M-PAT-06)
+        print("\n--- Form Draft Guard Tests ---")
+        guard_result = run_docker_command(["node", "/app/static/js/form_draft_guard.test.js"])
+        results.append(("JS DraftGuard", guard_result.returncode))
 
     # Show browser test info (if not node-only)
     if not node_only:

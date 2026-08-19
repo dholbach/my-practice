@@ -33,13 +33,9 @@
 </div>
 {% endif %}
 
-<!-- Header actions -->
-<div class="cd-header-actions">
-    <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">{% trans "← List" %}</a>
-    <a href="{% url 'client_edit' client.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">{% trans "✏️ Edit" %}</a>
-</div>
-
-<!-- Page-level tab bar -->
+<!-- Page-level tab bar; the list/edit actions ride along on the same row rather
+     than taking a band of their own (they push right via margin-left:auto, and
+     drop onto their own line if the tabs wrap). -->
 <div class="page-tab-bar" data-unsaved-label="{% trans "Unsaved changes" %}">
     <button class="page-tab-btn page-tab-active" data-tab="profil" onclick="pageTab('profil', this)">{% trans "Overview" %}</button>
     <button class="page-tab-btn" data-tab="protokoll" onclick="pageTab('protokoll', this)">📝 {% trans "Protocol" %}
@@ -50,6 +46,10 @@
         {% if stats.open_amount %}<span class="cn-badge cn-badge-warn">{{ stats.open_amount|floatformat:0 }} €</span>{% endif %}
     </button>
     <button class="page-tab-btn" data-tab="dokumente" onclick="pageTab('dokumente', this)">📎 {% trans "Documents" %}</button>
+    <div class="cd-header-actions">
+        <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">{% trans "← List" %}</a>
+        <a href="{% url 'client_edit' client.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">{% trans "✏️ Edit" %}</a>
+    </div>
 </div>
 
 <!-- ══ Tab: Overview + Profile (merged) ══════════════════════════════════════ -->
