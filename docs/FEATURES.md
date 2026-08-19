@@ -36,11 +36,12 @@ chronological record; this document only tracks current state.
 - ✅ GebüH-recorded indicator on session rows — the GebüH button shows a visual marker once a code has been entered for that session
 
 ### Client Detail Cockpit (P-094)
-- ✅ Tabbed layout: Überblick / Protokoll / Profil / Abrechnung / Dokumente — replaces sidebar layout
-- ✅ Überblick tab: stat cards (diagnosis, last session, session hours, open balance), intake progress widget (4-step bar from existing date fields), recent session one-liners
-- ✅ `SessionLog.summary` — unencrypted one-liner field (max 120 chars) shown in Überblick without Fernet decryption; editable in session log form
-- ✅ Client tags shown in Überblick tab strip; tag add/remove UI in Profil tab; duplicate tags removed from page header
-- ✅ "Details in Profil-Tab" onboarding link switches to the Profil tab and scrolls to the onboarding section
+- ✅ Tabbed layout: Overview / Protokoll / Abrechnung / Dokumente — replaces sidebar layout
+- ✅ Overview tab: stat cards (diagnosis, last session, session hours, open balance), intake progress widget (4-step bar from existing date fields), recent session one-liners, and the client's profile/tag/onboarding detail further down the same tab — originally two separate tabs (Überblick + Profil), merged once the split proved to be mostly duplicated content
+- ✅ `SessionLog.summary` — unencrypted one-liner field (max 120 chars) shown in the Overview tab without Fernet decryption; editable in session log form
+- ✅ Tag add/remove UI in the Overview tab; duplicate tags removed from page header
+- ✅ "Details ↓" onboarding link scrolls to the onboarding section further down the Overview tab
+- ✅ Tab buttons show a dot indicator + "Unsaved changes" tooltip when a draft-guarded form inside them has unsaved edits — the browser's own beforeunload dialog can't say which tab the edit is in
 
 ### Focus Queue (P-050)
 - ✅ Unified task list (`/focus/`) — replaces the old `/todos/` list and the dashboard's "Needs Action" pane; manual tasks and materialized system signals (missing session log, unpaid/unsent invoice, pending checklist, open supervision topic) live side by side as real, closeable rows
@@ -101,7 +102,7 @@ chronological record; this document only tracks current state.
 - ✅ Invoice PDF — conditional GebüH block: Diagnose line, per-visit headline row (date, service, amount) with Ziffer/Restbetrag collapsed into a muted detail line underneath; running "GebüH gesamt" total near the grand total; unchanged layout for non-GebüH clients
 - ✅ Invoice detail page (web view) mirrors the same headline-row + collapsed detail-line layout as the PDF, instead of a separate row per code plus subtotal/remaining rows; totals block also shows the running "GebüH gesamt" alongside the invoice grand total, matching the PDF
 - ✅ Recorded Ziffer amount capped at what's actually charged (`min(satz_max, vereinbarter_betrag)`) rather than always showing the code's ceiling rate
-- ✅ Probatorik callout — Profil tab hint when diagnosis not yet set; escalates to warning badge after 5+ diagnostic Ziffern recorded
+- ✅ Probatorik callout — Overview tab hint when diagnosis not yet set; escalates to warning badge after 5+ diagnostic Ziffern recorded
 - ✅ `Client.gebueh_no_diagnosis` opt-out — per-client checkbox to omit the diagnosis line from GebüH invoices (PDF and web invoice detail) while keeping the Ziffern/fee-schedule breakdown
 
 ### Session Tracking

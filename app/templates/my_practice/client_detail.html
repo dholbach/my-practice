@@ -760,7 +760,7 @@ function pageTab(tabName, btn) {
 })();
 
 // Surface which tab holds a form_draft_guard'd unsaved edit — the browser's
-// native beforeunload dialog gives no clue which of the 5 tabs it's in.
+// native beforeunload dialog gives no clue which tab it's in.
 document.addEventListener('draftguard:dirty', function(e) {
     const tabContent = e.target.closest('.page-tab-content');
     if (!tabContent) return;
