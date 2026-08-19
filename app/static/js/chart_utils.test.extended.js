@@ -12,11 +12,14 @@ const {
 } = require('./charts/chart_math.js');
 
 // Test framework
+let failures = 0;
+
 function test(name, fn) {
     try {
         fn();
         console.log(`✓ ${name}`);
     } catch (error) {
+        failures++;
         console.error(`✗ ${name}`);
         console.error(`  ${error.message}`);
     }
@@ -100,4 +103,8 @@ test('aggregateMonthlyToYearly - ignores undefined/null values', () => {
     assertEquals(result.data, [300], 'Should skip undefined/null values');
 });
 
-console.log('\n✅ All additional tests completed!\n');
+if (failures > 0) {
+    console.error(`\n❌ ${failures} test(s) failed\n`);
+    process.exit(1);
+}
+console.log('\n✅ All additional tests passed!\n');

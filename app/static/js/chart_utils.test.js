@@ -17,11 +17,14 @@ const {
 } = require('./charts/chart_math.js');
 
 // Simple test framework
+let failures = 0;
+
 function test(name, fn) {
     try {
         fn();
         console.log(`✓ ${name}`);
     } catch (error) {
+        failures++;
         console.error(`✗ ${name}`);
         console.error(`  ${error.message}`);
     }
@@ -148,4 +151,8 @@ test('aggregateMonthlyToYearly - sorts years', () => {
     assertEquals(result.data, [200, 100, 300], 'Should map data to sorted years');
 });
 
-console.log('\n✅ All tests completed!\n');
+if (failures > 0) {
+    console.error(`\n❌ ${failures} test(s) failed\n`);
+    process.exit(1);
+}
+console.log('\n✅ All tests passed!\n');
