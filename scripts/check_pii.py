@@ -92,7 +92,9 @@ def main() -> int:
         print("🚫 PII check failed — denylisted terms found:")
         for filename, term in sorted(set(hits)):
             print(f"   {filename}: contains '{term}'")
-        print("Remove the sensitive data, or edit .git/pii-denylist if this is a false positive.")
+        print(
+            "Remove the sensitive data, or edit .git/pii-denylist if this is a false positive."
+        )
         return 1
     return 0
 
