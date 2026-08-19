@@ -69,20 +69,22 @@ class Practice(models.Model):
     )
 
     # Address
-    street = models.CharField(max_length=200, default="")
-    postal_code = models.CharField(max_length=20, default="")
-    city = models.CharField(max_length=100, default="")
-    country = models.CharField(max_length=100, default="Deutschland", blank=True)
+    street = models.CharField(max_length=200, default="", verbose_name=_("Street and house number"))
+    postal_code = models.CharField(max_length=20, default="", verbose_name=_("Postal code"))
+    city = models.CharField(max_length=100, default="", verbose_name=_("City"))
+    country = models.CharField(
+        max_length=100, default="Deutschland", blank=True, verbose_name=_("Country")
+    )
 
     # Contact
-    email = models.EmailField(default="")
+    email = models.EmailField(default="", verbose_name=_("Email"))
     email_from_name = models.CharField(
         max_length=200,
         default="",
         verbose_name=_("Email sender name"),
         help_text=_("Name displayed in 'From' field of outgoing emails"),
     )
-    website = models.URLField(default="")
+    website = models.URLField(default="", verbose_name=_("Website"))
     booking_url = models.URLField(
         default="",
         blank=True,
@@ -92,12 +94,12 @@ class Practice(models.Model):
             "Automatically inserted into inquiry email templates."
         ),
     )
-    phone = models.CharField(max_length=50, blank=True)
+    phone = models.CharField(max_length=50, blank=True, verbose_name=_("Phone"))
 
     # Banking
-    bank_name = models.CharField(max_length=200, default="")
-    iban = models.CharField(max_length=34, default="")
-    bic = models.CharField(max_length=11, default="")
+    bank_name = models.CharField(max_length=200, default="", verbose_name=_("Bank name"))
+    iban = models.CharField(max_length=34, default="", verbose_name=_("IBAN"))
+    bic = models.CharField(max_length=11, default="", verbose_name=_("BIC"))
     private_bank_account = models.CharField(
         max_length=34,
         blank=True,
