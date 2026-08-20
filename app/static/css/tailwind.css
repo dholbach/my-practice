@@ -484,8 +484,8 @@
   .bank-import-status__body { flex: 1; }
   .bank-import-status__text-main      { font-weight: 600; margin-bottom: 0.25rem; }
   .bank-import-status__text-secondary { font-size: 0.875rem; opacity: 0.9; }
-  .bank-import-status__btn  { padding: 0.5rem 1rem; white-space: nowrap; background: #f59e0b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; flex-shrink: 0; }
-  .bank-import-status__btn:hover { background: #d97706; color: white; }
+  .bank-import-status__btn  { padding: 0.5rem 1rem; white-space: nowrap; background: #b45309; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; flex-shrink: 0; }
+  .bank-import-status__btn:hover { background: #92400e; color: white; }
   .bank-import-status__link { color: var(--color-success); text-decoration: none; font-weight: 600; opacity: 0.8; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
   .bank-import-status__link:hover { opacity: 1; }
   /* Calendar preflight widget */
@@ -1101,9 +1101,13 @@
   .placeholder-warning a { color: #742a2a; text-decoration: underline; font-weight: 600; }
   .client-actions { margin-top: 1.5rem; margin-bottom: 2rem; display: flex; gap: 1rem; justify-content: space-between; }
   .client-actions-left, .client-actions-right { display: flex; gap: 1rem; }
-  .btn-invoice-create  { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-  .btn-invoice-urgent  { background: #ef4444; color: white; }
-  .btn-invoice-warning { background: #f59e0b; color: white; }
+  /* Compound selectors: these are always used as `class="btn btn-invoice-*"`, and
+     .btn is defined further down the file. At equal specificity the later rule
+     wins, so the plain .btn-invoice-* forms lost to .btn's own background and the
+     urgency colour-coding never rendered. */
+  .btn.btn-invoice-create  { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+  .btn.btn-invoice-urgent  { background: #dc2626; color: white; }
+  .btn.btn-invoice-warning { background: #b45309; color: white; }
   .data-table th.col-amount, .data-table td.col-amount { text-align: right; }
   .data-table td.col-amount { font-weight: 700; }
   .data-table a.invoice-link-primary   { color: var(--color-text-primary); text-decoration: none; font-weight: 600; }
@@ -1373,8 +1377,8 @@
   .import-results-panel h2 { margin: 0 0 1rem; font-size: 1.25rem; }
   .import-results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
   .divider-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid currentColor; }
-  .btn-amber { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #f59e0b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; }
-  .btn-amber:hover { background: #d97706; }
+  .btn-amber { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #b45309; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; }
+  .btn-amber:hover { background: #92400e; }
   .stat-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
   .stat-mini-card { padding: 1rem; border-radius: 8px; text-align: center; }
   .stat-mini-card--danger  { background: var(--color-danger-bg);   color: var(--color-danger); }
