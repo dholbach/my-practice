@@ -418,6 +418,14 @@ msgstr "Beträge"
 msgid "Amounts are calculated automatically from invoice items"
 msgstr "Beträge werden automatisch aus den Rechnungspositionen berechnet"
 
+#: templates/my_practice/bank_review.html:345
+msgid "matches the transaction"
+msgstr "passt zur Transaktion"
+
+#: templates/my_practice/bank_review.html:346
+msgid "Difference:"
+msgstr "Differenz:"
+
 #: my_practice/admin/invoice.py:147 my_practice/models/invoice.py:284
 #: templates/my_practice/bank_review.html:75
 #: templates/my_practice/invoice_detail.html:87
