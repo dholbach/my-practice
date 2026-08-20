@@ -8,3 +8,6 @@ backups/
 staticfiles/
 node_modules/
 .git
+# Not needed at runtime; the dev container gets the real files via its
+# ./app bind mount regardless of what's baked into the image.
+my_practice/tests/
