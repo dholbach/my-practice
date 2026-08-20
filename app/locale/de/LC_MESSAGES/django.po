@@ -422,7 +422,7 @@ msgstr "Beträge werden automatisch aus den Rechnungspositionen berechnet"
 msgid "matches the transaction"
 msgstr "passt zur Transaktion"
 
-#: templates/my_practice/bank_review.html:344
+#: templates/my_practice/bank_review.html:346
 msgid "Difference:"
 msgstr "Differenz:"
 

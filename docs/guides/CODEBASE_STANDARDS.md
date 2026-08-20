@@ -89,33 +89,67 @@ and provides the anti-patterns checklist used during periodic reviews
 - Reusable snippets live in `templates/includes/`
 - Delete views use `PracticeScopedDeleteView` — no wrapper functions
 
-### Dark-mode contract (M-PAT-06)
+### Dark-mode contract (M-PAT-07)
 
-Every CSS rule that sets `background` to a themed variable must also set an explicit `color`. Omitting `color` causes dark-on-dark text when the background goes dark but the inherited text colour doesn't follow.
+**Use the real token names.** They are all prefixed `--color-`: `--color-bg-primary`,
+`--color-bg-secondary`, `--color-surface`, `--color-text-primary`,
+`--color-text-secondary`, `--color-border`, `--color-link`, `--color-primary`, and the
+semantic pairs `--color-success`/`--color-success-bg`, `--color-warning`/`--color-warning-bg`,
+`--color-danger`/`--color-danger-bg`. Grep the `@theme` block at the bottom of
+`tailwind.css` for the full list before inventing one.
+
+This matters more than it looks. `var(--made-up-name)` with no fallback makes the whole
+declaration invalid at computed-value time, so the property is *dropped* and silently
+falls back to inherited/initial — the background or hover highlight simply never renders.
+With a hardcoded fallback (`var(--made-up-name, #333)`) the fallback wins permanently,
+which defeats the token and breaks dark mode. Both had live instances in the stylesheet
+until they were found by measuring contrast in a real browser.
+
+Every CSS rule that sets `background` to a themed variable must also set an explicit
+`color`. Omitting `color` causes dark-on-dark text when the background goes dark but the
+inherited text colour doesn't follow.
 
 ```css
 /* Good */
 .my-card {
-    background: var(--card-bg);
-    color: var(--text-primary);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
 }
 
 /* Bad — text colour is unspecified; breaks in dark mode */
 .my-card {
-    background: var(--card-bg);
+    background: var(--color-surface);
 }
 ```
 
-Links inside themed containers must scope a link-colour rule so they use the theme token rather than the browser default (`#0000ee`, invisible on dark backgrounds):
+Equally bad, and harder to spot: a hardcoded background with a tokenised text colour. The
+background stays light in dark mode while the text goes near-white, giving a contrast
+ratio around 1.0 — invisible, not merely low.
+
+```css
+/* Bad — #f0fff4 doesn't flip with the theme, but the inherited colour does */
+.my-step.step-done { background: #f0fff4; }
+
+/* Good */
+.my-step.step-done { background: var(--color-success-bg); color: var(--color-success); }
+```
+
+Links inside themed containers must scope a link-colour rule so they use the theme token
+rather than the browser default (`#0000ee`, invisible on dark backgrounds):
 
 ```css
 .my-container {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
 
-    a { color: var(--link-color); }
+    a { color: var(--color-link); }
 }
 ```
+
+`my_practice/tests/test_css_tokens.py` enforces the first two rules as a ratchet: it fails
+on a `var(--x)` whose token is never defined, and on new hardcoded hex on a semantic
+component class. Its allowlist covers what is deliberately theme-independent (brand
+gradients, fixed swatch palettes, coloured buttons) — shrink it, don't grow it.
 
 Note: a global `a { color: var(--color-link); }` rule in `@layer base` in `tailwind.css` handles the base case. You only need the scoped rule when the container overrides `color` to something that would make the global rule look wrong (e.g. white text on a coloured background where links should also be white).
 
@@ -126,7 +160,8 @@ Note: a global `a { color: var(--color-link); }` rule in `@layer base` in `tailw
 - `attrs={"class": "form-control"}` on form fields → use `StyledFormMixin`
 - Inline `style="..."` on elements that should use CSS classes → replace with class
 - Hardcoded colours (`#2d3748`, `#a5b4fc`) in templates or CSS → use `var(--color-*)` tokens
-- `background: var(--*)` without a matching `color:` rule → dark-on-dark regression risk (M-PAT-06)
+- `background: var(--*)` without a matching `color:` rule → dark-on-dark regression risk (M-PAT-07)
+- `var(--some-token)` where the token isn't defined in `tailwind.css` → declaration silently dropped (M-PAT-07)
 - `.text-success` / `.text-warning` / `.text-danger` / `.text-info` are now tokenised — don't add hardcoded hex equivalents
 - `{{ client.full_name }}` without `sensitive-data` class outside of clearly staff-only sections
 - New template file with a German filename → rename to English (P-038)

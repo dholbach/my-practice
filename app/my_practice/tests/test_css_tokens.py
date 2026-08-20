@@ -117,8 +117,7 @@ class CssTokenDefinitionTests(SimpleTestCase):
             set(),
             "CSS custom properties referenced but never defined — the declaration "
             "is dropped and the property falls back to inherited/initial. Define "
-            "the token, or use an existing --color-* one:\n  "
-            + "\n  ".join(sorted(undefined)),
+            "the token, or use an existing --color-* one:\n  " + "\n  ".join(sorted(undefined)),
         )
 
     def test_allowlisted_undefined_tokens_are_still_referenced(self):

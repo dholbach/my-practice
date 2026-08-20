@@ -422,7 +422,7 @@ msgstr ""
 msgid "matches the transaction"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:344
+#: templates/my_practice/bank_review.html:346
 msgid "Difference:"
 msgstr ""
 
