@@ -7,6 +7,8 @@ from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
+from ..validators import validate_email_template_placeholders
+
 
 class Practice(models.Model):
     """
@@ -259,18 +261,21 @@ class Practice(models.Model):
 
     # Email templates for invoices
     invoice_email_subject_de = models.CharField(
+        validators=[validate_email_template_placeholders],
         max_length=200,
         default="Rechnung {invoice_number}",
         verbose_name=_("Email subject (German)"),
         help_text=_("Placeholders: {invoice_number}, {amount}, {date}, {client_name}"),
     )
     invoice_email_subject_en = models.CharField(
+        validators=[validate_email_template_placeholders],
         max_length=200,
         default="Invoice {invoice_number}",
         verbose_name=_("Email subject (English)"),
         help_text=_("Placeholders: {invoice_number}, {amount}, {date}, {client_name}"),
     )
     invoice_email_body_de = models.TextField(
+        validators=[validate_email_template_placeholders],
         default="{salutation},\n\n{sessions_intro}anbei erhalten Sie die Rechnung {invoice_number} über {amount} vom {date}.\n\n"
         "Bitte überweisen Sie den Betrag innerhalb von 14 Tagen unter Angabe der Rechnungsnummer.\n\n"
         "Die Rechnung ist als PDF im Anhang beigefügt.",
@@ -280,6 +285,7 @@ class Practice(models.Model):
         ),
     )
     invoice_email_body_en = models.TextField(
+        validators=[validate_email_template_placeholders],
         default="{salutation},\n\n{sessions_intro}Please find attached invoice {invoice_number} for {amount} dated {date}.\n\n"
         "Please transfer the amount within 14 days, stating the invoice number.\n\n"
         "The invoice is attached as a PDF.",

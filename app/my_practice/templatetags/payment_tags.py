@@ -8,6 +8,7 @@ from django import template
 from django.utils.safestring import mark_safe
 
 from ..utils.chart_helpers import MONTH_ABBREVIATIONS
+from ..utils.formatting import format_currency_de
 
 register = template.Library()
 
@@ -24,12 +25,7 @@ def currency(value, symbol="€"):
         return "–"
 
     try:
-        value = float(value)
-        # Format with 2 decimal places and thousands separator
-        formatted = f"{value:,.2f}"
-        # Convert to German format: swap . and , then replace , with .
-        formatted = formatted.replace(",", "X").replace(".", ",").replace("X", ".")
-        return f"{formatted}\u00a0{symbol}"
+        return format_currency_de(value, symbol)
     except ValueError, TypeError:
         return value
 

@@ -4,6 +4,9 @@ Email utility functions for invoice sending.
 
 from typing import TYPE_CHECKING, Any
 
+from ..validators import PLACEHOLDER_RE
+from .formatting import format_currency_de
+
 if TYPE_CHECKING:
     from ..models import Client, Invoice, Practice, TimeOff
 
@@ -98,8 +101,29 @@ def render_email_template(template_text: str, context: dict[str, Any]) -> str:
     - {amount}: Formatted amount with currency
     - {date}: Formatted date
     - {client_name}: Client full name
+
+    Deliberately *total*: it never raises, whatever the template contains.
+    Templates are free text typed by the practitioner — the DB-configured
+    invoice templates in Practice settings, and the time-off notice body typed
+    straight into a form — so a typo'd ``{Betrag}`` or a stray ``{`` in ordinary
+    prose used to abort the send with KeyError/ValueError. In the time-off loop
+    that happened outside the per-recipient try/except, i.e. mid-send, after
+    some clients had already been emailed.
+
+    Unknown ``{placeholders}`` and unmatched braces are therefore left standing
+    verbatim rather than raising. Save-time validation is what tells the
+    practitioner about a typo, while they can still fix it — see
+    ``validate_email_template_placeholders`` on the Practice template fields.
+
+    Note this replaces ``str.format``, so ``{{`` is no longer an escape for a
+    literal brace (nothing in the app relied on it) and attribute/index
+    traversal like ``{client.__class__}`` is no longer reachable from template
+    text at all.
     """
-    return template_text.format(**context)
+    return PLACEHOLDER_RE.sub(
+        lambda m: str(context[m.group(1)]) if m.group(1) in context else m.group(0),
+        template_text,
+    )
 
 
 def prepare_invoice_email_context(
@@ -122,8 +146,10 @@ def prepare_invoice_email_context(
     else:
         salutation = get_salutation_for_client(invoice.client)
 
-    # Format amount
-    amount_formatted = f"{invoice.total:.2f} €"
+    # German number format, matching the |currency filter used by the invoice
+    # PDF attached to this very email — an inline f-string here produced English
+    # format ("1234.50 €") beside a PDF reading "1.234,50 €".
+    amount_formatted = format_currency_de(invoice.total)
 
     # Format date
     date_formatted = invoice.invoice_date.strftime("%d.%m.%Y")
@@ -174,8 +200,11 @@ def get_invoice_email_content(
     if custom_message:
         body = body + "\n\n" + custom_message
 
-    # Add signature with standard email delimiter
-    body = body + "\n\n-- \n" + practice.email_signature
+    # Add signature with standard email delimiter. Guarded like the other
+    # builders below — appending unconditionally left a bare "-- " sig
+    # delimiter dangling on the mail when a practice had no signature set.
+    if practice.email_signature:
+        body = body + "\n\n-- \n" + practice.email_signature
 
     return subject, body
 
