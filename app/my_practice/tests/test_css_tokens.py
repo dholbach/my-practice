@@ -47,6 +47,7 @@ KNOWN_HARDCODED_HEX_PREFIXES = (
     ".billing-summary__chip",
     ".cn-session-",
     ".btn-",  # coloured action buttons (white on brand colour)
+    ".btn.btn-",  # …and the compound forms that have to outrank .btn itself
     ".badge--",
     ".audit-",
     ".month-bar",
