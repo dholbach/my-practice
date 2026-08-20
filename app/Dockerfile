@@ -13,6 +13,13 @@ COPY templates/ templates/
 
 RUN npm run build:css
 
+# Assemble the rest of the app source here too, and drop the Tailwind source
+# file now — Docker layers are additive, so COPY-then-RUN-rm in the stage
+# that ships would still leave the removed file's bytes in an earlier layer.
+# Doing it in this discarded builder stage means it never lands in the image.
+COPY . .
+RUN rm static/css/tailwind.css
+
 # ── Stage 2: compile Python dependencies ─────────────────────────────────────
 # Isolated so the compiler toolchain (gcc + dev headers) never lands in the
 # final image — only the compiled packages get copied over.
@@ -32,8 +39,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+# google-api-python-client bundles a static discovery JSON for every Google
+# API it supports (586 files, ~98MB) — this app only ever calls
+# build("calendar", "v3", ...), so all but that one file are dead weight.
 RUN pip install --upgrade pip \
-    && pip install --no-cache-dir --prefix=/install -r requirements.txt
+    && pip install --no-cache-dir --prefix=/install -r requirements.txt \
+    && find /install -path '*/discovery_cache/documents/*.json' ! -name 'calendar.v3.json' -delete
 
 # ── Stage 3: production image ────────────────────────────────────────────────
 FROM python:3.14-slim AS production
@@ -62,11 +73,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --upgrade pip
 COPY --from=python-builder /install /usr/local
 
-# Copy application and drop in the compiled CSS from the builder stage
-COPY . .
-COPY --from=css-builder /app/static/css/tailwind.out.css static/css/tailwind.out.css
-# Remove the Tailwind source file — only the compiled output is served
-RUN rm static/css/tailwind.css
+# App source, already including the compiled CSS and minus the Tailwind
+# source file — assembled in the css-builder stage (see the comment there).
+COPY --from=css-builder /app /app
 
 RUN chmod +x manage.py
 
