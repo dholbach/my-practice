@@ -1626,12 +1626,13 @@
   .data-table--bank tbody tr { border-bottom: 1px solid var(--color-border); }
   .data-table--bank .td-reference { color: var(--color-text-secondary); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .data-table--bank .td-amount { text-align: right; font-weight: 600; }
-  .import-badge { padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+  .import-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700; text-decoration: none; }
   .import-badge--matched { background: var(--color-success-bg); color: var(--color-success); }
   .import-badge--fuzzy   { background: var(--color-warning-bg); color: var(--color-warning); }
   .import-badge--manual  { background: var(--color-info-bg);    color: var(--color-info); }
   .import-badge--neutral { background: var(--color-bg-secondary); color: var(--color-text-secondary); }
-  .import-badge--open    { background: var(--color-danger-bg);  color: var(--color-danger); }
+  .import-badge--open    { background: var(--color-danger-bg);  color: var(--color-danger); cursor: pointer; }
+  .import-badge--open:hover { text-decoration: underline; }
 
   /* ── Client cards view ── */
   .workflow-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap; }

@@ -124,9 +124,9 @@
                                     📋 {% trans "Expense" %}
                                 </span>
                             {% else %}
-                                <span class="import-badge import-badge--open">
+                                <a href="{% url 'bank_review' %}#trans-{{ trans.id }}" class="import-badge import-badge--open">
                                     ? {% trans "Open" %}
-                                </span>
+                                </a>
                             {% endif %}
                         </td>
                     </tr>
