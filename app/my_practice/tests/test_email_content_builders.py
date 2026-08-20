@@ -80,7 +80,9 @@ class RenderEmailTemplateTest(TestCase):
 
     def test_unknown_placeholder_left_standing_instead_of_raising(self):
         # Previously str.format() raised KeyError and aborted the send.
-        self.assertEqual(render_email_template("Betrag: {Betrag}", {"amount": "5"}), "Betrag: {Betrag}")
+        self.assertEqual(
+            render_email_template("Betrag: {Betrag}", {"amount": "5"}), "Betrag: {Betrag}"
+        )
 
     def test_stray_opening_brace_does_not_raise(self):
         # e.g. the practitioner typing a brace in ordinary prose.
@@ -444,9 +446,7 @@ class TimeOffNoticeContentTest(EmailContentBuilderTestBase):
             self._timeoff(date(2026, 7, 24), date(2026, 7, 28)),
             self._timeoff(date(2026, 8, 10), date(2026, 8, 14)),
         ]
-        subject_de, body_de, _, body_en = get_timeoff_notice_default_content(
-            periods, self.practice
-        )
+        subject_de, body_de, _, body_en = get_timeoff_notice_default_content(periods, self.practice)
         self.assertIn("24.-28. Juli", subject_de)
         self.assertIn("10.-14. August", subject_de)
         self.assertIn("- Fr 24. - Di 28. Juli", body_de)
@@ -464,7 +464,16 @@ class TimeOffNoticeContentTest(EmailContentBuilderTestBase):
         self.assertTrue(rendered.startswith("Liebe:r Max,"))
 
     def test_english_ordinal_suffixes(self):
-        cases = {1: "1st", 2: "2nd", 3: "3rd", 4: "4th", 11: "11th", 12: "12th", 13: "13th", 21: "21st"}
+        cases = {
+            1: "1st",
+            2: "2nd",
+            3: "3rd",
+            4: "4th",
+            11: "11th",
+            12: "12th",
+            13: "13th",
+            21: "21st",
+        }
         for day, expected in cases.items():
             with self.subTest(day=day):
                 periods = [self._timeoff(date(2026, 7, day), date(2026, 7, day))]
