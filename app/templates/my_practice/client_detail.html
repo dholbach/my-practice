@@ -392,7 +392,7 @@
         <h3 class="cn-supervision-heading">🔍 {% trans "Supervision" %}</h3>
         <form method="post" action="{% url 'supervision_item_create' client.pk %}" class="cn-field cn-supervision-new-form">
             {% csrf_token %}
-            <textarea name="content" class="form-control cn-textarea-small"
+            <textarea name="content" class="cn-textarea-small"
                       placeholder="{% trans 'Supervision topic or question…' %}" rows="3"></textarea>
             <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
         </form>
