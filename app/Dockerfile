@@ -1,4 +1,4 @@
-# ── Stage 1: compile Tailwind CSS ───────────────────────────────────────────
+# ── Stage 1: compile Tailwind CSS ────────────────────────────────────────────
 FROM node:26-slim AS css-builder
 WORKDIR /app
 
@@ -13,18 +13,38 @@ COPY templates/ templates/
 
 RUN npm run build:css
 
-# ── Stage 2: production image ────────────────────────────────────────────────
+# ── Stage 2: compile Python dependencies ─────────────────────────────────────
+# Isolated so the compiler toolchain (gcc + dev headers) never lands in the
+# final image — only the compiled packages get copied over.
+FROM python:3.14-slim AS python-builder
+WORKDIR /app
+
+# gcc, libffi-dev, zlib1g-dev, libjpeg-dev, libopenjp2-7-dev: needed to compile
+# Pillow from source on Python 3.14 (no pre-built cp314 wheels available yet
+# for all platforms). psycopg[binary] and cryptography ship prebuilt wheels,
+# so no libpq-dev is needed here.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libffi-dev \
+    zlib1g-dev \
+    libjpeg-dev \
+    libopenjp2-7-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# ── Stage 3: production image ────────────────────────────────────────────────
 FROM python:3.14-slim AS production
 WORKDIR /app
 
-# System dependencies for WeasyPrint and psycopg
-# zlib1g-dev, libjpeg-dev, libopenjp2-7-dev: needed to compile Pillow from source on Python 3.14
-# (no pre-built cp314 wheels available yet for all platforms)
-RUN apt-get update && apt-get install -y \
-    postgresql-client \
-    libpq-dev \
-    gcc \
-    libffi-dev \
+# Runtime-only system dependencies for WeasyPrint, Ghostscript and Pillow.
+# libjpeg62-turbo/libopenjp2-7/zlib1g are the runtime counterparts of the
+# -dev headers used to compile Pillow in the python-builder stage above.
+# postgresql-client is intentionally NOT installed here — it's only used by
+# `./dev.py psql`/`./dev.py sql`, which run against the development image.
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
@@ -32,16 +52,15 @@ RUN apt-get update && apt-get install -y \
     shared-mime-info \
     fonts-liberation \
     curl \
-    zlib1g-dev \
-    libjpeg-dev \
-    libopenjp2-7-dev \
+    libjpeg62-turbo \
+    libopenjp2-7 \
+    zlib1g \
     ghostscript \
     gettext \
     && rm -rf /var/lib/apt/lists/*
 
-# Production Python dependencies only
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip
+COPY --from=python-builder /install /usr/local
 
 # Copy application and drop in the compiled CSS from the builder stage
 COPY . .
@@ -58,12 +77,16 @@ EXPOSE 8000
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "config.wsgi:application"]
 
-# ── Stage 3: development image (extends production) ──────────────────────────
+# ── Stage 4: development image (extends production) ──────────────────────────
 FROM production AS development
 
+# postgresql-client: only needed for `./dev.py psql`/`./dev.py sql`, which
+# exec into this (development-target) container — not shipped in production.
 # Node.js 22 (LTS) for CSS rebuilding (npm run watch:css) and JS tests
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 RUN npm install
 
