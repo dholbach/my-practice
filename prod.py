@@ -14,7 +14,7 @@ import time
 import urllib.request
 
 VERSION = (
-    "v0.5.0"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
+    "v0.5.1"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
 )
 
 COMPOSE_FILE = os.path.join(
