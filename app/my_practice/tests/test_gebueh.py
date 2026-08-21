@@ -5,11 +5,13 @@ from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import Client as TestClient
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
+
+TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
 
 
 def _make_practice(slug="gebueh-test"):
@@ -391,6 +393,10 @@ class GebuhPdfBlocksTest(TestCase):
         result = self._diagnose(self.client_obj)
         self.assertEqual(result, "")
 
+    # arbeitsdiagnose is an EncryptedCharField, so writing a non-empty value
+    # needs a key. settings.FERNET_KEY is deliberately None in dev/test, which
+    # made this test pass only because a developer's .env happened to set one.
+    @override_settings(FERNET_KEY=TEST_FERNET_KEY)
     def test_get_arbeitsdiagnose_with_profile(self):
         from ..models import ClientProfile
 
