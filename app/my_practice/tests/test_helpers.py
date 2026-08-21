@@ -2,6 +2,9 @@
 Test helper utilities and mixins for multi-practice testing.
 """
 
+import io
+
+import pypdf
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.test import TestCase
@@ -10,6 +13,26 @@ from django.test.utils import CaptureQueriesContext
 from ..models import Practice, UserPractice
 
 User = get_user_model()
+
+
+def make_pdf_bytes(num_pages: int = 1, rotate: int = 0) -> bytes:
+    """Return bytes for a real, parseable PDF.
+
+    Upload tests used to hand-roll a stub — b"%PDF-1.0\n1 0 obj<</Type /Catalog>>endobj\n"
+    — which has a PDF header but no xref table or EOF marker, so pypdf cannot
+    read it. That was invisible until process_upload() started rejecting
+    unparseable PDFs, at which point eight tests began failing on uploads that
+    had never contained a PDF in the first place. Anything exercising the upload
+    path needs bytes that actually parse.
+    """
+    writer = pypdf.PdfWriter()
+    for _ in range(num_pages):
+        page = writer.add_blank_page(width=200, height=200)
+        if rotate:
+            page.rotate(rotate)
+    buf = io.BytesIO()
+    writer.write(buf)
+    return buf.getvalue()
 
 
 class QueryCountMixin:

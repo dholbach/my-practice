@@ -24,6 +24,7 @@ from ..models import (
     UserPractice,
 )
 from ..utils.tag_helpers import SESSION_LOG_MIN_DURATION
+from .test_helpers import make_pdf_bytes
 
 
 class ClientListViewTest(TestCase):
@@ -736,8 +737,8 @@ class ClientDocumentUploadTest(TestCase):
         )
 
     def _pdf_file(self, name="beleg.pdf"):
-        content = b"%PDF-1.0\n1 0 obj<</Type /Catalog>>endobj\n"
-        return SimpleUploadedFile(name, content, content_type="application/pdf")
+        # Must be a real PDF: process_upload() rejects anything pypdf cannot read.
+        return SimpleUploadedFile(name, make_pdf_bytes(), content_type="application/pdf")
 
     def test_get_not_allowed(self):
         response = self.http.get(

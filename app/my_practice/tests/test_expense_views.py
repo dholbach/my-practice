@@ -19,6 +19,7 @@ from my_practice.models import (
     Practice,
     UserPractice,
 )
+from my_practice.tests.test_helpers import make_pdf_bytes
 
 User = get_user_model()
 
@@ -384,9 +385,12 @@ class ExpenseReceiptUploadTest(TestCase):
         self.client.login(username="receiptuser", password="testpass123")
 
     def _pdf_file(self, name="rechnung.pdf"):
-        """Return a minimal in-memory PDF for upload."""
-        content = b"%PDF-1.0\n1 0 obj<</Type /Catalog>>endobj\n"
-        return SimpleUploadedFile(name, content, content_type="application/pdf")
+        """Return a real in-memory PDF for upload.
+
+        process_upload() rejects anything pypdf cannot read, so this has to be
+        a genuine document rather than a header-shaped stub.
+        """
+        return SimpleUploadedFile(name, make_pdf_bytes(), content_type="application/pdf")
 
     def test_create_with_receipt(self):
         """Uploading a receipt on create creates an ExpenseReceipt linked to the expense."""

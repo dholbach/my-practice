@@ -162,13 +162,51 @@ with heavy related-object access.
 
 </details>
 
-### 3. `utils/file_processing.py` exception audit
+### 3. `utils/file_processing.py` exception audit — DONE
+
+The seven broad handlers were not equally suspicious. Three are fine as they
+stand: `_restore_page_rotations` logs a warning and degrades correctly,
+`_compress_pdf_bytes` logs with `.exception` and has a separate
+`FileNotFoundError` branch, and `_process_image_upload` deliberately re-raises
+as a user-facing `ValueError` — that one is the model the rest should follow.
+
+Two were changed:
+
+- **`_read_page_rotations` swallowed silently.** Broad is defensible (pypdf
+  raises a wide, unstable set of types) but silent is not: if pypdf started
+  failing across the board, every file would lose its page rotations with
+  nothing in the log to say so. Now logs a warning with `exc_info`.
+- **`contextlib.suppress(Exception)` around a recovery `seek(0)`** narrowed to
+  `(OSError, ValueError)`. Returning an upload whose read position is unknown
+  stores a truncated document, which is worse than failing the upload.
+
+**The structural finding was the real one.** Images that fail to parse are
+rejected — the code comments "could be active content" — but PDFs were never
+validated at all. `_compress_pdf_bytes` returns the original bytes whenever
+Ghostscript fails, so a file that was not a PDF sailed straight through. That
+fallback exists so a working PDF is never lost to a compression failure, not to
+vouch for content. It matters because client documents and expense receipts are
+linked as `{{ doc.file.url }}` with `target="_blank"` — served from `MEDIA_URL`
+inline, not as attachments, so the browser is handed the file with whatever
+content type the extension implies.
+
+`_pdf_is_parseable` now gates the upload path, and unparseable PDFs are rejected
+exactly as unparseable images are. Verified against the pinned pypdf 6.16.1:
+garbage, empty input, HTML under a `.pdf` name, a bare `%PDF-` header and a
+truncated PDF all fail to parse, so truncated uploads get caught too. All three
+callers of `process_upload()` already wrap it in `except ValueError` and surface
+the message with `messages.error`, so rejection needed no caller changes.
+
+<details>
+<summary>Original note</summary>
 
 Seven broad `except Exception` handlers, including one bare
 `except Exception: pass` at lines 186-189. This is the module that hands
 uploads to Pillow and shells out to Ghostscript — the untrusted-input path.
 #355 narrowed three such blocks elsewhere for exactly this reason; this file
 was the one where it matters most and it was skipped.
+
+</details>
 
 ### 4. Widen the ruff rule selection — DONE
 

@@ -3240,6 +3240,10 @@ msgstr "Heute fällig"
 msgid "Capacity"
 msgstr "Kapazität"
 
+#: my_practice/utils/file_processing.py
+msgid "PDF file '%(name)s' could not be processed."
+msgstr "PDF-Datei '%(name)s' konnte nicht verarbeitet werden."
+
 #: my_practice/utils/file_processing.py:174
 #, python-format
 msgid "Image file '%(name)s' could not be processed."

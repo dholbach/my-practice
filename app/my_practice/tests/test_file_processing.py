@@ -17,6 +17,7 @@ from ..utils.file_processing import (
     MAX_UPLOAD_BYTES,
     PDF_SKIP_BYTES,
     _compress_pdf_bytes,
+    _pdf_is_parseable,
     _read_page_rotations,
     _restore_page_rotations,
     compress_image_inplace,
@@ -24,22 +25,12 @@ from ..utils.file_processing import (
     compress_pdf_inplace,
     process_upload,
 )
+from .test_helpers import make_pdf_bytes
 
 
 def _make_jpeg_bytes(size=(800, 600), color=(200, 50, 50)) -> bytes:
     buf = io.BytesIO()
     Image.new("RGB", size, color).save(buf, format="JPEG", quality=95)
-    return buf.getvalue()
-
-
-def _make_pdf_bytes(num_pages=1, rotate=0) -> bytes:
-    writer = pypdf.PdfWriter()
-    for _ in range(num_pages):
-        page = writer.add_blank_page(width=200, height=200)
-        if rotate:
-            page.rotate(rotate)
-    buf = io.BytesIO()
-    writer.write(buf)
     return buf.getvalue()
 
 
@@ -74,7 +65,7 @@ class ProcessUploadTest(TestCase):
             process_upload(upload)
 
     def test_pdf_upload_is_passed_through_process_upload(self):
-        upload = SimpleUploadedFile("doc.pdf", _make_pdf_bytes(), content_type="application/pdf")
+        upload = SimpleUploadedFile("doc.pdf", make_pdf_bytes(), content_type="application/pdf")
         result = process_upload(upload)
         self.assertEqual(result.name, "doc.pdf")
 
@@ -87,6 +78,48 @@ class ProcessUploadTest(TestCase):
         result = process_upload(upload)
         self.assertIs(result, upload)
 
+    def test_unparseable_pdf_raises_value_error(self):
+        # Mirrors test_unparseable_image_raises_value_error. A file claiming to
+        # be a PDF but that pypdf cannot read is not stored: uploaded documents
+        # are linked straight from MEDIA_URL and opened in a new tab, so the
+        # browser gets handed the file with whatever content type the extension
+        # implies, and nothing downstream re-checks it.
+        upload = SimpleUploadedFile("doc.pdf", b"not a pdf", content_type="application/pdf")
+        with self.assertRaises(ValueError):
+            process_upload(upload)
+
+    def test_unparseable_pdf_is_rejected_by_extension_alone(self):
+        # Routing is `content_type == "application/pdf" or ext in _PDF_EXTENSIONS`,
+        # so a misdeclared content type must not route around the check.
+        upload = SimpleUploadedFile("doc.pdf", b"not a pdf", content_type="text/plain")
+        with self.assertRaises(ValueError):
+            process_upload(upload)
+
+    def test_html_disguised_as_pdf_is_rejected(self):
+        # The extension allowlist already blocks .html; this is the same content
+        # arriving under a permitted extension.
+        upload = SimpleUploadedFile(
+            "invoice.pdf",
+            b"<html><body><script>alert(1)</script></body></html>",
+            content_type="application/pdf",
+        )
+        with self.assertRaises(ValueError):
+            process_upload(upload)
+
+    def test_rejection_message_names_the_file(self):
+        upload = SimpleUploadedFile("beleg.pdf", b"garbage", content_type="application/pdf")
+        with self.assertRaises(ValueError) as ctx:
+            process_upload(upload)
+        self.assertIn("beleg.pdf", str(ctx.exception))
+
+    def test_valid_pdf_is_still_accepted(self):
+        # The point of the check is to reject what cannot be parsed, not to
+        # start refusing ordinary documents.
+        upload = SimpleUploadedFile(
+            "doc.pdf", make_pdf_bytes(num_pages=3), content_type="application/pdf"
+        )
+        self.assertEqual(process_upload(upload).name, "doc.pdf")
+
     def test_rejects_oversized_upload_before_processing(self):
         upload = SimpleUploadedFile("photo.jpg", b"x", content_type="image/jpeg")
         upload.size = MAX_UPLOAD_BYTES + 1
@@ -94,7 +127,7 @@ class ProcessUploadTest(TestCase):
             process_upload(upload)
 
     def test_allows_upload_at_exactly_the_size_limit(self):
-        upload = SimpleUploadedFile("doc.pdf", _make_pdf_bytes(), content_type="application/pdf")
+        upload = SimpleUploadedFile("doc.pdf", make_pdf_bytes(), content_type="application/pdf")
         upload.size = MAX_UPLOAD_BYTES
         result = process_upload(upload)
         self.assertEqual(result.name, "doc.pdf")
@@ -102,26 +135,44 @@ class ProcessUploadTest(TestCase):
 
 class PageRotationTest(TestCase):
     def test_read_page_rotations_returns_zero_for_unrotated(self):
-        pdf_bytes = _make_pdf_bytes(num_pages=2)
+        pdf_bytes = make_pdf_bytes(num_pages=2)
         self.assertEqual(_read_page_rotations(pdf_bytes), [0, 0])
 
     def test_read_page_rotations_reads_actual_rotation(self):
-        pdf_bytes = _make_pdf_bytes(num_pages=1, rotate=90)
+        pdf_bytes = make_pdf_bytes(num_pages=1, rotate=90)
         self.assertEqual(_read_page_rotations(pdf_bytes), [90])
+
+    def test_read_page_rotations_logs_when_it_cannot_parse(self):
+        # The one handler in this module that used to swallow silently. If pypdf
+        # ever started failing across the board, every upload would quietly lose
+        # its page rotations with nothing in the log to say so.
+        with self.assertLogs("my_practice.utils.file_processing", level="WARNING") as logs:
+            _read_page_rotations(b"not a pdf")
+        self.assertTrue(
+            any("page rotations" in line for line in logs.output),
+            f"expected a warning about page rotations, got: {logs.output}",
+        )
 
     def test_read_page_rotations_returns_empty_on_garbage(self):
         self.assertEqual(_read_page_rotations(b"not a pdf"), [])
 
+    def test_pdf_is_parseable_accepts_a_real_pdf(self):
+        self.assertTrue(_pdf_is_parseable(make_pdf_bytes()))
+
+    def test_pdf_is_parseable_rejects_garbage_and_empty_input(self):
+        self.assertFalse(_pdf_is_parseable(b"not a pdf"))
+        self.assertFalse(_pdf_is_parseable(b""))
+
     def test_restore_page_rotations_noop_when_all_zero(self):
-        pdf_bytes = _make_pdf_bytes(num_pages=1)
+        pdf_bytes = make_pdf_bytes(num_pages=1)
         self.assertIs(_restore_page_rotations(pdf_bytes, [0]), pdf_bytes)
 
     def test_restore_page_rotations_noop_when_empty(self):
-        pdf_bytes = _make_pdf_bytes(num_pages=1)
+        pdf_bytes = make_pdf_bytes(num_pages=1)
         self.assertIs(_restore_page_rotations(pdf_bytes, []), pdf_bytes)
 
     def test_restore_page_rotations_applies_rotation(self):
-        pdf_bytes = _make_pdf_bytes(num_pages=1)  # rotation stripped, as gs would do
+        pdf_bytes = make_pdf_bytes(num_pages=1)  # rotation stripped, as gs would do
         restored = _restore_page_rotations(pdf_bytes, [90])
         reader = pypdf.PdfReader(io.BytesIO(restored))
         self.assertEqual(int(reader.pages[0].get("/Rotate", 0)), 90)
@@ -133,14 +184,14 @@ class PageRotationTest(TestCase):
 
 class CompressPdfBytesTest(TestCase):
     def test_compresses_real_pdf_or_returns_original(self):
-        pdf_bytes = _make_pdf_bytes(num_pages=1)
+        pdf_bytes = make_pdf_bytes(num_pages=1)
         result = _compress_pdf_bytes(pdf_bytes)
         # gs may not shrink a trivial blank page below its own overhead;
         # either way the result must still be a valid, readable PDF.
         pypdf.PdfReader(io.BytesIO(result))
 
     def test_preserves_rotation_through_compression(self):
-        pdf_bytes = _make_pdf_bytes(num_pages=1, rotate=90)
+        pdf_bytes = make_pdf_bytes(num_pages=1, rotate=90)
         result = _compress_pdf_bytes(pdf_bytes)
         reader = pypdf.PdfReader(io.BytesIO(result))
         self.assertEqual(int(reader.pages[0].get("/Rotate", 0)), 90)
@@ -148,7 +199,7 @@ class CompressPdfBytesTest(TestCase):
     def test_gs_not_found_returns_original(self):
         from unittest.mock import patch
 
-        pdf_bytes = _make_pdf_bytes(num_pages=1)
+        pdf_bytes = make_pdf_bytes(num_pages=1)
         with patch(
             "my_practice.utils.file_processing.subprocess.run",
             side_effect=FileNotFoundError,
@@ -159,7 +210,7 @@ class CompressPdfBytesTest(TestCase):
     def test_gs_failure_returns_original(self):
         from unittest.mock import MagicMock, patch
 
-        pdf_bytes = _make_pdf_bytes(num_pages=1)
+        pdf_bytes = make_pdf_bytes(num_pages=1)
         failed = MagicMock(returncode=1, stderr="boom")
         with patch("my_practice.utils.file_processing.subprocess.run", return_value=failed):
             result = _compress_pdf_bytes(pdf_bytes)
@@ -246,7 +297,7 @@ class CompressPdfInplaceTest(TestCase):
     def test_skips_small_pdf(self):
         fd, path = tempfile.mkstemp(suffix=".pdf")
         os.close(fd)
-        Path(path).write_bytes(_make_pdf_bytes())
+        Path(path).write_bytes(make_pdf_bytes())
         try:
             self.assertLess(os.path.getsize(path), PDF_SKIP_BYTES)
             saved = compress_pdf_inplace(path)
@@ -280,7 +331,7 @@ class CompressPdfInplaceTest(TestCase):
 
         fd, path = tempfile.mkstemp(suffix=".pdf")
         os.close(fd)
-        Path(path).write_bytes(_make_pdf_bytes())
+        Path(path).write_bytes(make_pdf_bytes())
         # Force past the skip threshold.
         with open(path, "ab") as f:
             f.write(b"0" * (PDF_SKIP_BYTES + 1000))
