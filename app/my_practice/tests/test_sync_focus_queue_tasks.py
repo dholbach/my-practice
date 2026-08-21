@@ -131,6 +131,9 @@ class SyncMissingSessionLogTests(TestCase):
             ).exists()
         )
 
+    # SessionLog.content is an EncryptedTextField, so writing a non-empty value
+    # needs a key (the sibling tests here only ever create empty logs).
+    @override_settings(FERNET_KEY=TEST_FERNET_KEY)
     def test_auto_closes_when_log_added(self):
         from ..models import SessionLog
 

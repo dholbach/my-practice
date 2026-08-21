@@ -20,8 +20,12 @@ jobs:
           cache: pip
           cache-dependency-path: app/requirements-dev.txt
 
-      - name: Install dependencies
-        run: pip install ruff==0.15.18
+      # Read the pin from requirements-dev.txt rather than duplicating it here.
+      # A second copy of the version drifted once already (CI ran 0.15.18 while
+      # `./dev.py quality` ran 0.16.3), which silently changes what "lint
+      # passes" means between CI and a local run.
+      - name: Install ruff
+        run: pip install "$(grep -E '^ruff==' app/requirements-dev.txt)"
 
       - name: Lint
         working-directory: app
@@ -30,3 +34,91 @@ jobs:
       - name: Format
         working-directory: app
         run: ruff format --check --diff .
+
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: my_practice
+          POSTGRES_USER: my_practice
+          POSTGRES_PASSWORD: changeme123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U my_practice -d my_practice"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # STORAGES picks CompressedManifestStaticFilesStorage when DJANGO_DEBUG is
+      # not True, and that backend raises on any {% static %} lookup without a
+      # collectstatic manifest. The test runner forces settings.DEBUG=False at
+      # runtime, but STORAGES is already resolved at import time — so this has to
+      # be set in the environment, exactly as docker-compose.yml does for dev.
+      DJANGO_DEBUG: "True"
+      DJANGO_SECRET_KEY: django-insecure-ci-key
+      POSTGRES_DB: my_practice
+      POSTGRES_USER: my_practice
+      POSTGRES_PASSWORD: changeme123
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      MY_PRACTICE_DATA_DIR: /tmp/my-practice-data
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Mirrors the production stage's runtime packages in app/Dockerfile:
+      # cairo/pango/gdk-pixbuf for WeasyPrint's PDF rendering, ghostscript for
+      # utils/file_processing.py, and gettext for the makemessages run inside
+      # test_i18n_coverage.test_no_unextracted_strings.
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libcairo2 \
+            libpango-1.0-0 \
+            libpangocairo-1.0-0 \
+            libgdk-pixbuf-2.0-0 \
+            shared-mime-info \
+            fonts-liberation \
+            ghostscript \
+            gettext
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: app/requirements-dev.txt
+
+      - name: Install Python dependencies
+        working-directory: app
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Create data directories
+        run: mkdir -p /tmp/my-practice-data/{documents,questionnaires,media,backups}
+
+      - name: Compile translation catalogs
+        working-directory: app
+        run: python manage.py compilemessages
+
+      - name: Django tests
+        working-directory: app
+        run: python manage.py test --parallel
+
+      # Three plain `node <file>` runners, the same set ./dev.py test-js executes.
+      # They import nothing from node_modules, so the runner's preinstalled Node
+      # is enough — no setup-node step and no `npm ci` needed.
+      - name: JavaScript tests
+        working-directory: app
+        run: |
+          node --version
+          node static/js/chart_utils.test.js
+          node static/js/chart_utils.test.extended.js
+          node static/js/form_draft_guard.test.js
