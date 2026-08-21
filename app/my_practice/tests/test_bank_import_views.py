@@ -13,6 +13,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import translation
 
 from ..models import (
     BankTransaction,
@@ -224,6 +225,30 @@ class BankReviewViewGetTest(BankReviewViewBase):
         transaction = response.context["transactions"][0]
         self.assertFalse(transaction.payer_name_known)
         self.assertContains(response, "create_alias")
+
+
+class BankReviewDataAmountTest(BankReviewViewBase):
+    """data-amount feeds parseFloat in bank_review.js, so it must not be localized.
+
+    Django localizes template numbers, and LANGUAGE_CODE is "de-de" — a bare
+    {{ trans.amount }} renders "90,50", which parseFloat truncates to 90. That
+    silently drops the cents from the tally's match comparison, so a transaction
+    that exactly matches its invoice was reported as a 0,50 € mismatch. The
+    template uses |unlocalize; this pins it.
+    """
+
+    def test_data_amount_is_a_machine_readable_decimal(self):
+        self._make_unmatched(amount="90,50")
+        with translation.override("de"):
+            response = self.http.get(reverse("bank_review"))
+        self.assertContains(response, 'data-amount="90.50"')
+        self.assertNotContains(response, 'data-amount="90,50"')
+
+    def test_data_amount_has_no_thousands_separator(self):
+        self._make_unmatched(amount="1234,56")
+        with translation.override("de"):
+            response = self.http.get(reverse("bank_review"))
+        self.assertContains(response, 'data-amount="1234.56"')
 
 
 class BankReviewPaginationTest(BankReviewViewBase):

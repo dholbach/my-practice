@@ -130,7 +130,7 @@ jobs:
         working-directory: app
         run: python manage.py test --parallel || python manage.py test
 
-      # Three plain `node <file>` runners, the same set ./dev.py test-js executes.
+      # Plain `node <file>` runners, the same set ./dev.py test-js executes.
       # They import nothing from node_modules, so the runner's preinstalled Node
       # is enough — no setup-node step and no `npm ci` needed.
       - name: JavaScript tests
@@ -140,3 +140,4 @@ jobs:
           node static/js/chart_utils.test.js
           node static/js/chart_utils.test.extended.js
           node static/js/form_draft_guard.test.js
+          node static/js/bank_review.test.js

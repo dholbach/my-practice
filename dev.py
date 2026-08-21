@@ -383,6 +383,11 @@ def cmd_test_js(args):
         guard_result = run_docker_command(["node", "/app/static/js/form_draft_guard.test.js"])
         results.append(("JS DraftGuard", guard_result.returncode))
 
+        # Run bank review tally tests
+        print("\n--- Bank Review Tally Tests ---")
+        bank_result = run_docker_command(["node", "/app/static/js/bank_review.test.js"])
+        results.append(("JS BankReview", bank_result.returncode))
+
     # Show browser test info (if not node-only)
     if not node_only:
         print("\n" + "=" * 50)
