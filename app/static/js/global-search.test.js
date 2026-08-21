@@ -189,6 +189,7 @@ class FakeNode {
  * @param options.toggles   ids to pre-create as existing header controls
  * @param options.results   payload for the next fetch
  * @param options.fetchFails reject the next fetch instead of resolving
+ * @param options.deferFetches park each fetch in `pending` for manual settling
  */
 function setupPage(options = {}) {
     const {
@@ -232,11 +233,21 @@ function setupPage(options = {}) {
     document_.createElement = (tag) => make(tag);
     document_.getElementById = (id) => registry.get(id) || null;
 
-    const timers = [];
+    // Handles are monotonic and never reused, as in a browser. The earlier
+    // array-index stub recycled them after a flush, so a type/flush/type
+    // sequence handed out the same id twice and the second clearTimeout could
+    // cancel a live timer instead of the dead one it was aimed at.
+    let nextTimerId = 1;
+    const timers = new Map();
     const fetches = [];
     const navigations = [];
+    const pending = [];
 
-    const state = { results: options.results || [], fetchFails: Boolean(options.fetchFails) };
+    const state = {
+        results: options.results || [],
+        fetchFails: Boolean(options.fetchFails),
+        deferFetches: Boolean(options.deferFetches),
+    };
 
     const window_ = make("#window");
     Object.defineProperty(window_, "location", {
@@ -259,14 +270,29 @@ function setupPage(options = {}) {
         // A 0-based stub would make the first timer falsy and fake a debounce
         // failure that no browser can produce.
         setTimeout: (fn, delay) => {
-            timers.push({ fn, delay });
-            return timers.length;
+            const id = nextTimerId++;
+            timers.set(id, { fn, delay });
+            return id;
         },
         clearTimeout: (id) => {
-            if (typeof id === "number" && timers[id - 1]) timers[id - 1] = null;
+            timers.delete(id);
         },
+        // With deferFetches the promise is parked in `pending` instead of
+        // settling, so a test can land two overlapping responses in whatever
+        // order it likes — the only way to reproduce a race that in a browser
+        // depends on which request the network happens to finish first.
         fetch: (url) => {
             fetches.push(url);
+            if (state.deferFetches) {
+                return new Promise((resolve, reject) => {
+                    pending.push({
+                        url,
+                        resolveWith: (results) =>
+                            resolve({ json: () => Promise.resolve({ results }) }),
+                        rejectWith: () => reject(new Error("network")),
+                    });
+                });
+            }
             return state.fetchFails
                 ? Promise.reject(new Error("network"))
                 : Promise.resolve({ json: () => Promise.resolve({ results: state.results }) });
@@ -290,9 +316,12 @@ function setupPage(options = {}) {
         registry,
         /** Run every pending timer callback (the 300ms debounce, the blur delay). */
         flushTimers() {
-            const pending = timers.splice(0, timers.length);
-            for (const timer of pending) if (timer) timer.fn();
+            const due = [...timers.values()];
+            timers.clear();
+            for (const timer of due) timer.fn();
         },
+        /** Parked fetches, oldest first, when deferFetches is on. */
+        pending,
         /** Let the fetch promise chain settle. */
         flushAsync() {
             return new Promise((resolve) => setImmediate(resolve));
@@ -522,6 +551,130 @@ test("a failed request drops the previous results", async () => {
     await page.search("zzz");
     page.press("Enter");
     assertEquals(page.navigations.length, 0, "no navigation to a stale result after an error");
+});
+
+// --- overlapping requests ---------------------------------------------------
+//
+// The 300ms debounce spaces requests out but does not serialise them: pause
+// mid-word and two searches are in flight at once. fetch settles in completion
+// order, not call order, so whichever request the network finishes last is the
+// one that writes the dropdown. These drive both responses by hand.
+
+const OLD_RESULTS = [{ label: "stale hit", url: "/clients/9/" }];
+const NEW_RESULTS = [{ label: "fresh hit", url: "/clients/1/" }];
+
+/** Type two queries, leaving both requests parked and unsettled. */
+async function twoInFlight() {
+    const page = setupPage({ deferFetches: true });
+    await page.search("sch");
+    await page.search("schmidt");
+    assertEquals(page.fetches.length, 2, "sanity: both requests were actually issued");
+    return page;
+}
+
+test("a slow response for an earlier query cannot overwrite a newer one", async () => {
+    const page = await twoInFlight();
+    page.pending[1].resolveWith(NEW_RESULTS);
+    await page.flushAsync();
+    page.pending[0].resolveWith(OLD_RESULTS);
+    await page.flushAsync();
+
+    assertContains(page.dropdown().innerHTML, "fresh hit", "the newest query's results stand");
+    assertNotContains(page.dropdown().innerHTML, "stale hit", "the superseded response is dropped");
+});
+
+test("Enter after a superseded response goes to the newer result", async () => {
+    // The visible symptom of the same bug: currentResults is what Enter reads,
+    // so a stale overwrite sends the user to a row for a query they replaced.
+    const page = await twoInFlight();
+    page.pending[1].resolveWith(NEW_RESULTS);
+    await page.flushAsync();
+    page.pending[0].resolveWith(OLD_RESULTS);
+    await page.flushAsync();
+
+    page.press("ArrowDown");
+    page.press("Enter");
+    assertEquals(page.navigations, ["/clients/1/"], "navigates to the fresh result");
+});
+
+test("a superseded response does not reset the selection", async () => {
+    // The stale branch would set selectedIndex = -1, so a user who had already
+    // arrowed onto a row would find Enter doing nothing.
+    const page = await twoInFlight();
+    page.pending[1].resolveWith(NEW_RESULTS);
+    await page.flushAsync();
+    page.press("ArrowDown");
+    page.pending[0].resolveWith(OLD_RESULTS);
+    await page.flushAsync();
+
+    page.press("Enter");
+    assertEquals(page.navigations, ["/clients/1/"], "the selection survived the late response");
+});
+
+test("a stale failure does not clear the newer query's results", async () => {
+    const page = await twoInFlight();
+    page.pending[1].resolveWith(NEW_RESULTS);
+    await page.flushAsync();
+    page.pending[0].rejectWith();
+    await page.flushAsync();
+
+    assertContains(page.dropdown().innerHTML, "fresh hit", "results survive the late failure");
+    assertNotContains(page.dropdown().innerHTML, I18N.searchError, "and no error is shown");
+    page.press("ArrowDown");
+    page.press("Enter");
+    assertEquals(page.navigations, ["/clients/1/"], "still navigable");
+});
+
+test("a stale success does not paper over the newer query's failure", async () => {
+    // The mirror case: the newest request is the one that failed, so the error
+    // must stay put and a late success must not offer rows to navigate to.
+    const page = await twoInFlight();
+    page.pending[1].rejectWith();
+    await page.flushAsync();
+    page.pending[0].resolveWith(OLD_RESULTS);
+    await page.flushAsync();
+
+    assertContains(page.dropdown().innerHTML, I18N.searchError, "the error stands");
+    assertNotContains(page.dropdown().innerHTML, "stale hit", "no rows from the late success");
+    page.press("ArrowDown");
+    page.press("Enter");
+    assertEquals(page.navigations.length, 0, "nothing to navigate to");
+});
+
+test("clearing the box retires the request still in flight", async () => {
+    const page = setupPage({ deferFetches: true });
+    await page.search("sch");
+    page.type("");
+
+    page.pending[0].resolveWith(OLD_RESULTS);
+    await page.flushAsync();
+
+    assertEquals(page.dropdown().style.display, "none", "the dropdown stays hidden");
+    assertNotContains(page.dropdown().innerHTML, "stale hit", "and stays empty of stale rows");
+    page.press("ArrowDown");
+    page.press("Enter");
+    assertEquals(page.navigations.length, 0, "nothing selectable behind the empty box");
+});
+
+test("responses that arrive in order still render the newest", async () => {
+    // The guard must reject only what is actually superseded — if it were keyed
+    // on anything but recency, the common in-order case would render nothing.
+    const page = await twoInFlight();
+    page.pending[0].resolveWith(OLD_RESULTS);
+    await page.flushAsync();
+    page.pending[1].resolveWith(NEW_RESULTS);
+    await page.flushAsync();
+
+    assertContains(page.dropdown().innerHTML, "fresh hit", "the last word wins as usual");
+    assertNotContains(page.dropdown().innerHTML, "stale hit", "the earlier one is replaced");
+});
+
+test("a single request is unaffected by the guard", async () => {
+    const page = setupPage({ deferFetches: true });
+    await page.search("Max");
+    page.pending[0].resolveWith(NEW_RESULTS);
+    await page.flushAsync();
+    assertContains(page.dropdown().innerHTML, "fresh hit", "the ordinary path still renders");
 });
 
 // --- keyboard navigation ----------------------------------------------------
