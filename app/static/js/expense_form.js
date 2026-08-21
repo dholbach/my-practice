@@ -38,7 +38,13 @@
             dropzone.classList.add("dragover");
         });
 
-        dropzone.addEventListener("dragleave", function () {
+        dropzone.addEventListener("dragleave", function (e) {
+            // dragleave also fires when the pointer crosses from the dropzone
+            // into one of its children, and this one has four (.dropzone-content
+            // plus the icon/text/hint inside it, and .dropzone-filelist). Without
+            // this guard the highlight is removed and immediately re-added by the
+            // next dragover, so it flickers while dragging across the zone.
+            if (e.relatedTarget && dropzone.contains(e.relatedTarget)) return;
             dropzone.classList.remove("dragover");
         });
 

@@ -15,6 +15,20 @@
     // wasn't worth wiring up).
     const i18n = document.body.dataset;
 
+    /* result.label carries client and inquiry names straight from the search
+       API (search_views.py builds "👤 XX-1 — Max Mustermann"), and they land in
+       innerHTML below. Names legitimately contain & and <, which would render
+       as broken markup or vanish, so escape on the way in — the same care
+       payment_tags.py takes with the names it renders. */
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     let searchTimeout = null;
     let currentResults = [];
     let selectedIndex = -1;
@@ -129,6 +143,10 @@
             })
             .catch(error => {
                 console.error('Search error:', error);
+                // Drop the previous query's results too: without this, Enter
+                // still navigates to whatever was showing before the failure.
+                currentResults = [];
+                selectedIndex = -1;
                 resultsDropdown.innerHTML = `<div style="padding: 1rem; color: var(--color-danger);">${i18n.searchError}</div>`;
             });
     }
@@ -146,7 +164,7 @@
         currentResults.forEach(function(result, index) {
             const isSelected = index === selectedIndex;
             html += `
-                <a href="${result.url}"
+                <a href="${escapeHtml(result.url)}"
                    class="search-result-item"
                    data-index="${index}"
                    style="
@@ -161,7 +179,7 @@
                    onmouseover="this.style.background = 'var(--color-dropdown-hover)'"
                    onmouseout="this.style.background = '${isSelected ? 'var(--color-dropdown-hover)' : 'transparent'}'"
                 >
-                    ${result.label}
+                    ${escapeHtml(result.label)}
                 </a>
             `;
         });
