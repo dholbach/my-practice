@@ -35,10 +35,7 @@ class DateRangeHelper:
             >>> DateRangeHelper.get_year_range(date(2025, 6, 15))
             (date(2025, 1, 1), date(2025, 12, 31))
         """
-        if isinstance(year_date, int):
-            year = year_date
-        else:
-            year = year_date.year
+        year = year_date if isinstance(year_date, int) else year_date.year
 
         year_start = date(year, 1, 1)
         year_end = date(year, 12, 31)

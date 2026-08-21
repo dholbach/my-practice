@@ -166,9 +166,12 @@ class CalendarPreflightChecker:
 
         for event in calendar_events:
             # Duration filter: skip if event duration differs too much
-            if item_duration and event.duration_minutes:
-                if abs(event.duration_minutes - item_duration) > self.TOLERANCE_MINUTES:
-                    continue
+            if (
+                item_duration
+                and event.duration_minutes
+                and abs(event.duration_minutes - item_duration) > self.TOLERANCE_MINUTES
+            ):
+                continue
 
             delta = abs((event.event_date - item_session_date).days)
 
@@ -176,9 +179,12 @@ class CalendarPreflightChecker:
                 if event.status != PendingCalendarEvent.Status.CANCELLED:
                     exact_match = event
                     break  # Best possible match
-            elif delta <= self.TOLERANCE_DAYS and near_match is None:
-                if event.status != PendingCalendarEvent.Status.CANCELLED:
-                    near_match = event
+            elif (
+                delta <= self.TOLERANCE_DAYS
+                and near_match is None
+                and event.status != PendingCalendarEvent.Status.CANCELLED
+            ):
+                near_match = event
 
         return exact_match, near_match
 

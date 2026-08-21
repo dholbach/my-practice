@@ -49,12 +49,8 @@ def get_next_invoice_number(client: "Client") -> str:
                 # Skip malformed invoice numbers
                 continue
 
-        if numbers:
-            # Use highest number + 1
-            new_num = max(numbers) + 1
-        else:
-            # No valid numbers found, start at 1
-            new_num = 1
+        # Highest parsed number + 1; start at 1 when nothing parsed
+        new_num = max(numbers) + 1 if numbers else 1
     else:
         # First invoice for this client
         new_num = 1

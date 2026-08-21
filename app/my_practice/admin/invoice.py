@@ -19,7 +19,20 @@ class InvoiceItemAdminForm(forms.ModelForm):
 
     class Meta:
         model = InvoiceItem
-        fields = "__all__"
+        # The set "__all__" expanded to, written out: this form backs both
+        # InvoiceItemInline and the standalone InvoiceItemAdmin, so `invoice`
+        # has to stay editable for the latter. Listing them means a new model
+        # field is no longer silently exposed here.
+        fields = [
+            "invoice",
+            "session",
+            "description",
+            "service_type",
+            "rate",
+            "quantity",
+            "group_size",
+            "total",
+        ]
 
     def clean(self):
         cleaned_data = super().clean()

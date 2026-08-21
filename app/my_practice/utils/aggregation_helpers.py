@@ -71,10 +71,7 @@ def get_category_breakdown(
     """
     results = queryset.values(category_field).annotate(total=Sum(amount_field), count=Count("id"))
 
-    if order_by_total:
-        results = results.order_by("-total")
-    else:
-        results = results.order_by(category_field)
+    results = results.order_by("-total") if order_by_total else results.order_by(category_field)
 
     # Add human-readable category names
     if category_choices:

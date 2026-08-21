@@ -3,6 +3,7 @@ Views for operational checklist feature (P-012).
 Handles checklist display and completion tracking.
 """
 
+import contextlib
 from datetime import date, timedelta
 
 from django.contrib import messages
@@ -228,10 +229,8 @@ def checklist_pause_item(request: HttpRequest, checklist_type: str, item_id: str
     if paused_until_str:
         from datetime import datetime
 
-        try:
+        with contextlib.suppress(ValueError):
             paused_until = datetime.strptime(paused_until_str, "%Y-%m-%d").date()
-        except ValueError:
-            pass
 
     ChecklistItemPause.objects.update_or_create(
         checklist_type=checklist_type,

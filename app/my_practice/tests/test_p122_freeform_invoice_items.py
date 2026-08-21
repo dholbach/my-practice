@@ -26,12 +26,12 @@ from ..utils.client_helpers import annotate_activity_status, group_clients_by_ac
 
 
 def _make_practice(**kwargs):
-    defaults = dict(
-        name="Test Practice",
-        title="Test Practitioner",
-        email="test@practice.com",
-        city="Berlin",
-    )
+    defaults = {
+        "name": "Test Practice",
+        "title": "Test Practitioner",
+        "email": "test@practice.com",
+        "city": "Berlin",
+    }
     defaults.update(kwargs)
     return Practice.objects.create(**defaults)
 

@@ -56,9 +56,7 @@ def staged_additions() -> list[tuple[str, str]]:
 
 
 def tracked_file_lines() -> list[tuple[str, str]]:
-    files = subprocess.run(
-        ["git", "ls-files"], capture_output=True, text=True
-    ).stdout.splitlines()
+    files = subprocess.run(["git", "ls-files"], capture_output=True, text=True).stdout.splitlines()
     pairs = []
     for f in files:
         try:
@@ -81,20 +79,13 @@ def main() -> int:
 
     pairs = tracked_file_lines() if "--all" in sys.argv else staged_additions()
 
-    hits = []
-    for filename, line in pairs:
-        lowered = line.lower()
-        for term in terms:
-            if term in lowered:
-                hits.append((filename, term))
+    hits = [(filename, term) for filename, line in pairs for term in terms if term in line.lower()]
 
     if hits:
         print("🚫 PII check failed — denylisted terms found:")
         for filename, term in sorted(set(hits)):
             print(f"   {filename}: contains '{term}'")
-        print(
-            "Remove the sensitive data, or edit .git/pii-denylist if this is a false positive."
-        )
+        print("Remove the sensitive data, or edit .git/pii-denylist if this is a false positive.")
         return 1
     return 0
 

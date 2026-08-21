@@ -35,6 +35,18 @@ jobs:
         working-directory: app
         run: ruff format --check --diff .
 
+      # dev.py, prod.py and scripts/*.py live outside ./app, so the step above
+      # never saw them — `./dev.py quality` reaches them only by piping each
+      # through the container's ruff over stdin. They have their own ruff.toml
+      # (a lower target-version: they run on the host Python, where 3.14's
+      # bracketless `except A, B:` is a SyntaxError), which ruff picks up as
+      # the nearest config when invoked from the repo root.
+      - name: Lint repo-root Python
+        run: ruff check dev.py prod.py scripts/*.py
+
+      - name: Format repo-root Python
+        run: ruff format --check --diff dev.py prod.py scripts/*.py
+
   test:
     runs-on: ubuntu-latest
 
@@ -108,9 +120,15 @@ jobs:
         working-directory: app
         run: python manage.py compilemessages
 
+      # On failure, re-run serially before giving up. Django's parallel runner
+      # pickles results back to the parent, and an errored test whose traceback
+      # can't be pickled kills the whole run with "cannot pickle 'traceback'
+      # object" at the first error — so any later failures stay hidden and you
+      # find them one red round at a time. The serial re-run costs nothing on a
+      # green build and produces a complete report when it matters.
       - name: Django tests
         working-directory: app
-        run: python manage.py test --parallel
+        run: python manage.py test --parallel || python manage.py test
 
       # Three plain `node <file>` runners, the same set ./dev.py test-js executes.
       # They import nothing from node_modules, so the runner's preinstalled Node

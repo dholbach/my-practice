@@ -290,16 +290,16 @@ class CalendarImportEventsViewTest(CalendarViewsTestBase):
 
 class CalendarApprovalQueueTest(CalendarViewsTestBase):
     def _make_event(self, event_date, **overrides):
-        base = dict(
-            practice=self.practice,
-            google_event_id=f"evt-{event_date}",
-            summary="Termin",
-            event_date=event_date,
-            duration_minutes=60,
-            matched_client=self.test_client,
-            suggested_service_type=self.service_type,
-            status=PendingCalendarEvent.Status.PENDING,
-        )
+        base = {
+            "practice": self.practice,
+            "google_event_id": f"evt-{event_date}",
+            "summary": "Termin",
+            "event_date": event_date,
+            "duration_minutes": 60,
+            "matched_client": self.test_client,
+            "suggested_service_type": self.service_type,
+            "status": PendingCalendarEvent.Status.PENDING,
+        }
         base.update(overrides)
         return PendingCalendarEvent.objects.create(**base)
 
@@ -458,16 +458,16 @@ class CalendarQueueSkipTest(CalendarViewsTestBase):
 
 class CalendarEventQuickActionTest(CalendarViewsTestBase):
     def _make_event(self, **overrides):
-        base = dict(
-            practice=self.practice,
-            google_event_id="evt-1",
-            summary="Termin",
-            event_date=date.today(),
-            duration_minutes=60,
-            matched_client=self.test_client,
-            suggested_service_type=self.service_type,
-            status=PendingCalendarEvent.Status.PENDING,
-        )
+        base = {
+            "practice": self.practice,
+            "google_event_id": "evt-1",
+            "summary": "Termin",
+            "event_date": date.today(),
+            "duration_minutes": 60,
+            "matched_client": self.test_client,
+            "suggested_service_type": self.service_type,
+            "status": PendingCalendarEvent.Status.PENDING,
+        }
         base.update(overrides)
         return PendingCalendarEvent.objects.create(**base)
 

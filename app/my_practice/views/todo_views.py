@@ -116,12 +116,9 @@ def todo_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse | JsonRe
         message = _("'%(title)s' marked as completed.") % {"title": todo.title}
 
     # Return HTMX partial
-    if request.headers.get("HX-Request"):
-        if request.GET.get("ctx") == "weekly_focus":
-            builder = WeeklyFocusWidgetBuilder(request.current_practice)
-            return render(
-                request, "includes/weekly_focus_widget_content.html", builder.build_context()
-            )
+    if request.headers.get("HX-Request") and request.GET.get("ctx") == "weekly_focus":
+        builder = WeeklyFocusWidgetBuilder(request.current_practice)
+        return render(request, "includes/weekly_focus_widget_content.html", builder.build_context())
     # For GET requests (direct links): redirect with success message
     messages.success(request, message)
 

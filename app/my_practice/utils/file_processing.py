@@ -8,6 +8,7 @@ Images: Pillow resize to MAX_IMAGE_PX on the longest side + JPEG re-encode.
 PDFs:   Ghostscript /ebook base preset + explicit Bicubic downsampling to GS_PDF_DPI.
 """
 
+import contextlib
 import io
 import logging
 import os
@@ -157,10 +158,8 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
         return data
     finally:
         for p in (tmp_in, tmp_out):
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(p)
-            except OSError:
-                pass
 
 
 def _process_image_upload(upload, name: str) -> ContentFile:
@@ -183,10 +182,8 @@ def _process_pdf_upload(upload, name: str):
         return ContentFile(compressed, name=name)
     except Exception:
         logger.exception("PDF compression failed for %s; storing original", name)
-        try:
+        with contextlib.suppress(Exception):
             upload.seek(0)
-        except Exception:
-            pass
         return upload
 
 
