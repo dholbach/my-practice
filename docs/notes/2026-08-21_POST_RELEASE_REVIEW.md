@@ -62,8 +62,27 @@ with `|unlocalize`, pinned from both sides: a Django test asserts the rendered
 attribute, and a JS test asserts a comma-decimal attribute still produces the
 false mismatch, so the reason for `|unlocalize` can't be forgotten.
 
-Remaining files, in the same order as before: `global-search.js`,
-`expense_form.js`, `widgets.js`, `keyboard-nav.js`.
+`global-search.js` DONE too — 29 tests, also mutation-checked. Two fixes came
+out of it, both in how server data reaches `innerHTML`:
+
+- **Result labels were interpolated unescaped.** `search_views.py` builds them
+  from `full_name`, so an ordinary client named "Müller & Co" rendered broken
+  markup and anything in angle brackets vanished. Not a security hole —
+  `LoginRequiredMiddleware` is global and the data is self-entered — but wrong
+  on ordinary input, and inconsistent with `payment_tags.py`, which escapes the
+  names it renders.
+- **A failed search left the previous results navigable.** The `catch` replaced
+  the dropdown's markup but not `currentResults`, so Enter still jumped to a row
+  from a query the user had already replaced.
+
+Still open in that file, deliberately not fixed here because it needs request
+sequencing rather than a one-liner: `performSearch` has **no protection against
+out-of-order responses**. The 300ms debounce narrows the window but does not
+close it — a slow response for an earlier query can still overwrite a faster one
+for the current query, leaving the dropdown showing results for text the user
+has already changed.
+
+Remaining files: `expense_form.js`, `widgets.js`, `keyboard-nav.js`.
 
 <details>
 <summary>Original note</summary>

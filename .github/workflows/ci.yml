@@ -141,3 +141,4 @@ jobs:
           node static/js/chart_utils.test.extended.js
           node static/js/form_draft_guard.test.js
           node static/js/bank_review.test.js
+          node static/js/global-search.test.js
