@@ -1,10 +1,11 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-08-20
+**Last Updated**: 2026-08-21
 
 ## 🔍 Recent Activity
 
+- **2026-08-21 — v0.5.2 patch release**: practice-setup redirect for practice-less users plus an unbilled sessions/estimated-fee summary on the open billing overview (#377); bank import "Open" badge made clickable (#371); further Docker image size cuts — pruned Google API client's unused discovery cache (97.65 MB), fixed a layering bug that kept Tailwind source CSS in the image (#372); 135 new builder-class tests exposed and fixed a currency-format mismatch between invoice emails and their PDF attachment, a template-render crash on typo'd placeholders, and free-form invoice items being miscounted as sessions in analytics (#373-#375); i18n drift regression test added after a never-extracted validator string was found (#376, #378). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 - **2026-08-20 — v0.5.1 patch release**: client detail cockpit consolidation (Überblick+Profil merged into one Overview tab, unsaved-draft tab indicator, ~40px less chrome above the fold, #362-#365); dark-mode contrast fixes and a new `test_css_tokens.py` guardrail (M-PAT-07, #366); amber button contrast plus a specificity bug that had silently disabled all `.btn-invoice-*` urgency colour-coding (#367); a flex-column button-stretch fix (#368); production Docker image shrunk via a multi-stage build that keeps the Pillow compiler toolchain out of the shipped image (#369). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)

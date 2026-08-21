@@ -89,7 +89,7 @@ chronological record; this document only tracks current state.
 - ✅ Batch operations
 - ✅ Monthly batch invoicing (`/invoices/batch/`) — month picker, one card per client with unbilled sessions, bulk draft creation; free 20-min intro calls excluded automatically
 - ✅ Monthly Billing Overview (`/billing/`) — single page showing all clients with activity for a given month: pending calendar events, session count, billed/unbilled split, invoice status, and contextual quick actions; replaces the multi-step clients → client detail → protocol → invoice navigation chain; shows combined `billed/total` count when unbilled sessions exist alongside an invoice; 🚫 badge flags cancelled sessions on invoices; ✏️ edit shortcut appears when cleanup or additions are needed
-- ✅ Open Billing Overview (`/billing/open/`) — cross-month view of every unresolved item (warning, draft, sent) grouped by month; identical quick-actions as monthly view; "⚠️ Alle offen" button in monthly nav bar; "Stornierte Sitzung" warning suppressed for paid invoices (not actionable)
+- ✅ Open Billing Overview (`/billing/open/`) — cross-month view of every unresolved item (warning, draft, sent) grouped by month; identical quick-actions as monthly view; "⚠️ Alle offen" button in monthly nav bar; "Stornierte Sitzung" warning suppressed for paid invoices (not actionable); header line shows unbilled session count and estimated total fee, priced with the same rate-resolution logic invoice creation itself uses
 - ✅ Free-form invoice items (P-122 Phase 1) — invoice line items can skip the linked session entirely and use a free-text description instead, for day-rate/project billing (e.g. IT consulting); opt-in per practice via `Practice.allows_free_form_items` (off by default) — therapy/coaching practices are unaffected
 - ✅ Free-form-items practices bill company/non-individual counterparties as a plain `Client` row without therapy-only friction — the client form hides date-of-birth/insurance/hourly-rate/GebüH fields, and the dashboard no longer flags a session-less client as permanently "needs attention"
 
@@ -130,6 +130,7 @@ chronological record; this document only tracks current state.
 - ✅ Recent invoices overview
 - ✅ Multi-practice overview cards — shown only when the user has access to more than one practice
 - ✅ Dark mode + Privacy mode
+- ✅ A user with no `Practice` yet is redirected straight to practice setup instead of landing on an all-zeros dashboard
 - ℹ️ The dashboard is a pure overview now — the old "Needs Action" queue and separate daily-agenda pane were retired in P-050 phase 4; that working surface is the [Focus Queue](#focus-queue-p-050) (`/focus/`), and revenue trends live on the Analytics page
 
 ### Analytics Dashboard
