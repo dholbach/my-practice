@@ -269,6 +269,7 @@ class DashboardPerformanceTest(TestCase):
         )
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -364,3 +365,21 @@ class DashboardPerformanceTest(TestCase):
             85,  # Actual count ~74; raised threshold to account for query variation.
             f"Dashboard has {query_count} queries - might have N+1 problem",
         )
+
+
+class DashboardNoPracticeRedirectTest(TestCase):
+    """A user with no practice is sent to practice_create instead of an empty dashboard."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="newuser", password="testpass123")
+        self.client_instance = TestClient()
+        self.client_instance.login(username="newuser", password="testpass123")
+
+    def test_dashboard_redirects_to_practice_create(self):
+        response = self.client_instance.get(reverse("dashboard"))
+        self.assertRedirects(response, reverse("practice_create"))
+
+    def test_home_redirects_to_practice_create(self):
+        # home -> dashboard -> practice_create is two hops; follow both.
+        response = self.client_instance.get(reverse("home"), follow=True)
+        self.assertRedirects(response, reverse("practice_create"))

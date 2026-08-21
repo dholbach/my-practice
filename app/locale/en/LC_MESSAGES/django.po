@@ -5554,6 +5554,17 @@ msgstr[1] ""
 msgid "All done"
 msgstr ""
 
+#: templates/my_practice/billing_open_overview.html:23
+msgid "Estimated from each client’s standard hourly rate — not yet invoiced"
+msgstr ""
+
+#: templates/my_practice/billing_open_overview.html:24
+#, python-format
+msgid "%(count)s unbilled session"
+msgid_plural "%(count)s unbilled sessions"
+msgstr[0] ""
+msgstr[1] ""
+
 #: templates/my_practice/billing_open_overview.html:26
 msgid "No open items."
 msgstr ""
