@@ -78,9 +78,9 @@
         global: {
             'c': { url: '/clients/', name: i18n.kbdClients },
             'i': { url: '/invoices/', name: i18n.kbdInvoices },
-            'd': { url: '/dashboard/', name: 'Dashboard' },
-            'a': { url: '/analytics/', name: 'Analytics' },
-            'p': { url: '/practice-analysis/', name: 'Practice Analysis' },
+            'd': { url: '/dashboard/', name: i18n.kbdDashboard },
+            'a': { url: '/analytics/', name: i18n.kbdAnalytics },
+            'p': { url: '/practice-analysis/', name: i18n.kbdPracticeAnalysis },
             '?': { action: 'showHelp', name: i18n.kbdHelp }
         },
         contextual: {

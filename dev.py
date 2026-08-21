@@ -393,6 +393,16 @@ def cmd_test_js(args):
         search_result = run_docker_command(["node", "/app/static/js/global-search.test.js"])
         results.append(("JS GlobalSearch", search_result.returncode))
 
+        # Run the remaining component suites
+        for label, script in (
+            ("JS ExpenseForm", "expense_form.test.js"),
+            ("JS Widgets", "widgets.test.js"),
+            ("JS KeyboardNav", "keyboard-nav.test.js"),
+        ):
+            print(f"\n--- {label} Tests ---")
+            result = run_docker_command(["node", f"/app/static/js/{script}"])
+            results.append((label, result.returncode))
+
     # Show browser test info (if not node-only)
     if not node_only:
         print("\n" + "=" * 50)

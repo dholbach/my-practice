@@ -82,7 +82,33 @@ close it — a slow response for an earlier query can still overwrite a faster o
 for the current query, leaving the dropdown showing results for text the user
 has already changed.
 
-Remaining files: `expense_form.js`, `widgets.js`, `keyboard-nav.js`.
+`expense_form.js`, `widgets.js` and `keyboard-nav.js` are DONE too — **the JS
+item is closed**. All five hand-written files now have suites, all of them
+mutation-checked, and CI runs the lot on every PR.
+
+Two more fixes came out of the last three:
+
+- **`keyboard-nav.js` hardcoded three English shortcut names.** `Dashboard`,
+  `Analytics` and `Practice Analysis` were literals in the source while every
+  other name came from `data-kbd-*`. In the German UI the help overlay showed
+  those three in English while the nav said "Übersicht" and "Analysen". Exactly
+  the blind spot CLAUDE.md describes — the guardrail scans templates and `.po`
+  files, so a literal in a `.js` file is invisible to it. Fixed with three new
+  `data-kbd-*` attributes; `Practice Analysis` needed a new msgid
+  ("Praxisanalyse"), added to both catalogs by hand and verified with polib
+  since `./dev.py i18n` needs the container.
+- **`expense_form.js`'s dragover highlight flickered.** `dragleave` bubbles from
+  children and the dropzone has four, so the highlight was dropped and re-added
+  continuously while dragging across the zone. Guarded with a `contains()` check
+  on `relatedTarget`.
+
+Behaviour pinned by tests but deliberately left as-is: `showFilelist` returns
+early on an empty list, so clearing the file input leaves the previous filenames
+on screen; and the `DataTransfer` merge does not de-duplicate a file dropped
+twice. Both are arguable product decisions rather than defects.
+
+Still open in `global-search.js`, unchanged: no protection against out-of-order
+search responses.
 
 <details>
 <summary>Original note</summary>

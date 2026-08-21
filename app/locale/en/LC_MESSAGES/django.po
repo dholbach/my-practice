@@ -4443,6 +4443,10 @@ msgstr ""
 msgid "Bank expenses"
 msgstr ""
 
+#: templates/base.html
+msgid "Practice Analysis"
+msgstr ""
+
 #: templates/base.html:76 templates/my_practice/analytics.html:6
 #: templates/my_practice/analytics.html:9
 #: templates/my_practice/inquiry_list.html:36
