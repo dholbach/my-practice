@@ -128,13 +128,39 @@ every PR.
 
 </details>
 
-### 2. Perf regression ratchet is thin
+### 2. Perf regression ratchet is thin — DONE
+
+`test_query_counts.py` adds six ratchets covering the invoice list (per-invoice
+and per-client), the client list, client detail, and the Focus Queue (plain
+tasks and tasks with a generic related object).
+
+They assert a different property than the two existing tests. Those assert a
+fixed ceiling against fixed seed data, which is weaker than it looks: the
+dashboard test seeds five clients and allows eleven queries of headroom, so a
+freshly introduced N+1 adds about five queries and sails through. The ceilings
+also drift — each one carries a comment explaining why it was raised.
+
+The new ones render the same page twice with different row counts and assert the
+count did not grow. That tests the *shape* of the query behaviour rather than its
+size: O(1) stays O(1) whatever the baseline, so the assertion neither drifts with
+unrelated changes nor needs a magic number. `QueryCountMixin.assertQueryCountStable`
+in `test_helpers.py`; failures print the first few extra SQL statements.
+
+**Still open:** the dashboard and analytics ceilings are untouched. Adding
+invariance assertions there too is the obvious follow-up, but both pages are
+aggregate-heavy and may legitimately issue per-month work, so it needs someone
+who can run the suite and read the real numbers rather than a guess.
+
+<details>
+<summary>Original note</summary>
 
 `assertNumQueries` appears in exactly two test files (`test_views_analytics`,
 `test_views_dashboard`). #276 fixed an analytics page firing 4,088 queries in
 2.3s; nothing currently stops a future missing `select_related` from putting it
 back. Worth extending to client detail and the Focus Queue, the other two pages
 with heavy related-object access.
+
+</details>
 
 ### 3. `utils/file_processing.py` exception audit
 

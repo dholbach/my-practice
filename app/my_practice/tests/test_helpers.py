@@ -3,11 +3,59 @@ Test helper utilities and mixins for multi-practice testing.
 """
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 
 from ..models import Practice, UserPractice
 
 User = get_user_model()
+
+
+class QueryCountMixin:
+    """Assert that a page's query count does not grow with the number of rows.
+
+    The older query-count tests in this suite assert a fixed ceiling against a
+    fixed amount of seed data, which is a weak guard: the dashboard test seeds
+    five clients and allows eleven queries of headroom, so a freshly introduced
+    N+1 adds about five queries and passes. Ceilings also drift — every one has
+    a comment explaining why it was raised.
+
+    Measuring the same page twice with different row counts tests the shape of
+    the query behaviour instead of its size. O(1) stays O(1) whatever the
+    baseline, so the assertion neither drifts with unrelated changes nor needs
+    a magic number.
+    """
+
+    def assertQueryCountStable(self, fetch, add_rows, tolerance=0, label="page"):
+        """Render twice — before and after adding rows — and compare counts.
+
+        Args:
+            fetch: callable returning the response (asserted 200 both times)
+            add_rows: callable that creates more of whatever the page lists
+            tolerance: extra queries allowed, for genuinely constant additions
+                such as a pagination COUNT appearing once a page fills up
+            label: name used in the failure message
+        """
+        with CaptureQueriesContext(connection) as before:
+            self.assertEqual(fetch().status_code, 200, f"{label} did not render")
+        baseline = len(before.captured_queries)
+
+        add_rows()
+
+        with CaptureQueriesContext(connection) as after:
+            self.assertEqual(fetch().status_code, 200, f"{label} did not render after seeding")
+        grown = len(after.captured_queries)
+
+        growth = grown - baseline
+        if growth > tolerance:
+            extra = [q["sql"] for q in after.captured_queries[baseline:]][:5]
+            listing = "\n    ".join(extra)
+            self.fail(
+                f"{label} query count grew with the row count "
+                f"({baseline} -> {grown}, +{growth}, tolerance {tolerance}) — "
+                f"this is what an N+1 looks like.\n  First extra queries:\n    {listing}"
+            )
 
 
 def link_user_to_practice(user, practice, is_owner=True):
