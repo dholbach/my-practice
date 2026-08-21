@@ -16,6 +16,8 @@ def home(_request: HttpRequest) -> HttpResponse:
 
 def dashboard(request: HttpRequest) -> HttpResponse:
     """Dashboard with statistics, widgets, and session heatmap."""
+    if request.current_practice is None:
+        return redirect("practice_create")
     today = timezone.localdate()
     context = DashboardContextAssembler(request, today=today).build()
     return render(request, "my_practice/dashboard.html", context)

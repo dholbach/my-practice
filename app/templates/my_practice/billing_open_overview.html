@@ -19,6 +19,12 @@
         {% trans "All done" %}
         {% endif %}
     </span>
+    {% if total_unbilled_sessions %}
+    <span class="billing-nav__month text-muted" title="{% trans "Estimated from each client’s standard hourly rate — not yet invoiced" %}">
+        📝 {% blocktrans count count=total_unbilled_sessions %}{{ count }} unbilled session{% plural %}{{ count }} unbilled sessions{% endblocktrans %}
+        (~{{ total_unbilled_fees|currency_rounded }})
+    </span>
+    {% endif %}
 </div>
 
 {% if not months %}

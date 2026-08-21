@@ -5554,6 +5554,17 @@ msgstr[1] "%(count)s offene Posten"
 msgid "All done"
 msgstr "Alles erledigt"
 
+#: templates/my_practice/billing_open_overview.html:23
+msgid "Estimated from each client’s standard hourly rate — not yet invoiced"
+msgstr "Geschätzt anhand des Standard-Stundensatzes der jeweiligen Klient:in — noch nicht in Rechnung gestellt"
+
+#: templates/my_practice/billing_open_overview.html:24
+#, python-format
+msgid "%(count)s unbilled session"
+msgid_plural "%(count)s unbilled sessions"
+msgstr[0] "%(count)s unberechnete Sitzung"
+msgstr[1] "%(count)s unberechnete Sitzungen"
+
 #: templates/my_practice/billing_open_overview.html:26
 msgid "No open items."
 msgstr "Keine offenen Posten."

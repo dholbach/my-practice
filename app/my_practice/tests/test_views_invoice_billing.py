@@ -558,6 +558,20 @@ class MonthlyBillingOverviewTests(TestCase):
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
+        self.service_type_60 = ServiceType.objects.create(
+            code="individual_60",
+            name="60 Min Session",
+            name_de="60 Min. Psychotherapie",
+            default_duration=60,
+            practice=self.practice,
+        )
+        self.service_type_30 = ServiceType.objects.create(
+            code="individual_30",
+            name="30 Min Session",
+            name_de="30 Min. Psychotherapie",
+            default_duration=30,
+            practice=self.practice,
+        )
         self.test_client = Client.objects.create(
             client_code="TC",
             full_name="Max Mustermann",
@@ -627,3 +641,17 @@ class MonthlyBillingOverviewTests(TestCase):
         response = self.client_instance.get(reverse("billing_open_overview"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["total_unresolved"], 0)
+
+    def test_billing_open_overview_totals_unbilled_sessions_and_fees(self):
+        today = date.today()
+        Session.objects.create(client=self.test_client, session_date=today, duration=60)
+        Session.objects.create(client=self.test_client, session_date=today, duration=30)
+        response = self.client_instance.get(reverse("billing_open_overview"))
+        self.assertEqual(response.context["total_unbilled_sessions"], 2)
+        # hourly_rate_60=90.00 -> 60min session = 90.00, 30min session = 45.00
+        self.assertEqual(response.context["total_unbilled_fees"], Decimal("135.00"))
+
+    def test_billing_open_overview_zero_totals_when_nothing_unbilled(self):
+        response = self.client_instance.get(reverse("billing_open_overview"))
+        self.assertEqual(response.context["total_unbilled_sessions"], 0)
+        self.assertEqual(response.context["total_unbilled_fees"], Decimal("0"))

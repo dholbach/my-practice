@@ -4,6 +4,7 @@ Invoice-related views (CRUD operations).
 
 import logging
 from datetime import date
+from decimal import Decimal
 from typing import Any
 
 from dateutil.relativedelta import relativedelta
@@ -22,7 +23,11 @@ from ..invoice_forms import InvoiceForm
 from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, Session
 from ..signals import recalculate_invoice_total
 from ..utils import RevenueCalculator, get_next_invoice_number
-from ..utils.billing_helpers import build_service_type_map, create_invoice_item_for_session
+from ..utils.billing_helpers import (
+    build_service_type_map,
+    create_invoice_item_for_session,
+    resolve_session_rate,
+)
 from ..utils.calendar_preflight import CalendarPreflightChecker
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks, get_arbeitsdiagnose
 from ..utils.invoice_filter_helper import InvoiceFilterHelper
@@ -834,12 +839,27 @@ def billing_open_overview(request):
 
     total_unresolved = sum(len(m["rows"]) for m in months)
 
+    service_type_map = build_service_type_map(practice)
+    fallback_service_type = next(iter(service_type_map.values()), None)
+
+    total_unbilled_sessions = 0
+    total_unbilled_fees = Decimal("0")
+    for m in months:
+        for row in m["rows"]:
+            total_unbilled_sessions += row["unbilled_count"]
+            for session in row["unbilled_sessions"]:
+                service_type = service_type_map.get(session.duration, fallback_service_type)
+                if service_type is not None:
+                    total_unbilled_fees += resolve_session_rate(row["client"], service_type)
+
     return render(
         request,
         "my_practice/billing_open_overview.html",
         {
             "months": months,
             "total_unresolved": total_unresolved,
+            "total_unbilled_sessions": total_unbilled_sessions,
+            "total_unbilled_fees": total_unbilled_fees,
         },
     )
 
