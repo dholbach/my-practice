@@ -6,7 +6,6 @@ Eliminates duplication in context preparation for financial tracking views.
 from typing import Any
 
 from django.db.models import Q, QuerySet
-from django.utils import timezone
 
 
 class FinancialListContextBuilder:
@@ -36,7 +35,6 @@ class FinancialListContextBuilder:
     def build_context(
         self,
         include_categories: bool = False,
-        include_monthly: bool = False,
         include_tax_deductible: bool = False,
         limit: int | None = None,
     ) -> tuple[dict[str, Any], QuerySet]:
@@ -45,7 +43,6 @@ class FinancialListContextBuilder:
 
         Args:
             include_categories: Whether to include category breakdown
-            include_monthly: Whether to include monthly breakdown for current year
             include_tax_deductible: Whether to include tax deductible total
             limit: Limit number of items returned (for pagination)
 
@@ -81,9 +78,6 @@ class FinancialListContextBuilder:
         if include_categories:
             context["category_totals"] = self._get_category_breakdown(filtered_qs)
 
-        if include_monthly:
-            context["monthly_data"] = self._get_monthly_breakdown(filtered_qs)
-
         if include_tax_deductible:
             context["tax_deductible_total"] = get_grand_total(
                 filtered_qs, filter_condition=Q(is_tax_deductible=True)
@@ -118,11 +112,3 @@ class FinancialListContextBuilder:
             return get_category_breakdown(queryset, category_choices=category_dict)
 
         return get_category_breakdown(queryset)
-
-    def _get_monthly_breakdown(self, queryset: QuerySet) -> dict[str, Any]:
-        """Get monthly breakdown for current year."""
-        from ..utils.aggregation_helpers import get_monthly_breakdown
-
-        current_year = timezone.localdate().year
-        monthly_data = get_monthly_breakdown(queryset, current_year)
-        return dict(monthly_data)

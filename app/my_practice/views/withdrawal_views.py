@@ -31,7 +31,7 @@ def withdrawal_list(request: HttpRequest) -> HttpResponse:
     # Build stat cards (grand_total, yearly_totals) from outgoing-only so that    # Kapitaleinlagen (stored as positive amounts) don't inflate the totals.
     outgoing_qs = all_qs.filter(category__in=CompanyWithdrawal.OUTGOING_CATEGORIES)
     builder = FinancialListContextBuilder(outgoing_qs, year_filter=year_filter)
-    context, outgoing = builder.build_context(include_monthly=True)
+    context, outgoing = builder.build_context()
 
     # Incoming / adjustments come from the full queryset with the same year filter
     incoming_qs = all_qs.filter(category__in=CompanyWithdrawal.INCOMING_CATEGORIES)
