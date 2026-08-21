@@ -487,18 +487,25 @@ class ClientAnalyzer:
         ).filter(total_revenue__gt=0)
         if practice:
             clients_qs = clients_qs.filter(practice=practice)
-        clients_with_revenue = clients_qs.order_by("-total_revenue")[:limit]
+        clients_with_revenue = list(clients_qs.order_by("-total_revenue")[:limit])
+
+        # One query for every top client's items, grouped in Python, rather than
+        # one query per client inside the loop below. The old shape was an N+1
+        # bounded by `limit` — ten extra round-trips on every /analytics/ load,
+        # which is the same class of problem as #276 and survived it because the
+        # query-count test guarding this page allowed 360 queries.
+        items_by_client: dict[int, list] = defaultdict(list)
+        client_items = InvoiceItem.objects.filter(
+            invoice__client__in=clients_with_revenue, invoice__status="paid"
+        ).select_related("invoice", "session", "service_type")
+        for item in client_items:
+            items_by_client[item.invoice.client_id].append(item)
 
         # Format results with proper session counting
         result = []
         for client in clients_with_revenue:
-            # Get all invoice items for this client (paid invoices only)
-            items = InvoiceItem.objects.filter(
-                invoice__client=client, invoice__status="paid"
-            ).select_related("session", "service_type")
-
             # Use centralized session counting (handles duration, quantity, and Ausfall)
-            session_hours = count_sessions(items, exclude_cancellations=True)
+            session_hours = count_sessions(items_by_client[client.id], exclude_cancellations=True)
 
             result.append(
                 {

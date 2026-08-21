@@ -65,10 +65,13 @@ class DashboardContextAssembler:
             or 0
         )
 
+        # No prefetch of items here: the dashboard's recent-invoices list reads
+        # invoice_number, client.full_name, status and the stored `total` field,
+        # and never touches item rows. Prefetching them cost two queries a load
+        # for data the template drops on the floor.
         recent_invoices = (
             Invoice.objects.for_current_practice(self.request)
             .select_related("client")
-            .prefetch_related("items__service_type")
             .order_by("-invoice_date")[:10]
         )
 

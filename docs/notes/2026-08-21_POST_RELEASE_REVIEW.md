@@ -1,8 +1,8 @@
 # Post-release review — after v0.5.0 / v0.5.1 / v0.5.2
 
 Findings from a review session on 2026-08-21, covering the 98 commits between
-v0.4.3 and v0.5.2. Two items were fixed in the same session; the rest are
-recorded here as a worklist.
+v0.4.3 and v0.5.2. Every item recorded here has since been worked through; the
+worklist is closed.
 
 ## Context: what those three releases were
 
@@ -107,8 +107,21 @@ early on an empty list, so clearing the file input leaves the previous filenames
 on screen; and the `DataTransfer` merge does not de-duplicate a file dropped
 twice. Both are arguable product decisions rather than defects.
 
-Still open in `global-search.js`, unchanged: no protection against out-of-order
-search responses.
+The out-of-order response race in `global-search.js` is now fixed too. The 300ms
+debounce spaces requests out but does not serialise them, and `fetch` settles in
+completion order: pause mid-word and the slower of two in-flight requests writes
+the dropdown last, so it shows matches for a query the box no longer contains —
+with Enter navigating to one of them. `performSearch` now stamps each request
+with a monotonic id and every handler checks it is still the newest before
+touching state. Clearing the box bumps the id too, so a response for text the
+user just deleted cannot repopulate the dropdown behind them.
+
+Nine tests cover it, driven through a `deferFetches` mode that parks each fetch
+so a test can land two responses in either order. All three guard lines were
+mutation-checked individually. The timer stub was fixed in the same pass: it
+recycled handles after a flush, so a type/flush/type sequence handed out the
+same id twice and a `clearTimeout` could cancel a live timer — handles are now
+monotonic, as in a browser.
 
 <details>
 <summary>Original note</summary>
@@ -144,12 +157,37 @@ The new ones render the same page twice with different row counts and assert the
 count did not grow. That tests the *shape* of the query behaviour rather than its
 size: O(1) stays O(1) whatever the baseline, so the assertion neither drifts with
 unrelated changes nor needs a magic number. `QueryCountMixin.assertQueryCountStable`
-in `test_helpers.py`; failures print the first few extra SQL statements.
+in `test_helpers.py`; failures name the SQL that repeated.
 
-**Still open:** the dashboard and analytics ceilings are untouched. Adding
-invariance assertions there too is the obvious follow-up, but both pages are
-aggregate-heavy and may legitimately issue per-month work, so it needs someone
-who can run the suite and read the real numbers rather than a guess.
+**Now done as well**, with real numbers rather than a guess — a local Python
+3.14 + PostgreSQL 16 environment made the full 1,686-test suite runnable in this
+session. Both ceilings are deleted and replaced by invariance ratchets in
+`test_query_counts.py`; the fear that these pages legitimately issue per-row work
+turned out to be unfounded, both are flat.
+
+Two real problems fell out of writing them:
+
+- **A live N+1 on `/analytics/`.** `ClientAnalyzer.get_top_by_revenue` ran an
+  `InvoiceItem` query per client inside its loop — ten extra round-trips per
+  page load, the same class of bug as #276 and a survivor of it, hidden the
+  whole time behind a ceiling of 360. Now one query grouped in Python.
+  Confirmed by reverting the fix: +15 queries, caught.
+- **The first version of the analytics ratchet was vacuous.** The shared fixture
+  builds `sent` invoices and the top-clients panel filters on `paid`, so the
+  panel rendered empty and the test passed green over the live N+1 above. It
+  seeds paid invoices now — a reminder that a green query test proves nothing
+  until it has been made to fail on purpose.
+
+Also removed: a `prefetch_related("items__service_type")` on the dashboard's
+recent-invoices list. Nothing in that template touches item rows — it reads
+`invoice_number`, `client.full_name`, `status` and the stored `total` field — so
+it cost two queries a load for data that was dropped on the floor. 23 → 21.
+
+`assertQueryCountStable`'s failure message was rewritten too. It used to slice
+the tail of the query log, which reads as "the extra queries" but is positional:
+on analytics it reported three unrelated `TimeOff` selects while the culprit sat
+further up. It now compares query frequencies and names what actually repeated
+("5x more: SELECT ... invoiceitem ...").
 
 <details>
 <summary>Original note</summary>

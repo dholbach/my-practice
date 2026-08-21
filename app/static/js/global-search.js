@@ -33,6 +33,16 @@
     let currentResults = [];
     let selectedIndex = -1;
 
+    /* Monotonic id for the newest search the user has asked for. The 300ms
+       debounce only spaces requests out; it does not stop two being in flight
+       at once, and fetch resolves in completion order, not call order. Type
+       "sch", pause, then finish "schmidt": if the first request is the slower
+       of the two, its results land last and the dropdown ends up showing
+       matches for a query the box no longer contains — with Enter navigating
+       to one of them. Each response checks it is still the newest before
+       touching any state; a superseded one is dropped silently. */
+    let latestRequestId = 0;
+
     function createSearchBox() {
         // Create search container
         const searchContainer = document.createElement('div');
@@ -114,6 +124,9 @@
 
         // Clear results if query is empty
         if (!query) {
+            // Retire any in-flight request too, so a response for the text the
+            // user just deleted cannot repopulate the dropdown behind them.
+            latestRequestId++;
             currentResults = [];
             selectedIndex = -1;
             resultsDropdown.style.display = 'none';
@@ -128,6 +141,7 @@
 
     function performSearch(query) {
         const resultsDropdown = document.getElementById('global-search-results');
+        const requestId = ++latestRequestId;
 
         // Show loading state
         resultsDropdown.innerHTML = `<div style="padding: 1rem; color: var(--color-text-secondary); text-align: center;">${i18n.searchLoading}</div>`;
@@ -137,12 +151,16 @@
         fetch(`/api/search/?q=${encodeURIComponent(query)}`)
             .then(response => response.json())
             .then(data => {
+                if (requestId !== latestRequestId) return;
                 currentResults = data.results || [];
                 selectedIndex = -1;
                 displayResults();
             })
             .catch(error => {
                 console.error('Search error:', error);
+                // A stale failure must not clear the newer query's results
+                // either, so this is checked after the log, not before it.
+                if (requestId !== latestRequestId) return;
                 // Drop the previous query's results too: without this, Enter
                 // still navigates to whatever was showing before the failure.
                 currentResults = [];

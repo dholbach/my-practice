@@ -276,49 +276,6 @@ class AnalyticsDashboardViewTest(TestCase):
         total_expenses = sum(item["expenses"] for item in expenses_2024)
         self.assertAlmostEqual(total_expenses, 12000.0, places=2)
 
-    def test_analytics_dashboard_performance(self):
-        """Test analytics dashboard doesn't have excessive queries."""
-        # Create more test data
-        for i in range(5):
-            client = Client.objects.create(
-                client_code=f"CL{i}",
-                full_name=f"Client {i}",
-                email=f"client{i}@example.com",
-                hourly_rate_60=Decimal("90.00"),
-                practice=self.practice,
-            )
-            invoice = Invoice.objects.create(
-                client=client,
-                invoice_number=f"INV-{i}",
-                invoice_date=date.today(),
-                status="paid",
-                practice=self.practice,
-            )
-            InvoiceItem.objects.create(
-                invoice=invoice,
-                service_type=self.service_type,
-                session=Session.objects.create(
-                    client=client,
-                    session_date=date.today(),
-                    duration=60,
-                ),
-                rate=Decimal("90.00"),
-                quantity=Decimal("1.00"),
-                total=Decimal("90.00"),
-            )
-
-        from django.db import connection
-        from django.test.utils import CaptureQueriesContext
-
-        with CaptureQueriesContext(connection) as context:
-            response = self.client_instance.get(reverse("analytics"))
-            self.assertEqual(response.status_code, 200)
-
-        # Analytics can be complex with many aggregations - allow reasonable query count
-        # Note: Multi-practice filtering adds some overhead
-        query_count = len(context.captured_queries)
-        self.assertLess(query_count, 360, f"Analytics has {query_count} queries")
-
 
 class AnalyticsFilterTest(TestCase):
     """Test analytics filtering functionality."""

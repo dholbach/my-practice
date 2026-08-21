@@ -3,6 +3,8 @@ Test helper utilities and mixins for multi-practice testing.
 """
 
 import io
+import re
+from collections import Counter
 
 import pypdf
 from django.contrib.auth import get_user_model
@@ -33,6 +35,33 @@ def make_pdf_bytes(num_pages: int = 1, rotate: int = 0) -> bytes:
     buf = io.BytesIO()
     writer.write(buf)
     return buf.getvalue()
+
+
+def _repeated_queries(before, after, limit: int = 3) -> list[str]:
+    """Name the SQL whose frequency grew, for an N+1 failure message.
+
+    Slicing the tail of the query log (`captured_queries[baseline:]`) reads as
+    "the extra queries" but is positional, so it reports whatever happened to
+    run last — on the analytics page that meant three unrelated TimeOff selects
+    while the actual culprit sat further up the log. Comparing frequencies finds
+    the query that repeated instead, which is the one worth looking at.
+
+    Literals are blanked so the N copies of a per-row lookup, which differ only
+    by id, collapse into one entry with a count.
+    """
+
+    def shape(sql: str) -> str:
+        return re.sub(r"\b\d+\b", "?", sql)
+
+    before_counts = Counter(shape(q["sql"]) for q in before.captured_queries)
+    after_counts = Counter(shape(q["sql"]) for q in after.captured_queries)
+    grew = after_counts - before_counts
+    if not grew:
+        return ["(no query ran more often — the growth is in distinct queries)"]
+    return [
+        f"{count}x more: {sql[:200]}{'…' if len(sql) > 200 else ''}"
+        for sql, count in grew.most_common(limit)
+    ]
 
 
 class QueryCountMixin:
@@ -72,12 +101,12 @@ class QueryCountMixin:
 
         growth = grown - baseline
         if growth > tolerance:
-            extra = [q["sql"] for q in after.captured_queries[baseline:]][:5]
-            listing = "\n    ".join(extra)
             self.fail(
                 f"{label} query count grew with the row count "
                 f"({baseline} -> {grown}, +{growth}, tolerance {tolerance}) — "
-                f"this is what an N+1 looks like.\n  First extra queries:\n    {listing}"
+                f"this is what an N+1 looks like.\n"
+                f"  Queries that ran more often after seeding:\n    "
+                + "\n    ".join(_repeated_queries(before, after))
             )
 
 
