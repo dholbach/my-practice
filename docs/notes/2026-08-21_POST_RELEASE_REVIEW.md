@@ -30,6 +30,19 @@ mostly found by looking at a page rather than by a test.
   GitHub meant every authenticated page render paid the full 3s timeout again,
   indefinitely. Now cached as an empty string for 15 minutes; the bare
   `except Exception` narrowed to `(OSError, ValueError)` and logged.
+- **Two encrypted-field tests fixed.** CI's first two runs caught
+  `test_gebueh.py` and `test_sync_focus_queue_tasks.py` writing non-empty values
+  to Art. 9 fields without `@override_settings(FERNET_KEY=...)`. Neither had ever
+  passed on a clean checkout — they were green only because a developer `.env`
+  exported a real key into the test process.
+- **CI re-runs the test suite serially on failure.** Django's parallel runner
+  pickles results back to the parent, and an errored test whose traceback can't
+  be pickled kills the run at the first error, hiding everything after it. That
+  is exactly how the two encrypted-field bugs above took two red rounds instead
+  of one. Free on a green build.
+- **Repo-root Python is linted by CI, with its own `ruff.toml`** (items 4 and 5
+  below). See "Resolved: which ruff config is authoritative" for what that
+  turned up.
 
 ## Remaining — recommended order
 
@@ -64,10 +77,10 @@ uploads to Pillow and shells out to Ghostscript — the untrusted-input path.
 #355 narrowed three such blocks elsewhere for exactly this reason; this file
 was the one where it matters most and it was skipped.
 
-### 4. Widen the ruff rule selection
+### 4. Widen the ruff rule selection — DONE
 
-`[tool.ruff.lint] select` is currently `E4/E7/E9`, `F`, `PERF`. Measured cost of
-adding more, across all 247 files:
+`B`, `DJ`, `C4` and `SIM` are now selected; all 24 findings fixed except one
+documented `DJ012` ignore. The original measurement, for reference:
 
 | Rules | Findings |
 | --- | --- |
@@ -83,7 +96,39 @@ adding more, across all 247 files:
 10 `mark_safe` call sites it flags were audited this session and are correctly
 escaped or static — #297's lesson did stick.
 
-### 5. Repo-root Python is unchecked by CI, and appears to be drifting
+**Still open — `I` (isort).** CLAUDE.md names isort as the convention but nothing
+enforces it, and ruff reports 82 files with unsorted import blocks. All are
+auto-fixable, but that is 82 files of pure import churn that would conflict with
+anything in flight, so it wants its own PR rather than riding along with a
+behavioural change. Worth doing: without it, ruff's own autofixes append new
+stdlib imports *below* the local imports (it did exactly that three times while
+the rules above were being applied, each needing a manual move).
+
+### 5. Repo-root Python is unchecked by CI — DONE
+
+Resolved; kept below because the answer matters.
+
+**Which ruff config is authoritative.** Neither, as it turned out — the root
+files need their *own*. `app/pyproject.toml` sets `target-version = "py314"`,
+under which the formatter rewrites `except (A, B):` into 3.14's bracketless
+`except A, B:`. The app runs on 3.14 in the container, so that is correct there.
+But `dev.py`, `prod.py` and `scripts/*.py` run on the **host** Python, where that
+form is a hard `SyntaxError` on 3.13 and older. Running `./dev.py lint --write`
+today would therefore have rewritten `dev.py` into a file that its own users
+could not execute.
+
+They now have a repo-root `ruff.toml` pinned to `target-version = "py310"` (all
+five files verified to compile under 3.10), and CI lints and format-checks them
+natively. `dev.py`'s stdin path — which pipes each file through the *container's*
+ruff, where the root `ruff.toml` isn't mounted — passes the target-version
+through as an inline `--config`, read out of `ruff.toml` rather than duplicated.
+
+The `PERF401` in `scripts/check_pii.py` is fixed, along with three more findings
+the widened rules surfaced there, and the files are now format-clean at the
+project's 100-column width (they had been sitting at ruff's default 88).
+
+<details>
+<summary>Original note</summary>
 
 `dev.py`, `prod.py` and `scripts/*.py` are linted by `./dev.py quality` (via the
 container's ruff over stdin, since the container only mounts `app/`) but not by
@@ -100,6 +145,8 @@ CI. Two things to verify locally:
 
 Resolve which is authoritative before adding these files to CI, otherwise the
 lint job goes red on the first PR.
+
+</details>
 
 ### 6. No explicit `CACHES` configuration
 

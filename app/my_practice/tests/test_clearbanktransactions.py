@@ -29,18 +29,18 @@ def _make_practice(slug="cmd-test"):
 
 
 def _make_transaction(practice, **kwargs):
-    defaults = dict(
-        transaction_date=date(2026, 1, 15),
-        value_date=date(2026, 1, 15),
-        payer_name="Test Zahler",
-        payer_iban="",
-        reference="Test Überweisung",
-        amount=Decimal("90.00"),
-        balance_after=Decimal("1090.00"),
-        account_iban=PRACTICE_IBAN,
-        match_confidence="unmatched",
-        processed=False,
-    )
+    defaults = {
+        "transaction_date": date(2026, 1, 15),
+        "value_date": date(2026, 1, 15),
+        "payer_name": "Test Zahler",
+        "payer_iban": "",
+        "reference": "Test Überweisung",
+        "amount": Decimal("90.00"),
+        "balance_after": Decimal("1090.00"),
+        "account_iban": PRACTICE_IBAN,
+        "match_confidence": "unmatched",
+        "processed": False,
+    }
     defaults.update(kwargs)
     return BankTransaction.objects.create(practice=practice, **defaults)
 

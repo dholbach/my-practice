@@ -29,9 +29,7 @@ def parse_env_file(path: Path) -> tuple[dict[str, list[tuple[int, str]]], set[st
     """Return {key: [(lineno, value), ...]} and the set of keys marked CHANGE ME."""
     entries: dict[str, list[tuple[int, str]]] = {}
     change_me_keys: set[str] = set()
-    for lineno, raw_line in enumerate(
-        path.read_text(encoding="utf-8").splitlines(), start=1
-    ):
+    for lineno, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         line = raw_line.strip()
         if not line or line.startswith("#"):
             continue

@@ -141,10 +141,7 @@ def prepare_invoice_email_context(
         dict with all template placeholders
     """
     # Get or generate salutation
-    if custom_salutation:
-        salutation = custom_salutation
-    else:
-        salutation = get_salutation_for_client(invoice.client)
+    salutation = custom_salutation or get_salutation_for_client(invoice.client)
 
     # German number format, matching the |currency filter used by the invoice
     # PDF attached to this very email — an inline f-string here produced English

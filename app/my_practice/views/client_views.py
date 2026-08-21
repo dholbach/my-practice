@@ -2,6 +2,7 @@
 Client-related views.
 """
 
+import contextlib
 import logging
 import os
 from datetime import date, timedelta
@@ -425,10 +426,8 @@ def _collect_document_file_paths(client: Client) -> list[str]:
     paths = []
     for doc in client.documents.all():
         if doc.file and doc.file.name:
-            try:
+            with contextlib.suppress(ValueError):
                 paths.append(doc.file.path)
-            except ValueError:
-                pass
     return paths
 
 

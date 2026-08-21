@@ -6,6 +6,7 @@ Automatically detects if running in VS Code on Silverblue and prepends flatpak-s
 
 import glob
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -15,8 +16,33 @@ CONTAINER_NAME = "my-practice-django"
 # Python that lives outside ./app and so is invisible to the container's
 # `ruff format .` (docker-compose mounts only ./app at /app). These are piped
 # through the container's ruff over stdin instead — see _ruff_root_python —
-# so they're held to the same pinned ruff version and config as the app.
+# so they're held to the same pinned ruff version as the app.
+#
+# Their *config* has to differ in one respect, though: these files run on the
+# host Python, not the container's 3.14, and the app's target-version = "py314"
+# makes the formatter rewrite `except (A, B):` into 3.14's bracketless form —
+# a SyntaxError on 3.13 and older, which would make ./dev.py itself unrunnable.
+# The repo-root ruff.toml sets the lower target, but the container can't see it
+# (only ./app is mounted), so it's passed through as an inline --config below.
 ROOT_PYTHON_GLOBS = ("dev.py", "prod.py", "scripts/*.py")
+ROOT_RUFF_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ruff.toml")
+
+
+def _root_ruff_target_version():
+    """Read target-version out of the repo-root ruff.toml.
+
+    Parsed rather than duplicated so the value can't drift from the config CI
+    and a native `ruff` run both use.
+    """
+    try:
+        with open(ROOT_RUFF_CONFIG, encoding="utf-8") as fh:
+            for line in fh:
+                match = re.match(r'\s*target-version\s*=\s*"([^"]+)"', line)
+                if match:
+                    return match.group(1)
+    except OSError:
+        pass
+    return None
 
 
 def is_vscode():
@@ -78,12 +104,20 @@ def _root_python_files():
 
 
 def _run_ruff_stdin(ruff_args, source):
-    """Run the container's ruff against source text piped over stdin."""
+    """Run the container's ruff against source text piped over stdin.
+
+    --stdin-filename resolves against the container's /app, so ruff discovers
+    app/pyproject.toml for these files. That is right for everything except
+    target-version — see ROOT_PYTHON_GLOBS — which is overridden inline.
+    """
     cmd = []
     if needs_flatpak():
         cmd.extend(["flatpak-spawn", "--host"])
     cmd.extend(["docker", "exec", "-i", CONTAINER_NAME, "python", "-m", "ruff"])
     cmd.extend(ruff_args)
+    target_version = _root_ruff_target_version()
+    if target_version:
+        cmd.extend(["--config", f"target-version='{target_version}'"])
     return subprocess.run(cmd, input=source, capture_output=True, text=True)
 
 
@@ -108,9 +142,7 @@ def _ruff_root_python(write=False, verbose=False):
                     fh.write(result.stdout)
                 print(f"   reformatted {path}")
         else:
-            result = _run_ruff_stdin(
-                ["format", "--check", "-", "--stdin-filename", path], source
-            )
+            result = _run_ruff_stdin(["format", "--check", "-", "--stdin-filename", path], source)
             if result.returncode != 0:
                 problems.append(f"{path}: needs formatting")
 
@@ -188,9 +220,7 @@ def cmd_restart(args):
     if "--force" in args:
         extra_args = [a for a in args if a not in ("--force", "--build")]
         rebuild = "--build" in args
-        print(
-            "Forcing full restart (compose down/up) to reload environment variables..."
-        )
+        print("Forcing full restart (compose down/up) to reload environment variables...")
         if rebuild:
             print("Rebuilding image first...")
             cmd_build(extra_args)
@@ -350,9 +380,7 @@ def cmd_test_js(args):
 
         # Run form draft guard tests (M-PAT-06)
         print("\n--- Form Draft Guard Tests ---")
-        guard_result = run_docker_command(
-            ["node", "/app/static/js/form_draft_guard.test.js"]
-        )
+        guard_result = run_docker_command(["node", "/app/static/js/form_draft_guard.test.js"])
         results.append(("JS DraftGuard", guard_result.returncode))
 
     # Show browser test info (if not node-only)
@@ -375,10 +403,7 @@ def cmd_test_js(args):
         print("Node.js Test Summary:")
         print("=" * 50)
         for test_type, code in results:
-            if code == 0:
-                status = "✓ PASSED"
-            else:
-                status = "✗ FAILED"
+            status = "✓ PASSED" if code == 0 else "✗ FAILED"
             print(f"{test_type:12} {status}")
         print("=" * 50)
 
@@ -431,9 +456,7 @@ def cmd_manage(args):
         rm_cmd = []
         if needs_flatpak():
             rm_cmd.extend(["flatpak-spawn", "--host"])
-        rm_cmd.extend(
-            ["docker", "exec", CONTAINER_NAME, "rm", "-f", container_tmp_path]
-        )
+        rm_cmd.extend(["docker", "exec", CONTAINER_NAME, "rm", "-f", container_tmp_path])
         subprocess.run(rm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     return result
@@ -465,9 +488,7 @@ def cmd_shell(args):
         cmd = []
         if needs_flatpak():
             cmd.extend(["flatpak-spawn", "--host"])
-        cmd.extend(
-            ["docker", "exec", "-i", CONTAINER_NAME, "python", "manage.py", "shell"]
-        )
+        cmd.extend(["docker", "exec", "-i", CONTAINER_NAME, "python", "manage.py", "shell"])
 
         return subprocess.run(cmd, input=command.encode(), capture_output=False)
     else:
@@ -522,9 +543,7 @@ def cmd_start(args):
     wait_cmd = []
     if needs_flatpak():
         wait_cmd.extend(["flatpak-spawn", "--host"])
-    wait_cmd.extend(
-        ["docker", "inspect", "--format", "{{.State.Health.Status}}", CONTAINER_NAME]
-    )
+    wait_cmd.extend(["docker", "inspect", "--format", "{{.State.Health.Status}}", CONTAINER_NAME])
     import time
 
     for _ in range(60):
@@ -964,9 +983,7 @@ def cmd_review(args):
     print("Automated Check Summary:")
     print("=" * 55)
     for name, code in results:
-        status = (
-            "⏭️  Skipped" if code is None else ("✅ OK" if code == 0 else "⚠️  Review")
-        )
+        status = "⏭️  Skipped" if code is None else ("✅ OK" if code == 0 else "⚠️  Review")
         print(f"  {name:<30} {status}")
     print()
 
@@ -1076,10 +1093,14 @@ def cmd_smoke(args):
     skip_confirm = "--yes" in args
     positional = [a for a in args if not a.startswith("-")]
 
-    if not no_pull and not down_only and not skip_confirm:
-        if not _confirm_metered_download("Pulling the smoke-test image"):
-            print("Aborted.")
-            return subprocess.CompletedProcess(args=[], returncode=1)
+    if (
+        not no_pull
+        and not down_only
+        and not skip_confirm
+        and not _confirm_metered_download("Pulling the smoke-test image")
+    ):
+        print("Aborted.")
+        return subprocess.CompletedProcess(args=[], returncode=1)
 
     repo_dir = os.path.dirname(os.path.abspath(__file__))
     if positional:
@@ -1153,9 +1174,7 @@ def cmd_smoke(args):
         )
         reported = result.stdout.strip()
         if result.returncode != 0 or reported != version:
-            return fail(
-                result, f"Image reports version {reported!r}, expected {version!r}."
-            )
+            return fail(result, f"Image reports version {reported!r}, expected {version!r}.")
         print(f"  ✓ image reports {reported}")
 
         result = compose(
@@ -1285,9 +1304,7 @@ def cmd_sql(args):
 def cmd_psql(args):
     """Open interactive PostgreSQL shell"""
     print("Opening PostgreSQL shell...")
-    return run_docker_command(
-        ["psql", "-U", "my_practice", "-d", "my_practice"], interactive=True
-    )
+    return run_docker_command(["psql", "-U", "my_practice", "-d", "my_practice"], interactive=True)
 
 
 COMMANDS = {
@@ -1328,9 +1345,7 @@ def print_help():
     print("  start                - Start all containers (compose up -d)")
     print("  stop                 - Stop all containers (compose down)")
     print("  build [--no-cache]   - Rebuild Docker image(s)")
-    print(
-        "  restart [--force]    - Restart the Django container (--force: full down/up)"
-    )
+    print("  restart [--force]    - Restart the Django container (--force: full down/up)")
     print("  test [args]          - Run tests (default: Django + JS)")
     print("  test --js-only       - Run only JavaScript tests (Node.js + browser info)")
     print("  test --django-only   - Run only Django tests")
@@ -1345,55 +1360,37 @@ def print_help():
     print("  exec <cmd> [args]    - Execute arbitrary command in container")
     print("  sql <query|file>     - Execute SQL query or file")
     print("  psql                 - Open interactive PostgreSQL shell")
-    print(
-        "  logs [args]          - Show container logs (default: all services, last 100 lines)"
-    )
+    print("  logs [args]          - Show container logs (default: all services, last 100 lines)")
     print("  ps                   - Show container status")
     print("  migrate [args]       - Run migrations")
     print("  makemigrations [args]- Create new migrations")
-    print(
-        "  i18n [sub]           - Extract/compile translations (makemessages + compilemessages)"
-    )
+    print("  i18n [sub]           - Extract/compile translations (makemessages + compilemessages)")
     print("  runserver            - Info about development server")
-    print(
-        "  lint                 - Fast lint check: ruff format + ruff check (no tests, ~seconds)"
-    )
+    print("  lint                 - Fast lint check: ruff format + ruff check (no tests, ~seconds)")
     print("  lint --verbose       - Lint with full output")
-    print(
-        "  quality              - Full pre-release check: lint + full test suite (~minutes)"
-    )
+    print("  quality              - Full pre-release check: lint + full test suite (~minutes)")
     print("  quality --no-tests   - Run quality checks without tests")
     print("  quality --only-tests - Run only tests")
     print("  quality --verbose    - Show full output from all tools")
-    print(
-        "  review               - Monthly codebase health check (dead code, CVEs, coverage)"
-    )
+    print("  review               - Monthly codebase health check (dead code, CVEs, coverage)")
     print("  review --full        - Quarterly review (adds complexity analysis)")
     print("  review --verbose     - Show full tool output during review")
-    print(
-        "  format               - Auto-format code with ruff format + ruff check --fix"
-    )
+    print("  format               - Auto-format code with ruff format + ruff check --fix")
     print(
         "  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)"
     )
     print(
         "  smoke [vX.Y.Z]       - Boot a released GHCR image with a throwaway DB and verify it serves"
     )
-    print(
-        "  smoke --keep         - Leave the smoke stack running for manual inspection"
-    )
+    print("  smoke --keep         - Leave the smoke stack running for manual inspection")
     print("  smoke --down         - Tear down a smoke stack left running by --keep")
-    print(
-        "  install-hooks        - Configure git to use .githooks/ (run once after clone)"
-    )
+    print("  install-hooks        - Configure git to use .githooks/ (run once after clone)")
     print("\nExamples:")
     print("  ./dev.py start                                # Start all containers")
     print("  ./dev.py start --build                        # Rebuild and start")
     print("  ./dev.py build                                # Rebuild image (cached)")
     print("  ./dev.py build --no-cache                     # Full rebuild (no cache)")
-    print(
-        "  ./dev.py restart --force                      # Full restart (reloads .env)"
-    )
+    print("  ./dev.py restart --force                      # Full restart (reloads .env)")
     print("  ./dev.py restart --force --build              # Rebuild + full restart")
     print("  ./dev.py stop                                 # Stop all containers")
     print("  ./dev.py stop -v                              # Stop and remove volumes")
@@ -1403,25 +1400,15 @@ def print_help():
     print("  ./dev.py test                                 # Run all tests")
     print("  ./dev.py test --django-only                   # Run only Django tests")
     print("  ./dev.py test --js-only                       # Run only JavaScript tests")
-    print(
-        "  ./dev.py test-js                              # Run Node.js JS tests + browser info"
-    )
+    print("  ./dev.py test-js                              # Run Node.js JS tests + browser info")
     print("  ./dev.py test-js --node                       # Run only Node.js tests")
-    print(
-        "  ./dev.py test-js --browser                    # Show browser test instructions"
-    )
+    print("  ./dev.py test-js --browser                    # Show browser test instructions")
     print("  ./dev.py test my_practice.tests.test_imports # Run specific tests")
     print("  ./dev.py manage createsuperuser               # Create superuser")
     print("  ./dev.py shell                                # Open Django shell")
-    print(
-        "  ./dev.py shell -c \"print('Hello')\"            # Execute command in Django shell"
-    )
-    print(
-        "  ./dev.py run check_df.py                      # Run Python script with Django"
-    )
-    print(
-        "  ./dev.py exec ls -la /app                     # Execute command in container"
-    )
+    print("  ./dev.py shell -c \"print('Hello')\"            # Execute command in Django shell")
+    print("  ./dev.py run check_df.py                      # Run Python script with Django")
+    print("  ./dev.py exec ls -la /app                     # Execute command in container")
     print('  ./dev.py sql "SELECT COUNT(*) FROM ..."       # Execute SQL query')
     print("  ./dev.py psql                                 # Open PostgreSQL shell")
     print("\nNote: Automatically uses flatpak-spawn when running in VS Code")

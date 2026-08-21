@@ -140,14 +140,13 @@ def get_heatmap_data(
             last_date = max(item.session.session_date for item in items)
             client_totals[code] = {"total": hours, "last_activity": last_date}
 
-    if sort == "recent":
-        sort_key = lambda x: x[1]["last_activity"]  # noqa: E731
-    else:
-        sort_key = lambda x: x[1]["total"]  # noqa: E731
+    sort_field = "last_activity" if sort == "recent" else "total"
 
     active_clients_with_totals = [
         {"code": code, "total": data["total"]}
-        for code, data in sorted(client_totals.items(), key=sort_key, reverse=True)[:30]
+        for code, data in sorted(
+            client_totals.items(), key=lambda x: x[1][sort_field], reverse=True
+        )[:30]
     ]
 
     return {

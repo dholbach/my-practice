@@ -13,13 +13,9 @@ import sys
 import time
 import urllib.request
 
-VERSION = (
-    "v0.5.2"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
-)
+VERSION = "v0.5.2"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
 
-COMPOSE_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "docker-compose.prod.yml"
-)
+COMPOSE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docker-compose.prod.yml")
 COMPOSE = ["docker", "compose", "-f", COMPOSE_FILE]
 IMAGE = f"ghcr.io/dholbach/my-practice:{VERSION}"
 ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
@@ -109,10 +105,7 @@ def _check_docker():
             "  Install Docker Desktop: https://docs.docker.com/get-docker/\n"
             "  Then start it and re-run ./prod.py setup"
         )
-    if (
-        subprocess.run(["docker", "compose", "version"], capture_output=True).returncode
-        != 0
-    ):
+    if subprocess.run(["docker", "compose", "version"], capture_output=True).returncode != 0:
         abort(
             "The Docker Compose plugin is missing.\n"
             "  Docker Desktop includes it automatically.\n"
@@ -194,9 +187,7 @@ def _write_env(env: dict):
 
 def _ensure_gitignore():
     """Add .env to .gitignore next to prod.py (create the file if needed)."""
-    gitignore_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), ".gitignore"
-    )
+    gitignore_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".gitignore")
     entry = ".env"
     if os.path.exists(gitignore_path):
         with open(gitignore_path) as f:
@@ -260,9 +251,11 @@ def cmd_setup(args):
         print("  docker-compose.prod.yml not found — downloading...")
         compose_url = f"{RAW_BASE}/docker-compose.prod.yml"
         try:
-            with urllib.request.urlopen(compose_url, timeout=10) as r:
-                with open(COMPOSE_FILE, "wb") as f:
-                    f.write(r.read())
+            with (
+                urllib.request.urlopen(compose_url, timeout=10) as r,
+                open(COMPOSE_FILE, "wb") as f,
+            ):
+                f.write(r.read())
             print(f"  Saved to {COMPOSE_FILE}")
         except Exception as e:
             abort(
@@ -322,11 +315,7 @@ def cmd_setup(args):
     step("Starting the stack")
     result = compose("up", "-d", "--remove-orphans")
     if result.returncode != 0:
-        abort(
-            "docker compose up failed.\n"
-            "  Check the logs for details:\n"
-            "    ./prod.py logs"
-        )
+        abort("docker compose up failed.\n  Check the logs for details:\n    ./prod.py logs")
 
     # 5. Wait for healthy
     if not _wait_for_healthy():
@@ -368,9 +357,7 @@ def cmd_setup(args):
     print("  Open the app: http://localhost:8000")
     print()
     print("  ⚠  Back up your .env file before anything else.")
-    print(
-        "     It contains FERNET_KEY, which encrypts clinical notes (Art. 9 GDPR data)."
-    )
+    print("     It contains FERNET_KEY, which encrypts clinical notes (Art. 9 GDPR data).")
     print("     Losing it means that encrypted content cannot be recovered.")
     print("     Copy .env to a safe location now — USB drive or password manager.")
     print()
@@ -378,9 +365,7 @@ def cmd_setup(args):
     print("    ./prod.py logs          — check everything looks healthy")
     print("    ./prod.py update        — upgrade to a new release when one is out")
     print(f"    {ENV_DOCS}")
-    print(
-        "                            — full .env reference (email, calendar, backups, ...)"
-    )
+    print("                            — full .env reference (email, calendar, backups, ...)")
     return subprocess.CompletedProcess(args=[], returncode=0)
 
 
@@ -404,9 +389,7 @@ def cmd_restart(_args):
 
 def cmd_update(args):
     """Pull the latest image and restart. Pass --yes to skip the metered-connection prompt."""
-    if "--yes" not in args and not _confirm_metered_download(
-        "Pulling the latest image"
-    ):
+    if "--yes" not in args and not _confirm_metered_download("Pulling the latest image"):
         print("Aborted.")
         return subprocess.CompletedProcess(args=[], returncode=1)
 

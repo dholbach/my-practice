@@ -388,9 +388,9 @@ class WorkdayAuditCalculator:
 
     def calculate(self) -> WorkdayAuditResult:
         """Build the audit list for the full year."""
-        practice_weekdays = set(
+        practice_weekdays = {
             int(d) for d in (self.practice.practice_weekdays or []) if 0 <= int(d) <= 4
-        )
+        }
         holidays = berlin_public_holidays(self.year)
         holiday_names = _berlin_holiday_names(self.year)
         timeoff = _timeoff_dates_for_year(self.year)

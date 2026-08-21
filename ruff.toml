@@ -1,0 +1,30 @@
+# Ruff configuration for the repo-root Python that lives outside ./app:
+# dev.py, prod.py and scripts/*.py.
+#
+# These are held to the same line-length and rule set as the app (see
+# app/pyproject.toml), with one deliberate difference: target-version.
+#
+# The app runs on Python 3.14 inside the container, so app/pyproject.toml sets
+# target-version = "py314" and the formatter normalises exception tuples to
+# 3.14's bracketless `except A, B:` form. These files run on the *host* Python
+# instead, where that syntax is a hard SyntaxError on 3.13 and older — a
+# reformat under the app's target would make ./dev.py itself unrunnable for
+# anyone not already on 3.14. Hence a conservative floor here.
+line-length = 100
+target-version = "py310"
+
+exclude = [".git", ".venv", "venv", "env", "__pycache__", ".pytest_cache", "app"]
+
+[lint]
+# Mirrors app/pyproject.toml's selection, minus DJ (no Django in these files).
+select = [
+    "E4",    # pycodestyle errors (imports)
+    "E7",    # pycodestyle errors (statements)
+    "E9",    # pycodestyle errors (runtime)
+    "F",     # pyflakes
+    "PERF",  # perflint — performance anti-patterns
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+]
+ignore = ["PERF203"]

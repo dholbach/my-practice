@@ -59,13 +59,13 @@ def _make_importer(practice, rows, csv_iban=PRACTICE_IBAN):
 
 
 def _make_practice(**kwargs):
-    defaults = dict(
-        name="Test Praxis",
-        slug="bank-util-test",
-        title="Therapeutin",
-        email="test@example.com",
-        iban=PRACTICE_IBAN,
-    )
+    defaults = {
+        "name": "Test Praxis",
+        "slug": "bank-util-test",
+        "title": "Therapeutin",
+        "email": "test@example.com",
+        "iban": PRACTICE_IBAN,
+    }
     defaults.update(kwargs)
     return Practice.objects.create(**defaults)
 

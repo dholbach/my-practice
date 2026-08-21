@@ -3,6 +3,7 @@ Invoice Filter Helper - Encapsulates invoice queryset filtering logic.
 Extracts complex filter logic from InvoiceListView.get_queryset().
 """
 
+import contextlib
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import cast
@@ -166,15 +167,13 @@ class InvoiceFilterHelper:
         qs = qs.annotate(_items_total=Sum("items__total"))
 
         if min_amount:
-            try:
+            # An unparseable amount means "no filter", not an error
+            with contextlib.suppress(ValueError, TypeError, InvalidOperation):
                 qs = qs.filter(_items_total__gte=Decimal(min_amount))
-            except ValueError, TypeError, InvalidOperation:
-                pass  # Invalid amount, skip filter
 
         if max_amount:
-            try:
+            # An unparseable amount means "no filter", not an error
+            with contextlib.suppress(ValueError, TypeError, InvalidOperation):
                 qs = qs.filter(_items_total__lte=Decimal(max_amount))
-            except ValueError, TypeError, InvalidOperation:
-                pass  # Invalid amount, skip filter
 
         return qs

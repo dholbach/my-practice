@@ -87,8 +87,8 @@ class Command(BaseCommand):
         if since_str:
             try:
                 since_date = date.fromisoformat(since_str)
-            except ValueError:
-                raise CommandError(f"Invalid date: {since_str}. Expected: YYYY-MM-DD")
+            except ValueError as exc:
+                raise CommandError(f"Invalid date: {since_str}. Expected: YYYY-MM-DD") from exc
             self.stdout.write(f"ℹ️  Deleting transactions with date >= {since_date}")
             self._print_financials_tip(with_financials)
             return (
@@ -108,8 +108,10 @@ class Command(BaseCommand):
         if imported_on_str:
             try:
                 import_date = date.fromisoformat(imported_on_str)
-            except ValueError:
-                raise CommandError(f"Invalid date: {imported_on_str}. Expected: YYYY-MM-DD")
+            except ValueError as exc:
+                raise CommandError(
+                    f"Invalid date: {imported_on_str}. Expected: YYYY-MM-DD"
+                ) from exc
             self.stdout.write(f"ℹ️  Deleting transactions imported on {import_date}")
             self._print_financials_tip(with_financials)
             return (

@@ -128,11 +128,26 @@ select = [
     "E9",    # pycodestyle errors (runtime)
     "F",     # pyflakes
     "PERF",  # perflint — performance anti-patterns
+    "B",     # flake8-bugbear
+    "DJ",    # flake8-django
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
 ]
 # PERF203: try-except-in-loop overhead warning — acceptable in Django views/management commands
 # UP034: "extraneous parentheses" — ruff lint counterpart to the formatter bug below; kept in
 #        ignore as belt-and-suspenders even though UP is not in `select`.
-ignore = ["PERF203", "UP034"]
+# DJ012: "save() should come before custom methods". InvoiceItem deliberately groups its
+#        validate_*() staticmethods directly above clean() and save(), the two callers that
+#        consume them, and both docstrings cross-reference each other by position. Hoisting
+#        save() above its own helpers to satisfy a style-guide ordering would read worse and
+#        invalidate those references.
+ignore = ["PERF203", "UP034", "DJ012"]
+
+[tool.ruff.lint.per-file-ignores]
+# B007: an unused loop variable in a range() loop is the normal way to repeat a
+# body N times when building fixtures — renaming it to `_` in test data setup
+# reads worse than leaving it.
+"my_practice/tests/*" = ["B007"]
 
 # Python 3.14 introduced bracketless multi-exception syntax (`except A, B:`)
 # as equivalent to `except (A, B):` — see https://github.com/astral-sh/ruff/issues/23090
