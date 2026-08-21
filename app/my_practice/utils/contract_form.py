@@ -18,6 +18,8 @@ from pypdf.generic import (
     FloatObject,
     NameObject,
     NumberObject,
+)
+from pypdf.generic import (
     TextStringObject as StringObject,
 )
 

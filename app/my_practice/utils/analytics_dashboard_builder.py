@@ -5,6 +5,7 @@ Handles analytics data preparation and aggregation for the dashboard view.
 
 from collections import defaultdict
 from datetime import date
+
 from dateutil.relativedelta import relativedelta
 from django.db.models import Min
 from django.utils import timezone
@@ -275,6 +276,7 @@ class AnalyticsDashboardBuilder:
                    avg_capacity_hours, years_count}
         """
         from collections import defaultdict
+
         from ..utils.chart_helpers import MONTH_ABBREVIATIONS
 
         by_month: dict[int, list] = defaultdict(list)

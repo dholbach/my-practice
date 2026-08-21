@@ -10,7 +10,8 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.db.models import Count, FloatField, OuterRef, Subquery, Sum
 from django.db.models.functions import Cast
-from django.utils.translation import gettext as _, ngettext
+from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 from ..models import Client, Invoice
 from ..models.session import Session

@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django.test import TestCase
 from django.utils import translation
+
 from my_practice.email_forms import InvoiceEmailForm
 from my_practice.invoice_forms import InvoiceForm, InvoiceItemForm
 from my_practice.models import Client, Practice, ServiceType, Session

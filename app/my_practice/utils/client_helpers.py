@@ -1,6 +1,7 @@
 """Helper functions for client-related operations"""
 
 from typing import Any
+
 from django.utils import timezone
 
 

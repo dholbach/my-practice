@@ -9,7 +9,6 @@ from datetime import date, timedelta
 from typing import cast
 
 from django.contrib import messages
-from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.mail import EmailMessage
 from django.db import models, transaction
@@ -17,19 +16,20 @@ from django.db.models import Max, QuerySet
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.decorators.http import require_POST
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
 
 from ..forms import ClientIntakeForm
 from ..models import Client, ClientDocument, ClientTag, Invoice, InvoiceItem
-from ..utils.email_utils import get_gdpr_deletion_email_content
-from ..utils.file_processing import process_upload
-from ..utils.view_helpers import get_object_or_403
 from ..utils import (
     RevenueCalculator,
     annotate_activity_status,
     sort_tags_by_category,
 )
+from ..utils.email_utils import get_gdpr_deletion_email_content
+from ..utils.file_processing import process_upload
+from ..utils.view_helpers import get_object_or_403
 from .crud_mixins import NextRedirectMixin, PracticeScopedListView, PracticeScopedUpdateView
 
 logger = logging.getLogger(__name__)

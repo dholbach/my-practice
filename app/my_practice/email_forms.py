@@ -4,8 +4,8 @@ Forms for email sending.
 
 from django import forms
 from django.db.models import OuterRef, Subquery
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from .forms import StyledFormMixin
 from .models import Client, Practice, Session

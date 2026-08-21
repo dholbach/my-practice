@@ -10,15 +10,15 @@ from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
-from django.utils import timezone
 
 from ..forms import TaxYearNoteForm
 from ..models import CompanyExpense, CompanyWithdrawal, TaxYearNote
 from ..utils import DateRangeHelper, RevenueCalculator, TaxYearContextBuilder
-from ..utils.tax_context_builder import available_data_years
 from ..utils.practice_days import WorkdayAuditCalculator
+from ..utils.tax_context_builder import available_data_years
 from ..utils.view_helpers import get_year_from_request
 
 

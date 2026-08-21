@@ -5,8 +5,8 @@ from decimal import Decimal
 from itertools import chain
 
 from dateutil.relativedelta import relativedelta
-from django.utils.translation import gettext as _
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from ..models import (
     ClientDocument,
@@ -24,12 +24,12 @@ from ..models.clinical import (
     MoodTag,
 )
 from ..models.session import Session
+from .calculations import count_sessions
 from .chart_helpers import (
     MONTH_ABBREVIATIONS,
     aggregate_invoice_items_by_month,
     prepare_monthly_chart_data,
 )
-from .calculations import count_sessions
 from .questionnaire_content import list_available_questionnaires
 from .revenue_helpers import RevenueCalculator
 from .tag_helpers import sort_tags_by_category

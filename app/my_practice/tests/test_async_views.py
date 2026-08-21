@@ -14,6 +14,7 @@ from decimal import Decimal
 import pytest
 from django.contrib.auth import get_user_model
 from django.test import AsyncClient
+
 from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
 
 User = get_user_model()

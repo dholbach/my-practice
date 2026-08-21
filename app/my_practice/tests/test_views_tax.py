@@ -17,8 +17,8 @@ from ..models import (
     Invoice,
     InvoiceItem,
     Practice,
-    Session,
     ServiceType,
+    Session,
 )
 
 

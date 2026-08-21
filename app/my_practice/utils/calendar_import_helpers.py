@@ -9,11 +9,9 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 
-from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, ServiceType
-from ..models import Session
+from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, ServiceType, Session
 from ..utils import get_next_invoice_number, sync_no_next_session_tag
 from .billing_helpers import resolve_session_rate
-
 
 # ── Private resolution helpers ────────────────────────────────────────────────
 

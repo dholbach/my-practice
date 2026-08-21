@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client as TestClient
 from django.test import TestCase, override_settings
 from django.urls import reverse
+
 from my_practice.models import Client, Practice, UserPractice
 from my_practice.utils.questionnaire_content import (
     QuestionnaireNotFoundError,

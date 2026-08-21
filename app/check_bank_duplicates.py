@@ -8,6 +8,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 from django.db.models import Count  # noqa: E402
+
 from my_practice.models import BankTransaction  # noqa: E402
 
 # Find duplicates based on unique constraint

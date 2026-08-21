@@ -9,10 +9,10 @@ from datetime import date, timedelta
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.generic import TemplateView
-from django.utils import timezone
 
 from ..models import ChecklistItemPause, OperationalChecklistCompletion
 

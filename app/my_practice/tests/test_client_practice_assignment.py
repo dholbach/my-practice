@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
+
 from my_practice.models import Client, Practice, UserPractice
 
 

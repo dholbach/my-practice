@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 
 from django.test import TestCase
 from django.utils import timezone
+
 from my_practice.models import (
     Client,
     GoogleCalendarToken,

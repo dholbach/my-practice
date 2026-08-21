@@ -8,10 +8,10 @@ from django.core.mail import EmailMessage
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.views import View
-from django.utils import timezone
 
 from ..email_forms import InvoiceEmailForm
 from ..models import Client, Invoice, Practice

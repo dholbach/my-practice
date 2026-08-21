@@ -12,9 +12,9 @@ from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
-from django.utils import timezone
 from PIL import Image
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration

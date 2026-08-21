@@ -3,6 +3,7 @@
 from datetime import date
 
 from django.test import TestCase
+
 from my_practice.models import CapacityPeriod, Practice, TimeOff
 from my_practice.utils.capacity_helpers import (
     _calculate_weighted_capacity,

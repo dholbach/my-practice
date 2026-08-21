@@ -3,7 +3,8 @@ Tests for calendar_import_helpers utility (moved from views/ to utils/).
 Covers: create_invoice_items_from_events, get_or_create_invoice_for_month, bill_session.
 """
 
-from datetime import date as date_cls, datetime
+from datetime import date as date_cls
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock
 

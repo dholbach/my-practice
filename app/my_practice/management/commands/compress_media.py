@@ -20,10 +20,10 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from ...utils.file_processing import (
-    IMAGE_SKIP_BYTES,
-    PDF_SKIP_BYTES,
     _IMAGE_EXTENSIONS,
     _PDF_EXTENSIONS,
+    IMAGE_SKIP_BYTES,
+    PDF_SKIP_BYTES,
     compress_image_inplace,
     compress_pdf_inplace,
 )

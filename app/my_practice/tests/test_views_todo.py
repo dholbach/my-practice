@@ -4,6 +4,7 @@ Tests for todo views.
 
 from decimal import Decimal
 
+from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
@@ -11,8 +12,6 @@ from django.urls import reverse
 from ..models import Client as ClientModel
 from ..models import Practice, PracticeTodo
 from ..tests.test_helpers import link_user_to_practice
-
-from django.contrib.auth.models import User
 
 
 def _make_practice(slug):

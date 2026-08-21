@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
+
 from my_practice.models import Client, Invoice, Practice, UserPractice
 
 User = get_user_model()

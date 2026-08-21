@@ -7,8 +7,8 @@ from datetime import date, timedelta
 
 from django.db.models import Max, QuerySet
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from ..models import (
     ChecklistItemPause,

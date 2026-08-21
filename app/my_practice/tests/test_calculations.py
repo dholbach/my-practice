@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase
+
 from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
 from my_practice.utils import count_sessions, count_sessions_rounded
 

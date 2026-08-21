@@ -5,6 +5,7 @@ Tests for chart_helpers utility functions.
 from datetime import date
 
 from django.test import TestCase
+
 from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
 from my_practice.utils.chart_helpers import (
     aggregate_invoice_items_by_month,
