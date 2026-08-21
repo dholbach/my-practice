@@ -69,14 +69,18 @@ class ClientDetailContextBuilder:
     def _build_stats(self) -> dict:
         revenue_stats = RevenueCalculator.get_client_revenue(self.client)
 
-        non_cancelled = [
-            item for item in self.all_items if not (item.session_id and item.session.cancelled)
+        # Free-form items (P-122 day-rate/project billing) carry no session and
+        # no duration, so they must not reach the session-based stats: counting
+        # them inflated session_count and, contributing 0 minutes each, dragged
+        # avg_duration down — a client with one 60-min session plus one
+        # free-form item read "2 sessions, Ø 30 min" beside total_hours of 1.0.
+        # count_sessions() already excludes them; this now agrees with it.
+        session_items = [
+            item for item in self.all_items if item.session_id and not item.session.cancelled
         ]
         total_hours = count_sessions(self.all_items, exclude_cancellations=True)
-        session_count = len(non_cancelled)
-        total_minutes = sum(
-            item.session.duration if item.session_id else 0 for item in non_cancelled
-        )
+        session_count = len(session_items)
+        total_minutes = sum(item.session.duration for item in session_items)
         avg_duration = round(total_minutes / session_count) if session_count > 0 else 0
 
         finalized = [inv for inv in self.invoices if inv.status != "draft"]

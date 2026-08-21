@@ -230,7 +230,7 @@ class AnalyticsDashboardBuilder:
     def _get_cumulative_year_data(self, capacity_trends: list) -> dict:
         """
         Build monthly booked-hours per calendar month (Jan–Dec) for the
-        last 3 years with data, plus an average line — for a year-overlay
+        last 4 years with data, plus an average line — for a year-overlay
         line chart.
 
         Returns:
