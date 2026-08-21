@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load i18n %}
+{% load l10n %}
 
 {% block title %}{% trans "Bank import — manual assignment" %}{% endblock %}
 
@@ -246,7 +247,12 @@
             </div>
 
             <!-- Action Form -->
-            <form method="post" data-amount="{{ trans.amount }}" class="trans-form">
+            {# unlocalize: this attribute is read by parseFloat in bank_review.js, so it must
+   carry a machine-readable dot decimal. Django localises template numbers, and
+   under LANGUAGE_CODE="de-de" a plain {{ trans.amount }} renders "90,50" — which
+   parseFloat truncates to 90, silently dropping the cents from the tally's
+   match comparison. #}
+            <form method="post" data-amount="{{ trans.amount|unlocalize }}" class="trans-form">
                 {% csrf_token %}
                 <input type="hidden" name="transaction_id" value="{{ trans.id }}">
 

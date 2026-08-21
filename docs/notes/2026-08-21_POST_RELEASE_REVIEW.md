@@ -46,7 +46,27 @@ mostly found by looking at a page rather than by a test.
 
 ## Remaining — recommended order
 
-### 1. JavaScript is the last untested surface
+### 1. JavaScript is the last untested surface — `bank_review.js` DONE
+
+22 tests added, mutation-checked (every deliberate break in the parser, the
+German formatter, the float tolerance, the pluralisation and the i18n plumbing
+is caught). They found a live bug at the Python/JS boundary that neither the
+i18n guardrail nor any Django test could see:
+
+`bank_review.html` passed the transaction amount to JS as
+`data-amount="{{ trans.amount }}"`. Django localises template numbers and
+`LANGUAGE_CODE` is `de-de`, so that rendered `90,50` — and `parseFloat("90,50")`
+is `90`. The tally silently compared invoices against a cents-truncated
+transaction amount, reporting an exact match as a `0,50 €` difference. Fixed
+with `|unlocalize`, pinned from both sides: a Django test asserts the rendered
+attribute, and a JS test asserts a comma-decimal attribute still produces the
+false mismatch, so the reason for `|unlocalize` can't be forgotten.
+
+Remaining files, in the same order as before: `global-search.js`,
+`expense_form.js`, `widgets.js`, `keyboard-nav.js`.
+
+<details>
+<summary>Original note</summary>
 
 Of seven hand-written JS files, only `form_draft_guard.js` and the chart modules
 have tests. Untested: `bank_review.js`, `global-search.js`, `keyboard-nav.js`,
@@ -60,6 +80,8 @@ plain `node <file>`, no framework, no node_modules.
 
 Now that CI runs the node suites, each new test file added there is enforced on
 every PR.
+
+</details>
 
 ### 2. Perf regression ratchet is thin
 
