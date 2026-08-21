@@ -287,13 +287,27 @@ lint job goes red on the first PR.
 
 </details>
 
-### 6. No explicit `CACHES` configuration
+### 6. No explicit `CACHES` configuration — DONE
 
-`config/settings.py` has no `CACHES` block, so everything falls back to
-per-process `LocMemCache`. The `update_check` fix above is correct under it, but
-each gunicorn worker warms its own copy and every restart is cold. Choosing a
-real backend is a deployment decision (a DB-table cache needs no new service),
-so it is recorded here rather than assumed.
+`django.core.cache.backends.db.DatabaseCache` — the backend that needs no extra
+service, chosen on the owner's call of "no Redis".
+
+Its table is created by migration `0032_cache_table` rather than a manual
+`manage.py createcachetable`, so there is no new deploy step to remember: the
+table appears wherever `migrate` already runs — the compose command, `prod.py`'s
+update flow, a fresh install. `createcachetable` is idempotent, so re-running is
+safe.
+
+Tests keep LocMemCache, guarded by the existing `RUNNING_TESTS` flag alongside
+`PASSWORD_HASHERS` and `MEDIA_ROOT`. That avoids DB round-trips in the suite and,
+more importantly, stops cached values bleeding between tests through a shared
+table.
+
+Only one thing uses the cache today — the GitHub release lookup in
+`update_check`, which runs on every authenticated page render. Under the old
+per-process fallback that outbound call happened far more often than its
+24-hour TTL implied: once per worker, and again after every restart.
+
 
 ### 7. Loose scripts at `app/` root — DONE
 
@@ -315,12 +329,11 @@ image, and `scripts/` is covered by CI lint while `app/`-root files were not.
 `check_bank_duplicates.py` gained the same `sys.path` bootstrap its new
 neighbour has, so it stays runnable on its own.
 
-**Still worth deciding:** `create_initial_data.py` looks superseded by
-`seed_sample_data` (which has `_get_or_create_service_types`) and also creates a
-"Test Client" in whatever database it is pointed at, which is a footgun outside
-development. `run_tests.py` looks superseded by `./dev.py test`, and its
-`/tmp/summary.txt` output is a relic. Both are deletion candidates, left in place
-because that is the owner's call rather than a cleanup decision.
+**Both deletion candidates are now gone**, on the owner's call.
+`create_initial_data.py` was superseded by `seed_sample_data` (which has
+`_get_or_create_service_types`) and created a "Test Client" in whatever database
+it was pointed at — a footgun outside development. `run_tests.py` was superseded
+by `./dev.py test`, and its `/tmp/summary.txt` output was a relic.
 
 ### 8. Duplicated tool configuration — DONE
 
