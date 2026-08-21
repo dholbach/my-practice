@@ -17,6 +17,7 @@ from ..utils.file_processing import (
     MAX_UPLOAD_BYTES,
     PDF_SKIP_BYTES,
     _compress_pdf_bytes,
+    _pdf_is_parseable,
     _read_page_rotations,
     _restore_page_rotations,
     compress_image_inplace,
@@ -87,6 +88,48 @@ class ProcessUploadTest(TestCase):
         result = process_upload(upload)
         self.assertIs(result, upload)
 
+    def test_unparseable_pdf_raises_value_error(self):
+        # Mirrors test_unparseable_image_raises_value_error. A file claiming to
+        # be a PDF but that pypdf cannot read is not stored: uploaded documents
+        # are linked straight from MEDIA_URL and opened in a new tab, so the
+        # browser gets handed the file with whatever content type the extension
+        # implies, and nothing downstream re-checks it.
+        upload = SimpleUploadedFile("doc.pdf", b"not a pdf", content_type="application/pdf")
+        with self.assertRaises(ValueError):
+            process_upload(upload)
+
+    def test_unparseable_pdf_is_rejected_by_extension_alone(self):
+        # Routing is `content_type == "application/pdf" or ext in _PDF_EXTENSIONS`,
+        # so a misdeclared content type must not route around the check.
+        upload = SimpleUploadedFile("doc.pdf", b"not a pdf", content_type="text/plain")
+        with self.assertRaises(ValueError):
+            process_upload(upload)
+
+    def test_html_disguised_as_pdf_is_rejected(self):
+        # The extension allowlist already blocks .html; this is the same content
+        # arriving under a permitted extension.
+        upload = SimpleUploadedFile(
+            "invoice.pdf",
+            b"<html><body><script>alert(1)</script></body></html>",
+            content_type="application/pdf",
+        )
+        with self.assertRaises(ValueError):
+            process_upload(upload)
+
+    def test_rejection_message_names_the_file(self):
+        upload = SimpleUploadedFile("beleg.pdf", b"garbage", content_type="application/pdf")
+        with self.assertRaises(ValueError) as ctx:
+            process_upload(upload)
+        self.assertIn("beleg.pdf", str(ctx.exception))
+
+    def test_valid_pdf_is_still_accepted(self):
+        # The point of the check is to reject what cannot be parsed, not to
+        # start refusing ordinary documents.
+        upload = SimpleUploadedFile(
+            "doc.pdf", _make_pdf_bytes(num_pages=3), content_type="application/pdf"
+        )
+        self.assertEqual(process_upload(upload).name, "doc.pdf")
+
     def test_rejects_oversized_upload_before_processing(self):
         upload = SimpleUploadedFile("photo.jpg", b"x", content_type="image/jpeg")
         upload.size = MAX_UPLOAD_BYTES + 1
@@ -109,8 +152,26 @@ class PageRotationTest(TestCase):
         pdf_bytes = _make_pdf_bytes(num_pages=1, rotate=90)
         self.assertEqual(_read_page_rotations(pdf_bytes), [90])
 
+    def test_read_page_rotations_logs_when_it_cannot_parse(self):
+        # The one handler in this module that used to swallow silently. If pypdf
+        # ever started failing across the board, every upload would quietly lose
+        # its page rotations with nothing in the log to say so.
+        with self.assertLogs("my_practice.utils.file_processing", level="WARNING") as logs:
+            _read_page_rotations(b"not a pdf")
+        self.assertTrue(
+            any("page rotations" in line for line in logs.output),
+            f"expected a warning about page rotations, got: {logs.output}",
+        )
+
     def test_read_page_rotations_returns_empty_on_garbage(self):
         self.assertEqual(_read_page_rotations(b"not a pdf"), [])
+
+    def test_pdf_is_parseable_accepts_a_real_pdf(self):
+        self.assertTrue(_pdf_is_parseable(_make_pdf_bytes()))
+
+    def test_pdf_is_parseable_rejects_garbage_and_empty_input(self):
+        self.assertFalse(_pdf_is_parseable(b"not a pdf"))
+        self.assertFalse(_pdf_is_parseable(b""))
 
     def test_restore_page_rotations_noop_when_all_zero(self):
         pdf_bytes = _make_pdf_bytes(num_pages=1)

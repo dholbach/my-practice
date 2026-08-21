@@ -73,6 +73,17 @@ def _read_page_rotations(data: bytes) -> list[int]:
             reader = pypdf.PdfReader(io.BytesIO(data))
             return [int(page.get("/Rotate", 0) or 0) for page in reader.pages]
     except Exception:
+        # Broad by necessity — pypdf raises a wide and unstable set of types for
+        # malformed input — but not silent. Uploads are rejected before they get
+        # here (see _pdf_is_parseable); this path is reached by the in-place
+        # helpers, which run over files already stored, where the right answer
+        # is to compress what we can rather than refuse. Losing every page's
+        # /Rotate should still not be something you discover by eye.
+        logger.warning(
+            "Could not read PDF page rotations — the file may not be a valid PDF. "
+            "It will be compressed without preserving page rotations.",
+            exc_info=True,
+        )
         return []
 
 
@@ -100,6 +111,30 @@ def _restore_page_rotations(data: bytes, rotations: list[int]) -> bytes:
     except Exception:
         logger.warning("Could not restore PDF page rotations; returning as-is")
         return data
+
+
+def _pdf_is_parseable(data: bytes) -> bool:
+    """Whether these bytes are a PDF with at least one readable page.
+
+    The image path rejects an upload it cannot parse, on the grounds that a
+    file claiming to be an image but isn't could be something else entirely.
+    The same reasoning applies to PDFs, and applies with a little more force
+    here: uploaded documents are linked straight from MEDIA_URL and opened in
+    a new tab, so the browser is handed the file with whatever content type
+    the extension implies — nothing downstream re-checks it.
+
+    Ghostscript is not the check. _compress_pdf_bytes deliberately returns the
+    original bytes whenever gs fails, so a file that is not a PDF at all still
+    sails through it; that fallback exists so a working PDF is never lost to a
+    compression failure, not to vouch for the content.
+    """
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            reader = pypdf.PdfReader(io.BytesIO(data))
+            return len(reader.pages) > 0
+    except Exception:
+        return False
 
 
 def _compress_pdf_bytes(data: bytes) -> bytes:
@@ -178,11 +213,26 @@ def _process_pdf_upload(upload, name: str):
     try:
         upload.seek(0)
         data = upload.read()
+        if not _pdf_is_parseable(data):
+            # Mirrors _process_image_upload: what we cannot parse, we do not
+            # store. Raised as ValueError because every caller of
+            # process_upload() already turns that into a form error.
+            logger.warning("Rejecting %s — not a parseable PDF", name)
+            raise ValueError(_("PDF file '%(name)s' could not be processed.") % {"name": name})
         compressed = _compress_pdf_bytes(data)
         return ContentFile(compressed, name=name)
+    except ValueError:
+        # The rejection above is the answer, not a failure to recover from —
+        # the broad handler below must not turn it back into "store the
+        # original", which is exactly what it is there to prevent.
+        raise
     except Exception:
         logger.exception("PDF compression failed for %s; storing original", name)
-        with contextlib.suppress(Exception):
+        # Only the seek failures worth recovering from. Anything else is a bug
+        # in the file object, and propagating beats returning an upload whose
+        # read position is unknown — that would store a truncated document,
+        # which is worse than failing the upload outright.
+        with contextlib.suppress(OSError, ValueError):
             upload.seek(0)
         return upload
 

@@ -3240,6 +3240,10 @@ msgstr ""
 msgid "Capacity"
 msgstr ""
 
+#: my_practice/utils/file_processing.py
+msgid "PDF file '%(name)s' could not be processed."
+msgstr ""
+
 #: my_practice/utils/file_processing.py:174
 #, python-format
 msgid "Image file '%(name)s' could not be processed."
