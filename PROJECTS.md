@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-08-21 — post-release review**: CI now runs the full test suite on PRs (#8) — it was lint-only, so every guardrail built across v0.5.0–v0.5.2 (`test_i18n_coverage`, `test_css_tokens`, the 135 builder tests, the JS suites) ran only when someone remembered `./dev.py quality`; also fixed a drifted second copy of the ruff pin in CI. `update_check` now caches failed GitHub lookups — it runs in a context processor and an uncached failure made every authenticated page render pay the full 3s timeout again, indefinitely. Remaining findings from the review: [docs/notes/2026-08-21_POST_RELEASE_REVIEW.md](docs/notes/2026-08-21_POST_RELEASE_REVIEW.md).
 - **2026-08-21 — v0.5.2 patch release**: practice-setup redirect for practice-less users plus an unbilled sessions/estimated-fee summary on the open billing overview (#377); bank import "Open" badge made clickable (#371); further Docker image size cuts — pruned Google API client's unused discovery cache (97.65 MB), fixed a layering bug that kept Tailwind source CSS in the image (#372); 135 new builder-class tests exposed and fixed a currency-format mismatch between invoice emails and their PDF attachment, a template-render crash on typo'd placeholders, and free-form invoice items being miscounted as sessions in analytics (#373-#375); i18n drift regression test added after a never-extracted validator string was found (#376, #378). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
-- **2026-08-20 — v0.5.1 patch release**: client detail cockpit consolidation (Überblick+Profil merged into one Overview tab, unsaved-draft tab indicator, ~40px less chrome above the fold, #362-#365); dark-mode contrast fixes and a new `test_css_tokens.py` guardrail (M-PAT-07, #366); amber button contrast plus a specificity bug that had silently disabled all `.btn-invoice-*` urgency colour-coding (#367); a flex-column button-stretch fix (#368); production Docker image shrunk via a multi-stage build that keeps the Pillow compiler toolchain out of the shipped image (#369). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -29,7 +29,7 @@
 - **P-122 General Freelance Practice Type**: Phase 1 (free-form invoice items) done — Phase 2 (standard VAT + advance-payment report) deferred until the Kleinunternehmer election is actually dropped → [docs/projects/todo/P-122_GENERAL_FREELANCE_PRACTICE.md](docs/projects/todo/P-122_GENERAL_FREELANCE_PRACTICE.md)
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
-- **OSS follow-ups** (post P-024): extend CI beyond lint (pytest); GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
+- **OSS follow-ups** (post P-024): ~~extend CI beyond lint (pytest)~~ done 2026-08-21 (#8); GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
 
 ### ✅ Abgeschlossen
 
