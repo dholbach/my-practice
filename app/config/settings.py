@@ -111,6 +111,33 @@ DATABASES = {
     }
 }
 
+# Cache
+#
+# Without this block Django falls back to per-process LocMemCache: each gunicorn
+# worker warms its own copy and every restart starts cold. The only thing cached
+# today is the GitHub release lookup in context_processors.update_check, which
+# runs on every authenticated page render — so a cold or per-worker cache means
+# that outbound call happens far more often than its 24-hour TTL implies.
+#
+# The database backend is the one that needs no extra service. Its table is
+# created by migration 0032 rather than a manual `createcachetable`, so there is
+# no new deploy step: it appears wherever `migrate` already runs.
+if RUNNING_TESTS:
+    # LocMem under tests: no DB round-trips, and each process gets a clean cache
+    # rather than values bleeding between tests through a shared table.
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "my_practice_cache",
+        }
+    }
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
