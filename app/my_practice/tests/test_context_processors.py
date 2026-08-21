@@ -42,6 +42,25 @@ class UpdateCheckContextProcessorTest(TestCase):
             ctx = update_check(_make_request())
         self.assertEqual(ctx, {})
 
+    def test_malformed_json_returns_empty(self):
+        with patch("urllib.request.urlopen") as mock_open:
+            mock_open.return_value.__enter__.return_value.read.return_value = b"not json"
+            ctx = update_check(_make_request())
+        self.assertEqual(ctx, {})
+
+    def test_failure_is_cached(self):
+        """A failed lookup must not re-hit GitHub on the next request.
+
+        The check runs in a context processor, so an uncached failure means every
+        authenticated page render pays the full 3s timeout again for as long as
+        GitHub is unreachable.
+        """
+        with patch("urllib.request.urlopen", side_effect=OSError("timeout")) as mock_open:
+            update_check(_make_request())
+            ctx = update_check(_make_request())
+        self.assertEqual(mock_open.call_count, 1)
+        self.assertEqual(ctx, {})
+
     def test_already_on_latest_returns_empty(self):
         with patch("urllib.request.urlopen") as mock_open:
             mock_open.return_value.__enter__.return_value.read.return_value = (
