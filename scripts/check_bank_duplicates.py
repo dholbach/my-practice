@@ -1,14 +1,18 @@
 """Check for duplicate BankTransactions."""
 
 import os
+import sys
 
 import django
 
+# Same bootstrap as create_default_tags.py. ./dev.py run pipes this file into
+# `manage.py shell` inside the container, where /app is already importable, but
+# the path insert keeps the script runnable on its own the way its neighbour is.
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 from django.db.models import Count  # noqa: E402
-
 from my_practice.models import BankTransaction  # noqa: E402
 
 # Find duplicates based on unique constraint

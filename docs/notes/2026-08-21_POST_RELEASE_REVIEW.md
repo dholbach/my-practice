@@ -295,20 +295,55 @@ each gunicorn worker warms its own copy and every restart is cold. Choosing a
 real backend is a deployment decision (a DB-table cache needs no new service),
 so it is recorded here rather than assumed.
 
-### 7. Loose scripts at `app/` root
+### 7. Loose scripts at `app/` root — DONE
 
-`check_bank_duplicates.py`, `cleanup_test_db.py`, `create_initial_data.py` and
-`report_monthly_sessions.py` are referenced by nothing outside CHANGELOG
-history. They are `./dev.py run`-style operator scripts, but they sit outside
-`scripts/`, ship inside the image, and `create_initial_data.py` overlaps with
-`seed_sample_data`. The #323/#325 dead-code sweep missed them because vulture
-finds unused *names*, not unreferenced *modules*.
+All five (`check_bank_duplicates.py`, `cleanup_test_db.py`, `create_initial_data.py`,
+`report_monthly_sessions.py`, `run_tests.py`) moved to `scripts/`, alongside the
+`create_default_tags.py` that already set the precedent.
 
-### 8. Duplicated tool configuration
+Two corrections to the original note. `run_tests.py` was listed as referenced by
+`dev.py`; it is not — the grep matched a local variable also called `run_tests`.
+And `create_initial_data.py` was assumed broken because it creates `ServiceType`
+rows without a practice, but `ServiceType.practice` is deliberately nullable for
+global service types, so it still works.
 
-vulture is configured twice with different `paths` — `app/pyproject.toml`
-`[tool.vulture]` and `setup.cfg` `[vulture]`. `setup.cfg` also still carries a
-`[pycodestyle]` section that nothing has read since the ruff migration.
+They were **moved rather than deleted** because they are working operator tools,
+not dead code, and `./dev.py run` reads the file on the host before piping it
+into `manage.py shell`, so the location does not affect how they are invoked.
+The move earns two things anyway: they stop being copied into the production
+image, and `scripts/` is covered by CI lint while `app/`-root files were not.
+`check_bank_duplicates.py` gained the same `sys.path` bootstrap its new
+neighbour has, so it stays runnable on its own.
+
+**Still worth deciding:** `create_initial_data.py` looks superseded by
+`seed_sample_data` (which has `_get_or_create_service_types`) and also creates a
+"Test Client" in whatever database it is pointed at, which is a footgun outside
+development. `run_tests.py` looks superseded by `./dev.py test`, and its
+`/tmp/summary.txt` output is a relic. Both are deletion candidates, left in place
+because that is the owner's call rather than a cleanup decision.
+
+### 8. Duplicated tool configuration — DONE
+
+`setup.cfg` deleted outright. Both of its sections were dead:
+
+- `[vulture]` never applied. `./dev.py review` runs vulture from inside the
+  container with cwd `/app`, so it reads `app/pyproject.toml`'s `[tool.vulture]`.
+  Worse, the root section set `paths = app,.vulture_whitelist.py` and that
+  whitelist file does not exist — so anyone running vulture from the repo root
+  hit a broken config rather than no config.
+- `[pycodestyle]` has not been read by anything since the ruff migration.
+
+### 9. `calendar_import_helpers` self-import — DONE
+
+Found while auditing the isort change: the module imported its own package
+(`from ..utils import get_next_invoice_number, sync_no_next_session_tag`), and
+both names come from modules that sort *after* it. It was safe only because
+`utils/__init__.py` does not import it — adding it there would have stopped the
+app booting. Now uses direct sibling imports (`from .invoice_helpers import ...`,
+`from .tag_helpers import ...`) like every other module in the package, so the
+trap is gone. Verified no module under `models/`, `utils/`, `views/` or `admin/`
+imports its own package any more, and that the new direction introduces no cycle.
+
 
 ## Quick wins in the open issue list
 
