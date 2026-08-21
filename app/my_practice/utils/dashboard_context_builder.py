@@ -12,9 +12,9 @@ from django.utils.translation import ngettext
 
 from ..models import Client, CompanyExpense, Invoice, TimeOff
 from .dashboard_widgets import CapacityMonitoringWidgetBuilder
-from .weekly_focus_widget import WeeklyFocusWidgetBuilder
 from .practice_helpers import get_user_practices
 from .revenue_helpers import RevenueCalculator
+from .weekly_focus_widget import WeeklyFocusWidgetBuilder
 
 
 class DashboardContextAssembler:

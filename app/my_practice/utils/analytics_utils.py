@@ -7,10 +7,10 @@ from collections import defaultdict
 from datetime import date
 from decimal import Decimal
 
-from django.db.models import Avg, Count, ExpressionWrapper, DurationField, F, Q, Sum
+from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F, Q, Sum
 from django.db.models.functions import Coalesce, TruncMonth
-from django.utils.translation import gettext as _
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from ..models import (
     Client,

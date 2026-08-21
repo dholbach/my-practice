@@ -21,7 +21,7 @@ from django.db.models import (
 from django.db.models.functions import Cast
 
 if TYPE_CHECKING:
-    from ..models import Practice, Client
+    from ..models import Client, Practice
 
 from ..models import Invoice, InvoiceItem
 

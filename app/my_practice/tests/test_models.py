@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
+
 from my_practice.models import (
     Client,
     ClientTag,

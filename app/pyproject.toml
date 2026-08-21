@@ -132,6 +132,7 @@ select = [
     "DJ",    # flake8-django
     "C4",    # flake8-comprehensions
     "SIM",   # flake8-simplify
+    "I",     # isort — CLAUDE.md names it as the convention; nothing enforced it
 ]
 # PERF203: try-except-in-loop overhead warning — acceptable in Django views/management commands
 # UP034: "extraneous parentheses" — ruff lint counterpart to the formatter bug below; kept in

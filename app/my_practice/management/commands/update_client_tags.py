@@ -6,6 +6,7 @@ Run this periodically (e.g., daily) to maintain system tags.
 from django.core.management.base import BaseCommand
 from django.db.models import Max
 from django.utils import timezone
+
 from ...models import Client, ClientTag
 from ...models.session import Session
 from ...utils.tag_helpers import RECENT_ACTIVITY_WINDOW_DAYS

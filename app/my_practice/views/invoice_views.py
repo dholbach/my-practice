@@ -14,10 +14,11 @@ from django.db import transaction
 from django.db.models import Case, Count, DecimalField, Exists, F, OuterRef, QuerySet, Sum, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _, ngettext
-from django.views.generic import DetailView
 from django.utils import timezone
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
+from django.views.generic import DetailView
 
 from ..invoice_forms import InvoiceForm
 from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, Session

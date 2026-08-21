@@ -12,7 +12,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from ..management.commands.fetch_calendar_events import Command, FIRST_RUN_DAYS, OVERLAP_HOURS
+from ..management.commands.fetch_calendar_events import FIRST_RUN_DAYS, OVERLAP_HOURS, Command
 from ..models import (
     Client,
     GoogleCalendarToken,

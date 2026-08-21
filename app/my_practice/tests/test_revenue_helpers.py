@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase
+
 from my_practice.models import Client, Invoice, Practice
 from my_practice.utils.revenue_helpers import RevenueCalculator
 

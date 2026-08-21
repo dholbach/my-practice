@@ -7,6 +7,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
+
 from my_practice.admin import (
     BankTransactionAdmin,
     ChecklistItemPauseAdmin,

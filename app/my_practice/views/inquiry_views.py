@@ -17,10 +17,10 @@ from django.db.models.functions import TruncMonth
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views import View
-from django.utils import timezone
 
 from ..inquiry_forms import InquiryConvertForm, InquiryForm, MarketingPeriodForm
 from ..models import Client, ClientInquiry, InquiryStatus, MarketingPeriod

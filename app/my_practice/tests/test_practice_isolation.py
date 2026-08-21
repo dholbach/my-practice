@@ -3,9 +3,10 @@ Tests for practice isolation - ensuring data is properly scoped by practice.
 """
 
 from django.contrib.auth.models import User
-from django.test import RequestFactory, TestCase
 from django.test import Client as TestClient
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
+
 from my_practice.models import (
     Client,
     CompanyExpense,

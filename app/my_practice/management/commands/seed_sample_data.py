@@ -16,8 +16,8 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
-from django.utils.text import slugify
 from django.utils import timezone
+from django.utils.text import slugify
 
 from ...models import (
     Client,

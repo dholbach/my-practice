@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+
 from my_practice.models import Client, Invoice, Practice, PracticeTodo, Session, SupervisionItem
 
 TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow

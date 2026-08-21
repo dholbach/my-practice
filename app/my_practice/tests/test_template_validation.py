@@ -6,6 +6,7 @@ Prevents bugs where templates miss required fields (like invoice quantity field)
 import re
 
 from django.test import TestCase
+
 from my_practice.forms import (
     ClientIntakeForm,
     CompanyExpenseForm,

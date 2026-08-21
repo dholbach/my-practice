@@ -10,6 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
+
 from my_practice.models import (
     BankTransaction,
     CompanyExpense,

@@ -65,9 +65,9 @@ from .clinical_views import (
     gebueh_leistung_create,
     session_bill,
     session_delete,
+    session_duration_edit,
     session_log_create,
     session_log_delete,
-    session_duration_edit,
     session_log_edit,
     session_log_mark_noshow,
     session_toggle_billable,
@@ -101,6 +101,26 @@ from .expense_views import (
     expense_merge,
     expense_receipt_delete,
     expense_unlink_transaction,
+)
+
+# Focus Queue views (P-050)
+from .focus_queue_views import (
+    FocusQueueView,
+    focus_queue_set_due_today,
+    focus_queue_snooze,
+    focus_queue_toggle_complete,
+)
+
+# Inquiry views (P-031)
+from .inquiry_views import (  # noqa: F401
+    InquiryConvertView,
+    InquiryCreateView,
+    InquiryDeleteView,
+    InquiryListView,
+    InquiryUpdateView,
+    MarketingPeriodCreateView,
+    MarketingPeriodDeleteView,
+    MarketingPeriodUpdateView,
 )
 
 # Invoice views
@@ -153,12 +173,13 @@ from .tag_views import (
 # Tax views
 from .tax_views import save_tax_year_note, tax_quarter_overview, tax_workday_audit, tax_year_summary
 
-# Focus Queue views (P-050)
-from .focus_queue_views import (
-    FocusQueueView,
-    focus_queue_set_due_today,
-    focus_queue_snooze,
-    focus_queue_toggle_complete,
+# Time-off views
+from .timeoff_views import (
+    SendTimeOffNoticeView,
+    TimeOffCreateView,
+    TimeOffDeleteView,
+    TimeOffUpdateView,
+    timeoff_list,
 )
 
 # TODO views (list page retired — see Focus Queue below, P-050)
@@ -169,33 +190,12 @@ from .todo_views import (
     todo_toggle_complete,
 )
 
-# Time-off views
-from .timeoff_views import (
-    SendTimeOffNoticeView,
-    TimeOffCreateView,
-    TimeOffDeleteView,
-    TimeOffUpdateView,
-    timeoff_list,
-)
-
 # Withdrawal views
 from .withdrawal_views import (
     WithdrawalCreateView,
     WithdrawalDeleteView,
     WithdrawalUpdateView,
     withdrawal_list,
-)
-
-# Inquiry views (P-031)
-from .inquiry_views import (  # noqa: F401
-    InquiryListView,
-    InquiryCreateView,
-    InquiryUpdateView,
-    InquiryDeleteView,
-    InquiryConvertView,
-    MarketingPeriodCreateView,
-    MarketingPeriodUpdateView,
-    MarketingPeriodDeleteView,
 )
 
 __all__ = [

@@ -9,6 +9,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+
 from my_practice.models import Client as ClientModel
 from my_practice.models import (
     CompanyExpense,

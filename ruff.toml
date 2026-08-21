@@ -26,5 +26,6 @@ select = [
     "B",     # flake8-bugbear
     "C4",    # flake8-comprehensions
     "SIM",   # flake8-simplify
+    "I",     # isort
 ]
 ignore = ["PERF203"]

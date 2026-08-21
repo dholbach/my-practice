@@ -15,11 +15,9 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
-from django.utils import timezone
-
-from ..utils.view_helpers import safe_next
 
 from ..models import (
     Client,
@@ -35,6 +33,7 @@ from ..models.clinical import (
     MoodTag,
 )
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
+from ..utils.view_helpers import safe_next
 
 
 def _get_scoped_client(request, pk):

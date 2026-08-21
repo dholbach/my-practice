@@ -3,10 +3,13 @@ Utility functions for the payments app.
 """
 
 from .analytics_dashboard_builder import AnalyticsDashboardBuilder
-from .client_detail_builder import ClientDetailContextBuilder
-from .dashboard_context_builder import DashboardContextAssembler
-from .tax_context_builder import TaxYearContextBuilder, available_data_years
 from .bank_import import BankStatementImporter, build_counterparty_key
+from .billing_helpers import (
+    build_service_type_map,
+    create_invoice_item_for_session,
+    is_session_already_billed,
+    resolve_session_rate,
+)
 from .calculations import (
     apply_remainder_distribution,
     count_session_hours,
@@ -20,6 +23,7 @@ from .chart_helpers import (
     format_month_label,
     prepare_monthly_chart_data,
 )
+from .client_detail_builder import ClientDetailContextBuilder
 from .client_helpers import (
     annotate_activity_status,
     calculate_client_session_stats,
@@ -27,6 +31,7 @@ from .client_helpers import (
     group_clients_by_activity,
     group_clients_by_year,
 )
+from .dashboard_context_builder import DashboardContextAssembler
 from .dashboard_widgets import (
     CapacityMonitoringWidgetBuilder,
     ChecklistWidgetBuilder,
@@ -37,12 +42,6 @@ from .dashboard_widgets import (
 from .date_helpers import DateRangeHelper
 from .financial_list_context_builder import FinancialListContextBuilder
 from .invoice_filter_helper import InvoiceFilterHelper
-from .billing_helpers import (
-    build_service_type_map,
-    create_invoice_item_for_session,
-    is_session_already_billed,
-    resolve_session_rate,
-)
 from .invoice_helpers import get_next_invoice_number
 from .practice_days import FahrtkostenResult, PracticeDayCalculator
 from .practice_helpers import (
@@ -60,6 +59,7 @@ from .tag_helpers import (
     sort_tags_by_category,
     sync_no_next_session_tag,
 )
+from .tax_context_builder import TaxYearContextBuilder, available_data_years
 from .weekly_focus_widget import WeeklyFocusWidgetBuilder
 
 __all__ = [

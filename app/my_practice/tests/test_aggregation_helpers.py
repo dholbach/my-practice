@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase
+
 from my_practice.models import CompanyExpense, CompanyWithdrawal, Practice
 from my_practice.utils.aggregation_helpers import (
     get_category_breakdown,

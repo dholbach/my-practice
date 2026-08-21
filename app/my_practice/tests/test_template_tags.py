@@ -6,6 +6,7 @@ from datetime import date
 
 from django.template import Context, Template
 from django.test import RequestFactory, TestCase
+
 from my_practice.models import Practice
 from my_practice.templatetags.payment_tags import (
     abs_value,

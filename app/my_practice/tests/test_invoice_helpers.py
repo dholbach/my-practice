@@ -5,6 +5,7 @@ Tests for invoice_helpers utility functions.
 from decimal import Decimal
 
 from django.test import TestCase
+
 from my_practice.models import Client, Invoice, Practice, ServiceType
 from my_practice.utils.invoice_helpers import get_next_invoice_number
 

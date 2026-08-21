@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from django.core.files.storage import default_storage
 from django.test import TestCase
+
 from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
 
 

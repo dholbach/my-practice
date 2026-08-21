@@ -1,6 +1,7 @@
 """Tests for view_helpers utility functions."""
 
 from django.test import RequestFactory, TestCase
+
 from my_practice.utils.view_helpers import get_year_from_request
 
 

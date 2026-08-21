@@ -8,8 +8,8 @@ from unittest.mock import Mock
 from django.test import TestCase
 
 from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
-from ..utils.google_calendar import CalendarEventParser
 from ..utils.calendar_import_helpers import create_invoice_items_from_events
+from ..utils.google_calendar import CalendarEventParser
 
 
 class CalendarTimeImportTest(TestCase):

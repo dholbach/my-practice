@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
-from django.utils import timezone
 
 from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
 from .client import Client

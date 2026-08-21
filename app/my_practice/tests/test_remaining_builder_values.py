@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
+
 from my_practice.models import (
     Client,
     CompanyExpense,

@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+
 from my_practice.models import (
     Client,
     Invoice,
@@ -133,6 +134,7 @@ class ValidateEmailTemplatePlaceholdersTest(TestCase):
     def test_enforced_by_the_admin_form(self):
         """The admin is the only edit path for these fields — check it really rejects."""
         from django.contrib import admin as django_admin
+
         from my_practice.models import Practice
 
         model_admin = django_admin.site._registry[Practice]

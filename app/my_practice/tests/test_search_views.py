@@ -11,9 +11,9 @@ from django.urls import reverse
 from ..models import (
     Client,
     ClientInquiry,
-    Invoice,
     InquirySource,
     InquiryStatus,
+    Invoice,
     Practice,
     UserPractice,
 )

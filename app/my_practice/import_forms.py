@@ -8,7 +8,6 @@ from django.utils.translation import gettext_lazy
 
 from .forms import StyledFormMixin
 
-
 # Bank statement import forms
 
 

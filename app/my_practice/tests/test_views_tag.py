@@ -2,6 +2,8 @@
 Tests for tag views.
 """
 
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
@@ -9,7 +11,6 @@ from django.urls import reverse
 
 from ..models import Client, ClientTag, Practice
 from ..tests.test_helpers import link_user_to_practice
-from decimal import Decimal
 
 
 def _make_practice(slug):

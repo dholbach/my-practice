@@ -96,13 +96,21 @@ documented `DJ012` ignore. The original measurement, for reference:
 10 `mark_safe` call sites it flags were audited this session and are correctly
 escaped or static — #297's lesson did stick.
 
-**Still open — `I` (isort).** CLAUDE.md names isort as the convention but nothing
-enforces it, and ruff reports 82 files with unsorted import blocks. All are
-auto-fixable, but that is 82 files of pure import churn that would conflict with
-anything in flight, so it wants its own PR rather than riding along with a
-behavioural change. Worth doing: without it, ruff's own autofixes append new
-stdlib imports *below* the local imports (it did exactly that three times while
-the rules above were being applied, each needing a manual move).
+**`I` (isort) — DONE**, in its own PR as planned. 81 files reordered, no import
+added or removed (verified by comparing the set of imported names per file
+before and after) and all three package `__all__` exports byte-identical.
+
+The one thing worth knowing if this ever needs redoing: reordering a package
+`__init__.py` can expose a latent import cycle that the previous order happened
+to avoid. `utils/calendar_import_helpers.py` imports its own package
+(`from ..utils import get_next_invoice_number, sync_no_next_session_tag`), and
+both names come from modules that sort *after* it — so if `__init__.py` imported
+it, alphabetising would have broken app startup outright. It doesn't: that module
+is only ever imported lazily by its callers. Nothing else in `models/`, `utils/`,
+`views/` or `admin/` imports its own package, the deferred post-`django.setup()`
+imports in `check_bank_duplicates.py` and `create_default_tags.py` stayed put
+(ruff won't hoist imports across statements), and signals are wired in
+`apps.py ready()` rather than at module import.
 
 ### 5. Repo-root Python is unchecked by CI — DONE
 

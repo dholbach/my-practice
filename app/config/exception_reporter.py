@@ -1,6 +1,7 @@
 import re
-from django.views.debug import SafeExceptionReporterFilter
+
 from django.conf import settings
+from django.views.debug import SafeExceptionReporterFilter
 
 
 class PIIExceptionReporterFilter(SafeExceptionReporterFilter):
