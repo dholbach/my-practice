@@ -1,10 +1,11 @@
 """N+1 ratchets for the pages with the heaviest related-object access.
 
 #276 found /analytics/ firing 4,088 queries in 2.3s from four separate causes.
-Two query-count tests came out of that (test_views_analytics, test_views_dashboard)
-but nothing guards the other list-shaped pages, and the guards that do exist
-assert a fixed ceiling against fixed seed data — see QueryCountMixin for why that
-is a weak shape.
+Two query-count tests came out of that, one in test_views_analytics and one in
+test_views_dashboard, but both asserted a fixed ceiling against fixed seed data
+— see QueryCountMixin for why that is a weak shape. Both have been rewritten in
+this module (Dashboard/Analytics below) and removed from their old homes, so
+every query guard in the suite now has the same shape.
 
 These assert the opposite property: rendering the same page with more rows must
 not issue more queries. That is exactly what an N+1 breaks, and it holds no
@@ -71,13 +72,20 @@ class QueryCountTestBase(QueryCountMixin, TestCase):
             hourly_rate_60=Decimal("90.00"),
         )
 
-    def make_invoice(self, client, number, days_ago=0):
+    def make_invoice(self, client, number, days_ago=0, paid=False):
+        """Create an invoice with one 60-minute item.
+
+        `paid` matters for the analytics page: several of its panels count only
+        paid invoices, so a queryset of sent ones leaves them empty and any N+1
+        inside them dormant.
+        """
         invoice = Invoice.objects.create(
             practice=self.practice,
             client=client,
             invoice_number=number,
             invoice_date=date.today() - timedelta(days=days_ago),
-            status=Invoice.Status.SENT,
+            status=Invoice.Status.PAID if paid else Invoice.Status.SENT,
+            total=Decimal("90.00"),
         )
         InvoiceItem.objects.create(
             invoice=invoice,
@@ -234,4 +242,66 @@ class FocusQueueQueryCountTest(QueryCountTestBase):
             lambda: self.http.get(reverse("focus_queue")),
             add_rows,
             label="Focus Queue (tasks with related objects)",
+        )
+
+
+class DashboardQueryCountTest(QueryCountTestBase):
+    slug = "query-counts-dashboard"
+
+    def test_dashboard_does_not_query_per_invoice(self):
+        # Replaces test_views_dashboard.test_dashboard_query_count, which seeded
+        # five clients and allowed 85 queries against an actual ~74. An N+1 over
+        # those five rows adds about five queries and lands inside the headroom,
+        # so the ceiling could not fail for the reason it was written.
+        #
+        # recent_invoices is sliced [:10], so both measurements are kept at or
+        # below the cap: the rendered list grows from five rows to ten and a
+        # per-row query in it shows up, instead of being masked by the slice.
+        for i in range(5):
+            self.make_invoice(self.make_client(f"D{i}"), f"D{i}-1")
+
+        def add_rows():
+            for i in range(5, 10):
+                self.make_invoice(self.make_client(f"D{i}"), f"D{i}-1")
+
+        self.assertQueryCountStable(
+            lambda: self.http.get(reverse("dashboard")),
+            add_rows,
+            label="Dashboard",
+        )
+
+
+class AnalyticsQueryCountTest(QueryCountTestBase):
+    slug = "query-counts-analytics"
+
+    def test_analytics_does_not_query_per_invoice(self):
+        # Replaces test_views_analytics.test_analytics_dashboard_performance and
+        # its ceiling of 360, which was loose enough to absorb an N+1 over the
+        # five rows it seeded several times over.
+        #
+        # Every invoice is dated today deliberately. AnalyticsDashboardBuilder
+        # loops over the years its data spans (_get_yearly_timeoff_breakdown
+        # queries once per year), so seeding across years would grow the count
+        # for a bounded, legitimate reason and make the assertion meaningless.
+        # Holding the span at one year isolates per-row growth, which is the
+        # thing being guarded.
+        #
+        # They are paid, which is load-bearing rather than incidental: the
+        # top-clients panel filters on status="paid", so an unpaid fixture
+        # renders it empty and the test passes without ever entering the code
+        # it most needs to guard. Written with sent invoices first, this test
+        # was green against a live N+1 in ClientAnalyzer.get_top_by_revenue.
+        def seed(start, stop):
+            for i in range(start, stop):
+                self.make_invoice(self.make_client(f"AN{i}"), f"AN{i}-1", paid=True)
+
+        seed(0, 5)
+
+        def add_rows():
+            seed(5, 12)
+
+        self.assertQueryCountStable(
+            lambda: self.http.get(reverse("analytics")),
+            add_rows,
+            label="Analytics",
         )

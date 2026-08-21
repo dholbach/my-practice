@@ -317,55 +317,6 @@ class DashboardPerformanceTest(TestCase):
         response = self.client_instance.get(reverse("dashboard"))
         self.assertEqual(response.status_code, 200)
 
-    def test_dashboard_query_count(self):
-        """Test that dashboard doesn't have N+1 query problems."""
-        # Create test data
-        for i in range(5):
-            client = Client.objects.create(
-                client_code=f"C{i:02d}",
-                full_name=f"Client {i}",
-                email=f"client{i}@example.com",
-                practice=self.practice,
-            )
-
-            invoice = Invoice.objects.create(
-                client=client,
-                invoice_number=f"C{i:02d}-1",
-                invoice_date=date.today(),
-                total=Decimal("90.00"),
-                practice=self.practice,
-            )
-
-            InvoiceItem.objects.create(
-                invoice=invoice,
-                service_type=self.service_type,
-                session=Session.objects.create(
-                    client=client,
-                    session_date=date.today(),
-                    duration=60,
-                ),
-                rate=Decimal("90.00"),
-                quantity=Decimal("1.00"),
-                total=Decimal("90.00"),
-            )
-
-        # Count queries
-        from django.db import connection
-        from django.test.utils import CaptureQueriesContext
-
-        with CaptureQueriesContext(connection) as context:
-            response = self.client_instance.get(reverse("dashboard"))
-            self.assertEqual(response.status_code, 200)
-
-        # Dashboard should use select_related/prefetch_related to minimize queries
-        # Dashboard is complex with heatmaps - allow more queries
-        query_count = len(context.captured_queries)
-        self.assertLess(
-            query_count,
-            85,  # Actual count ~74; raised threshold to account for query variation.
-            f"Dashboard has {query_count} queries - might have N+1 problem",
-        )
-
 
 class DashboardNoPracticeRedirectTest(TestCase):
     """A user with no practice is sent to practice_create instead of an empty dashboard."""
