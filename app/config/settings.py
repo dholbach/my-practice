@@ -282,7 +282,12 @@ if USE_PROTON_BRIDGE:
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")  # Your Proton email
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")  # Proton Bridge password
     DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
-    EMAIL_TIMEOUT = 10  # Fail fast if Proton Bridge is unreachable
+    # 30s: a down/unreachable Bridge still fails almost instantly (connection
+    # refused), but a live Bridge can take >10s to hand off to Proton's
+    # servers before replying to DATA/QUIT — a short timeout here causes a
+    # false "send failed" error even though the message was actually sent
+    # (confirmed in the Proton Sent folder).
+    EMAIL_TIMEOUT = 30
 else:
     # Development: print emails to console
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
