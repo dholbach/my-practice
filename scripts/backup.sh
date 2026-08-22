@@ -20,6 +20,8 @@ REPO_DIR="$(dirname "$SCRIPT_DIR")"
 # an inline "KEY=value  # comment" line otherwise makes xargs hand a bare "#"
 # to export, which bash rejects as an invalid identifier)
 if [ -f "${REPO_DIR}/.env" ]; then
+    # Word splitting here is the point: each KEY=value pair becomes its own export argument.
+    # shellcheck disable=SC2046
     export $(grep -v '^\s*#' "${REPO_DIR}/.env" | sed -E 's/[[:space:]]+#.*$//' | grep -v '^\s*$' | xargs)
 fi
 

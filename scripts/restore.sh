@@ -18,8 +18,13 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Load environment variables from repo root .env
+# (strip full-line comments, inline trailing comments, and blank lines first —
+# an inline "KEY=value  # comment" line otherwise makes xargs hand a bare "#"
+# to export, which bash rejects as an invalid identifier)
 if [ -f "${REPO_DIR}/.env" ]; then
-    export $(grep -v '^#' "${REPO_DIR}/.env" | xargs)
+    # Word splitting here is the point: each KEY=value pair becomes its own export argument.
+    # shellcheck disable=SC2046
+    export $(grep -v '^\s*#' "${REPO_DIR}/.env" | sed -E 's/[[:space:]]+#.*$//' | grep -v '^\s*$' | xargs)
 fi
 
 # External data directory (must match MY_PRACTICE_DATA_DIR in .env / backup.sh)
@@ -35,7 +40,7 @@ if [ $# -lt 1 ]; then
     echo "  $0 ${BACKUP_DIR}/db_backup_20250115_120000.sql.gz ${BACKUP_DIR}/media_backup_20250115_120000.tar.gz"
     echo ""
     echo "Available backups (${BACKUP_DIR}):"
-    ls -lh "${BACKUP_DIR}" 2>/dev/null | grep -E "(db_backup|media_backup)" || echo "  No backups found"
+    ls -lh "${BACKUP_DIR}"/db_backup* "${BACKUP_DIR}"/media_backup* 2>/dev/null || echo "  No backups found"
     exit 1
 fi
 
