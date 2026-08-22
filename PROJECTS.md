@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-08-21
+**Last Updated**: 2026-08-22
 
 ## 🔍 Recent Activity
 
-- **2026-08-21 — post-release review**: CI now runs the full test suite on PRs (#8) — it was lint-only, so every guardrail built across v0.5.0–v0.5.2 (`test_i18n_coverage`, `test_css_tokens`, the 135 builder tests, the JS suites) ran only when someone remembered `./dev.py quality`; also fixed a drifted second copy of the ruff pin in CI. `update_check` now caches failed GitHub lookups — it runs in a context processor and an uncached failure made every authenticated page render pay the full 3s timeout again, indefinitely. Remaining findings from the review: [docs/notes/2026-08-21_POST_RELEASE_REVIEW.md](docs/notes/2026-08-21_POST_RELEASE_REVIEW.md).
-- **2026-08-21 — v0.5.2 patch release**: practice-setup redirect for practice-less users plus an unbilled sessions/estimated-fee summary on the open billing overview (#377); bank import "Open" badge made clickable (#371); further Docker image size cuts — pruned Google API client's unused discovery cache (97.65 MB), fixed a layering bug that kept Tailwind source CSS in the image (#372); 135 new builder-class tests exposed and fixed a currency-format mismatch between invoice emails and their PDF attachment, a template-render crash on typo'd placeholders, and free-form invoice items being miscounted as sessions in analytics (#373-#375); i18n drift regression test added after a never-extracted validator string was found (#376, #378). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+- **2026-08-22 — v0.5.3 patch release**: closed out the post-release review worklist — `sqlparse` CVE fix (pinned `>=0.6.0`), a search-dropdown race fix (stale query results could win over the current one), PDF-upload validation (a file only claiming to be a PDF now gets rejected, matching existing image validation), an analytics N+1 fix plus six new row-count-invariance query ratchets, a database cache backend (was silently falling back to per-process `LocMemCache`), isort enforced repo-wide, and operator scripts moved out of `app/` into CI's lint coverage. Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+- **2026-08-21 — post-release review**: CI now runs the full test suite on PRs (#8) — it was lint-only, so every guardrail built across v0.5.0–v0.5.2 (`test_i18n_coverage`, `test_css_tokens`, the 135 builder tests, the JS suites) ran only when someone remembered `./dev.py quality`; also fixed a drifted second copy of the ruff pin in CI. `update_check` now caches failed GitHub lookups — it runs in a context processor and an uncached failure made every authenticated page render pay the full 3s timeout again, indefinitely. Review worklist closed out: [docs/notes/2026-08-21_POST_RELEASE_REVIEW.md](docs/notes/2026-08-21_POST_RELEASE_REVIEW.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

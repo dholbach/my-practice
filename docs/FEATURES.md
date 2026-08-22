@@ -303,6 +303,7 @@ chronological record; this document only tracks current state.
 - ✅ Practice isolation enforced on all endpoints including `session_toggle` and email views
 - ✅ Pre-commit PII guard — staged content checked against a local denylist before every commit
 - ✅ Responsible-disclosure policy (`SECURITY.md`)
+- ✅ Upload validation — client documents and expense receipts must parse as a real PDF or image; a file that only claims the extension is rejected
 
 ### Testing
 - ✅ 1,400+ automated tests
