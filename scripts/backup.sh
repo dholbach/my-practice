@@ -16,8 +16,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Load environment variables from repo root .env
+# (strip full-line comments, inline trailing comments, and blank lines first —
+# an inline "KEY=value  # comment" line otherwise makes xargs hand a bare "#"
+# to export, which bash rejects as an invalid identifier)
 if [ -f "${REPO_DIR}/.env" ]; then
-    export $(grep -v '^#' "${REPO_DIR}/.env" | xargs)
+    export $(grep -v '^\s*#' "${REPO_DIR}/.env" | sed -E 's/[[:space:]]+#.*$//' | grep -v '^\s*$' | xargs)
 fi
 
 # Set defaults if not in .env
