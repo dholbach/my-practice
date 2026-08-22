@@ -10,6 +10,12 @@
     <h1>📅 {% trans "Google Calendar import" %}</h1>
     <p class="mb-3">
         <a href="{% url 'calendar_approval_queue' %}" class="btn btn-secondary btn-sm">→ {% trans "Approval queue" %}</a>
+        <form method="post" class="inline-block">
+            {% csrf_token %}
+            <button type="submit" name="clear_calendar" value="1" class="btn btn-secondary btn-sm">
+                🔁 {% trans "Change calendar" %}
+            </button>
+        </form>
     </p>
 
     <div class="filter-controls">

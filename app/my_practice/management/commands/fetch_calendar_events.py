@@ -16,7 +16,6 @@ from ...models import GoogleCalendarToken, PendingCalendarEvent, Session
 from ...utils.google_calendar import (
     CalendarEventParser,
     GoogleCalendarOAuth,
-    find_calendar_by_name,
 )
 from ...utils.tag_helpers import sync_no_next_session_tag
 
@@ -80,9 +79,9 @@ class Command(BaseCommand):
                 )
                 continue
             self.stdout.write(f"\n📅 Practice: {practice.name}")
-            self._fetch_for_practice(practice, dry_run, forced_days, future_days)
+            self._fetch_for_practice(practice, token.calendar_id, dry_run, forced_days, future_days)
 
-    def _fetch_for_practice(self, practice, dry_run, forced_days, future_days=1):
+    def _fetch_for_practice(self, practice, calendar_id, dry_run, forced_days, future_days=1):
         service = GoogleCalendarOAuth.get_service(practice=practice)
         if not service:
             self.stdout.write(
@@ -97,21 +96,25 @@ class Command(BaseCommand):
             )
             return
 
+        if not calendar_id:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  ⚠️  No calendar selected for practice '{practice.name}'. "
+                    "Open /calendar/import/ in the app to choose one."
+                )
+            )
+            return
+
         start_dt, end_dt = self._determine_fetch_window(practice, forced_days, future_days)
         self.stdout.write(
             f"  Window: {start_dt.strftime('%d.%m.%Y')} – {end_dt.strftime('%d.%m.%Y')}"
         )
 
-        praxis_calendar_id = find_calendar_by_name(service, "Praxis")
-        if not praxis_calendar_id:
-            self.stdout.write(self.style.WARNING("  ⚠️  Calendar 'Praxis' not found."))
-            return
-
         try:
-            raw_events = self._fetch_raw_events(service, praxis_calendar_id, start_dt, end_dt)
+            raw_events = self._fetch_raw_events(service, calendar_id, start_dt, end_dt)
         except Exception as e:
             logger.error(f"Error fetching calendar events: {e}")
-            self.stdout.write(self.style.ERROR(f"  ✗ API-Fehler: {e}"))
+            self.stdout.write(self.style.ERROR(f"  ✗ API error: {e}"))
             return
 
         live_ids = {e.get("id") for e in raw_events if e.get("id")}

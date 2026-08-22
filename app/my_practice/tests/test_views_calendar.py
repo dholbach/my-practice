@@ -16,6 +16,7 @@ from django.utils import timezone
 
 from ..models import (
     Client,
+    GoogleCalendarToken,
     Invoice,
     InvoiceItem,
     PendingCalendarEvent,
@@ -51,6 +52,19 @@ class CalendarViewsTestBase(TestCase):
             full_name="Max Mustermann",
             hourly_rate_60=Decimal("90.00"),
             practice=self.practice,
+        )
+
+    def _create_calendar_token(self, calendar_id="cal-1"):
+        return GoogleCalendarToken.objects.create(
+            practice=self.practice,
+            token="tok",
+            refresh_token="refresh",
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id="test-client",
+            client_secret="test-secret",
+            scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            calendar_id=calendar_id,
+            is_active=True,
         )
 
 
@@ -129,20 +143,45 @@ class CalendarImportViewTest(CalendarViewsTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "my_practice/calendar_connect.html")
 
-    def test_no_praxis_calendar_found(self):
+    def test_no_calendar_selected_shows_picker(self):
         service = MagicMock()
-        with (
-            patch(
-                "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
-                return_value=service,
-            ),
-            patch("my_practice.views.calendar_views.find_calendar_by_name", return_value=None),
+        service.calendarList().list().execute.return_value = {
+            "items": [{"id": "cal-1", "summary": "Praxis"}]
+        }
+        with patch(
+            "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
+            return_value=service,
         ):
             response = self.http.get(reverse("calendar_import"))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["total_events"], 0)
+        self.assertTemplateUsed(response, "my_practice/calendar_select.html")
+        self.assertEqual(
+            response.context["calendars"],
+            [{"id": "cal-1", "name": "Praxis", "primary": False}],
+        )
+
+    def test_selecting_a_calendar_saves_it_on_the_token(self):
+        token = self._create_calendar_token(calendar_id="")
+        service = MagicMock()
+        # follow=True re-enters calendar_import as a GET, which — now that the
+        # calendar_id is set — proceeds to the real event-fetch/pagination path.
+        # An unconfigured MagicMock's .get("nextPageToken") is always truthy,
+        # so without this the pagination loop in
+        # CalendarImportProcessor._paginate never terminates.
+        service.events.return_value.list.return_value.execute.return_value = {"items": []}
+        with patch(
+            "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
+            return_value=service,
+        ):
+            response = self.http.post(
+                reverse("calendar_import"), {"calendar_id": "cal-2"}, follow=True
+            )
+        self.assertRedirects(response, reverse("calendar_import"))
+        token.refresh_from_db()
+        self.assertEqual(token.calendar_id, "cal-2")
 
     def test_loads_and_categorizes_events(self):
+        self._create_calendar_token(calendar_id="cal-1")
         service = MagicMock()
         raw_event = {
             "id": "evt-1",
@@ -151,15 +190,9 @@ class CalendarImportViewTest(CalendarViewsTestBase):
             "end": {"dateTime": "2026-03-01T11:00:00+01:00"},
         }
         service.events.return_value.list.return_value.execute.return_value = {"items": [raw_event]}
-        with (
-            patch(
-                "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
-                return_value=service,
-            ),
-            patch(
-                "my_practice.views.calendar_views.find_calendar_by_name",
-                return_value="cal-1",
-            ),
+        with patch(
+            "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
+            return_value=service,
         ):
             response = self.http.get(reverse("calendar_import"))
         self.assertEqual(response.status_code, 200)
@@ -168,16 +201,12 @@ class CalendarImportViewTest(CalendarViewsTestBase):
         self.assertIn("cached_events", self.http.session)
 
     def test_exception_during_fetch_redirects_to_dashboard(self):
+        self._create_calendar_token(calendar_id="cal-1")
         service = MagicMock()
-        with (
-            patch(
-                "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
-                return_value=service,
-            ),
-            patch(
-                "my_practice.views.calendar_views.find_calendar_by_name",
-                side_effect=RuntimeError("api down"),
-            ),
+        service.events.return_value.list.return_value.execute.side_effect = RuntimeError("api down")
+        with patch(
+            "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
+            return_value=service,
         ):
             response = self.http.get(reverse("calendar_import"), follow=True)
         self.assertRedirects(response, reverse("dashboard"))
@@ -249,12 +278,9 @@ class CalendarImportEventsViewTest(CalendarViewsTestBase):
 
     def test_calendar_not_found_returns_404(self):
         service = MagicMock()
-        with (
-            patch(
-                "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
-                return_value=service,
-            ),
-            patch("my_practice.views.calendar_views.find_calendar_by_name", return_value=None),
+        with patch(
+            "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
+            return_value=service,
         ):
             response = self.http.post(
                 reverse("calendar_import_events"),
@@ -264,15 +290,12 @@ class CalendarImportEventsViewTest(CalendarViewsTestBase):
         self.assertEqual(response.status_code, 404)
 
     def test_fetch_specific_events_failure_returns_500(self):
+        self._create_calendar_token(calendar_id="cal-1")
         service = MagicMock()
         with (
             patch(
                 "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
                 return_value=service,
-            ),
-            patch(
-                "my_practice.views.calendar_views.find_calendar_by_name",
-                return_value="cal-1",
             ),
             patch(
                 "my_practice.utils.calendar_event_processor.CalendarImportProcessor."

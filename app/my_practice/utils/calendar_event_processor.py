@@ -22,7 +22,7 @@ class CalendarImportProcessor:
 
     Usage (fetch path):
         processor = CalendarImportProcessor(request)
-        calendar_id = find_calendar_by_name(service, "Praxis")
+        calendar_id = GoogleCalendarOAuth.get_active_token(practice).calendar_id
         events = processor.fetch_and_parse(service, calendar_id, start, end)
         request.session["cached_events"] = processor.build_cache(events, start, end)
         processor.mark_duplicates(events)

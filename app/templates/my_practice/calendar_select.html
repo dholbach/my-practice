@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Select calendar" %}{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <h1>📅 {% trans "Select calendar" %}</h1>
+
+    <div class="card max-w-[600px] mx-auto my-8 p-8">
+        <p class="text-secondary mb-5">
+            {% trans "Choose which of your Google calendars sessions should be imported from." %}
+        </p>
+
+        {% if calendars %}
+        <form method="post">
+            {% csrf_token %}
+            <select name="calendar_id" class="form-control mb-5" required>
+                <option value="" disabled selected>{% trans "Choose a calendar…" %}</option>
+                {% for calendar in calendars %}
+                <option value="{{ calendar.id }}">
+                    {{ calendar.name }}{% if calendar.primary %} ({% trans "primary" %}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">
+                {% trans "Use this calendar" %}
+            </button>
+        </form>
+        {% else %}
+        <p class="text-secondary">{% trans "No calendars found for this Google account." %}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

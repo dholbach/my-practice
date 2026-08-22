@@ -34,6 +34,15 @@ class GoogleCalendarToken(TimestampedModel):
     client_secret = models.CharField(max_length=500)
     scopes = models.JSONField(default=list, help_text=_("List of granted scopes"))
 
+    # Which of the connected Google account's calendars to import sessions
+    # from. Blank until the user picks one on the calendar import page.
+    calendar_id = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name=_("Calendar"),
+        help_text=_("Google Calendar selected for session import"),
+    )
+
     # Metadata
     expires_at = models.DateTimeField(null=True, blank=True, help_text=_("Token expiration time"))
     is_active = models.BooleanField(

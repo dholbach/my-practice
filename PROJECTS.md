@@ -5,8 +5,8 @@
 
 ## 🔍 Recent Activity
 
+- **2026-08-22 — issue quick wins**: Google Calendar integration no longer hardcodes a calendar named "Praxis" (#192) — a picker on the calendar-import page lets you choose any of the connected account's calendars, stored per-token so multi-practice setups keep working; `TIME_ZONE`/`LANGUAGE_CODE` are now overridable via `DJANGO_TIME_ZONE`/`DJANGO_LANGUAGE_CODE` env vars for non-Germany deployments (#193). Also closed #8 (CI pytest+GHCR) as already done — `ci.yml`/`image.yml` cover it.
 - **2026-08-22 — v0.5.3 patch release**: closed out the post-release review worklist — `sqlparse` CVE fix (pinned `>=0.6.0`), a search-dropdown race fix (stale query results could win over the current one), PDF-upload validation (a file only claiming to be a PDF now gets rejected, matching existing image validation), an analytics N+1 fix plus six new row-count-invariance query ratchets, a database cache backend (was silently falling back to per-process `LocMemCache`), isort enforced repo-wide, and operator scripts moved out of `app/` into CI's lint coverage. Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
-- **2026-08-21 — post-release review**: CI now runs the full test suite on PRs (#8) — it was lint-only, so every guardrail built across v0.5.0–v0.5.2 (`test_i18n_coverage`, `test_css_tokens`, the 135 builder tests, the JS suites) ran only when someone remembered `./dev.py quality`; also fixed a drifted second copy of the ruff pin in CI. `update_check` now caches failed GitHub lookups — it runs in a context processor and an uncached failure made every authenticated page render pay the full 3s timeout again, indefinitely. Review worklist closed out: [docs/notes/2026-08-21_POST_RELEASE_REVIEW.md](docs/notes/2026-08-21_POST_RELEASE_REVIEW.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

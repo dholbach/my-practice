@@ -21,7 +21,7 @@ from my_practice.models import (
 from my_practice.utils.google_calendar import (
     CalendarEventParser,
     GoogleCalendarOAuth,
-    find_calendar_by_name,
+    list_calendars,
 )
 
 
@@ -419,54 +419,43 @@ class CalendarEventParserTest(TestCase):
         self.assertEqual(result["suggested_service_type"], "Ausgefallener Termin")
 
 
-class FindCalendarByNameTest(TestCase):
-    """Test calendar lookup utility."""
+class ListCalendarsTest(TestCase):
+    """Test the calendar-listing utility behind the calendar-selection picker."""
 
-    def test_find_calendar_by_name(self):
-        """Test finding calendar by name."""
+    def test_list_calendars(self):
+        """Returns id/name/primary for every calendar the account can see."""
         mock_service = Mock()
         mock_service.calendarList().list().execute.return_value = {
             "items": [
                 {"id": "cal1", "summary": "Personal"},
-                {"id": "cal2", "summary": "Praxis"},
+                {"id": "cal2", "summary": "Praxis", "primary": True},
                 {"id": "cal3", "summary": "Work"},
             ]
         }
 
-        result = find_calendar_by_name(mock_service, "Praxis")
-        self.assertEqual(result, "cal2")
+        result = list_calendars(mock_service)
+        self.assertEqual(
+            result,
+            [
+                {"id": "cal1", "name": "Personal", "primary": False},
+                {"id": "cal2", "name": "Praxis", "primary": True},
+                {"id": "cal3", "name": "Work", "primary": False},
+            ],
+        )
 
-    def test_find_calendar_case_insensitive(self):
-        """Test calendar lookup is case-insensitive."""
+    def test_list_calendars_empty(self):
+        """No calendars on the account returns an empty list, not an error."""
         mock_service = Mock()
-        mock_service.calendarList().list().execute.return_value = {
-            "items": [
-                {"id": "cal1", "summary": "PRAXIS"},
-            ]
-        }
+        mock_service.calendarList().list().execute.return_value = {"items": []}
 
-        result = find_calendar_by_name(mock_service, "praxis")
-        self.assertEqual(result, "cal1")
+        self.assertEqual(list_calendars(mock_service), [])
 
-    def test_find_calendar_not_found(self):
-        """Test calendar lookup when calendar doesn't exist."""
+    def test_list_calendars_falls_back_to_id_when_summary_missing(self):
         mock_service = Mock()
-        mock_service.calendarList().list().execute.return_value = {
-            "items": [
-                {"id": "cal1", "summary": "Personal"},
-            ]
-        }
+        mock_service.calendarList().list().execute.return_value = {"items": [{"id": "cal1"}]}
 
-        result = find_calendar_by_name(mock_service, "NonExistent")
-        self.assertIsNone(result)
-
-    def test_find_calendar_api_error(self):
-        """Test calendar lookup handles API errors gracefully."""
-        mock_service = Mock()
-        mock_service.calendarList().list().execute.side_effect = Exception("API Error")
-
-        result = find_calendar_by_name(mock_service, "Praxis")
-        self.assertIsNone(result)
+        result = list_calendars(mock_service)
+        self.assertEqual(result, [{"id": "cal1", "name": "cal1", "primary": False}])
 
 
 class UpsertEventReinstatementTest(TestCase):

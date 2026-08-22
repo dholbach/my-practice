@@ -24,7 +24,7 @@ from ..utils.calendar_event_processor import (
 )
 from ..utils.google_calendar import (
     GoogleCalendarOAuth,
-    find_calendar_by_name,
+    list_calendars,
 )
 
 
@@ -82,25 +82,42 @@ def calendar_oauth2callback(request: HttpRequest) -> HttpResponse:
 
 def calendar_import(request: HttpRequest) -> HttpResponse:
     """Show calendar import interface — list events from Google Calendar and allow import."""
-    service = GoogleCalendarOAuth.get_service()
+    practice = getattr(request, "current_practice", None)
+    service = GoogleCalendarOAuth.get_service(practice=practice)
     if not service:
         messages.warning(request, _("Please connect your Google Calendar first."))
         return render(request, "my_practice/calendar_connect.html")
 
+    token = GoogleCalendarOAuth.get_active_token(practice)
+
+    if request.method == "POST":
+        if request.POST.get("clear_calendar"):
+            if token:
+                token.calendar_id = ""
+                token.save(update_fields=["calendar_id"])
+            return redirect("calendar_import")
+
+        calendar_id = request.POST.get("calendar_id")
+        if calendar_id and token:
+            token.calendar_id = calendar_id
+            token.save(update_fields=["calendar_id"])
+            messages.success(request, _("Calendar selected."))
+        return redirect("calendar_import")
+
+    if not token or not token.calendar_id:
+        try:
+            calendars = list_calendars(service)
+        except Exception as e:
+            messages.error(request, _("Error loading calendars: %(error)s") % {"error": str(e)})
+            calendars = []
+        return render(request, "my_practice/calendar_select.html", {"calendars": calendars})
+
+    calendar_id = token.calendar_id
     start_date, end_date = parse_date_range(request)
 
     try:
-        praxis_calendar_id = find_calendar_by_name(service, "Praxis")
-        if not praxis_calendar_id:
-            messages.warning(request, _("No calendar named 'Praxis' found."))
-            return render(
-                request,
-                "my_practice/calendar_import.html",
-                {"events": [], "start_date": start_date, "end_date": end_date, "total_events": 0},
-            )
-
         processor = CalendarImportProcessor(request)
-        parsed_events = processor.fetch_and_parse(service, praxis_calendar_id, start_date, end_date)
+        parsed_events = processor.fetch_and_parse(service, calendar_id, start_date, end_date)
         request.session["cached_events"] = processor.build_cache(
             parsed_events, start_date, end_date
         )
@@ -180,19 +197,21 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
             parsed_events = processor.rehydrate_from_cache(cached_data, event_ids)
 
         if not parsed_events:
-            service = GoogleCalendarOAuth.get_service()
+            practice = getattr(request, "current_practice", None)
+            service = GoogleCalendarOAuth.get_service(practice=practice)
             if not service:
                 return JsonResponse(
                     {"success": False, "error": _("Google Calendar not connected")}, status=401
                 )
-            praxis_calendar_id = find_calendar_by_name(service, "Praxis")
-            if not praxis_calendar_id:
+            token = GoogleCalendarOAuth.get_active_token(practice)
+            calendar_id = token.calendar_id if token else ""
+            if not calendar_id:
                 return JsonResponse(
-                    {"success": False, "error": _("Calendar 'Praxis' not found")}, status=404
+                    {"success": False, "error": _("No calendar selected")}, status=404
                 )
             try:
                 parsed_events = processor.fetch_specific_events(
-                    service, praxis_calendar_id, list(event_ids)
+                    service, calendar_id, list(event_ids)
                 )
             except Exception as e:
                 return JsonResponse(

@@ -98,6 +98,24 @@ class GoogleCalendarOAuth:
         )
 
     @staticmethod
+    def get_active_token(practice=None) -> "GoogleCalendarToken | None":
+        """
+        Fetch the active Google Calendar token for a practice (or the
+        practice-less fallback token in single-practice setups).
+
+        Args:
+            practice: Optional Practice instance; when provided only that
+                      practice's token is considered.
+
+        Returns:
+            The most recently created active token, or None if none exists.
+        """
+        token_qs = GoogleCalendarToken.objects.filter(is_active=True)
+        if practice is not None:
+            token_qs = token_qs.filter(practice=practice)
+        return token_qs.order_by("-created_at").first()
+
+    @staticmethod
     def get_service(practice=None):
         """
         Get authenticated Google Calendar API service.
@@ -110,53 +128,20 @@ class GoogleCalendarOAuth:
         Returns:
             Google Calendar API service object or None if no valid token exists
         """
-        try:
-            token_qs = GoogleCalendarToken.objects.filter(is_active=True)
-            if practice is not None:
-                token_qs = token_qs.filter(practice=practice)
-            token = token_qs.latest("created_at")
+        token = GoogleCalendarOAuth.get_active_token(practice)
+        if token is None:
+            return None
 
-            # Proactively refresh if token expires within 5 minutes
-            needs_refresh = False
-            if token.expires_at:
-                time_until_expiry = (token.expires_at - timezone.now()).total_seconds()
-                needs_refresh = time_until_expiry < 300  # 5 minutes
+        # Proactively refresh if token expires within 5 minutes
+        needs_refresh = False
+        if token.expires_at:
+            time_until_expiry = (token.expires_at - timezone.now()).total_seconds()
+            needs_refresh = time_until_expiry < 300  # 5 minutes
 
-            if (needs_refresh or token.is_expired) and token.refresh_token:
-                # Refresh the token using Google's OAuth2 flow
-                from google.auth.transport.requests import Request
+        if (needs_refresh or token.is_expired) and token.refresh_token:
+            # Refresh the token using Google's OAuth2 flow
+            from google.auth.transport.requests import Request
 
-                credentials = Credentials(
-                    token=token.token,
-                    refresh_token=token.refresh_token,
-                    token_uri=token.token_uri,
-                    client_id=token.client_id,
-                    client_secret=token.client_secret,
-                    scopes=token.scopes,
-                )
-
-                try:
-                    credentials.refresh(Request())
-
-                    # Update token in database
-                    token.token = credentials.token or ""
-                    if credentials.expiry:
-                        token.expires_at = (
-                            timezone.make_aware(credentials.expiry)
-                            if timezone.is_naive(credentials.expiry)
-                            else credentials.expiry
-                        )
-                    token.save(update_fields=["token", "expires_at"])
-
-                except Exception as e:
-                    # Token refresh failed — most likely the refresh_token itself
-                    # has been revoked (Google limits unverified-app refresh tokens
-                    # to 7 days).  Leave the token active so subsequent runs report
-                    # the same clear error rather than "no active tokens found".
-                    logger.error(f"Token refresh failed: {e}")
-                    return None
-
-            # Build credentials
             credentials = Credentials(
                 token=token.token,
                 refresh_token=token.refresh_token,
@@ -166,10 +151,38 @@ class GoogleCalendarOAuth:
                 scopes=token.scopes,
             )
 
-            return build("calendar", "v3", credentials=credentials)
+            try:
+                credentials.refresh(Request())
 
-        except GoogleCalendarToken.DoesNotExist:
-            return None
+                # Update token in database
+                token.token = credentials.token or ""
+                if credentials.expiry:
+                    token.expires_at = (
+                        timezone.make_aware(credentials.expiry)
+                        if timezone.is_naive(credentials.expiry)
+                        else credentials.expiry
+                    )
+                token.save(update_fields=["token", "expires_at"])
+
+            except Exception as e:
+                # Token refresh failed — most likely the refresh_token itself
+                # has been revoked (Google limits unverified-app refresh tokens
+                # to 7 days).  Leave the token active so subsequent runs report
+                # the same clear error rather than "no active tokens found".
+                logger.error(f"Token refresh failed: {e}")
+                return None
+
+        # Build credentials
+        credentials = Credentials(
+            token=token.token,
+            refresh_token=token.refresh_token,
+            token_uri=token.token_uri,
+            client_id=token.client_id,
+            client_secret=token.client_secret,
+            scopes=token.scopes,
+        )
+
+        return build("calendar", "v3", credentials=credentials)
 
 
 class CalendarEventParser:
@@ -365,28 +378,23 @@ class CalendarEventParser:
         ]
 
 
-def find_calendar_by_name(service, calendar_name: str) -> str | None:
+def list_calendars(service) -> list[dict]:
     """
-    Find calendar ID by name.
+    List the calendars visible to the connected Google account, for the
+    calendar-selection picker.
 
     Args:
         service: Google Calendar API service object
-        calendar_name: Name of calendar to find (case-insensitive)
 
     Returns:
-        Calendar ID or None if not found
+        List of {"id": str, "name": str, "primary": bool} dicts.
     """
-    try:
-        calendar_list = service.calendarList().list().execute()
-        calendar_name_lower = calendar_name.lower()
-
-        for calendar_entry in calendar_list.get("items", []):
-            if calendar_entry.get("summary", "").lower() == calendar_name_lower:
-                return cast(str, calendar_entry["id"])
-    except Exception:
-        # Distinguish "API call failed" from "no calendar with that name" in logs —
-        # the caller treats both the same (falls back to the primary calendar), but
-        # only the former is worth investigating.
-        logger.exception("Failed to list calendars while looking up '%s'", calendar_name)
-
-    return None
+    calendar_list = service.calendarList().list().execute()
+    return [
+        {
+            "id": cast(str, entry["id"]),
+            "name": entry.get("summary", entry["id"]),
+            "primary": entry.get("primary", False),
+        }
+        for entry in calendar_list.get("items", [])
+    ]
