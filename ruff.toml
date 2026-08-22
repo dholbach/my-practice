@@ -29,3 +29,12 @@ select = [
     "I",     # isort
 ]
 ignore = ["PERF203"]
+
+[lint.isort]
+# scripts/*.py import my_practice (app/my_practice/) alongside third-party
+# packages. Ruff auto-detects first-party status from filesystem layout, which
+# gives a different answer depending on whether the file is resolved from the
+# repo root (CI's native `ruff check`) or against the container's /app mount
+# (./dev.py lint's stdin path) — the two disagreed on import grouping for the
+# exact same file. Declared explicitly so both invocations agree.
+known-first-party = ["my_practice"]
