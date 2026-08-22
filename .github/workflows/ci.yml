@@ -47,6 +47,14 @@ jobs:
       - name: Format repo-root Python
         run: ruff format --check --diff dev.py prod.py scripts/*.py
 
+      # shellcheck ships preinstalled on GitHub-hosted ubuntu-latest runners.
+      # -S warning skips style/info-level nitpicks (SC2181 "$?" checks, SC2162
+      # "read -r", etc.) so the gate catches real bugs — like the inline .env
+      # comment that broke scripts/backup.sh's export line — without forcing
+      # a style rewrite of scripts that already work.
+      - name: Shellcheck
+        run: shellcheck -S warning scripts/*.sh
+
   test:
     runs-on: ubuntu-latest
 
