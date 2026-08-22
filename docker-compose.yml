@@ -27,6 +27,8 @@ services:
     environment:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-dev-key}
       - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
+      - DJANGO_LANGUAGE_CODE=${DJANGO_LANGUAGE_CODE:-de-de}
+      - DJANGO_TIME_ZONE=${DJANGO_TIME_ZONE:-Europe/Berlin}
       - POSTGRES_DB=${POSTGRES_DB:-my_practice}
       - POSTGRES_USER=${POSTGRES_USER:-my_practice}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme123}

@@ -239,7 +239,7 @@ chronological record; this document only tracks current state.
 
 #### Phase 1-2: Foundation
 - ✅ OAuth2 authentication with token storage
-- ✅ Calendar event import from "Praxis" calendar
+- ✅ Calendar picker: choose which of the connected Google account's calendars to import from (previously hardcoded to a calendar named "Praxis")
 - ✅ Automatic client matching via client codes
 - ✅ Service type mapping based on duration (15/20/60/90 min)
 - ✅ Cancellation detection with "(cancel)" keyword

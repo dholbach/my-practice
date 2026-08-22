@@ -147,13 +147,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = "de-de"
+LANGUAGE_CODE = os.getenv("DJANGO_LANGUAGE_CODE", "de-de")
 LANGUAGES = [
     ("de", "Deutsch"),
     ("en", "English"),
 ]
 LOCALE_PATHS = [BASE_DIR / "locale"]
-TIME_ZONE = "Europe/Berlin"
+TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "Europe/Berlin")
 USE_I18N = True
 USE_TZ = True
 

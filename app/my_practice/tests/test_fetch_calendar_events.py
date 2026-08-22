@@ -557,7 +557,7 @@ class HandleAndFetchForPracticeTest(TestCase):
             call_command("fetch_calendar_events", stdout=out)
         self.assertIn("expired or invalid", out.getvalue())
 
-    def test_fetch_for_practice_no_praxis_calendar_warns(self):
+    def test_fetch_for_practice_no_calendar_selected_warns(self):
         GoogleCalendarToken.objects.create(
             practice=self.practice,
             token="tok",
@@ -569,19 +569,13 @@ class HandleAndFetchForPracticeTest(TestCase):
             is_active=True,
         )
         service = MagicMock()
-        with (
-            patch(
-                "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
-                return_value=service,
-            ),
-            patch(
-                "my_practice.management.commands.fetch_calendar_events.find_calendar_by_name",
-                return_value=None,
-            ),
+        with patch(
+            "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
+            return_value=service,
         ):
             out = StringIO()
             call_command("fetch_calendar_events", stdout=out)
-        self.assertIn("not found", out.getvalue())
+        self.assertIn("No calendar selected", out.getvalue())
 
     def test_fetch_for_practice_api_error_is_reported(self):
         GoogleCalendarToken.objects.create(
@@ -592,6 +586,7 @@ class HandleAndFetchForPracticeTest(TestCase):
             client_id="test-client",
             client_secret="test-secret",
             scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            calendar_id="cal-1",
             is_active=True,
         )
         service = MagicMock()
@@ -601,17 +596,13 @@ class HandleAndFetchForPracticeTest(TestCase):
                 return_value=service,
             ),
             patch(
-                "my_practice.management.commands.fetch_calendar_events.find_calendar_by_name",
-                return_value="cal-1",
-            ),
-            patch(
                 "my_practice.management.commands.fetch_calendar_events.Command._fetch_raw_events",
                 side_effect=RuntimeError("api down"),
             ),
         ):
             out = StringIO()
             call_command("fetch_calendar_events", stdout=out)
-        self.assertIn("API-Fehler", out.getvalue())
+        self.assertIn("API error", out.getvalue())
 
     def test_fetch_for_practice_creates_events_end_to_end(self):
         test_client = Client.objects.create(
@@ -625,6 +616,7 @@ class HandleAndFetchForPracticeTest(TestCase):
             client_id="test-client",
             client_secret="test-secret",
             scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            calendar_id="cal-1",
             is_active=True,
         )
         service = MagicMock()
@@ -635,15 +627,9 @@ class HandleAndFetchForPracticeTest(TestCase):
             "end": {"dateTime": "2026-03-01T11:00:00+01:00"},
         }
         service.events.return_value.list.return_value.execute.return_value = {"items": [raw_event]}
-        with (
-            patch(
-                "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
-                return_value=service,
-            ),
-            patch(
-                "my_practice.management.commands.fetch_calendar_events.find_calendar_by_name",
-                return_value="cal-1",
-            ),
+        with patch(
+            "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
+            return_value=service,
         ):
             out = StringIO()
             call_command("fetch_calendar_events", stdout=out)
@@ -662,6 +648,7 @@ class HandleAndFetchForPracticeTest(TestCase):
             client_id="test-client",
             client_secret="test-secret",
             scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            calendar_id="cal-1",
             is_active=True,
         )
         service = MagicMock()
@@ -672,15 +659,9 @@ class HandleAndFetchForPracticeTest(TestCase):
             "end": {"dateTime": "2026-03-01T11:00:00+01:00"},
         }
         service.events.return_value.list.return_value.execute.return_value = {"items": [raw_event]}
-        with (
-            patch(
-                "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
-                return_value=service,
-            ),
-            patch(
-                "my_practice.management.commands.fetch_calendar_events.find_calendar_by_name",
-                return_value="cal-1",
-            ),
+        with patch(
+            "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
+            return_value=service,
         ):
             out = StringIO()
             call_command("fetch_calendar_events", "--dry-run", stdout=out)
