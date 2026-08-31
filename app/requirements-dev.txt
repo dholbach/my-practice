@@ -4,10 +4,10 @@
 # against this file with no way for Dependabot to fix it.
 Django==6.1
 psycopg[binary]==3.3.4
-cryptography==50.0.0
+cryptography==50.0.1
 markdown==3.10.3
-nh3==0.3.6
-gunicorn==26.1.0
+nh3==0.3.7
+gunicorn==26.2.0
 python-dotenv==1.2.3
 weasyprint==69.0
 pydyf==0.12.1
@@ -15,20 +15,20 @@ pillow==12.3.0
 whitenoise==6.12.0
 python-dateutil==2.9.0.post0
 pdfplumber==0.11.10
-pypdf==6.16.1
+pypdf==6.16.2
 urllib3==2.7.0
 
 # Google Calendar API
-google-auth==2.56.3
-google-auth-oauthlib==1.4.0
-google-auth-httplib2==0.4.1
+google-auth==2.57.0
+google-auth-oauthlib==1.4.1
+google-auth-httplib2==0.4.2
 google-api-python-client==2.199.0
 
 # Async support (Django 5.1+)
 uvicorn==0.52.4
 
 # Dev-only tools
-ruff==0.16.4
+ruff==0.16.5
 vulture==2.16
 radon==6.0.1
 pip-audit==2.10.1
