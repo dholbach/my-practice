@@ -391,6 +391,50 @@ class SupervisionViewTests(ClinicalTestBase):
         total_open = response.context["total_open"]
         self.assertEqual(total_open, 1)
 
+    def test_resolve_marks_discussed_with_notes(self):
+        """POST to supervision_item_resolve sets status, resolution notes, and date."""
+        item = SupervisionItem.objects.create(client=self.client_obj, content="Test")
+        url = reverse(
+            "supervision_item_resolve",
+            kwargs={"pk": self.client_obj.pk, "item_pk": item.pk},
+        )
+        self.http.post(url, {"resolution_notes": "Klar besprochen.", "resolved_date": "2026-05-01"})
+        item.refresh_from_db()
+        self.assertEqual(item.status, SupervisionItem.Status.BESPROCHEN)
+        self.assertEqual(item.resolution_notes, "Klar besprochen.")
+        self.assertEqual(item.resolved_date, date(2026, 5, 1))
+
+    def test_resolve_defaults_date_to_today(self):
+        """POST to supervision_item_resolve without a date defaults to today."""
+        item = SupervisionItem.objects.create(client=self.client_obj, content="Test")
+        url = reverse(
+            "supervision_item_resolve",
+            kwargs={"pk": self.client_obj.pk, "item_pk": item.pk},
+        )
+        self.http.post(url, {})
+        item.refresh_from_db()
+        self.assertEqual(item.status, SupervisionItem.Status.BESPROCHEN)
+        self.assertEqual(item.resolved_date, date.today())
+
+    def test_reopen_clears_resolution_fields(self):
+        """Toggling a discussed item back to open clears its resolution notes/date."""
+        item = SupervisionItem.objects.create(
+            client=self.client_obj,
+            content="Test",
+            status=SupervisionItem.Status.BESPROCHEN,
+            resolution_notes="Alte Notiz.",
+            resolved_date=date(2026, 4, 1),
+        )
+        url = reverse(
+            "supervision_item_toggle",
+            kwargs={"pk": self.client_obj.pk, "item_pk": item.pk},
+        )
+        self.http.post(url)
+        item.refresh_from_db()
+        self.assertEqual(item.status, SupervisionItem.Status.OFFEN)
+        self.assertEqual(item.resolution_notes, "")
+        self.assertIsNone(item.resolved_date)
+
 
 class SessionDurationEditViewTests(ClinicalTestBase):
     """Tests for session_duration_edit — updates Session.duration."""

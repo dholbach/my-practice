@@ -375,24 +375,12 @@
         </form>
     </div>
 
-    <div x-show="showSupervision">
-        <form method="post" action="{% url 'client_note_create' client.pk %}" class="cn-note-new-form">
-            {% csrf_token %}
-            <input type="hidden" name="note_type" value="supervision">
-            <div class="cn-note-new-row">
-                <input type="date" name="note_date" class="form-control" required value="{% now 'Y-m-d' %}">
-                <button type="submit" class="btn btn-primary btn-sm">{% trans "Save" %}</button>
-            </div>
-            <textarea name="content" class="form-control cn-textarea" placeholder="{% trans 'Supervision feedback and recommendations (Markdown)…' %}" rows="4" required></textarea>
-        </form>
-    </div>
-
     <!-- Supervision section, above the chronological timeline so open topics aren't buried -->
-    <div class="cn-supervision-section">
+    <div class="cn-supervision-section" x-show="showSupervision">
         <h3 class="cn-supervision-heading">🔍 {% trans "Supervision" %}</h3>
         <form method="post" action="{% url 'supervision_item_create' client.pk %}" class="cn-field cn-supervision-new-form">
             {% csrf_token %}
-            <textarea name="content" class="cn-textarea-small"
+            <textarea name="content" id="supervision-new-content" class="cn-textarea-small"
                       placeholder="{% trans 'Supervision topic or question…' %}" rows="3"></textarea>
             <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
         </form>
@@ -400,19 +388,40 @@
         <div class="cn-supervision-list">
         {% for item in supervision_items %}
         {% trans "Delete supervision topic?" as confirm_del_supervision %}
-        {% if item.status %}{% trans "↩ Reopen" as lbl_toggle %}{% else %}{% trans "✓ Discussed" as lbl_toggle %}{% endif %}
-        <div class="cn-supervision-item cn-status-{{ item.status }}">
+        <div class="cn-supervision-item cn-status-{{ item.status }}" x-data="{ resolving: false }">
             <div class="cn-supervision-content">{{ item.content }}</div>
+            {% if item.resolution_notes %}
+            <div class="cn-supervision-resolution md-rendered">{{ item.resolution_notes|render_markdown }}</div>
+            {% endif %}
             <div class="cn-supervision-meta">
                 <span class="cn-status-badge cn-status-{{ item.status }}">{{ item.get_status_display }}</span>
+                {% if item.resolved_date %}
+                <span class="cn-date-hint">{{ item.resolved_date|date:"d.m.Y" }}</span>
+                {% else %}
                 <span class="cn-date-hint">{{ item.created_at|date:"d.m.Y" }}</span>
+                {% endif %}
             </div>
             <div class="cn-supervision-actions">
+            {% if item.status == "offen" %}
+            <button type="button" class="btn btn-secondary btn-sm" x-on:click="resolving = !resolving">✓ {% trans "Mark discussed" %}</button>
+            {% else %}
             {% url 'supervision_item_toggle' client.pk item.pk as toggle_url %}
-            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=lbl_toggle button_class='btn btn-secondary btn-sm' %}
+            {% trans "↩ Reopen" as lbl_reopen %}
+            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=lbl_reopen button_class='btn btn-secondary btn-sm' %}
+            {% endif %}
             {% url 'supervision_item_delete' client.pk item.pk as delete_url %}
             {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm=confirm_del_supervision %}
             </div>
+            {% if item.status == "offen" %}
+            <div class="cn-supervision-resolve-form" x-show="resolving">
+                <form method="post" action="{% url 'supervision_item_resolve' client.pk item.pk %}">
+                    {% csrf_token %}
+                    <input type="date" name="resolved_date" class="form-control" value="{% now 'Y-m-d' %}">
+                    <textarea name="resolution_notes" class="cn-textarea-small" rows="3" placeholder="{% trans 'Feedback or outcome (optional, Markdown)…' %}"></textarea>
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Mark discussed" %}</button>
+                </form>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
         </div>
@@ -542,15 +551,13 @@
 
     {% elif entry.type == "note" %}
     {% with note=entry.obj %}
-    {% if note.note_type == "supervision" %}
-    {% trans "Delete supervision note?" as confirm_del_supervision_note %}
-    <div class="cn-note-item cn-supervision-inline" x-data="{ editing: false }">
+    {% trans "Delete note?" as confirm_del_note %}
+    <div class="cn-note-item" x-data="{ editing: false }">
         <div class="cn-note-header">
             <span class="cn-note-date">{{ note.note_date|date:"d.m.Y" }}</span>
-            <span class="cn-supervision-tag">🔍 {% trans "Supervision" %}</span>
             <button type="button" class="btn btn-secondary btn-sm" x-on:click="editing = !editing">✏️</button>
             <form method="post" action="{% url 'client_note_delete' client.pk note.pk %}" class="form-inline"
-                  x-on:submit="confirm('{{ confirm_del_supervision_note }}') || $event.preventDefault()">
+                  x-on:submit="confirm('{{ confirm_del_note }}') || $event.preventDefault()">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
             </form>
@@ -571,20 +578,6 @@
             </form>
         </div>
     </div>
-    {% else %}
-    {% trans "Delete note?" as confirm_del_note %}
-    <div class="cn-note-item">
-        <div class="cn-note-header">
-            <span class="cn-note-date">{{ note.note_date|date:"d.m.Y" }}</span>
-            <form method="post" action="{% url 'client_note_delete' client.pk note.pk %}" class="form-inline"
-                  x-data x-on:submit="confirm('{{ confirm_del_note }}') || $event.preventDefault()">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-            </form>
-        </div>
-        <div class="cn-note-content md-rendered">{{ note.content|render_markdown }}</div>
-    </div>
-    {% endif %}
     {% endwith %}
     {% endif %}
 

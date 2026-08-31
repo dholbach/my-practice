@@ -649,7 +649,7 @@
   .cn-label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.02em; }
   .cn-textarea-large  { width: 100%; min-height: 520px; font-family: "Fira Mono", "Courier New", monospace; font-size: 0.875rem; line-height: 1.7; resize: vertical; padding: 0.85rem 1rem; border: 1.5px solid var(--color-border); border-radius: 6px; background: var(--color-input-bg); color: var(--color-text-primary); transition: border-color 0.18s, box-shadow 0.18s; box-sizing: border-box; }
   .cn-textarea-medium { width: 100%; min-height: 160px; font-size: 0.875rem; line-height: 1.6; resize: vertical; padding: 0.65rem 0.85rem; border: 1.5px solid var(--color-border); border-radius: 6px; background: var(--color-input-bg); color: var(--color-text-primary); transition: border-color 0.18s, box-shadow 0.18s; box-sizing: border-box; }
-  .cn-textarea-small  { width: 100%; min-height: 80px; font-size: 0.875rem; resize: vertical; padding: 0.5rem 0.75rem; border: 1.5px solid var(--color-border); border-radius: 6px; background: var(--color-input-bg); transition: border-color 0.18s; box-sizing: border-box; }
+  .cn-textarea-small  { width: 100%; min-height: 80px; font-size: 0.875rem; resize: vertical; padding: 0.5rem 0.75rem; border: 1.5px solid var(--color-border); border-radius: 6px; background: var(--color-input-bg); color: var(--color-text-primary); transition: border-color 0.18s; box-sizing: border-box; }
   .cn-textarea-large:focus, .cn-textarea-medium:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); background: var(--color-surface); }
   .cn-textarea-small:focus  { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
   .cn-actions { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; }
@@ -751,9 +751,9 @@
   .cn-supervision-actions { display: flex; gap: 0.5rem; align-items: center; }
   .cn-supervision-new-form { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; margin-bottom: 1.25rem; }
   .cn-supervision-new-form .cn-textarea-small { align-self: stretch; }
-  .cn-supervision-inline { border-left: 3px solid var(--color-primary); background: var(--color-bg-muted); }
-  .cn-supervision-inline.cn-note-item .cn-note-header { gap: 0.6rem; }
-  .cn-supervision-tag { font-size: 0.75rem; font-weight: 600; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.03em; }
+  .cn-supervision-resolution { font-size: 0.875rem; margin-bottom: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 6px; background: var(--color-surface); }
+  .cn-supervision-resolve-form { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .cn-supervision-resolve-form .cn-textarea-small { align-self: stretch; }
   .cn-note-edit-form { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border); }
   .cn-note-edit-date-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
   .cn-note-edit-date { width: auto; }
