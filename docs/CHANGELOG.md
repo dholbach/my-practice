@@ -2,6 +2,15 @@
 
 Major features and milestones in chronological order.
 
+## 2026-08-31 — v0.5.4 patch release
+
+- **Feature — Google Calendar picker + configurable timezone/locale** (#390): `calendar/import/` now shows a dropdown of the connected Google account's calendars instead of hardcoding a lookup for one named "Praxis" (fixes #192), storing the chosen `calendar_id` per `GoogleCalendarToken` with a "Change calendar" link to re-pick later. `TIME_ZONE`/`LANGUAGE_CODE` are now overridable via `DJANGO_TIME_ZONE`/`DJANGO_LANGUAGE_CODE` env vars for self-hosters outside Germany (fixes #193). Closed #8 (CI pytest + GHCR publish on tag push) as already done.
+- **Fix — `.env` inline comments broke backup/restore scripts** (#391, #392): `scripts/backup.sh` and `scripts/restore.sh` loaded `.env` via `export $(grep -v '^#' .env | xargs)`, which chokes on a trailing `# note` on a value line — `xargs` hands a bare `#` to `export`, which bash rejects. Both scripts now strip trailing comments before exporting. `restore.sh`'s `ls | grep` backup listing also switched to globs for filename safety.
+- **CI — shellcheck on `scripts/*.sh`** (#392): new lint-job step, `-S warning` to catch real bugs without forcing a style rewrite.
+- **Fix — false email-send failures against a live Proton Bridge** (#393): `EMAIL_TIMEOUT` raised from 10s to 30s — a slow-but-live Bridge could exceed the old timeout and report failure even though the message had already been delivered. An unreachable Bridge still fails fast via connection refused.
+- **i18n — translated "Therapy Practice" page-title suffix** (#399): the `<title>` element and the practice select/edit/delete page-title suffix hardcoded literal English instead of going through Django i18n, so it never switched to German.
+- **Deps**: `cryptography` 50.0.1, `gunicorn` 26.2.0, `nh3` 0.3.7, `pypdf` 6.16.2, `google-auth` 2.57.0, `google-auth-oauthlib` 1.4.1, `google-auth-httplib2` 0.4.2, `google-api-python-client` 2.199.0, `uvicorn` 0.52.4, `python-dotenv` 1.2.3, `ruff` 0.16.5 (dev). `pip-audit` reports 0 known vulnerabilities.
+
 ## 2026-08-22 — v0.5.3 patch release
 
 - **Security — `sqlparse` CVE fix**: pinned `sqlparse>=0.6.0` (previously resolved transitively to 0.5.5 via Django's `>=0.5.0` constraint), closing four known vulnerabilities (PYSEC-2026-3696–3699).
