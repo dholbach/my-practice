@@ -319,6 +319,19 @@ class SupervisionItem(TimestampedModel):
         # NOT encrypted — used for filtering open/closed items
     )
 
+    resolution_notes = EncryptedTextField(
+        blank=True,
+        default="",
+        verbose_name=_("Resolution notes"),
+        help_text=_("Feedback or outcome once discussed (optional, encrypted)"),
+    )
+
+    resolved_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_("Discussed on"),
+    )
+
     class Meta:
         verbose_name = _("Supervision topic")
         verbose_name_plural = _("Supervision topics")
@@ -335,14 +348,13 @@ class ClientNote(TimestampedModel):
     """
     Dated freeform note attached to a client (encrypted).
 
-    For ad-hoc entries like phone calls, observations between sessions, and
-    post-supervision reflections. Date is user-supplied (defaults to today).
-    Content is Fernet-encrypted and supports markdown formatting.
-    """
+    For ad-hoc entries like phone calls and observations between sessions.
+    Date is user-supplied (defaults to today). Content is Fernet-encrypted
+    and supports markdown formatting.
 
-    class NoteType(models.TextChoices):
-        NOTE = "note", _("Note")
-        SUPERVISION = "supervision", _("Supervision")
+    Supervision documentation lives on SupervisionItem (topic, status,
+    resolution notes), not here.
+    """
 
     client = models.ForeignKey(
         Client,
@@ -353,19 +365,12 @@ class ClientNote(TimestampedModel):
 
     note_date = models.DateField(
         verbose_name=_("Date"),
-        help_text=_("Date of the entry (e.g. call, supervision, note)"),
+        help_text=_("Date of the entry (e.g. call, note)"),
     )
 
     content = EncryptedTextField(
         verbose_name=_("Content"),
         help_text=_("Note content (encrypted, markdown supported)"),
-    )
-
-    note_type = models.CharField(
-        max_length=20,
-        choices=NoteType.choices,
-        default=NoteType.NOTE,
-        verbose_name=_("Type"),
     )
 
     class Meta:

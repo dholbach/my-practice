@@ -395,6 +395,11 @@ urlpatterns = [
         name="supervision_item_toggle",
     ),
     path(
+        "clients/<int:pk>/supervision/<int:item_pk>/resolve/",
+        views.supervision_item_resolve,
+        name="supervision_item_resolve",
+    ),
+    path(
         "clients/<int:pk>/supervision/<int:item_pk>/delete/",
         views.supervision_item_delete,
         name="supervision_item_delete",

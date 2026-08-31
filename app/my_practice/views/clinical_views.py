@@ -4,7 +4,7 @@ Clinical documentation views (P-009).
 Views for:
   - ClientProfile: get/create on client detail page, save via POST
   - SessionLog: create/edit per session
-  - SupervisionItem: create per client, toggle status
+  - SupervisionItem: create per client, toggle/resolve status
   - Supervision queue: cross-client view of open items
   - Triage summary: printable emergency overview (no Fernet access)
 """
@@ -232,18 +232,51 @@ def supervision_item_delete(request, pk, item_pk):
 
 @require_POST
 def supervision_item_toggle(request, pk, item_pk):
-    """Toggle SupervisionItem status between offen and besprochen."""
+    """
+    Toggle SupervisionItem status between offen and besprochen.
+
+    Quick one-click toggle with no resolution notes — used for reopening an
+    item, and for marking one discussed from the cross-client queue where a
+    notes form would be too heavy. To mark discussed with resolution notes
+    from the client detail page, use supervision_item_resolve instead.
+    """
     client = _get_scoped_client(request, pk)
     item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
-    item.status = (
-        SupervisionItem.Status.BESPROCHEN
-        if item.status == SupervisionItem.Status.OFFEN
-        else SupervisionItem.Status.OFFEN
-    )
-    item.save(update_fields=["status"])
+    if item.status == SupervisionItem.Status.OFFEN:
+        item.status = SupervisionItem.Status.BESPROCHEN
+    else:
+        item.status = SupervisionItem.Status.OFFEN
+        item.resolution_notes = ""
+        item.resolved_date = None
+    item.save(update_fields=["status", "resolution_notes", "resolved_date"])
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"status": item.status, "label": item.get_status_display()})
+    return redirect(
+        safe_next(
+            request,
+            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
+        )
+    )
+
+
+@require_POST
+def supervision_item_resolve(request, pk, item_pk):
+    """Mark a SupervisionItem discussed, optionally recording resolution notes."""
+    client = _get_scoped_client(request, pk)
+    item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
+
+    resolved_date_str = request.POST.get("resolved_date", "").strip()
+    try:
+        resolved_date = date.fromisoformat(resolved_date_str) if resolved_date_str else date.today()
+    except ValueError:
+        resolved_date = date.today()
+
+    item.status = SupervisionItem.Status.BESPROCHEN
+    item.resolution_notes = request.POST.get("resolution_notes", "").strip()
+    item.resolved_date = resolved_date
+    item.save(update_fields=["status", "resolution_notes", "resolved_date"])
+    messages.success(request, _("Supervision topic marked discussed."))
     return redirect(
         safe_next(
             request,
@@ -306,23 +339,7 @@ def client_note_create(request, pk):
         messages.error(request, _("Invalid date."))
         return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
-    note_type = request.POST.get("note_type", ClientNote.NoteType.NOTE)
-    if note_type not in ClientNote.NoteType.values:
-        note_type = ClientNote.NoteType.NOTE
-
-    ClientNote.objects.create(
-        client=client, note_date=note_date, content=content, note_type=note_type
-    )
-
-    if note_type == ClientNote.NoteType.SUPERVISION:
-        messages.success(request, _("Supervision note saved."))
-        return redirect(
-            safe_next(
-                request,
-                fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
-            )
-        )
-
+    ClientNote.objects.create(client=client, note_date=note_date, content=content)
     messages.success(request, _("Note saved."))
     return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 

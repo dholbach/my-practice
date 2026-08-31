@@ -73,6 +73,7 @@ from .clinical_views import (
     session_toggle_billable,
     supervision_item_create,
     supervision_item_delete,
+    supervision_item_resolve,
     supervision_item_toggle,
     supervision_queue,
 )
@@ -334,6 +335,7 @@ __all__ = [
     "session_toggle_billable",
     "supervision_item_create",
     "supervision_item_delete",
+    "supervision_item_resolve",
     "supervision_item_toggle",
     "supervision_queue",
 ]

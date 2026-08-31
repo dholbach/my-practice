@@ -73,7 +73,7 @@ class SessionLogAdmin(admin.ModelAdmin):
 class SupervisionItemAdmin(admin.ModelAdmin):
     """SupervisionItem admin — cross-client supervision queue."""
 
-    list_display = ["client", "status", "content_preview", "created_at"]
+    list_display = ["client", "status", "content_preview", "resolved_date", "created_at"]
     list_filter = ["status", "client__practice"]
     search_fields = ["client__client_code", "client__full_name"]
     ordering = ["-created_at"]
@@ -81,8 +81,8 @@ class SupervisionItemAdmin(admin.ModelAdmin):
     autocomplete_fields = ["client"]
 
     fieldsets = (
-        (gettext_lazy("Client & Status"), {"fields": ("client", "status")}),
-        (gettext_lazy("Content (Fernet-encrypted)"), {"fields": ("content",)}),
+        (gettext_lazy("Client & Status"), {"fields": ("client", "status", "resolved_date")}),
+        (gettext_lazy("Content (Fernet-encrypted)"), {"fields": ("content", "resolution_notes")}),
         (
             gettext_lazy("Timestamps"),
             {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
@@ -99,8 +99,8 @@ class SupervisionItemAdmin(admin.ModelAdmin):
 class ClientNoteAdmin(admin.ModelAdmin):
     """ClientNote admin — dated freeform notes per client (encrypted)."""
 
-    list_display = ["client", "note_date", "note_type", "content_preview", "updated_at"]
-    list_filter = ["note_type", "client__practice"]
+    list_display = ["client", "note_date", "content_preview", "updated_at"]
+    list_filter = ["client__practice"]
     search_fields = ["client__client_code", "client__full_name"]
     ordering = ["-note_date", "-created_at"]
     readonly_fields = ["created_at", "updated_at"]
@@ -108,7 +108,7 @@ class ClientNoteAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (gettext_lazy("Client"), {"fields": ("client",)}),
-        (gettext_lazy("Metadata"), {"fields": ("note_date", "note_type")}),
+        (gettext_lazy("Metadata"), {"fields": ("note_date",)}),
         (gettext_lazy("Content (Fernet-encrypted)"), {"fields": ("content",)}),
         (
             gettext_lazy("Timestamps"),
