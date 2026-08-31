@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% if object %}{% trans "Edit practice" %}{% else %}{% trans "New practice" %}{% endif %} - Therapy Practice{% endblock %}
+{% block title %}{% if object %}{% trans "Edit practice" %}{% else %}{% trans "New practice" %}{% endif %} - {% trans "Therapy Practice" %}{% endblock %}
 
 {% block page_title %}{% if object %}{% trans "Edit practice" %}{% else %}{% trans "Create new practice" %}{% endif %}{% endblock %}
 {% block page_subtitle %}{% if object %}{{ object.name }}{% else %}{% trans "Enter practice information" %}{% endif %}{% endblock %}
