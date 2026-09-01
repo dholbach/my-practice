@@ -88,11 +88,10 @@ Create tags for different purposes:
 ./dev.py manage update_client_tags
 ```
 
-### Cron Job Setup (recommended: daily)
-```bash
-# crontab -e
-0 6 * * * cd /path/to/payments && ./dev.py manage update_client_tags
-```
+### Scheduling
+Runs hourly as part of the consolidated `my-practice-scheduled-jobs` systemd
+timer — see [docs/operations/SCRIPTS.md](../operations/SCRIPTS.md).
+No separate cron setup needed.
 
 ### How It Works
 1. Checks invoices from the last 90 days (activity check)

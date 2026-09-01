@@ -118,3 +118,76 @@ class SyncNoNextSessionTagTest(UpdateClientTagsTestBase):
     def test_noop_when_tag_does_not_exist(self):
         self.tag.delete()
         self.assertIsNone(sync_no_next_session_tag(self.client_obj))
+
+
+class UpdateClientTagsCommandTest(UpdateClientTagsTestBase):
+    """End-to-end coverage of Command.handle() itself, not just the
+    sync_no_next_session_tag helper — the command also creates the system
+    tags, drives the incomplete-intake rule, and strips tags from inactive
+    clients, none of which the helper-level tests above exercise."""
+
+    def test_creates_missing_system_tags(self):
+        self.assertFalse(ClientTag.objects.filter(slug="no-next-session").exists())
+        self.assertFalse(ClientTag.objects.filter(slug="incomplete-intake").exists())
+
+        self._run()
+
+        self.assertTrue(ClientTag.objects.filter(slug="no-next-session").exists())
+        self.assertTrue(ClientTag.objects.filter(slug="incomplete-intake").exists())
+
+    def test_adds_no_next_session_tag_for_recently_active_client(self):
+        Session.objects.create(
+            client=self.client_obj,
+            session_date=self.today - timedelta(days=10),
+            duration=60,
+            cancelled=False,
+        )
+
+        self._run()
+
+        self.assertTrue(self._has_tag("no-next-session"))
+
+    def test_adds_incomplete_intake_tag_when_intake_unfinished(self):
+        self.client_obj.first_seen_date = self.today - timedelta(days=30)
+        self.client_obj.onboarding_complete_date = None
+        self.client_obj.save()
+
+        self._run()
+
+        self.assertTrue(self._has_tag("incomplete-intake"))
+
+    def test_removes_incomplete_intake_tag_once_onboarding_completes(self):
+        self.client_obj.first_seen_date = self.today - timedelta(days=30)
+        self.client_obj.onboarding_complete_date = None
+        self.client_obj.save()
+        self._run()
+        self.assertTrue(self._has_tag("incomplete-intake"))
+
+        self.client_obj.onboarding_complete_date = self.today
+        self.client_obj.save()
+        self._run()
+
+        self.assertFalse(self._has_tag("incomplete-intake"))
+
+    def test_strips_system_tags_from_inactive_clients(self):
+        self._run()  # create system tags
+        no_next_tag = ClientTag.objects.get(slug="no-next-session")
+        self.client_obj.tags.add(no_next_tag)
+        self.client_obj.active = False
+        self.client_obj.save()
+
+        self._run()
+
+        self.assertFalse(self._has_tag("no-next-session"))
+
+    def test_reports_totals_added_and_removed(self):
+        Session.objects.create(
+            client=self.client_obj,
+            session_date=self.today - timedelta(days=10),
+            duration=60,
+            cancelled=False,
+        )
+        out = StringIO()
+        call_command("update_client_tags", stdout=out, stderr=StringIO())
+
+        self.assertIn("Added", out.getvalue())
