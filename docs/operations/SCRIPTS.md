@@ -67,15 +67,31 @@ Or with media files:
 
 ## 🤖 Automatic Timers (Systemd user units)
 
-Four timers run as user systemd units (no sudo needed). The unit files live in
+Two timers run as user systemd units (no sudo needed). The unit files live in
 `scripts/` (source of truth) and are installed to `~/.config/systemd/user/`.
 
 | Timer | Schedule | What it does |
 | --- | --- | --- |
 | `my-practice-backup` | Daily (random offset) | PostgreSQL dump + media archive |
-| `my-practice-update-client-tags` | Hourly (random offset) | Recalculate tag rules for all clients |
-| `my-practice-fetch-calendar-events` | Hourly (random offset) | Pull Google Calendar events into pending queue |
-| `my-practice-sync-focus-queue` | Daily (random offset) | Materialize/auto-close Focus Queue tasks (missing session logs, unpaid/unsent invoices, operational checklists) |
+| `my-practice-scheduled-jobs` | Hourly (random offset) | Runs `run_scheduled_jobs`: calendar sync, client tag recalculation, and Focus Queue materialize/auto-close, in sequence |
+
+`my-practice-scheduled-jobs` consolidates what used to be three separately-timed
+units (`update-client-tags`, `fetch-calendar-events`, `sync-focus-queue`) into
+one — each job is independently idempotent, so running all three hourly (rather
+than the former daily cadence for Focus Queue sync) is safe. A failure in one
+job is logged and doesn't block the others; see
+`run_scheduled_jobs` (`my_practice/management/commands/run_scheduled_jobs.py`).
+Any of the three underlying commands can still be run individually for
+manual/debug use, e.g. `./dev.py manage update_client_tags`.
+
+**Upgrading from the three-timer setup**: disable and remove the old units
+before installing the new one:
+
+```bash
+systemctl --user disable --now my-practice-update-client-tags.timer my-practice-fetch-calendar-events.timer my-practice-sync-focus-queue.timer
+rm ~/.config/systemd/user/my-practice-{update-client-tags,fetch-calendar-events,sync-focus-queue}.{timer,service}
+systemctl --user daemon-reload
+```
 
 ### Install / reinstall after path changes
 
@@ -83,19 +99,13 @@ Four timers run as user systemd units (no sudo needed). The unit files live in
 DEST=~/.config/systemd/user
 cp scripts/my-practice-backup.service          $DEST/
 cp scripts/my-practice-backup.timer            $DEST/
-cp scripts/my-practice-update-client-tags.service $DEST/
-cp scripts/my-practice-update-client-tags.timer   $DEST/
-cp scripts/my-practice-fetch-calendar-events.service $DEST/
-cp scripts/my-practice-fetch-calendar-events.timer   $DEST/
-cp scripts/my-practice-sync-focus-queue.service    $DEST/
-cp scripts/my-practice-sync-focus-queue.timer      $DEST/
+cp scripts/my-practice-scheduled-jobs.service  $DEST/
+cp scripts/my-practice-scheduled-jobs.timer    $DEST/
 
 # Edit WorkingDirectory / ExecStart in each .service to match the actual repo path, then:
 systemctl --user daemon-reload
 systemctl --user enable --now my-practice-backup.timer
-systemctl --user enable --now my-practice-update-client-tags.timer
-systemctl --user enable --now my-practice-fetch-calendar-events.timer
-systemctl --user enable --now my-practice-sync-focus-queue.timer
+systemctl --user enable --now my-practice-scheduled-jobs.timer
 ```
 
 ### Check status
@@ -103,9 +113,7 @@ systemctl --user enable --now my-practice-sync-focus-queue.timer
 ```bash
 systemctl --user list-timers --all | grep my-practice
 journalctl --user -u my-practice-backup.service -n 20
-journalctl --user -u my-practice-update-client-tags.service -n 20
-journalctl --user -u my-practice-fetch-calendar-events.service -n 20
-journalctl --user -u my-practice-sync-focus-queue.service -n 20
+journalctl --user -u my-practice-scheduled-jobs.service -n 20
 ```
 
 ## 📤 External Backups
