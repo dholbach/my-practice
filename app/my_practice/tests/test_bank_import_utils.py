@@ -151,7 +151,7 @@ class ExtractInvoiceNumberTest(TestCase):
     def test_direct_code_longer(self):
         self.assertEqual(self.importer.extract_invoice_number("ABCD-123"), "ABCD-123")
 
-    def test_rechnung_keyword(self):
+    def test_german_invoice_keyword(self):
         self.assertEqual(self.importer.extract_invoice_number("Rechnung Nr. YY-2"), "YY-2")
 
     def test_invoice_keyword(self):
