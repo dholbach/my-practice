@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-08-22
+**Last Updated**: 2026-09-01
 
 ## 🔍 Recent Activity
 
-- **2026-08-22 — v0.5.3 patch release**: closed out the post-release review worklist — `sqlparse` CVE fix (pinned `>=0.6.0`), a search-dropdown race fix (stale query results could win over the current one), PDF-upload validation (a file only claiming to be a PDF now gets rejected, matching existing image validation), an analytics N+1 fix plus six new row-count-invariance query ratchets, a database cache backend (was silently falling back to per-process `LocMemCache`), isort enforced repo-wide, and operator scripts moved out of `app/` into CI's lint coverage. Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 - **2026-08-31 — v0.5.4 patch release**: Google Calendar picker replacing the hardcoded "Praxis" lookup plus configurable timezone/locale env vars (#390, closes #192/#193/#8), `.env` inline-comment parsing fixed in backup/restore scripts with new shellcheck CI coverage (#391/#392), a Proton Bridge email-timeout false-failure fix (#393), the "Therapy Practice" page title now translates to German (#399), and a routine patch/minor dependency catch-up (0 known vulnerabilities per `pip-audit`). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+- **2026-09-01 — quarterly review follow-ups**: consolidated the three separately-timed background-job systemd timers (update-client-tags, fetch-calendar-events, sync-focus-queue — two hourly, one daily) into one hourly `run_scheduled_jobs` command/timer (PR #405), fixed `update_client_tags.py` showing 0% coverage despite an existing test file (its `_run()` helper was defined but never called), and added a new ratchet test guarding against German identifiers/comments in `.py`/`.js` source — a gap the existing i18n guardrail never covered since it only scans template text (PR #406). `client_detail.html` flagged as the standing design-review candidate (15 fix commits in 6 months, still not settled since P-094 "done") — not yet scoped.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
