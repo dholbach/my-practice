@@ -65,8 +65,12 @@ def _task_types_with_counts(request: HttpRequest) -> list[tuple[str, str, int]]:
     regardless of the currently selected type filter — so pill counts stay
     stable as the user switches between them (matches the client tag filter).
     """
+    # _open_tasks_queryset() carries an .order_by() for queue display order;
+    # left in place, those columns leak into the implicit GROUP BY below and
+    # split every task_type into near-unique groups (counts of 0 or 1).
     counts = dict(
         _open_tasks_queryset(request)
+        .order_by()
         .values_list("task_type")
         .annotate(count=Count("id"))
         .values_list("task_type", "count")
