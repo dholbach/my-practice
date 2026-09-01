@@ -429,7 +429,7 @@ test("the overlay lists the global shortcuts using translated names", () => {
     // All of these come from body.dataset. Three of them used to be hardcoded
     // English literals, invisible to the i18n guardrail because it only scans
     // templates — the German UI showed "Dashboard"/"Analytics"/"Practice
-    // Analysis" while the nav said "Übersicht"/"Analysen".
+    // Analysis" while the nav used the actual translated German labels.
     const page = setupPage({
         pathname: "/",
         i18n: Object.assign({}, I18N, {
