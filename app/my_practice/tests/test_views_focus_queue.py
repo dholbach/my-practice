@@ -152,10 +152,15 @@ class FocusQueueViewTest(TestCase):
             title="XX-1",
             task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG,
         )
+        PracticeTodo.objects.create(
+            practice=self.practice,
+            title="YY-2",
+            task_type=PracticeTodo.TaskType.MISSING_SESSION_LOG,
+        )
         response = self.tc.get(reverse("focus_queue") + "?type=manual")
         counts = {value: count for value, _, count in response.context["task_types_with_counts"]}
         self.assertEqual(counts["manual"], 1)
-        self.assertEqual(counts["missing_session_log"], 1)
+        self.assertEqual(counts["missing_session_log"], 2)
 
     def test_filter_by_type_empty_shows_all(self):
         PracticeTodo.objects.create(
