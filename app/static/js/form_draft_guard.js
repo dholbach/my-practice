@@ -62,10 +62,27 @@
         }
     }
 
-    function fieldsHaveContent(fields) {
-        return Object.values(fields).some((value) =>
-            Array.isArray(value) ? value.length > 0 : String(value || "").trim() !== ""
-        );
+    // Normalizes a collected field value for comparison: arrays (checkbox/radio
+    // groups) become an order-independent signature, scalars are trimmed. An
+    // empty array and "no value" both normalize to "" so undefined/missing
+    // keys compare equal to fields that exist but hold nothing.
+    function normalizeValue(value) {
+        if (value === undefined || value === null) return "";
+        if (Array.isArray(value)) {
+            const sorted = value.map(String).sort();
+            return sorted.length ? JSON.stringify(sorted) : "";
+        }
+        return String(value).trim();
+    }
+
+    // Compares two collectFields() snapshots, ignoring differences that don't
+    // amount to a real edit (whitespace-only, or unchecked-vs-absent groups).
+    function fieldsEqual(a, b) {
+        const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
+        for (const key of keys) {
+            if (normalizeValue(a[key]) !== normalizeValue(b[key])) return false;
+        }
+        return true;
     }
 
     function draftKeyFor(form) {
@@ -114,12 +131,16 @@
 
     function initForm(form) {
         const key = draftKeyFor(form);
+        // Snapshot fields as rendered (including any non-blank server-side
+        // default, e.g. a boilerplate notes template) so "unsaved draft" means
+        // "differs from what's already on the page", not just "non-blank".
+        const baseline = collectFields(form);
 
         try {
             const raw = localStorage.getItem(key);
             if (raw) {
                 const draft = JSON.parse(raw);
-                if (draft && draft.fields && fieldsHaveContent(draft.fields)) {
+                if (draft && draft.fields && !fieldsEqual(draft.fields, baseline)) {
                     showRestoreBanner(form, draft, key);
                 } else {
                     clearDraft(key);
@@ -130,16 +151,29 @@
         }
 
         let saveTimer = null;
-        form.addEventListener("input", function () {
+        function handleEdit(debounce) {
+            if (fieldsEqual(collectFields(form), baseline)) {
+                clearTimeout(saveTimer);
+                markClean(form);
+                clearDraft(key);
+                return;
+            }
             markDirty(form);
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(function () {
+            if (debounce) {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(function () {
+                    saveDraft(form, key);
+                }, 500);
+            } else {
+                clearTimeout(saveTimer);
                 saveDraft(form, key);
-            }, 500);
+            }
+        }
+        form.addEventListener("input", function () {
+            handleEdit(true);
         });
         form.addEventListener("change", function () {
-            markDirty(form);
-            saveDraft(form, key);
+            handleEdit(false);
         });
 
         form.addEventListener("submit", function () {
