@@ -251,18 +251,30 @@ function basicForm(fields) {
     };
 }
 
+// The guard snapshots each field's value as a baseline when the page loads,
+// then only treats a form as dirty once a field's value differs from that
+// baseline. Tests simulate "the user typed something" by building the form
+// with its pre-edit (often blank) value, then calling this to apply the
+// post-edit value — exactly like a real browser mutates el.value before
+// firing input/change.
+function typeInto(field, value) {
+    field.value = value;
+}
+
 console.log("\n📝 Running form_draft_guard Tests\n");
 
 // --- dirty-state signalling (the draftguard:dirty contract) -----------------
 
 test("draftguard:dirty fires on first input and bubbles to document", () => {
     const page = setupPage({ forms: [basicForm()] });
+    typeInto(page.form.elements[0], "x");
     page.form.dispatchEvent(new FakeEvent("input", { bubbles: true }));
     assertEquals(page.dirtyEvents, [true], "should emit exactly one dirty=true");
 });
 
 test("draftguard:dirty is not re-emitted while already dirty", () => {
     const page = setupPage({ forms: [basicForm()] });
+    typeInto(page.form.elements[0], "x");
     page.form.dispatchEvent(new FakeEvent("input", { bubbles: true }));
     page.form.dispatchEvent(new FakeEvent("input", { bubbles: true }));
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
@@ -271,6 +283,7 @@ test("draftguard:dirty is not re-emitted while already dirty", () => {
 
 test("draftguard:dirty emits dirty=false on submit", () => {
     const page = setupPage({ forms: [basicForm()] });
+    typeInto(page.form.elements[0], "x");
     page.form.dispatchEvent(new FakeEvent("input", { bubbles: true }));
     page.form.dispatchEvent(new FakeEvent("submit", { bubbles: true }));
     assertEquals(page.dirtyEvents, [true, false], "should announce clean after submit");
@@ -282,12 +295,34 @@ test("submitting a never-edited form emits nothing", () => {
     assertEquals(page.dirtyEvents, [], "clean form should stay silent");
 });
 
+test("an input/change event with no actual value change stays clean", () => {
+    // e.g. a field regaining focus, or a non-blank server-rendered default
+    // (a boilerplate notes template) that the user never touched.
+    const page = setupPage({ forms: [basicForm([makeField("case_notes", "template text")])] });
+    page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
+    assertEquals(page.dirtyEvents, [], "unchanged value should not count as an edit");
+    assertNull(page.store.get(KEY), "nothing should be saved");
+});
+
+test("editing a field back to its original value clears dirty state and any saved draft", () => {
+    const field = makeField("case_notes", "original");
+    const page = setupPage({ forms: [basicForm([field])] });
+    typeInto(field, "typing...");
+    page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
+    assertTrue(page.store.has(KEY), "draft exists mid-edit");
+    typeInto(field, "original");
+    page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
+    assertEquals(page.dirtyEvents, [true, false], "reverting should announce clean");
+    assertNull(page.store.get(KEY), "reverted edit should not leave a stale draft");
+});
+
 test("dirty event carries the form as target, so the owning tab is identifiable", () => {
     const page = setupPage({ forms: [basicForm()] });
     let target = null;
     page.document.addEventListener("draftguard:dirty", (e) => {
         target = e.target;
     });
+    typeInto(page.form.elements[0], "x");
     page.form.dispatchEvent(new FakeEvent("input", { bubbles: true }));
     assertTrue(target === page.form, "event target should be the guarded form");
 });
@@ -295,7 +330,9 @@ test("dirty event carries the form as target, so the owning tab is identifiable"
 // --- autosave --------------------------------------------------------------
 
 test("input autosaves after the debounce flushes", () => {
-    const page = setupPage({ forms: [basicForm([makeField("case_notes", "hello")])] });
+    const field = makeField("case_notes", "");
+    const page = setupPage({ forms: [basicForm([field])] });
+    typeInto(field, "hello");
     page.form.dispatchEvent(new FakeEvent("input", { bubbles: true }));
     assertNull(page.store.get(KEY), "should not save before the debounce fires");
     page.flushTimers();
@@ -303,26 +340,29 @@ test("input autosaves after the debounce flushes", () => {
 });
 
 test("change autosaves immediately, without waiting for the debounce", () => {
-    const page = setupPage({ forms: [basicForm([makeField("case_notes", "picked")])] });
+    const field = makeField("case_notes", "");
+    const page = setupPage({ forms: [basicForm([field])] });
+    typeInto(field, "picked");
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
     assertEquals(savedFields(page), { case_notes: "picked" }, "change should save at once");
 });
 
 test("csrfmiddlewaretoken is never persisted", () => {
+    const body = makeField("body", "");
     const page = setupPage({
-        forms: [
-            basicForm([makeField("csrfmiddlewaretoken", "secret-token"), makeField("body", "text")]),
-        ],
+        forms: [basicForm([makeField("csrfmiddlewaretoken", "secret-token"), body])],
     });
+    typeInto(body, "text");
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
     assertEquals(savedFields(page), { body: "text" }, "CSRF token must be excluded");
 });
 
 test("hidden, submit, button and file inputs are excluded", () => {
+    const body = makeField("body", "");
     const page = setupPage({
         forms: [
             basicForm([
-                makeField("body", "text"),
+                body,
                 makeField("next", "/somewhere/", "hidden"),
                 makeField("go", "Save", "submit"),
                 makeField("cancel", "Cancel", "button"),
@@ -330,39 +370,40 @@ test("hidden, submit, button and file inputs are excluded", () => {
             ]),
         ],
     });
+    typeInto(body, "text");
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
     assertEquals(savedFields(page), { body: "text" }, "only real inputs should persist");
 });
 
 test("unnamed fields are ignored", () => {
-    const page = setupPage({ forms: [basicForm([makeField("", "orphan"), makeField("body", "x")])] });
+    const body = makeField("body", "");
+    const page = setupPage({ forms: [basicForm([makeField("", "orphan"), body])] });
+    typeInto(body, "x");
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
     assertEquals(savedFields(page), { body: "x" }, "fields without a name are skipped");
 });
 
 test("checkbox groups persist as a list of checked values only", () => {
+    const calm = makeField("mood", "calm", "checkbox", true);
     const page = setupPage({
         forms: [
             basicForm([
-                makeField("mood", "calm", "checkbox", true),
+                calm,
                 makeField("mood", "tense", "checkbox", false),
                 makeField("mood", "tired", "checkbox", true),
             ]),
         ],
     });
+    calm.checked = false; // baseline had it unchecked; this is the "edit"
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
-    assertEquals(savedFields(page), { mood: ["calm", "tired"] }, "unchecked boxes are dropped");
+    assertEquals(savedFields(page), { mood: ["tired"] }, "unchecked boxes are dropped");
 });
 
 test("radio groups persist the selected value", () => {
-    const page = setupPage({
-        forms: [
-            basicForm([
-                makeField("session_type", "intake", "radio", false),
-                makeField("session_type", "followup", "radio", true),
-            ]),
-        ],
-    });
+    const intake = makeField("session_type", "intake", "radio", false);
+    const followup = makeField("session_type", "followup", "radio", false);
+    const page = setupPage({ forms: [basicForm([intake, followup])] });
+    followup.checked = true;
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
     assertEquals(savedFields(page), { session_type: ["followup"] }, "selected radio persists");
 });
@@ -370,11 +411,13 @@ test("radio groups persist the selected value", () => {
 // --- draft key scoping -----------------------------------------------------
 
 test("draft key includes pathname, query string and form id", () => {
+    const body = makeField("body", "");
     const page = setupPage({
-        forms: [basicForm([makeField("body", "x")])],
+        forms: [basicForm([body])],
         pathname: "/clients/7/",
         search: "?tab=protokoll",
     });
+    typeInto(body, "x");
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
     assertEquals(
         [...page.store.keys()],
@@ -384,12 +427,16 @@ test("draft key includes pathname, query string and form id", () => {
 });
 
 test("two guarded forms on one page keep separate drafts", () => {
+    const first = makeField("body", "");
+    const second = makeField("body", "");
     const page = setupPage({
         forms: [
-            { id: "notes-form", fields: [makeField("body", "first")] },
-            { id: "supervision-form", fields: [makeField("body", "second")] },
+            { id: "notes-form", fields: [first] },
+            { id: "supervision-form", fields: [second] },
         ],
     });
+    typeInto(first, "first");
+    typeInto(second, "second");
     page.forms[0].dispatchEvent(new FakeEvent("change", { bubbles: true }));
     page.forms[1].dispatchEvent(new FakeEvent("change", { bubbles: true }));
     assertEquals(savedFields(page, KEY), { body: "first" }, "first form's draft");
@@ -423,6 +470,17 @@ test("malformed stored draft is cleared instead of throwing", () => {
     const page = setupPage({ forms: [basicForm()], storage: { [KEY]: "{not json" } });
     assertNull(page.banner(), "no banner for unparseable draft");
     assertNull(page.store.get(KEY), "corrupt entry should be cleared");
+});
+
+test("stored draft identical to a non-blank server-rendered default is discarded, not offered", () => {
+    // e.g. a boilerplate notes template pre-filled server-side — the same
+    // text sitting in localStorage isn't an edit worth restoring.
+    const page = setupPage({
+        forms: [basicForm([makeField("case_notes", "template text")])],
+        storage: { [KEY]: JSON.stringify({ fields: { case_notes: "template text" } }) },
+    });
+    assertNull(page.banner(), "identical-to-baseline draft should not prompt");
+    assertNull(page.store.get(KEY), "and should be cleared from storage");
 });
 
 test("restore applies the saved fields, marks dirty and dismisses the banner", () => {
@@ -464,7 +522,9 @@ test("checkbox state is restored, including unchecking boxes not in the draft", 
 // --- submit and navigation guard -------------------------------------------
 
 test("submit clears the stored draft", () => {
-    const page = setupPage({ forms: [basicForm([makeField("body", "text")])] });
+    const body = makeField("body", "");
+    const page = setupPage({ forms: [basicForm([body])] });
+    typeInto(body, "text");
     page.form.dispatchEvent(new FakeEvent("change", { bubbles: true }));
     assertTrue(page.store.has(KEY), "draft exists before submit");
     page.form.dispatchEvent(new FakeEvent("submit", { bubbles: true }));
@@ -474,12 +534,14 @@ test("submit clears the stored draft", () => {
 test("beforeunload is blocked while a form is dirty", () => {
     const page = setupPage({ forms: [basicForm()] });
     assertTrue(!page.beforeunload().defaultPrevented, "clean page should navigate freely");
+    typeInto(page.form.elements[0], "x");
     page.form.dispatchEvent(new FakeEvent("input", { bubbles: true }));
     assertTrue(page.beforeunload().defaultPrevented, "dirty page should warn");
 });
 
 test("beforeunload stops warning once the form is submitted", () => {
     const page = setupPage({ forms: [basicForm()] });
+    typeInto(page.form.elements[0], "x");
     page.form.dispatchEvent(new FakeEvent("input", { bubbles: true }));
     page.form.dispatchEvent(new FakeEvent("submit", { bubbles: true }));
     assertTrue(!page.beforeunload().defaultPrevented, "submitted form should not warn");
