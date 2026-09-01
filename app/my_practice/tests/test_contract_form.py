@@ -31,12 +31,12 @@ def _render_raw_contract_pdf(client: Client, practice: Practice, lang: str) -> b
 class ClassifySigLabelTest(TestCase):
     """Unit tests for the sig-label classifier."""
 
-    def test_german_datum_label(self):
+    def test_date_label_from_german_pdf(self):
         self.assertEqual(
             _classify_sig_label("(Ort,", "Datum)"), ("datum", "Ort, Datum / Place, date")
         )
 
-    def test_english_datum_label(self):
+    def test_date_label_from_english_pdf(self):
         self.assertEqual(
             _classify_sig_label("(Place,", "date)"), ("datum", "Ort, Datum / Place, date")
         )

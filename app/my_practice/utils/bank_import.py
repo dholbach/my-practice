@@ -47,7 +47,8 @@ class BankStatementImporter:
     INVOICE_PATTERNS = [
         # Pattern 1: Direct codes (XX-1, YY-2, AB-3)
         r"\b([A-Z]{2,4}-\d+)\b",
-        # Pattern 2: With keywords (Rechnung Nr. YY-2, Invoice No. AB-3)
+        # Pattern 2: with a keyword prefix before the code (see the German/
+        # English invoice-label variants in the regex below)
         r"(?:Rechnung|Invoice|ReNr|Re)\s*(?:Nr\.?|No\.?)?\s*([A-Z]{2,4}-\d+)",
         # Pattern 3: In context (3x Therapie CD-4)
         r"Therapie\s+([A-Z]{2,4}-\d+)",

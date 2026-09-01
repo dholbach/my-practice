@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly background jobs timer (calendar sync, tag update, Focus Queue sync)
+Requires=my-practice-scheduled-jobs.service
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
