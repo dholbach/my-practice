@@ -228,6 +228,12 @@ class GebuhLeistungViewTest(TestCase):
             reverse("client_detail", kwargs={"pk": regular.pk}) + "#ptab-protokoll",
         )
 
+    def test_post_non_numeric_ziffer_id_redirects_with_error(self):
+        resp = self.http.post(self._url(), {"ziffern": ["not-an-id"]}, follow=True)
+        self.assertEqual(Leistungserfassung.objects.filter(session=self.session).count(), 0)
+        messages_list = list(resp.context["messages"])
+        self.assertTrue(any(m.tags == "error" for m in messages_list))
+
     def test_frequency_warning(self):
         ziffer_freq, _ = GebuhZiffer.objects.get_or_create(
             nummer="1",

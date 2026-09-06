@@ -21,6 +21,7 @@ from django.urls import reverse
 
 from ..models import (
     Client,
+    ClientNote,
     ClientProfile,
     Practice,
     Session,
@@ -269,6 +270,7 @@ class ClientProfileSaveViewTests(ClinicalTestBase):
 
 
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
 class SessionLogCreateViewTests(ClinicalTestBase):
     """Tests for session_log_create view."""
 
@@ -311,6 +313,15 @@ class SessionLogCreateViewTests(ClinicalTestBase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Session.objects.filter(client=self.client_obj).exists())
 
+    def test_post_adds_supervision_item_when_question_given(self):
+        """A non-blank supervision_question also creates a SupervisionItem."""
+        self.http.post(
+            self._url(),
+            {"session_date": "2026-03-20", "supervision_question": "Wie geht es weiter?"},
+        )
+        item = SupervisionItem.objects.get(client=self.client_obj)
+        self.assertEqual(item.content, "Wie geht es weiter?")
+
     def test_post_finds_existing_session(self):
         """POST uses existing Session for the same client+date."""
         existing = Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 20))
@@ -329,6 +340,37 @@ class SessionLogCreateViewTests(ClinicalTestBase):
         )
         existing.refresh_from_db()
         self.assertTrue(hasattr(existing, "log"))
+
+    def test_post_invalid_date_redirects(self):
+        """POST with an unparseable session_date redirects with error, no Session created."""
+        response = self.http.post(self._url(), {"session_date": "not-a-date"})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Session.objects.filter(client=self.client_obj).exists())
+
+    def test_post_duplicate_log_warns_and_redirects_to_edit(self):
+        """POST for a session that already has a log redirects to session_log_edit instead."""
+        session = Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 20))
+        log = SessionLog.objects.create(session=session, content="Existing")
+        response = self.http.post(self._url(), {"session_date": "2026-03-20"})
+        self.assertRedirects(
+            response,
+            reverse("session_log_edit", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}),
+        )
+
+    def test_get_prefills_duration_from_calendar_event(self):
+        """GET with ?session_date= pre-fills duration from a matched calendar event."""
+        from ..models import PendingCalendarEvent
+
+        PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="evt-prefill-1",
+            matched_client=self.client_obj,
+            event_date=date(2026, 3, 20),
+            duration_minutes=90,
+            summary="Session",
+        )
+        response = self.http.get(self._url(), {"session_date": "2026-03-20"})
+        self.assertEqual(response.context["prefill_duration"], 90)
 
 
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)
@@ -435,6 +477,27 @@ class SupervisionViewTests(ClinicalTestBase):
         self.assertEqual(item.resolution_notes, "")
         self.assertIsNone(item.resolved_date)
 
+    def test_resolve_falls_back_to_today_on_unparseable_date(self):
+        """A malformed resolved_date string falls back to today rather than erroring."""
+        item = SupervisionItem.objects.create(client=self.client_obj, content="Test")
+        url = reverse(
+            "supervision_item_resolve",
+            kwargs={"pk": self.client_obj.pk, "item_pk": item.pk},
+        )
+        self.http.post(url, {"resolved_date": "not-a-date"})
+        item.refresh_from_db()
+        self.assertEqual(item.resolved_date, date.today())
+
+    def test_delete_supervision_item(self):
+        """POST to supervision_item_delete removes the item."""
+        item = SupervisionItem.objects.create(client=self.client_obj, content="Test")
+        url = reverse(
+            "supervision_item_delete",
+            kwargs={"pk": self.client_obj.pk, "item_pk": item.pk},
+        )
+        self.http.post(url)
+        self.assertFalse(SupervisionItem.objects.filter(pk=item.pk).exists())
+
 
 class SessionDurationEditViewTests(ClinicalTestBase):
     """Tests for session_duration_edit — updates Session.duration."""
@@ -460,6 +523,18 @@ class SessionDurationEditViewTests(ClinicalTestBase):
             "session_duration_edit", kwargs={"pk": self.client_obj.pk, "session_pk": session.pk}
         )
         self.http.post(url, {"duration": "0"})
+        session.refresh_from_db()
+        self.assertEqual(session.duration, 60)
+
+    def test_rejects_non_numeric_duration(self):
+        """POST with a non-numeric duration leaves the session unchanged."""
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 15), duration=60
+        )
+        url = reverse(
+            "session_duration_edit", kwargs={"pk": self.client_obj.pk, "session_pk": session.pk}
+        )
+        self.http.post(url, {"duration": "not-a-number"})
         session.refresh_from_db()
         self.assertEqual(session.duration, 60)
 
@@ -531,3 +606,249 @@ class TriageSummaryViewTests(ClinicalTestBase):
         self.assertIn("krise", sessions[0]["mood_tags"])
         # Encrypted 'content' field must NOT appear in session snapshots
         self.assertNotIn("content", sessions[0])
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class SessionLogEditViewTests(ClinicalTestBase):
+    """Tests for session_log_edit — the update counterpart to session_log_create."""
+
+    def setUp(self):
+        super().setUp()
+        self.session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), duration=60
+        )
+        self.log = SessionLog.objects.create(session=self.session, content="Original")
+
+    def _url(self):
+        return reverse(
+            "session_log_edit",
+            kwargs={"client_pk": self.client_obj.pk, "log_pk": self.log.pk},
+        )
+
+    def test_get_renders_form_with_existing_log(self):
+        response = self.http.get(self._url())
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "my_practice/session_log_form.html")
+        self.assertEqual(response.context["log"], self.log)
+        self.assertTrue(response.context["is_edit"])
+
+    def test_post_updates_log_fields(self):
+        self.http.post(
+            self._url(),
+            {
+                "session_type": "standard",
+                "mood_tags": ["gute_ressourcen"],
+                "content": "Updated content",
+                "summary": "New summary",
+            },
+        )
+        self.log.refresh_from_db()
+        self.assertEqual(self.log.content, "Updated content")
+        self.assertEqual(self.log.summary, "New summary")
+        self.assertEqual(self.log.mood_tags, ["gute_ressourcen"])
+
+    def test_post_updates_session_duration_when_valid(self):
+        self.http.post(self._url(), {"content": "x", "duration": "45"})
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.duration, 45)
+
+    def test_post_ignores_invalid_duration(self):
+        self.http.post(self._url(), {"content": "x", "duration": "not-a-number"})
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.duration, 60)
+
+    def test_post_adds_supervision_item_when_question_given(self):
+        self.http.post(self._url(), {"content": "x", "supervision_question": "Wie weiter?"})
+        item = SupervisionItem.objects.get(client=self.client_obj)
+        self.assertEqual(item.content, "Wie weiter?")
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class ClientNoteViewTests(ClinicalTestBase):
+    """Tests for client_note_create/update/delete."""
+
+    def test_create_note(self):
+        url = reverse("client_note_create", kwargs={"pk": self.client_obj.pk})
+        self.http.post(url, {"note_date": "2026-03-20", "content": "Anruf wegen Termin"})
+        note = ClientNote.objects.get(client=self.client_obj)
+        self.assertEqual(note.content, "Anruf wegen Termin")
+
+    def test_create_requires_date_and_content(self):
+        url = reverse("client_note_create", kwargs={"pk": self.client_obj.pk})
+        self.http.post(url, {"note_date": "", "content": ""})
+        self.assertFalse(ClientNote.objects.filter(client=self.client_obj).exists())
+
+    def test_create_rejects_invalid_date(self):
+        url = reverse("client_note_create", kwargs={"pk": self.client_obj.pk})
+        self.http.post(url, {"note_date": "not-a-date", "content": "Something"})
+        self.assertFalse(ClientNote.objects.filter(client=self.client_obj).exists())
+
+    def test_update_note(self):
+        note = ClientNote.objects.create(
+            client=self.client_obj, note_date=date(2026, 3, 20), content="Original"
+        )
+        url = reverse("client_note_update", kwargs={"pk": self.client_obj.pk, "note_pk": note.pk})
+        self.http.post(url, {"content": "Updated", "note_date": "2026-03-21"})
+        note.refresh_from_db()
+        self.assertEqual(note.content, "Updated")
+        self.assertEqual(note.note_date, date(2026, 3, 21))
+
+    def test_update_rejects_empty_content(self):
+        note = ClientNote.objects.create(
+            client=self.client_obj, note_date=date(2026, 3, 20), content="Original"
+        )
+        url = reverse("client_note_update", kwargs={"pk": self.client_obj.pk, "note_pk": note.pk})
+        self.http.post(url, {"content": "   "})
+        note.refresh_from_db()
+        self.assertEqual(note.content, "Original")
+
+    def test_update_rejects_invalid_date_keeps_content_unsaved(self):
+        note = ClientNote.objects.create(
+            client=self.client_obj, note_date=date(2026, 3, 20), content="Original"
+        )
+        url = reverse("client_note_update", kwargs={"pk": self.client_obj.pk, "note_pk": note.pk})
+        self.http.post(url, {"content": "Updated", "note_date": "not-a-date"})
+        note.refresh_from_db()
+        self.assertEqual(note.note_date, date(2026, 3, 20))
+
+    def test_delete_note(self):
+        note = ClientNote.objects.create(
+            client=self.client_obj, note_date=date(2026, 3, 20), content="To delete"
+        )
+        url = reverse("client_note_delete", kwargs={"pk": self.client_obj.pk, "note_pk": note.pk})
+        self.http.post(url)
+        self.assertFalse(ClientNote.objects.filter(pk=note.pk).exists())
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class SessionQuickActionViewTests(ClinicalTestBase):
+    """Tests for session_log_delete, session_delete, session_log_mark_noshow,
+    session_toggle_billable, session_bill."""
+
+    def test_delete_session_log_keeps_unbilled_session(self):
+        """Deleting the log of a session with no InvoiceItem also deletes the bare Session."""
+        session = Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 20))
+        log = SessionLog.objects.create(session=session, content="x")
+        url = reverse(
+            "session_log_delete", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}
+        )
+        self.http.post(url)
+        self.assertFalse(SessionLog.objects.filter(pk=log.pk).exists())
+        self.assertFalse(Session.objects.filter(pk=session.pk).exists())
+
+    def test_delete_session_log_keeps_billed_session(self):
+        """Deleting the log of an already-billed session keeps the Session (only the log goes)."""
+        from ..models import Invoice, InvoiceItem, ServiceType
+
+        service = ServiceType.objects.create(
+            code="individual", name_en="Individual Session", name_de="Einzelsitzung"
+        )
+        invoice = Invoice.objects.create(
+            client=self.client_obj,
+            invoice_number="TEST-2",
+            invoice_date=date(2026, 3, 20),
+            practice=self.practice,
+        )
+        session = Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 20))
+        log = SessionLog.objects.create(session=session, content="x")
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=service,
+            session=session,
+            rate=Decimal("90.00"),
+            quantity=Decimal("1.00"),
+        )
+        url = reverse(
+            "session_log_delete", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}
+        )
+        self.http.post(url)
+        self.assertFalse(SessionLog.objects.filter(pk=log.pk).exists())
+        self.assertTrue(Session.objects.filter(pk=session.pk).exists())
+
+    def test_delete_bare_session(self):
+        session = Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 20))
+        url = reverse(
+            "session_delete", kwargs={"client_pk": self.client_obj.pk, "session_pk": session.pk}
+        )
+        self.http.post(url)
+        self.assertFalse(Session.objects.filter(pk=session.pk).exists())
+
+    def test_delete_blocked_when_billed(self):
+        from ..models import Invoice, InvoiceItem, ServiceType
+
+        service = ServiceType.objects.create(
+            code="individual", name_en="Individual Session", name_de="Einzelsitzung"
+        )
+        invoice = Invoice.objects.create(
+            client=self.client_obj,
+            invoice_number="TEST-3",
+            invoice_date=date(2026, 3, 20),
+            practice=self.practice,
+        )
+        session = Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 20))
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=service,
+            session=session,
+            rate=Decimal("90.00"),
+            quantity=Decimal("1.00"),
+        )
+        url = reverse(
+            "session_delete", kwargs={"client_pk": self.client_obj.pk, "session_pk": session.pk}
+        )
+        self.http.post(url)
+        self.assertTrue(Session.objects.filter(pk=session.pk).exists())
+
+    def test_mark_noshow(self):
+        session = Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 20))
+        log = SessionLog.objects.create(session=session, session_type="standard")
+        url = reverse(
+            "session_log_mark_noshow",
+            kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk},
+        )
+        self.http.post(url)
+        log.refresh_from_db()
+        self.assertEqual(log.session_type, SessionLog.SessionType.AUSFALL)
+
+    def test_toggle_billable(self):
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), billable=True
+        )
+        url = reverse(
+            "session_toggle_billable",
+            kwargs={"client_pk": self.client_obj.pk, "session_pk": session.pk},
+        )
+        self.http.post(url)
+        session.refresh_from_db()
+        self.assertFalse(session.billable)
+        self.http.post(url)
+        session.refresh_from_db()
+        self.assertTrue(session.billable)
+
+    def test_session_bill_success(self):
+        from ..models import ServiceType
+
+        ServiceType.objects.create(
+            practice=self.practice,
+            code="therapy_60",
+            name_en="Therapy 60",
+            name_de="Therapie 60",
+        )
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), duration=60
+        )
+        url = reverse("session_bill", kwargs={"pk": self.client_obj.pk, "session_pk": session.pk})
+        response = self.http.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(session.invoice_items.exists())
+
+    def test_session_bill_failure_shows_error(self):
+        """No matching service type at all → error message, no InvoiceItem created."""
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), duration=60
+        )
+        url = reverse("session_bill", kwargs={"pk": self.client_obj.pk, "session_pk": session.pk})
+        response = self.http.post(url, follow=True)
+        messages_list = list(response.context["messages"])
+        self.assertTrue(any(m.tags == "error" for m in messages_list))
+        self.assertFalse(session.invoice_items.exists())
