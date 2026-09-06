@@ -487,19 +487,9 @@
             {% if client.needs_gebueh_invoice %}
             {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}
-            {% if not session.invoice_items.all %}
-            {% url 'session_bill' client.pk session.pk as session_bill_url %}
-            {% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text=lbl_to_invoice %}
-            {% url 'session_toggle_billable' client.pk session.pk as session_toggle_billable_url %}
-            {% if session.billable %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_non_billable button_class='btn-secondary btn-sm' %}
-            {% else %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_billable button_class='btn-secondary btn-sm' %}{% endif %}
-            {% endif %}
-            {% if log.session_type != 'ausfall' %}
-            {% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
-            {% include 'includes/inline_post_button.html' with action_url=session_log_mark_noshow_url button_text=lbl_noshow %}
-            {% endif %}
-            {% url 'session_log_delete' client.pk log.pk as session_log_delete_url %}
-            {% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_log %}
+            {% include 'includes/session_invoice_actions.html' with client=client session=session lbl_to_invoice=lbl_to_invoice lbl_non_billable=lbl_non_billable lbl_billable=lbl_billable %}
+            {% include 'includes/session_noshow_action.html' with client=client log=log lbl_noshow=lbl_noshow %}
+            {% include 'includes/session_log_delete_button.html' with client=client log=log confirm_delete_log=confirm_delete_log %}
         </div>
         {% else %}
         <div class="cn-session-meta">
@@ -516,23 +506,13 @@
             {% if client.needs_gebueh_invoice %}
             {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}
-            {% if log.session_type != 'ausfall' %}
-            {% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
-            {% include 'includes/inline_post_button.html' with action_url=session_log_mark_noshow_url button_text=lbl_noshow %}
-            {% endif %}
-            {% url 'session_log_delete' client.pk log.pk as session_log_delete_url %}
-            {% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_log %}
+            {% include 'includes/session_noshow_action.html' with client=client log=log lbl_noshow=lbl_noshow %}
+            {% include 'includes/session_log_delete_button.html' with client=client log=log confirm_delete_log=confirm_delete_log %}
             {% else %}
             {% if client.needs_gebueh_invoice %}
             {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}
-            {% if not session.invoice_items.all %}
-            {% url 'session_bill' client.pk session.pk as session_bill_url %}
-            {% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text=lbl_to_invoice %}
-            {% url 'session_toggle_billable' client.pk session.pk as session_toggle_billable_url %}
-            {% if session.billable %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_non_billable button_class='btn-secondary btn-sm' %}
-            {% else %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_billable button_class='btn-secondary btn-sm' %}{% endif %}
-            {% endif %}
+            {% include 'includes/session_invoice_actions.html' with client=client session=session lbl_to_invoice=lbl_to_invoice lbl_non_billable=lbl_non_billable lbl_billable=lbl_billable %}
             {% if session.pk not in no_log_needed_session_ids %}<a href="{% url 'session_log_create' client.pk %}?session_date={{ session.session_date|date:'Y-m-d' }}" class="btn btn-sm">{% trans "+ Log" %}</a>{% endif %}
             {% if not session.invoice_items.all %}
             <form method="post" action="{% url 'session_duration_edit' client.pk session.pk %}" class="form-inline cn-duration-edit-form">

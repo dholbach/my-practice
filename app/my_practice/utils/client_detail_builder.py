@@ -68,7 +68,32 @@ class ClientDetailContextBuilder:
 
     def _build_stats(self) -> dict:
         revenue_stats = RevenueCalculator.get_client_revenue(self.client)
+        total_hours, session_count, avg_duration = self._session_stats()
+        first_session_date, last_session_date, is_recently_active = self._activity_dates()
+        activity_period = self._format_activity_period(
+            first_session_date, last_session_date, is_recently_active
+        )
+        available_tags = ClientTag.objects.filter(is_system=False).exclude(clients=self.client)
 
+        return {
+            "stats": {
+                "total_revenue": float(revenue_stats["total"]),
+                "paid_count": revenue_stats["count"],
+                "total_hours": total_hours,
+                "session_count": session_count,
+                "avg_duration": avg_duration,
+                "last_invoice_date": self._last_invoice_date(),
+                "first_session_date": first_session_date,
+                "last_session_date": last_session_date,
+                "is_recently_active": is_recently_active,
+                "activity_period": activity_period,
+                "open_amount": self._open_amount(),
+            },
+            "monthly_sessions": self._monthly_chart_data(),
+            "available_tags": sort_tags_by_category(available_tags),
+        }
+
+    def _session_stats(self) -> tuple[float, int, int]:
         # Free-form items (P-122 day-rate/project billing) carry no session and
         # no duration, so they must not reach the session-based stats: counting
         # them inflated session_count and, contributing 0 minutes each, dragged
@@ -82,10 +107,13 @@ class ClientDetailContextBuilder:
         session_count = len(session_items)
         total_minutes = sum(item.session.duration for item in session_items)
         avg_duration = round(total_minutes / session_count) if session_count > 0 else 0
+        return total_hours, session_count, avg_duration
 
+    def _last_invoice_date(self) -> date | None:
         finalized = [inv for inv in self.invoices if inv.status != "draft"]
-        last_invoice_date = finalized[0].invoice_date if finalized else None
+        return finalized[0].invoice_date if finalized else None
 
+    def _activity_dates(self) -> tuple[date | None, date | None, bool]:
         items_with_session = [item for item in self.all_items if item.session_id]
         if items_with_session:
             session_dates = [item.session.session_date for item in items_with_session]
@@ -98,13 +126,12 @@ class ClientDetailContextBuilder:
         is_recently_active = bool(
             self.client.active and last_session_date and last_session_date >= four_months_ago
         )
-        activity_period = self._format_activity_period(
-            first_session_date, last_session_date, is_recently_active
-        )
-        open_amount = sum(
-            (inv.total for inv in self.invoices if inv.status == "sent"), Decimal("0")
-        )
+        return first_session_date, last_session_date, is_recently_active
 
+    def _open_amount(self) -> Decimal:
+        return sum((inv.total for inv in self.invoices if inv.status == "sent"), Decimal("0"))
+
+    def _monthly_chart_data(self) -> list[dict]:
         monthly_aggregation = aggregate_invoice_items_by_month(
             self.all_items, exclude_cancellations=True
         )
@@ -113,26 +140,7 @@ class ClientDetailContextBuilder:
         )
         for item in monthly_data:
             item["hours"] = round(item["hours"], 1)
-
-        available_tags = ClientTag.objects.filter(is_system=False).exclude(clients=self.client)
-
-        return {
-            "stats": {
-                "total_revenue": float(revenue_stats["total"]),
-                "paid_count": revenue_stats["count"],
-                "total_hours": total_hours,
-                "session_count": session_count,
-                "avg_duration": avg_duration,
-                "last_invoice_date": last_invoice_date,
-                "first_session_date": first_session_date,
-                "last_session_date": last_session_date,
-                "is_recently_active": is_recently_active,
-                "activity_period": activity_period,
-                "open_amount": open_amount,
-            },
-            "monthly_sessions": monthly_data,
-            "available_tags": sort_tags_by_category(available_tags),
-        }
+        return monthly_data
 
     @staticmethod
     def _format_activity_period(
