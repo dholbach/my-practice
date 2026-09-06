@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from django.db.models import (
     Avg,
+    Case,
     Count,
     F,
     FloatField,
@@ -17,6 +18,7 @@ from django.db.models import (
     QuerySet,
     Subquery,
     Sum,
+    When,
 )
 from django.db.models.functions import Cast
 
@@ -469,76 +471,61 @@ class RevenueCalculator:
                 'cancelled': {'count': 2, 'total': Decimal('200.00')}
             }
         """
-        from django.db.models import Case, When
-
         if year:
-            # For year filtering: use invoice_date for draft/sent/cancelled,
-            # but paid_date for paid invoices (when payment was received)
-            qs_invoice_date = Invoice.objects.filter(invoice_date__year=year)
-            if filters:
-                # Remove invoice_date__year from filters if present (we handle it separately)
-                filters_copy = {k: v for k, v in filters.items() if k != "invoice_date__year"}
-                if filters_copy:
-                    qs_invoice_date = qs_invoice_date.filter(**filters_copy)
+            return RevenueCalculator._status_breakdown_for_year(filters, year)
+        return RevenueCalculator._status_breakdown_all_time(filters)
 
-            # Query for draft/sent/cancelled (by invoice_date)
-            stats_by_invoice_date = qs_invoice_date.aggregate(
-                draft_count=Count(Case(When(status="draft", then=1))),
-                draft_total=Sum(Case(When(status="draft", then="total"))),
-                sent_count=Count(Case(When(status="sent", then=1))),
-                sent_total=Sum(Case(When(status="sent", then="total"))),
-                cancelled_count=Count(Case(When(status="cancelled", then=1))),
-                cancelled_total=Sum(Case(When(status="cancelled", then="total"))),
-            )
+    @staticmethod
+    def _zero_if_none(value: Decimal | None) -> Decimal:
+        return value if value is not None else Decimal("0")
 
-            # Query for paid (by paid_date - when the payment was received)
-            qs_paid_date = Invoice.objects.filter(status="paid", paid_date__year=year)
-            if filters:
-                filters_copy = {k: v for k, v in filters.items() if k != "invoice_date__year"}
-                if filters_copy:
-                    qs_paid_date = qs_paid_date.filter(**filters_copy)
+    @staticmethod
+    def _status_entry(stats: dict, prefix: str) -> dict[str, Any]:
+        return {
+            "count": stats[f"{prefix}_count"],
+            "total": RevenueCalculator._zero_if_none(stats[f"{prefix}_total"]),
+        }
 
-            stats_by_paid_date = qs_paid_date.aggregate(
-                paid_count=Count("id"),
-                paid_total=Sum("total"),
-            )
+    @staticmethod
+    def _without_year_filter(filters: dict | None) -> dict:
+        if not filters:
+            return {}
+        return {k: v for k, v in filters.items() if k != "invoice_date__year"}
 
-            return {
-                "draft": {
-                    "count": stats_by_invoice_date["draft_count"],
-                    "total": (
-                        stats_by_invoice_date["draft_total"]
-                        if stats_by_invoice_date["draft_total"] is not None
-                        else Decimal("0")
-                    ),
-                },
-                "sent": {
-                    "count": stats_by_invoice_date["sent_count"],
-                    "total": (
-                        stats_by_invoice_date["sent_total"]
-                        if stats_by_invoice_date["sent_total"] is not None
-                        else Decimal("0")
-                    ),
-                },
-                "paid": {
-                    "count": stats_by_paid_date["paid_count"],
-                    "total": (
-                        stats_by_paid_date["paid_total"]
-                        if stats_by_paid_date["paid_total"] is not None
-                        else Decimal("0")
-                    ),
-                },
-                "cancelled": {
-                    "count": stats_by_invoice_date["cancelled_count"],
-                    "total": (
-                        stats_by_invoice_date["cancelled_total"]
-                        if stats_by_invoice_date["cancelled_total"] is not None
-                        else Decimal("0")
-                    ),
-                },
-            }
+    @staticmethod
+    def _status_breakdown_for_year(filters: dict | None, year: int) -> dict[str, dict[str, Any]]:
+        """Draft/sent/cancelled are filtered by invoice_date; paid by paid_date."""
+        clean_filters = RevenueCalculator._without_year_filter(filters)
 
-        # No year filter - use single query with conditional aggregation
+        qs_invoice_date = Invoice.objects.filter(invoice_date__year=year)
+        if clean_filters:
+            qs_invoice_date = qs_invoice_date.filter(**clean_filters)
+        stats_by_invoice_date = qs_invoice_date.aggregate(
+            draft_count=Count(Case(When(status="draft", then=1))),
+            draft_total=Sum(Case(When(status="draft", then="total"))),
+            sent_count=Count(Case(When(status="sent", then=1))),
+            sent_total=Sum(Case(When(status="sent", then="total"))),
+            cancelled_count=Count(Case(When(status="cancelled", then=1))),
+            cancelled_total=Sum(Case(When(status="cancelled", then="total"))),
+        )
+
+        qs_paid_date = Invoice.objects.filter(status="paid", paid_date__year=year)
+        if clean_filters:
+            qs_paid_date = qs_paid_date.filter(**clean_filters)
+        stats_by_paid_date = qs_paid_date.aggregate(
+            paid_count=Count("id"),
+            paid_total=Sum("total"),
+        )
+
+        return {
+            "draft": RevenueCalculator._status_entry(stats_by_invoice_date, "draft"),
+            "sent": RevenueCalculator._status_entry(stats_by_invoice_date, "sent"),
+            "paid": RevenueCalculator._status_entry(stats_by_paid_date, "paid"),
+            "cancelled": RevenueCalculator._status_entry(stats_by_invoice_date, "cancelled"),
+        }
+
+    @staticmethod
+    def _status_breakdown_all_time(filters: dict | None) -> dict[str, dict[str, Any]]:
         qs = Invoice.objects.all()
         if filters:
             qs = qs.filter(**filters)
@@ -555,26 +542,8 @@ class RevenueCalculator:
         )
 
         return {
-            "draft": {
-                "count": stats["draft_count"],
-                "total": (
-                    stats["draft_total"] if stats["draft_total"] is not None else Decimal("0")
-                ),
-            },
-            "sent": {
-                "count": stats["sent_count"],
-                "total": (stats["sent_total"] if stats["sent_total"] is not None else Decimal("0")),
-            },
-            "paid": {
-                "count": stats["paid_count"],
-                "total": (stats["paid_total"] if stats["paid_total"] is not None else Decimal("0")),
-            },
-            "cancelled": {
-                "count": stats["cancelled_count"],
-                "total": (
-                    stats["cancelled_total"]
-                    if stats["cancelled_total"] is not None
-                    else Decimal("0")
-                ),
-            },
+            "draft": RevenueCalculator._status_entry(stats, "draft"),
+            "sent": RevenueCalculator._status_entry(stats, "sent"),
+            "paid": RevenueCalculator._status_entry(stats, "paid"),
+            "cancelled": RevenueCalculator._status_entry(stats, "cancelled"),
         }
