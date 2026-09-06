@@ -1,0 +1,7 @@
+{# Mark-as-no-show action for a session log, hidden once already marked #}
+{# Usage: {% include 'includes/session_noshow_action.html' with client=client log=log lbl_noshow=lbl_noshow %} #}
+{% load i18n %}
+{% if log.session_type != 'ausfall' %}
+{% url 'session_log_mark_noshow' client.pk log.pk as session_log_mark_noshow_url %}
+{% include 'includes/inline_post_button.html' with action_url=session_log_mark_noshow_url button_text=lbl_noshow %}
+{% endif %}

@@ -1,0 +1,10 @@
+{# Bill / toggle-billable actions for an unbilled session #}
+{# Usage: {% include 'includes/session_invoice_actions.html' with client=client session=session lbl_to_invoice=lbl_to_invoice lbl_non_billable=lbl_non_billable lbl_billable=lbl_billable %} #}
+{% load i18n %}
+{% if not session.invoice_items.all %}
+{% url 'session_bill' client.pk session.pk as session_bill_url %}
+{% include 'includes/inline_post_button.html' with action_url=session_bill_url button_text=lbl_to_invoice %}
+{% url 'session_toggle_billable' client.pk session.pk as session_toggle_billable_url %}
+{% if session.billable %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_non_billable button_class='btn-secondary btn-sm' %}
+{% else %}{% include 'includes/inline_post_button.html' with action_url=session_toggle_billable_url button_text=lbl_billable button_class='btn-secondary btn-sm' %}{% endif %}
+{% endif %}
