@@ -15,6 +15,16 @@ had live instances when this test was added:
    how the triage card and the onboarding step ended up with invisible text.
 
 Both lists are ratchets: shrink them, never grow them.
+
+Note on the second check's own history: its token-block skip used a persistent
+line-state flag that only reset on a line *starting* with "}". A single-line
+override like ``[data-theme="dark"] .foo { color: #fff; }`` closes itself and
+never produces such a line, so the flag got stuck "on" from the first one of
+those in the file and silently skipped hex-checking for everything after it —
+hundreds of unrelated lines never actually got scanned. Fixed by only treating
+a bare block opener (``@theme {`` / ``:root {`` / ``[data-theme="dark"] {``, alone
+on its line) as entering a multi-line block, and by exempting dark-scoped
+selectors on a per-line basis instead.
 """
 
 import re
@@ -63,10 +73,7 @@ KNOWN_HARDCODED_HEX_PREFIXES = (
     ".summary-cards",
     ".tax-summary-container",
     ".checklist-",
-    ".message.",
     ".text-muted-light",
-    ".tag-add-btn",
-    ".tag-dropdown-item",
     ".bank-import-status__btn",
     ".bank-tx-",
     ".receipt-delete-btn",
@@ -82,13 +89,11 @@ KNOWN_HARDCODED_HEX_PREFIXES = (
     ".step-",
     ".cockpit-",
     ".onboarding-step",
-    ".errorlist",  # Django-rendered; see note in the stylesheet
     ".stat-hint",
     ".row-",
     ".dropzone-",
     ".action-btn",
     ".cn-needs-log",
-    ".cn-status-badge",
     ".col-",
     ".alert-",
     "code",
@@ -141,18 +146,29 @@ class CssHardcodedColourTests(SimpleTestCase):
 
         for lineno, line in enumerate(_css().splitlines(), 1):
             stripped = line.strip()
-            if re.match(r"@theme\b|:root|\[data-theme", stripped):
-                in_token_block = True
             if in_token_block:
                 if stripped.startswith("}"):
                     in_token_block = False
                 continue
-            if "{" not in stripped or stripped.startswith(("--", "/*", "*", "@")):
+            # Multi-line token-definition block opener: bare `@theme {`, `:root {`,
+            # `[data-theme="dark"] {` with nothing else on the line. A single-line
+            # rule like `[data-theme="dark"] .foo { color: #fff; }` closes itself
+            # and must NOT set this — it previously never reset (no line here
+            # starts with a bare "}"), silently disabling hex-checking for
+            # everything until the next unrelated block happened to close one.
+            if re.match(r'(@theme\b|:root|\[data-theme="dark"\])\s*\{\s*$', stripped):
+                in_token_block = True
                 continue
-            if not HEX.search(stripped.split("{", 1)[1]):
+            if "{" not in stripped or stripped.startswith(("--", "/*", "*", "@")):
                 continue
 
             selector = stripped.split("{", 1)[0].strip()
+            # A dark-mode-scoped override is expected to differ from light mode —
+            # that's the point, not a hardcoded-hex violation.
+            if selector.startswith('[data-theme="dark"]'):
+                continue
+            if not HEX.search(stripped.split("{", 1)[1]):
+                continue
             if selector.startswith(KNOWN_HARDCODED_HEX_PREFIXES):
                 continue
             offenders.append(f"{lineno}: {selector}")

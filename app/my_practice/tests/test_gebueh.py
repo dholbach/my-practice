@@ -517,7 +517,7 @@ class GebuhPdfTemplateTest(TestCase):
         # Both codes collapse into a single detail row, not one row per code.
         self.assertEqual(html.count('class="gebueh-detail-row"'), 1)
 
-    def test_gebueh_gesamt_total_shown_when_leistungen_recorded(self):
+    def test_gebueh_total_shown_when_leistungen_recorded(self):
         z, _ = GebuhZiffer.objects.get_or_create(
             nummer="19.2",
             defaults={
@@ -533,7 +533,7 @@ class GebuhPdfTemplateTest(TestCase):
         html = self._render()
         self.assertIn("GebüH gesamt", html)
 
-    def test_gebueh_gesamt_total_hidden_when_no_leistungen(self):
+    def test_gebueh_total_hidden_when_no_leistungen(self):
         html = self._render()
         self.assertNotIn("GebüH gesamt", html)
 
