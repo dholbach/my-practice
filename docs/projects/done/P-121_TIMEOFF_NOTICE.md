@@ -50,4 +50,4 @@ current table (`timeoff/notify/?ids=1&ids=2…`, any combination of periods):
   P-039 "English msgids" convention; a couple of mid-session mistakes here
   (German text used as a msgid, unwrapped `success_message` strings) led to
   clarifying CLAUDE.md that "touched" always includes newly-created files —
-  see [P-039_I18N.md](../wip/P-039_I18N.md).
+  see [P-039_DJANGO_I18N.md](P-039_DJANGO_I18N.md).

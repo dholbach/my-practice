@@ -14,15 +14,15 @@ Die Code-Qualität der Payments App ist **exzellent**, mit klarer modularer Stru
 
 ### Complexity Reduction
 1. **H-CMPLX-01**: `import_invoices()` - 520→75 lines (87% reduction)
-   - Created [InvoiceCSVImporter](app/my_practice/utils/invoice_importer.py) class (454 lines)
+   - Created [InvoiceCSVImporter](../../../app/my_practice/utils/invoice_importer.py) class (454 lines)
    - Extracted 17 focused methods with clear responsibilities
 
 2. **M-CMPLX-01**: `analytics_dashboard()` - 223→53 lines (76% reduction)
-   - Created [AnalyticsDashboardBuilder](app/my_practice/utils/analytics_dashboard_builder.py) class (295 lines)
+   - Created [AnalyticsDashboardBuilder](../../../app/my_practice/utils/analytics_dashboard_builder.py) class (295 lines)
    - Extracted 10 builder methods for dashboard context
 
 3. **M-CMPLX-02**: `InvoiceListView.get_queryset()` - 80→19 lines (76% reduction)
-   - Created [InvoiceFilterHelper](app/my_practice/utils/invoice_filter_helper.py) class (186 lines)
+   - Created [InvoiceFilterHelper](../../../app/my_practice/utils/invoice_filter_helper.py) class (186 lines)
    - Extracted 6 filter methods with proper validation
 
 4. **M-CMPLX-03**: `PracticeAnalyzer._analyze_client()` - 73→30 lines (59% reduction)
@@ -31,7 +31,7 @@ Die Code-Qualität der Payments App ist **exzellent**, mit klarer modularer Stru
 
 ### Duplication Elimination
 5. **M-DUP-02**: Financial list views - expense/withdrawal duplication eliminated
-   - Created [FinancialListContextBuilder](app/my_practice/utils/financial_list_context_builder.py) (122 lines)
+   - Created [FinancialListContextBuilder](../../../app/my_practice/utils/financial_list_context_builder.py) (122 lines)
    - expense_views.py: 114→81 lines (29% reduction)
    - withdrawal_views.py: 103→70 lines (32% reduction)
 
@@ -79,7 +79,7 @@ Die Code-Qualität der Payments App ist **exzellent**, mit klarer modularer Stru
 ### HIGH SEVERITY
 
 #### H-DUP-01: ~~Duplizierte Exception Handler~~ **✅ RESOLVED (31. Jan 2026)**
-~~**File:** [views/reconciliation_views.py](app/my_practice/views/reconciliation_views.py#L253-L270)~~
+~~**File:** [views/reconciliation_views.py](../../../app/my_practice/views/reconciliation_views.py#L253-L270)~~
 
 **Resolution:** File removed during archive_legacy cleanup (reconciliation completed, 96% alignment achieved).
 Duplicate exception handlers no longer present in codebase.
@@ -92,8 +92,8 @@ Duplicate exception handlers no longer present in codebase.
 
 #### M-DUP-01: ~~Wiederholte Wrapper-Funktionen für Mixins~~ **✅ RESOLVED (1. Feb 2026)**
 ~~**Files:**~~
-- ~~[views/expense_views.py](app/my_practice/views/expense_views.py)~~
-- ~~[views/withdrawal_views.py](app/my_practice/views/withdrawal_views.py)~~
+- ~~[views/expense_views.py](../../../app/my_practice/views/expense_views.py)~~
+- ~~[views/withdrawal_views.py](../../../app/my_practice/views/withdrawal_views.py)~~
 
 **Resolution:** Wrapper functions eliminated. URLs now use CBVs directly:
 ```python
@@ -109,8 +109,8 @@ path('expenses/<int:pk>/edit/', views.ExpenseUpdateView.as_view(), name='expense
 
 #### M-DUP-02: Wiederholte aggregation_helpers Pattern
 **Files:**
-- [views/expense_views.py](app/my_practice/views/expense_views.py#L20-L48)
-- [views/withdrawal_views.py](app/my_practice/views/withdrawal_views.py#L20-L42)
+- [views/expense_views.py](../../../app/my_practice/views/expense_views.py#L20-L48)
+- [views/withdrawal_views.py](../../../app/my_practice/views/withdrawal_views.py#L20-L42)
 
 Beide Views nutzen identische Pattern:
 ```python
@@ -129,13 +129,13 @@ grand_total = get_grand_total(Model.objects.all())
 ```
 
 **Status:** ✅ **COMPLETED** (2025-01-21)
-**Implementation:** [financial_list_context_builder.py](app/my_practice/utils/financial_list_context_builder.py)
+**Implementation:** [financial_list_context_builder.py](../../../app/my_practice/utils/financial_list_context_builder.py)
 **Lines Reduced:** expense_views.py (114→81), withdrawal_views.py (103→70)
 
 ---
 
 #### M-DUP-03: Wiederholte Client Map Building in Import Views
-**File:** [views/import_views/invoices.py](app/my_practice/views/import_views/invoices.py#L57-L59)
+**File:** [views/import_views/invoices.py](../../../app/my_practice/views/import_views/invoices.py#L57-L59)
 
 ```python
 # ALREADY COMPLETED - See utils/import_helpers.py
@@ -143,7 +143,7 @@ grand_total = get_grand_total(Model.objects.all())
 ```
 
 **Status:** ✅ **COMPLETED** (Previously)
-**Implementation:** [import_helpers.py](app/my_practice/utils/import_helpers.py)
+**Implementation:** [import_helpers.py](../../../app/my_practice/utils/import_helpers.py)
 
 **Priority:** MEDIUM
 
@@ -152,7 +152,7 @@ grand_total = get_grand_total(Model.objects.all())
 ### LOW SEVERITY
 
 #### L-DUP-01: Ähnliche `get_context_data()` Implementations in Invoice Views
-**File:** [views/invoice_views.py](app/my_practice/views/invoice_views.py#L158-L168,L240-L250)
+**File:** [views/invoice_views.py](../../../app/my_practice/views/invoice_views.py#L158-L168,L240-L250)
 
 ```python
 # REFACTORED - See views/crud_mixins.py
@@ -163,7 +163,7 @@ grand_total = get_grand_total(Model.objects.all())
 ```
 
 **Status:** ✅ **COMPLETED** (2026-01-31)
-**Implementation:** [crud_mixins.py](app/my_practice/views/crud_mixins.py) InvoiceFormsetMixin
+**Implementation:** [crud_mixins.py](../../../app/my_practice/views/crud_mixins.py) InvoiceFormsetMixin
 **Impact:** Consistent formset handling across invoice views
 
 ---
@@ -173,11 +173,11 @@ grand_total = get_grand_total(Model.objects.all())
 ### HIGH SEVERITY
 
 #### H-CMPLX-01: ~~Mega-Funktion `import_invoices()`~~ **✅ COMPLETED (31. Jan 2026)**
-**File:** ~~[views/import_views/invoices.py](app/my_practice/views/import_views/invoices.py#L24)~~ **REFACTORED**
+**File:** ~~[views/import_views/invoices.py](../../../app/my_practice/views/import_views/invoices.py#L24)~~ **REFACTORED**
 **Previous:** 520 lines | **Now:** 75 lines (87% reduction)
 
 **Solution Implemented:**
-- ✅ Created [InvoiceCSVImporter](app/my_practice/utils/invoice_importer.py) class
+- ✅ Created [InvoiceCSVImporter](../../../app/my_practice/utils/invoice_importer.py) class
 - ✅ Extracted responsibilities into focused methods:
   - `_parse_row()` - CSV parsing with multi-format support
   - `_validate_data()` - Business logic validation
@@ -204,11 +204,11 @@ grand_total = get_grand_total(Model.objects.all())
 ### MEDIUM SEVERITY
 
 #### M-CMPLX-01: ~~Komplexe `analytics_dashboard()` Funktion~~ **✅ COMPLETED (31. Jan 2026)**
-**File:** ~~[views/analytics_views.py](app/my_practice/views/analytics_views.py#L38-L223)~~ **REFACTORED**
+**File:** ~~[views/analytics_views.py](../../../app/my_practice/views/analytics_views.py#L38-L223)~~ **REFACTORED**
 **Previous:** 185 lines | **Now:** 16 lines (91% reduction)
 
 **Solution Implemented:**
-- ✅ Created [AnalyticsDashboardBuilder](app/my_practice/utils/analytics_dashboard_builder.py) class (318 lines)
+- ✅ Created [AnalyticsDashboardBuilder](../../../app/my_practice/utils/analytics_dashboard_builder.py) class (318 lines)
 - ✅ Extracted responsibilities into focused methods:
   - `_parse_date_range()` - Period filter parsing (month/quarter/year/custom/all)
   - `_get_trend_data()` - Revenue & expense trends + yearly totals
@@ -235,7 +235,7 @@ grand_total = get_grand_total(Model.objects.all())
 ---
 
 #### M-CMPLX-02: Lange `InvoiceListView.get_queryset()`
-**File:** [views/invoice_views.py](app/my_practice/views/invoice_views.py#L29-L93)
+**File:** [views/invoice_views.py](../../../app/my_practice/views/invoice_views.py#L29-L93)
 **Lines:** 29-93 (64 Zeilen)
 
 Enthält viel Filter-Logik, die extrahiert werden könnte.
@@ -258,13 +258,13 @@ class InvoiceFilterHelper:
 ```
 
 **Status:** ✅ **COMPLETED** (2025-01-21)
-**Implementation:** [invoice_filter_helper.py](app/my_practice/utils/invoice_filter_helper.py)
+**Implementation:** [invoice_filter_helper.py](../../../app/my_practice/utils/invoice_filter_helper.py)
 **Lines Reduced:** invoice_views.py get_queryset() (80→19 lines)
 
 ---
 
 #### M-CMPLX-03: `PracticeAnalyzer._analyze_client()` ist zu lang
-**File:** [utils/practice_analysis.py](app/my_practice/utils/practice_analysis.py#L168-L241)
+**File:** [utils/practice_analysis.py](../../../app/my_practice/utils/practice_analysis.py#L168-L241)
 **Lines:** 168-241 (73 Zeilen)
 
 ```python
@@ -277,7 +277,7 @@ class InvoiceFilterHelper:
 ```
 
 **Status:** ✅ **COMPLETED** (2025-01-21)
-**Implementation:** [practice_analysis.py](app/my_practice/utils/practice_analysis.py)
+**Implementation:** [practice_analysis.py](../../../app/my_practice/utils/practice_analysis.py)
 **Lines Reduced:** _analyze_client() (73→30 lines, 59% reduction)
 
 ---
@@ -322,7 +322,7 @@ class InvoiceFilterHelper:
 ---
 
 #### M-PERF-02: Client.objects.all() in Invoice Import Loop ✅ **COMPLETED (Previously)**
-**File:** [views/import_views/invoices.py](app/my_practice/views/import_views/invoices.py#L58)
+**File:** [views/import_views/invoices.py](../../../app/my_practice/views/import_views/invoices.py#L58)
 
 ```python
 for client in Client.objects.all():
@@ -337,7 +337,7 @@ Wird bei **jedem** Import ausgeführt, auch für kleine Imports.
 ---
 
 #### M-PERF-03: Fehlende select_related in einigen Views
-**File:** [views/search_views.py](app/my_practice/views/search_views.py#L69-L74)
+**File:** [views/search_views.py](../../../app/my_practice/views/search_views.py#L69-L74)
 
 ```python
 # ALREADY PRESENT - Line 70:
@@ -352,7 +352,7 @@ Invoice.objects.filter(...).select_related("client").order_by(...)
 ### LOW SEVERITY
 
 #### L-PERF-01: Ineffiziente List Comprehensions in Analytics
-**File:** [analytics_utils.py](app/my_practice/analytics_utils.py) - mehrere Stellen
+**File:** [analytics_utils.py](../../../app/my_practice/analytics_utils.py) - mehrere Stellen
 
 ```python
 # Beispiel Line ~250
@@ -375,7 +375,7 @@ count_60 = InvoiceItem.objects.filter(...).count()
 
 #### L-DEAD-01: Historische Data Files
 **Files:**
-- [data/historical_sessions_OLD.py](app/my_practice/data/historical_sessions_OLD.py) (787 lines)
+- [data/historical_sessions_OLD.py](../../../app/my_practice/data/historical_sessions_OLD.py) (787 lines)
 
 **Status:** ✅ **COMPLETED** (2025-01-21)
 **Action:** Moved to scripts/archive/completed/
@@ -383,7 +383,7 @@ count_60 = InvoiceItem.objects.filter(...).count()
 ---
 
 #### L-DEAD-02: Kommentierte Import-Form Referenzen
-**File:** [import_forms.py](app/my_practice/import_forms.py#L7-L9)
+**File:** [import_forms.py](../../../app/my_practice/import_forms.py#L7-L9)
 
 **Status:** ✅ **COMPLETED** (2025-01-21)
 **Action:** Removed deprecated SessionHistoryImportForm comments from import_forms.py and test_forms.py
@@ -400,7 +400,7 @@ count_60 = InvoiceItem.objects.filter(...).count()
 ~~- Andere werfen Exceptions~~
 ~~- Manche returnieren JsonResponse mit error~~
 
-**Resolution:** Error handling patterns fully documented in [.github/copilot-instructions.md](.github/copilot-instructions.md):
+**Resolution:** Error handling patterns fully documented in [.github/copilot-instructions.md](../../../.github/copilot-instructions.md):
 
 **Pattern Guidelines:**
 1. **Form Views**: Use `messages.error()` + `form_invalid()` for user-facing validation errors
@@ -440,7 +440,7 @@ class Command(BaseCommand):
 #### M-PAT-02: Gemischte Date Filter Patterns ✅ **RESOLVED (1. Feb 2026)**
 ~~**Issue:** Manche Views nutzen `RevenueCalculator._build_paid_date_filter()`, andere bauen Filter manuell.~~
 
-**Resolution:** Pattern fully documented in [.github/copilot-instructions.md](.github/copilot-instructions.md):
+**Resolution:** Pattern fully documented in [.github/copilot-instructions.md](../../../.github/copilot-instructions.md):
 
 **Standard Pattern:**
 ```python

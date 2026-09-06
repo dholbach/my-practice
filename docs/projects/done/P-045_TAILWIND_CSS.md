@@ -179,4 +179,4 @@ CSS custom property inheritance — no `dark:` prefix needed in most templates.
 ## Related
 
 - [P-044 Alpine.js](../done/P-044_ALPINE_JS.md) — complete; Alpine vendored locally
-- [P-039 Django i18n](P-039_I18N.md) — unrelated but similar deliberate-migration shape
+- [P-039 Django i18n](P-039_DJANGO_I18N.md) — unrelated but similar deliberate-migration shape

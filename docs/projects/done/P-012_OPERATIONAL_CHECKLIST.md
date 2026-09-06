@@ -95,4 +95,4 @@ class ChecklistItemPause:
 ## Related
 
 - Root: [PROJECTS.md](../../../PROJECTS.md#p-012-operational-checklist-backup--recovery-automation)
-- P-011: [Security Foundation](wip/P-011_SECURITY_FOUNDATION.md) — definiert die operativen Prozeduren, die diese Checklisten abbilden
+- P-011: [Security Foundation](P-011_SECURITY_FOUNDATION.md) — definiert die operativen Prozeduren, die diese Checklisten abbilden

@@ -1,6 +1,6 @@
 # P-009: Client Documentation System
 
-**Status**: ✅ Core implemented — ongoing refinements  
+**Status**: ✅ Done — core system stable; two legal/compliance items remain open (see below)
 **Security Level**: 🔴 CRITICAL — Gesundheitsdaten (Art. 9 DSGVO)
 
 ---
@@ -22,11 +22,14 @@ is intentionally **unencrypted** for triage use.
 ### Views (`views/clinical_views.py`)
 
 - `client_profile_save` — create/update ClientProfile
-- `session_log_create` / `session_log_edit` — create/edit SessionLog; edit can update session duration
-- `supervision_item_create` / `supervision_item_toggle` — add + toggle supervision items (AJAX-capable)
+- `session_log_create` / `session_log_edit` / `session_log_delete` — create/edit/delete SessionLog; edit can update session duration
+- `session_log_mark_noshow` — quick-mark a log as Ausfall/Absage
+- `session_delete` / `session_toggle_billable` / `session_bill` — bare-session lifecycle and billing
+- `supervision_item_create` / `supervision_item_toggle` / `supervision_item_resolve` / `supervision_item_delete` — full SupervisionItem lifecycle (AJAX-capable toggle)
 - `supervision_queue` — cross-client supervision dashboard
 - `client_triage_summary` — emergency printable triage (unencrypted metadata only)
-- `client_note_create` / `client_note_delete` — dated free-text notes per client
+- `client_note_create` / `client_note_update` / `client_note_delete` — dated free-text notes per client
+- `gebueh_leistung_create` — GebüH Ziffer quick-entry per session (see P-046)
 
 ### UI (`templates/my_practice/client_detail.html`)
 
@@ -41,8 +44,8 @@ Client detail page has a 4-tab clinical workspace:
 
 - `markdown==3.8` + `render_markdown` templatetag (`nl2br`, `sane_lists`, `fenced_code`)
 - Fernet encryption via `FERNET_KEY` env var
-- Admin classes for `ClientProfile`, `SessionLog`, `SupervisionItem`
-- Test coverage: `tests/test_clinical.py` — models, encryption round-trips, views, mood tags, triage
+- Admin classes for `ClientProfile`, `SessionLog`, `SupervisionItem`, `ClientNote`
+- Test coverage: `tests/test_clinical.py` (100%) + `tests/test_gebueh.py` — models, encryption round-trips, views, mood tags, triage
 
 ### Onboarding widget (sidebar)
 
@@ -52,18 +55,15 @@ Three-step process tracker: **Aufnahme → Vertrag → Anamnese → Abschließen
 
 ## Remaining / Open Items
 
-### Legal & Compliance
+Everything below is legal/compliance paperwork, not code — the two items below are
+the only ones from this doc's original backlog that weren't already done by later
+projects (`ClientNote` admin registration and the `ClientDocument` model both
+shipped as part of P-026, Klientendokument-Upload, März 2026).
 
 - [ ] **Data portability export** (DSGVO Art. 20) — export a client's full record as a
   portable file; ~4h code; nobody is asking for this urgently
 - [ ] **Erasure / pseudonymisation policy** — document the conflict between DSGVO Art. 17
   (right to erasure) and the 10-year Aufbewahrungspflicht; no code needed
-- [ ] **ClientNote admin registration** — 5-minute item
-
-### Features (Low Priority / If Needed)
-
-- [ ] **`ClientDocument` model** — PDF upload for intake forms, contracts; ~1–2 days;
-  access-control design depends on P-010 multi-user work
 
 ---
 
