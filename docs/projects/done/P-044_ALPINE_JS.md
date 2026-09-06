@@ -72,4 +72,4 @@ Switch to `package.json` + bundler if/when P-045 Tailwind introduces a build ste
 
 ## Related
 
-- [P-045 Tailwind CSS](../todo/P-045_TAILWIND_CSS.md) — independent; Alpine does not depend on Tailwind
+- [P-045 Tailwind CSS](P-045_TAILWIND_CSS.md) — independent; Alpine does not depend on Tailwind

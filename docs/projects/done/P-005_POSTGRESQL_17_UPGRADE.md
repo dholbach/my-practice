@@ -3,7 +3,6 @@
 **Status**: ✅ DONE
 **Completed**: 3. März 2026
 **Effort**: ~1h (dump/restore Methode)
-**Technical Guide**: [docs/development/POSTGRESQL_17_UPGRADE.md](../../development/POSTGRESQL_17_UPGRADE.md)
 
 ## Ergebnis
 

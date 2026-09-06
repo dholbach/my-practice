@@ -471,9 +471,9 @@ class PracticeScopedListView(ListView):
 
 ## 🔗 Related Documentation
 
-- [FEATURES.md](../FEATURES.md) - Feature list
-- [CODE_STRUCTURE.md](../architecture/CODE_STRUCTURE.md) - Architecture
-- [CHANGELOG.md](../CHANGELOG.md) - Version history
+- [FEATURES.md](../../FEATURES.md) - Feature list
+- [CODE_STRUCTURE.md](../../architecture/CODE_STRUCTURE.md) - Architecture
+- [CHANGELOG.md](../../CHANGELOG.md) - Version history
 
 ---
 

@@ -115,6 +115,64 @@ def tax_workday_audit(request: HttpRequest) -> HttpResponse:
     )
 
 
+def _build_quarter_data(year: int, practice, today, current_quarter: int, q: int) -> dict:
+    """Revenue/expenses/tax-prepayment data for one quarter of *year*."""
+    start, end = DateRangeHelper.get_quarter_range(year, q)
+
+    # Same paid-date rule (with invoice_date fallback) as the year summary,
+    # so quarters sum to the year total
+    revenue = RevenueCalculator.get_paid_revenue_for_range(start, end, practice=practice)
+
+    expenses = CompanyExpense.objects.filter(
+        practice=practice,
+        date__range=(start, end),
+        is_tax_deductible=True,
+    ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
+
+    tax_withdrawals = CompanyWithdrawal.objects.filter(
+        practice=practice,
+        category="tax",
+        date__range=(start, end),
+    ).order_by("date")
+    tax_paid = sum(w.amount for w in tax_withdrawals)
+
+    # A quarter is "complete" once its last day has passed
+    is_complete = today > end
+    is_current = q == current_quarter and year == today.year
+    # Flag quarters where money was earned but no prepayment recorded
+    needs_attention = (is_complete or is_current) and revenue > 0 and not tax_withdrawals.exists()
+
+    return {
+        "number": q,
+        "label": f"Q{q}",
+        "start": start,
+        "end": end,
+        "revenue": revenue,
+        "expenses": expenses,
+        "net_profit": revenue - expenses,
+        "tax_withdrawals": tax_withdrawals,
+        "tax_paid": tax_paid,
+        "is_complete": is_complete,
+        "is_current": is_current,
+        "needs_attention": needs_attention,
+    }
+
+
+def _tax_note_context(practice, year: int, total_tax_paid: Decimal) -> dict:
+    """Settlement amount/date from TaxYearNote, plus the resulting net tax position."""
+    tax_note = (
+        TaxYearNote.objects.filter(practice=practice, year=year).first() if practice else None
+    )
+    settlement_amount = tax_note.settlement_amount if tax_note else None
+    settlement_date = tax_note.settlement_date if tax_note else None
+    net_tax_position = total_tax_paid + settlement_amount if settlement_amount is not None else None
+    return {
+        "settlement_amount": settlement_amount,
+        "settlement_date": settlement_date,
+        "net_tax_position": net_tax_position,
+    }
+
+
 def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
     """
     Quarterly tax overview for Steuervorauszahlung tracking (P-013 Phase 2).
@@ -131,64 +189,13 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
     today = timezone.localdate()
     current_quarter = DateRangeHelper.get_quarter_for_date(today)[0]
 
-    quarters = []
-    for q in range(1, 5):
-        start, end = DateRangeHelper.get_quarter_range(year, q)
-
-        # Same paid-date rule (with invoice_date fallback) as the year summary,
-        # so quarters sum to the year total
-        revenue = RevenueCalculator.get_paid_revenue_for_range(start, end, practice=practice)
-
-        expenses = CompanyExpense.objects.filter(
-            practice=practice,
-            date__range=(start, end),
-            is_tax_deductible=True,
-        ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
-
-        tax_withdrawals = CompanyWithdrawal.objects.filter(
-            practice=practice,
-            category="tax",
-            date__range=(start, end),
-        ).order_by("date")
-        tax_paid = sum(w.amount for w in tax_withdrawals)
-
-        # A quarter is "complete" once its last day has passed
-        is_complete = today > end
-        is_current = q == current_quarter and year == today.year
-        # Flag quarters where money was earned but no prepayment recorded
-        needs_attention = (
-            (is_complete or is_current) and revenue > 0 and not tax_withdrawals.exists()
-        )
-
-        quarters.append(
-            {
-                "number": q,
-                "label": f"Q{q}",
-                "start": start,
-                "end": end,
-                "revenue": revenue,
-                "expenses": expenses,
-                "net_profit": revenue - expenses,
-                "tax_withdrawals": tax_withdrawals,
-                "tax_paid": tax_paid,
-                "is_complete": is_complete,
-                "is_current": is_current,
-                "needs_attention": needs_attention,
-            }
-        )
+    quarters = [_build_quarter_data(year, practice, today, current_quarter, q) for q in range(1, 5)]
 
     total_revenue: Decimal = sum((cast(Decimal, q["revenue"]) for q in quarters), Decimal("0"))
     total_expenses: Decimal = sum((cast(Decimal, q["expenses"]) for q in quarters), Decimal("0"))
     total_tax_paid: Decimal = sum((cast(Decimal, q["tax_paid"]) for q in quarters), Decimal("0"))
 
     available_years = available_data_years(practice, include_expenses=False) or [today.year]
-
-    tax_note = (
-        TaxYearNote.objects.filter(practice=practice, year=year).first() if practice else None
-    )
-    settlement_amount = tax_note.settlement_amount if tax_note else None
-    settlement_date = tax_note.settlement_date if tax_note else None
-    net_tax_position = total_tax_paid + settlement_amount if settlement_amount is not None else None
 
     return render(
         request,
@@ -203,9 +210,7 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
             "total_net_profit": total_revenue - total_expenses,
             "current_quarter": current_quarter,
             "add_payment_url": reverse("withdrawal_create") + "?category=tax",
-            "settlement_amount": settlement_amount,
-            "settlement_date": settlement_date,
-            "net_tax_position": net_tax_position,
             "save_note_url": reverse("save_tax_year_note"),
+            **_tax_note_context(practice, year, total_tax_paid),
         },
     )

@@ -30,4 +30,4 @@ BACKUP_DIR=/path/to/your/my-practice-data/backups
 ## Ergebnis
 - Keine Binärdaten im Git-Repo
 - Regelmäßige automatische Backups aktiv
-- Restore-Prozess dokumentiert in [docs/development/BACKUP_SETUP.md](../development/BACKUP_SETUP.md)
+- Restore-Prozess dokumentiert in [docs/guides/BACKUP_SETUP.md](../../guides/BACKUP_SETUP.md)

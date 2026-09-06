@@ -78,6 +78,7 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 | P-013 | Workflow Dashboard (Phasen 1–3) | Feb 2026 |
 | P-012 | Operational Checklist + Pause | Feb 2026 |
 | P-011 | Security Foundation (LUKS + Yubikey + DPIA) | Feb 2026 |
+| P-009 | Client Documentation System: encrypted `ClientProfile`/`SessionLog`/`SupervisionItem`/`ClientNote`, triage summary, supervision queue → [done doc](docs/projects/done/P-009_CLIENT_DOCUMENTATION.md) | Feb 2026 |
 | P-005 | PostgreSQL 17 Upgrade | März 2026 |
 | P-004 | Analytics Consolidation | Feb 2026 |
 | P-003 | Workflow-Driven Dashboard | Feb 2026 |

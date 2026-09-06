@@ -402,7 +402,7 @@ Never add bare `<style>` blocks:
 - `CompanyWithdrawal` / `CompanyExpense` - Financial tracking
 
 ## Database
-PostgreSQL with performance indexes (see migrations 0013, 0014). Use `select_related`/`prefetch_related` for related data.
+PostgreSQL with performance indexes — defined inline via each model's `Meta.indexes` (e.g. `Invoice`, `Session`, `PracticeTodo`, `SupervisionItem`, `ClientInquiry`) rather than concentrated in specific migration files. Use `select_related`/`prefetch_related` for related data.
 
 ## File Organization
 When adding new features:
