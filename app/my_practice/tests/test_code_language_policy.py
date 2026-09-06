@@ -44,13 +44,7 @@ PY_FILE_EXEMPTIONS = {"my_practice/tests/test_i18n_coverage.py"}
 # pre-existing test names use for "total" is ordinary vocabulary, not
 # domain-specific like the GebüH-billing terms in TERM_EXEMPTIONS, so they're
 # recorded here instead of widening that exemption.
-KNOWN_VIOLATIONS: set[tuple[str, str]] = {
-    (
-        "my_practice/tests/test_gebueh.py",
-        "test_gebueh_gesamt_total_shown_when_leistungen_recorded",
-    ),
-    ("my_practice/tests/test_gebueh.py", "test_gebueh_gesamt_total_hidden_when_no_leistungen"),
-}
+KNOWN_VIOLATIONS: set[tuple[str, str]] = set()
 
 # Untranslatable German technical/legal terms with no English equivalent,
 # used as identifiers throughout the codebase — proper nouns for specific
