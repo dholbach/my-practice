@@ -228,6 +228,12 @@ class GebuhLeistungViewTest(TestCase):
             reverse("client_detail", kwargs={"pk": regular.pk}) + "#ptab-protokoll",
         )
 
+    def test_post_non_numeric_ziffer_id_redirects_with_error(self):
+        resp = self.http.post(self._url(), {"ziffern": ["not-an-id"]}, follow=True)
+        self.assertEqual(Leistungserfassung.objects.filter(session=self.session).count(), 0)
+        messages_list = list(resp.context["messages"])
+        self.assertTrue(any(m.tags == "error" for m in messages_list))
+
     def test_frequency_warning(self):
         ziffer_freq, _ = GebuhZiffer.objects.get_or_create(
             nummer="1",
@@ -517,7 +523,7 @@ class GebuhPdfTemplateTest(TestCase):
         # Both codes collapse into a single detail row, not one row per code.
         self.assertEqual(html.count('class="gebueh-detail-row"'), 1)
 
-    def test_gebueh_gesamt_total_shown_when_leistungen_recorded(self):
+    def test_gebueh_total_shown_when_leistungen_recorded(self):
         z, _ = GebuhZiffer.objects.get_or_create(
             nummer="19.2",
             defaults={
@@ -533,7 +539,7 @@ class GebuhPdfTemplateTest(TestCase):
         html = self._render()
         self.assertIn("GebüH gesamt", html)
 
-    def test_gebueh_gesamt_total_hidden_when_no_leistungen(self):
+    def test_gebueh_total_hidden_when_no_leistungen(self):
         html = self._render()
         self.assertNotIn("GebüH gesamt", html)
 

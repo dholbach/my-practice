@@ -308,52 +308,63 @@ class PracticeAnalyzer:
         return insights
 
     def _client_insights(self, clients) -> list[str]:
-        insights = []
+        return [
+            *self._concentration_insight(clients),
+            *self._average_per_active_client_insight(clients),
+            *self._probatoric_insight(clients),
+            *self._dormant_insight(clients),
+        ]
 
-        # Concentration
-        if clients:
-            total_sessions = sum(c["sessions_in_period"] for c in clients)
-            if total_sessions > 0:
-                top_3 = sum(c["sessions_in_period"] for c in clients[:3])
-                concentration = (top_3 / total_sessions) * 100
-                if concentration > 60:
-                    insights.append(
-                        _("⚠️ High concentration: Top 3 clients = %(pct)s%% of sessions")
-                        % {"pct": f"{concentration:.0f}"}
-                    )
-                elif concentration > 40:
-                    insights.append(
-                        _("📊 Top 3 clients account for %(pct)s%% of sessions")
-                        % {"pct": f"{concentration:.0f}"}
-                    )
+    @staticmethod
+    def _concentration_insight(clients) -> list[str]:
+        if not clients:
+            return []
+        total_sessions = sum(c["sessions_in_period"] for c in clients)
+        if total_sessions == 0:
+            return []
+        top_3 = sum(c["sessions_in_period"] for c in clients[:3])
+        concentration = (top_3 / total_sessions) * 100
+        if concentration > 60:
+            return [
+                _("⚠️ High concentration: Top 3 clients = %(pct)s%% of sessions")
+                % {"pct": f"{concentration:.0f}"}
+            ]
+        if concentration > 40:
+            return [
+                _("📊 Top 3 clients account for %(pct)s%% of sessions")
+                % {"pct": f"{concentration:.0f}"}
+            ]
+        return []
 
-        # Average per active client
+    @staticmethod
+    def _average_per_active_client_insight(clients) -> list[str]:
         active = [c for c in clients if c["classification"] in ["established", "probatoric"]]
-        if active:
-            avg = sum(c["sessions_in_period"] for c in active) / len(active)
-            insights.append(_("📈 Average: %(avg)sh per active client") % {"avg": f"{avg:.1f}"})
+        if not active:
+            return []
+        avg = sum(c["sessions_in_period"] for c in active) / len(active)
+        return [_("📈 Average: %(avg)sh per active client") % {"avg": f"{avg:.1f}"}]
 
-        # Probatoric
+    @staticmethod
+    def _probatoric_insight(clients) -> list[str]:
         probatoric = [c for c in clients if c["classification"] == "probatoric"]
-        if probatoric:
-            ph = sum(c["sessions_in_period"] for c in probatoric)
-            insights.append(
-                ngettext(
-                    "🌱 %(n)s new probatoric client (%(h)sh)",
-                    "🌱 %(n)s new probatoric clients (%(h)sh)",
-                    len(probatoric),
-                )
-                % {"n": len(probatoric), "h": f"{ph:.1f}"}
+        if not probatoric:
+            return []
+        ph = sum(c["sessions_in_period"] for c in probatoric)
+        return [
+            ngettext(
+                "🌱 %(n)s new probatoric client (%(h)sh)",
+                "🌱 %(n)s new probatoric clients (%(h)sh)",
+                len(probatoric),
             )
+            % {"n": len(probatoric), "h": f"{ph:.1f}"}
+        ]
 
-        # Dormant
+    @staticmethod
+    def _dormant_insight(clients) -> list[str]:
         dormant = [c for c in clients if c["classification"] == "dormant"]
-        if len(dormant) > 5:
-            insights.append(
-                _("💤 %(n)s dormant clients (no activity this period)") % {"n": len(dormant)}
-            )
-
-        return insights
+        if len(dormant) <= 5:
+            return []
+        return [_("💤 %(n)s dormant clients (no activity this period)") % {"n": len(dormant)}]
 
     def _capacity_insights(self, capacity) -> list[str]:
         cap_pct = capacity["capacity_percentage"]
