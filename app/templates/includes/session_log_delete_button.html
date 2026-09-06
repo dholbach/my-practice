@@ -1,0 +1,5 @@
+{# Delete button for a session log #}
+{# Usage: {% include 'includes/session_log_delete_button.html' with client=client log=log confirm_delete_log=confirm_delete_log %} #}
+{% load i18n %}
+{% url 'session_log_delete' client.pk log.pk as session_log_delete_url %}
+{% include 'includes/inline_post_button.html' with action_url=session_log_delete_url button_text='🗑️' button_class='btn-danger btn-sm' confirm=confirm_delete_log %}
