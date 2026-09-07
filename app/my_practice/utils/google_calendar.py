@@ -166,9 +166,12 @@ class GoogleCalendarOAuth:
 
             except Exception as e:
                 # Token refresh failed — most likely the refresh_token itself
-                # has been revoked (Google limits unverified-app refresh tokens
-                # to 7 days).  Leave the token active so subsequent runs report
-                # the same clear error rather than "no active tokens found".
+                # has been revoked (Google caps refresh tokens at 7 days while
+                # the OAuth consent screen's publishing status is "Testing",
+                # regardless of the Test users list — only publishing the app
+                # to "In production" removes the cap). Leave the token active
+                # so subsequent runs report the same clear error rather than
+                # "no active tokens found".
                 logger.error(f"Token refresh failed: {e}")
                 return None
 

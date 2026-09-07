@@ -89,9 +89,11 @@ class Command(BaseCommand):
                     f"  ✗ Calendar token for practice '{practice.name}' is expired or invalid.\n"
                     "    → Re-authorise: ./dev.py calendar-auth "
                     "(or open /calendar/authorize/ in the app).\n"
-                    "    ℹ️  Note: Google revokes refresh tokens after 7 days for unverified apps.\n"
-                    "       Add your e-mail address as a test user in the Google Cloud Console\n"
-                    "       (OAuth consent screen) to bypass this limit."
+                    "    ℹ️  Note: Google caps refresh tokens at 7 days while the OAuth consent\n"
+                    "       screen's publishing status is 'Testing' — being on the Test users\n"
+                    "       list does NOT bypass this. Publish the app to 'In production' in\n"
+                    "       the Google Cloud Console (Audience → App veröffentlichen) to remove\n"
+                    "       the 7-day cap, then re-run ./dev.py calendar-auth once."
                 )
             )
             return

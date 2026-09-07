@@ -1,13 +1,13 @@
 # Google Calendar Integration - User Guide
 
 **Status**: ✅ Phase 1-5 Complete
-**Last Updated**: 31. Januar 2026
+**Last Updated**: 7. September 2026
 
 ---
 
-## Übersicht
+## Overview
 
-Import von Therapie-Sessions aus Google Calendar direkt in das Rechnungssystem. Erstellt automatisch InvoiceItems für alle geplanten Sessions.
+Imports therapy sessions from Google Calendar directly into the invoicing system. Automatically creates InvoiceItems for all scheduled sessions.
 
 ---
 
@@ -16,192 +16,193 @@ Import von Therapie-Sessions aus Google Calendar direkt in das Rechnungssystem. 
 ### ✅ Phase 1-5 Complete
 
 **OAuth2 Integration**:
-- Sichere Authentifizierung mit Google
-- Filter auf "Praxis" Calendar
+- Secure authentication with Google
+- Filters on the "Praxis" calendar
 - Token auto-refresh (proactive 5-min expiry check)
 - API pagination (>250 events support)
 
 **Event Parser**:
-- Client Matching via Initialen im Event-Titel
-- Cancel Detection (durchgestrichene Events)
-- Farb-codierte Status-Anzeige
-- Duration-based Service Type Mapping
+- Client matching via initials in the event title
+- Cancel detection (strikethrough events)
+- Colour-coded status display
+- Duration-based service type mapping
 
 **Approval UI**:
-- Manuelle Korrekturen (Client/Service Type ändern)
-- Smart Auto-Selection für ready Events
-- Duplicate Detection mit Visual Indicators
-- Status Badges mit Tooltips
-- Bulk Actions: "Import selected"
+- Manual corrections (change client/service type)
+- Smart auto-selection for ready events
+- Duplicate detection with visual indicators
+- Status badges with tooltips
+- Bulk actions: "Import selected"
 
 **InvoiceItem Creation**:
-- Erstellt Items aus approved Events
-- Duplicate Prevention (prüft existierende Items)
-- Free Vorgespräch Handling (0€ rate)
-- First Seen Date Auto-Tracking
-- Single Draft Invoice per Client
-- Comprehensive Error Reporting
+- Creates items from approved events
+- Duplicate prevention (checks existing items)
+- Free initial-consultation handling (0€ rate)
+- First-seen date auto-tracking
+- Single draft invoice per client
+- Comprehensive error reporting
 
 **Production Polish**:
-- Session Storage Event Caching (30-min cache)
-- Performance Optimizations
-- Error Handling
+- Session storage event caching (30-min cache)
+- Performance optimizations
+- Error handling
 
 ---
 
 ## Setup
 
 ### 1. Google Cloud Console
-1. Projekt erstellen: [console.cloud.google.com](https://console.cloud.google.com)
-2. APIs aktivieren: **Google Calendar API**
-3. OAuth 2.0 Client ID erstellen:
-   - Application Type: **Web Application**
-   - Authorized Redirect URIs: `http://localhost:8000/calendar/oauth2callback/`
+1. Create a project: [console.cloud.google.com](https://console.cloud.google.com)
+2. Enable the API: **Google Calendar API**
+3. Create an OAuth 2.0 client ID:
+   - Application type: **Web application**
+   - Authorized redirect URIs: `http://localhost:8000/calendar/oauth2callback/`
+4. **OAuth consent screen → Audience**: fill in Branding completely (app name, support email, developer contact, homepage/privacy/ToS links pointing at an authorized domain) and click **"Publish App"** to move the app from "Testing" to "In production" — see Troubleshooting below for why this matters.
 
-### 2. Credentials Konfigurieren
+### 2. Configure Credentials
 ```bash
-# .env Datei
-GOOGLE_CLIENT_ID=your-client-id
-GOOGLE_CLIENT_SECRET=your-client-secret
+# .env file
+GOOGLE_CALENDAR_CLIENT_ID=your-client-id
+GOOGLE_CALENDAR_CLIENT_SECRET=your-client-secret
 ```
 
-### 3. Erste Nutzung
-1. **Calendar Import** im Hauptmenü öffnen
-2. **"Mit Google verbinden"** klicken
-3. Google Account auswählen und Berechtigungen erteilen
-4. Automatische Weiterleitung zurück zur App
+### 3. First Use
+1. Open **Calendar Import** from the main menu
+2. Click **"Connect with Google"**
+3. Choose the Google account and grant permissions
+4. Automatic redirect back to the app
 
 ---
 
 ## Workflow
 
-### 1. Events Abrufen
-**Navigation**: Hauptmenü → **Calendar Import**
+### 1. Fetching Events
+**Navigation**: Main menu → **Calendar Import**
 
-**Event Fetching**:
-- Zeigt Events von HEUTE bis +365 Tage
-- Filtert auf "Praxis" Calendar
-- Session Caching (30 Minuten)
+**Event fetching**:
+- Shows events from TODAY to +365 days
+- Filters on the "Praxis" calendar
+- Session caching (30 minutes)
 
-**Status Badges**:
-- 🟢 **Ready**: Client gefunden, Service Type gemappt, keine Duplikate
-- 🟡 **Needs Attention**: Client unklar oder Service Type fehlt
-- 🔴 **Duplicate**: Bereits in InvoiceItems vorhanden
-- ⚫ **Cancelled**: Event durchgestrichen
+**Status badges**:
+- 🟢 **Ready**: client found, service type mapped, no duplicates
+- 🟡 **Needs Attention**: client unclear or service type missing
+- 🔴 **Duplicate**: already present in InvoiceItems
+- ⚫ **Cancelled**: event struck through
 
-### 2. Events Überprüfen & Korrigieren
+### 2. Reviewing & Correcting Events
 
-**Auto-Matching**:
-- Parser sucht Initialen im Event-Titel (z.B. "AB" → "Müller, Anna (AB)")
-- Duration → Service Type Mapping:
-  - 60min → "Sitzung (60min)"
-  - 90min → "Sitzung (90min)"
+**Auto-matching**:
+- Parser looks for initials in the event title (e.g. "AB" → "Müller, Anna (AB)")
+- Duration → service type mapping:
+  - 60min → "Session (60min)"
+  - 90min → "Session (90min)"
   - 15min → "Check-in"
-  - Default → "Sitzung (60min)"
+  - Default → "Session (60min)"
 
-**Manuelle Korrekturen**:
-- Dropdown: Client auswählen (falls Auto-Match fehlschlägt)
-- Dropdown: Service Type ändern (falls Standard nicht passt)
-- Changes werden sofort gespeichert (Session Storage)
+**Manual corrections**:
+- Dropdown: choose client (if auto-match fails)
+- Dropdown: change service type (if the default doesn't fit)
+- Changes are saved immediately (session storage)
 
-**Smart Selection**:
-- "Select Ready" Button: Wählt alle 🟢 Ready Events
-- Spart Zeit bei Bulk-Import
+**Smart selection**:
+- "Select Ready" button: selects all 🟢 Ready events
+- Saves time on bulk import
 
-### 3. Import Durchführen
+### 3. Running the Import
 
-**"Import Selected" Button**:
-- Verarbeitet alle ausgewählten Events
-- Erstellt InvoiceItems für jeden Client
-- Fügt Items zu Draft Invoice hinzu (oder erstellt neue Draft)
+**"Import Selected" button**:
+- Processes all selected events
+- Creates InvoiceItems for each client
+- Adds items to a draft invoice (or creates a new draft)
 
-**Duplicate Prevention**:
-- Prüft existierende InvoiceItems (gleicher Tag + Client)
-- Zeigt 🔴 Duplicate Badge
-- Kann nicht importiert werden (checkbox disabled)
+**Duplicate prevention**:
+- Checks existing InvoiceItems (same day + client)
+- Shows a 🔴 Duplicate badge
+- Cannot be imported (checkbox disabled)
 
-**Success Feedback**:
-- Zeigt Anzahl erfolgreich importierter Sessions
-- Listet Clients auf
-- Link zu Invoice Draft
+**Success feedback**:
+- Shows the number of successfully imported sessions
+- Lists clients
+- Link to the invoice draft
 
 ---
 
 ## Special Cases
 
-### Vorgespräch (Initial Consultation)
-**Erkennung**: "Vorgespräch" oder "Erstgespräch" im Event-Titel
+### Initial Consultation
+**Detection**: "Vorgespräch" or "Erstgespräch" in the event title
 
-**Automatische Behandlung**:
-- Service Type: "Sitzung (60min)"
-- **Rate: 0€** (kostenlos)
-- First Seen Date: Automatisch gesetzt
+**Automatic handling**:
+- Service type: "Session (60min)"
+- **Rate: 0€** (free)
+- First-seen date: set automatically
 
 ### Group Sessions
-**Event-Titel Format**: Muss Initialen enthalten (z.B. "Gruppe - AB, CD, EF")
+**Event title format**: must contain initials (e.g. "Gruppe - AB, CD, EF")
 
 **Handling**:
-- Jeder Client bekommt separates InvoiceItem
-- Service Type: Manuell als "Gruppensitzung" wählen
-- Duration: Wie im Event angegeben
+- Each client gets a separate InvoiceItem
+- Service type: manually chosen as "Group Session"
+- Duration: as specified in the event
 
 ### Cancelled Events
-**Anzeige**: ⚫ Cancelled Badge
+**Display**: ⚫ Cancelled badge
 
 **Handling**:
-- Checkbox disabled (kann nicht importiert werden)
-- Bleibt in Liste für Übersicht
-- Optional: Manuell als "Ausfall" Invoice erstellen
+- Checkbox disabled (cannot be imported)
+- Stays in the list for visibility
+- Optional: manually create a "cancellation" invoice
 
 ---
 
-## Technische Details
+## Technical Details
 
 ### Event Parser Logic
 ```python
-# Duration → Service Type Mapping
+# Duration → service type mapping
 duration_map = {
-    60: "therapy_60",     # Sitzung (60min)
-    90: "therapy_90",     # Sitzung (90min)
+    60: "therapy_60",     # Session (60min)
+    90: "therapy_90",     # Session (90min)
     15: "check_in",       # Check-in
-    120: "therapy_120",   # Sitzung (120min)
+    120: "therapy_120",   # Session (120min)
 }
 ```
 
 ### Client Matching
 ```python
-# 1. Sucht Initialen in Event-Titel
-# 2. Matched gegen Client.client_code
-# 3. Falls mehrere Matches: Zeigt alle zur Auswahl
+# 1. Looks for initials in the event title
+# 2. Matches against Client.client_code
+# 3. If multiple matches: shows all for selection
 ```
 
 ### Duplicate Detection
 ```python
-# Prüft InvoiceItem mit:
-# - Gleichem Datum (session_date)
-# - Gleichem Client
-# - ±5 Minuten Duration Variance (erlaubt kleine Abweichungen)
+# Checks InvoiceItem against:
+# - Same date (session_date)
+# - Same client
+# - ±5 minutes duration variance (allows small deviations)
 ```
 
 ### Token Management
-- OAuth Token wird in Session gespeichert
-- Proactive Refresh bei <5 Minuten verbleibender Gültigkeit
-- Automatische Re-Authentifizierung falls Token expired
+- OAuth token is stored in the database (`GoogleCalendarToken`)
+- Proactive refresh when <5 minutes of validity remain
+- Automatic re-authentication if the token has expired — see Troubleshooting
 
 ---
 
-## Dateien
+## Files
 
 ### Backend
 ```
 app/my_practice/
-├── views/calendar_views.py        # OAuth + Import Views
-├── utils/google_calendar.py       # Event Parser
+├── views/calendar_views.py        # OAuth + import views
+├── utils/google_calendar.py       # Event parser
 ├── forms.py                       # CalendarImportForm
 └── urls.py                        # /calendar/* routes
 
 app/config/
-└── settings.py                    # GOOGLE_CLIENT_ID/SECRET
+└── settings.py                    # GOOGLE_CALENDAR_CLIENT_ID/SECRET
 ```
 
 ### Frontend
@@ -211,64 +212,64 @@ templates/my_practice/
 
 static/
 ├── css/calendar_import.css        # Styling
-└── js/calendar_import.js          # AJAX + Interactions
+└── js/calendar_import.js          # AJAX + interactions
 ```
 
 ### Tests
 ```
 app/my_practice/tests/
-├── test_google_calendar.py        # Event Parser Tests
-└── test_calendar_views.py         # Integration Tests
+├── test_google_calendar.py        # Event parser tests
+└── test_calendar_views.py         # Integration tests
 ```
 
 ---
 
 ## Troubleshooting
 
-### "Invalid Grant" Error
-**Ursache**: OAuth Token expired
+### "Invalid Grant" Error / Token Keeps Expiring Every ~7 Days
+**Cause**: Google caps refresh-token lifetime at **7 days** whenever the OAuth consent screen's publishing status is **"Testing"**. This is unconditional — setting a support/contact email on the consent screen does **not** change it, and neither does adding your account to the **Test users** list. The Test users list only controls who is allowed to complete the consent flow while unverified; it has no effect on refresh-token lifetime.
 
-**Lösung**: Button "Mit Google verbinden" erneut klicken
+**Fix**: Google Cloud Console → APIs & Services → OAuth consent screen → **Audience**. Complete Branding fully (app name, support email, developer contact, and homepage/privacy-policy/ToS links that resolve to an authorized domain — `http://localhost` will not validate; point them at a domain you've already authorized, e.g. the GitHub repo URL), then click **"App veröffentlichen" / "Publish App"** to move the app from "Testing" to "In production". After publishing, run `./dev.py calendar-auth` once more to mint a fresh refresh token — you'll see a one-time "Google hasn't verified this app" warning to click through, since `calendar.readonly` is a sensitive (not restricted) scope and doesn't require full verification for personal/single-user use.
 
 ### "No Events Found"
-**Mögliche Ursachen**:
-- Falscher Calendar Name (muss "Praxis" heißen)
-- Keine Events in nächsten 365 Tagen
-- Calendar nicht freigegeben
+**Possible causes**:
+- Wrong calendar name (must be "Praxis")
+- No events in the next 365 days
+- Calendar not shared
 
-**Lösung**: Google Calendar prüfen, ggf. Calendar Name anpassen
+**Fix**: Check Google Calendar, adjust the calendar name if needed
 
-### Client Nicht Gefunden
-**Ursache**: Initialen im Event-Titel fehlen oder falsch
+### Client Not Found
+**Cause**: Initials missing or incorrect in the event title
 
-**Lösung**:
-- Dropdown: Client manuell auswählen
-- Oder: Event-Titel in Google Calendar korrigieren
+**Fix**:
+- Dropdown: choose the client manually
+- Or: correct the event title in Google Calendar
 
 ### Duplicate Detected (False Positive)
-**Ursache**: ±5min Variance Detection zu streng
+**Cause**: ±5min variance detection too strict
 
-**Lösung**:
-- Existierendes Item in Invoice prüfen
-- Falls wirklich Duplikat: Ignorieren
-- Falls false positive: Existierendes Item löschen, erneut importieren
+**Fix**:
+- Check the existing item on the invoice
+- If it's really a duplicate: ignore
+- If false positive: delete the existing item, re-import
 
 ---
 
 ## Best Practices
 
-1. **Regelmäßiger Import**: Wöchentlich oder nach Terminplanung
-2. **Event-Titel Konsistenz**: Immer Initialen verwenden (z.B. "AB - Therapie")
-3. **Calendar Name**: "Praxis" beibehalten für automatische Filterung
-4. **Vorgespräch Kennzeichnung**: "Vorgespräch" im Titel für 0€ Handling
-5. **Draft Invoice Prüfen**: Nach Import immer Draft Invoice kontrollieren
+1. **Regular import**: weekly or after scheduling appointments
+2. **Event title consistency**: always use initials (e.g. "AB - Therapie")
+3. **Calendar name**: keep "Praxis" for automatic filtering
+4. **Initial-consultation marker**: "Vorgespräch" in the title for 0€ handling
+5. **Check draft invoice**: always review the draft invoice after import
 
 ---
 
-## Zukünftige Erweiterungen (Nice to Have)
+## Future Extensions (Nice to Have)
 
-- Bi-directional Sync (App → Google Calendar)
-- Automatic Reminder Emails
-- Recurring Appointment Templates
-- Multi-Calendar Support
-- Automatic Cancellation Handling (creates "Ausfall" invoice)
+- Bi-directional sync (app → Google Calendar)
+- Automatic reminder emails
+- Recurring appointment templates
+- Multi-calendar support
+- Automatic cancellation handling (creates a "cancellation" invoice)
