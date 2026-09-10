@@ -28,10 +28,9 @@ chronological record; this document only tracks current state.
 ### Clinical Documentation (Protokoll Tab)
 - ✅ Session log entries (SessionLog) — structured per-session notes with interventions, mood tags, session type
 - ✅ Freeform dated notes (ClientNote) — encrypted Markdown, user-supplied date
-- ✅ Supervision notes — dated Markdown note variant (`note_type=supervision`) interspersed in chronological log; inline ✏️ edit form (date + content, collapsible)
-- ✅ `+ Notiz` and `+ Supervision` quick-entry in Protokoll toolbar
-- ✅ Supervision tab — agenda items with `besprochen` toggle (separate from Protokoll log)
-- ✅ Chronological unified log view (sessions + notes + supervision notes, newest first, collapse >10)
+- ✅ `+ Notiz` and `+ Supervision` quick-entry in Protokoll toolbar (Supervision section collapsed by default behind the toggle)
+- ✅ Supervision — single unified workflow: `SupervisionItem` agenda entries with a `besprochen` toggle, optional resolution notes/date filled in via a resolve view when marked discussed
+- ✅ Chronological unified log view (sessions + notes, newest first, collapse >10)
 - ✅ Unbilled session delete (blocked if already invoiced)
 - ✅ GebüH-recorded indicator on session rows — the GebüH button shows a visual marker once a code has been entered for that session
 
@@ -45,7 +44,7 @@ chronological record; this document only tracks current state.
 
 ### Focus Queue (P-050)
 - ✅ Unified task list (`/focus/`) — replaces the old `/todos/` list and the dashboard's "Needs Action" pane; manual tasks and materialized system signals (missing session log, unpaid/unsent invoice, pending checklist, open supervision topic) live side by side as real, closeable rows
-- ✅ `sync_focus_queue_tasks` management command materializes and auto-closes derived tasks; runs on its own daily systemd timer
+- ✅ `sync_focus_queue_tasks` management command materializes and auto-closes derived tasks; runs via the shared hourly `run_scheduled_jobs` systemd timer (consolidated with calendar-fetch and client-tag jobs)
 - ✅ Type filter — colour-coded pill buttons matching each task type's badge colour
 - ✅ Reference date per row — invoice date, session date, or task creation date, whichever is most relevant
 - ✅ Real undo — the complete checkbox toggles complete/incomplete instead of only marking done; the just-completed row stays visible in place, struck through

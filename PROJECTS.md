@@ -1,12 +1,12 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-09-01
+**Last Updated**: 2026-09-10
 
 ## 🔍 Recent Activity
 
-- **2026-08-31 — v0.5.4 patch release**: Google Calendar picker replacing the hardcoded "Praxis" lookup plus configurable timezone/locale env vars (#390, closes #192/#193/#8), `.env` inline-comment parsing fixed in backup/restore scripts with new shellcheck CI coverage (#391/#392), a Proton Bridge email-timeout false-failure fix (#393), the "Therapy Practice" page title now translates to German (#399), and a routine patch/minor dependency catch-up (0 known vulnerabilities per `pip-audit`). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 - **2026-09-01 — quarterly review follow-ups**: consolidated the three separately-timed background-job systemd timers (update-client-tags, fetch-calendar-events, sync-focus-queue — two hourly, one daily) into one hourly `run_scheduled_jobs` command/timer (PR #405), fixed `update_client_tags.py` showing 0% coverage despite an existing test file (its `_run()` helper was defined but never called), and added a new ratchet test guarding against German identifiers/comments in `.py`/`.js` source — a gap the existing i18n guardrail never covered since it only scans template text (PR #406). `client_detail.html` flagged as the standing design-review candidate (15 fix commits in 6 months, still not settled since P-094 "done") — not yet scoped.
+- **2026-09-10 — v0.5.5 patch release**: dark-on-dark supervision textarea fixed alongside a merge of the two overlapping client-detail Supervision workflows into one (#402); Focus Queue filter counts stuck at 0/1 fixed, a `GROUP BY` column implicitly widened by an inherited `.order_by()` (#403); false-positive unsaved-draft banner on client detail fixed (#404); the `client_detail.html` complexity flagged in the prior entry resolved via a four-phase codebase review — complexity hotspots split, a CSS-token guardrail blind spot fixed (231/460 lines silently unchecked, surfaced a real dark-mode bug), `clinical_views.py`/`email_views.py` test coverage filled in, 11 broken doc links fixed (#408–#411); a stray raw HTML comment on `/bank/review/` fixed (#412); misleading OAuth 7-day-token-expiry guidance corrected (#414); `weasyprint` bumped to close PYSEC-2026-3940 plus routine `pypdf`/`google-auth` bumps (#413/#415, 0 known vulnerabilities). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
