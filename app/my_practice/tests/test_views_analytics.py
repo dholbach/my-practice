@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from ..models import (
     Client,
@@ -430,10 +431,64 @@ class RevenueReportTest(TestCase):
             practice=self.practice,
         )
 
-    def test_no_year_selected_shows_available_years_only(self):
+    def test_no_year_selected_defaults_to_current_year(self):
+        current_year = timezone.localdate().year
+        Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date(current_year, 1, 15),
+            paid_date=date(current_year, 1, 20),
+            status="paid",
+            total=Decimal("180.00"),
+            practice=self.practice,
+        )
         response = self.client_instance.get(reverse("revenue_report"))
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn("invoices", response.context)
+        self.assertEqual(response.context["selected_year"], current_year)
+        self.assertEqual(response.context["summary"]["count"], 1)
+
+    def test_no_year_selected_falls_back_to_latest_year_with_data(self):
+        """Before this year has any payments, show the most recent year that does."""
+        past_year = timezone.localdate().year - 2
+        Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date(past_year, 1, 15),
+            paid_date=date(past_year, 1, 20),
+            status="paid",
+            total=Decimal("180.00"),
+            practice=self.practice,
+        )
+        response = self.client_instance.get(reverse("revenue_report"))
+        self.assertEqual(response.context["selected_year"], past_year)
+        self.assertEqual(response.context["summary"]["count"], 1)
+
+    def test_empty_practice_defaults_to_current_year(self):
+        current_year = timezone.localdate().year
+        response = self.client_instance.get(reverse("revenue_report"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["selected_year"], current_year)
+        self.assertEqual(response.context["summary"]["count"], 0)
+
+    def test_selected_year_always_present_in_dropdown(self):
+        """A year with no paid invoices must still appear, or the select renders blank."""
+        response = self.client_instance.get(reverse("revenue_report") + "?year=2042")
+        self.assertEqual(response.context["selected_year"], 2042)
+        self.assertIn(2042, response.context["available_years"])
+
+    def test_available_years_sorted_descending(self):
+        for year in (2023, 2025, 2024):
+            Invoice.objects.create(
+                client=self.test_client,
+                invoice_number=f"TC-{year}",
+                invoice_date=date(year, 1, 15),
+                paid_date=date(year, 1, 20),
+                status="paid",
+                total=Decimal("90.00"),
+                practice=self.practice,
+            )
+        response = self.client_instance.get(reverse("revenue_report") + "?year=2024")
+        self.assertEqual(response.context["available_years"], [2025, 2024, 2023])
 
     def test_selected_year_shows_paid_invoices(self):
         Invoice.objects.create(
@@ -470,10 +525,10 @@ class RevenueReportTest(TestCase):
         Invoice.objects.create(
             client=self.test_client,
             invoice_number="TC-1",
-            invoice_date=date(2026, 1, 15),
+            invoice_date=date(2024, 1, 15),
             status="draft",
             total=Decimal("90.00"),
             practice=self.practice,
         )
         response = self.client_instance.get(reverse("revenue_report"))
-        self.assertEqual(response.context["available_years"], [])
+        self.assertNotIn(2024, response.context["available_years"])
