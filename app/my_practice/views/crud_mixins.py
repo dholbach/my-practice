@@ -146,7 +146,7 @@ class PracticeScopedListView(LoginRequiredMixin, ListView):
     Example:
         class ClientListView(PracticeScopedListView):
             model = Client
-            template_name = "my_practice/client_list.html"
+            template_name = "my_practice/client_list_cards.html"
     """
 
     def get_queryset(self):
@@ -170,8 +170,8 @@ class PracticeScopedCreateView(LoginRequiredMixin, CreateView):
     Example:
         class ClientCreateView(PracticeScopedCreateView):
             model = Client
-            form_class = ClientForm
-            template_name = "my_practice/client_form.html"
+            form_class = ClientIntakeForm
+            template_name = "my_practice/client_intake.html"
             success_url = reverse_lazy("client_list")
             success_message = gettext_lazy("Client {obj.full_name} created successfully!")
     """
@@ -205,8 +205,8 @@ class PracticeScopedUpdateView(LoginRequiredMixin, UpdateView):
     Example:
         class ClientUpdateView(PracticeScopedUpdateView):
             model = Client
-            form_class = ClientForm
-            template_name = "my_practice/client_form.html"
+            form_class = ClientIntakeForm
+            template_name = "my_practice/client_intake.html"
             success_url = reverse_lazy("client_list")
             success_message = gettext_lazy("Client {obj.full_name} updated successfully!")
     """

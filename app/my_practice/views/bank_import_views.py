@@ -7,7 +7,7 @@ Handles CSV upload, automatic matching, and manual review of unmatched transacti
 from decimal import Decimal
 
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
@@ -548,21 +548,6 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             alias_name=transaction.payer_name,
             notes=notes,
         )
-
-
-def bank_transaction_detail(request, pk):
-    """Detail view for a single bank transaction"""
-    transaction = get_object_or_404(
-        BankTransaction.objects.for_current_practice(request),
-        pk=pk,
-    )
-
-    context = {
-        "transaction": transaction,
-        "page_title": f"Transaktion vom {transaction.transaction_date}",
-    }
-
-    return render(request, "my_practice/bank_transaction_detail.html", context)
 
 
 class BankExpenseReviewView(PracticeScopedListView):
