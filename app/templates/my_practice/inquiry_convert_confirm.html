@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% load payment_tags %}
 
 {% block title %}{% trans "Add client" %}{% endblock %}
 
@@ -14,15 +15,15 @@
         <h2>{% trans "Inquiry" %}</h2>
         <div class="detail-row">
             <span class="label">{% trans "Name" %}:</span>
-            <span class="value">{{ inquiry.full_name }}</span>
+            <span class="value">{{ inquiry.full_name|privacy_name }}</span>
         </div>
         <div class="detail-row">
             <span class="label">{% trans "Email" %}:</span>
-            <span class="value">{{ inquiry.email|default:"—" }}</span>
+            <span class="value sensitive-data">{{ inquiry.email|default:"—" }}</span>
         </div>
         <div class="detail-row">
             <span class="label">{% trans "Phone" %}:</span>
-            <span class="value">{{ inquiry.phone|default:"—" }}</span>
+            <span class="value sensitive-data">{{ inquiry.phone|default:"—" }}</span>
         </div>
         <div class="detail-row">
             <span class="label">{% trans "Source" %}:</span>

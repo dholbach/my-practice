@@ -133,7 +133,7 @@
                         {% for client in clients %}
                         <option value="{{ client.id }}"
                                 {% if event.matched_client and event.matched_client.id == client.id %}selected{% endif %}>
-                            {{ client.client_code }} - {{ client.full_name }}
+                            {{ client.client_code }}
                         </option>
                         {% endfor %}
                     </select>

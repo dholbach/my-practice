@@ -153,6 +153,36 @@ gradients, fixed swatch palettes, coloured buttons) — shrink it, don't grow it
 
 Note: a global `a { color: var(--color-link); }` rule in `@layer base` in `tailwind.css` handles the base case. You only need the scoped rule when the container overrides `color` to something that would make the global rule look wrong (e.g. white text on a coloured background where links should also be white).
 
+### Privacy-mode contract (M-PAT-08)
+
+Privacy mode is a shoulder-surfing toggle: `body.privacy-mode` (localStorage, client-side
+only — the server never knows it is on) blurs everything inside a `.sensitive-data`
+element. Two mistakes are possible, and neither is visible in review or in normal use,
+because nothing renders differently unless the toggle happens to be on:
+
+- **under-blur** — a personal field rendered outside any `.sensitive-data` element;
+- **over-blur** — `.sensitive-data` around something that was never personal, which hides a
+  form label or a client code that *is* the privacy-safe representation.
+
+Both have been fixed one site at a time more than once (#321, #424, #426).
+`my_practice/tests/test_privacy_coverage.py` now ratchets both directions.
+
+Which treatment to use:
+
+| Situation | Treatment |
+|---|---|
+| Name shown beside its client code, or anywhere the record is already identified | `<span class="sensitive-data">` — full blur |
+| Name with no code to fall back on (inquiries; any picker where rows must be told apart) | `\|privacy_name` — first letter of each word stays legible, rest blurred |
+| Client code, invoice number, date, status | nothing — these are already the privacy-safe form |
+| Form inputs, labels, `<option>` text | nothing — never blurred anywhere; `<option>` text is painted by the OS widget and a CSS blur cannot reach it, so a select shows the code only (`Client.__str__`) |
+| PDF templates | nothing — a document needs the real name to be valid |
+
+A value needed by JavaScript is a separate question from a blur: the guardrail reports
+`<script>` hits with a `script:` prefix, and the answer is "check what the JS does with
+it" — a name passed to `fetch()` never reaches the page, one written into `innerHTML`
+leaks exactly like body text (which is how the command palette shipped unblurred results
+in #424).
+
 ### Anti-patterns to flag
 
 - `<style>` block inside a template `{% block extra_css %}` → move to `@layer components` in `tailwind.css`
@@ -163,7 +193,7 @@ Note: a global `a { color: var(--color-link); }` rule in `@layer base` in `tailw
 - `background: var(--*)` without a matching `color:` rule → dark-on-dark regression risk (M-PAT-07)
 - `var(--some-token)` where the token isn't defined in `tailwind.css` → declaration silently dropped (M-PAT-07)
 - `.text-success` / `.text-warning` / `.text-danger` / `.text-info` are now tokenised — don't add hardcoded hex equivalents
-- `{{ client.full_name }}` without `sensitive-data` class outside of clearly staff-only sections
+- `{{ client.full_name }}` without `sensitive-data` class, or `sensitive-data` on something that isn't personal (a client code, a form label) — both directions are caught by `test_privacy_coverage.py` (M-PAT-08)
 - New template file with a German filename → rename to English (P-038)
 
 ---
@@ -250,7 +280,7 @@ Models
 Templates & CSS
 [ ] Bare <style> blocks in non-PDF templates?
 [ ] Hardcoded colours or inline styles?
-[ ] client.full_name without sensitive-data class?
+[ ] Privacy-mode coverage — now automated by `test_privacy_coverage.py` (M-PAT-08)
 
 Language
 [ ] German names/comments in touched files?

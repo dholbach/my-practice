@@ -4,7 +4,7 @@
 {% block title %}{% if object.pk %}{% trans "Edit client" %}{% else %}{% trans "New client" %}{% endif %}{% endblock %}
 
 {% block page_title %}{% if object.pk %}{% trans "Edit client" %}{% else %}{% trans "New client" %}{% endif %}{% endblock %}
-{% block page_subtitle %}{% if object.pk %}{{ object.full_name }} ({{ object.client_code }}){% else %}{% trans "Client intake form" %}{% endif %}{% endblock %}
+{% block page_subtitle %}{% if object.pk %}<span class="sensitive-data">{{ object.full_name }}</span> ({{ object.client_code }}){% else %}{% trans "Client intake form" %}{% endif %}{% endblock %}
 
 
 {% block content %}
