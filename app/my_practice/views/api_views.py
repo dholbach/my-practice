@@ -9,6 +9,7 @@ from io import BytesIO
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.cache import cache
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
@@ -56,7 +57,21 @@ def _prepare_practice_images(
     Returns:
         (logo_data, signature_data) as base64-encoded JPEG strings, or None
         if the image is missing.
+
+    Cached per practice — decoding/resizing is the same work on every PDF a
+    practice generates (invoice, contract, intake form, questionnaire) until
+    the logo or signature file actually changes. The cache key includes both
+    file names, so a re-upload (which Django always saves under a new name)
+    invalidates it automatically; nothing needs to clear the cache by hand.
     """
+    logo_name = getattr(practice.logo, "name", None) or ""
+    signature_name = getattr(practice.signature, "name", None) or ""
+    cache_key = f"practice_pdf_images:{practice.pk}:{logo_name}:{signature_name}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     logo_data: str | None = None
     signature_data: str | None = None
 
@@ -82,7 +97,9 @@ def _prepare_practice_images(
         else:
             signature_data = encoded
 
-    return logo_data, signature_data
+    result = (logo_data, signature_data)
+    cache.set(cache_key, result, None)
+    return result
 
 
 def _render_invoice_pdf_bytes(
