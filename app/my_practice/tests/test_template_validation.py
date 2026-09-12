@@ -4,8 +4,12 @@ Prevents bugs where templates miss required fields (like invoice quantity field)
 """
 
 import re
+from pathlib import Path
 
-from django.test import TestCase
+from django.conf import settings
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
+from django.test import SimpleTestCase, TestCase
 
 from my_practice.forms import (
     ClientIntakeForm,
@@ -185,3 +189,38 @@ class TemplateFieldValidationTestCase(TestCase):
                         has_hidden,
                         f"{template_path} should render practice field as hidden if present",
                     )
+
+
+class TemplateReferenceTests(SimpleTestCase):
+    """Every template a view names must actually exist.
+
+    `bank_transaction_detail` shipped in v0.1.0 rendering
+    `my_practice/bank_transaction_detail.html`, a template that was never added.
+    The URL was routed and the view exported, so the only symptom was a
+    TemplateDoesNotExist 500 for anyone who reached it — and since nothing
+    linked there, nobody did, for fifteen releases. Nothing in Django checks
+    this: a template name is just a string until the view runs.
+    """
+
+    VIEWS_DIR = Path(settings.BASE_DIR) / "my_practice" / "views"
+    REFERENCE_RE = re.compile(
+        r"""(?:render\s*\(\s*[^,]+,\s*|template_name\s*=\s*|get_template\s*\(\s*"""
+        r"""|render_to_string\s*\(\s*)["\']([\w/.-]+\.html)["\']"""
+    )
+
+    def test_every_template_named_by_a_view_exists(self):
+        missing = []
+        for path in sorted(self.VIEWS_DIR.glob("*.py")):
+            source = path.read_text(encoding="utf-8")
+            for match in self.REFERENCE_RE.finditer(source):
+                name = match.group(1)
+                try:
+                    get_template(name)
+                except TemplateDoesNotExist:
+                    line = source.count("\n", 0, match.start()) + 1
+                    missing.append(f"{path.name}:{line} renders {name}")
+        self.assertEqual(
+            missing,
+            [],
+            f"Views naming a template that does not exist — every hit is a 500: {missing}",
+        )

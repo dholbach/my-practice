@@ -26,7 +26,6 @@ from .bank_import_views import (
     BankImportView,
     BankReviewView,
     BankWithdrawalReviewView,
-    bank_transaction_detail,
 )
 
 # Calendar import views
@@ -254,7 +253,6 @@ __all__ = [
     "BankImportView",
     "BankReviewView",
     "BankWithdrawalReviewView",
-    "bank_transaction_detail",
     # Email views
     "SendCancellationEmailView",
     "SendContractEmailView",
