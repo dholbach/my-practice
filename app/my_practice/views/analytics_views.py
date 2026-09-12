@@ -117,8 +117,6 @@ def analytics_dashboard(request: HttpRequest) -> HttpResponse:
 
 def revenue_report(request):
     """Detailed revenue report by payment year"""
-    selected_year = get_year_from_request(request, "year", None)
-
     # Get available years from paid invoices (filtered by current practice)
     available_years = sorted(
         set(
@@ -131,63 +129,77 @@ def revenue_report(request):
         reverse=True,
     )
 
+    # A plain visit shows the current year rather than an empty page. Before
+    # the year has any payments (early January, or a brand-new practice) that
+    # would be a report of nothing, so fall back to the most recent year that
+    # does have data.
+    current_year = timezone.localdate().year
+    if current_year in available_years or not available_years:
+        default_year = current_year
+    else:
+        default_year = available_years[0]
+    selected_year = get_year_from_request(request, "year", default_year)
+
+    # Keep the dropdown in sync with what is on screen: a year with no paid
+    # invoices (an explicit ?year=, or the default above on an empty practice)
+    # is absent from available_years and would leave the select blank.
+    if selected_year not in available_years:
+        available_years = sorted([*available_years, selected_year], reverse=True)
+
     context: dict[str, Any] = {
         "available_years": available_years,
         "selected_year": selected_year,
     }
 
-    if selected_year:
-        year = selected_year
-
-        # Get all invoices paid in this year
-        # Use centralized filter helper (M-PAT-02: Date Filter Patterns)
-        invoices = (
-            Invoice.objects.for_current_practice(request)
-            .filter(
-                RevenueCalculator.build_paid_date_filter(year),
-                status="paid",
-            )
-            .select_related("client")  # Optimize client access (2026-01-30)
-            .order_by("paid_date", "invoice_date", "invoice_number")
+    # Get all invoices paid in the selected year
+    # Use centralized filter helper (M-PAT-02: Date Filter Patterns)
+    invoices = (
+        Invoice.objects.for_current_practice(request)
+        .filter(
+            RevenueCalculator.build_paid_date_filter(selected_year),
+            status="paid",
         )
+        .select_related("client")  # Optimize client access (2026-01-30)
+        .order_by("paid_date", "invoice_date", "invoice_number")
+    )
 
-        # Annotate invoices with year_diff flag
-        invoice_list = []
-        for inv in invoices:
-            paid_year = inv.paid_date.year if inv.paid_date else inv.invoice_date.year
-            invoice_year = inv.invoice_date.year
-            inv.year_diff = paid_year != invoice_year
-            invoice_list.append(inv)
+    # Annotate invoices with year_diff flag
+    invoice_list = []
+    for inv in invoices:
+        paid_year = inv.paid_date.year if inv.paid_date else inv.invoice_date.year
+        invoice_year = inv.invoice_date.year
+        inv.year_diff = paid_year != invoice_year
+        invoice_list.append(inv)
 
-        # Calculate summary statistics in one pass
-        total = Decimal(0)
-        same_year_total = Decimal(0)
-        prev_year_total = Decimal(0)
-        same_year_count = 0
-        prev_year_count = 0
-        for inv in invoice_list:
-            total += inv.total
-            if inv.year_diff:
-                prev_year_total += inv.total
-                prev_year_count += 1
-            else:
-                same_year_total += inv.total
-                same_year_count += 1
+    # Calculate summary statistics in one pass
+    total = Decimal(0)
+    same_year_total = Decimal(0)
+    prev_year_total = Decimal(0)
+    same_year_count = 0
+    prev_year_count = 0
+    for inv in invoice_list:
+        total += inv.total
+        if inv.year_diff:
+            prev_year_total += inv.total
+            prev_year_count += 1
+        else:
+            same_year_total += inv.total
+            same_year_count += 1
 
-        summary: dict[str, Any] = {
-            "total": total,
-            "count": len(invoice_list),
-            "same_year_count": same_year_count,
-            "same_year_total": same_year_total,
-            "prev_year_count": prev_year_count,
-            "prev_year_total": prev_year_total,
+    summary: dict[str, Any] = {
+        "total": total,
+        "count": len(invoice_list),
+        "same_year_count": same_year_count,
+        "same_year_total": same_year_total,
+        "prev_year_count": prev_year_count,
+        "prev_year_total": prev_year_total,
+    }
+
+    context.update(
+        {
+            "invoices": invoice_list,
+            "summary": summary,
         }
-
-        context.update(
-            {
-                "invoices": invoice_list,
-                "summary": summary,
-            }
-        )
+    )
 
     return render(request, "my_practice/revenue_report.html", context)

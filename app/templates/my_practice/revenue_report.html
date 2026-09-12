@@ -13,14 +13,12 @@
 <div class="bg-surface border border-border rounded-lg p-6 mb-8 flex gap-4 items-center">
     <label for="year-select" class="font-semibold">{% trans "Select year:" %}</label>
     <select id="year-select" class="form-control w-auto" x-data x-on:change="window.location.href = '{% url 'revenue_report' %}?year=' + $el.value">
-        <option value="">{% trans "All years" %}</option>
         {% for y in available_years %}
         <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
     </select>
 </div>
 
-{% if selected_year %}
 <div class="bg-surface rounded-lg p-6 mb-8">
     <h3 class="mb-4">📊 {% blocktrans with year=selected_year %}Summary {{ year }}{% endblocktrans %}</h3>
     <div class="stats-grid">
@@ -95,12 +93,6 @@
         </tr>
     </tfoot>
 </table>
-
-{% else %}
-<div class="empty-state">
-    <p>{% trans "Please select a year to display the report." %}</p>
-</div>
-{% endif %}
 
 <div class="text-center mt-8">
     <a href="{% url 'analytics' %}" class="btn btn-secondary">← {% trans "Back to Analytics" %}</a>
