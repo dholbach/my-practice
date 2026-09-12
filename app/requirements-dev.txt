@@ -15,7 +15,7 @@ pillow==12.3.0
 whitenoise==6.12.0
 python-dateutil==2.9.0.post0
 pdfplumber==0.11.10
-pypdf==6.18.0
+pypdf==6.18.1
 urllib3==2.7.0
 
 # Google Calendar API
@@ -28,7 +28,7 @@ google-api-python-client==2.200.0
 uvicorn==0.52.4
 
 # Dev-only tools
-ruff==0.16.6
+ruff==0.16.7
 vulture==2.16
 radon==6.0.1
 pip-audit==2.10.1
