@@ -13,7 +13,10 @@
     {% csrf_token %}
 
     <div class="form-row">
-        <div class="form-group sensitive-data">
+        {% comment %} The client select renders Client.__str__ = client_code, which
+           is already the privacy-safe form, so it needs no blur — and the blur
+           sat on the whole form-group, hiding the field's label too. {% endcomment %}
+        <div class="form-group">
             {{ form.client.label_tag }}
             {{ form.client }}
             {{ form.client.errors }}
