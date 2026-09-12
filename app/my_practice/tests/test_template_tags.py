@@ -16,6 +16,7 @@ from my_practice.templatetags.payment_tags import (
     hours,
     percent,
     percentage,
+    privacy_name,
 )
 
 
@@ -325,3 +326,36 @@ class FormatMonthYearFilterTests(TestCase):
                 f"{month_name} 2025",
                 f"Failed for month {month}",
             )
+
+
+class PrivacyNameFilterTests(TestCase):
+    """The initials-visible treatment: used where a blurred name would leave
+    nothing to identify the record by — inquiries have no client code, and a
+    picker's rows have to be told apart (M-PAT-08)."""
+
+    def test_initial_stays_legible_and_remainder_is_blurred(self):
+        self.assertEqual(
+            privacy_name("Max Mustermann"),
+            'M<span class="sensitive-data pn-rest">ax</span> '
+            'M<span class="sensitive-data pn-rest">ustermann</span>',
+        )
+
+    def test_single_letter_word_has_nothing_left_to_blur(self):
+        self.assertEqual(
+            privacy_name("A Schmidt"), 'A S<span class="sensitive-data pn-rest">chmidt</span>'
+        )
+
+    def test_empty_value_renders_nothing(self):
+        self.assertEqual(privacy_name(""), "")
+        self.assertEqual(privacy_name(None), "")
+
+    def test_html_in_a_name_is_escaped(self):
+        """Output is mark_safe'd, so the filter has to escape it itself."""
+        rendered = privacy_name("<script>alert(1)</script> Schmidt")
+        self.assertNotIn("<script>", rendered)
+        self.assertIn("&lt;", rendered)
+
+    def test_rendered_through_a_template_is_not_double_escaped(self):
+        template = Template("{% load payment_tags %}{{ name|privacy_name }}")
+        rendered = template.render(Context({"name": "Anna Schmidt"}))
+        self.assertIn('A<span class="sensitive-data pn-rest">nna</span>', rendered)
