@@ -154,6 +154,14 @@ App is at **http://localhost:8000**. First run:
 ./dev.py manage seed_sample_data   # optional: loads fictional demo data
 ```
 
+Note that in a repo checkout both stacks are present, and they cannot run at the
+same time: `docker-compose.yml` and `docker-compose.prod.yml` use the same
+container names, and Docker container names are global rather than scoped to a
+Compose project. Run `./dev.py stop` before `./prod.py start`, and vice versa —
+`prod.py` checks for this and refuses rather than touching containers it did not
+create. The image-based layout above has no such conflict, since it is a bare
+directory with only `prod.py` and `docker-compose.prod.yml` in it.
+
 Full walkthrough including real-use setup: [docs/guides/GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)
 
 ---

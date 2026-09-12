@@ -6,6 +6,7 @@ Requirements: Python 3, Docker with the Compose plugin.
 
 import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -22,6 +23,11 @@ ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 ENV_DOCS = f"https://github.com/dholbach/my-practice/blob/{VERSION}/.env.example"
 RELEASES_API = "https://api.github.com/repos/dholbach/my-practice/releases/latest"
 RAW_BASE = f"https://raw.githubusercontent.com/dholbach/my-practice/{VERSION}"
+
+# Without these the stack starts but cannot work: Postgres refuses to initialise
+# with a blank password, and Django cannot sign sessions or read encrypted
+# clinical notes. Compose only warns about them and carries on, so check first.
+REQUIRED_SECRETS = ("DJANGO_SECRET_KEY", "POSTGRES_PASSWORD", "FERNET_KEY")
 
 
 def compose(*args):
@@ -246,6 +252,7 @@ def cmd_setup(args):
     step("Checking Docker")
     _check_docker()
     print("  Docker OK")
+    _require_no_foreign_containers()
 
     if not os.path.exists(COMPOSE_FILE):
         print("  docker-compose.prod.yml not found — downloading...")
@@ -369,26 +376,183 @@ def cmd_setup(args):
     return subprocess.CompletedProcess(args=[], returncode=0)
 
 
+# ── preflight ────────────────────────────────────────────────────────────────
+
+
+def _require_secrets():
+    """Abort unless .env carries the secrets the stack cannot run without.
+
+    Compose interpolates a missing variable to an empty string and only prints a
+    WARN, so without this the stack comes up mid-broken — Postgres exits because
+    POSTGRES_PASSWORD is blank — and the actual cause is four lines above the
+    error, phrased as a warning.
+    """
+    if not os.path.exists(ENV_FILE):
+        abort(
+            "No .env file here — the stack has no database password or encryption key.\n"
+            "  Run the guided setup, which generates them:\n"
+            "    ./prod.py setup\n"
+            "\n"
+            "  Restoring an existing installation? Copy that machine's .env here first.\n"
+            "  FERNET_KEY must match the original or encrypted clinical notes cannot be read."
+        )
+    env = _read_env()
+    missing = [key for key in REQUIRED_SECRETS if not env.get(key)]
+    if missing:
+        abort(
+            f".env is missing required secrets: {', '.join(missing)}\n"
+            "  Setup fills in whatever is absent and leaves the rest of .env alone:\n"
+            "    ./prod.py setup\n"
+            "\n"
+            "  Do not invent a FERNET_KEY for an installation that already has data —\n"
+            "  the original is the only thing that can decrypt existing clinical notes."
+        )
+
+
+def _compose_container_names():
+    """Container names claimed by docker-compose.prod.yml.
+
+    Read with a regex rather than a YAML parser: prod.py ships to self-hosters
+    as a single stdlib-only file, and this is the one value needed from it.
+    """
+    if not os.path.exists(COMPOSE_FILE):
+        return []
+    with open(COMPOSE_FILE) as f:
+        return re.findall(r"^\s*container_name:\s*(\S+)", f.read(), re.MULTILINE)
+
+
+def _inspect_container(ref):
+    """(id, name, compose file basename) for a container, or None if absent.
+
+    The compose file is "" for a container Compose did not create. Compared by
+    basename so moving the installation directory doesn't read as a foreign stack.
+    """
+    out = subprocess.run(
+        [
+            "docker",
+            "inspect",
+            "--format",
+            '{{.Id}}\t{{.Name}}\t{{index .Config.Labels "com.docker.compose.project.config_files"}}',
+            ref,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if out.returncode != 0:
+        return None
+    parts = out.stdout.strip().split("\t")
+    if len(parts) < 3:
+        return None
+    container_id, name, files = parts[0], parts[1].lstrip("/"), parts[2]
+    if not files or files == "<no value>":
+        return container_id, name, ""
+    return container_id, name, ", ".join(os.path.basename(path) for path in files.split(","))
+
+
+def _project_container_ids():
+    """Container ids Compose considers part of this project, running or not."""
+    out = subprocess.run([*COMPOSE, "ps", "-aq"], capture_output=True, text=True)
+    return out.stdout.split() if out.returncode == 0 else []
+
+
+def _require_no_foreign_containers():
+    """Abort rather than touch containers this compose file did not create.
+
+    Three ways a container can carry one of our names without being ours, all
+    because Docker namespaces less than it looks:
+
+    - The development stack (docker-compose.yml, ./dev.py) uses the same
+      container names. Names are global to the daemon, not scoped to a Compose
+      project, so whichever stack starts second fails with a raw daemon conflict
+      that names the container but not the stack holding it.
+    - Both files take their project name from the directory, so Compose matches
+      containers by project and service label regardless of name: a
+      `docker compose -f docker-compose.prod.yml down` stops and removes the
+      *development* containers, silently and without an error. That one is the
+      dangerous case, and the reason this check also looks at project membership
+      rather than names alone.
+    - A container left by an earlier installation in a differently-named
+      directory carries our compose file but a project name Compose no longer
+      looks under, so `down` cannot reach it and `up` keeps failing on the name.
+
+    Compose reports none of these usefully, so report them here and do nothing.
+    """
+    ours = os.path.basename(COMPOSE_FILE)
+    project_ids = set(_project_container_ids())
+    reported = set()
+    for ref in [*_compose_container_names(), *project_ids]:
+        found = _inspect_container(ref)
+        if found is None:
+            continue
+        container_id, name, owner = found
+        if owner == ours and container_id in project_ids:
+            continue  # genuinely this stack's own container
+        if name in reported:
+            continue
+        reported.add(name)
+        if owner == ours:
+            headline = f'The container "{name}" is left over from an earlier run of this stack.'
+            why = (
+                "  It was created in a different directory, so Compose no longer finds it\n"
+                "  from here — but container names are global to Docker, so it still blocks\n"
+                "  this one."
+            )
+            remedy = (
+                "  Remove it. The database lives in a Docker volume, not in the container,\n"
+                f"  so nothing is lost:\n    docker rm -f {name}"
+            )
+        elif owner == "docker-compose.yml":
+            headline = f'The container "{name}" belongs to the development stack (./dev.py).'
+            why = (
+                "  Container names are global to Docker, and both compose files in this\n"
+                "  directory take the same project name, so the two stacks cannot run\n"
+                "  side by side — and a `down` here would remove the development ones."
+            )
+            remedy = "  Stop it first, then try again:\n    ./dev.py stop"
+        elif owner:
+            headline = f'The container "{name}" belongs to a stack started from {owner}.'
+            why = "  Container names are global to Docker, so both stacks cannot use it."
+            remedy = f"  Stop that stack, or remove the container:\n    docker rm -f {name}"
+        else:
+            headline = f'The container "{name}" was not created by Compose.'
+            why = "  Container names are global to Docker, so it blocks this stack's own."
+            remedy = f"  Remove it:\n    docker rm -f {name}"
+        abort(
+            f"{headline}\n"
+            f"{why}\n"
+            f"{remedy}\n"
+            "\n"
+            "  Nothing was started or stopped — your data is untouched."
+        )
+
+
 # ── commands ────────────────────────────────────────────────────────────────
 
 
 def cmd_start(_args):
     """Start the stack."""
+    _require_secrets()
+    _require_no_foreign_containers()
     return compose("up", "-d", "--remove-orphans")
 
 
 def cmd_stop(_args):
     """Stop the stack."""
+    _require_no_foreign_containers()
     return compose("down")
 
 
 def cmd_restart(_args):
     """Restart the Django container."""
+    _require_secrets()
+    _require_no_foreign_containers()
     return compose("restart", "django")
 
 
 def cmd_update(args):
     """Pull the latest image and restart. Pass --yes to skip the metered-connection prompt."""
+    _require_secrets()
+    _require_no_foreign_containers()
     if "--yes" not in args and not _confirm_metered_download("Pulling the latest image"):
         print("Aborted.")
         return subprocess.CompletedProcess(args=[], returncode=1)
