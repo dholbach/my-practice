@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 21:51+0200\n"
+"POT-Creation-Date: 2026-09-12 22:18+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -3642,30 +3642,30 @@ msgstr "Termin am %(date)s zu Rechnung %(number)s hinzugefügt."
 msgid "Import error: %(error)s"
 msgstr "Fehler beim Import: %(error)s"
 
-#: my_practice/views/client_views.py:183
+#: my_practice/views/client_views.py:190
 #, python-brace-format
 msgid "Client {obj.full_name} saved successfully!"
 msgstr "Klient:in {obj.full_name} erfolgreich gespeichert!"
 
-#: my_practice/views/client_views.py:299
+#: my_practice/views/client_views.py:306
 msgid "No file selected."
 msgstr "Keine Datei ausgewählt."
 
-#: my_practice/views/client_views.py:379
+#: my_practice/views/client_views.py:386
 #, python-format
 msgid "Client %(code)s does not meet the requirements for GDPR deletion (inactive + last session more than %(years)s years ago)."
 msgstr "Klient:in %(code)s erfüllt nicht die Voraussetzungen für die DSGVO-Löschung (inaktiv + letzte Sitzung vor mehr als %(years)s Jahren)."
 
-#: my_practice/views/client_views.py:417
+#: my_practice/views/client_views.py:424
 #, python-format
 msgid "Note: The notification email to %(email)s could not be sent. Please inform the client manually."
 msgstr "Hinweis: Die Benachrichtigungs-E-Mail an %(email)s konnte nicht gesendet werden. Bitte informieren Sie die Klient:in manuell."
 
-#: my_practice/views/client_views.py:450
+#: my_practice/views/client_views.py:457
 msgid "Requirements for GDPR deletion not met."
 msgstr "Voraussetzungen für die DSGVO-Löschung nicht erfüllt."
 
-#: my_practice/views/client_views.py:471
+#: my_practice/views/client_views.py:478
 #, python-format
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr "Klient:in %(code)s wurde gemäß DSGVO Art. 17 gelöscht."
