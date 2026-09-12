@@ -2204,16 +2204,28 @@
     display: inline-block;
   }
 
+  /* Title row: the title/subtitle group on the left, .header-controls pushed to
+     the right edge. Wraps the controls onto their own line on narrow screens. */
+  .header-titlebar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
   /* Title + subtitle on one line, wrapping the subtitle onto its own line when
      it's too long to share (page_subtitle is built from a loop on some pages).
      Baseline alignment keeps the subtitle sitting on the title's baseline
-     rather than centred against the much taller logo. */
-  .header-titlebar {
+     rather than centred against the much taller logo. min-width:0 lets a long
+     subtitle wrap inside this group instead of shoving the controls off-row. */
+  .header-titlebar__text {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
     gap: 0.15rem 0.75rem;
-    margin-bottom: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .subtitle {
@@ -2318,10 +2330,14 @@
     padding: 0 0.25rem;
   }
 
+  /* The nav row now has the header's full width to itself (the controls moved
+     up to the title row), so extra menu items wrap onto a second line instead
+     of being squeezed. */
   nav {
     margin-bottom: 0.75rem;
     display: flex;
-    gap: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
     align-items: center;
   }
 
@@ -2349,12 +2365,15 @@
     border-bottom: 2px solid var(--color-link);
   }
 
-  /* Right-hand side of the nav row: palette trigger, practice switcher and the
-     three toggles. Replaces the absolutely-positioned #header-controls that
-     global-search.js used to build at runtime (P-047 Phase 2). */
+  /* Right-hand side of the title row: palette trigger, practice switcher and
+     the three toggles. Lives up beside the title rather than in the nav row so
+     the nav keeps its full width for menu items (P-047 Phase 2 originally put
+     these in the nav; before that global-search.js built an absolutely
+     positioned #header-controls at runtime). */
   .header-controls {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin-left: auto;
   }
@@ -2703,6 +2722,7 @@
   .btn,
   nav,
   .header-actions,
+  .header-controls,
   #skip-to-main {
     display: none !important;
   }

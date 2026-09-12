@@ -32,38 +32,25 @@
 >
     <div class="container">
         <div class="header">
-            <!-- Title and subtitle share a line when they fit; the row wraps the
+            <!-- Title row: title + subtitle on the left, the global controls
+                 (palette, practice switcher, toggles) pushed right. Title and
+                 subtitle share a line when they fit; the inner row wraps the
                  subtitle onto its own line when it's long (some pages build a
-                 subtitle from a loop, so it can be arbitrarily wide). -->
+                 subtitle from a loop, so it can be arbitrarily wide). Keeping
+                 the controls here leaves the whole nav row free for menu
+                 items. -->
             <div class="header-titlebar">
-                <h1>
+                <div class="header-titlebar__text">
+                    <h1>
                     {% if request.current_practice and request.current_practice.logo %}
                         <img src="{{ request.current_practice.logo.url }}" alt="{{ request.current_practice.name }}" class="practice-logo">
                     {% else %}
                         {% block page_icon %}🏥{% endblock %}
                     {% endif %}
                     {% block page_title %}{% if request.current_practice and request.current_practice.short_title_de %}{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de }}{% else %}{{ request.current_practice.short_title_de }}{% endif %}{% else %}{% trans "Practice management" %}{% endif %}{% endblock %}
-                </h1>
-                <p class="subtitle">{% block page_subtitle %}{% trans "Practice management" %}{% endblock %}</p>
-            </div>
-            <nav>
-                {% comment %} Four daily destinations (P-047 Phase 3). Everything else —
-                   Billing, Bank, Analytics, Tax, Calendar, Time off,
-                   Supervision, Triage, Tags, Email templates, Django admin —
-                   lives in the ⌘K palette, which is why the Invoices/Finances/
-                   Admin dropdowns are gone. {% endcomment %}
-                <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 {% trans "Overview" %}</a>
-                <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' or request.resolver_match.url_name == 'client_detail' %}class="active"{% endif %}>📋 {% trans "Clients" %}</a>
-                <a href="{% url 'invoice_list' %}" {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' or request.resolver_match.url_name == 'invoice_edit' or request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' or request.resolver_match.url_name == 'billing_open_overview' %}class="active"{% endif %}>📄 {% trans "Invoices" %}</a>
-                <a href="{% url 'focus_queue' %}" {% if request.resolver_match.url_name == 'focus_queue' or 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>🎯 {% trans "Focus Queue" %}</a>
-                {% comment %} The unmatched-transaction count was the only alert for bank work
-                   waiting to be assigned, and it used to ride on the Finances
-                   dropdown. Rather than lose it, the link appears only while there
-                   is something to match — the nav is four links the rest of the
-                   time. Proper home is a Focus Queue task type (see P-047 doc). {% endcomment %}
-                {% if request.unmatched_bank_count %}
-                <a href="{% url 'bank_import' %}" {% if 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>🏦 {% trans "Bank import" %} <span class="badge">{{ request.unmatched_bank_count }}</span></a>
-                {% endif %}
+                    </h1>
+                    <p class="subtitle">{% block page_subtitle %}{% trans "Practice management" %}{% endblock %}</p>
+                </div>
                 <div class="header-controls">
                     <button class="cmd-palette-trigger" id="cmd-palette-trigger" type="button"
                             title="{% trans 'Command palette' %}">
@@ -102,6 +89,25 @@
                         👁️ Privacy
                     </button>
                 </div>
+            </div>
+            <nav>
+                {% comment %} Four daily destinations (P-047 Phase 3). Everything else —
+                   Billing, Bank, Analytics, Tax, Calendar, Time off,
+                   Supervision, Triage, Tags, Email templates, Django admin —
+                   lives in the ⌘K palette, which is why the Invoices/Finances/
+                   Admin dropdowns are gone. {% endcomment %}
+                <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 {% trans "Overview" %}</a>
+                <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' or request.resolver_match.url_name == 'client_detail' %}class="active"{% endif %}>📋 {% trans "Clients" %}</a>
+                <a href="{% url 'invoice_list' %}" {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' or request.resolver_match.url_name == 'invoice_edit' or request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' or request.resolver_match.url_name == 'billing_open_overview' %}class="active"{% endif %}>📄 {% trans "Invoices" %}</a>
+                <a href="{% url 'focus_queue' %}" {% if request.resolver_match.url_name == 'focus_queue' or 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>🎯 {% trans "Focus Queue" %}</a>
+                {% comment %} The unmatched-transaction count was the only alert for bank work
+                   waiting to be assigned, and it used to ride on the Finances
+                   dropdown. Rather than lose it, the link appears only while there
+                   is something to match — the nav is four links the rest of the
+                   time. Proper home is a Focus Queue task type (see P-047 doc). {% endcomment %}
+                {% if request.unmatched_bank_count %}
+                <a href="{% url 'bank_import' %}" {% if 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>🏦 {% trans "Bank import" %} <span class="badge">{{ request.unmatched_bank_count }}</span></a>
+                {% endif %}
             </nav>
         </div>
 
