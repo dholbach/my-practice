@@ -80,7 +80,7 @@ class PracticeTodoModelTests(TestCase):
         todo_overdue = PracticeTodo.objects.create(
             practice=self.practice,
             title="Overdue task",
-            due_date=timezone.now().date() - timedelta(days=1),
+            due_date=timezone.localdate() - timedelta(days=1),
         )
         self.assertTrue(todo_overdue.is_overdue)
 
@@ -88,7 +88,7 @@ class PracticeTodoModelTests(TestCase):
         todo_upcoming = PracticeTodo.objects.create(
             practice=self.practice,
             title="Upcoming task",
-            due_date=timezone.now().date() + timedelta(days=7),
+            due_date=timezone.localdate() + timedelta(days=7),
         )
         self.assertFalse(todo_upcoming.is_overdue)
 
@@ -96,7 +96,7 @@ class PracticeTodoModelTests(TestCase):
         todo_completed = PracticeTodo.objects.create(
             practice=self.practice,
             title="Completed task",
-            due_date=timezone.now().date() - timedelta(days=7),
+            due_date=timezone.localdate() - timedelta(days=7),
             completed_at=timezone.now(),
         )
         self.assertFalse(todo_completed.is_overdue)
@@ -169,7 +169,7 @@ class PracticeTodoModelTests(TestCase):
             practice=self.practice,
             title="Full TODO",
             description="Detailed notes here",
-            due_date=timezone.now().date() + timedelta(days=7),
+            due_date=timezone.localdate() + timedelta(days=7),
         )
         self.assertEqual(todo_full.description, "Detailed notes here")
         self.assertIsNotNone(todo_full.due_date)
@@ -200,10 +200,10 @@ class PracticeTodoModelTests(TestCase):
         )
         self.assertFalse(todo.is_snoozed)
 
-        todo.snoozed_until = timezone.now().date() + timedelta(days=1)
+        todo.snoozed_until = timezone.localdate() + timedelta(days=1)
         self.assertTrue(todo.is_snoozed)
 
-        todo.snoozed_until = timezone.now().date() - timedelta(days=1)
+        todo.snoozed_until = timezone.localdate() - timedelta(days=1)
         self.assertFalse(todo.is_snoozed)
 
     def test_related_object_generic_fk(self):
@@ -256,7 +256,7 @@ class PracticeTodoModelTests(TestCase):
             full_name="Max Mustermann",
             hourly_rate_60=Decimal("100.00"),
         )
-        session_date = timezone.now().date() - timedelta(days=3)
+        session_date = timezone.localdate() - timedelta(days=3)
         session = Session.objects.create(client=client, session_date=session_date, duration=60)
         todo = PracticeTodo.objects.create(
             practice=self.practice,
@@ -296,7 +296,7 @@ class PracticeTodoModelTests(TestCase):
             full_name="Max Mustermann",
             hourly_rate_60=Decimal("100.00"),
         )
-        invoice_date = timezone.now().date() - timedelta(days=10)
+        invoice_date = timezone.localdate() - timedelta(days=10)
         invoice = Invoice.objects.create(
             practice=self.practice,
             client=client,
@@ -319,7 +319,7 @@ class PracticeTodoModelTests(TestCase):
             full_name="Max Mustermann",
             hourly_rate_60=Decimal("100.00"),
         )
-        session_date = timezone.now().date() - timedelta(days=4)
+        session_date = timezone.localdate() - timedelta(days=4)
         session = Session.objects.create(client=client, session_date=session_date, duration=60)
         todo = PracticeTodo.objects.create(
             practice=self.practice,
