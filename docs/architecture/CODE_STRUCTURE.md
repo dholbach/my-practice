@@ -1,6 +1,6 @@
 # my_practice — Code Structure
 
-**Last updated: 2026-08-17**
+**Last updated: 2026-09-12**
 
 ## Overview
 
@@ -36,7 +36,7 @@ app/my_practice/
 │   ├── timeoff.py              # TimeOffAdmin
 │   └── todo.py                 # PracticeTodoAdmin
 │
-├── models/                     # Domain models package (18 modules)
+├── models/                     # Domain models package (19 modules)
 │   ├── __init__.py            # Package exports with __all__
 │   ├── base.py                # TimestampedModel base class, PracticeScopedManager
 │   ├── bank_statement.py      # BankTransaction
@@ -81,7 +81,7 @@ app/my_practice/
 │   ├── todo_views.py          # Practice todo list
 │   └── withdrawal_views.py    # Withdrawal CRUD + list
 │
-├── utils/                      # Utility functions (35 modules)
+├── utils/                      # Utility functions (36 modules)
 │   ├── __init__.py            # Central exports
 │   ├── aggregation_helpers.py      # Reusable DB aggregation patterns
 │   ├── analytics_dashboard_builder.py  # AnalyticsDashboardBuilder
@@ -106,6 +106,8 @@ app/my_practice/
 │   ├── email_utils.py              # Email composition helpers
 │   ├── file_processing.py          # Uploaded media compression (images, PDFs)
 │   ├── financial_list_context_builder.py  # FinancialListContextBuilder
+│   ├── formatting.py               # format_currency_de() — shared money formatting for
+│   │                               #   templates, PDFs, and client-facing emails
 │   ├── gebueh_helpers.py           # GebüH block building shared by PDF + invoice detail
 │   ├── google_calendar.py          # Google Calendar API wrapper
 │   ├── heatmap_utils.py            # Session heatmap generation
