@@ -365,38 +365,22 @@ def cmd_test_js(args):
     if not browser_only:
         print("📊 Running Node.js-based JS Tests...")
 
-        # Run basic tests
-        print("\n--- Basic Chart Utils Tests ---")
-        js_result = run_docker_command(["node", "/app/static/js/chart_utils.test.js"])
-        results.append(("JS Basic", js_result.returncode))
-
-        # Run extended tests
+        # Discovered, not listed. This used to be a hand-maintained list, and so
+        # did the copy in .github/workflows/ci.yml — which broke the build the
+        # first time a suite was deleted (global-search.test.js, P-047). Both
+        # sides glob now, so adding or removing a suite needs no edit here.
+        # The browser-only suites under static/js/tests/ are named test_*.js and
+        # correctly don't match.
+        js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app", "static", "js")
+        suites = sorted(os.path.basename(p) for p in glob.glob(os.path.join(js_dir, "*.test.js")))
         if not node_only:
-            print("\n--- Extended Chart Utils Tests ---")
-            js_ext_result = run_docker_command(
-                ["node", "/app/static/js/chart_utils.test.extended.js"]
-            )
-            results.append(("JS Extended", js_ext_result.returncode))
+            suites.append("chart_utils.test.extended.js")
 
-        # Run form draft guard tests (M-PAT-06)
-        print("\n--- Form Draft Guard Tests ---")
-        guard_result = run_docker_command(["node", "/app/static/js/form_draft_guard.test.js"])
-        results.append(("JS DraftGuard", guard_result.returncode))
-
-        # Run bank review tally tests
-        print("\n--- Bank Review Tally Tests ---")
-        bank_result = run_docker_command(["node", "/app/static/js/bank_review.test.js"])
-        results.append(("JS BankReview", bank_result.returncode))
-
-        # Run the remaining component suites
-        for label, script in (
-            ("JS ExpenseForm", "expense_form.test.js"),
-            ("JS Widgets", "widgets.test.js"),
-            ("JS KeyboardNav", "keyboard-nav.test.js"),
-            ("JS CommandPalette", "command_palette.test.js"),
-        ):
-            print(f"\n--- {label} Tests ---")
-            result = run_docker_command(["node", f"/app/static/js/{script}"])
+        for suite in suites:
+            stem = suite.replace(".test.extended.js", " (extended)").replace(".test.js", "")
+            label = f"JS {stem}"
+            print(f"\n--- {suite} ---")
+            result = run_docker_command(["node", f"/app/static/js/{suite}"])
             results.append((label, result.returncode))
 
     # Show browser test info (if not node-only)

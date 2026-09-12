@@ -141,15 +141,17 @@ jobs:
       # Plain `node <file>` runners, the same set ./dev.py test-js executes.
       # They import nothing from node_modules, so the runner's preinstalled Node
       # is enough — no setup-node step and no `npm ci` needed.
+      #
+      # Globbed, not listed: this used to be a hand-maintained copy of the file
+      # list in dev.py, and it broke the build the first time a test file was
+      # deleted (global-search.test.js, P-047). The browser-only suites under
+      # static/js/tests/ are named test_*.js and correctly don't match.
+      # The step shell is `bash -e`, so the first failing file fails the step.
       - name: JavaScript tests
         working-directory: app
         run: |
           node --version
-          node static/js/chart_utils.test.js
-          node static/js/chart_utils.test.extended.js
-          node static/js/form_draft_guard.test.js
-          node static/js/bank_review.test.js
-          node static/js/global-search.test.js
-          node static/js/expense_form.test.js
-          node static/js/widgets.test.js
-          node static/js/keyboard-nav.test.js
+          for suite in static/js/*.test.js static/js/*.test.extended.js; do
+            echo "--- $suite"
+            node "$suite"
+          done
