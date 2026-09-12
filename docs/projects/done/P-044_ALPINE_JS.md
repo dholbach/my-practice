@@ -51,7 +51,7 @@ no bundler required — purely incremental and reversible.
 
 ### Phase 3 — Evaluate (after Phase 2 complete)
 
-- `global-search.js` dropdown (good Alpine candidate)
+- ~~`global-search.js` dropdown~~ — moot: the file was deleted in P-047 Phase 2, its search folded into the command palette
 - Any `widgets.js` sections that are pure DOM toggling
 
 ## Not in scope

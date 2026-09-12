@@ -2349,8 +2349,17 @@
     border-bottom: 2px solid var(--color-link);
   }
 
+  /* Right-hand side of the nav row: palette trigger, practice switcher and the
+     three toggles. Replaces the absolutely-positioned #header-controls that
+     global-search.js used to build at runtime (P-047 Phase 2). */
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
   .privacy-toggle {
-    float: right;
     padding: 0.5rem 1rem;
     background: var(--color-toggle-bg);
     color: var(--color-text-primary);
@@ -2371,8 +2380,6 @@
   }
 
   .lang-toggle {
-    float: right;
-    margin-right: 0.5rem;
     padding: 0.5rem 1rem;
     background: var(--color-toggle-bg);
     color: var(--color-text-primary);
@@ -2388,8 +2395,6 @@
   .lang-toggle:hover { background: var(--color-toggle-border); }
 
   .theme-toggle {
-    float: right;
-    margin-right: 0.5rem;
     padding: 0.5rem 1rem;
     background: var(--color-toggle-bg);
     color: var(--color-text-primary);
@@ -2488,6 +2493,57 @@
     vertical-align: middle;
   }
 
+  /* ── Keyboard help overlay (?) ───────────────────────────────────── */
+  /* Moved out of keyboard-nav.js's style.cssText in P-047 Phase 3; it was the
+     last UI in the codebase built from inline styles with hardcoded colours. */
+  .kbd-help {
+    position: fixed;
+    inset: 0;
+    z-index: 10500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--color-overlay);
+    backdrop-filter: blur(5px);
+  }
+
+  .kbd-help__box {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 36rem;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px var(--color-shadow);
+  }
+
+  .kbd-help__title { margin-top: 0; color: var(--color-text-primary); }
+  .kbd-help__intro { color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+  .kbd-help__section { color: var(--color-text-primary); margin-top: 1.5rem; }
+
+  .kbd-help__table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  .kbd-help__row { border-bottom: 1px solid var(--color-border); }
+  .kbd-help__key { padding: 0.5rem; }
+  .kbd-help__name { padding: 0.5rem; color: var(--color-text-primary); }
+
+  .kbd-help__footer {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  .kbd-help kbd {
+    padding: 0.2rem 0.5rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-family: monospace;
+    color: var(--color-text-primary);
+  }
+
   /* ── Command palette (P-047) ─────────────────────────────────────── */
   /* Markup in includes/command_palette.html, behaviour in command_palette.js.
      Open/closed is the [hidden] attribute on #command-palette, so the closed
@@ -2578,14 +2634,18 @@
     box-shadow: inset 3px 0 0 var(--color-primary);
   }
 
-  .cmd-palette__empty {
+  .cmd-palette__empty,
+  .cmd-palette__status {
     padding: 1.25rem;
     text-align: center;
     color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
 
-  .cmd-palette__empty[hidden] { display: none; }
+  .cmd-palette__status--error { color: var(--color-danger); }
+
+  .cmd-palette__empty[hidden],
+  .cmd-palette__status[hidden] { display: none; }
 
   .cmd-palette__hints {
     flex: none;

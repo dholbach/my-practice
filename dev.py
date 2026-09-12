@@ -388,11 +388,6 @@ def cmd_test_js(args):
         bank_result = run_docker_command(["node", "/app/static/js/bank_review.test.js"])
         results.append(("JS BankReview", bank_result.returncode))
 
-        # Run global search tests
-        print("\n--- Global Search Tests ---")
-        search_result = run_docker_command(["node", "/app/static/js/global-search.test.js"])
-        results.append(("JS GlobalSearch", search_result.returncode))
-
         # Run the remaining component suites
         for label, script in (
             ("JS ExpenseForm", "expense_form.test.js"),

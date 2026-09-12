@@ -16,12 +16,8 @@
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-    data-kbd-clients="{% trans 'Clients' %}"
-    data-kbd-dashboard="{% trans 'Dashboard' %}"
-    data-kbd-analytics="{% trans 'Analytics' %}"
-    data-kbd-practice-analysis="{% trans 'Practice Analysis' %}"
-    data-kbd-invoices="{% trans 'Invoices' %}"
     data-kbd-help="{% trans 'Help' %}"
+    data-kbd-command-palette="{% trans 'Open command palette' %}"
     data-kbd-new-client="{% trans 'New client' %}"
     data-kbd-new-invoice="{% trans 'New invoice' %}"
     data-kbd-edit-client="{% trans 'Edit client' %}"
@@ -33,13 +29,6 @@
     data-kbd-press="{% trans 'Press' %}"
     data-kbd-or="{% trans 'or' %}"
     data-kbd-to-close="{% trans 'to close' %}"
-    data-kbd-for-shortcuts="{% trans 'for keyboard shortcuts' %}"
-    data-kbd-for-search="{% trans 'for search' %}"
-    data-kbd-shortcut-label="{% trans 'Shortcut' %}"
-    data-search-placeholder="{% trans 'Search... (c:client/inquiry, i:invoice)' %}"
-    data-search-loading="{% trans 'Searching…' %}"
-    data-search-error="{% trans 'Error while searching' %}"
-    data-search-no-results="{% trans 'No results' %}"
 >
     <div class="container">
         <div class="header">
@@ -58,75 +47,61 @@
                 <p class="subtitle">{% block page_subtitle %}{% trans "Practice management" %}{% endblock %}</p>
             </div>
             <nav>
+                {% comment %} Four daily destinations (P-047 Phase 3). Everything else —
+                   Billing, Bank, Analytics, Tax, Calendar, Time off,
+                   Supervision, Triage, Tags, Email templates, Django admin —
+                   lives in the ⌘K palette, which is why the Invoices/Finances/
+                   Admin dropdowns are gone. {% endcomment %}
                 <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>📊 {% trans "Overview" %}</a>
-                <div class="dropdown">
-                    <span {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' or request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' %}class="active"{% endif %}>📄 {% trans "Invoices" %} ▾</span>
-                    <div class="dropdown-content">
-                        <a href="{% url 'invoice_list' %}">📄 {% trans "Invoices" %}</a>
-                        <a href="{% url 'monthly_billing' %}">📅 {% trans "Billing" %}</a>
-                    </div>
-                </div>
-                <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' %}class="active"{% endif %}>📋 {% trans "Clients" %}</a>
-                <a href="{% url 'inquiry_list' %}" {% if 'inquiry' in request.resolver_match.url_name %}class="active"{% endif %}>📬 {% trans "Inquiries" %}</a>
+                <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' or request.resolver_match.url_name == 'client_detail' %}class="active"{% endif %}>📋 {% trans "Clients" %}</a>
+                <a href="{% url 'invoice_list' %}" {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' or request.resolver_match.url_name == 'invoice_edit' or request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' or request.resolver_match.url_name == 'billing_open_overview' %}class="active"{% endif %}>📄 {% trans "Invoices" %}</a>
                 <a href="{% url 'focus_queue' %}" {% if request.resolver_match.url_name == 'focus_queue' or 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>🎯 {% trans "Focus Queue" %}</a>
-                <div class="dropdown">
-                    <span {% if request.resolver_match.url_name == 'withdrawal_list' or request.resolver_match.url_name == 'expense_list' or request.resolver_match.url_name == 'tax_year_summary' or request.resolver_match.url_name == 'tax_quarter_overview' or request.resolver_match.url_name == 'analytics' or 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>💰 {% trans "Finances" %}{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %} ▾</span>
-                    <div class="dropdown-content">
-                        <a href="{% url 'bank_import' %}">🏦 {% trans "Bank import" %}{% if request.unmatched_bank_count %} <span class="badge">{{ request.unmatched_bank_count }}</span>{% endif %}</a>
-                        <a href="{% url 'withdrawal_list' %}">📤 {% trans "Withdrawals" %}</a>
-                        <a href="{% url 'expense_list' %}">💸 {% trans "Expenses" %}</a>
-                        <a href="{% url 'bank_expense_review' %}">🏦 {% trans "Bank expenses" %}</a>
-                        <a href="{% url 'analytics' %}">📊 {% trans "Analytics" %}</a>
-                        <a href="{% url 'tax_year_summary' %}">📋 {% trans "Tax annual overview" %}</a>
-                        <a href="{% url 'tax_quarter_overview' %}">📊 {% trans "Tax quarterly overview" %}</a>
-                    </div>
-                </div>
-                <div class="dropdown">
-                    <span>⚙️ Admin ▾</span>
-                    <div class="dropdown-content">
-                        <a href="{% url 'calendar_approval_queue' %}">📅 {% trans "Calendar approval" %}</a>
-                        <a href="{% url 'timeoff_list' %}">🌴 {% trans "Time off" %}</a>
-                        <a href="{% url 'supervision_queue' %}">🔍 Supervision</a>
-                        <a href="{% url 'boilerplate' %}">✉️ {% trans "Email templates" %}</a>
-                        <a href="{% url 'admin:index' %}">⚙️ Django Admin</a>
-                    </div>
-                </div>
-                {% if user.is_authenticated and user.practices.exists %}
-                <div class="dropdown practice-switcher">
-                    {% trans "Practice" as practice_fallback %}
-                    <span>{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de|default:practice_fallback }}{% else %}{{ request.current_practice.short_title_de|default:practice_fallback }}{% endif %} ▾</span>
-                    <div class="dropdown-content">
-                        {% for practice in user.practices.all %}
-                        <a href="{% url 'practice_switch' practice.slug %}"
-                           {% if practice.id == request.current_practice.id %}class="current-practice"{% endif %}>
-                            {% if CURRENT_LANGUAGE == "en" %}{{ practice.short_title_en|default:practice.short_title_de|default:practice.name }}{% else %}{{ practice.short_title_de|default:practice.name }}{% endif %}
-                            {% if practice.id == request.current_practice.id %}✓{% endif %}
-                        </a>
-                        {% endfor %}
-                        <a href="{% url 'practice_management' %}" class="nav-manage-link">⚙️ {% trans "Manage practices" %}</a>
-                    </div>
-                </div>
+                {% comment %} The unmatched-transaction count was the only alert for bank work
+                   waiting to be assigned, and it used to ride on the Finances
+                   dropdown. Rather than lose it, the link appears only while there
+                   is something to match — the nav is four links the rest of the
+                   time. Proper home is a Focus Queue task type (see P-047 doc). {% endcomment %}
+                {% if request.unmatched_bank_count %}
+                <a href="{% url 'bank_import' %}" {% if 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>🏦 {% trans "Bank import" %} <span class="badge">{{ request.unmatched_bank_count }}</span></a>
                 {% endif %}
-                <form id="lang-form" action="{% url 'set_language' %}" method="post" class="hidden">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <input type="hidden" name="language" id="lang-input" value="">
-                </form>
-                <button class="lang-toggle" id="langToggle" title="Sprache wechseln / Switch language">
-                    {{ CURRENT_LANGUAGE|upper }}
-                </button>
-                <button class="theme-toggle" id="themeToggle" title="{% trans 'Toggle dark mode' %}">
-                    🌙
-                </button>
-                <button class="privacy-toggle" id="privacyToggle" title="{% trans 'Click to hide sensitive data' %}">
-                    👁️ Privacy
-                </button>
-                <button class="cmd-palette-trigger" id="cmd-palette-trigger" type="button"
-                        title="{% trans 'Command palette' %}">
-                    🔍 <span>{% trans "Search" %}</span>
-                    <kbd data-cmdk-key="mac" hidden>⌘K</kbd>
-                    <kbd data-cmdk-key="other">Ctrl K</kbd>
-                </button>
+                <div class="header-controls">
+                    <button class="cmd-palette-trigger" id="cmd-palette-trigger" type="button"
+                            title="{% trans 'Command palette' %}">
+                        🔍 <span>{% trans "Search" %}</span>
+                        <kbd data-cmdk-key="mac" hidden>⌘K</kbd>
+                        <kbd data-cmdk-key="other">Ctrl K</kbd>
+                    </button>
+                    {% if user.is_authenticated and user.practices.exists %}
+                    <div class="dropdown practice-switcher">
+                        {% trans "Practice" as practice_fallback %}
+                        <span>{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de|default:practice_fallback }}{% else %}{{ request.current_practice.short_title_de|default:practice_fallback }}{% endif %} ▾</span>
+                        <div class="dropdown-content">
+                            {% for practice in user.practices.all %}
+                            <a href="{% url 'practice_switch' practice.slug %}"
+                               {% if practice.id == request.current_practice.id %}class="current-practice"{% endif %}>
+                                {% if CURRENT_LANGUAGE == "en" %}{{ practice.short_title_en|default:practice.short_title_de|default:practice.name }}{% else %}{{ practice.short_title_de|default:practice.name }}{% endif %}
+                                {% if practice.id == request.current_practice.id %}✓{% endif %}
+                            </a>
+                            {% endfor %}
+                            <a href="{% url 'practice_management' %}" class="nav-manage-link">⚙️ {% trans "Manage practices" %}</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <form id="lang-form" action="{% url 'set_language' %}" method="post" class="hidden">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="hidden" name="language" id="lang-input" value="">
+                    </form>
+                    <button class="lang-toggle" id="langToggle" title="Sprache wechseln / Switch language">
+                        {{ CURRENT_LANGUAGE|upper }}
+                    </button>
+                    <button class="theme-toggle" id="themeToggle" title="{% trans 'Toggle dark mode' %}">
+                        🌙
+                    </button>
+                    <button class="privacy-toggle" id="privacyToggle" title="{% trans 'Click to hide sensitive data' %}">
+                        👁️ Privacy
+                    </button>
+                </div>
             </nav>
         </div>
 
@@ -263,9 +238,6 @@
 
     <!-- Keyboard Navigation -->
     <script src="{% static 'js/keyboard-nav.js' %}"></script>
-
-    <!-- Global Search -->
-    <script src="{% static 'js/global-search.js' %}"></script>
 
     <!-- Widget System (P-003 Phase 3) -->
     <script src="{% static 'js/widgets.js' %}"></script>

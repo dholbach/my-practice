@@ -1,12 +1,15 @@
 {% load i18n %}
 {% comment %}
-Command palette (P-047 Phase 1) — ⌘K / Ctrl+K.
+Command palette (P-047) — ⌘K / Ctrl+K, or "/".
 
-Every entry is rendered server-side so its label passes through {% trans %}.
-command_palette.js only opens/closes, filters and keyboard-navigates this markup
-and holds no user-facing strings of its own — the i18n guardrail cannot see
-strings that live in a .js file (CLAUDE.md i18n Conventions), and filtering reads
-each item's textContent, so no label is repeated in a data-* attribute either.
+Every static entry is rendered server-side so its label passes through
+{% trans %}. command_palette.js only opens/closes, filters, searches and
+keyboard-navigates this markup and holds no user-facing strings of its own — the
+i18n guardrail cannot see strings that live in a .js file (CLAUDE.md i18n
+Conventions), and filtering reads each item's textContent, so no label is
+repeated in a data-* attribute either. Search rows are the one dynamic part;
+their heading and status lines are still rendered (empty) here for the same
+reason.
 
 Only argument-free destinations belong here: an entry is a plain <a href>, so
 anything needing a pk or a type segment (client detail, the operational
@@ -19,10 +22,19 @@ list scannable.
     <div class="cmd-palette__dialog" role="dialog" aria-modal="true"
          aria-label="{% trans 'Command palette' %}">
         <input type="text" id="cmd-palette-input" class="cmd-palette__input"
-               placeholder="{% trans 'Search' %}" autocomplete="off" spellcheck="false"
+               placeholder="{% trans 'Search... (c:client/inquiry, i:invoice)' %}"
+               autocomplete="off" spellcheck="false"
                role="combobox" aria-expanded="true" aria-controls="cmd-palette-list">
 
         <div class="cmd-palette__list" id="cmd-palette-list" role="listbox">
+            {% comment %} Filled from /api/search/ by command_palette.js. The heading and the
+               three status lines below are rendered here — empty — so their text
+               stays translatable even though the rows themselves are dynamic. {% endcomment %}
+            <section class="cmd-palette__group" id="cmd-palette-results-group" hidden>
+                <h2 class="cmd-palette__group-title">{% trans "Search results" %}</h2>
+                <div id="cmd-palette-results"></div>
+            </section>
+
             <section class="cmd-palette__group">
                 <h2 class="cmd-palette__group-title">{% trans "Jump to" %}</h2>
                 <a class="cmd-palette__item" role="option" href="{% url 'inquiry_list' %}">📬 {% trans "Inquiries" %}</a>
@@ -60,10 +72,14 @@ list scannable.
                 <a class="cmd-palette__item" role="option" href="{% url 'tag_create' %}">➕ {% trans "New tag" %}</a>
             </section>
 
+            <p class="cmd-palette__status" id="cmd-palette-loading" hidden>{% trans "Searching…" %}</p>
+            <p class="cmd-palette__status cmd-palette__status--error" id="cmd-palette-error" hidden>{% trans "Error while searching" %}</p>
             <p class="cmd-palette__empty" id="cmd-palette-empty" hidden>{% trans "No results" %}</p>
         </div>
 
         <footer class="cmd-palette__hints">
+            <span><kbd>c:</kbd> {% trans "Clients" %}</span>
+            <span><kbd>i:</kbd> {% trans "Invoices" %}</span>
             <span><kbd>↑</kbd><kbd>↓</kbd> {% trans "Navigate" %}</span>
             <span><kbd>↵</kbd> {% trans "Open" %}</span>
             <span><kbd>esc</kbd> {% trans "Close" %}</span>

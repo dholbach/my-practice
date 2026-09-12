@@ -2,16 +2,18 @@
  * Keyboard Navigation for Therapy Practice App
  *
  * Global shortcuts:
- * - c: Clients
- * - i: Invoices
- * - d: Dashboard
- * - a: Analytics
- * - p: Practice Analysis
- * - ?: Help overlay
+ * - ⌘K / Ctrl+K, or /: command palette (command_palette.js owns these)
+ * - ?: help overlay
  *
  * Context-aware shortcuts:
  * - n: New (client/invoice depending on page)
  * - e: Edit (on detail pages)
+ *
+ * The single-letter global navigation keys (c/i/d/a/p) were retired in P-047
+ * Phase 3: every destination they covered is in the command palette, and a bare
+ * letter that navigates away the moment it lands outside an input is a poor
+ * trade for that. The context-aware keys stay — they act on the record you are
+ * already looking at, which the palette has no way to express.
  */
 
 (function() {
@@ -66,37 +68,30 @@
             return 'invoices';
         }
 
-        if (path.includes('/dashboard')) return 'dashboard';
-        if (path.includes('/analytics')) return 'analytics';
-        if (path.includes('/practice-analysis')) return 'practice';
-
-        return 'home';
+        return 'other';
     }
 
-    // Keyboard shortcut mappings
-    const shortcuts = {
-        global: {
-            'c': { url: '/clients/', name: i18n.kbdClients },
-            'i': { url: '/invoices/', name: i18n.kbdInvoices },
-            'd': { url: '/dashboard/', name: i18n.kbdDashboard },
-            'a': { url: '/analytics/', name: i18n.kbdAnalytics },
-            'p': { url: '/practice-analysis/', name: i18n.kbdPracticeAnalysis },
-            '?': { action: 'showHelp', name: i18n.kbdHelp }
+    // Keys the overlay documents but does not implement: the palette owns ⌘K
+    // and /, and ? is handled below. Display order is the order listed here.
+    const globalHints = [
+        { keys: '⌘K · Ctrl+K', name: () => i18n.kbdCommandPalette },
+        { keys: '/', name: () => i18n.kbdCommandPalette },
+        { keys: '?', name: () => i18n.kbdHelp }
+    ];
+
+    const contextualShortcuts = {
+        'clients': {
+            'n': { url: '/clients/new/', name: () => i18n.kbdNewClient }
         },
-        contextual: {
-            'clients': {
-                'n': { url: '/clients/new/', name: i18n.kbdNewClient }
-            },
-            'client-detail': {
-                'n': { action: 'createInvoice', name: i18n.kbdNewInvoice },
-                'e': { action: 'editClient', name: i18n.kbdEditClient }
-            },
-            'invoices': {
-                'n': { url: '/invoices/new/', name: i18n.kbdNewInvoice }
-            },
-            'invoice-detail': {
-                'e': { action: 'editInvoice', name: i18n.kbdEditInvoice }
-            }
+        'client-detail': {
+            'n': { action: 'createInvoice', name: () => i18n.kbdNewInvoice },
+            'e': { action: 'editClient', name: () => i18n.kbdEditClient }
+        },
+        'invoices': {
+            'n': { url: '/invoices/new/', name: () => i18n.kbdNewInvoice }
+        },
+        'invoice-detail': {
+            'e': { action: 'editInvoice', name: () => i18n.kbdEditInvoice }
         }
     };
 
@@ -123,6 +118,17 @@
         }
     }
 
+    function shortcutRows(entries) {
+        return entries.map(function(entry) {
+            return `
+                <tr class="kbd-help__row">
+                    <td class="kbd-help__key"><kbd>${entry.keys}</kbd></td>
+                    <td class="kbd-help__name">${entry.name()}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
     // Show help overlay
     function showHelpOverlay() {
         // Check if overlay already exists
@@ -131,90 +137,42 @@
             return;
         }
 
-        const context = getPageContext();
-        const contextShortcuts = shortcuts.contextual[context] || {};
+        const contextual = contextualShortcuts[getPageContext()] || {};
+        const contextEntries = Object.keys(contextual).map(function(key) {
+            return { keys: key, name: contextual[key].name };
+        });
 
         const overlay = document.createElement('div');
         overlay.id = 'keyboard-help-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-        `;
-
-        const helpBox = document.createElement('div');
-        helpBox.style.cssText = `
-            background: var(--color-surface, white);
-            padding: 2rem;
-            border-radius: 12px;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        `;
+        overlay.className = 'kbd-help';
 
         let html = `
-            <h2 style="margin-top: 0; color: var(--color-text-primary);">⌨️ ${i18n.kbdHelpTitle}</h2>
-            <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem;">
-                ${i18n.kbdHelpIntro}
-            </p>
+            <div class="kbd-help__box">
+                <h2 class="kbd-help__title">⌨️ ${i18n.kbdHelpTitle}</h2>
+                <p class="kbd-help__intro">${i18n.kbdHelpIntro}</p>
 
-            <h3 style="color: var(--color-text-primary); margin-top: 1.5rem;">${i18n.kbdGlobalNav}</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
+                <h3 class="kbd-help__section">${i18n.kbdGlobalNav}</h3>
+                <table class="kbd-help__table">${shortcutRows(globalHints)}</table>
         `;
 
-        for (const [key, data] of Object.entries(shortcuts.global)) {
-            if (data.action === 'showHelp') continue;
+        if (contextEntries.length > 0) {
             html += `
-                <tr style="border-bottom: 1px solid var(--color-border);">
-                    <td style="padding: 0.5rem; font-weight: bold; font-family: monospace; color: var(--color-link);">${key}</td>
-                    <td style="padding: 0.5rem; color: var(--color-text-primary);">${data.name}</td>
-                </tr>
+                <h3 class="kbd-help__section">${i18n.kbdOnThisPage}</h3>
+                <table class="kbd-help__table">${shortcutRows(contextEntries)}</table>
             `;
-        }
-
-        html += '</table>';
-
-        // Context-specific shortcuts
-        if (Object.keys(contextShortcuts).length > 0) {
-            html += `
-                <h3 style="color: var(--color-text-primary); margin-top: 1.5rem;">${i18n.kbdOnThisPage}</h3>
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
-            `;
-
-            for (const [key, data] of Object.entries(contextShortcuts)) {
-                html += `
-                    <tr style="border-bottom: 1px solid var(--color-border);">
-                        <td style="padding: 0.5rem; font-weight: bold; font-family: monospace; color: var(--color-link);">${key}</td>
-                        <td style="padding: 0.5rem; color: var(--color-text-primary);">${data.name}</td>
-                    </tr>
-                `;
-            }
-
-            html += '</table>';
         }
 
         html += `
-            <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-top: 1.5rem; text-align: center;">
-                ${i18n.kbdPress} <kbd style="padding: 0.2rem 0.5rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace;">?</kbd>
-                ${i18n.kbdOr} <kbd style="padding: 0.2rem 0.5rem; background: var(--color-bg-secondary); border-radius: 4px;">ESC</kbd>
-                ${i18n.kbdToClose}
-            </p>
+                <p class="kbd-help__footer">
+                    ${i18n.kbdPress} <kbd>?</kbd> ${i18n.kbdOr} <kbd>ESC</kbd> ${i18n.kbdToClose}
+                </p>
+            </div>
         `;
 
-        helpBox.innerHTML = html;
-        overlay.appendChild(helpBox);
+        overlay.innerHTML = html;
         document.body.appendChild(overlay);
 
-        // Close on click outside or ESC
+        // Close on click outside
         overlay.addEventListener('click', function(e) {
             if (e.target === overlay) {
                 overlay.remove();
@@ -235,7 +193,6 @@
         }
 
         const key = event.key.toLowerCase();
-        const context = getPageContext();
 
         // Close help overlay with ESC
         if (key === 'escape') {
@@ -254,110 +211,16 @@
             return;
         }
 
-        // Check contextual shortcuts first
-        const contextShortcuts = shortcuts.contextual[context] || {};
-        if (contextShortcuts[key]) {
+        const contextual = contextualShortcuts[getPageContext()] || {};
+        if (contextual[key]) {
             event.preventDefault();
-            const shortcut = contextShortcuts[key];
+            const shortcut = contextual[key];
 
             if (shortcut.action) {
                 handleContextualAction(shortcut.action);
             } else if (shortcut.url) {
                 window.location.href = shortcut.url;
             }
-            return;
-        }
-
-        // Check global shortcuts
-        if (shortcuts.global[key]) {
-            event.preventDefault();
-            const shortcut = shortcuts.global[key];
-
-            if (shortcut.action === 'showHelp') {
-                showHelpOverlay();
-            } else if (shortcut.url) {
-                window.location.href = shortcut.url;
-            }
         }
     });
-
-    // Add visual indicator for shortcuts (optional tooltip)
-    function addShortcutIndicators() {
-        const indicators = [
-            { selector: 'a[href*="/clients/"]', key: 'c' },
-            { selector: 'a[href*="/invoices/"]', key: 'i' },
-            { selector: 'a[href*="/dashboard"]', key: 'd' },
-            { selector: 'a[href*="/analytics"]', key: 'a' },
-            { selector: 'a[href*="/practice-analysis"]', key: 'p' }
-        ];
-
-        indicators.forEach(function(indicator) {
-            const elements = document.querySelectorAll(indicator.selector);
-            elements.forEach(function(el) {
-                // Skip if it's inside a dropdown (those have specific paths)
-                if (el.closest('.dropdown-content')) return;
-
-                const originalTitle = el.getAttribute('title') || '';
-                const shortcutHint = `${i18n.kbdShortcutLabel}: ${indicator.key}`;
-                const newTitle = originalTitle ? `${originalTitle} (${shortcutHint})` : shortcutHint;
-                el.setAttribute('title', newTitle);
-            });
-        });
-    }
-
-    // Initialize on page load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addShortcutIndicators);
-    } else {
-        addShortcutIndicators();
-    }
-
-    // Add small help hint to the page
-    function addHelpHint() {
-        // Only add if not already present
-        if (document.getElementById('keyboard-hint')) return;
-
-        const hint = document.createElement('div');
-        hint.id = 'keyboard-hint';
-        hint.style.cssText = `
-            position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            background: var(--color-surface);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px var(--color-shadow);
-            font-size: 0.85rem;
-            color: var(--color-text-secondary);
-            z-index: 1000;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-            cursor: pointer;
-        `;
-        hint.innerHTML = `${i18n.kbdPress} <kbd style="padding: 0.2rem 0.4rem; background: var(--color-bg-secondary); border-radius: 4px; font-family: monospace; color: var(--color-text-primary);">?</kbd> ${i18n.kbdForShortcuts}`;
-
-        hint.addEventListener('mouseenter', function() {
-            hint.style.opacity = '1';
-        });
-
-        hint.addEventListener('mouseleave', function() {
-            hint.style.opacity = '0.7';
-        });
-
-        hint.addEventListener('click', showHelpOverlay);
-
-        document.body.appendChild(hint);
-
-        // Auto-hide after 5 seconds if user hasn't interacted
-        setTimeout(function() {
-            hint.style.transition = 'opacity 1s';
-            hint.style.opacity = '0';
-        }, 5000);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addHelpHint);
-    } else {
-        addHelpHint();
-    }
 })();

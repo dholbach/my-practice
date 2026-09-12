@@ -2,12 +2,20 @@
  * Tests for command_palette.js (P-047)
  * Run with: node command_palette.test.js
  *
- * Same approach as form_draft_guard.test.js and global-search.test.js: the
- * script is a browser IIFE with no exports, so each test builds a throwaway DOM
- * stub, loads the real source into it via `vm`, and drives it through events.
- * Stubs are hand-rolled rather than jsdom because the repo runs JS tests as
- * plain `node <file>` with no framework or devDependencies (see dev.py
- * cmd_test_js), and a DOM dependency would have to exist in the Docker image.
+ * Same approach as form_draft_guard.test.js and the global-search.test.js this
+ * replaced: the script is a browser IIFE with no exports, so each test builds a
+ * throwaway DOM stub, loads the real source into it via `vm`, and drives it
+ * through events. Stubs are hand-rolled rather than jsdom because the repo runs
+ * JS tests as plain `node <file>` with no framework or devDependencies (see
+ * dev.py cmd_test_js), and a DOM dependency would have to exist in the Docker
+ * image too.
+ *
+ * Two things this file has to fake:
+ *   - setTimeout is a manual map, so the 300ms search debounce can be flushed
+ *     synchronously instead of slept through.
+ *   - fetch hands back a deferred, so a test can land two responses in either
+ *     order and check the stale one is dropped. Tests are therefore async and
+ *     run sequentially.
  *
  * The stub's selector matching covers exactly the selectors command_palette.js
  * uses — class, [attr], [attr="value"], and the one compound form
@@ -51,7 +59,6 @@ class FakeNode {
         this.hidden = false;
         this.value = "";
         this.focused = false;
-        this.scrolledIntoView = false;
         this._classes = new Set();
         this._listeners = {};
         this._text = "";
@@ -75,8 +82,10 @@ class FakeNode {
     get textContent() {
         return this._text + this.children.map((c) => c.textContent).join("");
     }
+    // Assigning "" is also how the source empties the results container.
     set textContent(value) {
         this._text = String(value);
+        for (const child of this.children) child.parentNode = null;
         this.children = [];
     }
 
@@ -103,6 +112,7 @@ class FakeNode {
 
     appendChild(child) {
         child.parentNode = this;
+        child.ownerDocument = this.ownerDocument;
         this.children.push(child);
         return child;
     }
@@ -111,9 +121,7 @@ class FakeNode {
         this.focused = true;
         if (this.ownerDocument) this.ownerDocument.activeElement = this;
     }
-    scrollIntoView() {
-        this.scrolledIntoView = true;
-    }
+    scrollIntoView() {}
 
     _descendants() {
         return this.children.flatMap((c) => [c, ...c._descendants()]);
@@ -151,98 +159,150 @@ class FakeNode {
 }
 
 /**
- * Builds the subset of includes/command_palette.html the script touches:
- * two groups with the given item labels, plus input, backdrop, empty message
- * and the two platform <kbd> variants.
+ * Builds the subset of includes/command_palette.html the script touches: the
+ * results group, two static groups with the given item labels, the three status
+ * lines, and the two platform <kbd> variants on the header trigger.
  */
 function buildPalette({ jumpTo, actions }) {
     const document = new FakeNode("document");
+    document.ownerDocument = document;
     document.readyState = "complete";
     document.activeElement = null;
+    document.createElement = (tag) => {
+        const node = new FakeNode(tag);
+        node.ownerDocument = document;
+        return node;
+    };
 
-    const body = new FakeNode("body");
+    const body = document.appendChild(new FakeNode("body"));
     document.body = body;
-    document.appendChild(body);
 
-    const palette = new FakeNode("div");
+    const palette = body.appendChild(new FakeNode("div"));
     palette.id = "command-palette";
     palette.hidden = true;
-    body.appendChild(palette);
 
-    const backdrop = new FakeNode("div");
+    const backdrop = palette.appendChild(new FakeNode("div"));
     backdrop.className = "cmd-palette__backdrop";
     backdrop.dataset.cmdkDismiss = "";
-    palette.appendChild(backdrop);
 
     const dialog = palette.appendChild(new FakeNode("div"));
-
-    const input = new FakeNode("input");
+    const input = dialog.appendChild(new FakeNode("input"));
     input.id = "cmd-palette-input";
-    dialog.appendChild(input);
+
+    const resultsGroup = dialog.appendChild(new FakeNode("section"));
+    resultsGroup.className = "cmd-palette__group";
+    resultsGroup.id = "cmd-palette-results-group";
+    resultsGroup.hidden = true;
+    const resultsContainer = resultsGroup.appendChild(new FakeNode("div"));
+    resultsContainer.id = "cmd-palette-results";
 
     const makeGroup = (labels) => {
-        const group = new FakeNode("section");
+        const group = dialog.appendChild(new FakeNode("section"));
         group.className = "cmd-palette__group";
-        dialog.appendChild(group);
-        return labels.map(([label, href]) => {
-            const item = new FakeNode("a");
+        for (const [label, href] of labels) {
+            const item = group.appendChild(new FakeNode("a"));
             item.className = "cmd-palette__item";
             item.textContent = label;
             item.setAttribute("href", href);
-            return group.appendChild(item);
-        });
+        }
     };
     makeGroup(jumpTo);
     makeGroup(actions);
 
-    const empty = new FakeNode("p");
-    empty.id = "cmd-palette-empty";
-    empty.hidden = true;
-    dialog.appendChild(empty);
+    const status = (id) => {
+        const el = dialog.appendChild(new FakeNode("p"));
+        el.id = id;
+        el.hidden = true;
+        return el;
+    };
+    const loading = status("cmd-palette-loading");
+    const error = status("cmd-palette-error");
+    const empty = status("cmd-palette-empty");
 
-    const trigger = new FakeNode("button");
+    const trigger = body.appendChild(new FakeNode("button"));
     trigger.id = "cmd-palette-trigger";
-    body.appendChild(trigger);
-
-    const kbdMac = new FakeNode("kbd");
+    const kbdMac = trigger.appendChild(new FakeNode("kbd"));
     kbdMac.dataset.cmdkKey = "mac";
     kbdMac.hidden = true;
-    trigger.appendChild(kbdMac);
-    const kbdOther = new FakeNode("kbd");
+    const kbdOther = trigger.appendChild(new FakeNode("kbd"));
     kbdOther.dataset.cmdkKey = "other";
-    trigger.appendChild(kbdOther);
-
-    // Tag every node so focus() can report back through document.activeElement.
-    for (const node of [document, ...document._descendants()]) node.ownerDocument = document;
 
     const byId = {};
     for (const node of document._descendants()) if (node.id) byId[node.id] = node;
     document.getElementById = (id) => byId[id] || null;
 
-    return { document, palette, input, backdrop, empty, trigger, kbdMac, kbdOther };
+    return {
+        document, palette, input, backdrop, resultsGroup, resultsContainer,
+        loading, error, empty, trigger, kbdMac, kbdOther,
+    };
+}
+
+/** fetch stub: each call records a deferred the test resolves or rejects itself. */
+function makeFetch() {
+    const calls = [];
+    const fetchImpl = (url) => {
+        const call = { url };
+        call.promise = new Promise((resolve, reject) => {
+            call.respond = (results) =>
+                resolve({ json: () => Promise.resolve({ results }) });
+            call.fail = () => reject(new Error("network down"));
+        });
+        calls.push(call);
+        return call.promise;
+    };
+    return { fetchImpl, calls };
 }
 
 function load(dom, { platform = "Linux x86_64" } = {}) {
     const { document } = dom;
     const location = { href: "/dashboard/" };
+    const { fetchImpl, calls } = makeFetch();
+
+    const timers = new Map();
+    let nextTimerId = 1;
+    const errors = [];
+
     const context = {
         document,
         navigator: { platform, userAgent: platform },
         window: { location },
         location,
-        console,
+        console: { error: (...args) => errors.push(args.join(" ")) },
+        fetch: fetchImpl,
+        setTimeout: (fn) => {
+            const id = nextTimerId++;
+            timers.set(id, fn);
+            return id;
+        },
+        clearTimeout: (id) => timers.delete(id),
+        Promise,
     };
     context.globalThis = context;
     vm.createContext(context);
     vm.runInContext(SOURCE, context);
-    return { location };
+
+    return {
+        location,
+        fetchCalls: calls,
+        errors,
+        pendingTimers: () => timers.size,
+        flushTimers: () => {
+            const fns = Array.from(timers.values());
+            timers.clear();
+            for (const fn of fns) fn();
+        },
+    };
 }
+
+// Lets queued promise callbacks (fetch → .json() → render) run before asserting.
+const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 // ---------------------------------------------------------------------------
 // Assertions + runner
 // ---------------------------------------------------------------------------
 
 let failures = 0;
+const tests = [];
 
 function assert(condition, message) {
     if (!condition) {
@@ -266,14 +326,7 @@ function assertEqual(actual, expected, message) {
 }
 
 function test(name, fn) {
-    const before = failures;
-    try {
-        fn();
-    } catch (error) {
-        failures += 1;
-        console.error(`  ✗ ${name} threw: ${error.stack}`);
-    }
-    console.log(`${failures === before ? "✓" : "✗"} ${name}`);
+    tests.push({ name, fn });
 }
 
 // ---------------------------------------------------------------------------
@@ -293,22 +346,28 @@ const ACTIONS = [
 
 function setup(options) {
     const dom = buildPalette({ jumpTo: JUMP_TO, actions: ACTIONS });
-    const env = load(dom, options);
-    return Object.assign({}, dom, env);
+    return Object.assign({}, dom, load(dom, options));
 }
 
-const visibleLabels = (dom) =>
-    dom.palette.querySelectorAll(".cmd-palette__item").filter((i) => !i.hidden).map((i) => i.textContent);
+function openPalette(dom) {
+    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
+}
+
+function type(dom, text) {
+    dom.input.value = text;
+    dom.input.dispatch("input");
+}
+
+const items = (dom) => dom.palette.querySelectorAll(".cmd-palette__item");
+const visibleLabels = (dom) => items(dom).filter((i) => !i.hidden).map((i) => i.textContent);
 
 const selectedLabel = (dom) => {
-    const hit = dom.palette
-        .querySelectorAll(".cmd-palette__item")
-        .filter((i) => i.classList.contains("cmd-palette__item--selected"));
+    const hit = items(dom).filter((i) => i.classList.contains("cmd-palette__item--selected"));
     return hit.length === 1 ? hit[0].textContent : null;
 };
 
 // ---------------------------------------------------------------------------
-// Tests
+// Open / close
 // ---------------------------------------------------------------------------
 
 test("starts closed and opens on Ctrl+K", () => {
@@ -339,6 +398,21 @@ test("ignores Ctrl+Alt+K so it cannot shadow an OS/browser combo", () => {
     assert(!event.defaultPrevented, "the event is left alone");
 });
 
+test('"/" opens the palette, inheriting the old search box shortcut', () => {
+    const dom = setup();
+    const event = dom.document.dispatch("keydown", { key: "/" });
+    assertEqual(dom.palette.hidden, false, '"/" opens');
+    assert(event.defaultPrevented, '"/" is consumed so it does not land in the page');
+});
+
+test('"/" typed into a field is left alone', () => {
+    const dom = setup();
+    const field = new FakeNode("textarea");
+    const event = dom.document.dispatch("keydown", { key: "/", target: field });
+    assertEqual(dom.palette.hidden, true, "palette stays closed while typing");
+    assert(!event.defaultPrevented, "the slash reaches the field");
+});
+
 test("trigger button opens the palette", () => {
     const dom = setup();
     dom.trigger.dispatch("click");
@@ -347,69 +421,51 @@ test("trigger button opens the palette", () => {
 
 test("Escape closes and returns focus to where it was", () => {
     const dom = setup();
-    const opener = dom.trigger;
-    opener.focus();
-
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
+    dom.trigger.focus();
+    openPalette(dom);
     assertEqual(dom.document.activeElement, dom.input, "focus moved into the palette");
 
     dom.input.dispatch("keydown", { key: "Escape" });
     assertEqual(dom.palette.hidden, true, "palette closed");
-    assertEqual(dom.document.activeElement, opener, "focus handed back to the opener");
+    assertEqual(dom.document.activeElement, dom.trigger, "focus handed back to the opener");
 });
 
 test("backdrop click closes", () => {
     const dom = setup();
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
+    openPalette(dom);
     dom.backdrop.dispatch("click");
     assertEqual(dom.palette.hidden, true, "clicking the scrim closes the palette");
 });
 
+// ---------------------------------------------------------------------------
+// Static filtering
+// ---------------------------------------------------------------------------
+
 test("typing filters items and hides groups that emptied out", () => {
     const dom = setup();
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
-
-    dom.input.value = "bank";
-    dom.input.dispatch("input");
+    openPalette(dom);
+    type(dom, "bank");
 
     assertEqual(visibleLabels(dom).join(" | "), "🏦 Bank import | 🏦 Bank expenses", "only Bank items visible");
     const groups = dom.palette.querySelectorAll(".cmd-palette__group");
-    assertEqual(groups[0].hidden, false, "Jump-to group still shown");
-    assertEqual(groups[1].hidden, true, "Actions group hidden — nothing in it matched");
+    assertEqual(groups[1].hidden, false, "Jump-to group still shown");
+    assertEqual(groups[2].hidden, true, "Actions group hidden — nothing in it matched");
     assertEqual(dom.empty.hidden, true, "no empty message while there are matches");
 });
 
 test("filtering is case-insensitive and matches mid-label", () => {
     const dom = setup();
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
-    dom.input.value = "INVOICE";
-    dom.input.dispatch("input");
+    openPalette(dom);
+    type(dom, "INVOICE");
     assertEqual(visibleLabels(dom).join(" | "), "➕ New invoice", "case-insensitive substring match");
-});
-
-test("no matches shows the empty message and leaves nothing selected", () => {
-    const dom = setup();
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
-    dom.input.value = "zzz";
-    dom.input.dispatch("input");
-
-    assertEqual(visibleLabels(dom).length, 0, "no items visible");
-    assertEqual(dom.empty.hidden, false, "empty message shown");
-    assertEqual(selectedLabel(dom), null, "nothing selected");
-
-    // Enter on an empty list must be inert, not navigate to a stale item.
-    const before = dom.location.href;
-    dom.input.dispatch("keydown", { key: "Enter" });
-    assertEqual(dom.location.href, before, "Enter does nothing with no matches");
 });
 
 test("first match is pre-selected so Enter works without pressing ArrowDown", () => {
     const dom = setup();
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
+    openPalette(dom);
     assertEqual(selectedLabel(dom), "📬 Inquiries", "first item selected on open");
 
-    dom.input.value = "bank ex";
-    dom.input.dispatch("input");
+    type(dom, "bank ex");
     assertEqual(selectedLabel(dom), "🏦 Bank expenses", "selection follows the filter");
 
     const event = dom.input.dispatch("keydown", { key: "Enter" });
@@ -419,9 +475,8 @@ test("first match is pre-selected so Enter works without pressing ArrowDown", ()
 
 test("arrow keys move the selection over visible items only, and wrap", () => {
     const dom = setup();
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
-    dom.input.value = "bank";
-    dom.input.dispatch("input");
+    openPalette(dom);
+    type(dom, "bank");
 
     dom.input.dispatch("keydown", { key: "ArrowDown" });
     assertEqual(selectedLabel(dom), "🏦 Bank expenses", "ArrowDown → second match");
@@ -435,11 +490,9 @@ test("arrow keys move the selection over visible items only, and wrap", () => {
 
 test("hover moves the selection so Enter opens what is highlighted", () => {
     const dom = setup();
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
+    openPalette(dom);
 
-    const analytics = dom.palette
-        .querySelectorAll(".cmd-palette__item")
-        .find((i) => i.textContent.includes("Analytics"));
+    const analytics = items(dom).find((i) => i.textContent.includes("Analytics"));
     analytics.dispatch("mouseenter");
     assertEqual(selectedLabel(dom), "📊 Analytics", "hovered item becomes the selection");
 
@@ -449,12 +502,11 @@ test("hover moves the selection so Enter opens what is highlighted", () => {
 
 test("reopening clears the previous query", () => {
     const dom = setup();
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
-    dom.input.value = "bank";
-    dom.input.dispatch("input");
+    openPalette(dom);
+    type(dom, "bank");
     dom.input.dispatch("keydown", { key: "Escape" });
 
-    dom.document.dispatch("keydown", { key: "k", ctrlKey: true });
+    openPalette(dom);
     assertEqual(dom.input.value, "", "input reset");
     assertEqual(visibleLabels(dom).length, JUMP_TO.length + ACTIONS.length, "all items visible again");
 });
@@ -470,9 +522,196 @@ test("shortcut hint matches the platform", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Search (/api/search/)
+// ---------------------------------------------------------------------------
 
-if (failures > 0) {
-    console.error(`\n${failures} assertion(s) failed`);
-    process.exit(1);
-}
-console.log("\nAll command_palette.js tests passed");
+test("the search request is debounced, not fired per keystroke", async () => {
+    const dom = setup();
+    openPalette(dom);
+
+    type(dom, "sch");
+    type(dom, "schm");
+    type(dom, "schmidt");
+    assertEqual(dom.fetchCalls.length, 0, "nothing requested before the debounce elapses");
+    assertEqual(dom.pendingTimers(), 1, "only the newest keystroke has a timer — earlier ones cleared");
+
+    dom.flushTimers();
+    assertEqual(dom.fetchCalls.length, 1, "one request for the final text");
+    assertEqual(dom.fetchCalls[0].url, "/api/search/?q=schmidt", "query sent url-encoded");
+    assertEqual(dom.loading.hidden, false, "loading line shown while in flight");
+
+    dom.fetchCalls[0].respond([]);
+    await settle();
+    assertEqual(dom.loading.hidden, true, "loading line cleared when the response lands");
+});
+
+test("results render above the static entries and are Enter-able", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "MU");
+    dom.flushTimers();
+    dom.fetchCalls[0].respond([
+        { type: "client", url: "/clients/7/detail/", label: "👤 MU-1 — Max Mustermann" },
+        { type: "invoice", url: "/invoices/3/", label: "📄 INV-001 — MU-1" },
+    ]);
+    await settle();
+
+    assertEqual(dom.resultsGroup.hidden, false, "results group revealed");
+    assertEqual(
+        visibleLabels(dom).join(" | "),
+        "👤 MU-1 — Max Mustermann | 📄 INV-001 — MU-1",
+        "results listed first; no static entry contains \"MU\""
+    );
+    assertEqual(selectedLabel(dom), "👤 MU-1 — Max Mustermann", "top result pre-selected");
+
+    dom.input.dispatch("keydown", { key: "ArrowDown" });
+    dom.input.dispatch("keydown", { key: "Enter" });
+    assertEqual(dom.location.href, "/invoices/3/", "Enter opens the selected result");
+});
+
+test("result labels with & and < survive verbatim", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "ka");
+    dom.flushTimers();
+    dom.fetchCalls[0].respond([
+        { type: "client", url: "/clients/9/detail/", label: "👤 KA-1 — Karl <Kalle> & Co" },
+    ]);
+    await settle();
+
+    assertEqual(
+        visibleLabels(dom).join(""),
+        "👤 KA-1 — Karl <Kalle> & Co",
+        "built as a text node, so no escaping round-trip to get wrong"
+    );
+});
+
+test("results and matching static entries appear together", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "bank");
+    dom.flushTimers();
+    dom.fetchCalls[0].respond([
+        { type: "client", url: "/clients/4/detail/", label: "👤 BA-1 — Banks" },
+    ]);
+    await settle();
+
+    assertEqual(
+        visibleLabels(dom).join(" | "),
+        "👤 BA-1 — Banks | 🏦 Bank import | 🏦 Bank expenses",
+        "one search hit followed by the two static matches"
+    );
+});
+
+test("a superseded response is dropped even if it lands last", async () => {
+    const dom = setup();
+    openPalette(dom);
+
+    type(dom, "sch");
+    dom.flushTimers();
+    type(dom, "schmidt");
+    dom.flushTimers();
+    assertEqual(dom.fetchCalls.length, 2, "two requests in flight");
+
+    // Newest answers first, then the slower earlier one — the race the
+    // latestRequestId guard exists for.
+    dom.fetchCalls[1].respond([{ type: "client", url: "/clients/2/detail/", label: "👤 SC-1 — Schmidt" }]);
+    await settle();
+    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/99/detail/", label: "👤 XX-9 — Stale" }]);
+    await settle();
+
+    assertEqual(visibleLabels(dom).join(""), "👤 SC-1 — Schmidt", "stale response ignored");
+    dom.input.dispatch("keydown", { key: "Enter" });
+    assertEqual(dom.location.href, "/clients/2/detail/", "Enter cannot navigate to a stale result");
+});
+
+test("clearing the input drops the results and any in-flight response", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "MU");
+    dom.flushTimers();
+
+    type(dom, "");
+    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/7/detail/", label: "👤 MU-1 — Max" }]);
+    await settle();
+
+    assertEqual(dom.resultsGroup.hidden, true, "results group hidden again");
+    assertEqual(visibleLabels(dom).length, JUMP_TO.length + ACTIONS.length, "back to the full static list");
+    assertEqual(dom.loading.hidden, true, "loading line cleared");
+});
+
+test("a failed search shows the error line and clears stale rows", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "MU");
+    dom.flushTimers();
+    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/7/detail/", label: "👤 MU-1 — Max" }]);
+    await settle();
+
+    type(dom, "MUS");
+    dom.flushTimers();
+    dom.fetchCalls[1].fail();
+    await settle();
+
+    assertEqual(dom.error.hidden, false, "error line shown");
+    assertEqual(dom.loading.hidden, true, "loading line cleared");
+    assertEqual(dom.empty.hidden, true, "no 'No results' piled on top of the error");
+    assertEqual(visibleLabels(dom).length, 0, "the previous query's rows are gone");
+    assert(dom.errors.length === 1, "the failure is logged for the console");
+
+    const before = dom.location.href;
+    dom.input.dispatch("keydown", { key: "Enter" });
+    assertEqual(dom.location.href, before, "Enter cannot navigate after a failure");
+});
+
+test("no static match and no search hit shows the empty message", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "zzz");
+    assertEqual(dom.empty.hidden, false, "empty message already shown before the search returns");
+
+    dom.flushTimers();
+    assertEqual(dom.empty.hidden, true, "suppressed while the search is in flight");
+
+    dom.fetchCalls[0].respond([]);
+    await settle();
+    assertEqual(dom.empty.hidden, false, "shown again once the search comes back empty");
+    assertEqual(selectedLabel(dom), null, "nothing selected");
+
+    const before = dom.location.href;
+    dom.input.dispatch("keydown", { key: "Enter" });
+    assertEqual(dom.location.href, before, "Enter does nothing with no matches");
+});
+
+test("closing cancels a pending search", () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "MU");
+    assertEqual(dom.pendingTimers(), 1, "search queued");
+
+    dom.input.dispatch("keydown", { key: "Escape" });
+    assertEqual(dom.pendingTimers(), 0, "timer cleared on close");
+    dom.flushTimers();
+    assertEqual(dom.fetchCalls.length, 0, "no request fired for a palette the user dismissed");
+});
+
+// ---------------------------------------------------------------------------
+
+(async () => {
+    for (const { name, fn } of tests) {
+        const before = failures;
+        try {
+            await fn();
+        } catch (error) {
+            failures += 1;
+            console.error(`  ✗ ${name} threw: ${error.stack}`);
+        }
+        console.log(`${failures === before ? "✓" : "✗"} ${name}`);
+    }
+
+    if (failures > 0) {
+        console.error(`\n${failures} assertion(s) failed`);
+        process.exit(1);
+    }
+    console.log("\nAll command_palette.js tests passed");
+})();

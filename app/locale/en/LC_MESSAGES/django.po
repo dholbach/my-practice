@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 21:36+0200\n"
+"POT-Creation-Date: 2026-09-12 21:51+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -221,7 +221,7 @@ msgid "On-site"
 msgstr ""
 
 #: my_practice/admin/client.py:125 my_practice/admin/clinical.py:66
-#: my_practice/models/client.py:203 templates/includes/command_palette.html:45
+#: my_practice/models/client.py:203 templates/includes/command_palette.html:58
 #: templates/my_practice/client_detail.html:154
 #: templates/my_practice/client_list_cards.html:26
 #: templates/my_practice/tag_list.html:6
@@ -427,8 +427,7 @@ msgstr ""
 msgid "Total"
 msgstr ""
 
-#: my_practice/admin/invoice.py:186 templates/base.html:66
-#: templates/includes/command_palette.html:29
+#: my_practice/admin/invoice.py:186 templates/includes/command_palette.html:42
 #: templates/my_practice/client_detail.html:45
 msgid "Billing"
 msgstr ""
@@ -1052,7 +1051,7 @@ msgstr ""
 #: my_practice/models/inquiry.py:204 my_practice/models/invoice.py:68
 #: my_practice/models/practice.py:372 my_practice/models/practice.py:408
 #: my_practice/models/service.py:17 my_practice/models/todo.py:95
-#: templates/base.html:96 templates/my_practice/tax_workday_audit.html:73
+#: templates/base.html:78 templates/my_practice/tax_workday_audit.html:73
 msgid "Practice"
 msgstr ""
 
@@ -1406,8 +1405,9 @@ msgstr ""
 msgid "Check if this client primarily has online sessions"
 msgstr ""
 
-#: my_practice/models/client.py:213 templates/base.html:19
-#: templates/base.html:69 templates/my_practice/analytics.html:104
+#: my_practice/models/client.py:213 templates/base.html:57
+#: templates/includes/command_palette.html:82
+#: templates/my_practice/analytics.html:104
 #: templates/my_practice/analytics.html:592
 #: templates/my_practice/client_list_cards.html:8
 msgid "Clients"
@@ -1674,7 +1674,7 @@ msgid "Session logs"
 msgstr ""
 
 #: my_practice/models/clinical.py:299
-#: templates/includes/command_palette.html:68
+#: templates/includes/command_palette.html:85
 #: templates/my_practice/bank_import.html:128
 msgid "Open"
 msgstr ""
@@ -2132,8 +2132,7 @@ msgstr ""
 msgid "Inquiry"
 msgstr ""
 
-#: my_practice/models/inquiry.py:170 templates/base.html:70
-#: templates/includes/command_palette.html:28
+#: my_practice/models/inquiry.py:170 templates/includes/command_palette.html:41
 #: templates/my_practice/inquiry_list.html:6
 #: templates/my_practice/inquiry_list.html:9
 #: templates/my_practice/inquiry_list.html:15
@@ -2240,8 +2239,8 @@ msgstr ""
 msgid "Total amount"
 msgstr "Total amount"
 
-#: my_practice/models/invoice.py:139 templates/base.html:23
-#: templates/base.html:63 templates/base.html:65
+#: my_practice/models/invoice.py:139 templates/base.html:58
+#: templates/includes/command_palette.html:83
 #: templates/my_practice/analytics.html:329
 #: templates/my_practice/analytics.html:350
 #: templates/my_practice/analytics.html:399
@@ -4350,213 +4349,118 @@ msgstr ""
 msgid "Therapy Practice"
 msgstr ""
 
-#: templates/base.html:20 templates/my_practice/dashboard.html:7
-#: templates/my_practice/dashboard.html:10
-msgid "Dashboard"
-msgstr ""
-
-#: templates/base.html:21 templates/base.html:79
-#: templates/includes/command_palette.html:35
-#: templates/my_practice/analytics.html:6
-#: templates/my_practice/analytics.html:9
-#: templates/my_practice/inquiry_list.html:36
-#: templates/my_practice/withdrawal_list.html:16
-msgid "Analytics"
-msgstr ""
-
-#: templates/base.html:22
-msgid "Practice Analysis"
-msgstr ""
-
-#: templates/base.html:24
+#: templates/base.html:19
 msgid "Help"
 msgstr ""
 
-#: templates/base.html:25 templates/includes/command_palette.html:54
+#: templates/base.html:20
+msgid "Open command palette"
+msgstr ""
+
+#: templates/base.html:21 templates/includes/command_palette.html:67
 #: templates/my_practice/client_intake.html:4
 #: templates/my_practice/client_intake.html:6
 #: templates/my_practice/client_list_cards.html:29
 msgid "New client"
 msgstr ""
 
-#: templates/base.html:26 templates/includes/command_palette.html:53
+#: templates/base.html:22 templates/includes/command_palette.html:66
 #: templates/my_practice/client_detail.html:579
 #: templates/my_practice/invoice_list.html:136
 msgid "New invoice"
 msgstr ""
 
-#: templates/base.html:27 templates/my_practice/client_intake.html:4
+#: templates/base.html:23 templates/my_practice/client_intake.html:4
 #: templates/my_practice/client_intake.html:6
 msgid "Edit client"
 msgstr ""
 
-#: templates/base.html:28 templates/my_practice/billing_open_overview.html:142
+#: templates/base.html:24 templates/my_practice/billing_open_overview.html:142
 #: templates/my_practice/invoice_edit.html:6
 #: templates/my_practice/invoice_edit.html:8
 #: templates/my_practice/monthly_billing_overview.html:130
 msgid "Edit invoice"
 msgstr ""
 
-#: templates/base.html:29
+#: templates/base.html:25
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-#: templates/base.html:30
+#: templates/base.html:26
 msgid "These shortcuts work everywhere (except in input fields)."
 msgstr ""
 
-#: templates/base.html:31
+#: templates/base.html:27
 msgid "Global Navigation"
 msgstr ""
 
-#: templates/base.html:32
+#: templates/base.html:28
 msgid "On This Page"
 msgstr ""
 
-#: templates/base.html:33
+#: templates/base.html:29
 msgid "Press"
 msgstr ""
 
-#: templates/base.html:34
+#: templates/base.html:30
 msgid "or"
 msgstr ""
 
-#: templates/base.html:35
+#: templates/base.html:31
 msgid "to close"
 msgstr ""
 
-#: templates/base.html:36
-msgid "for keyboard shortcuts"
-msgstr ""
-
-#: templates/base.html:37
-msgid "for search"
-msgstr ""
-
-#: templates/base.html:38
-msgid "Shortcut"
-msgstr ""
-
-#: templates/base.html:39
-msgid "Search... (c:client/inquiry, i:invoice)"
-msgstr ""
-
-#: templates/base.html:40
-msgid "Searching…"
-msgstr ""
-
-#: templates/base.html:41
-msgid "Error while searching"
-msgstr ""
-
-#: templates/base.html:42 templates/includes/command_palette.html:63
-msgid "No results"
-msgstr ""
-
-#: templates/base.html:56 templates/base.html:58
+#: templates/base.html:45 templates/base.html:47
 #: templates/registration/login.html:6
 msgid "Practice management"
 msgstr ""
 
-#: templates/base.html:61 templates/my_practice/bank_expense_review.html:132
+#: templates/base.html:56 templates/my_practice/bank_expense_review.html:132
 #: templates/my_practice/bank_withdrawal_review.html:112
 #: templates/my_practice/checklist.html:16
 #: templates/my_practice/client_detail.html:40
 msgid "Overview"
 msgstr ""
 
-#: templates/base.html:71 templates/my_practice/focus_queue.html:4
+#: templates/base.html:59 templates/my_practice/focus_queue.html:4
 #: templates/my_practice/focus_queue.html:7
 msgid "Focus Queue"
 msgstr ""
 
-#: templates/base.html:73
-msgid "Finances"
-msgstr ""
-
-#: templates/base.html:75 templates/includes/command_palette.html:31
+#: templates/base.html:67 templates/includes/command_palette.html:44
 #: templates/my_practice/bank_expense_review.html:130
 #: templates/my_practice/bank_import.html:4
 #: templates/my_practice/bank_import.html:9
 msgid "Bank import"
 msgstr ""
 
-#: templates/base.html:76 templates/includes/command_palette.html:33
-#: templates/my_practice/analytics.html:142
-#: templates/my_practice/analytics.html:187
-#: templates/my_practice/bank_review.html:23
-#: templates/my_practice/withdrawal_list.html:48
-msgid "Withdrawals"
+#: templates/base.html:71 templates/includes/command_palette.html:23
+msgid "Command palette"
 msgstr ""
 
-#: templates/base.html:77 templates/includes/command_palette.html:34
-#: templates/my_practice/analytics.html:110
-#: templates/my_practice/analytics.html:139
-#: templates/my_practice/analytics.html:186
-#: templates/my_practice/bank_review.html:18
-#: templates/my_practice/bank_withdrawal_review.html:110
-#: templates/my_practice/expense_list.html:66
-#: templates/my_practice/tax_quarter_overview.html:78
-msgid "Expenses"
+#: templates/base.html:72 templates/my_practice/expense_form.html:179
+msgid "Search"
 msgstr ""
 
-#: templates/base.html:78 templates/includes/command_palette.html:32
-msgid "Bank expenses"
-msgstr ""
-
-#: templates/base.html:80 templates/includes/command_palette.html:37
-msgid "Tax annual overview"
-msgstr ""
-
-#: templates/base.html:81 templates/includes/command_palette.html:38
-msgid "Tax quarterly overview"
-msgstr ""
-
-#: templates/base.html:87 templates/includes/command_palette.html:41
-msgid "Calendar approval"
-msgstr ""
-
-#: templates/base.html:88 templates/includes/command_palette.html:42
-#: templates/my_practice/analytics.html:662
-#: templates/my_practice/time_off_list.html:4
-#: templates/my_practice/time_off_list.html:6
-msgid "Time off"
-msgstr ""
-
-#: templates/base.html:90 templates/includes/command_palette.html:46
-#: templates/my_practice/boilerplate.html:4
-#: templates/my_practice/boilerplate.html:9
-msgid "Email templates"
-msgstr ""
-
-#: templates/base.html:106 templates/includes/command_palette.html:47
+#: templates/base.html:88 templates/includes/command_palette.html:60
 #: templates/my_practice/practice_management.html:4
 #: templates/my_practice/practice_management.html:6
 msgid "Manage practices"
 msgstr "Manage practices"
 
-#: templates/base.html:118
+#: templates/base.html:100
 msgid "Toggle dark mode"
 msgstr ""
 
-#: templates/base.html:121
+#: templates/base.html:103
 msgid "Click to hide sensitive data"
 msgstr ""
 
-#: templates/base.html:125 templates/includes/command_palette.html:20
-msgid "Command palette"
-msgstr ""
-
-#: templates/base.html:126 templates/includes/command_palette.html:22
-#: templates/my_practice/expense_form.html:179
-msgid "Search"
-msgstr ""
-
-#: templates/base.html:145
+#: templates/base.html:122
 msgid "available"
 msgstr ""
 
-#: templates/base.html:147 templates/includes/command_palette.html:69
+#: templates/base.html:124 templates/includes/command_palette.html:86
 msgid "Close"
 msgstr ""
 
@@ -4685,37 +4589,101 @@ msgstr ""
 msgid "Error removing tag"
 msgstr "Error removing tag"
 
-#: templates/includes/command_palette.html:27
+#: templates/includes/command_palette.html:25
+msgid "Search... (c:client/inquiry, i:invoice)"
+msgstr ""
+
+#: templates/includes/command_palette.html:35
+msgid "Search results"
+msgstr ""
+
+#: templates/includes/command_palette.html:40
 msgid "Jump to"
 msgstr ""
 
-#: templates/includes/command_palette.html:30
+#: templates/includes/command_palette.html:43
 #: templates/my_practice/send_payment_reminder.html:15
 msgid "Open invoices"
 msgstr ""
 
-#: templates/includes/command_palette.html:36
+#: templates/includes/command_palette.html:45
+msgid "Bank expenses"
+msgstr ""
+
+#: templates/includes/command_palette.html:46
+#: templates/my_practice/analytics.html:142
+#: templates/my_practice/analytics.html:187
+#: templates/my_practice/bank_review.html:23
+#: templates/my_practice/withdrawal_list.html:48
+msgid "Withdrawals"
+msgstr ""
+
+#: templates/includes/command_palette.html:47
+#: templates/my_practice/analytics.html:110
+#: templates/my_practice/analytics.html:139
+#: templates/my_practice/analytics.html:186
+#: templates/my_practice/bank_review.html:18
+#: templates/my_practice/bank_withdrawal_review.html:110
+#: templates/my_practice/expense_list.html:66
+#: templates/my_practice/tax_quarter_overview.html:78
+msgid "Expenses"
+msgstr ""
+
+#: templates/includes/command_palette.html:48
+#: templates/my_practice/analytics.html:6
+#: templates/my_practice/analytics.html:9
+#: templates/my_practice/inquiry_list.html:36
+#: templates/my_practice/withdrawal_list.html:16
+msgid "Analytics"
+msgstr ""
+
+#: templates/includes/command_palette.html:49
 #: templates/my_practice/revenue_report.html:6
 #: templates/my_practice/revenue_report.html:8
 msgid "Revenue Report"
 msgstr ""
 
-#: templates/includes/command_palette.html:39
+#: templates/includes/command_palette.html:50
+msgid "Tax annual overview"
+msgstr ""
+
+#: templates/includes/command_palette.html:51
+msgid "Tax quarterly overview"
+msgstr ""
+
+#: templates/includes/command_palette.html:52
 #: templates/my_practice/tax_workday_audit.html:5
 msgid "Workday Audit"
 msgstr ""
 
-#: templates/includes/command_palette.html:40
+#: templates/includes/command_palette.html:53
 #: templates/my_practice/calendar_import.html:6
 msgid "Calendar import"
 msgstr ""
 
-#: templates/includes/command_palette.html:44
+#: templates/includes/command_palette.html:54
+msgid "Calendar approval"
+msgstr ""
+
+#: templates/includes/command_palette.html:55
+#: templates/my_practice/analytics.html:662
+#: templates/my_practice/time_off_list.html:4
+#: templates/my_practice/time_off_list.html:6
+msgid "Time off"
+msgstr ""
+
+#: templates/includes/command_palette.html:57
 #: templates/my_practice/client_triage.html:5
 msgid "Triage overview"
 msgstr ""
 
-#: templates/includes/command_palette.html:52
+#: templates/includes/command_palette.html:59
+#: templates/my_practice/boilerplate.html:4
+#: templates/my_practice/boilerplate.html:9
+msgid "Email templates"
+msgstr ""
+
+#: templates/includes/command_palette.html:65
 #: templates/my_practice/billing_open_overview.html:65
 #: templates/my_practice/calendar_import.html:100
 #: templates/my_practice/client_detail.html:600
@@ -4733,14 +4701,14 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
-#: templates/includes/command_palette.html:55
+#: templates/includes/command_palette.html:68
 #: templates/my_practice/inquiry_form.html:5
 #: templates/my_practice/inquiry_form.html:8
 #: templates/my_practice/inquiry_list.html:16
 msgid "New inquiry"
 msgstr ""
 
-#: templates/includes/command_palette.html:56
+#: templates/includes/command_palette.html:69
 #: templates/my_practice/expense_form.html:4
 #: templates/my_practice/expense_form.html:7
 #: templates/my_practice/expense_list.html:16
@@ -4748,31 +4716,43 @@ msgstr ""
 msgid "New expense"
 msgstr ""
 
-#: templates/includes/command_palette.html:57
+#: templates/includes/command_palette.html:70
 #: templates/my_practice/withdrawal_form.html:4
 #: templates/my_practice/withdrawal_form.html:6
 msgid "New withdrawal"
 msgstr ""
 
-#: templates/includes/command_palette.html:58
+#: templates/includes/command_palette.html:71
 #: templates/includes/focus_queue_content.html:22
 #: templates/my_practice/todo_form.html:4
 msgid "New task"
 msgstr ""
 
-#: templates/includes/command_palette.html:59
+#: templates/includes/command_palette.html:72
 #: templates/my_practice/time_off_form.html:4
 #: templates/my_practice/time_off_form.html:6
 #: templates/my_practice/time_off_list.html:13
 msgid "New time off"
 msgstr ""
 
-#: templates/includes/command_palette.html:60
+#: templates/includes/command_palette.html:73
 #: templates/my_practice/tag_form.html:4
 msgid "New tag"
 msgstr ""
 
-#: templates/includes/command_palette.html:67
+#: templates/includes/command_palette.html:76
+msgid "Searching…"
+msgstr ""
+
+#: templates/includes/command_palette.html:77
+msgid "Error while searching"
+msgstr ""
+
+#: templates/includes/command_palette.html:78
+msgid "No results"
+msgstr ""
+
+#: templates/includes/command_palette.html:84
 msgid "Navigate"
 msgstr ""
 
@@ -6988,6 +6968,11 @@ msgstr ""
 
 #: templates/my_practice/client_triage.html:47
 msgid "No active clients found."
+msgstr ""
+
+#: templates/my_practice/dashboard.html:7
+#: templates/my_practice/dashboard.html:10
+msgid "Dashboard"
 msgstr ""
 
 #: templates/my_practice/dashboard.html:11
