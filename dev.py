@@ -183,6 +183,10 @@ def _is_metered_connection():
     determined (no NetworkManager, no default route, non-Linux host, ...).
     Callers should treat None as "unknown" and not block on it.
     """
+    # Deliberately not identical to prod.py's copy: only dev.py routes through
+    # flatpak-spawn, because it can run from a VS Code Flatpak terminal whose
+    # sandbox cannot reach the host's ip/nmcli. prod.py runs on a server host
+    # and must stay minimal — don't "sync" this one.
     if not shutil.which("nmcli"):
         return None
     device = _default_route_device()
@@ -198,6 +202,9 @@ def _is_metered_connection():
         return None
 
 
+# Duplicated verbatim in prod.py. prod.py ships to self-hosters as a single
+# stdlib-only file, so it cannot import a shared module, and the two copies must
+# stay identical — scripts/check_shared_helpers.py fails if they drift.
 def _confirm_metered_download(action):
     """Ask before a data-heavy operation if the active connection looks metered.
 
@@ -713,6 +720,19 @@ def cmd_quality(args):
             print("❌ Ruff found issues")
             if not verbose:
                 print("   Run with --verbose to see details")
+        print()
+
+        # Plain subprocess, not run_host_command: this only reads two files in
+        # the workspace, so it needs neither the container (which mounts just
+        # ./app) nor flatpak-spawn (whose host has no sys.executable of ours).
+        print("2️⃣ ½ Duplicated helpers (dev.py ↔ prod.py)")
+        print("-" * 30)
+        dup_result = subprocess.run([sys.executable, "scripts/check_shared_helpers.py"])
+        results.append(("Duplicated helpers", dup_result.returncode))
+        if dup_result.returncode == 0:
+            print("✅ Duplicated helpers in sync")
+        else:
+            print("❌ Duplicated helpers have drifted")
         print()
 
     # Tailwind CSS build

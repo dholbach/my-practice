@@ -47,6 +47,12 @@ jobs:
       - name: Format repo-root Python
         run: ruff format --check --diff dev.py prod.py scripts/*.py
 
+      # prod.py ships as a single stdlib-only file and cannot import a shared
+      # module, so one helper is duplicated in dev.py on purpose. Ruff has no
+      # opinion about two identical functions in two files; this does.
+      - name: Check duplicated helpers stay in sync
+        run: python scripts/check_shared_helpers.py
+
       # shellcheck ships preinstalled on GitHub-hosted ubuntu-latest runners.
       # -S warning skips style/info-level nitpicks (SC2181 "$?" checks, SC2162
       # "read -r", etc.) so the gate catches real bugs — like the inline .env

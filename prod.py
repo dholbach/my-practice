@@ -59,6 +59,10 @@ def _is_metered_connection():
     determined (no NetworkManager, no default route, non-Linux host, ...).
     Callers should treat None as "unknown" and not block on it.
     """
+    # Deliberately not identical to dev.py's copy: dev.py routes these through
+    # flatpak-spawn for VS Code's sandboxed terminal, a workstation concern that
+    # would drag is_vscode()/has_flatpak_spawn() into a file that ships on its
+    # own. Unlike _confirm_metered_download below, these two may differ.
     if not shutil.which("nmcli"):
         return None
     try:
@@ -84,6 +88,9 @@ def _is_metered_connection():
         return None
 
 
+# Duplicated verbatim in dev.py. prod.py ships to self-hosters as a single
+# stdlib-only file, so it cannot import a shared module, and the two copies must
+# stay identical — scripts/check_shared_helpers.py fails if they drift.
 def _confirm_metered_download(action):
     """Ask before a data-heavy operation if the active connection looks metered.
 
