@@ -164,7 +164,7 @@ chronological record; this document only tracks current state.
 - ✅ Tax Year Summary: Home-Office-Pauschale (calendar-based non-practice weekdays minus holidays/time off), deduction row in Gewinn, improved link contrast
 - ✅ Tax quarter overview: all four quarters now sum exactly to the year total — invoices with no `paid_date` fall into their `invoice_date` quarter (same fallback rule as the year summary)
 - ✅ Annual tax settlement (Steuerbescheid) tracking on the quarterly tax page
-- ✅ Revenue Report with filters
+- ✅ Revenue Report with filters — opens on the current year (falling back to the most recent year with paid invoices), rather than an empty page awaiting a dropdown pick
 - ✅ Client detail reports
 
 ### Client Inquiries & Lead Tracking
@@ -269,7 +269,7 @@ chronological record; this document only tracks current state.
 ### UI/UX
 - ✅ Bilingual app UI (German/English) with a DE/EN language switcher — every template, view, model, and admin label wrapped via Django i18n (P-039)
 - ✅ Dark mode with theme toggle
-- ✅ Privacy mode (blur sensitive data)
+- ✅ Privacy mode (blur sensitive data) — client names, contact details and diagnoses blur on toggle, while client codes, invoice numbers and form labels stay legible; inquiries keep their initials visible so a record is still tellable apart. Coverage is enforced by a guardrail test in both directions (M-PAT-08)
 - ✅ Responsive design
 - ✅ Interactive charts
 - ✅ Toast notifications
@@ -278,6 +278,7 @@ chronological record; this document only tracks current state.
 - ✅ Form validation
 - ✅ Loading states
 - ✅ E-Mail-Textbausteine (`/tools/boilerplate/`) — 6 copyable DE/EN templates for common practice email scenarios
+- ✅ Quick-add forms return where you started them — adding a tax prepayment from the quarterly overview, a tag from a client's tag picker, or a task from the Focus Queue comes back to that page with its year/filter intact
 - ✅ Draft autosave + unsaved-changes warning on long-text forms (session logs, client case notes) — protects against accidental back/forward navigation wiping out typed content
 - ✅ Command palette (P-047) — `⌘K` / `Ctrl+K` / `/`, or the header 🔍 button, opens a palette combining **search** (clients, open inquiries, invoices — with `c:`/`i:` prefixes), **Springe zu** (21 destinations) and **Aktionen** (8 quick-create shortcuts); type to filter, `↑`/`↓` to move, `↵` to open, `esc` to close. The nav bar is four links — Übersicht, Klienten, Rechnungen, Focus Queue — with everything else in the palette
 
