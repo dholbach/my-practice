@@ -75,6 +75,30 @@ legitimately contain `&` and `<`. Search rows are now `createElement` +
 `textContent`, which removes the class of bug rather than guarding against it.
 There is a test asserting a label containing both characters survives verbatim.
 
+**Privacy mode covers search results, using the initials-visible treatment.**
+Search rows are the only place in the palette that shows personal data, and the
+old header dropdown never handled privacy mode at all — names rendered in the
+clear with it switched on. The app has two treatments for a name: full blur
+(`.sensitive-data` around the whole thing, used almost everywhere) and
+initials-visible (`privacy_name` in `payment_tags.py`, used only in the inquiry
+list). The palette uses the second for every name, because a picker has the
+inquiry list's problem on every row — you have to tell results apart, and an
+inquiry has no client code to fall back on. "Max Mustermann" reads as "M… M…"
+with privacy mode on.
+
+To make that possible without returning HTML from a JSON endpoint (which would
+undo the createElement/textContent safety above), `/api/search/` now returns each
+row split as `prefix` + `name` + `suffix` instead of one display string. `name`
+is the personal name and nothing else; `prefix`/`suffix` carry client codes,
+invoice numbers, dates and status labels, which the app shows in the clear
+everywhere. Invoice rows have an empty `name` — they are identified by code, so
+there was never anything to hide in them.
+
+The initials rule is implemented twice, in `payment_tags.privacy_name` and in
+`command_palette.js`'s `appendName`. Both carry a comment pointing at the other;
+sharing it would mean either shipping HTML through the API or a JS template
+catalogue, both worse than the duplication.
+
 **Only argument-free destinations belong in the palette.** An entry is a plain
 `<a href>`, so anything needing a pk or a type segment (client detail, the
 operational checklist at `backups/checklist/<type>/`) has nowhere to get one.
@@ -122,6 +146,11 @@ pattern) — both already exist in that command.
 - `static/js/keyboard-nav.test.js` — rewritten for the reduced surface, including
   a test that the retired letters no longer navigate and one asserting the overlay
   carries no inline `style=`.
+- Privacy: five JS tests over the rendered nodes (client, inquiry, invoice,
+  one-letter name, and that static entries carry nothing sensitive) plus three
+  Django tests asserting the `prefix`/`name`/`suffix` split holds — a code
+  leaking into `name`, or non-personal text landing there, would blur the wrong
+  thing, which is invisible unless privacy mode happens to be switched on.
 
 Two bugs were caught by these tests while writing them:
 

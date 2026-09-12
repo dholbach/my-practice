@@ -19,6 +19,16 @@ from ..models import (
 )
 
 
+def _display(result):
+    """Join a result back into the string the palette renders.
+
+    Results are returned split as prefix + name + suffix so the palette can give
+    the personal name its own privacy treatment; tests that only care about
+    identity read the joined form.
+    """
+    return f"{result['prefix']}{result['name']}{result['suffix']}"
+
+
 def _setup_practice(slug, username):
     user = User.objects.create_user(username=username, password="pass")
     practice = Practice.objects.create(name=f"Praxis {slug}", slug=slug)
@@ -117,7 +127,9 @@ class GlobalSearchClientPrefixTest(TestCase):
         self.assertIn("id", first)
         self.assertIn("code", first)
         self.assertIn("url", first)
-        self.assertIn("label", first)
+        self.assertIn("prefix", first)
+        self.assertIn("name", first)
+        self.assertIn("suffix", first)
 
 
 class GlobalSearchInquiryTest(TestCase):
@@ -129,7 +141,7 @@ class GlobalSearchInquiryTest(TestCase):
     def test_open_inquiry_appears_in_client_search(self):
         _make_inquiry(self.practice, name="Laura Liebig", status=InquiryStatus.NEW)
         resp = self.http.get(reverse("global_search"), {"q": "c:Laura"})
-        labels = [r["label"] for r in resp.json()["results"]]
+        labels = [_display(r) for r in resp.json()["results"]]
         self.assertTrue(any("Laura" in lbl for lbl in labels))
 
     def test_closed_inquiry_not_included(self):
@@ -144,7 +156,9 @@ class GlobalSearchInquiryTest(TestCase):
         inquiries = [r for r in resp.json()["results"] if r["type"] == "inquiry"]
         self.assertTrue(inquiries)
         self.assertIn("url", inquiries[0])
-        self.assertIn("label", inquiries[0])
+        self.assertIn("prefix", inquiries[0])
+        self.assertIn("name", inquiries[0])
+        self.assertIn("suffix", inquiries[0])
 
     def test_active_clients_appear_before_inquiries(self):
         _make_client(self.practice, "LL", "Lena Lange")
@@ -206,7 +220,7 @@ class MultiLexemeQueryTest(TestCase):
     def _labels(self, q):
         resp = self.http.get(reverse("global_search"), {"q": q})
         self.assertEqual(resp.status_code, 200)
-        return [r["label"] for r in resp.json()["results"]]
+        return [_display(r) for r in resp.json()["results"]]
 
     def test_hyphenated_invoice_number_returns_only_that_invoice(self):
         labels = self._labels("KK-9")
@@ -237,3 +251,48 @@ class MultiLexemeQueryTest(TestCase):
         self.assertTrue(any("Klaus Kleber" in label for label in labels))
         self.assertTrue(any("KK-9" in label for label in labels))
         self.assertFalse(any("Anna" in label or "AA-6" in label for label in labels))
+
+
+class ResultSplitTest(TestCase):
+    """
+    Results are prefix + name + suffix, not one display string, so the palette
+    can blur the personal name on its own (privacy mode) while leaving codes,
+    invoice numbers, dates and statuses legible. If `name` ever picks up
+    non-personal text, or a code leaks into `name`, privacy mode silently blurs
+    the wrong thing — which is invisible unless privacy mode is switched on.
+    """
+
+    def setUp(self):
+        self.user, self.practice = _setup_practice("search-split", "srch_split")
+        self.http = TestClient()
+        self.http.login(username="srch_split", password="pass")
+        self.client_obj = _make_client(self.practice, "MU", name="Max Mustermann")
+
+    def _first(self, q, result_type):
+        resp = self.http.get(reverse("global_search"), {"q": q})
+        matches = [r for r in resp.json()["results"] if r["type"] == result_type]
+        self.assertTrue(matches, f"no {result_type} result for {q!r}")
+        return matches[0]
+
+    def test_client_name_is_isolated_from_the_code(self):
+        result = self._first("c:MU", "client")
+        self.assertEqual(result["name"], "Max Mustermann")
+        self.assertIn("MU", result["prefix"])
+        self.assertNotIn("Mustermann", result["prefix"])
+        self.assertNotIn("Mustermann", result["suffix"])
+        self.assertEqual(_display(result), "👤 MU — Max Mustermann")
+
+    def test_inquiry_name_is_isolated_from_the_status(self):
+        _make_inquiry(self.practice, name="Anna Schmidt", status=InquiryStatus.NEW)
+        result = self._first("c:Anna", "inquiry")
+        self.assertEqual(result["name"], "Anna Schmidt")
+        self.assertNotIn("Schmidt", result["prefix"])
+        self.assertNotIn("Schmidt", result["suffix"])
+        self.assertIn("(", result["suffix"], "status renders after the name")
+
+    def test_invoice_row_carries_no_personal_name(self):
+        _make_invoice(self.client_obj, number="MU-1")
+        result = self._first("i:MU-1", "invoice")
+        self.assertEqual(result["name"], "", "invoices are identified by code, not name")
+        self.assertNotIn("Mustermann", _display(result))
+        self.assertIn("MU-1", result["prefix"])

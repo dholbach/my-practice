@@ -1,5 +1,13 @@
 """
 Global search view for unified search across clients, inquiries, and invoices.
+
+Each result is returned as ``prefix`` + ``name`` + ``suffix`` rather than one
+display string. ``name`` is the personal name and nothing else, because it is
+the only part the caller has to treat as sensitive: the command palette renders
+it through the same initials-visible treatment as the ``privacy_name`` template
+filter, so privacy mode blurs the name without making results indistinguishable.
+``prefix``/``suffix`` carry only client codes, invoice numbers, dates and status
+labels, which the app shows in the clear everywhere else.
 """
 
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
@@ -74,7 +82,8 @@ def _search_clients_and_inquiries(request, query: str) -> list[dict]:
                 "code": c.client_code,
                 "name": c.full_name,
                 "url": f"/clients/{c.id}/detail/",
-                "label": f"👤 {c.client_code} — {c.full_name}",
+                "prefix": f"👤 {c.client_code} — ",
+                "suffix": "",
             }
             for c in clients
         ],
@@ -90,7 +99,8 @@ def _search_clients_and_inquiries(request, query: str) -> list[dict]:
             "name": inq.full_name,
             "status": inq.status,
             "url": f"/inquiries/{inq.id}/edit/",
-            "label": f"📬 {inq.full_name} ({inq.get_status_display()})",
+            "prefix": "📬 ",
+            "suffix": f" ({inq.get_status_display()})",
         }
         for inq in inquiries
     ]
@@ -129,10 +139,16 @@ def _search_invoices(request, query: str) -> list[dict]:
             "id": invoice.id,
             "invoice_number": invoice.invoice_number,
             "client_code": invoice.client.client_code,
-            "client_name": invoice.client.full_name,
             "date": invoice.invoice_date.strftime("%d.%m.%Y"),
             "url": f"/invoices/{invoice.id}/",
-            "label": f"📄 {invoice.invoice_number} - {invoice.client.client_code} ({invoice.invoice_date.strftime('%d.%m.%Y')})",
+            # Invoice rows are identified by number and client *code*, so there
+            # is no personal name in them and nothing for privacy mode to hide.
+            "prefix": (
+                f"📄 {invoice.invoice_number} - {invoice.client.client_code} "
+                f"({invoice.invoice_date.strftime('%d.%m.%Y')})"
+            ),
+            "name": "",
+            "suffix": "",
         }
         for invoice in invoices
     ]
