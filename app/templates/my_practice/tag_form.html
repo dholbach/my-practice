@@ -9,6 +9,7 @@
 <div class="section-card max-w-[600px] mx-auto">
     <form method="post">
         {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
         <div class="form-group">
             <label for="{{ form.name.id_for_label }}">{% trans "Name" %} *</label>
@@ -54,7 +55,7 @@
             <button type="submit" class="btn">
                 {% if object.pk %}💾 {% trans "Save" %}{% else %}➕ {% trans "Create" %}{% endif %}
             </button>
-            <a href="{% url 'tag_list' %}" class="btn btn-secondary">
+            <a href="{% if next %}{{ next }}{% else %}{% url 'tag_list' %}{% endif %}" class="btn btn-secondary">
                 {% trans "Cancel" %}
             </a>
         </div>

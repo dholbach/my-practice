@@ -16,6 +16,7 @@ from django.views.generic import ListView
 from ..models import Client, ClientTag
 from ..utils import sort_tags_by_category
 from .crud_mixins import (
+    NextRedirectMixin,
     PracticeScopedCreateView,
     PracticeScopedDeleteView,
     PracticeScopedUpdateView,
@@ -34,7 +35,7 @@ class TagListView(LoginRequiredMixin, ListView):
         return ClientTag.objects.annotate(client_count=Count("clients")).order_by("name")
 
 
-class TagCreateView(PracticeScopedCreateView):
+class TagCreateView(NextRedirectMixin, PracticeScopedCreateView):
     """Create a new tag.
 
     ClientTag has no practice FK (tags are deliberately global) — the

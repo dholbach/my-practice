@@ -19,7 +19,7 @@ instead of this whole container — see focus_queue_toggle_complete.
         </a>
         {% endfor %}
     </div>
-    <a href="{% url 'todo_create' %}" class="btn">➕ {% trans "New task" %}</a>
+    <a href="{% url 'todo_create' %}?next={{ request.get_full_path|urlencode }}" class="btn">➕ {% trans "New task" %}</a>
 </div>
 
 {% if snoozed_count %}
@@ -41,7 +41,7 @@ instead of this whole container — see focus_queue_toggle_complete.
 <div class="empty-state">
     <h2>{% trans "Nothing needs your attention" %}</h2>
     <p>{% trans "The focus queue is empty." %}</p>
-    <a href="{% url 'todo_create' %}" class="btn">➕ {% trans "Create a task" %}</a>
+    <a href="{% url 'todo_create' %}?next={{ request.get_full_path|urlencode }}" class="btn">➕ {% trans "Create a task" %}</a>
 </div>
 {% endif %}
 

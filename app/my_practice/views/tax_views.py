@@ -4,6 +4,7 @@ Tax year summary view - provides comprehensive financial overview for tax purpos
 
 from decimal import Decimal
 from typing import cast
+from urllib.parse import urlencode
 
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
@@ -173,6 +174,17 @@ def _tax_note_context(practice, year: int, total_tax_paid: Decimal) -> dict:
     }
 
 
+def _add_tax_payment_url(year: int) -> str:
+    """Quick-add URL for a tax prepayment, returning to this year's overview.
+
+    The withdrawal form honours ?next= (NextRedirectMixin), so saving or
+    cancelling comes back here rather than dropping the user on the withdrawal
+    list. The year rides along so it is the same view, not just the same page.
+    """
+    back = f"{reverse('tax_quarter_overview')}?{urlencode({'year': year})}"
+    return f"{reverse('withdrawal_create')}?{urlencode({'category': 'tax', 'next': back})}"
+
+
 def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
     """
     Quarterly tax overview for Steuervorauszahlung tracking (P-013 Phase 2).
@@ -209,7 +221,7 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
             "total_tax_paid": total_tax_paid,
             "total_net_profit": total_revenue - total_expenses,
             "current_quarter": current_quarter,
-            "add_payment_url": reverse("withdrawal_create") + "?category=tax",
+            "add_payment_url": _add_tax_payment_url(year),
             "save_note_url": reverse("save_tax_year_note"),
             **_tax_note_context(practice, year, total_tax_paid),
         },

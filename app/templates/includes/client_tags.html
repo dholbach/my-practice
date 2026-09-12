@@ -28,7 +28,7 @@ Usage: {% include 'includes/client_tags.html' with client=client editable=True %
                 {% empty %}
                     <div class="text-center text-muted-light text-sm p-1">
                         {% trans "No more tags available" %}<br>
-                        <a href="{% url 'tag_create' %}" class="link-primary">{% trans "Create new tag →" %}</a>
+                        <a href="{% url 'tag_create' %}?next={{ request.get_full_path|urlencode }}" class="link-primary">{% trans "Create new tag →" %}</a>
                     </div>
                 {% endfor %}
             </div>
