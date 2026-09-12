@@ -94,7 +94,7 @@ palette"). Both fuzzy guesses `makemessages` produced were wrong in exactly the
 way CLAUDE.md warns about — "Open command palette" → "Befehlspalette", "Search
 results" → "Keine Ergebnisse" — and were corrected by hand.
 
-## Known gap (follow-up)
+## Known gap (follow-up: [#422](https://github.com/dholbach/my-practice/issues/422))
 
 The unmatched-bank-transaction count used to ride as a badge on the Finances
 dropdown, and it is the **only** alert for bank work waiting to be assigned —
@@ -105,7 +105,11 @@ is non-zero; the rest of the time the nav is four links.
 The proper home is a Focus Queue task type (`TaskType.BANK_UNMATCHED` in
 `models/todo.py` plus a `sync_focus_queue_tasks` branch), at which point the
 conditional nav link can go. Not done here — it needs a model choice, a
-migration and a sync branch, none of which belong in a nav refactor.
+migration and a sync branch, none of which belong in a nav refactor. Filed as
+[#422](https://github.com/dholbach/my-practice/issues/422), where the open
+question is one task per transaction (`_sync_object_tasks`, floods on a big CSV
+import) versus one aggregate task per practice (`_sync_operational_checklist`
+pattern) — both already exist in that command.
 
 ## Tests
 
