@@ -4,11 +4,13 @@ Tests for API views.
 
 from datetime import date
 from decimal import Decimal
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
+from PIL import Image
 
 from my_practice.models import Client, Invoice, Practice, UserPractice
 
@@ -585,3 +587,38 @@ class PracticeImagesTransparencyTest(TestCase):
         response = self.client_http.get(reverse("invoice_pdf", kwargs={"pk": self.invoice.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
+
+
+class PreparePracticeImagesCacheTest(TestCase):
+    """_prepare_practice_images() caches its decode/resize work per practice."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="practice-image-cache",
+            title="Test Practitioner",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.practice.logo = PracticeImagesTransparencyTest._transparent_png("logo.png")
+        self.practice.save()
+
+    def test_second_call_does_not_reopen_the_image(self):
+        from my_practice.views.api_views import _prepare_practice_images
+
+        first = _prepare_practice_images(self.practice)
+        with mock.patch("my_practice.views.api_views.Image.open") as mock_open:
+            second = _prepare_practice_images(self.practice)
+        mock_open.assert_not_called()
+        self.assertEqual(first, second)
+
+    def test_replacing_the_logo_invalidates_the_cache(self):
+        from my_practice.views.api_views import _prepare_practice_images
+
+        _prepare_practice_images(self.practice)
+        self.practice.logo = PracticeImagesTransparencyTest._transparent_png("new-logo.png")
+        self.practice.save()
+
+        with mock.patch("my_practice.views.api_views.Image.open", wraps=Image.open) as mock_open:
+            _prepare_practice_images(self.practice)
+        mock_open.assert_called_once()
