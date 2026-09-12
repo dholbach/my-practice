@@ -36,7 +36,7 @@ class UpdateClientTagsTestBase(TestCase):
             active=True,
         )
 
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
 
     def _run(self):
         call_command("update_client_tags", stdout=StringIO(), stderr=StringIO())

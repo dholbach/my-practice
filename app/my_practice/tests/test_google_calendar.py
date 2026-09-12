@@ -574,7 +574,7 @@ class FetchTagSyncTest(TestCase):
             category="attention",
             is_system=True,
         )
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
         # Recent past session so the client counts as "recently active"
         Session.objects.create(
             client=self.client_obj,

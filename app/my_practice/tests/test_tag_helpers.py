@@ -45,7 +45,7 @@ class GetSessionsMissingLogTest(TestCase):
             practice=self.practice,
             active=True,
         )
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
         self.recent = self.today - timedelta(days=SESSION_LOG_WINDOW_DAYS - 2)
         self.old = self.today - timedelta(days=SESSION_LOG_WINDOW_DAYS + 5)
 
