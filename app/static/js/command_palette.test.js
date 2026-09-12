@@ -173,6 +173,12 @@ function buildPalette({ jumpTo, actions }) {
         node.ownerDocument = document;
         return node;
     };
+    document.createTextNode = (text) => {
+        const node = new FakeNode("#text");
+        node.ownerDocument = document;
+        node.textContent = text;
+        return node;
+    };
 
     const body = document.appendChild(new FakeNode("body"));
     document.body = body;
@@ -551,8 +557,8 @@ test("results render above the static entries and are Enter-able", async () => {
     type(dom, "MU");
     dom.flushTimers();
     dom.fetchCalls[0].respond([
-        { type: "client", url: "/clients/7/detail/", label: "👤 MU-1 — Max Mustermann" },
-        { type: "invoice", url: "/invoices/3/", label: "📄 INV-001 — MU-1" },
+        { type: "client", url: "/clients/7/detail/", prefix: "👤 MU-1 — ", name: "Max Mustermann", suffix: "" },
+        { type: "invoice", url: "/invoices/3/", prefix: "📄 INV-001 — MU-1", name: "", suffix: "" },
     ]);
     await settle();
 
@@ -575,7 +581,7 @@ test("result labels with & and < survive verbatim", async () => {
     type(dom, "ka");
     dom.flushTimers();
     dom.fetchCalls[0].respond([
-        { type: "client", url: "/clients/9/detail/", label: "👤 KA-1 — Karl <Kalle> & Co" },
+        { type: "client", url: "/clients/9/detail/", prefix: "👤 KA-1 — ", name: "Karl <Kalle> & Co", suffix: "" },
     ]);
     await settle();
 
@@ -592,7 +598,7 @@ test("results and matching static entries appear together", async () => {
     type(dom, "bank");
     dom.flushTimers();
     dom.fetchCalls[0].respond([
-        { type: "client", url: "/clients/4/detail/", label: "👤 BA-1 — Banks" },
+        { type: "client", url: "/clients/4/detail/", prefix: "👤 BA-1 — ", name: "Banks", suffix: "" },
     ]);
     await settle();
 
@@ -615,9 +621,9 @@ test("a superseded response is dropped even if it lands last", async () => {
 
     // Newest answers first, then the slower earlier one — the race the
     // latestRequestId guard exists for.
-    dom.fetchCalls[1].respond([{ type: "client", url: "/clients/2/detail/", label: "👤 SC-1 — Schmidt" }]);
+    dom.fetchCalls[1].respond([{ type: "client", url: "/clients/2/detail/", prefix: "👤 SC-1 — ", name: "Schmidt", suffix: "" }]);
     await settle();
-    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/99/detail/", label: "👤 XX-9 — Stale" }]);
+    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/99/detail/", prefix: "👤 XX-9 — ", name: "Stale", suffix: "" }]);
     await settle();
 
     assertEqual(visibleLabels(dom).join(""), "👤 SC-1 — Schmidt", "stale response ignored");
@@ -632,7 +638,7 @@ test("clearing the input drops the results and any in-flight response", async ()
     dom.flushTimers();
 
     type(dom, "");
-    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/7/detail/", label: "👤 MU-1 — Max" }]);
+    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/7/detail/", prefix: "👤 MU-1 — ", name: "Max", suffix: "" }]);
     await settle();
 
     assertEqual(dom.resultsGroup.hidden, true, "results group hidden again");
@@ -645,7 +651,7 @@ test("a failed search shows the error line and clears stale rows", async () => {
     openPalette(dom);
     type(dom, "MU");
     dom.flushTimers();
-    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/7/detail/", label: "👤 MU-1 — Max" }]);
+    dom.fetchCalls[0].respond([{ type: "client", url: "/clients/7/detail/", prefix: "👤 MU-1 — ", name: "Max", suffix: "" }]);
     await settle();
 
     type(dom, "MUS");
@@ -681,6 +687,96 @@ test("no static match and no search hit shows the empty message", async () => {
     const before = dom.location.href;
     dom.input.dispatch("keydown", { key: "Enter" });
     assertEqual(dom.location.href, before, "Enter does nothing with no matches");
+});
+
+// --- privacy mode ------------------------------------------------------------
+
+// Names are rendered as initial + <span class="sensitive-data pn-rest">rest</span>,
+// which body.privacy-mode blurs. These assert the markup, since whether the blur
+// actually paints is CSS's job (tailwind.css .sensitive-data / .pn-rest).
+const sensitiveText = (item) =>
+    item.children
+        .filter((c) => c.classList.contains("sensitive-data"))
+        .map((c) => c.textContent)
+        .join("|");
+
+const plainText = (item) =>
+    item.children
+        .filter((c) => !c.classList.contains("sensitive-data"))
+        .map((c) => c.textContent)
+        .join("");
+
+test("a client result blurs the name but keeps the code and initials legible", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "MU");
+    dom.flushTimers();
+    dom.fetchCalls[0].respond([
+        { type: "client", url: "/clients/7/detail/", prefix: "👤 MU-1 — ", name: "Max Mustermann", suffix: "" },
+    ]);
+    await settle();
+
+    const [item] = dom.resultsContainer.children;
+    assertEqual(item.textContent, "👤 MU-1 — Max Mustermann", "reads normally with privacy mode off");
+    assertEqual(sensitiveText(item), "ax|ustermann", "only the tail of each word is sensitive");
+    assertEqual(plainText(item), "👤 MU-1 — M M", "code and both initials stay in the clear");
+});
+
+test("an inquiry result blurs the name — it is the only identifier there", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "an");
+    dom.flushTimers();
+    dom.fetchCalls[0].respond([
+        { type: "inquiry", url: "/inquiries/3/edit/", prefix: "📬 ", name: "Anna Schmidt", suffix: " (Neu)" },
+    ]);
+    await settle();
+
+    const [item] = dom.resultsContainer.children;
+    assertEqual(sensitiveText(item), "nna|chmidt", "name tails sensitive");
+    assertEqual(plainText(item), "📬 A S (Neu)", "initials and status stay legible");
+});
+
+test("an invoice result has nothing sensitive — it carries a code, not a name", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "MU");
+    dom.flushTimers();
+    dom.fetchCalls[0].respond([
+        { type: "invoice", url: "/invoices/3/", prefix: "📄 MU-1 - MU (12.09.2026)", name: "", suffix: "" },
+    ]);
+    await settle();
+
+    const [item] = dom.resultsContainer.children;
+    assertEqual(sensitiveText(item), "", "no blurred span at all");
+    assertEqual(item.textContent, "📄 MU-1 - MU (12.09.2026)", "row reads in full");
+});
+
+test("a single-character name part is left whole rather than emptied", async () => {
+    const dom = setup();
+    openPalette(dom);
+    type(dom, "x");
+    dom.flushTimers();
+    dom.fetchCalls[0].respond([
+        { type: "client", url: "/clients/8/detail/", prefix: "👤 XY-1 — ", name: "X Yolo", suffix: "" },
+    ]);
+    await settle();
+
+    const [item] = dom.resultsContainer.children;
+    assertEqual(item.textContent, "👤 XY-1 — X Yolo", "spacing survives a one-letter word");
+    assertEqual(sensitiveText(item), "olo", "nothing to blur in a lone initial");
+});
+
+test("static entries carry nothing sensitive", () => {
+    const dom = setup();
+    openPalette(dom);
+    for (const item of items(dom)) {
+        assertEqual(
+            item.querySelectorAll(".sensitive-data").length,
+            0,
+            `${item.textContent} is a destination, not personal data`
+        );
+    }
 });
 
 test("closing cancels a pending search", () => {

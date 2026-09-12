@@ -138,6 +138,30 @@
         });
     }
 
+    /**
+     * Append a personal name with its initials left legible and the rest marked
+     * sensitive, so privacy mode blurs it to "K… K…" instead of hiding the row.
+     * Full blur is what the rest of the app does to a name, but it only works
+     * where a client code identifies the row too; here the name is often the
+     * only thing telling two results apart (inquiries have no code at all), so
+     * this mirrors the privacy_name template filter in payment_tags.py — keep
+     * the two in step if either changes.
+     */
+    function appendName(target, name) {
+        String(name).trim().split(/\s+/).forEach(function (word, index) {
+            if (index > 0) target.appendChild(document.createTextNode(' '));
+            if (word.length > 1) {
+                target.appendChild(document.createTextNode(word.charAt(0)));
+                const rest = document.createElement('span');
+                rest.className = 'sensitive-data pn-rest';
+                rest.textContent = word.slice(1);
+                target.appendChild(rest);
+            } else {
+                target.appendChild(document.createTextNode(word));
+            }
+        });
+    }
+
     function renderResults(results) {
         resultsContainer.textContent = '';
         resultItems = results.map(function (result) {
@@ -145,8 +169,14 @@
             item.className = 'cmd-palette__item';
             item.setAttribute('role', 'option');
             item.setAttribute('href', result.url);
-            // The API pre-bakes the icon into result.label ("👤 XX-1 — Name").
-            item.textContent = result.label;
+
+            // prefix/name/suffix rather than one string: only `name` is
+            // personal, and it needs its own treatment (see appendName).
+            // Built as nodes, never innerHTML — names contain & and <.
+            item.appendChild(document.createTextNode(result.prefix || ''));
+            if (result.name) appendName(item, result.name);
+            item.appendChild(document.createTextNode(result.suffix || ''));
+
             item.addEventListener('mouseenter', function () {
                 selectItem(item);
             });
