@@ -27,6 +27,21 @@ Therapy practice payment/invoicing system built with Django, PostgreSQL, running
 - Admin interface respects privacy settings
 - Exports use codes unless explicitly needed
 
+**Guardrail test** (M-PAT-08): `my_practice/tests/test_privacy_coverage.py` ratchets both
+directions of the `.sensitive-data` contract — a personal field rendered *outside* a blur
+(under-blur), and a blur wrapped around something that was never personal (over-blur,
+which hides a form label or the client code that is itself the privacy-safe form). Neither
+is visible in review or in normal use: `body.privacy-mode` is a client-side localStorage
+toggle, so nothing renders differently unless it happens to be switched on. That is why
+this bug class was fixed one site at a time three times (#321, #424, #426) before being
+automated. Use `<span class="sensitive-data">` for a name shown beside its client code,
+`|privacy_name` (initials stay legible) where there is no code to fall back on — inquiries,
+and any picker whose rows must be told apart — and nothing at all for codes, invoice
+numbers, form inputs or `<option>` text (a CSS blur can't reach text painted by the OS
+select widget, so selects show the code only). `KNOWN_UNPROTECTED` holds the deliberate
+exceptions, each with a reason; shrink it, never grow it to make a new render pass. Full
+contract: [docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) (M-PAT-08).
+
 ## Current Focus (Q2 2026)
 - Django i18n bilingual UI (P-039): DONE — full sweep complete (issue #69 closed). Every template, Python view/form/util, model, `admin.py`, and the small JS surface is wrapped. See [docs/projects/done/P-039_DJANGO_I18N.md](docs/projects/done/P-039_DJANGO_I18N.md) for the sweep retrospective.
 

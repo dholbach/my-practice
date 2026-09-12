@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 23:03+0200\n"
+"POT-Creation-Date: 2026-09-12 23:47+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -49,7 +49,7 @@ msgstr "Zuordnung"
 #: templates/my_practice/calendar_import.html:99
 #: templates/my_practice/client_detail.html:600
 #: templates/my_practice/client_detail.html:644
-#: templates/my_practice/inquiry_confirm_delete.html:22
+#: templates/my_practice/inquiry_confirm_delete.html:23
 #: templates/my_practice/invoice_confirm_delete.html:24
 #: templates/my_practice/invoice_detail.html:33
 #: templates/my_practice/invoice_list.html:168
@@ -685,7 +685,7 @@ msgstr "Klientenkürzel"
 #: my_practice/models/inquiry.py:99 my_practice/models/practice.py:82
 #: templates/my_practice/client_detail.html:214
 #: templates/my_practice/client_list_cards.html:109
-#: templates/my_practice/inquiry_convert_confirm.html:20
+#: templates/my_practice/inquiry_convert_confirm.html:21
 #: templates/my_practice/practice_confirm_delete.html:36
 #: templates/my_practice/practice_form.html:103
 msgid "Email"
@@ -696,7 +696,7 @@ msgstr "E-Mail"
 #: my_practice/models/practice.py:99
 #: templates/my_practice/bank_expense_review.html:34
 #: templates/my_practice/client_detail.html:218
-#: templates/my_practice/inquiry_convert_confirm.html:24
+#: templates/my_practice/inquiry_convert_confirm.html:25
 #: templates/my_practice/practice_form.html:120
 msgid "Phone"
 msgstr "Telefon"
@@ -916,7 +916,7 @@ msgid "Optional: description for the grouped expense"
 msgstr "Optional: Beschreibung für die zusammengefasste Ausgabe"
 
 #: my_practice/inquiry_forms.py:17 my_practice/models/inquiry.py:114
-#: templates/my_practice/inquiry_confirm_delete.html:14
+#: templates/my_practice/inquiry_confirm_delete.html:15
 msgid "Date received"
 msgstr "Eingangsdatum"
 
@@ -1051,7 +1051,7 @@ msgstr "Automatisch erstellte Korrektur (Fehlbuchung)"
 #: my_practice/models/inquiry.py:204 my_practice/models/invoice.py:68
 #: my_practice/models/practice.py:372 my_practice/models/practice.py:408
 #: my_practice/models/service.py:17 my_practice/models/todo.py:95
-#: templates/base.html:78 templates/my_practice/tax_workday_audit.html:73
+#: templates/base.html:63 templates/my_practice/tax_workday_audit.html:73
 msgid "Practice"
 msgstr "Praxis"
 
@@ -1405,7 +1405,7 @@ msgstr "Online Klient"
 msgid "Check if this client primarily has online sessions"
 msgstr "Ankreuzen, wenn dieser Klient hauptsächlich Online-Sitzungen hat"
 
-#: my_practice/models/client.py:213 templates/base.html:57
+#: my_practice/models/client.py:213 templates/base.html:101
 #: templates/includes/command_palette.html:82
 #: templates/my_practice/analytics.html:104
 #: templates/my_practice/analytics.html:592
@@ -2068,8 +2068,8 @@ msgstr "Kein Match"
 #: templates/my_practice/bank_import.html:84
 #: templates/my_practice/bank_review.html:209
 #: templates/my_practice/client_list_cards.html:107
-#: templates/my_practice/inquiry_confirm_delete.html:10
-#: templates/my_practice/inquiry_convert_confirm.html:16
+#: templates/my_practice/inquiry_confirm_delete.html:11
+#: templates/my_practice/inquiry_convert_confirm.html:17
 #: templates/my_practice/inquiry_list.html:179
 #: templates/my_practice/inquiry_list.html:225
 #: templates/my_practice/practice_confirm_delete.html:24
@@ -2079,8 +2079,8 @@ msgid "Name"
 msgstr "Name"
 
 #: my_practice/models/inquiry.py:104
-#: templates/my_practice/inquiry_confirm_delete.html:18
-#: templates/my_practice/inquiry_convert_confirm.html:28
+#: templates/my_practice/inquiry_confirm_delete.html:19
+#: templates/my_practice/inquiry_convert_confirm.html:29
 #: templates/my_practice/inquiry_list.html:180
 #: templates/my_practice/inquiry_list.html:226
 msgid "Source"
@@ -2128,7 +2128,7 @@ msgid "Client (after onboarding)"
 msgstr "Klient:in (nach Aufnahme)"
 
 #: my_practice/models/inquiry.py:169
-#: templates/my_practice/inquiry_convert_confirm.html:14
+#: templates/my_practice/inquiry_convert_confirm.html:15
 msgid "Inquiry"
 msgstr "Anfrage"
 
@@ -2239,7 +2239,7 @@ msgstr "Steuerbetrag"
 msgid "Total amount"
 msgstr "Gesamtbetrag"
 
-#: my_practice/models/invoice.py:139 templates/base.html:58
+#: my_practice/models/invoice.py:139 templates/base.html:102
 #: templates/includes/command_palette.html:83
 #: templates/my_practice/analytics.html:329
 #: templates/my_practice/analytics.html:350
@@ -2295,7 +2295,7 @@ msgid "Invoice item"
 msgstr "Rechnungsposition"
 
 #: my_practice/models/invoice.py:326 templates/my_practice/invoice_edit.html:67
-#: templates/my_practice/invoice_form.html:64
+#: templates/my_practice/invoice_form.html:68
 msgid "Invoice items"
 msgstr "Rechnungspositionen"
 
@@ -4410,57 +4410,57 @@ msgstr "oder"
 msgid "to close"
 msgstr "um zu schließen"
 
-#: templates/base.html:45 templates/base.html:47
+#: templates/base.html:50 templates/base.html:52
 #: templates/registration/login.html:6
 msgid "Practice management"
 msgstr "Praxisverwaltung"
 
-#: templates/base.html:56 templates/my_practice/bank_expense_review.html:132
+#: templates/base.html:56 templates/includes/command_palette.html:23
+msgid "Command palette"
+msgstr "Befehlspalette"
+
+#: templates/base.html:57 templates/my_practice/expense_form.html:179
+msgid "Search"
+msgstr "Suchen"
+
+#: templates/base.html:73 templates/includes/command_palette.html:60
+#: templates/my_practice/practice_management.html:4
+#: templates/my_practice/practice_management.html:6
+msgid "Manage practices"
+msgstr "Praxen verwalten"
+
+#: templates/base.html:85
+msgid "Toggle dark mode"
+msgstr "Dark Mode umschalten"
+
+#: templates/base.html:88
+msgid "Click to hide sensitive data"
+msgstr "Klicken zum Verbergen sensibler Daten"
+
+#: templates/base.html:100 templates/my_practice/bank_expense_review.html:132
 #: templates/my_practice/bank_withdrawal_review.html:112
 #: templates/my_practice/checklist.html:16
 #: templates/my_practice/client_detail.html:40
 msgid "Overview"
 msgstr "Überblick"
 
-#: templates/base.html:59 templates/my_practice/focus_queue.html:4
+#: templates/base.html:103 templates/my_practice/focus_queue.html:4
 #: templates/my_practice/focus_queue.html:7
 msgid "Focus Queue"
 msgstr "Im Fokus"
 
-#: templates/base.html:67 templates/includes/command_palette.html:44
+#: templates/base.html:111 templates/includes/command_palette.html:44
 #: templates/my_practice/bank_expense_review.html:130
 #: templates/my_practice/bank_import.html:4
 #: templates/my_practice/bank_import.html:9
 msgid "Bank import"
 msgstr "Bank-Import"
 
-#: templates/base.html:71 templates/includes/command_palette.html:23
-msgid "Command palette"
-msgstr "Befehlspalette"
-
-#: templates/base.html:72 templates/my_practice/expense_form.html:179
-msgid "Search"
-msgstr "Suchen"
-
-#: templates/base.html:88 templates/includes/command_palette.html:60
-#: templates/my_practice/practice_management.html:4
-#: templates/my_practice/practice_management.html:6
-msgid "Manage practices"
-msgstr "Praxen verwalten"
-
-#: templates/base.html:100
-msgid "Toggle dark mode"
-msgstr "Dark Mode umschalten"
-
-#: templates/base.html:103
-msgid "Click to hide sensitive data"
-msgstr "Klicken zum Verbergen sensibler Daten"
-
-#: templates/base.html:122
+#: templates/base.html:128
 msgid "available"
 msgstr "verfügbar"
 
-#: templates/base.html:124 templates/includes/command_palette.html:86
+#: templates/base.html:130 templates/includes/command_palette.html:86
 msgid "Close"
 msgstr "Schließen"
 
@@ -4946,10 +4946,10 @@ msgstr "Ja, löschen"
 #: templates/my_practice/client_intake.html:144
 #: templates/my_practice/expense_form.html:100
 #: templates/my_practice/gebueh_leistung_form.html:42
-#: templates/my_practice/inquiry_convert_confirm.html:80
+#: templates/my_practice/inquiry_convert_confirm.html:81
 #: templates/my_practice/inquiry_form.html:191
 #: templates/my_practice/invoice_edit.html:151
-#: templates/my_practice/invoice_form.html:134
+#: templates/my_practice/invoice_form.html:138
 #: templates/my_practice/marketing_period_form.html:53
 #: templates/my_practice/practice_confirm_delete.html:52
 #: templates/my_practice/practice_form.html:314
@@ -6832,8 +6832,8 @@ msgstr "Ich bestätige, dass die gesetzliche Aufbewahrungsfrist von 10 Jahren ab
 
 #: templates/my_practice/client_gdpr_delete_confirm.html:46
 #, python-format
-msgid "A deletion notice will be sent to <strong>%(client_email)s</strong> (Art. 17 GDPR)."
-msgstr "Eine Löschbenachrichtigung wird an <strong>%(client_email)s</strong> (Art. 17 DSGVO) gesendet."
+msgid "A deletion notice will be sent to <strong class=\"sensitive-data\">%(client_email)s</strong> (Art. 17 GDPR)."
+msgstr "Eine Löschbenachrichtigung wird an <strong class=\"sensitive-data\">%(client_email)s</strong> (Art. 17 DSGVO) gesendet."
 
 #: templates/my_practice/client_gdpr_delete_confirm.html:50
 msgid "No email address on file — no notification will be sent."
@@ -6848,7 +6848,7 @@ msgstr "Keine E-Mail-Adresse hinterlegt — es wird keine Benachrichtigung gesen
 #: templates/my_practice/inquiry_list.html:253
 #: templates/my_practice/invoice_detail.html:205
 #: templates/my_practice/invoice_edit.html:90
-#: templates/my_practice/invoice_form.html:77
+#: templates/my_practice/invoice_form.html:81
 #: templates/my_practice/practice_form.html:301
 #: templates/my_practice/tag_list.html:65
 #: templates/my_practice/time_off_list.html:55
@@ -7206,42 +7206,42 @@ msgstr "Bestehende Einträge für diese Sitzung werden beim Speichern ersetzt."
 msgid "Select all billing codes (Ziffern) that apply to this session. The maximum rate is billed automatically."
 msgstr "Alle zutreffenden Ziffern für diese Sitzung auswählen. Der Höchstsatz wird automatisch abgerechnet."
 
-#: templates/my_practice/inquiry_confirm_delete.html:4
 #: templates/my_practice/inquiry_confirm_delete.html:5
+#: templates/my_practice/inquiry_confirm_delete.html:6
 msgid "Delete inquiry"
 msgstr "Anfrage löschen"
 
-#: templates/my_practice/inquiry_confirm_delete.html:6
+#: templates/my_practice/inquiry_confirm_delete.html:7
 msgid "Are you sure you want to delete this inquiry?"
 msgstr "Möchten Sie diese Anfrage wirklich löschen?"
 
-#: templates/my_practice/inquiry_convert_confirm.html:5
-#: templates/my_practice/inquiry_convert_confirm.html:9
-#: templates/my_practice/inquiry_convert_confirm.html:79
+#: templates/my_practice/inquiry_convert_confirm.html:6
+#: templates/my_practice/inquiry_convert_confirm.html:10
+#: templates/my_practice/inquiry_convert_confirm.html:80
 msgid "Add client"
 msgstr "Als Klient:in aufnehmen"
 
-#: templates/my_practice/inquiry_convert_confirm.html:32
+#: templates/my_practice/inquiry_convert_confirm.html:33
 msgid "Inquiry date"
 msgstr "Eingangsdatum"
 
-#: templates/my_practice/inquiry_convert_confirm.html:39
+#: templates/my_practice/inquiry_convert_confirm.html:40
 msgid "Client data"
 msgstr "Klientendaten"
 
-#: templates/my_practice/inquiry_convert_confirm.html:40
+#: templates/my_practice/inquiry_convert_confirm.html:41
 msgid "Name, email, and phone are taken from the inquiry. Please complete the fields below:"
 msgstr "Name, E-Mail und Telefon werden aus der Anfrage übernommen. Bitte ergänzen Sie die folgenden Felder:"
 
-#: templates/my_practice/inquiry_convert_confirm.html:44
+#: templates/my_practice/inquiry_convert_confirm.html:45
 msgid "Error:"
 msgstr "Fehler:"
 
-#: templates/my_practice/inquiry_convert_confirm.html:94
+#: templates/my_practice/inquiry_convert_confirm.html:95
 msgid "Suggestions:"
 msgstr "Vorschläge:"
 
-#: templates/my_practice/inquiry_convert_confirm.html:96
+#: templates/my_practice/inquiry_convert_confirm.html:97
 msgid "Click to use"
 msgstr "Zum Übernehmen klicken"
 
@@ -7544,8 +7544,8 @@ msgstr "Klicke auf \"➕ Position hinzufügen\", um eine neue Position zu erstel
 
 #: templates/my_practice/invoice_edit.html:86
 #: templates/my_practice/invoice_edit.html:289
-#: templates/my_practice/invoice_form.html:73
-#: templates/my_practice/invoice_form.html:336
+#: templates/my_practice/invoice_form.html:77
+#: templates/my_practice/invoice_form.html:340
 msgid "Item"
 msgstr "Position"
 
@@ -7554,7 +7554,7 @@ msgid "Duration (min)"
 msgstr "Dauer (min)"
 
 #: templates/my_practice/invoice_edit.html:137
-#: templates/my_practice/invoice_form.html:116
+#: templates/my_practice/invoice_form.html:120
 msgid "Fill in instead of a session date, for day-rate/project billing"
 msgstr "Statt eines Sitzungsdatums ausfüllen, für Tagessatz-/Projektabrechnung"
 
@@ -7567,20 +7567,20 @@ msgstr "Neue Rechnung"
 msgid "Create invoice"
 msgstr "Rechnung erstellen"
 
-#: templates/my_practice/invoice_form.html:46
+#: templates/my_practice/invoice_form.html:50
 msgid "Optional: payment date (only relevant for status \"Paid\")"
 msgstr "Optional: Zahlungsdatum (nur relevant bei Status \"Bezahlt\")"
 
-#: templates/my_practice/invoice_form.html:54
+#: templates/my_practice/invoice_form.html:58
 #, python-format
 msgid "Small business owner = 0%%"
 msgstr "Kleinunternehmer = 0%%"
 
-#: templates/my_practice/invoice_form.html:128
+#: templates/my_practice/invoice_form.html:132
 msgid "Add another item"
 msgstr "Weiteres Item hinzufügen"
 
-#: templates/my_practice/invoice_form.html:133
+#: templates/my_practice/invoice_form.html:137
 msgid "Create Invoice"
 msgstr "Rechnung Erstellen"
 

@@ -43,7 +43,7 @@
 
     {% if has_email %}
     <p class="help-text">
-      {% blocktrans with client_email=client.email %}A deletion notice will be sent to <strong>{{ client_email }}</strong> (Art. 17 GDPR).{% endblocktrans %}
+      {% blocktrans with client_email=client.email %}A deletion notice will be sent to <strong class="sensitive-data">{{ client_email }}</strong> (Art. 17 GDPR).{% endblocktrans %}
     </p>
     {% else %}
     <p class="help-text">

@@ -70,7 +70,7 @@ class FocusQueueViewTest(TestCase):
         PracticeTodo.objects.create(
             practice=self.practice,
             title="Snoozed",
-            snoozed_until=timezone.now().date() + timedelta(days=1),
+            snoozed_until=timezone.localdate() + timedelta(days=1),
         )
         response = self.tc.get(reverse("focus_queue"))
         titles = [t.title for t in response.context["tasks"]]
@@ -80,7 +80,7 @@ class FocusQueueViewTest(TestCase):
         PracticeTodo.objects.create(
             practice=self.practice,
             title="Past snooze",
-            snoozed_until=timezone.now().date() - timedelta(days=1),
+            snoozed_until=timezone.localdate() - timedelta(days=1),
         )
         response = self.tc.get(reverse("focus_queue"))
         titles = [t.title for t in response.context["tasks"]]
@@ -100,7 +100,7 @@ class FocusQueueViewTest(TestCase):
             practice=self.practice,
             title="Due today",
             priority="low",
-            due_date=timezone.now().date(),
+            due_date=timezone.localdate(),
         )
         response = self.tc.get(reverse("focus_queue"))
         titles = [t.title for t in response.context["tasks"]]
@@ -112,7 +112,7 @@ class FocusQueueViewTest(TestCase):
             practice=self.practice,
             title="Overdue",
             priority="low",
-            due_date=timezone.now().date() - timedelta(days=1),
+            due_date=timezone.localdate() - timedelta(days=1),
         )
         response = self.tc.get(reverse("focus_queue"))
         titles = [t.title for t in response.context["tasks"]]
@@ -124,7 +124,7 @@ class FocusQueueViewTest(TestCase):
             practice=self.practice,
             title="Due next week",
             priority="low",
-            due_date=timezone.now().date() + timedelta(days=7),
+            due_date=timezone.localdate() + timedelta(days=7),
         )
         response = self.tc.get(reverse("focus_queue"))
         titles = [t.title for t in response.context["tasks"]]
@@ -180,13 +180,13 @@ class FocusQueueViewTest(TestCase):
             practice=self.practice,
             title="Snoozed manual",
             task_type=PracticeTodo.TaskType.MANUAL,
-            snoozed_until=timezone.now().date() + timedelta(days=1),
+            snoozed_until=timezone.localdate() + timedelta(days=1),
         )
         PracticeTodo.objects.create(
             practice=self.practice,
             title="Snoozed invoice",
             task_type=PracticeTodo.TaskType.INVOICE_UNPAID,
-            snoozed_until=timezone.now().date() + timedelta(days=1),
+            snoozed_until=timezone.localdate() + timedelta(days=1),
         )
         response = self.tc.get(reverse("focus_queue") + "?type=manual")
         self.assertEqual(response.context["snoozed_count"], 1)
@@ -195,7 +195,7 @@ class FocusQueueViewTest(TestCase):
         PracticeTodo.objects.create(
             practice=self.practice,
             title="Snoozed",
-            snoozed_until=timezone.now().date() + timedelta(days=1),
+            snoozed_until=timezone.localdate() + timedelta(days=1),
         )
         response = self.tc.get(reverse("focus_queue"))
         self.assertEqual(response.context["snoozed_count"], 1)
@@ -275,17 +275,17 @@ class FocusQueueSnoozeTest(TestCase):
     def test_snooze_one_day(self):
         self.tc.post(reverse("focus_queue_snooze", args=[self.task.pk]), {"days": "1"})
         self.task.refresh_from_db()
-        self.assertEqual(self.task.snoozed_until, timezone.now().date() + timedelta(days=1))
+        self.assertEqual(self.task.snoozed_until, timezone.localdate() + timedelta(days=1))
 
     def test_snooze_one_week(self):
         self.tc.post(reverse("focus_queue_snooze", args=[self.task.pk]), {"days": "7"})
         self.task.refresh_from_db()
-        self.assertEqual(self.task.snoozed_until, timezone.now().date() + timedelta(days=7))
+        self.assertEqual(self.task.snoozed_until, timezone.localdate() + timedelta(days=7))
 
     def test_invalid_days_defaults_to_one(self):
         self.tc.post(reverse("focus_queue_snooze", args=[self.task.pk]), {"days": "bogus"})
         self.task.refresh_from_db()
-        self.assertEqual(self.task.snoozed_until, timezone.now().date() + timedelta(days=1))
+        self.assertEqual(self.task.snoozed_until, timezone.localdate() + timedelta(days=1))
 
     def test_snoozed_task_disappears_from_queue(self):
         self.tc.post(reverse("focus_queue_snooze", args=[self.task.pk]), {"days": "3"})
@@ -308,7 +308,7 @@ class FocusQueueSetDueTodayTest(TestCase):
         response = self.tc.post(reverse("focus_queue_due_today", args=[self.task.pk]))
         self.assertEqual(response.status_code, 302)
         self.task.refresh_from_db()
-        self.assertEqual(self.task.due_date, timezone.now().date())
+        self.assertEqual(self.task.due_date, timezone.localdate())
 
     def test_bumps_task_to_top_of_queue(self):
         PracticeTodo.objects.create(practice=self.practice, title="Urgent", priority="urgent")
