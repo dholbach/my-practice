@@ -491,7 +491,7 @@ def calculate_revenue(invoice_items, year=None):
 ### Documentation Principles
 1. **One source of truth per topic** - PROJECTS.md is the index, P-XXX docs have details
 2. **Status-based organization** - Use todo/wip/done directories for lifecycle tracking
-3. **Numbered projects** - P-XXX format for easy cross-referencing
+3. **Numbered projects** - P-XXX format for easy cross-referencing; a new project takes the **lowest unused number** (there are gaps — see [PROJECTS.md § Project Numbering](PROJECTS.md#-project-numbering)), never the number of the GitHub issue it came from
 4. **Docstrings are mandatory** for public functions/classes
 5. **Code is the primary documentation** - write self-documenting code
 6. **Comments explain WHY, not WHAT** - code shows what, comments explain reasoning

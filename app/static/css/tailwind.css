@@ -42,6 +42,7 @@
     --color-input-bg:            #1e2533;
     --color-bg-muted:            #252f3e;
     --color-shadow:              rgba(0, 0, 0, 0.3);
+    --color-overlay:             rgba(0, 0, 0, 0.65);
     --color-danger:              #fca5a5;
     --color-danger-bg:           #451a1a;
     --color-warning:             #fbd38d;
@@ -2348,8 +2349,17 @@
     border-bottom: 2px solid var(--color-link);
   }
 
+  /* Right-hand side of the nav row: palette trigger, practice switcher and the
+     three toggles. Replaces the absolutely-positioned #header-controls that
+     global-search.js used to build at runtime (P-047 Phase 2). */
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
   .privacy-toggle {
-    float: right;
     padding: 0.5rem 1rem;
     background: var(--color-toggle-bg);
     color: var(--color-text-primary);
@@ -2370,8 +2380,6 @@
   }
 
   .lang-toggle {
-    float: right;
-    margin-right: 0.5rem;
     padding: 0.5rem 1rem;
     background: var(--color-toggle-bg);
     color: var(--color-text-primary);
@@ -2387,8 +2395,6 @@
   .lang-toggle:hover { background: var(--color-toggle-border); }
 
   .theme-toggle {
-    float: right;
-    margin-right: 0.5rem;
     padding: 0.5rem 1rem;
     background: var(--color-toggle-bg);
     color: var(--color-text-primary);
@@ -2486,6 +2492,210 @@
     margin-left: 0.3rem;
     vertical-align: middle;
   }
+
+  /* ── Keyboard help overlay (?) ───────────────────────────────────── */
+  /* Moved out of keyboard-nav.js's style.cssText in P-047 Phase 3; it was the
+     last UI in the codebase built from inline styles with hardcoded colours. */
+  .kbd-help {
+    position: fixed;
+    inset: 0;
+    z-index: 10500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--color-overlay);
+    backdrop-filter: blur(5px);
+  }
+
+  .kbd-help__box {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 36rem;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px var(--color-shadow);
+  }
+
+  .kbd-help__title { margin-top: 0; color: var(--color-text-primary); }
+  .kbd-help__intro { color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+  .kbd-help__section { color: var(--color-text-primary); margin-top: 1.5rem; }
+
+  .kbd-help__table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  .kbd-help__row { border-bottom: 1px solid var(--color-border); }
+  .kbd-help__key { padding: 0.5rem; }
+  .kbd-help__name { padding: 0.5rem; color: var(--color-text-primary); }
+
+  .kbd-help__footer {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  .kbd-help kbd {
+    padding: 0.2rem 0.5rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-family: monospace;
+    color: var(--color-text-primary);
+  }
+
+  /* ── Command palette (P-047) ─────────────────────────────────────── */
+  /* Markup in includes/command_palette.html, behaviour in command_palette.js.
+     Open/closed is the [hidden] attribute on #command-palette, so the closed
+     state needs no rule here. */
+  .cmd-palette {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;   /* above .tag-dropdown-content (10000) and the help overlay */
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 10vh 1rem 1rem;
+  }
+
+  .cmd-palette[hidden] { display: none; }
+
+  body.cmd-palette-open { overflow: hidden; }
+
+  .cmd-palette__backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--color-overlay);
+    backdrop-filter: blur(2px);
+  }
+
+  .cmd-palette__dialog {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 40rem;
+    max-height: 70vh;
+    background: var(--color-dropdown-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px var(--color-shadow);
+    overflow: hidden;
+  }
+
+  .cmd-palette__input {
+    flex: none;
+    padding: 1rem 1.25rem;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  .cmd-palette__input:focus { outline: none; }
+
+  .cmd-palette__list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+  }
+
+  .cmd-palette__group[hidden] { display: none; }
+
+  .cmd-palette__group-title {
+    margin: 0.5rem 0 0.25rem;
+    padding: 0 1.25rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .cmd-palette__item {
+    display: block;
+    padding: 0.55rem 1.25rem;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cmd-palette__item[hidden] { display: none; }
+
+  /* Selection is driven from JS, and hover maps onto the same class, so there
+     is deliberately no separate :hover rule to disagree with it. */
+  .cmd-palette__item--selected {
+    background: var(--color-dropdown-hover);
+    box-shadow: inset 3px 0 0 var(--color-primary);
+  }
+
+  .cmd-palette__empty,
+  .cmd-palette__status {
+    padding: 1.25rem;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .cmd-palette__status--error { color: var(--color-danger); }
+
+  .cmd-palette__empty[hidden],
+  .cmd-palette__status[hidden] { display: none; }
+
+  .cmd-palette__hints {
+    flex: none;
+    display: flex;
+    gap: 1.25rem;
+    padding: 0.6rem 1.25rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  .cmd-palette__hints kbd,
+  .cmd-palette-trigger kbd {
+    padding: 0.1rem 0.35rem;
+    margin-right: 0.2rem;
+    background: var(--color-toggle-bg);
+    border: 1px solid var(--color-toggle-border);
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: var(--color-text-primary);
+  }
+
+  /* Header trigger — ⌘K is invisible on its own and unreachable on a phone. */
+  .cmd-palette-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    background: var(--color-toggle-bg);
+    color: var(--color-text-secondary);
+    border: 2px solid var(--color-toggle-border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .cmd-palette-trigger:hover { background: var(--color-toggle-border); }
+
+  .cmd-palette-trigger kbd[hidden] { display: none; }
+
+  @media (max-width: 640px) {
+    .cmd-palette { padding: 4vh 0.5rem 0.5rem; }
+    .cmd-palette__dialog { max-height: 85vh; }
+    .cmd-palette__hints { display: none; }
+    .cmd-palette-trigger kbd { display: none; }
+  }
 }
 
 @media print {
@@ -2559,6 +2769,9 @@
 
   /* ── Shadow ─────────────────────────────────────────────────────── */
   --color-shadow: rgba(0, 0, 0, 0.1);
+
+  /* ── Modal scrim (command palette) ──────────────────────────────── */
+  --color-overlay: rgba(0, 0, 0, 0.45);
 
   /* ── Body gradient ───────────────────────────────────────────────── */
   --color-bg-gradient-start: #667eea;

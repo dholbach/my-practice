@@ -1,5 +1,5 @@
 /**
- * Tests for keyboard-nav.js — global and context-aware keyboard shortcuts.
+ * Tests for keyboard-nav.js — the help overlay and context-aware shortcuts.
  * Run with: node keyboard-nav.test.js
  *
  * Same approach as the sibling suites: the script is a browser IIFE with no
@@ -9,10 +9,14 @@
  * or devDependencies (see dev.py cmd_test_js).
  *
  * The URL paths asserted here are the real ones from my_practice/urls.py —
- * `clients/<int:pk>/detail/`, `invoices/<int:pk>/`, `practice-analysis/`. The
- * context detection is regex-matched against window.location.pathname, so a
- * URL rename silently kills a whole group of shortcuts; these tests are what
- * would catch that.
+ * `clients/<int:pk>/detail/`, `invoices/<int:pk>/`. The context detection is
+ * regex-matched against window.location.pathname, so a URL rename silently
+ * kills a whole group of shortcuts; these tests are what would catch that.
+ *
+ * P-047 Phase 3 retired the single-letter global navigation keys (c/i/d/a/p),
+ * the title hints on nav links and the auto-fading corner toast; the command
+ * palette covers all three. What is left is the ? overlay and the contextual
+ * n/e keys, which act on the record already on screen.
  */
 
 const fs = require("fs");
@@ -23,12 +27,8 @@ const SOURCE = fs.readFileSync(path.join(__dirname, "keyboard-nav.js"), "utf8");
 
 // Mirrors the data-kbd-* attributes base.html puts on <body>.
 const I18N = {
-    kbdClients: "Clients",
-    kbdInvoices: "Invoices",
-    kbdDashboard: "Dashboard",
-    kbdAnalytics: "Analytics",
-    kbdPracticeAnalysis: "Practice Analysis",
     kbdHelp: "Help",
+    kbdCommandPalette: "Open command palette",
     kbdNewClient: "New client",
     kbdNewInvoice: "New invoice",
     kbdEditClient: "Edit client",
@@ -40,8 +40,6 @@ const I18N = {
     kbdPress: "Press",
     kbdOr: "or",
     kbdToClose: "to close",
-    kbdForShortcuts: "for keyboard shortcuts",
-    kbdShortcutLabel: "Shortcut",
 };
 
 // ---------------------------------------------------------------------------
@@ -63,17 +61,6 @@ class FakeEvent {
     }
 }
 
-class FakeStyle {
-    set cssText(text) {
-        for (const declaration of text.split(";")) {
-            const [property, ...rest] = declaration.split(":");
-            if (!property || rest.length === 0) continue;
-            const name = property.trim().replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-            this[name] = rest.join(":").trim();
-        }
-    }
-}
-
 class FakeNode {
     constructor(tagName = "div", registry = null) {
         this.tagName = tagName.toUpperCase();
@@ -81,8 +68,6 @@ class FakeNode {
         this.parentNode = null;
         this.dataset = {};
         this.className = "";
-        this.style = new FakeStyle();
-        this.attributes = {};
         this._id = "";
         this._html = "";
         this._listeners = {};
@@ -129,32 +114,11 @@ class FakeNode {
             : null;
     }
 
-    getAttribute(name) {
-        return this.attributes[name] ?? null;
-    }
-    setAttribute(name, value) {
-        this.attributes[name] = value;
-    }
-
-    closest(selector) {
-        const wanted = selector.slice(1);
-        let node = this;
-        while (node) {
-            if (node.className && node.className.split(/\s+/).includes(wanted)) return node;
-            node = node.parentNode;
-        }
-        return null;
-    }
-
     set innerHTML(value) {
         this._html = value;
     }
     get innerHTML() {
         return this._html;
-    }
-
-    querySelectorAll() {
-        return [];
     }
 }
 
@@ -162,48 +126,23 @@ class FakeNode {
  * Load the script against a page at the given path.
  *
  * @param options.pathname  window.location.pathname, driving getPageContext()
- * @param options.links     [{ href, title, inDropdown }] for the title hints
  */
 function setupPage(options = {}) {
-    const { pathname = "/dashboard/", i18n = I18N, links = [], readyState = "loading" } = options;
+    const { pathname = "/dashboard/", i18n = I18N } = options;
 
     const registry = new Map();
     const make = (tag) => new FakeNode(tag, registry);
 
     const document_ = make("#document");
-    document_.readyState = readyState;
-
     const body = make("body");
     body.dataset = Object.assign({}, i18n);
     document_.body = body;
-    body.parentNode = document_;
     document_.children.push(body);
-
-    const linkNodes = links.map((spec) => {
-        const anchor = make("a");
-        anchor.attributes.href = spec.href;
-        if (spec.title) anchor.attributes.title = spec.title;
-        if (spec.inDropdown) {
-            const wrapper = make("div");
-            wrapper.className = "dropdown-content";
-            wrapper.appendChild(anchor);
-            body.appendChild(wrapper);
-        } else {
-            body.appendChild(anchor);
-        }
-        return anchor;
-    });
 
     document_.createElement = (tag) => make(tag);
     document_.getElementById = (id) => registry.get(id) || null;
-    document_.querySelectorAll = (selector) => {
-        const match = selector.match(/href\*="([^"]+)"/);
-        if (!match) return [];
-        return linkNodes.filter((a) => (a.attributes.href || "").includes(match[1]));
-    };
 
     const navigations = [];
-    const timers = [];
     const window_ = make("#window");
     window_.location = {
         pathname,
@@ -215,29 +154,13 @@ function setupPage(options = {}) {
         },
     };
 
-    vm.runInNewContext(SOURCE, {
-        document: document_,
-        window: window_,
-        console,
-        setTimeout: (fn) => {
-            timers.push(fn);
-            return timers.length;
-        },
-        clearTimeout: () => {},
-    });
-    if (readyState === "loading") document_.dispatchEvent(new FakeEvent("DOMContentLoaded"));
+    vm.runInNewContext(SOURCE, { document: document_, window: window_, console });
 
     return {
         document: document_,
         body,
         navigations,
-        links: linkNodes,
         overlay: () => registry.get("keyboard-help-overlay") || null,
-        hint: () => registry.get("keyboard-hint") || null,
-        flushTimers() {
-            const pending = timers.splice(0, timers.length);
-            for (const fn of pending) if (fn) fn();
-        },
         press(key, options = {}) {
             const target = options.target || body;
             const event = new FakeEvent("keydown", Object.assign({ key, target }, options));
@@ -246,7 +169,7 @@ function setupPage(options = {}) {
         },
         overlayHtml() {
             const overlay = registry.get("keyboard-help-overlay");
-            return overlay ? overlay.children.map((c) => c.innerHTML).join("") : "";
+            return overlay ? overlay.innerHTML : "";
         },
     };
 }
@@ -286,23 +209,17 @@ function assertContains(haystack, needle, message) {
 
 console.log("\n⌨️  Running keyboard-nav Tests\n");
 
-// --- global shortcuts -------------------------------------------------------
+// --- retired global shortcuts -----------------------------------------------
 
-test("the five global shortcuts navigate to their real URLs", () => {
-    // These paths are asserted against my_practice/urls.py, so renaming a URL
-    // without updating the shortcut shows up here rather than as a 404.
-    const expected = {
-        c: "/clients/",
-        i: "/invoices/",
-        d: "/dashboard/",
-        a: "/analytics/",
-        p: "/practice-analysis/",
-    };
-    for (const [key, url] of Object.entries(expected)) {
+test("the retired single-letter nav keys no longer navigate", () => {
+    // c/i/d/a/p used to jump to Clients/Invoices/Dashboard/Analytics/Practice
+    // Analysis from anywhere outside an input. The palette covers all five, and
+    // a bare letter that navigates away on a stray keypress is a bad trade.
+    for (const key of ["c", "i", "d", "a", "p"]) {
         const page = setupPage({ pathname: "/" });
         const event = page.press(key);
-        assertEquals(page.navigations, [url], `"${key}" goes to ${url}`);
-        assertTrue(event.defaultPrevented, `"${key}" is swallowed`);
+        assertEquals(page.navigations, [], `"${key}" no longer navigates`);
+        assertTrue(!event.defaultPrevented, `"${key}" is left for the page`);
     }
 });
 
@@ -317,36 +234,38 @@ test("an unmapped key is left alone", () => {
 
 test("shortcuts are inert while typing in a field", () => {
     for (const tag of ["input", "textarea", "select"]) {
-        const page = setupPage({ pathname: "/" });
+        const page = setupPage({ pathname: "/clients/" });
         const field = new FakeNode(tag);
-        page.press("c", { target: field });
-        assertEquals(page.navigations, [], `typing "c" in <${tag}> must not navigate`);
+        page.press("n", { target: field });
+        assertEquals(page.navigations, [], `typing "n" in <${tag}> must not navigate`);
     }
 });
 
 test("shortcuts are inert inside a contenteditable element", () => {
-    const page = setupPage({ pathname: "/" });
+    const page = setupPage({ pathname: "/clients/" });
     const editor = new FakeNode("div");
     editor.isContentEditable = true;
-    page.press("c", { target: editor });
+    page.press("n", { target: editor });
     assertEquals(page.navigations, [], "contenteditable is a typing context");
 });
 
 test("shortcuts are inert inside a contenteditable parent", () => {
-    const page = setupPage({ pathname: "/" });
+    const page = setupPage({ pathname: "/clients/" });
     const editor = new FakeNode("div");
     editor.isContentEditable = true;
     const inner = new FakeNode("span");
     inner.parentNode = editor;
-    page.press("c", { target: inner });
+    page.press("n", { target: inner });
     assertEquals(page.navigations, [], "the guard walks up the tree");
 });
 
 test("modifier combinations are left to the browser", () => {
+    // ⌘K/Ctrl+K reaches command_palette.js precisely because this file bails on
+    // any modifier — the two listeners share the document.
     for (const modifier of ["ctrlKey", "altKey", "metaKey"]) {
-        const page = setupPage({ pathname: "/" });
-        page.press("c", { [modifier]: true });
-        assertEquals(page.navigations, [], `${modifier}+c belongs to the browser`);
+        const page = setupPage({ pathname: "/clients/" });
+        page.press("n", { [modifier]: true });
+        assertEquals(page.navigations, [], `${modifier}+n belongs to the browser`);
     }
 });
 
@@ -382,9 +301,7 @@ test("e on an invoice detail page edits that invoice", () => {
     assertEquals(page.navigations, ["/invoices/7/edit/"], "invoice id carried over");
 });
 
-test("contextual shortcuts win over global ones", () => {
-    // "e" is not global, but "n" on /clients/ must not fall through to
-    // anything else either — the contextual branch returns early.
+test("e does nothing on the client list", () => {
     const page = setupPage({ pathname: "/clients/" });
     page.press("e");
     assertEquals(page.navigations, [], "no contextual e on the client list");
@@ -425,32 +342,30 @@ test("Escape without an overlay is left alone", () => {
     assertTrue(!event.defaultPrevented, "Escape stays available to the page");
 });
 
-test("the overlay lists the global shortcuts using translated names", () => {
-    // All of these come from body.dataset. Three of them used to be hardcoded
-    // English literals, invisible to the i18n guardrail because it only scans
-    // templates — the German UI showed "Dashboard"/"Analytics"/"Practice
-    // Analysis" while the nav used the actual translated German labels.
+test("the overlay documents the palette, not the retired nav keys", () => {
     const page = setupPage({
         pathname: "/",
-        i18n: Object.assign({}, I18N, {
-            kbdClients: "KLIENTEN",
-            kbdInvoices: "RECHNUNGEN",
-            kbdDashboard: "UEBERSICHT",
-            kbdAnalytics: "ANALYSEN",
-            kbdPracticeAnalysis: "PRAXISANALYSE",
-        }),
+        i18n: Object.assign({}, I18N, { kbdCommandPalette: "PALETTE", kbdHelp: "HELPROW" }),
     });
     page.press("?");
     const html = page.overlayHtml();
-    for (const name of ["KLIENTEN", "RECHNUNGEN", "UEBERSICHT", "ANALYSEN", "PRAXISANALYSE"]) {
-        assertContains(html, name, `${name} comes from the dataset`);
+
+    assertContains(html, "⌘K", "the palette shortcut is listed");
+    assertContains(html, "PALETTE", "with its translated name from the dataset");
+    assertContains(html, "HELPROW", "and ? documents itself now that it is a global key");
+    for (const gone of ["Clients", "Dashboard", "Practice Analysis"]) {
+        assertTrue(!html.includes(gone), `${gone} is no longer a global shortcut row`);
     }
 });
 
-test("the overlay omits the help row itself", () => {
-    const page = setupPage({ pathname: "/", i18n: Object.assign({}, I18N, { kbdHelp: "HELPROW" }) });
+test("the overlay uses CSS classes, not inline styles", () => {
+    // P-047 Phase 3 moved the overlay's appearance into tailwind.css; a literal
+    // colour or px here would be invisible to the CSS-token guardrail, which
+    // only scans the stylesheet.
+    const page = setupPage({ pathname: "/" });
     page.press("?");
-    assertTrue(!page.overlayHtml().includes("HELPROW"), "no ? row inside the ? overlay");
+    assertEquals(page.overlay().className, "kbd-help", "overlay carries the component class");
+    assertTrue(!page.overlayHtml().includes("style="), "no inline style attributes");
 });
 
 test("the overlay adds a context section on a client detail page", () => {
@@ -466,59 +381,6 @@ test("the overlay omits the context section where there is none", () => {
     const page = setupPage({ pathname: "/dashboard/" });
     page.press("?");
     assertTrue(!page.overlayHtml().includes(I18N.kbdOnThisPage), "no empty context table");
-});
-
-// --- shortcut hints on links ------------------------------------------------
-
-test("adds a shortcut hint to matching nav links", () => {
-    const page = setupPage({ pathname: "/", links: [{ href: "/clients/" }] });
-    assertEquals(
-        page.links[0].getAttribute("title"),
-        `${I18N.kbdShortcutLabel}: c`,
-        "hint added as the title"
-    );
-});
-
-test("keeps an existing title and appends the hint", () => {
-    const page = setupPage({
-        pathname: "/",
-        links: [{ href: "/invoices/", title: "Alle Rechnungen" }],
-    });
-    assertEquals(
-        page.links[0].getAttribute("title"),
-        `Alle Rechnungen (${I18N.kbdShortcutLabel}: i)`,
-        "original title preserved"
-    );
-});
-
-test("skips links inside a dropdown", () => {
-    const page = setupPage({
-        pathname: "/",
-        links: [{ href: "/analytics/", inDropdown: true }],
-    });
-    assertEquals(page.links[0].getAttribute("title"), null, "dropdown links left alone");
-});
-
-// --- the help hint ----------------------------------------------------------
-
-test("adds a dismissable help hint built from the dataset", () => {
-    const page = setupPage({ pathname: "/" });
-    const hint = page.hint();
-    assertTrue(hint !== null, "hint added");
-    assertContains(hint.innerHTML, I18N.kbdPress, "uses the translated prefix");
-    assertContains(hint.innerHTML, I18N.kbdForShortcuts, "and the translated suffix");
-});
-
-test("clicking the hint opens the overlay", () => {
-    const page = setupPage({ pathname: "/" });
-    page.hint().dispatchEvent(new FakeEvent("click"));
-    assertTrue(page.overlay() !== null, "hint is a shortcut to the overlay");
-});
-
-test("the hint fades itself out", () => {
-    const page = setupPage({ pathname: "/" });
-    page.flushTimers();
-    assertEquals(page.hint().style.opacity, "0", "faded after the timeout");
 });
 
 // ---------------------------------------------------------------------------

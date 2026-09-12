@@ -35,7 +35,7 @@ docs/
 ├── projects/              # 🆕 Projektbezogene Docs
 │   ├── todo/             # P-002, P-003, etc.
 │   ├── wip/              # P-001 (this file)
-│   └── done/             # P-000, P-095-P-099
+│   └── done/             # P-000, P-097-P-099
 └── archive/               # Historisches
 ```
 
