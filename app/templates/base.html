@@ -121,6 +121,12 @@
                 <button class="privacy-toggle" id="privacyToggle" title="{% trans 'Click to hide sensitive data' %}">
                     👁️ Privacy
                 </button>
+                <button class="cmd-palette-trigger" id="cmd-palette-trigger" type="button"
+                        title="{% trans 'Command palette' %}">
+                    🔍 <span>{% trans "Search" %}</span>
+                    <kbd data-cmdk-key="mac" hidden>⌘K</kbd>
+                    <kbd data-cmdk-key="other">Ctrl K</kbd>
+                </button>
             </nav>
         </div>
 
@@ -249,6 +255,11 @@
             });
         })();
     </script>
+
+    {% include "includes/command_palette.html" %}
+
+    <!-- Command Palette (P-047) -->
+    <script src="{% static 'js/command_palette.js' %}"></script>
 
     <!-- Keyboard Navigation -->
     <script src="{% static 'js/keyboard-nav.js' %}"></script>

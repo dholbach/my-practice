@@ -398,6 +398,7 @@ def cmd_test_js(args):
             ("JS ExpenseForm", "expense_form.test.js"),
             ("JS Widgets", "widgets.test.js"),
             ("JS KeyboardNav", "keyboard-nav.test.js"),
+            ("JS CommandPalette", "command_palette.test.js"),
         ):
             print(f"\n--- {label} Tests ---")
             result = run_docker_command(["node", f"/app/static/js/{script}"])

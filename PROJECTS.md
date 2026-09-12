@@ -1,12 +1,38 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-09-10
+**Last Updated**: 2026-09-12
+
+## 🔢 Project Numbering
+
+**Next number = the lowest unused `P-XXX`, and never a GitHub issue/PR number.**
+
+Project numbers are pure identifiers — they carry no chronological meaning (the
+"Abgeschlossen" table below is date-ordered and runs P-050, P-039, P-121, P-046 …
+all in the same month), so reusing a gap costs nothing.
+
+Gaps exist because P-094 and P-117 were each named after the GitHub issue they came
+from (#94 "client detail — Überblick tab", #117 "dashboard redesign — two-pane
+console"), and the sequence then carried on from those inflated values
+(P-095–P-100, P-118–P-122). That skipped 63 numbers. **Don't renumber the past** to
+close the gaps — those numbers are cross-referenced from `docs/FEATURES.md`,
+`docs/CHANGELOG.md`, `docs/architecture/CODE_STRUCTURE.md` and code comments. Fill
+from the bottom instead.
+
+Currently unused: 6, 8, 48, 49, 51–93, 96, 98, 101–116. To re-check before claiming
+one:
+
+```bash
+grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
+    --include=*.js --include=*.css . | sort -u
+```
+
+---
 
 ## 🔍 Recent Activity
 
-- **2026-09-01 — quarterly review follow-ups**: consolidated the three separately-timed background-job systemd timers (update-client-tags, fetch-calendar-events, sync-focus-queue — two hourly, one daily) into one hourly `run_scheduled_jobs` command/timer (PR #405), fixed `update_client_tags.py` showing 0% coverage despite an existing test file (its `_run()` helper was defined but never called), and added a new ratchet test guarding against German identifiers/comments in `.py`/`.js` source — a gap the existing i18n guardrail never covered since it only scans template text (PR #406). `client_detail.html` flagged as the standing design-review candidate (15 fix commits in 6 months, still not settled since P-094 "done") — not yet scoped.
 - **2026-09-10 — v0.5.5 patch release**: dark-on-dark supervision textarea fixed alongside a merge of the two overlapping client-detail Supervision workflows into one (#402); Focus Queue filter counts stuck at 0/1 fixed, a `GROUP BY` column implicitly widened by an inherited `.order_by()` (#403); false-positive unsaved-draft banner on client detail fixed (#404); the `client_detail.html` complexity flagged in the prior entry resolved via a four-phase codebase review — complexity hotspots split, a CSS-token guardrail blind spot fixed (231/460 lines silently unchecked, surfaced a real dark-mode bug), `clinical_views.py`/`email_views.py` test coverage filled in, 11 broken doc links fixed (#408–#411); a stray raw HTML comment on `/bank/review/` fixed (#412); misleading OAuth 7-day-token-expiry guidance corrected (#414); `weasyprint` bumped to close PYSEC-2026-3940 plus routine `pypdf`/`google-auth` bumps (#413/#415, 0 known vulnerabilities). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+- **2026-09-12 — project numbering cleaned up + command palette Phase 1 (P-047)**: audited the `P-XXX` number space and found 63 skipped numbers — P-094 and P-117 had each been named after the GitHub issue they came from (#94, #117) and the sequence carried on from those inflated values. Rule written down in [§ Project Numbering](#-project-numbering) (lowest unused number, never an issue number); the past is deliberately left unrenumbered. Issue #77's "P-040" (a number already taken by Sample Data) renumbered to **P-047** and Phase 1 built: `⌘K`/`Ctrl+K` command palette with 21 jump-to destinations and 8 quick-create actions, rendered server-side as `includes/command_palette.html` so every label stays inside `{% trans %}` and every rule in `tailwind.css` — the header search box and nav are untouched until Phases 2–3. 14 new JS tests; one bug caught by them (a no-match filter left `aria-selected` and the highlight class on a hidden item).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -18,6 +44,7 @@
 
 - **P-010 Emergency Access Plan**: earlier crisis-field implementation was rolled back (too partial, was blocking other work) — redo needed → [docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md](docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md)
 - **P-011 operational remainder**: Backup timer + secrets rotation — see `memory/PERSONAL_TODO.md`
+- **P-047 Command Palette (⌘K)**: command-first nav — palette shell + jump/action sections (Phase 1), search folded in (Phase 2), nav stripped to four links (Phase 3); renumbered from the "P-040" in issue #77 → [docs/projects/todo/P-047_COMMAND_PALETTE.md](docs/projects/todo/P-047_COMMAND_PALETTE.md)
 
 ### Stack / Infrastructure
 

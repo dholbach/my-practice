@@ -279,6 +279,7 @@ chronological record; this document only tracks current state.
 - ✅ Loading states
 - ✅ E-Mail-Textbausteine (`/tools/boilerplate/`) — 6 copyable DE/EN templates for common practice email scenarios
 - ✅ Draft autosave + unsaved-changes warning on long-text forms (session logs, client case notes) — protects against accidental back/forward navigation wiping out typed content
+- ✅ Command palette (P-047 Phase 1) — `⌘K` / `Ctrl+K` (or the header 🔍 button) opens a filterable palette with **Springe zu** (21 destinations that otherwise live behind nav dropdowns) and **Aktionen** (8 quick-create shortcuts); type to filter, `↑`/`↓` to move, `↵` to open, `esc` to close
 
 ### Performance
 - ✅ N+1 query elimination (73-94% reduction)
