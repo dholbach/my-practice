@@ -4,6 +4,7 @@ Tests for tax views.
 
 from datetime import date
 from decimal import Decimal
+from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth.models import User
 from django.test import Client as TestClient
@@ -348,3 +349,43 @@ class TaxQuarterOverviewConsistencyTest(TestCase):
         self.assertEqual(quarters[2], Decimal("200.00"))
         self.assertEqual(quarters[3], Decimal("0"))
         self.assertEqual(quarters[4], Decimal("0"))
+
+    def test_add_payment_link_returns_to_the_same_year(self):
+        """The quick-add link carries ?next= back to this overview, year included
+        — saving a prepayment shouldn't land the user on the withdrawal list, and
+        coming back to a different year is no better than not coming back."""
+        response = self.client_instance.get(reverse("tax_quarter_overview") + "?year=2024")
+        add_url = response.context["add_payment_url"]
+
+        parsed = urlparse(add_url)
+        params = parse_qs(parsed.query)
+        self.assertEqual(parsed.path, reverse("withdrawal_create"))
+        self.assertEqual(params["category"], ["tax"])
+
+        back = urlparse(params["next"][0])
+        self.assertEqual(back.path, reverse("tax_quarter_overview"))
+        self.assertEqual(parse_qs(back.query)["year"], ["2024"])
+
+    def test_add_payment_round_trip_lands_back_on_the_overview(self):
+        """End to end: follow the link the page renders, save, and check where
+        that leaves you — the two halves are wired in different modules."""
+        add_url = self.client_instance.get(reverse("tax_quarter_overview") + "?year=2024").context[
+            "add_payment_url"
+        ]
+
+        form_page = self.client_instance.get(add_url)
+        self.assertEqual(form_page.status_code, 200)
+
+        response = self.client_instance.post(
+            add_url,
+            {
+                "description": "Tax prepayment Q1",
+                "amount": "900.00",
+                "category": "tax",
+                "date": "2024-03-10",
+                "next": form_page.context["next"],
+            },
+        )
+        self.assertRedirects(
+            response, reverse("tax_quarter_overview") + "?year=2024", fetch_redirect_response=False
+        )

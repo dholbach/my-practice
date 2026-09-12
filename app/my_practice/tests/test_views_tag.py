@@ -64,6 +64,9 @@ class TagCreateViewTest(TestCase):
         self.user = User.objects.create_user(username="taguser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
+        self.client_obj = Client.objects.create(
+            client_code="MM", full_name="Max Mustermann", practice=self.practice
+        )
 
     def test_get_renders_form(self):
         response = self.tc.get(reverse("tag_create"))
@@ -81,6 +84,40 @@ class TagCreateViewTest(TestCase):
         data = {"name": "existing-tag", "color": "green", "description": ""}
         response = self.tc.post(reverse("tag_create"), data)
         self.assertEqual(response.status_code, 200)  # Form error, stays on page
+
+    def test_save_returns_to_next(self):
+        """The "Create new tag" link in the client-tags widget is reached while
+        tagging a specific client; without ?next= the save dropped the user on
+        the tag list, away from the client they were working on."""
+        back = reverse("client_detail", kwargs={"pk": self.client_obj.pk})
+        data = {"name": "needs-supervision", "color": "red", "description": "", "next": back}
+        response = self.tc.post(f"{reverse('tag_create')}?next={back}", data)
+        self.assertRedirects(response, back, fetch_redirect_response=False)
+
+    def test_form_exposes_next_for_the_hidden_field_and_cancel_link(self):
+        back = reverse("client_detail", kwargs={"pk": self.client_obj.pk})
+        response = self.tc.get(f"{reverse('tag_create')}?next={back}")
+        self.assertEqual(response.context["next"], back)
+        self.assertContains(response, f'name="next" value="{back}"')
+
+    def test_widget_link_on_client_detail_carries_next(self):
+        """The view half and the link half live in different files; without this
+        the link could quietly lose ?next= and every view test would still pass."""
+        response = self.tc.get(reverse("client_detail", kwargs={"pk": self.client_obj.pk}))
+        self.assertContains(
+            response,
+            f"{reverse('tag_create')}?next=/clients/{self.client_obj.pk}/",
+        )
+
+    def test_without_next_still_falls_back_to_the_tag_list(self):
+        data = {"name": "plain-tag", "color": "blue", "description": ""}
+        response = self.tc.post(reverse("tag_create"), data)
+        self.assertRedirects(response, reverse("tag_list"), fetch_redirect_response=False)
+
+    def test_off_site_next_is_refused(self):
+        data = {"name": "safe-tag", "color": "blue", "description": "", "next": "//evil.example/x"}
+        response = self.tc.post(reverse("tag_create"), data)
+        self.assertRedirects(response, reverse("tag_list"), fetch_redirect_response=False)
 
 
 class TagUpdateViewTest(TestCase):

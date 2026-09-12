@@ -333,3 +333,47 @@ class FocusQueueSetDueTodayTest(TestCase):
         other_task = PracticeTodo.objects.create(practice=other_practice, title="Other")
         response = self.tc.post(reverse("focus_queue_due_today", args=[other_task.pk]))
         self.assertEqual(response.status_code, 404)
+
+
+class FocusQueueNewTaskReturnsToFilterTest(TestCase):
+    """ "New task" on the Focus Queue returns to the queue as it was.
+
+    TodoCreateView's success_url is already the queue, so the page was right —
+    but the active ?type= filter was dropped, which for a queue you work through
+    a filter at a time means coming back to a different view of it.
+    """
+
+    def setUp(self):
+        self.practice = _make_practice("focus-queue-next")
+        self.user = User.objects.create_user(username="fqnext", password="testpass123")
+        link_user_to_practice(self.user, self.practice)
+        self.tc = _setup_client(self.user, self.practice)
+        PracticeTodo.objects.create(
+            practice=self.practice,
+            title="Existing task",
+            task_type="manual",
+            due_date=timezone.localdate(),
+        )
+
+    def test_new_task_link_carries_the_active_filter(self):
+        response = self.tc.get(reverse("focus_queue") + "?type=manual")
+        self.assertContains(response, "next=/focus/%3Ftype%3Dmanual")
+
+    def test_save_returns_to_the_filtered_queue(self):
+        back = reverse("focus_queue") + "?type=manual"
+        response = self.tc.post(
+            f"{reverse('todo_create')}?next={back}",
+            {
+                "title": "Follow up with lab",
+                "description": "",
+                "category": "admin",
+                "priority": "medium",
+                "due_date": timezone.localdate().isoformat(),
+                "next": back,
+            },
+        )
+        self.assertRedirects(response, back, fetch_redirect_response=False)
+
+    def test_unfiltered_queue_links_back_to_the_unfiltered_queue(self):
+        response = self.tc.get(reverse("focus_queue"))
+        self.assertContains(response, "next=/focus/")

@@ -60,7 +60,7 @@ def withdrawal_list(request: HttpRequest) -> HttpResponse:
     return render(request, "my_practice/withdrawal_list.html", context)
 
 
-class WithdrawalCreateView(PracticeScopedCreateView):
+class WithdrawalCreateView(NextRedirectMixin, PracticeScopedCreateView):
     """Create a new withdrawal"""
 
     model = CompanyWithdrawal

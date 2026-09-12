@@ -354,3 +354,57 @@ class WithdrawalCategoryTest(TestCase):
         self.assertEqual(response.status_code, 200)
         # Just verify the view renders without error
         self.assertTrue("outgoing" in response.context)
+
+
+class WithdrawalCreateNextRedirectTest(TestCase):
+    """Creating a withdrawal honours ?next=, so a quick-add started from another
+    page comes back to it. Update and delete already did; create did not, which
+    dropped anyone adding a tax prepayment from /reports/tax-quarter/ onto the
+    withdrawal list instead of back on the overview they were reading."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="wd_next", password="12345")
+        self.client_instance = TestClient()
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="views_withdrawal-next",
+            title="Test Practitioner",
+            email="test@practice.example",
+            city="Berlin",
+        )
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.client_instance.login(username="wd_next", password="12345")
+        session = self.client_instance.session
+        session["current_practice_slug"] = self.practice.slug
+        session.save()
+        self.back = f"{reverse('tax_quarter_overview')}?year=2026"
+        self.data = {
+            "description": "Tax prepayment Q1",
+            "amount": "1200.00",
+            "category": "tax",
+            "date": "2026-03-10",
+        }
+
+    def test_save_returns_to_next(self):
+        response = self.client_instance.post(
+            f"{reverse('withdrawal_create')}?next={self.back}", {**self.data, "next": self.back}
+        )
+        self.assertRedirects(response, self.back, fetch_redirect_response=False)
+        self.assertTrue(CompanyWithdrawal.objects.filter(description="Tax prepayment Q1").exists())
+
+    def test_form_carries_next_through_the_post(self):
+        """The value has to survive the round trip as a hidden field — the POST
+        is where get_success_url() reads it from."""
+        response = self.client_instance.get(f"{reverse('withdrawal_create')}?next={self.back}")
+        self.assertEqual(response.context["next"], self.back)
+        self.assertContains(response, f'name="next" value="{self.back}"')
+
+    def test_without_next_still_falls_back_to_the_list(self):
+        response = self.client_instance.post(reverse("withdrawal_create"), self.data)
+        self.assertRedirects(response, reverse("withdrawal_list"), fetch_redirect_response=False)
+
+    def test_off_site_next_is_refused(self):
+        response = self.client_instance.post(
+            reverse("withdrawal_create"), {**self.data, "next": "//evil.example/steal"}
+        )
+        self.assertRedirects(response, reverse("withdrawal_list"), fetch_redirect_response=False)
