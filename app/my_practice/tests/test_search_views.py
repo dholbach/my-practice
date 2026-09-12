@@ -177,3 +177,63 @@ class GlobalSearchPracticeIsolationTest(TestCase):
         codes = [r["code"] for r in resp.json()["results"] if r["type"] == "client"]
         self.assertIn("P1", codes)
         self.assertNotIn("P2", codes)
+
+
+class MultiLexemeQueryTest(TestCase):
+    """
+    Regression: `SearchRank(...) > 0` was used as the match predicate, but
+    ts_rank only returns exactly 0.0 for a *single*-lexeme query that misses.
+    Any multi-lexeme miss scores 1e-20 — which is > 0 — so a two-word search, or
+    anything Postgres splits on a hyphen ("KK-9" -> 'kk' & '-9'), matched every
+    row in the table. The real hit was then buried among arbitrary rows, ordered
+    by a rank that tied at 1e-20 across all of them.
+
+    These cases all pass trivially against a single-lexeme query, which is why
+    the bug survived the original suite.
+    """
+
+    def setUp(self):
+        self.user, self.practice = _setup_practice("search-multi", "srch_multi")
+        self.http = TestClient()
+        self.http.login(username="srch_multi", password="pass")
+
+        self.klaus = _make_client(self.practice, "KK", name="Klaus Kleber")
+        self.other = _make_client(self.practice, "AA", name="Anna Andersson")
+        _make_inquiry(self.practice, name="Bertha Beispiel")
+        self.invoice = _make_invoice(self.klaus, number="KK-9")
+        _make_invoice(self.other, number="AA-6")
+
+    def _labels(self, q):
+        resp = self.http.get(reverse("global_search"), {"q": q})
+        self.assertEqual(resp.status_code, 200)
+        return [r["label"] for r in resp.json()["results"]]
+
+    def test_hyphenated_invoice_number_returns_only_that_invoice(self):
+        labels = self._labels("KK-9")
+        self.assertEqual(len(labels), 1, f"expected only KK-9, got {labels}")
+        self.assertIn("KK-9", labels[0])
+
+    def test_hyphenated_query_with_invoice_prefix(self):
+        labels = self._labels("i:KK-9")
+        self.assertEqual(len(labels), 1, f"expected only KK-9, got {labels}")
+        self.assertIn("KK-9", labels[0])
+
+    def test_hyphenated_query_matches_no_clients_or_inquiries(self):
+        # "KK-9" is an invoice number; no client or inquiry should surface for it.
+        self.assertEqual(self._labels("c:KK-9"), [])
+
+    def test_two_word_miss_returns_nothing(self):
+        self.assertEqual(self._labels("Zzz Qqq"), [])
+
+    def test_two_word_partial_miss_returns_nothing(self):
+        # plainto_tsquery ANDs the terms: one matching token is not a match.
+        self.assertEqual(self._labels("Klaus Qqq"), [])
+
+    def test_full_name_search_still_works(self):
+        # The client, plus their invoice — _search_invoices matches on
+        # client__full_name too, so both hits here are intended.
+        labels = self._labels("Klaus Kleber")
+        self.assertEqual(len(labels), 2, f"expected the client and their invoice, got {labels}")
+        self.assertTrue(any("Klaus Kleber" in label for label in labels))
+        self.assertTrue(any("KK-9" in label for label in labels))
+        self.assertFalse(any("Anna" in label or "AA-6" in label for label in labels))

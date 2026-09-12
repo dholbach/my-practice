@@ -87,10 +87,14 @@ class InvoiceFilterHelper:
 
         return cast(
             QuerySet,
-            qs.annotate(_name_rank=SearchRank(name_vector, name_q)).filter(
+            qs.alias(_name_search=name_vector)
+            .annotate(_name_rank=SearchRank(name_vector, name_q))
+            .filter(
                 Q(invoice_number__icontains=query)
                 | Q(client__client_code__icontains=query)
-                | Q(_name_rank__gt=0)
+                # See search_views._search_clients_and_inquiries: `rank > 0` is
+                # not a match test — a missing multi-lexeme query scores 1e-20.
+                | Q(_name_search=name_q)
             ),
         )
 

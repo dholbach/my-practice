@@ -118,11 +118,26 @@ class InvoiceListViewTest(TestCase):
         invoices = list(response.context["page_obj"])
         self.assertGreater(len(invoices), 0)
 
-    def test_invoice_list_search_by_invoice_number(self):
-        """Test invoice list loads with search parameter."""
-        response = self.client_instance.get(reverse("invoice_list") + "?q=TC-1")
+    def _search_numbers(self, term):
+        response = self.client_instance.get(reverse("invoice_list") + f"?search={term}")
         self.assertEqual(response.status_code, 200)
-        # Search may not be implemented - just verify page loads
+        return {inv.invoice_number for inv in response.context["page_obj"]}
+
+    def test_invoice_list_search_by_invoice_number(self):
+        """The ?search= param is `search`, not `q`, and narrows to one invoice."""
+        self.assertEqual(self._search_numbers("TC-1"), {"TC-1"})
+
+    def test_invoice_list_multi_word_search_miss_returns_nothing(self):
+        """
+        Regression: the search filter used `SearchRank(...) > 0` as its match
+        test. ts_rank only returns exactly 0.0 for a single-lexeme miss; a
+        multi-lexeme miss scores 1e-20, so a two-word search — or a hyphenated
+        one Postgres splits, like "TC-9" -> 'tc' & '-9' — listed every invoice.
+        """
+        self.assertEqual(self._search_numbers("Zzz+Qqq"), set())
+
+    def test_invoice_list_search_by_client_name_still_matches(self):
+        self.assertEqual(self._search_numbers("Test+Client"), {"TC-1", "TC-2"})
 
     def test_invoice_list_pagination(self):
         """Test that pagination works."""

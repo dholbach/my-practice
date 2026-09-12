@@ -97,6 +97,24 @@ class ClientListViewTest(TestCase):
         self.assertIn("CL1", codes)
         self.assertNotIn("CL2", codes)
 
+    def test_client_list_multi_word_search_miss_returns_nothing(self):
+        """
+        Regression: the ?search= filter used `SearchRank(...) > 0` as its match
+        test. ts_rank only returns exactly 0.0 for a single-lexeme miss; a
+        multi-lexeme miss scores 1e-20, so any two-word search listed every
+        client in the practice. A one-word miss passed all along, which is why
+        the existing coverage never caught it.
+        """
+        response = self.client_instance.get(reverse("client_list") + "?search=Zzz+Qqq")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([c.client_code for c in response.context["clients"]], [])
+
+    def test_client_list_full_name_search_still_matches(self):
+        response = self.client_instance.get(reverse("client_list") + "?search=Client+One")
+        self.assertEqual(response.status_code, 200)
+        codes = {c.client_code for c in response.context["clients"]}
+        self.assertEqual(codes, {"CL1"})
+
     def test_client_list_tag_filter(self):
         """The ?tag= param restricts the list to clients with that tag."""
         tag = ClientTag.objects.create(name="follow-up", slug="follow-up")

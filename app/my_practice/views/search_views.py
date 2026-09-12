@@ -37,11 +37,17 @@ def _search_clients_and_inquiries(request, query: str) -> list[dict]:
     active clients first, then open inquiries, then inactive clients."""
     name_vector = SearchVector("full_name", config="german")
     name_q = SearchQuery(query, config="german", search_type="plain")
+    # Match with the full-text operator (vector @@ query), not `rank > 0`:
+    # ts_rank returns 0.0 only for a single-lexeme query that misses. Any
+    # multi-lexeme query that misses — two words, or anything Postgres splits on
+    # a hyphen, e.g. "kk-9" -> 'kk' & '-9' — scores 1e-20, which is > 0, so the
+    # rank test matched every row in the table. SearchRank stays, for ordering.
 
     clients = (
         Client.objects.for_current_practice(request)
+        .alias(_search=name_vector)
         .annotate(_rank=SearchRank(name_vector, name_q))
-        .filter(Q(_rank__gt=0) | Q(client_code__icontains=query) | Q(email__icontains=query))
+        .filter(Q(_search=name_q) | Q(client_code__icontains=query) | Q(email__icontains=query))
         .only("id", "client_code", "full_name", "active")
         .order_by("-_rank", "client_code")[:8]
     )
@@ -51,8 +57,9 @@ def _search_clients_and_inquiries(request, query: str) -> list[dict]:
     inquiries = (
         ClientInquiry.objects.for_current_practice(request)
         .open()
+        .alias(_search=inq_name_vector)
         .annotate(_rank=SearchRank(inq_name_vector, inq_name_q))
-        .filter(Q(_rank__gt=0) | Q(full_name__icontains=query))
+        .filter(Q(_search=inq_name_q) | Q(full_name__icontains=query))
         .only("id", "full_name", "status")
         .order_by("-_rank", "full_name")[:8]
     )
@@ -105,11 +112,12 @@ def _search_invoices(request, query: str) -> list[dict]:
     inv_name_q = SearchQuery(query, config="german", search_type="plain")
     invoices = (
         Invoice.objects.for_current_practice(request)
+        .alias(_search=inv_name_vector)
         .annotate(_rank=SearchRank(inv_name_vector, inv_name_q))
         .filter(
             Q(invoice_number__icontains=query)
             | Q(client__client_code__icontains=query)
-            | Q(_rank__gt=0)
+            | Q(_search=inv_name_q)
         )
         .select_related("client")
         .order_by("-_rank", "-invoice_date")[:5]

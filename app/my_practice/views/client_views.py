@@ -57,10 +57,17 @@ class ClientListView(PracticeScopedListView):
         if search_query:
             name_vector = SearchVector("full_name", "notes", config="german")
             name_q = SearchQuery(search_query, config="german", search_type="plain")
-            queryset = queryset.annotate(_name_rank=SearchRank(name_vector, name_q)).filter(
-                models.Q(_name_rank__gt=0)
-                | models.Q(client_code__icontains=search_query)
-                | models.Q(email__icontains=search_query)
+            queryset = (
+                queryset.alias(_name_search=name_vector)
+                .annotate(_name_rank=SearchRank(name_vector, name_q))
+                .filter(
+                    # See search_views._search_clients_and_inquiries: `rank > 0`
+                    # is not a match test — a missing multi-lexeme query scores
+                    # 1e-20, so every client matched a two-word search.
+                    models.Q(_name_search=name_q)
+                    | models.Q(client_code__icontains=search_query)
+                    | models.Q(email__icontains=search_query)
+                )
             )
 
         # Filter by tag
