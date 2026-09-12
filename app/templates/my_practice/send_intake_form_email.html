@@ -5,7 +5,7 @@
 {% block title %}{% trans "Send intake form" %}{% endblock %}
 
 {% block page_title %}📧 {% trans "Send intake form" %}{% endblock %}
-{% block page_subtitle %}<span class="sensitive-data">{{ client.client_code }}</span>{% endblock %}
+{% block page_subtitle %}{{ client.client_code }}{% endblock %}
 
 {% block content %}
 <div class="email-preview">
