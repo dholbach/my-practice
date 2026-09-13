@@ -79,6 +79,36 @@ class UpdateCheckContextProcessorTest(TestCase):
         self.assertEqual(ctx.get("latest_version"), "v99.0.0")
         self.assertEqual(ctx.get("current_version"), VERSION)
 
+    def test_older_release_is_not_offered_as_an_upgrade(self):
+        """A version bump on main outruns its GitHub release; don't offer a downgrade."""
+        with patch("urllib.request.urlopen") as mock_open:
+            mock_open.return_value.__enter__.return_value.read.return_value = (
+                b'{"tag_name": "v0.0.1"}'
+            )
+            ctx = update_check(_make_request())
+        self.assertEqual(ctx, {})
+
+    def test_unparseable_tag_returns_empty(self):
+        with patch("urllib.request.urlopen") as mock_open:
+            mock_open.return_value.__enter__.return_value.read.return_value = (
+                b'{"tag_name": "nightly"}'
+            )
+            ctx = update_check(_make_request())
+        self.assertEqual(ctx, {})
+
+    def test_patch_level_is_compared_numerically(self):
+        """v0.10.0 is newer than v0.9.0 even though it sorts earlier as a string."""
+        with (
+            patch("my_practice.context_processors.VERSION", "v0.9.0"),
+            patch("urllib.request.urlopen") as mock_open,
+        ):
+            mock_open.return_value.__enter__.return_value.read.return_value = (
+                b'{"tag_name": "v0.10.0"}'
+            )
+            ctx = update_check(_make_request())
+        self.assertTrue(ctx.get("update_available"))
+        self.assertEqual(ctx.get("latest_version"), "v0.10.0")
+
     def test_result_is_cached(self):
         with patch("urllib.request.urlopen") as mock_open:
             mock_open.return_value.__enter__.return_value.read.return_value = (

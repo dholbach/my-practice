@@ -174,8 +174,8 @@ Sample output:
 
 Go to **http://localhost:8000** and log in with the credentials you just created.
 
-You'll land on the **dashboard** showing the demo practice — revenue chart for the
-last 12 months, today's agenda, active client list, and a weekly focus widget.
+You'll land on the **dashboard** showing the demo practice — this year's revenue and
+profit, the week's sessions, and a status overview of every invoice.
 
 ---
 
@@ -193,6 +193,14 @@ The dashboard is the daily starting point. It shows:
 Revenue charts and trend breakdowns live on the **Analytics** page, not the dashboard —
 see below. Switch to **Privacy mode** (toggle in the top bar) to blur client names — useful
 when working in a shared space.
+
+### Focus Queue (`/focus/`)
+
+The working surface for everything that needs doing. Manual tasks sit alongside
+signals the app raises for itself — a session without a log, an invoice that was
+never sent or never paid, a pending backup checklist, an open supervision topic —
+as real rows you can tick off. Filter by type along the top, and snooze anything
+that isn't for today (`+1d` / `+3d` / `+1w`).
 
 ### Client list (`/clients/`)
 
@@ -218,11 +226,12 @@ line items (session date, duration, rate). From the detail view you can:
 The demo has invoices in all four states (Draft / Sent / Paid / Cancelled),
 so you can see what each looks like.
 
-### Batch invoicing (`/invoices/batch/`)
+### Batch invoicing (`/billing/`)
 
 At the end of a billing period, use batch invoicing to create drafts for all
-clients with unbilled sessions in one go. Select the month, review the cards
-(one per client), and click **Erstellen** — done.
+clients with unbilled sessions in one go. `/billing/` opens the current month;
+**Open billing** (`/billing/open/`) lists every month that still has unresolved
+items, one row per client, so nothing gets left behind.
 
 ### Analytics (`/analytics/`)
 
