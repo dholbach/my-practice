@@ -100,7 +100,7 @@
                 <span class="cockpit-session-summary">{% if log.summary %}{{ log.summary }}{% else %}<em class="text-muted">–</em>{% endif %}</span>
                 <span class="cockpit-session-badges">
                     {% for tag in log.mood_tags %}
-                    <span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>
+                    <span class="cn-tag cn-tag-{{ tag }}">{{ tag|mood_tag_label }}</span>
                     {% endfor %}
                 </span>
             </div>
@@ -461,7 +461,7 @@
                 <span class="cn-session-duration">{{ session.duration }} {% trans "min" %}</span>
                 {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">{% trans "Unbilled" %}</span>{% else %}<span class="cn-session-not-billable">{% trans "Non-billable" %}</span>{% endif %}{% endif %}
                 {% if log.session_type %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% endif %}
-                {% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>{% endfor %}
+                {% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|mood_tag_label }}</span>{% endfor %}
                 {% if session.gebueh_leistungen.all %}<div class="cn-gebueh-ziffern">{% for le in session.gebueh_leistungen.all %}<span class="cn-gebueh-chip">{{ le.ziffer.nummer }}</span>{% endfor %}</div>{% endif %}
             </div>
             <div class="cn-session-content">
@@ -497,7 +497,7 @@
             <span class="cn-session-duration">{{ session.duration }} {% trans "min" %}</span>
             {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">{% trans "Unbilled" %}</span>{% else %}<span class="cn-session-not-billable">{% trans "Non-billable" %}</span>{% endif %}{% endif %}
             {% if session.pk in recent_sessions_needing_log %}<span class="cn-session-missing-log">📝 {% trans "Log missing" %}</span>{% endif %}
-            {% if log %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|title }}</span>{% endfor %}{% endif %}
+            {% if log %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|mood_tag_label }}</span>{% endfor %}{% endif %}
             {% if session.gebueh_leistungen.all %}<div class="cn-gebueh-ziffern inline-flex">{% for le in session.gebueh_leistungen.all %}<span class="cn-gebueh-chip">{{ le.ziffer.nummer }}</span>{% endfor %}</div>{% endif %}
         </div>
         <div class="cn-session-actions">

@@ -275,3 +275,22 @@ def privacy_name(value):
         else:
             parts.append(_html.escape(word))
     return mark_safe(" ".join(parts))
+
+
+@register.filter(name="mood_tag_label")
+def mood_tag_label(value):
+    """
+    Translate a stored MoodTag key into its localised label.
+
+    SessionLog.mood_tags is a JSON list of raw keys ("hohe_aktivierung"), so
+    Django's get_FOO_display() is unavailable — rendering the key directly leaks
+    the German storage value into the UI regardless of the active language.
+
+    Usage: {{ tag|mood_tag_label }} → 'High activation' / 'Hohe Aktivierung'
+    """
+    from ..models.clinical import MoodTag
+
+    try:
+        return MoodTag(value).label
+    except ValueError:
+        return str(value).replace("_", " ").capitalize()
