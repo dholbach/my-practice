@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static i18n %}
+{% load static i18n payment_tags %}
 
 {% block title %}{% trans "Triage overview – Emergency access" %}{% endblock %}
 {% block page_title %}🚨 {% trans "Triage overview" %}{% endblock %}
@@ -33,7 +33,7 @@
             <span class="cn-session-type">{{ s.session_type }}</span>
             {% endif %}
             {% for tag in s.mood_tags %}
-            <span class="cn-tag cn-tag-{{ tag }}">{{ tag }}</span>
+            <span class="cn-tag cn-tag-{{ tag }}">{{ tag|mood_tag_label }}</span>
             {% endfor %}
         </div>
         {% endfor %}

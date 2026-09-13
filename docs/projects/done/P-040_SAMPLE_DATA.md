@@ -82,3 +82,36 @@ seeker), shuffled per session.
 - Realistic clinical language beyond the note templates
 - Multi-practice seeding
 - Media files / documents
+
+---
+
+## Later Additions (2026-09-13)
+
+Two changes made while refreshing the screenshots for issue #148:
+
+**Demo content is English.** Session notes, session logs, intake/case notes, todo and
+time-off titles, tag names and expense descriptions were authored in German and leaked
+into English screenshots — the seeded content is data, so no `{% trans %}` wrapping
+applies and nothing flagged it. All of it now reads English. Three things stay German on
+purpose: ICD-10 diagnosis labels (catalogue entries, and what a German invoice prints),
+the practice's `title` (`Heilpraktikerin für Psychotherapie` is a regulated designation),
+and the GebüH fee schedule seeded by migration `0006` (statutory text).
+
+`LEGACY_TODO_TITLES` / `LEGACY_TAG_NAMES` / `LEGACY_TIMEOFF_TITLES` hold the old German
+spellings. `--clear` matches these rows by exact title, so without them it would silently
+leave pre-translation demo data behind. Safe to drop once no installation holds an older
+demo dataset.
+
+**GebüH billing is represented.** `GEBUEH_CLIENT_MODES` marks three clients as
+`needs_gebueh_invoice`, covering the three states the UI distinguishes:
+
+| Code | Mode | Shows |
+|------|------|-------|
+| `ARA` | `diagnosed` | GebüH breakdown on invoice detail, with the ICD-10 line |
+| `GED` | `probatorik` | Early probationary phase — standard diagnosis callout |
+| `THR` | `probatorik_due` | ≥ 5 diagnostic codes billed — escalated warning callout |
+
+Recorded amounts follow the quick-entry rule: a code bills its `satz_max`, capped by what
+is left of the session fee, so the GebüH lines never exceed what the client was charged.
+`Leistungserfassung.session` is `PROTECT`, so `_clear` deletes these lines before the
+sessions they hang off.

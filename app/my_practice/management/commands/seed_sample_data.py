@@ -36,6 +36,7 @@ from ...models import (
     UserPractice,
 )
 from ...models.clinical import ClientProfile, MoodTag, SessionLog
+from ...models.gebueh import Leistungserfassung
 from ...utils.invoice_helpers import get_next_invoice_number
 
 DEMO_SLUG = "demo"
@@ -98,51 +99,68 @@ CHARACTERS: list[tuple[str, str, str, float, bool]] = [
     ("EUR", "Eurydice", "exile", 1.0, True),
 ]
 
+# ── GebüH billing demo clients ────────────────────────────────────────────────
+# Client codes billed via the GebüH fee schedule (Client.needs_gebueh_invoice).
+# Mode drives what the demo shows on the client detail page:
+#   diagnosed       — Arbeitsdiagnose on file; invoices print the ICD-10 code
+#   probatorik      — early in the probationary phase, no diagnosis yet
+#   probatorik_due  — no diagnosis but >= 5 diagnostic codes billed, so the
+#                     client detail callout escalates to its warning variant
+GEBUEH_CLIENT_MODES: dict[str, str] = {
+    "ARA": "diagnosed",
+    "GED": "probatorik",
+    "THR": "probatorik_due",
+}
+
+# GebüH codes used by the seeder, from the schedule loaded in migration 0006.
+GEBUEH_ZIFFER_THERAPY = "19.2"  # Psychotherapie 50–90 Min
+GEBUEH_ZIFFER_ANAMNESE = "1"  # Anamnese / Folgeanamnese
+GEBUEH_ZIFFER_EXPLORATION = "19.5"  # Psychologische Exploration
+
 # ── Session note templates per archetype ─────────────────────────────────────
 NOTE_TEMPLATES: dict[str, list[str]] = {
     "hero": [
-        "Klient berichtete von wiederkehrenden Träumen, in denen er eine Last trägt, "
-        "die er nicht ablegen kann. Thema Verantwortung und Selbstwert. Hausaufgabe: Journaling.",
-        "Thema Pflichtgefühl vs. eigene Bedürfnisse. Klient zeigte gute Reflexionsfähigkeit. "
-        "Nächste Sitzung: Ressourcenarbeit.",
-        "Starke Erschöpfung durch anhaltende Belastung. Psychoedukation zu Grenzen und "
-        "Selbstfürsorge. Atemübung eingeführt.",
-        "Klient spricht von einer Aufgabe, die er um jeden Preis erfüllen muss. Exploration "
-        "der inneren Antreiber. Innerer Kritiker identifiziert.",
-        "Abschluss eines Themenblocks. Klient reflektiert Fortschritte. Positive Entwicklung "
-        "beim Thema Selbstmitgefühl.",
+        "Client reported recurring dreams of carrying a burden he cannot put down. "
+        "Theme: responsibility and self-worth. Homework: journalling.",
+        "Theme: sense of duty vs. own needs. Client showed good capacity for reflection. "
+        "Next session: resource work.",
+        "Marked exhaustion from sustained strain. Psychoeducation on boundaries and "
+        "self-care. Introduced a breathing exercise.",
+        "Client speaks of a task he must complete at any cost. Explored the inner drivers. "
+        "Inner critic identified.",
+        "Closing a block of work. Client reflects on progress. Positive development "
+        "around self-compassion.",
     ],
     "exile": [
-        "Klientin beschreibt tiefes Gefühl der Fremdheit, auch in vertrauten Umgebungen. "
-        "EMDR-Vorbereitung besprochen.",
-        "Thema Heimat und Zugehörigkeit. Ambivalente Gefühle bezüglich Herkunft. "
-        "Körperarbeit: Verortungsübung.",
-        "Klientin exploriert die Frage 'Wer bin ich ohne diesen Kontext?'. Identitätsarbeit begonnen.",
-        "Starkes Schamgefühl bezüglich Vergangenheit. Normalisierung und Reframing. "
-        "Gute therapeutische Allianz.",
-        "Thema Transformation und Identitätsverlust. Das Bild 'jemand anderes werden' taucht auf. "
-        "Teilearbeit begonnen.",
+        "Client describes a deep sense of strangeness, even in familiar surroundings. "
+        "Discussed EMDR preparation.",
+        "Theme: home and belonging. Ambivalent feelings about her origins. "
+        "Body work: grounding exercise.",
+        "Client explores the question 'who am I outside this context?'. Identity work begun.",
+        "Strong feelings of shame about the past. Normalisation and reframing. "
+        "Good therapeutic alliance.",
+        "Theme: transformation and loss of identity. The image of 'becoming someone else' "
+        "surfaces. Parts work begun.",
     ],
     "ruler": [
-        "Klient beschreibt Schwierigkeit, um Hilfe zu bitten. Perfektionismus und Kontrollbedürfnis "
-        "als Schutzstrategien identifiziert.",
-        "Einsamkeit trotz hoher sozialer Verantwortung. Klient zweifelt an Echtheit seiner "
-        "Beziehungen. Bindungsarbeit.",
-        "Thema Autorität und Angst vor Versagen. Klient hatte schwierige Woche. "
-        "Stabilisierungsübungen wiederholt.",
-        "Klient reflektiert Muster: Stärke zeigen auf Kosten der eigenen Verletzlichkeit. "
-        "Guter Fortschritt.",
-        "Erste Sitzung nach Krisenphase. Klient stabil. Schutzfaktoren erarbeitet.",
+        "Client describes difficulty asking for help. Perfectionism and need for control "
+        "identified as protective strategies.",
+        "Loneliness despite considerable social responsibility. Client doubts the "
+        "authenticity of his relationships. Attachment work.",
+        "Theme: authority and fear of failure. Client had a difficult week. "
+        "Repeated stabilisation exercises.",
+        "Client reflects on the pattern of showing strength at the cost of his own "
+        "vulnerability. Good progress.",
+        "First session after a crisis phase. Client stable. Protective factors worked out.",
     ],
     "seeker": [
-        "Klientin sucht Sinn in wiederkehrenden Verlusterfahrungen. Existenzielle Themen. "
-        "Verweis auf Ressourcen besprochen.",
-        "Thema Wandel und Angst vor dem Unbekannten. Achtsamkeitsübung eingeführt.",
-        "Klientin exploriert eigene Werte. Was ist wirklich wichtig? Tiefes Gespräch "
-        "über Lebensziele.",
-        "Träume über Verwandlung und Neugeburt. Symbolarbeit. Klientin sehr reflektiert.",
-        "Abschluss einer wichtigen Arbeitsphase. Integration von Erkenntnissen. "
-        "Klientin wirkt gefestigter.",
+        "Client searches for meaning in recurring experiences of loss. Existential themes. "
+        "Discussed referral to further resources.",
+        "Theme: change and fear of the unknown. Introduced a mindfulness exercise.",
+        "Client explores her own values. What actually matters? A deep conversation "
+        "about life goals.",
+        "Dreams of transformation and rebirth. Symbol work. Client very reflective.",
+        "Closing an important phase of work. Integration of insights. Client seems more settled.",
     ],
 }
 
@@ -152,288 +170,325 @@ NOTE_TEMPLATES: dict[str, list[str]] = {
 SESSION_LOG_TEMPLATES: dict[str, list[tuple[str, str, str, list[str], str]]] = {
     "hero": [
         (
-            "Klient berichtete von Erschöpfung nach einer besonders anstrengenden Woche. "
-            "Thema Verantwortung vs. eigene Erschöpfung. Wir erkundeten, was ihn antreibt "
-            "und woher das Pflichtgefühl kommt. Sitzung war produktiv.",
-            "Psychoedukation zu Selbstfürsorge. Ressourcenaktivierung. Atemübung.",
-            "Starke Resonanz mit dem Thema Aufopferung. Gegenübertragung beachten.",
+            "Client reported exhaustion after a particularly demanding week. "
+            "Theme: responsibility vs. his own depletion. We explored what drives him "
+            "and where the sense of duty comes from. Productive session.",
+            "Psychoeducation on self-care. Resource activation. Breathing exercise.",
+            "Strong resonance with the theme of self-sacrifice. Watch countertransference.",
             [MoodTag.MITTEL, MoodTag.GUTE_RESSOURCEN],
-            "Erschöpfung nach harter Woche – Verantwortung vs. Selbstfürsorge",
+            "Exhaustion after a hard week – responsibility vs. self-care",
         ),
         (
-            "Klient berichtete von einem Konflikt, den er nicht vermeiden konnte. "
-            "Gefühl der Ohnmacht und gleichzeitig Drang zur Kontrolle. "
-            "Innerer Antreiber 'Sei stark' identifiziert. Sehr offene Sitzung.",
-            "Teilearbeit (Innerer Kritiker vs. Verletzliches Kind). Stuhlarbeit vorbereitet.",
-            "Bewegt von der Offenheit des Klienten. Gute therapeutische Allianz spürbar.",
+            "Client reported a conflict he could not avoid. Feeling of powerlessness "
+            "alongside an urge to control. Inner driver 'be strong' identified. "
+            "Very open session.",
+            "Parts work (inner critic vs. vulnerable child). Chair work prepared.",
+            "Moved by the client's openness. Good therapeutic alliance palpable.",
             [MoodTag.SCHWER, MoodTag.HOHE_AKTIVIERUNG],
-            "Konflikt & Ohnmacht; innerer Antreiber 'Sei stark' erkannt",
+            "Conflict & powerlessness; inner driver 'be strong' recognised",
         ),
         (
-            "Klient zeigte heute deutlichen Fortschritt beim Thema Grenzen setzen. "
-            "Berichtete von einer Situation, in der er erstmals Nein gesagt hat. "
-            "Sitzung leicht und ermutigend.",
-            "Verhaltensexperiment ausgewertet. Positives Reinforcement. Nächste Schritte geplant.",
-            "Freude über den Fortschritt. Achtsam bleiben, nicht zu früh zu feiern.",
+            "Client showed clear progress today on setting boundaries. Reported a "
+            "situation in which he said no for the first time. Session felt light "
+            "and encouraging.",
+            "Behavioural experiment reviewed. Positive reinforcement. Next steps planned.",
+            "Pleased at the progress. Stay mindful, don't celebrate too early.",
             [MoodTag.LEICHT, MoodTag.FORTSCHRITT, MoodTag.GUTE_RESSOURCEN],
-            "Fortschritt: erstmals Nein gesagt, Grenzen gesetzt",
+            "Progress: said no for the first time, set boundaries",
         ),
         (
-            "Thema Trauma-Trigger durch äußere Ereignisse reaktiviert. Klient kam belastet. "
-            "Stabilisierung zuerst. Sicherer Ort geübt. Klient konnte sich regulieren.",
-            "Stabilisierung: sicherer Ort, Atemarbeit. Kein Trauma-Processing heute.",
-            "Sorge um den Klienten. Supervision besprechen. Ressourcen im Blick behalten.",
+            "Trauma triggers reactivated by external events. Client arrived distressed. "
+            "Stabilisation first. Practised safe place. Client was able to self-regulate.",
+            "Stabilisation: safe place, breath work. No trauma processing today.",
+            "Concern for the client. Raise in supervision. Keep resources in view.",
             [MoodTag.SCHWER, MoodTag.HOHE_AKTIVIERUNG, MoodTag.UNSICHER],
-            "Trauma-Trigger reaktiviert – Stabilisierung, sicherer Ort",
+            "Trauma triggers reactivated – stabilisation, safe place",
         ),
         (
-            "Abschluss eines längeren Themenblocks rund um Autonomie. Klient fasst "
-            "Erkenntnisse zusammen. Wir planen nächste Phase der Arbeit.",
-            "Bilanzierungsgespräch. Ziele für nächste Phase formuliert.",
-            "Stolz auf die Entwicklung. Beziehung hat sich vertieft.",
+            "Closing a longer block of work on autonomy. Client summarises his "
+            "insights. We plan the next phase of the work.",
+            "Review conversation. Goals formulated for the next phase.",
+            "Proud of the development. The relationship has deepened.",
             [MoodTag.LEICHT, MoodTag.FORTSCHRITT, MoodTag.DURCHBRUCH],
-            "Abschluss Themenblock Autonomie; nächste Phase geplant",
+            "Closed the autonomy block; next phase planned",
         ),
     ],
     "exile": [
         (
-            "Klientin beschreibt anhaltendes Gefühl des Nicht-dazugehörens. "
-            "Thema Heimat und innere Leere. Sitzung war tief und berührend.",
-            "Körperarbeit: Verortungsübung. Ressourcenbild entwickelt.",
-            "Tief berührt. Eigene Themen von Zugehörigkeit kurz hochgekommen — achtgeben.",
+            "Client describes a persistent sense of not belonging. "
+            "Theme: home and inner emptiness. Session was deep and moving.",
+            "Body work: grounding exercise. Resource image developed.",
+            "Deeply moved. My own themes of belonging surfaced briefly — take care.",
             [MoodTag.SCHWER, MoodTag.NIEDRIG_AFFEKTIV],
-            "Thema Nicht-dazugehören; Heimat und innere Leere",
+            "Theme of not belonging; home and inner emptiness",
         ),
         (
-            "Klientin berichtete von einem bedeutsamen Traum. Symbole der Verwandlung "
-            "und des Verlusts. Explorative Arbeit mit dem Trauminhalt. Sehr fruchtbare Sitzung.",
-            "Traumarbeit (explorative Methode). Symbolik besprochen.",
-            "Faszination für die Tiefe der Klientin. Gute Übertragungsdynamik.",
+            "Client reported a significant dream. Symbols of transformation and loss. "
+            "Exploratory work with the dream content. Very fruitful session.",
+            "Dream work (exploratory method). Symbolism discussed.",
+            "Fascinated by the client's depth. Good transference dynamic.",
             [MoodTag.MITTEL, MoodTag.GUTE_RESSOURCEN],
-            "Traumarbeit: Symbole von Verwandlung und Verlust",
+            "Dream work: symbols of transformation and loss",
         ),
         (
-            "Schamthema heute im Vordergrund. Klientin wagte es, über ein lange "
-            "verschwiegenes Erlebnis zu sprechen. Große Courage. Normalisierung.",
-            "Psychoedukation Scham vs. Schuld. Externalisierung. Reframing.",
-            "Bewegt von der Courage. Würde der Klientin im Blick behalten.",
+            "Shame was in the foreground today. Client dared to speak about an "
+            "experience long kept silent. Great courage. Normalisation.",
+            "Psychoeducation on shame vs. guilt. Externalisation. Reframing.",
+            "Moved by her courage. Keep the client's dignity in view.",
             [MoodTag.SCHWER, MoodTag.HOHE_AKTIVIERUNG, MoodTag.DURCHBRUCH],
-            "Schamthema – lange verschwiegenes Erlebnis angesprochen",
+            "Shame – spoke about a long-silenced experience",
         ),
         (
-            "Ruhigere Sitzung. Klientin berichtet über Alltag und wie sie Erlerntes anwendet. "
-            "Etwas Chitchat, aber auch tiefere Reflexion über Beziehungsmuster.",
-            "Ressourcenstärkung. Beziehungsanalyse (Bindungsmuster).",
-            "Sitzung wirkte etwas diffus. Nächste Mal klarer fokussieren.",
+            "Quieter session. Client reports on daily life and how she applies what "
+            "she has learned. Some chitchat, but also deeper reflection on relational patterns.",
+            "Resource strengthening. Relationship analysis (attachment patterns).",
+            "Session felt somewhat diffuse. Focus more clearly next time.",
             [MoodTag.LEICHT, MoodTag.UPDATE_CHITCHAT],
-            "Ruhigere Sitzung: Alltag und Beziehungsmuster",
+            "Quieter session: daily life and relational patterns",
         ),
         (
-            "Klientin in einer Krise: Trennungssituation hat alte Wunden aktiviert. "
-            "Krisenintervention. Klientin stabilisiert entlassen. Nächste Sitzung vorgezogen.",
-            "Krisenintervention: Sicherheitsplanung besprochen, Ressourcen aktiviert.",
-            "Sorge. Sicherheit der Klientin prüfen. Engmaschiger Kontakt planen.",
+            "Client in crisis: a separation has reactivated old wounds. "
+            "Crisis intervention. Client left stabilised. Next session brought forward.",
+            "Crisis intervention: safety planning discussed, resources activated.",
+            "Concerned. Check the client's safety. Plan close contact.",
             [MoodTag.SCHWER, MoodTag.KRISE, MoodTag.HOHE_AKTIVIERUNG],
-            "Krise nach Trennung – Krisenintervention, stabilisiert entlassen",
+            "Crisis after separation – intervention, left stabilised",
         ),
     ],
     "ruler": [
         (
-            "Klient berichtet über Kontrollverlust in einer beruflichen Situation. "
-            "Gefühle von Scham und Wut. Wir erkundeten den inneren Imperativ 'Funktioniere'. "
-            "Sitzung konfrontativ aber produktiv.",
-            "Kognitive Umstrukturierung. Arbeit mit inneren Antreibern.",
-            "Reibung in der Sitzung spürbar — heilsame Konfrontation. Gut.",
+            "Client reports a loss of control in a work situation. Feelings of shame "
+            "and anger. We explored the inner imperative 'perform'. "
+            "Confrontational but productive session.",
+            "Cognitive restructuring. Work with inner drivers.",
+            "Friction in the session was palpable — healing confrontation. Good.",
             [MoodTag.MITTEL, MoodTag.HOHE_AKTIVIERUNG],
-            "Kontrollverlust im Beruf; innerer Imperativ 'Funktioniere'",
+            "Loss of control at work; inner imperative 'perform'",
         ),
         (
-            "Klient sprach erstmals über seine Einsamkeit trotz vieler sozialer Kontakte. "
-            "Wichtiger Durchbruch. Berührende Sitzung.",
-            "Spiegeln von Emotionen. Validierung. Psychoedukation zu emotionaler Bedürftigkeit.",
-            "Gerührt von der Verletzlichkeit des Klienten. Schutz dieser Momente wichtig.",
+            "Client spoke for the first time about his loneliness despite many "
+            "social contacts. Important breakthrough. Touching session.",
+            "Mirroring emotions. Validation. Psychoeducation on emotional need.",
+            "Touched by the client's vulnerability. Protecting these moments matters.",
             [MoodTag.MITTEL, MoodTag.DURCHBRUCH, MoodTag.GUTE_RESSOURCEN],
-            "Einsamkeit trotz vieler Kontakte – wichtiger Durchbruch",
+            "Loneliness despite many contacts – important breakthrough",
         ),
         (
-            "Thema Bindungsangst und Nähe. Klient zog sich in Sitzung etwas zurück. "
-            "Wir arbeiteten damit als In-Vivo-Material.",
-            "Beziehungsgestaltung als Intervention. Prozessarbeit.",
-            "Spannungsfeld Nähe/Distanz gut gehalten. Supervision erwägen.",
+            "Theme: fear of attachment and closeness. Client withdrew somewhat during "
+            "the session. We worked with that as in-vivo material.",
+            "Relational work as intervention. Process work.",
+            "Held the closeness/distance tension well. Consider supervision.",
             [MoodTag.SCHWER, MoodTag.UNSICHER, MoodTag.NIEDRIG_AFFEKTIV],
-            "Bindungsangst & Nähe; Rückzug als In-Vivo-Material bearbeitet",
+            "Fear of closeness; withdrawal worked as in-vivo material",
         ),
         (
-            "Gute Sitzung. Klient reflektiert Veränderungen in seinem Führungsstil. "
-            "Weniger Kontrolle, mehr Vertrauen. Erkenntnisse aus der Therapie transferiert.",
-            "Transferarbeit (Therapie → Alltag). Bilanzierung.",
-            "Freude über die Entwicklung. Klient wächst spürbar.",
+            "Good session. Client reflects on changes in his leadership style. "
+            "Less control, more trust. Insights transferred from therapy.",
+            "Transfer work (therapy → everyday life). Review.",
+            "Pleased at the development. The client is visibly growing.",
             [MoodTag.LEICHT, MoodTag.FORTSCHRITT],
-            "Veränderter Führungsstil: mehr Vertrauen, weniger Kontrolle",
+            "Changed leadership style: more trust, less control",
         ),
         (
-            "Klient in einer Entscheidungssituation. Innerer Konflikt zwischen "
-            "Pflicht und eigenem Wunsch. Werteklärung.",
-            "Werteklärungsübung. Szenarioarbeit (Was wäre wenn).",
-            "Fühle mich als Begleiter in einem wichtigen Moment. Gute Arbeit.",
+            "Client facing a decision. Inner conflict between duty and his own wish. "
+            "Values clarification.",
+            "Values clarification exercise. Scenario work (what if).",
+            "I feel like a companion at an important moment. Good work.",
             [MoodTag.MITTEL, MoodTag.RICHTUNGSLOS],
-            "Entscheidung: Pflicht vs. eigener Wunsch, Werteklärung",
+            "Decision: duty vs. own wish, values clarification",
         ),
     ],
     "seeker": [
         (
-            "Klientin exploriert Lebenssinn nach einem Verlust. Existenzielle Themen. "
-            "Tiefgründige Sitzung mit viel Stille.",
-            "Existenzielle Gesprächsführung. Stille als therapeutisches Mittel.",
-            "Berührt von der Tiefe der Suche. Eigene Reflexion über Sinn angestoßen.",
+            "Client explores meaning in life after a loss. Existential themes. "
+            "Profound session with a lot of silence.",
+            "Existential conversation. Silence as a therapeutic means.",
+            "Touched by the depth of her search. Prompted my own reflection on meaning.",
             [MoodTag.SCHWER, MoodTag.NIEDRIG_AFFEKTIV],
-            "Lebenssinn nach Verlust – existenzielle Themen, viel Stille",
+            "Meaning after loss – existential themes, much silence",
         ),
         (
-            "Klientin berichtet von neuer Energie und Lust auf Veränderung. "
-            "Pläne für die Zukunft. Viel Aufbruchsstimmung.",
-            "Ressourcenaktivierung. Zukunftsvision erarbeitet. Ziele konkretisiert.",
-            "Ansteckende Energie. Achtsam sein — nicht in Aktionismus verfallen.",
+            "Client reports new energy and an appetite for change. "
+            "Plans for the future. A real sense of departure.",
+            "Resource activation. Vision of the future developed. Goals made concrete.",
+            "Infectious energy. Stay mindful — don't slip into busyness.",
             [MoodTag.LEICHT, MoodTag.FORTSCHRITT, MoodTag.GUTE_RESSOURCEN],
-            "Neue Energie und Aufbruch; Zukunftspläne konkretisiert",
+            "New energy and momentum; future plans made concrete",
         ),
         (
-            "Klientin hat eine wichtige Entscheidung getroffen. Wir reflektieren "
-            "den Prozess und was sie getragen hat.",
-            "Entscheidungsanalyse. Stärken der Klientin herausgearbeitet.",
-            "Stolz auf die Klientin. Beziehung endet bald — Abschied vorbereiten.",
+            "Client has made an important decision. We reflect on the process and "
+            "on what carried her through.",
+            "Decision analysis. Client's strengths drawn out.",
+            "Proud of the client. The work ends soon — prepare for closure.",
             [MoodTag.LEICHT, MoodTag.DURCHBRUCH, MoodTag.FORTSCHRITT],
-            "Wichtige Entscheidung getroffen; Prozess reflektiert",
+            "Important decision made; process reflected on",
         ),
         (
-            "Klientin kommt mit diffuser Unruhe. Sucht etwas, weiß nicht was. "
-            "Wir arbeiteten mit dem Bild des 'Suchenden'. Produktiv.",
-            "Imaginationsarbeit (Innere Reise). Symbolarbeit.",
-            "Resonanz mit dem Thema Suchen. Reflexion meiner eigenen Suchbewegungen.",
+            "Client arrives with diffuse restlessness. Searching for something, "
+            "doesn't know what. We worked with the image of 'the seeker'. Productive.",
+            "Imagination work (inner journey). Symbol work.",
+            "Resonance with the theme of searching. Reflected on my own search.",
             [MoodTag.MITTEL, MoodTag.RICHTUNGSLOS],
-            "Diffuse Unruhe – Arbeit mit dem Bild des 'Suchenden'",
+            "Diffuse restlessness – work with the image of 'the seeker'",
         ),
         (
-            "Klientin berichtete von Erfahrungen, die ihr Weltbild erschüttern. "
-            "Thema Kontrollverlust und Vertrauen ins Leben.",
-            "Psychoedukation zu Stress und Unsicherheit. Akzeptanzarbeit.",
-            "Solidarität mit der Klientin in einer schwierigen Phase.",
+            "Client reported experiences that shake her view of the world. "
+            "Theme: loss of control and basic trust in life.",
+            "Psychoeducation on stress and uncertainty. Acceptance work.",
+            "Solidarity with the client through a difficult phase.",
             [MoodTag.SCHWER, MoodTag.HOHE_AKTIVIERUNG, MoodTag.UNSICHER],
-            "Weltbild erschüttert – Kontrollverlust und Urvertrauen",
+            "Worldview shaken – loss of control and basic trust",
         ),
     ],
 }
 
 # ── Client profile templates per archetype ────────────────────────────────────
 # (arbeitsdiagnose, intake_notes, case_notes)
+# ICD-10 labels are kept in their official German wording — they are catalogue
+# entries, not UI text, and that is what appears on a German invoice.
 PROFILE_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
     "hero": [
         (
             "Anpassungsstörung mit depressiver Reaktion (F43.2)",
-            "Klient stellt sich vor mit anhaltender Erschöpfung und dem Gefühl, "
-            "nicht mehr leisten zu können. Hohe Belastung im Beruf. Keine psychiatrische "
-            "Vorgeschichte. Soziales Umfeld stabil. Motivation zur Veränderung vorhanden.",
-            "Zentrale Themen: innere Antreiber, Perfektionismus, Selbstfürsorge. "
-            "Ressourcen: starke soziale Bindungen, Reflexionsfähigkeit. "
-            "Herausforderung: Veränderungsangst. Nächste Phase: Traumadiagnostik prüfen.",
+            "Client presents with sustained exhaustion and the feeling of no longer "
+            "being able to perform. High strain at work. No psychiatric history. "
+            "Social environment stable. Motivated to change.",
+            "Central themes: inner drivers, perfectionism, self-care. "
+            "Resources: strong social bonds, capacity for reflection. "
+            "Challenge: fear of change. Next phase: consider trauma assessment.",
         ),
         (
             "Rezidivierende depressive Störung, ggw. mittelgradige Episode (F33.1)",
-            "Klient berichtet von wiederkehrenden Phasen der Niedergeschlagenheit seit "
-            "der Jugend. Erste stationäre Behandlung vor 8 Jahren. Aktuell ambulant. "
-            "Gute Compliance. Medikation durch Psychiater begleitet.",
-            "Schwerpunkt: Rückfallprävention, Stärkung des Selbstwerts. "
-            "Gute Fortschritte im Bereich Emotionsregulation. "
-            "Weiterhin Arbeit an frühen Glaubenssätzen.",
+            "Client reports recurring phases of low mood since adolescence. First "
+            "inpatient treatment 8 years ago. Currently outpatient. Good compliance. "
+            "Medication managed by a psychiatrist.",
+            "Focus: relapse prevention, strengthening self-worth. "
+            "Good progress on emotion regulation. "
+            "Continued work on early core beliefs.",
         ),
     ],
     "exile": [
         (
             "Posttraumatische Belastungsstörung (F43.1)",
-            "Klientin mit langjährigen Traumafolgesymptomen: Intrusionen, Vermeidung, "
-            "Schlafstörungen. Mehrfachtraumatisierung in Kindheit und frühem Erwachsenenalter. "
-            "Keine akute Suizidalität. Bisherige Therapieversuche: 2.",
-            "Stabilisierungsphase abgeschlossen. Traumabearbeitung begonnen (EMDR vorbereitet). "
-            "Gute Allianz. Herausforderung: Dissoziation bei Exposition. "
-            "Ressourcen: kreative Ausdrucksfähigkeit, stabile Wohnsituation.",
+            "Client with long-standing post-traumatic symptoms: intrusions, avoidance, "
+            "sleep disturbance. Multiple traumatisation in childhood and early adulthood. "
+            "No acute suicidality. Previous attempts at therapy: 2.",
+            "Stabilisation phase complete. Trauma processing begun (EMDR prepared). "
+            "Good alliance. Challenge: dissociation during exposure. "
+            "Resources: creative expression, stable housing.",
         ),
         (
             "Emotional instabile Persönlichkeitsstörung, Borderline-Typ (F60.31)",
-            "Klientin vorstellig nach Krisenintervention in Notaufnahme. Selbstverletzendes "
-            "Verhalten in der Vergangenheit, derzeit remittiert. DBT-Grundlagen bekannt. "
-            "Wunsch nach tiefergehender Beziehungsarbeit.",
-            "Arbeit an Emotionstoleranz und Identität. Beziehungsdynamiken im Fokus. "
-            "In-Vivo-Material aus der therapeutischen Beziehung nutzen. "
-            "Engmaschige Begleitung, klare Grenzen wichtig.",
+            "Client presented after a crisis intervention in A&E. Self-harming behaviour "
+            "in the past, currently in remission. Familiar with DBT basics. "
+            "Wishes for deeper relational work.",
+            "Work on distress tolerance and identity. Relational dynamics in focus. "
+            "Use in-vivo material from the therapeutic relationship. "
+            "Close support, clear boundaries important.",
         ),
     ],
     "ruler": [
         (
             "Zwanghafte Persönlichkeitsstörung (F60.5)",
-            "Klient führt eine leitende Position. Stellt sich vor mit beruflichem Stress "
-            "und Beziehungsschwierigkeiten. Perfektionismus und Kontrollbedürfnis "
-            "als Leitmotive. Hohe Intelligenz, eingeschränkter Zugang zu Emotionen.",
-            "Themen: Kontrollverlust, Bindungsangst, Verletzlichkeit zulassen. "
-            "Vorsichtiger Therapieprozess — Kontrollbedürfnis respektieren. "
-            "Langsam tiefere Ebenen zugänglich machen.",
+            "Client holds a leadership position. Presents with work stress and "
+            "relationship difficulties. Perfectionism and a need for control as "
+            "leitmotifs. High intelligence, limited access to emotions.",
+            "Themes: loss of control, fear of attachment, allowing vulnerability. "
+            "Cautious therapeutic process — respect the need for control. "
+            "Open up deeper levels slowly.",
         ),
         (
             "Dysthymia (F34.1)",
-            "Klient beschreibt lang anhaltende, unterschwellige Traurigkeit. "
-            "Funktioniert gut nach außen, innen chronisch erschöpft. "
-            "Erstmals in Therapie. Anfangs skeptisch, jetzt motiviert.",
-            "Beziehungsarbeit im Vordergrund — Klient lernt, sich Unterstützung zuzugestehen. "
-            "Themen: Leistung vs. Sein, Einsamkeit, Würde. "
-            "Gute Zusammenarbeit trotz anfänglicher Abwehr.",
+            "Client describes long-standing, low-grade sadness. Functions well "
+            "outwardly, chronically exhausted inwardly. First time in therapy. "
+            "Sceptical at first, now motivated.",
+            "Relational work in the foreground — client is learning to allow himself "
+            "support. Themes: achievement vs. being, loneliness, dignity. "
+            "Good collaboration despite initial resistance.",
         ),
     ],
     "seeker": [
         (
             "Anpassungsstörung mit Angst und depressiver Reaktion, gemischt (F43.22)",
-            "Klientin in einer Lebensumbruchphase (Trennung + Berufswechsel). "
-            "Anhaltende Erschöpfung, diffuse Ängste, Sinnkrise. "
-            "Keine psychiatrische Vorgeschichte. Gute Ressourcen.",
-            "Themen: Identität, Werte, Lebenssinn. Existenzielle Gesprächsführung. "
-            "Klientin sehr reflexiv. Gefahr: zu viel kognitive Analyse, zu wenig Erleben. "
-            "Mehr Körperarbeit einführen.",
+            "Client in a period of upheaval (separation + career change). "
+            "Sustained exhaustion, diffuse anxiety, crisis of meaning. "
+            "No psychiatric history. Good resources.",
+            "Themes: identity, values, meaning. Existential conversation. "
+            "Client very reflective. Risk: too much cognitive analysis, too little "
+            "felt experience. Introduce more body work.",
         ),
         (
             "Generalisierte Angststörung (F41.1)",
-            "Klientin mit seit Jahren anhaltender Sorgenneigung. Körperliche Begleitsymptome: "
-            "Schlafstörungen, Muskelverspannungen. Bisherige Behandlung: Verhaltenstherapie. "
-            "Wünscht sich tiefenpsychologischen Zugang.",
-            "Arbeit an der Funktion der Angst. Achtsamkeit als Anker. "
-            "Exploration der Ursprünge in Bindungsgeschichte. "
-            "Klientin öffnet sich zunehmend — Tempo beachten.",
+            "Client with a years-long tendency to worry. Physical accompanying symptoms: "
+            "sleep disturbance, muscle tension. Previous treatment: behavioural therapy. "
+            "Would like a psychodynamic approach.",
+            "Work on the function of the anxiety. Mindfulness as an anchor. "
+            "Exploring the origins in her attachment history. "
+            "Client is opening up increasingly — mind the pace.",
         ),
     ],
 }
 
 # ── Monthly expenses to seed ──────────────────────────────────────────────────
 # (category, description, amount, day_of_month, months_interval)
+# The category keys are CompanyExpense choice values — do not translate them.
 RECURRING_EXPENSES: list[tuple[str, str, str, int, int]] = [
-    ("miete", "Praxismiete", "800.00", 1, 1),
-    ("konto", "Kontoführungsgebühr", "12.00", 5, 1),
-    ("telefon", "Telefon & Internet", "45.00", 10, 1),
+    ("miete", "Practice rent", "800.00", 1, 1),
+    ("konto", "Account maintenance fee", "12.00", 5, 1),
+    ("telefon", "Phone & internet", "45.00", 10, 1),
     ("supervision", "Supervision", "150.00", 15, 3),
-    ("software", "Praxisverwaltung Software", "25.00", 20, 3),
-    ("verband", "Verbandsbeitrag", "60.00", 1, 12),
+    ("software", "Practice management software", "25.00", 20, 3),
+    ("verband", "Professional association fee", "60.00", 1, 12),
 ]
 
 # ── Inquiry seed data ─────────────────────────────────────────────────────────
 INQUIRIES: list[tuple[str, str, str, str, int]] = [
     # (full_name, source, status, notes_snippet, days_ago)
-    ("Voldemort Riddle", "google_organic", "new", "Meldet sich nach langer Pause.", 2),
-    ("Sauron Maia", "referral", "new", "Empfehlung durch Kollegin.", 5),
-    ("Circe Aiaia", "website", "contacted", "Erstgespräch vereinbart.", 14),
-    ("Jadis Narnia", "directory", "intro_meeting", "Vorgespräch lief gut.", 21),
-    ("Draco Malfoy", "google_organic", "waitlist", "Auf Warteliste gesetzt.", 30),
-    ("Tom Ripley", "referral", "in_intake", "Aufnahmeprozess läuft.", 45),
-    ("Iago Othello", "website", "declined", "Kein Match, weitergeleitet.", 60),
-    ("Ursula Thornton", "network", "unreachable", "Dreimal versucht, kein Rückruf.", 20),
+    ("Voldemort Riddle", "google_organic", "new", "Getting in touch after a long gap.", 2),
+    ("Sauron Maia", "referral", "new", "Referred by a colleague.", 5),
+    ("Circe Aiaia", "website", "contacted", "First appointment arranged.", 14),
+    ("Jadis Narnia", "directory", "intro_meeting", "Intro meeting went well.", 21),
+    ("Draco Malfoy", "google_organic", "waitlist", "Added to the waiting list.", 30),
+    ("Tom Ripley", "referral", "in_intake", "Intake process under way.", 45),
+    ("Iago Othello", "website", "declined", "Not a match, referred on.", 60),
+    ("Ursula Thornton", "network", "unreachable", "Tried three times, no call back.", 20),
 ]
 
 SEED_TODO_TITLES: frozenset[str] = frozenset(
+    [
+        "File 2024 tax return",
+        "Book supervision for next month",
+        "Update the practice handbook",
+        "Research trauma therapy training",
+        "Review the privacy policy",
+        "Prepare a new client folder",
+    ]
+)
+
+# Derived sets for idempotency checks and cleanup
+SEED_CODES: frozenset[str] = frozenset(c[0] for c in CHARACTERS)
+SEED_NAMES: frozenset[str] = frozenset(c[1] for c in CHARACTERS)
+SEED_INQUIRY_NAMES: frozenset[str] = frozenset(i[0] for i in INQUIRIES)
+SEED_TAG_NAMES: frozenset[str] = frozenset(
+    ["Individual therapy", "Long-term client", "Short-term intervention", "Group therapy"]
+)
+SEED_TIMEOFF_TITLES: frozenset[str] = frozenset(
+    [
+        "Easter break",
+        "Trauma therapy training",
+        "Summer holiday",
+        "Autumn break",
+        "Christmas holiday",
+        "Supervision intensive day",
+    ]
+)
+
+# ── Legacy German seed strings ────────────────────────────────────────────────
+# The seeder produced German todo/tag/time-off titles until the demo data was
+# translated. `--clear` matches these rows by exact title, so the old spellings
+# stay listed here; without them `--clear` silently leaves pre-translation demo
+# data behind. Safe to drop once no installation holds an older demo dataset.
+LEGACY_TODO_TITLES: frozenset[str] = frozenset(
     [
         "Steuererklärung 2024 einreichen",
         "Supervision buchen für nächsten Monat",
@@ -443,15 +498,10 @@ SEED_TODO_TITLES: frozenset[str] = frozenset(
         "Neue Klientenmappe vorbereiten",
     ]
 )
-
-# Derived sets for idempotency checks and cleanup
-SEED_CODES: frozenset[str] = frozenset(c[0] for c in CHARACTERS)
-SEED_NAMES: frozenset[str] = frozenset(c[1] for c in CHARACTERS)
-SEED_INQUIRY_NAMES: frozenset[str] = frozenset(i[0] for i in INQUIRIES)
-SEED_TAG_NAMES: frozenset[str] = frozenset(
+LEGACY_TAG_NAMES: frozenset[str] = frozenset(
     ["Einzeltherapie", "Langzeitklient", "Kurzzeitintervention", "Gruppentherapie"]
 )
-SEED_TIMEOFF_TITLES: frozenset[str] = frozenset(
+LEGACY_TIMEOFF_TITLES: frozenset[str] = frozenset(
     [
         "Osterurlaub",
         "Fortbildung Traumatherapie",
@@ -461,6 +511,10 @@ SEED_TIMEOFF_TITLES: frozenset[str] = frozenset(
         "Supervision-Intensivtag",
     ]
 )
+
+CLEARABLE_TODO_TITLES: frozenset[str] = SEED_TODO_TITLES | LEGACY_TODO_TITLES
+CLEARABLE_TAG_NAMES: frozenset[str] = SEED_TAG_NAMES | LEGACY_TAG_NAMES
+CLEARABLE_TIMEOFF_TITLES: frozenset[str] = SEED_TIMEOFF_TITLES | LEGACY_TIMEOFF_TITLES
 
 
 class Command(BaseCommand):
@@ -512,6 +566,7 @@ class Command(BaseCommand):
         self._create_notes(clients, char_map, sessions_by_client, rng)
         self._create_session_logs(clients, char_map, sessions_by_client, rng)
         self._create_profiles(clients, char_map, rng)
+        self._create_gebueh_leistungen(clients, char_map, sessions_by_client)
         self._create_invoices(practice, sessions_by_client, service_60, service_90, rng)
         self._create_pending_events(practice, clients, char_map, service_60, rng)
         self._create_inquiries(practice, rng)
@@ -546,6 +601,8 @@ class Command(BaseCommand):
             name="Anna Schmidt",
             short_title_de="Therapie (Demo)",
             short_title_en="Therapy (Demo)",
+            # Regulated German professional designation — kept untranslated, it is
+            # the licence the practice bills under, not UI text.
             title="Heilpraktikerin für Psychotherapie",
         )
         self.stdout.write(f"  ✓ Created practice: {practice.name}")
@@ -592,10 +649,10 @@ class Command(BaseCommand):
 
     def _create_tags(self) -> dict[str, ClientTag]:
         tag_specs = [
-            ("Einzeltherapie", "general", "blue"),
-            ("Langzeitklient", "general", "green"),
-            ("Kurzzeitintervention", "general", "orange"),
-            ("Gruppentherapie", "general", "purple"),
+            ("Individual therapy", "general", "blue"),
+            ("Long-term client", "general", "green"),
+            ("Short-term intervention", "general", "orange"),
+            ("Group therapy", "general", "purple"),
         ]
         tags = {}
         for name, category, color in tag_specs:
@@ -655,17 +712,18 @@ class Command(BaseCommand):
                 hourly_rate_90=rate_90,
                 active=active,
                 first_seen_date=intake_date,
+                needs_gebueh_invoice=code in GEBUEH_CLIENT_MODES,
             )
             char_map[client.pk] = char_entry
 
             # Assign a tag to most clients
             if rng.random() > 0.2:
                 if avg_spm >= 3.0:
-                    client.tags.add(tags["Langzeitklient"])
+                    client.tags.add(tags["Long-term client"])
                 elif avg_spm <= 1.0:
-                    client.tags.add(tags["Kurzzeitintervention"])
+                    client.tags.add(tags["Short-term intervention"])
                 else:
-                    client.tags.add(tags["Einzeltherapie"])
+                    client.tags.add(tags["Individual therapy"])
 
             clients.append(client)
 
@@ -834,9 +892,13 @@ class Command(BaseCommand):
 
         count = 0
         for client in clients:
-            _, _, archetype, _, _ = char_map[client.pk]
+            code, _, archetype, _, _ = char_map[client.pk]
             templates = PROFILE_TEMPLATES[archetype]
             arbeitsdiagnose, intake_notes, case_notes = rng.choice(templates)
+            # Probationary-phase clients have no working diagnosis yet — that is
+            # what surfaces the diagnosis callout on the client detail page.
+            if GEBUEH_CLIENT_MODES.get(code, "").startswith("probatorik"):
+                arbeitsdiagnose = ""
             _, created = ClientProfile.objects.get_or_create(
                 client=client,
                 defaults={
@@ -848,6 +910,71 @@ class Command(BaseCommand):
             if created:
                 count += 1
         self.stdout.write(f"  ✓ Created {count} client profiles")
+
+    # ── GebüH service entries ─────────────────────────────────────────────────
+
+    def _create_gebueh_leistungen(
+        self,
+        clients: list[Client],
+        char_map: dict[int, tuple],
+        sessions_by_client: dict[int, list[Session]],
+    ) -> None:
+        """
+        Record GebüH service lines for the clients billed via the fee schedule.
+
+        Each session gets the therapy code plus, at intake and periodically, a
+        diagnostic code. Amounts follow the same rule as the quick-entry UI: a
+        code bills its satz_max, capped by whatever is left of the session fee,
+        so the recorded lines never exceed what the client is actually charged.
+        """
+        from ...models.gebueh import GebuhZiffer
+
+        wanted = [
+            GEBUEH_ZIFFER_THERAPY,
+            GEBUEH_ZIFFER_ANAMNESE,
+            GEBUEH_ZIFFER_EXPLORATION,
+        ]
+        ziffern = {z.nummer: z for z in GebuhZiffer.objects.filter(nummer__in=wanted)}
+        if len(ziffern) < len(wanted):
+            self.stdout.write("  ℹ️  Skipping GebüH entries (fee schedule not seeded)")
+            return
+
+        count = 0
+        for client in clients:
+            code = char_map[client.pk][0]
+            mode = GEBUEH_CLIENT_MODES.get(code)
+            if mode is None:
+                continue
+
+            sessions = sorted(sessions_by_client.get(client.pk, []), key=lambda s: s.session_date)
+            # Early in the probationary phase only the first few sessions are billed.
+            if mode == "probatorik":
+                sessions = sessions[:3]
+
+            for idx, session in enumerate(sessions):
+                nummern = [GEBUEH_ZIFFER_THERAPY]
+                if idx == 0:
+                    nummern.append(GEBUEH_ZIFFER_ANAMNESE)
+                elif mode != "probatorik" and idx % 4 == 0:
+                    nummern.append(GEBUEH_ZIFFER_EXPLORATION)
+
+                remaining = Leistungserfassung.compute_vereinbarter_betrag(session)
+                agreed = remaining
+                for nummer in nummern:
+                    if remaining <= 0:
+                        break
+                    ziffer = ziffern[nummer]
+                    betrag = min(ziffer.satz_max, remaining)
+                    _, made = Leistungserfassung.objects.get_or_create(
+                        session=session,
+                        ziffer=ziffer,
+                        defaults={"betrag": betrag, "vereinbarter_betrag": agreed},
+                    )
+                    if made:
+                        remaining -= betrag
+                        count += 1
+
+        self.stdout.write(f"  ✓ Created {count} GebüH service entries")
 
     # ── Invoice creation ──────────────────────────────────────────────────────
 
@@ -1011,12 +1138,12 @@ class Command(BaseCommand):
 
     def _create_todos(self, practice: Practice) -> None:
         todo_specs = [
-            ("Steuererklärung 2024 einreichen", "financial", "high"),
-            ("Supervision buchen für nächsten Monat", "admin", "medium"),
-            ("Praxishandbuch aktualisieren", "admin", "low"),
-            ("Fortbildung zu Traumatherapie recherchieren", "learning", "medium"),
-            ("Datenschutzerklärung überprüfen", "admin", "medium"),
-            ("Neue Klientenmappe vorbereiten", "client", "low"),
+            ("File 2024 tax return", "financial", "high"),
+            ("Book supervision for next month", "admin", "medium"),
+            ("Update the practice handbook", "admin", "low"),
+            ("Research trauma therapy training", "learning", "medium"),
+            ("Review the privacy policy", "admin", "medium"),
+            ("Prepare a new client folder", "client", "low"),
         ]
         for title, category, priority in todo_specs:
             PracticeTodo.objects.create(
@@ -1077,25 +1204,25 @@ class Command(BaseCommand):
         # Dates are fixed so re-runs stay idempotent via get_or_create on (start_date, end_date, type).
         entries = [
             # 2025
-            (date(2025, 4, 14), date(2025, 4, 18), TimeOff.Type.VACATION, "Osterurlaub"),
+            (date(2025, 4, 14), date(2025, 4, 18), TimeOff.Type.VACATION, "Easter break"),
             (
                 date(2025, 5, 29),
                 date(2025, 5, 30),
                 TimeOff.Type.TRAINING,
-                "Fortbildung Traumatherapie",
+                "Trauma therapy training",
             ),
-            (date(2025, 8, 4), date(2025, 8, 15), TimeOff.Type.VACATION, "Sommerurlaub"),
-            (date(2025, 10, 27), date(2025, 10, 31), TimeOff.Type.VACATION, "Herbstpause"),
-            (date(2025, 12, 22), date(2026, 1, 2), TimeOff.Type.VACATION, "Weihnachtsurlaub"),
+            (date(2025, 8, 4), date(2025, 8, 15), TimeOff.Type.VACATION, "Summer holiday"),
+            (date(2025, 10, 27), date(2025, 10, 31), TimeOff.Type.VACATION, "Autumn break"),
+            (date(2025, 12, 22), date(2026, 1, 2), TimeOff.Type.VACATION, "Christmas holiday"),
             # 2026
-            (date(2026, 3, 30), date(2026, 4, 3), TimeOff.Type.VACATION, "Osterurlaub"),
+            (date(2026, 3, 30), date(2026, 4, 3), TimeOff.Type.VACATION, "Easter break"),
             (
                 date(2026, 6, 19),
                 date(2026, 6, 19),
                 TimeOff.Type.TRAINING,
-                "Supervision-Intensivtag",
+                "Supervision intensive day",
             ),
-            (date(2026, 7, 27), date(2026, 8, 7), TimeOff.Type.VACATION, "Sommerurlaub"),
+            (date(2026, 7, 27), date(2026, 8, 7), TimeOff.Type.VACATION, "Summer holiday"),
         ]
         created = 0
         for start, end, kind, title in entries:
@@ -1114,12 +1241,12 @@ class Command(BaseCommand):
     def _clear(self, skip_confirm: bool) -> None:
         seeded = Client.objects.filter(full_name__in=SEED_NAMES)
         demo_practice = Practice.objects.filter(slug=DEMO_SLUG).first()
-        has_todos = PracticeTodo.objects.filter(title__in=SEED_TODO_TITLES).exists()
+        has_todos = PracticeTodo.objects.filter(title__in=CLEARABLE_TODO_TITLES).exists()
         has_expenses = (
             demo_practice and CompanyExpense.objects.filter(practice=demo_practice).exists()
         )
         has_inquiries = ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).exists()
-        has_timeoff = TimeOff.objects.filter(title__in=SEED_TIMEOFF_TITLES).exists()
+        has_timeoff = TimeOff.objects.filter(title__in=CLEARABLE_TIMEOFF_TITLES).exists()
 
         if (
             not seeded.exists()
@@ -1150,14 +1277,17 @@ class Command(BaseCommand):
 
         # Delete in dependency order
         Invoice.objects.filter(client__full_name__in=SEED_NAMES).delete()
+        # Leistungserfassung.session is PROTECT, so the GebüH lines have to go
+        # before the sessions they hang off.
+        Leistungserfassung.objects.filter(session__client__full_name__in=SEED_NAMES).delete()
         Session.objects.filter(client__full_name__in=SEED_NAMES).delete()
         PendingCalendarEvent.objects.filter(
             google_event_id__startswith=SEED_PENDING_EVENT_PREFIX
         ).delete()
         seeded.delete()
         ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).delete()
-        PracticeTodo.objects.filter(title__in=SEED_TODO_TITLES).delete()
-        TimeOff.objects.filter(title__in=SEED_TIMEOFF_TITLES).delete()
+        PracticeTodo.objects.filter(title__in=CLEARABLE_TODO_TITLES).delete()
+        TimeOff.objects.filter(title__in=CLEARABLE_TIMEOFF_TITLES).delete()
         if demo_practice:
             CompanyExpense.objects.filter(practice=demo_practice).delete()
             UserPractice.objects.filter(practice=demo_practice).delete()
@@ -1167,7 +1297,7 @@ class Command(BaseCommand):
         # Deleting seed clients above already removed the M2M associations, so
         # any remaining .clients are real clients — leave those tags alone.
         deleted_tags = ClientTag.objects.filter(
-            name__in=SEED_TAG_NAMES, clients__isnull=True
+            name__in=CLEARABLE_TAG_NAMES, clients__isnull=True
         ).delete()
         n_tags = deleted_tags[0]
 
