@@ -88,6 +88,10 @@ A Verzeichnis von Verarbeitungstätigkeiten as required under GDPR Art. 30 — t
 - PDF generation (bilingual DE/EN, your logo + signature)
 - Email via Proton Bridge; payment status tracking
 
+**Daily workflow**
+- Focus Queue — one list for manual tasks and the signals the app raises itself (missing session log, unsent or unpaid invoice, pending checklist, open supervision topic)
+- Dashboard overview — revenue and profit to date, the week's sessions, invoice status at a glance
+
 **Sessions & clinical**
 - Session log with protocol notes, therapist reflection, mood tags
 - Intake questionnaire and treatment contract PDFs

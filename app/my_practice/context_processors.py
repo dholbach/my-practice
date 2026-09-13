@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import urllib.request
 
 from django.conf import settings
@@ -18,6 +19,18 @@ _CACHE_TIMEOUT = 86400  # 24 hours
 # critical path of every response.
 _FAILURE_TIMEOUT = 900  # 15 minutes
 _REQUEST_TIMEOUT = 3
+
+
+def _parse_version(tag):
+    """Turn a ``vX.Y.Z`` release tag into a comparable tuple of ints.
+
+    Returns None for anything that isn't three dot-separated numbers, which the
+    caller treats as "can't tell" rather than guessing.
+    """
+    match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", (tag or "").strip())
+    if not match:
+        return None
+    return tuple(int(part) for part in match.groups())
 
 
 def update_check(request):
@@ -50,6 +63,12 @@ def update_check(request):
             return {}
         cache.set(_CACHE_KEY, latest, _CACHE_TIMEOUT)
 
-    if latest and latest != VERSION:
+    # Compare numerically, not by inequality: between a version bump landing on
+    # main and that tag actually being released, the newest *published* release
+    # is older than what's running, and a string compare advertised it as an
+    # upgrade ("v0.6.1 -> v0.6.0 available").
+    latest_parts = _parse_version(latest)
+    current_parts = _parse_version(VERSION)
+    if latest_parts and current_parts and latest_parts > current_parts:
         return {"update_available": True, "current_version": VERSION, "latest_version": latest}
     return {}
