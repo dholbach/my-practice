@@ -16,6 +16,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -25,6 +26,8 @@ from ...models import (
     ClientNote,
     ClientTag,
     CompanyExpense,
+    CompanyWithdrawal,
+    ExpenseCategoryRule,
     Invoice,
     InvoiceItem,
     PendingCalendarEvent,
@@ -1275,30 +1278,31 @@ class Command(BaseCommand):
             if answer.lower() != "yes":
                 raise CommandError("Aborted.")
 
-        # Delete in dependency order
-        Invoice.objects.filter(client__full_name__in=SEED_NAMES).delete()
-        # Leistungserfassung.session is PROTECT, so the GebüH lines have to go
-        # before the sessions they hang off.
-        Leistungserfassung.objects.filter(session__client__full_name__in=SEED_NAMES).delete()
-        Session.objects.filter(client__full_name__in=SEED_NAMES).delete()
-        PendingCalendarEvent.objects.filter(
-            google_event_id__startswith=SEED_PENDING_EVENT_PREFIX
-        ).delete()
-        seeded.delete()
-        ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).delete()
-        PracticeTodo.objects.filter(title__in=CLEARABLE_TODO_TITLES).delete()
-        TimeOff.objects.filter(title__in=CLEARABLE_TIMEOFF_TITLES).delete()
-        if demo_practice:
-            CompanyExpense.objects.filter(practice=demo_practice).delete()
-            UserPractice.objects.filter(practice=demo_practice).delete()
-            demo_practice.delete()
+        # Delete in dependency order, all or nothing: a clear that dies halfway
+        # (a PROTECT the ordering below missed) otherwise leaves a stripped demo
+        # practice behind that neither reseeds nor reads as demo data.
+        with transaction.atomic():
+            Invoice.objects.filter(client__full_name__in=SEED_NAMES).delete()
+            # Leistungserfassung.session is PROTECT, so the GebüH lines have to go
+            # before the sessions they hang off.
+            Leistungserfassung.objects.filter(session__client__full_name__in=SEED_NAMES).delete()
+            Session.objects.filter(client__full_name__in=SEED_NAMES).delete()
+            PendingCalendarEvent.objects.filter(
+                google_event_id__startswith=SEED_PENDING_EVENT_PREFIX
+            ).delete()
+            seeded.delete()
+            ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).delete()
+            PracticeTodo.objects.filter(title__in=CLEARABLE_TODO_TITLES).delete()
+            TimeOff.objects.filter(title__in=CLEARABLE_TIMEOFF_TITLES).delete()
+            if demo_practice:
+                self._clear_demo_practice(demo_practice)
 
-        # Remove seed tags only if no real (non-seed) clients still use them.
-        # Deleting seed clients above already removed the M2M associations, so
-        # any remaining .clients are real clients — leave those tags alone.
-        deleted_tags = ClientTag.objects.filter(
-            name__in=CLEARABLE_TAG_NAMES, clients__isnull=True
-        ).delete()
+            # Remove seed tags only if no real (non-seed) clients still use them.
+            # Deleting seed clients above already removed the M2M associations, so
+            # any remaining .clients are real clients — leave those tags alone.
+            deleted_tags = ClientTag.objects.filter(
+                name__in=CLEARABLE_TAG_NAMES, clients__isnull=True
+            ).delete()
         n_tags = deleted_tags[0]
 
         parts = []
@@ -1317,6 +1321,36 @@ class Command(BaseCommand):
         if demo_practice:
             parts.append("demo practice")
         self.stdout.write(self.style.WARNING(f"🗑  Cleared seeded: {', '.join(parts)}."))
+
+    def _clear_demo_practice(self, demo_practice: Practice) -> None:
+        """Delete every row still pointing at the demo practice, then the practice.
+
+        The title- and name-matched deletes above only reach rows the seeder
+        wrote itself. Anything the *app* derived from them afterwards survives —
+        above all the materialized focus-queue todos (unpaid/unsent invoice,
+        missing session log, the operational checklist), which the sync creates
+        under its own titles. Those hold a PROTECT reference to the practice, so
+        clearing used to fail on a real installation while passing in tests,
+        where the sync never runs. Scoping by practice instead of by title keeps
+        that from recurring as new derived models appear.
+
+        Order matters — each queryset must be a leaf of the PROTECT graph rooted
+        at Practice by the time it runs.
+        """
+        Leistungserfassung.objects.filter(session__client__practice=demo_practice).delete()
+        # Invoices before sessions: InvoiceItem.session is PROTECT, and an item
+        # only goes away with its invoice.
+        Invoice.objects.filter(client__practice=demo_practice).delete()
+        Invoice.objects.filter(practice=demo_practice).delete()
+        Session.objects.filter(client__practice=demo_practice).delete()
+        Client.objects.filter(practice=demo_practice).delete()
+        PracticeTodo.objects.filter(practice=demo_practice).delete()
+        ServiceType.objects.filter(practice=demo_practice).delete()
+        ExpenseCategoryRule.objects.filter(practice=demo_practice).delete()
+        CompanyExpense.objects.filter(practice=demo_practice).delete()
+        CompanyWithdrawal.objects.filter(practice=demo_practice).delete()
+        UserPractice.objects.filter(practice=demo_practice).delete()
+        demo_practice.delete()
 
 
 def _days_in_month(year: int, month: int) -> int:
