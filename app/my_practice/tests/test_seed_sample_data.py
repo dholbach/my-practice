@@ -11,7 +11,7 @@ from io import StringIO
 from django.core.management import call_command
 from django.test import TestCase
 
-from ..models import Client, Invoice, Practice, Session
+from ..models import Client, Invoice, Practice, PracticeTodo, Session
 from ..models.gebueh import Leistungserfassung
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks
 
@@ -59,6 +59,16 @@ class SeedSampleDataCommandTests(TestCase):
             for block in build_gebueh_blocks(invoice):
                 self.assertLessEqual(block["gebueh_sum"], block["vereinbarter_betrag"])
 
+        # A materialized focus-queue todo, as the sync writes them on a real
+        # installation: its title is generated, so a title-matched clear misses
+        # it, and PracticeTodo.practice is PROTECT — it used to block the
+        # practice deletion below.
+        PracticeTodo.objects.create(
+            practice=practice,
+            title="Unpaid invoice INV-001",
+            task_type=PracticeTodo.TaskType.INVOICE_UNPAID,
+        )
+
         # --clear removes everything it created, including the demo practice itself.
         # Leistungserfassung.session is PROTECT, so this also guards against the
         # GebüH lines blocking session deletion.
@@ -66,3 +76,4 @@ class SeedSampleDataCommandTests(TestCase):
         self.assertFalse(Practice.objects.filter(slug="demo").exists())
         self.assertEqual(Client.objects.filter(practice__slug="demo").count(), 0)
         self.assertEqual(Leistungserfassung.objects.count(), 0)
+        self.assertEqual(PracticeTodo.objects.count(), 0)
