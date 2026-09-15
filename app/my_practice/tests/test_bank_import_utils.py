@@ -526,3 +526,113 @@ class ConfigurableCsvFormatTest(TestCase):
         results = importer.process()
         self.assertTrue(results.get("account_mismatch"))
         self.assertEqual(BankTransaction.objects.count(), 0)
+
+
+class IngestTransactionTest(TestCase):
+    """
+    The source-agnostic half of the importer, driven without any CSV.
+
+    These exercise the seam a bank-API fetcher would use: build the importer
+    with for_account(), hand it normalized dicts, and get the same matching,
+    duplicate suppression and invoice bookkeeping the CSV path gets.
+    """
+
+    def setUp(self):
+        self.practice = _make_practice(slug="ingest-tx")
+        self.client_obj = Client.objects.create(
+            practice=self.practice, full_name="Anna Schmidt", client_code="AS"
+        )
+        self.invoice = Invoice.objects.create(
+            practice=self.practice,
+            client=self.client_obj,
+            invoice_number="AS-1",
+            status="sent",
+            invoice_date=date(2026, 1, 1),
+        )
+        _make_invoice_item(self.invoice, self.practice, self.client_obj)
+
+    def _parsed(self, **overrides):
+        """Build a normalized transaction dict, as a non-CSV fetcher would."""
+        parsed = {
+            "transaction_date": date(2026, 1, 15),
+            "value_date": date(2026, 1, 15),
+            "payer_name": "Anna Schmidt",
+            "payer_iban": "",
+            "reference": "AS-1",
+            "amount": Decimal("90.00"),
+            "balance_after": Decimal("1000.00"),
+        }
+        parsed.update(overrides)
+        return parsed
+
+    def test_for_account_sets_normalized_iban(self):
+        importer = BankStatementImporter.for_account(self.practice, "de89 3704 0044 0532 0130 00")
+        self.assertEqual(importer.account_iban, PRACTICE_IBAN)
+
+    def test_ingest_matches_invoice_without_csv(self):
+        importer = BankStatementImporter.for_account(self.practice, PRACTICE_IBAN)
+        transaction = importer.ingest_transaction(self._parsed(), skip_negatives=False)
+
+        self.assertIsNotNone(transaction)
+        self.assertEqual(importer.results["total"], 1)
+        self.assertEqual(importer.results["matched"], 1)
+        self.assertEqual(transaction.account_iban, PRACTICE_IBAN)
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.status, "paid")
+        self.assertEqual(self.invoice.paid_date, date(2026, 1, 15))
+
+    def test_ingest_suppresses_duplicate(self):
+        importer = BankStatementImporter.for_account(self.practice, PRACTICE_IBAN)
+        importer.ingest_transaction(self._parsed(), skip_negatives=False)
+        second = importer.ingest_transaction(self._parsed(), skip_negatives=False)
+
+        self.assertIsNone(second)
+        self.assertEqual(importer.results["total"], 2)
+        self.assertEqual(importer.results["ignored"], 1)
+        self.assertEqual(BankTransaction.objects.count(), 1)
+
+    def test_ingest_routes_negative_to_expense(self):
+        """Negatives take the same auto-expense path they take from CSV."""
+        importer = BankStatementImporter.for_account(self.practice, PRACTICE_IBAN)
+        transaction = importer.ingest_transaction(
+            self._parsed(amount=Decimal("-40.00"), reference="Miete"), skip_negatives=True
+        )
+
+        # _handle_negative_row owns the row, so ingest_transaction returns None
+        # even though a BankTransaction and a CompanyExpense were created.
+        self.assertIsNone(transaction)
+        self.assertEqual(importer.results["total"], 1)
+        self.assertEqual(importer.results["needs_review"], 1)
+        self.assertEqual(CompanyExpense.objects.count(), 1)
+        self.assertEqual(BankTransaction.objects.get().account_iban, PRACTICE_IBAN)
+
+    def test_csv_and_ingest_agree(self):
+        """The CSV path and a hand-built dict produce the same stored row."""
+        csv_importer = _make_importer(
+            self.practice,
+            [{"date": "15.01.2026", "payer": "Anna Schmidt", "amount": "90,00", "ref": "AS-1"}],
+        )
+        csv_importer.process(skip_negatives=False)
+        via_csv = BankTransaction.objects.get()
+
+        self.invoice.status = "sent"
+        self.invoice.paid_date = None
+        self.invoice.save()
+        via_csv.delete()
+
+        api_importer = BankStatementImporter.for_account(self.practice, PRACTICE_IBAN)
+        via_api = api_importer.ingest_transaction(self._parsed(), skip_negatives=False)
+
+        for field in (
+            "transaction_date",
+            "value_date",
+            "payer_name",
+            "reference",
+            "amount",
+            "balance_after",
+            "account_iban",
+            "match_confidence",
+            "extracted_invoice_number",
+        ):
+            self.assertEqual(getattr(via_csv, field), getattr(via_api, field), f"{field} differs")
+        self.assertEqual(via_csv.matched_invoice_id, via_api.matched_invoice_id)
