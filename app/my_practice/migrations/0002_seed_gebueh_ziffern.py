@@ -1,5 +1,9 @@
 """Seed GebüH Ziffern catalogue (GebüH 1985, rates confirmed by practitioner)."""
 
+# Carried across the migration reset (see 0001_initial). A fresh database
+# still needs this, so unlike the historical data fixes it could not simply
+# be dropped when the pre-reset migrations were collapsed.
+
 from decimal import Decimal
 
 from django.db import migrations
@@ -121,7 +125,7 @@ def unseed_ziffern(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("my_practice", "0005_gebueh_models"),
+        ("my_practice", "0001_initial"),
     ]
 
     operations = [
