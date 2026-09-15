@@ -120,6 +120,13 @@ exclude = [
     ".pytest_cache",
     "*/migrations/*",
 ]
+# `exclude` is NOT applied to paths passed explicitly on the command line unless
+# this is set. The pre-commit hook passes staged files explicitly, so without it
+# the hook reformatted migrations that this config says to leave alone — and
+# because CI runs `ruff format --check .` (discovery, exclude honoured), it never
+# saw those files and nothing flagged the divergence. That is how a generated
+# 806-line 0001_initial arrived in a commit as 3,106 formatted lines.
+force-exclude = true
 
 [tool.ruff.lint]
 select = [
