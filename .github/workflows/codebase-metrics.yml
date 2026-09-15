@@ -58,15 +58,61 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
+      # The compare link carries a prefilled `body`, which overrides the repo's
+      # generic pull request template. That matters here: the whole diff is
+      # generated output — Mermaid blocks and Markdown tables show up as raw
+      # +/- text and are close to unreadable in review. The body instead points
+      # at the *rendered* page on both sides, which is what a reviewer actually
+      # needs to see. jq -sRr @uri does the percent-encoding; jq is preinstalled
+      # on GitHub-hosted runners.
       - name: Summarise
         if: steps.push.outputs.changed == 'true'
         env:
           BRANCH: ${{ steps.push.outputs.branch }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
         run: |
+          body=$(cat <<EOF
+          ## What does this change?
+
+          Scheduled refresh of the generated metrics page for $(date -u +%Y-%m).
+          No hand-written content — \`scripts/codebase_metrics.py\` rebuilds it
+          from git history.
+
+          | | |
+          | --- | --- |
+          | Rendered result on this branch | $REPO_URL/tree/$BRANCH/docs/development |
+          | Current version on \`main\` | $REPO_URL/tree/main/docs/development |
+
+          The diff below is generated output: Mermaid chart blocks and Markdown
+          tables appear as raw text. Read the rendered pages above instead.
+
+          ## Privacy check
+
+          - [x] No real names, contact details, or practice data
+          - [x] \`metrics.json\` holds only commit counts, type labels and release tags — no message bodies, no paths into client data
+
+          ## Testing
+
+          - [x] Docs-only change; CI short-circuits the suite for these (see \`.github/workflows/ci.yml\`)
+          - [x] The script is idempotent — re-running it on the same commit reproduces this output exactly (\`scripts/codebase_metrics.py --check\`)
+
+          ## Notes for reviewer
+
+          Worth a glance at the trend rather than the numbers: is \`feat:\` still
+          happening, and is anything other than tests and migrations growing?
+          EOF
+          )
+          # The heredoc above is indented to match the YAML block; strip it back
+          # off so the Markdown renders as Markdown and not as a code block.
+          body=$(echo "$body" | sed 's/^          //')
+          encoded=$(printf '%s' "$body" | jq -sRr @uri)
+          url="$REPO_URL/compare/main...$BRANCH?expand=1&body=$encoded"
+
           {
             echo "### Codebase metrics refreshed"
             echo
             echo "Branch \`$BRANCH\` pushed."
             echo
-            echo "[Open the pull request](${{ github.server_url }}/${{ github.repository }}/compare/main...$BRANCH?expand=1)"
+            echo "[Open the pull request]($url) — the link prefills a description"
+            echo "with rendered-page links, since the raw diff is generated output."
           } >> "$GITHUB_STEP_SUMMARY"

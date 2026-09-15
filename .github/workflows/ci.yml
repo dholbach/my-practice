@@ -6,14 +6,50 @@ on:
   pull_request:
     branches: [main]
 
+# Docs-only pull requests skip the expensive steps in both jobs. The skip is a
+# short-circuit *inside* each job, deliberately not `paths-ignore:` on the
+# workflow and not `if:` on the job — `lint` and `test` are required status
+# checks on main's ruleset with no bypass actors, and a required check that
+# never runs stays pending forever, which would make every docs PR permanently
+# unmergeable. Short-circuiting keeps both jobs running and reporting a real
+# success, so the gate is satisfied in seconds instead of two minutes.
+#
+# Pushes to main are never skipped: main must stay fully verified regardless of
+# what a PR was allowed to skip.
+
 jobs:
   lint:
     runs-on: ubuntu-latest
 
     steps:
+      # fetch-depth: 0 so the docs-only diff below can reach the PR base commit.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect docs-only change
+        id: scope
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "Not a pull request — running everything."
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # A leading `.` is required: a pathspec of only :(exclude) patterns
+          # matches nothing. Plain `*` spans `/` in a git pathspec, so `*.md`
+          # covers Markdown at any depth, not just the repo root.
+          if git diff --quiet \
+              "${{ github.event.pull_request.base.sha }}" \
+              "${{ github.event.pull_request.head.sha }}" \
+              -- . ':(exclude)docs/**' ':(exclude)*.md'; then
+            echo "Docs-only change — skipping lint."
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up Python 3.14
+        if: steps.scope.outputs.code == 'true'
         uses: actions/setup-python@v7
         with:
           python-version: "3.14"
@@ -25,13 +61,16 @@ jobs:
       # `./dev.py quality` ran 0.16.3), which silently changes what "lint
       # passes" means between CI and a local run.
       - name: Install ruff
+        if: steps.scope.outputs.code == 'true'
         run: pip install "$(grep -E '^ruff==' app/requirements-dev.txt)"
 
       - name: Lint
+        if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: ruff check .
 
       - name: Format
+        if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: ruff format --check --diff .
 
@@ -42,15 +81,18 @@ jobs:
       # bracketless `except A, B:` is a SyntaxError), which ruff picks up as
       # the nearest config when invoked from the repo root.
       - name: Lint repo-root Python
+        if: steps.scope.outputs.code == 'true'
         run: ruff check dev.py prod.py scripts/*.py
 
       - name: Format repo-root Python
+        if: steps.scope.outputs.code == 'true'
         run: ruff format --check --diff dev.py prod.py scripts/*.py
 
       # prod.py ships as a single stdlib-only file and cannot import a shared
       # module, so one helper is duplicated in dev.py on purpose. Ruff has no
       # opinion about two identical functions in two files; this does.
       - name: Check duplicated helpers stay in sync
+        if: steps.scope.outputs.code == 'true'
         run: python scripts/check_shared_helpers.py
 
       # shellcheck ships preinstalled on GitHub-hosted ubuntu-latest runners.
@@ -59,6 +101,7 @@ jobs:
       # comment that broke scripts/backup.sh's export line — without forcing
       # a style rewrite of scripts that already work.
       - name: Shellcheck
+        if: steps.scope.outputs.code == 'true'
         run: shellcheck -S warning scripts/*.sh
 
   test:
@@ -95,13 +138,35 @@ jobs:
       MY_PRACTICE_DATA_DIR: /tmp/my-practice-data
 
     steps:
+      # fetch-depth: 0 so the docs-only diff below can reach the PR base commit.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect docs-only change
+        id: scope
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "Not a pull request — running everything."
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --quiet \
+              "${{ github.event.pull_request.base.sha }}" \
+              "${{ github.event.pull_request.head.sha }}" \
+              -- . ':(exclude)docs/**' ':(exclude)*.md'; then
+            echo "Docs-only change — skipping tests."
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          fi
 
       # Mirrors the production stage's runtime packages in app/Dockerfile:
       # cairo/pango/gdk-pixbuf for WeasyPrint's PDF rendering, ghostscript for
       # utils/file_processing.py, and gettext for the makemessages run inside
       # test_i18n_coverage.test_no_unextracted_strings.
       - name: Install system dependencies
+        if: steps.scope.outputs.code == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -115,6 +180,7 @@ jobs:
             gettext
 
       - name: Set up Python 3.14
+        if: steps.scope.outputs.code == 'true'
         uses: actions/setup-python@v7
         with:
           python-version: "3.14"
@@ -122,15 +188,18 @@ jobs:
           cache-dependency-path: app/requirements-dev.txt
 
       - name: Install Python dependencies
+        if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: |
           pip install --upgrade pip
           pip install -r requirements-dev.txt
 
       - name: Create data directories
+        if: steps.scope.outputs.code == 'true'
         run: mkdir -p /tmp/my-practice-data/{documents,questionnaires,media,backups}
 
       - name: Compile translation catalogs
+        if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: python manage.py compilemessages
 
@@ -141,6 +210,7 @@ jobs:
       # find them one red round at a time. The serial re-run costs nothing on a
       # green build and produces a complete report when it matters.
       - name: Django tests
+        if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: python manage.py test --parallel || python manage.py test
 
@@ -154,6 +224,7 @@ jobs:
       # static/js/tests/ are named test_*.js and correctly don't match.
       # The step shell is `bash -e`, so the first failing file fails the step.
       - name: JavaScript tests
+        if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: |
           node --version

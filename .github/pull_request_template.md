@@ -15,3 +15,4 @@
 ## Notes for reviewer
 
 <!-- Anything non-obvious about the approach, trade-offs made, or follow-up work needed. -->
+<!-- Reviewing generated docs? Link the rendered page rather than the diff: https://github.com/dholbach/my-practice/tree/main/docs/development -->
