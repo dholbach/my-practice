@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 23:47+0200\n"
+"POT-Creation-Date: 2026-09-15 23:58+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -49,7 +49,7 @@ msgstr ""
 #: templates/my_practice/calendar_import.html:99
 #: templates/my_practice/client_detail.html:600
 #: templates/my_practice/client_detail.html:644
-#: templates/my_practice/inquiry_confirm_delete.html:23
+#: templates/my_practice/inquiry_confirm_delete.html:22
 #: templates/my_practice/invoice_confirm_delete.html:24
 #: templates/my_practice/invoice_detail.html:33
 #: templates/my_practice/invoice_list.html:168
@@ -589,7 +589,7 @@ msgstr ""
 msgid "Set automatically for materialized tasks — not manually editable."
 msgstr ""
 
-#: my_practice/admin/todo.py:72 my_practice/models/todo.py:149
+#: my_practice/admin/todo.py:72 my_practice/models/todo.py:159
 msgid "Task"
 msgstr ""
 
@@ -916,7 +916,7 @@ msgid "Optional: description for the grouped expense"
 msgstr ""
 
 #: my_practice/inquiry_forms.py:17 my_practice/models/inquiry.py:114
-#: templates/my_practice/inquiry_confirm_delete.html:15
+#: templates/my_practice/inquiry_confirm_delete.html:14
 msgid "Date received"
 msgstr "Date received"
 
@@ -1050,7 +1050,7 @@ msgstr ""
 #: my_practice/models/financial.py:235 my_practice/models/inquiry.py:96
 #: my_practice/models/inquiry.py:204 my_practice/models/invoice.py:68
 #: my_practice/models/practice.py:372 my_practice/models/practice.py:408
-#: my_practice/models/service.py:17 my_practice/models/todo.py:95
+#: my_practice/models/service.py:17 my_practice/models/todo.py:105
 #: templates/base.html:63 templates/my_practice/tax_workday_audit.html:73
 msgid "Practice"
 msgstr ""
@@ -1435,7 +1435,7 @@ msgstr ""
 
 #: my_practice/models/client.py:256 my_practice/models/financial.py:31
 #: my_practice/models/financial.py:132 my_practice/models/inquiry.py:33
-#: my_practice/models/todo.py:80 my_practice/views/inquiry_views.py:391
+#: my_practice/models/todo.py:90 my_practice/views/inquiry_views.py:391
 #: templates/my_practice/bank_expense_review.html:50
 msgid "Other"
 msgstr ""
@@ -1492,7 +1492,7 @@ msgstr ""
 msgid "Heavy"
 msgstr ""
 
-#: my_practice/models/clinical.py:133 my_practice/models/todo.py:85
+#: my_practice/models/clinical.py:133 my_practice/models/todo.py:95
 msgid "Medium"
 msgstr ""
 
@@ -1826,7 +1826,7 @@ msgstr ""
 msgid "Personal therapy (training)"
 msgstr ""
 
-#: my_practice/models/financial.py:124 my_practice/models/todo.py:69
+#: my_practice/models/financial.py:124 my_practice/models/todo.py:70
 #: templates/my_practice/bank_expense_review.html:42
 #: templates/my_practice/client_detail.html:380
 #: templates/my_practice/supervision_queue.html:5
@@ -2068,18 +2068,18 @@ msgstr ""
 #: templates/my_practice/bank_import.html:84
 #: templates/my_practice/bank_review.html:209
 #: templates/my_practice/client_list_cards.html:107
-#: templates/my_practice/inquiry_confirm_delete.html:11
+#: templates/my_practice/inquiry_confirm_delete.html:10
 #: templates/my_practice/inquiry_convert_confirm.html:17
 #: templates/my_practice/inquiry_list.html:179
 #: templates/my_practice/inquiry_list.html:225
 #: templates/my_practice/practice_confirm_delete.html:24
-#: templates/my_practice/tag_form.html:14
+#: templates/my_practice/tag_form.html:15
 #: templates/my_practice/tag_list.html:24
 msgid "Name"
 msgstr "Name"
 
 #: my_practice/models/inquiry.py:104
-#: templates/my_practice/inquiry_confirm_delete.html:19
+#: templates/my_practice/inquiry_confirm_delete.html:18
 #: templates/my_practice/inquiry_convert_confirm.html:29
 #: templates/my_practice/inquiry_list.html:180
 #: templates/my_practice/inquiry_list.html:226
@@ -2914,7 +2914,7 @@ msgstr ""
 msgid "URL-friendly version of the name (auto-generated)"
 msgstr ""
 
-#: my_practice/models/tag.py:70 templates/my_practice/tag_form.html:25
+#: my_practice/models/tag.py:70 templates/my_practice/tag_form.html:26
 #: templates/my_practice/tag_list.html:25
 msgid "Color"
 msgstr ""
@@ -2967,100 +2967,104 @@ msgstr ""
 msgid "End date cannot be before start date."
 msgstr ""
 
-#: my_practice/models/todo.py:65 templates/my_practice/bank_import.html:112
+#: my_practice/models/todo.py:66 templates/my_practice/bank_import.html:112
 #: templates/my_practice/bank_review.html:128
 msgid "Manual"
 msgstr ""
 
-#: my_practice/models/todo.py:66
+#: my_practice/models/todo.py:67
 msgid "Missing session log"
 msgstr ""
 
-#: my_practice/models/todo.py:67
+#: my_practice/models/todo.py:68
 msgid "Unpaid invoice"
 msgstr ""
 
-#: my_practice/models/todo.py:68
+#: my_practice/models/todo.py:69
 msgid "Unsent invoice"
 msgstr ""
 
-#: my_practice/models/todo.py:70
+#: my_practice/models/todo.py:71
 msgid "Recurring review"
 msgstr ""
 
-#: my_practice/models/todo.py:71
+#: my_practice/models/todo.py:72
 msgid "Operational checklist"
 msgstr ""
 
-#: my_practice/models/todo.py:75
+#: my_practice/models/todo.py:73
+msgid "Unmatched bank transactions"
+msgstr ""
+
+#: my_practice/models/todo.py:85
 msgid "Administrative"
 msgstr ""
 
-#: my_practice/models/todo.py:76
+#: my_practice/models/todo.py:86
 msgid "Learning/Research"
 msgstr ""
 
-#: my_practice/models/todo.py:77
+#: my_practice/models/todo.py:87
 msgid "Financial/Accounting"
 msgstr ""
 
-#: my_practice/models/todo.py:78
+#: my_practice/models/todo.py:88
 msgid "Client-related"
 msgstr ""
 
-#: my_practice/models/todo.py:79
+#: my_practice/models/todo.py:89
 msgid "Practice Management"
 msgstr ""
 
-#: my_practice/models/todo.py:84
+#: my_practice/models/todo.py:94
 msgid "Low"
 msgstr ""
 
-#: my_practice/models/todo.py:86
+#: my_practice/models/todo.py:96
 msgid "High"
 msgstr ""
 
-#: my_practice/models/todo.py:87
+#: my_practice/models/todo.py:97
 msgid "Urgent"
 msgstr ""
 
-#: my_practice/models/todo.py:99
+#: my_practice/models/todo.py:109
 msgid "Short description of the task"
 msgstr ""
 
-#: my_practice/models/todo.py:100
+#: my_practice/models/todo.py:110
 msgid "Optional detailed notes"
 msgstr ""
 
-#: my_practice/models/todo.py:105
+#: my_practice/models/todo.py:115
 msgid "Task category for organization"
 msgstr ""
 
-#: my_practice/models/todo.py:111
+#: my_practice/models/todo.py:121
 msgid "Task priority level"
 msgstr ""
 
-#: my_practice/models/todo.py:114
+#: my_practice/models/todo.py:124
 msgid "Optional due date"
 msgstr ""
 
-#: my_practice/models/todo.py:116
+#: my_practice/models/todo.py:126
 msgid "When the task was completed"
 msgstr ""
 
-#: my_practice/models/todo.py:121
+#: my_practice/models/todo.py:131
 msgid "Hide from the focus queue until this date"
 msgstr ""
 
-#: my_practice/models/todo.py:131
+#: my_practice/models/todo.py:141
 msgid "Manual entry, or a materialized system signal (unpaid invoice, missing session log, etc.)"
 msgstr ""
 
-#: my_practice/models/todo.py:140
+#: my_practice/models/todo.py:150
 msgid "Related object type, for materialized tasks (e.g. Client, Invoice)"
 msgstr ""
 
-#: my_practice/models/todo.py:150
+#: my_practice/models/todo.py:160
 msgid "Tasks"
 msgstr ""
 
@@ -3076,12 +3080,12 @@ msgstr ""
 msgid "Group sessions"
 msgstr ""
 
-#: my_practice/utils/bank_import.py:370
+#: my_practice/utils/bank_import.py:395
 #, python-format
 msgid "Wrong account: the CSV file belongs to IBAN %(csv_iban)s, expected the practice IBAN %(practice_iban)s. Import aborted."
 msgstr ""
 
-#: my_practice/utils/bank_import.py:514
+#: my_practice/utils/bank_import.py:538
 #, python-format
 msgid "Failed to parse row: %(row)s"
 msgstr ""
@@ -3453,8 +3457,8 @@ msgstr[0] "%(count)s expense ignored."
 msgstr[1] "%(count)s expenses ignored."
 
 #: my_practice/views/bank_import_views.py:394
-#: my_practice/views/bank_import_views.py:727
-#: my_practice/views/bank_import_views.py:881
+#: my_practice/views/bank_import_views.py:712
+#: my_practice/views/bank_import_views.py:866
 #, python-format
 msgid "%(count)s transaction ignored."
 msgid_plural "%(count)s transactions ignored."
@@ -3511,34 +3515,34 @@ msgstr "📌 Alias '%(name)s' for %(code)s saved."
 msgid "Alias '%(name)s' for %(code)s saved."
 msgstr "Alias '%(name)s' for %(code)s saved."
 
-#: my_practice/views/bank_import_views.py:595
+#: my_practice/views/bank_import_views.py:580
 msgid "Bank Import - Assign Expenses"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:618
-#: my_practice/views/bank_import_views.py:709
-#: my_practice/views/bank_import_views.py:784
-#: my_practice/views/bank_import_views.py:855
+#: my_practice/views/bank_import_views.py:603
+#: my_practice/views/bank_import_views.py:694
+#: my_practice/views/bank_import_views.py:769
+#: my_practice/views/bank_import_views.py:840
 msgid "Please select at least one transaction."
 msgstr "Please select at least one transaction."
 
-#: my_practice/views/bank_import_views.py:626
-#: my_practice/views/bank_import_views.py:792
+#: my_practice/views/bank_import_views.py:611
+#: my_practice/views/bank_import_views.py:777
 msgid "No transactions found."
 msgstr "No transactions found."
 
-#: my_practice/views/bank_import_views.py:697
+#: my_practice/views/bank_import_views.py:682
 #, python-format
 msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
 msgstr[0] "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgstr[1] "%(count)s transactions successfully grouped into expense: %(amount)s €"
 
-#: my_practice/views/bank_import_views.py:762
+#: my_practice/views/bank_import_views.py:747
 msgid "Bank Import - Assign Withdrawals"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:844
+#: my_practice/views/bank_import_views.py:829
 #, python-format
 msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
@@ -4251,48 +4255,48 @@ msgstr ""
 msgid "Practice '%(name)s' deactivated."
 msgstr ""
 
-#: my_practice/views/tag_views.py:49
+#: my_practice/views/tag_views.py:50
 #, python-brace-format
 msgid "Tag '{obj.name}' created successfully!"
 msgstr ""
 
-#: my_practice/views/tag_views.py:59
+#: my_practice/views/tag_views.py:60
 #, python-brace-format
 msgid "Tag '{obj.name}' updated successfully!"
 msgstr ""
 
-#: my_practice/views/tag_views.py:68
+#: my_practice/views/tag_views.py:69
 #, python-brace-format
 msgid "Tag '{obj.name}' deleted successfully!"
 msgstr ""
 
-#: my_practice/views/tag_views.py:79
+#: my_practice/views/tag_views.py:80
 msgid "Tag ID required"
 msgstr ""
 
-#: my_practice/views/tag_views.py:87
+#: my_practice/views/tag_views.py:88
 #, python-format
 msgid "Tag '%(name)s' added"
 msgstr ""
 
-#: my_practice/views/tag_views.py:105
+#: my_practice/views/tag_views.py:106
 #, python-format
 msgid "Tag '%(name)s' removed"
 msgstr ""
 
-#: my_practice/views/tax_views.py:50
+#: my_practice/views/tax_views.py:51
 msgid "No practice selected"
 msgstr ""
 
-#: my_practice/views/tax_views.py:55 my_practice/views/tax_views.py:58
+#: my_practice/views/tax_views.py:56 my_practice/views/tax_views.py:59
 msgid "Invalid year"
 msgstr ""
 
-#: my_practice/views/tax_views.py:73
+#: my_practice/views/tax_views.py:74
 msgid "Invalid amount"
 msgstr "Invalid amount"
 
-#: my_practice/views/tax_views.py:82
+#: my_practice/views/tax_views.py:83
 msgid "Invalid date"
 msgstr "Invalid date"
 
@@ -4449,18 +4453,11 @@ msgstr ""
 msgid "Focus Queue"
 msgstr ""
 
-#: templates/base.html:111 templates/includes/command_palette.html:44
-#: templates/my_practice/bank_expense_review.html:130
-#: templates/my_practice/bank_import.html:4
-#: templates/my_practice/bank_import.html:9
-msgid "Bank import"
-msgstr ""
-
-#: templates/base.html:128
+#: templates/base.html:119
 msgid "available"
 msgstr ""
 
-#: templates/base.html:130 templates/includes/command_palette.html:86
+#: templates/base.html:121 templates/includes/command_palette.html:86
 msgid "Close"
 msgstr ""
 
@@ -4604,6 +4601,13 @@ msgstr ""
 #: templates/includes/command_palette.html:43
 #: templates/my_practice/send_payment_reminder.html:15
 msgid "Open invoices"
+msgstr ""
+
+#: templates/includes/command_palette.html:44
+#: templates/my_practice/bank_expense_review.html:130
+#: templates/my_practice/bank_import.html:4
+#: templates/my_practice/bank_import.html:9
+msgid "Bank import"
 msgstr ""
 
 #: templates/includes/command_palette.html:45
@@ -4962,12 +4966,12 @@ msgstr "Yes, delete"
 #: templates/my_practice/send_questionnaire_pdf_email.html:65
 #: templates/my_practice/session_log_form.html:128
 #: templates/my_practice/tag_confirm_delete.html:37
-#: templates/my_practice/tag_form.html:58
+#: templates/my_practice/tag_form.html:59
 #: templates/my_practice/tax_quarter_overview.html:191
 #: templates/my_practice/time_off_form.html:70
 #: templates/my_practice/time_off_notice_form.html:94
 #: templates/my_practice/todo_confirm_delete.html:34
-#: templates/my_practice/todo_form.html:81
+#: templates/my_practice/todo_form.html:82
 #: templates/my_practice/withdrawal_form.html:73
 msgid "Cancel"
 msgstr "Cancel"
@@ -5397,7 +5401,7 @@ msgstr ""
 #: templates/my_practice/bank_expense_review.html:55
 #: templates/my_practice/bank_withdrawal_review.html:40
 #: templates/my_practice/client_detail_documents.html:22
-#: templates/my_practice/tag_form.html:43
+#: templates/my_practice/tag_form.html:44
 msgid "Description (optional)"
 msgstr ""
 
@@ -6532,10 +6536,10 @@ msgstr ""
 #: templates/my_practice/inquiry_form.html:190
 #: templates/my_practice/invoice_edit.html:149
 #: templates/my_practice/marketing_period_form.html:52
-#: templates/my_practice/tag_form.html:55
+#: templates/my_practice/tag_form.html:56
 #: templates/my_practice/tax_quarter_overview.html:189
 #: templates/my_practice/time_off_form.html:73
-#: templates/my_practice/todo_form.html:80
+#: templates/my_practice/todo_form.html:81
 #: templates/my_practice/withdrawal_form.html:76
 msgid "Save"
 msgstr "Save"
@@ -7204,12 +7208,12 @@ msgstr ""
 msgid "Select all billing codes (Ziffern) that apply to this session. The maximum rate is billed automatically."
 msgstr ""
 
+#: templates/my_practice/inquiry_confirm_delete.html:4
 #: templates/my_practice/inquiry_confirm_delete.html:5
-#: templates/my_practice/inquiry_confirm_delete.html:6
 msgid "Delete inquiry"
 msgstr "Delete inquiry"
 
-#: templates/my_practice/inquiry_confirm_delete.html:7
+#: templates/my_practice/inquiry_confirm_delete.html:6
 msgid "Are you sure you want to delete this inquiry?"
 msgstr "Are you sure you want to delete this inquiry?"
 
@@ -8276,15 +8280,15 @@ msgstr ""
 msgid "Create new tag"
 msgstr ""
 
-#: templates/my_practice/tag_form.html:20
+#: templates/my_practice/tag_form.html:21
 msgid "e.g. \"missing-paperwork\", \"follow-up\", \"needs-documentation\""
 msgstr ""
 
-#: templates/my_practice/tag_form.html:49
+#: templates/my_practice/tag_form.html:50
 msgid "What does this tag mean? When should it be used?"
 msgstr ""
 
-#: templates/my_practice/tag_form.html:55
+#: templates/my_practice/tag_form.html:56
 msgid "Create"
 msgstr ""
 
@@ -8901,20 +8905,20 @@ msgstr ""
 msgid "Create new task"
 msgstr ""
 
-#: templates/my_practice/todo_form.html:21
+#: templates/my_practice/todo_form.html:22
 #, python-format
 msgid "For client: %(code)s"
 msgstr ""
 
-#: templates/my_practice/todo_form.html:38
+#: templates/my_practice/todo_form.html:39
 msgid "Optional: detailed notes on the task"
 msgstr ""
 
-#: templates/my_practice/todo_form.html:65
+#: templates/my_practice/todo_form.html:66
 msgid "Optional: due date (DD.MM.YYYY or YYYY-MM-DD)"
 msgstr ""
 
-#: templates/my_practice/todo_form.html:75
+#: templates/my_practice/todo_form.html:76
 msgid "Leave empty for \"not completed\""
 msgstr ""
 

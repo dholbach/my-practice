@@ -118,22 +118,25 @@ palette"). Both fuzzy guesses `makemessages` produced were wrong in exactly the
 way CLAUDE.md warns about — "Open command palette" → "Befehlspalette", "Search
 results" → "Keine Ergebnisse" — and were corrected by hand.
 
-## Known gap (follow-up: [#422](https://github.com/dholbach/my-practice/issues/422))
+## Known gap — closed by [#422](https://github.com/dholbach/my-practice/issues/422)
 
 The unmatched-bank-transaction count used to ride as a badge on the Finances
-dropdown, and it is the **only** alert for bank work waiting to be assigned —
-nothing in the Focus Queue or the dashboard surfaces it. Rather than lose it, the
-nav grows a conditional fifth link (`🏦 Bank import` + count) only while the count
-is non-zero; the rest of the time the nav is four links.
+dropdown, and it was the **only** alert for bank work waiting to be assigned.
+Rather than lose it, this project gave the nav a conditional fifth link
+(`🏦 Bank import` + count) that appeared only while the count was non-zero —
+explicitly a stopgap.
 
-The proper home is a Focus Queue task type (`TaskType.BANK_UNMATCHED` in
-`models/todo.py` plus a `sync_focus_queue_tasks` branch), at which point the
-conditional nav link can go. Not done here — it needs a model choice, a
-migration and a sync branch, none of which belong in a nav refactor. Filed as
-[#422](https://github.com/dholbach/my-practice/issues/422), where the open
-question is one task per transaction (`_sync_object_tasks`, floods on a big CSV
-import) versus one aggregate task per practice (`_sync_operational_checklist`
-pattern) — both already exist in that command.
+That stopgap is **gone**. #422 added `TaskType.BANK_UNMATCHED` and a
+`_sync_bank_unmatched` branch to `sync_focus_queue_tasks`, so the alert now
+lives in the Focus Queue where "needs action" belongs, and the nav is honestly
+four links again. `PracticeScopeMiddleware.get_unmatched_bank_count` went with
+the link, having had no other consumer.
+
+The open question there — one task per transaction versus one aggregate task per
+practice — resolved to **aggregate**, matching `_sync_operational_checklist`:
+unmatched transactions get worked through in one sitting on `/bank/import`, a
+big CSV import would otherwise bury the queue, and a count carries no
+counterparty name (a per-transaction title would have had to name a client).
 
 ## Tests
 
