@@ -1,0 +1,72 @@
+name: Codebase metrics
+
+# Refreshes docs/development/ on the first of each month so the growth and
+# commit-mix trend is visible without anyone remembering to look.
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      # fetch-depth: 0 is required, not an optimisation: the script walks the
+      # whole history month by month and reads every tag. A shallow clone
+      # silently produces a truncated series rather than failing.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      # Stdlib only — no pip install step needed.
+      - name: Regenerate metrics
+        run: python scripts/codebase_metrics.py
+
+      # `main` is protected by a ruleset requiring the `lint` and `test` checks
+      # with no bypass actors, so this job cannot push to main directly. It also
+      # deliberately does not open the PR itself: GitHub does not trigger
+      # workflows for events raised by GITHUB_TOKEN, so a bot-authored PR would
+      # sit with both required checks pending forever and could never merge.
+      # Pushing the branch and handing over a compare link keeps the PR authored
+      # by a human, which makes CI run normally.
+      - name: Push refresh branch
+        id: push
+        run: |
+          if git diff --quiet -- docs/development/; then
+            echo "No change in docs/development/ this month."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          branch="chore/metrics-$(date -u +%Y-%m)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add docs/development/
+          git commit -m "chore: refresh codebase metrics for $(date -u +%Y-%m)"
+          git push --force-with-lease origin "$branch"
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Summarise
+        if: steps.push.outputs.changed == 'true'
+        env:
+          BRANCH: ${{ steps.push.outputs.branch }}
+        run: |
+          {
+            echo "### Codebase metrics refreshed"
+            echo
+            echo "Branch \`$BRANCH\` pushed."
+            echo
+            echo "[Open the pull request](${{ github.server_url }}/${{ github.repository }}/compare/main...$BRANCH?expand=1)"
+          } >> "$GITHUB_STEP_SUMMARY"

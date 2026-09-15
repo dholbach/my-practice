@@ -1,0 +1,145 @@
+{
+  "generated": "2026-09-15",
+  "head": "18b4520",
+  "months": [
+    {
+      "classified": 156,
+      "commits": 166,
+      "loc": {
+        "app": 25445,
+        "css": 2647,
+        "docs": 13657,
+        "js": 2719,
+        "migrations": 1029,
+        "templates": 12806,
+        "tests": 20986
+      },
+      "month": "2026-06",
+      "releases": [
+        "v0.1.0",
+        "v0.2.0",
+        "v0.2.1",
+        "v0.2.2",
+        "v0.2.3",
+        "v0.2.4",
+        "v0.2.5",
+        "v0.2.6"
+      ],
+      "types": {
+        "chore": 51,
+        "ci": 3,
+        "docs": 15,
+        "feat": 41,
+        "fix": 40,
+        "other": 2,
+        "perf": 0,
+        "refactor": 3,
+        "style": 1,
+        "test": 0
+      }
+    },
+    {
+      "classified": 137,
+      "commits": 146,
+      "loc": {
+        "app": 27099,
+        "css": 2641,
+        "docs": 13681,
+        "js": 2617,
+        "migrations": 3786,
+        "templates": 12617,
+        "tests": 27899
+      },
+      "month": "2026-07",
+      "releases": [
+        "v0.2.7",
+        "v0.2.8",
+        "v0.2.9",
+        "v0.2.10",
+        "v0.2.11",
+        "v0.2.12",
+        "v0.3.0",
+        "v0.4.0",
+        "v0.4.1"
+      ],
+      "types": {
+        "chore": 27,
+        "ci": 0,
+        "docs": 8,
+        "feat": 46,
+        "fix": 33,
+        "other": 4,
+        "perf": 1,
+        "refactor": 10,
+        "style": 1,
+        "test": 7
+      }
+    },
+    {
+      "classified": 111,
+      "commits": 116,
+      "loc": {
+        "app": 27985,
+        "css": 2645,
+        "docs": 14474,
+        "js": 2822,
+        "migrations": 4389,
+        "templates": 12564,
+        "tests": 35178
+      },
+      "month": "2026-08",
+      "releases": [
+        "v0.4.2",
+        "v0.4.3",
+        "v0.5.0",
+        "v0.5.1",
+        "v0.5.2",
+        "v0.5.3",
+        "v0.5.4"
+      ],
+      "types": {
+        "chore": 37,
+        "ci": 3,
+        "docs": 7,
+        "feat": 6,
+        "fix": 30,
+        "other": 1,
+        "perf": 2,
+        "refactor": 7,
+        "style": 6,
+        "test": 12
+      }
+    },
+    {
+      "classified": 33,
+      "commits": 40,
+      "loc": {
+        "app": 28300,
+        "css": 2878,
+        "docs": 12922,
+        "js": 2721,
+        "migrations": 4389,
+        "templates": 12645,
+        "tests": 37405
+      },
+      "month": "2026-09",
+      "releases": [
+        "v0.5.5",
+        "v0.6.0",
+        "v0.6.1"
+      ],
+      "types": {
+        "chore": 11,
+        "ci": 1,
+        "docs": 3,
+        "feat": 2,
+        "fix": 13,
+        "other": 2,
+        "perf": 1,
+        "refactor": 0,
+        "style": 0,
+        "test": 0
+      }
+    }
+  ]
+}

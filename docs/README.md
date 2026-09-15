@@ -49,6 +49,14 @@ P-XXX projects are used for larger efforts that need a design document before a 
 
 ---
 
+## Development Metrics
+
+How the codebase itself is trending — size by category, commit mix, release cadence:
+
+- [development/README.md](development/README.md) — Generated monthly from git history
+
+---
+
 ## Notes
 
 Analyses, workarounds, and observations that don't fit anywhere else:
