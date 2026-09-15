@@ -1,6 +1,6 @@
 {
   "generated": "2026-09-15",
-  "head": "29c5c21",
+  "head": "bb4afb6",
   "months": [
     {
       "classified": 156,
@@ -77,15 +77,15 @@
     },
     {
       "classified": 111,
-      "commits": 116,
+      "commits": 119,
       "loc": {
-        "app": 27985,
+        "app": 28036,
         "css": 2645,
-        "docs": 14474,
+        "docs": 14481,
         "js": 2822,
         "migrations": 4389,
         "templates": 12564,
-        "tests": 35178
+        "tests": 35581
       },
       "month": "2026-08",
       "releases": [
@@ -111,16 +111,16 @@
       }
     },
     {
-      "classified": 37,
-      "commits": 44,
+      "classified": 43,
+      "commits": 47,
       "loc": {
-        "app": 28300,
-        "css": 2878,
-        "docs": 12938,
+        "app": 28427,
+        "css": 2880,
+        "docs": 12941,
         "js": 2721,
-        "migrations": 4389,
-        "templates": 12645,
-        "tests": 37405
+        "migrations": 1023,
+        "templates": 12637,
+        "tests": 37623
       },
       "month": "2026-09",
       "releases": [
@@ -129,14 +129,14 @@
         "v0.6.1"
       ],
       "types": {
-        "chore": 12,
+        "chore": 16,
         "ci": 2,
         "docs": 3,
-        "feat": 4,
+        "feat": 5,
         "fix": 13,
         "other": 2,
         "perf": 1,
-        "refactor": 0,
+        "refactor": 1,
         "style": 0,
         "test": 0
       }
