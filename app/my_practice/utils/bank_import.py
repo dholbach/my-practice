@@ -76,12 +76,37 @@ class BankStatementImporter:
         """Normalize IBAN by removing spaces and uppercasing."""
         return iban.replace(" ", "").upper()
 
+    @classmethod
+    def for_account(cls, practice, account_iban: str) -> "BankStatementImporter":
+        """
+        Build an importer for a non-CSV source (e.g. a bank API fetcher).
+
+        ``process()`` is unavailable on the result — there is no file to read
+        and no CSV header to validate the account against — so the caller is
+        responsible for producing normalized dicts and feeding them to
+        ``ingest_transaction()`` itself. The account IBAN is supplied up front
+        because it would otherwise be read from the CSV by
+        ``_validate_csv_account()``.
+
+        Args:
+            practice: Practice instance for scoping
+            account_iban: IBAN of the account the transactions belong to
+
+        Returns:
+            An importer with only the source-agnostic half wired up.
+        """
+        importer = cls(None, practice)
+        importer.account_iban = cls._normalize_iban(account_iban)
+        return importer
+
     def __init__(self, csv_file, practice):
         """
         Initialize importer.
 
         Args:
-            csv_file: File object with CSV content
+            csv_file: File object with CSV content, or None when the
+                transactions come from somewhere other than a CSV upload
+                (see ``for_account()``)
             practice: Practice instance for scoping
         """
         self.csv_file = csv_file
@@ -507,76 +532,102 @@ class BankStatementImporter:
             return self.results
 
         for row in rows:
-            self.results["total"] += 1
-
             parsed = self.parse_csv_row(row)
             if not parsed:
+                self.results["total"] += 1
                 self.results["errors"].append(_("Failed to parse row: %(row)s") % {"row": row})
                 continue
 
-            payer_name_lower = parsed["payer_name"].lower().strip()
-            is_self_payment = payer_name_lower == self.practice.name.lower().strip()
-
-            # IBAN-based capital contribution detection takes priority over name matching.
-            # Check both the payer_iban field AND the reference text (bank embeds IBANs there).
-            payer_iban_normalized = self._normalize_iban(parsed["payer_iban"])
-            reference_normalized = self._normalize_iban(parsed["reference"])
-            is_private_contribution = bool(
-                self.private_iban
-                and (
-                    payer_iban_normalized == self.private_iban
-                    or self.private_iban in reference_normalized
-                )
-            )
-
-            if parsed["amount"] < 0 and self._handle_negative_row(parsed, skip_negatives):
-                continue
-
-            # Duplicate check for non-negative (and unhandled negative) rows
-            existing = (
-                BankTransaction.objects.for_practice(self.practice)
-                .filter(
-                    transaction_date=parsed["transaction_date"],
-                    amount=parsed["amount"],
-                    reference=parsed["reference"],
-                )
-                .first()
-            )
-            if existing:
-                self.results["ignored"] += 1
-                continue
-
-            invoice_number = self.extract_invoice_number(parsed["reference"])
-            confidence, notes, matched_invoice, linked_withdrawal = self._classify_transaction(
-                parsed, is_private_contribution, is_self_payment, invoice_number
-            )
-
-            bank_transaction = BankTransaction.objects.create(
-                practice=self.practice,
-                transaction_date=parsed["transaction_date"],
-                value_date=parsed["value_date"],
-                payer_name=parsed["payer_name"],
-                payer_iban=parsed["payer_iban"],
-                reference=parsed["reference"],
-                amount=parsed["amount"],
-                balance_after=parsed["balance_after"],
-                account_iban=self.account_iban,
-                matched_invoice=matched_invoice,
-                match_confidence=confidence,
-                extracted_invoice_number=invoice_number or "",
-                linked_withdrawal=linked_withdrawal,
-                notes=notes,
-                processed=matched_invoice is not None,
-            )
-
-            if matched_invoice:
-                matched_invoice.status = "paid"
-                matched_invoice.paid_date = parsed["transaction_date"]
-                matched_invoice.save()
-
-            self.results["transactions"].append(bank_transaction)
+            self.ingest_transaction(parsed, skip_negatives=skip_negatives)
 
         return self.results
+
+    def ingest_transaction(
+        self, parsed: dict[str, Any], skip_negatives: bool = True
+    ) -> "BankTransaction | None":
+        """
+        Classify one already-parsed transaction and record it.
+
+        This is the source-agnostic half of the import: everything from the
+        duplicate check onwards depends only on the normalized dict, never on
+        where it came from. ``process()`` feeds it rows parsed from CSV; a
+        fetcher for a bank API can build the same dict and call this directly
+        (see ``for_account()``).
+
+        Args:
+            parsed: Normalized transaction dict with the keys produced by
+                ``parse_csv_row``: transaction_date, value_date, payer_name,
+                payer_iban, reference, amount, balance_after
+            skip_negatives: If True, ignore negative amounts (expenses)
+
+        Returns:
+            The created BankTransaction, or None if the row was ignored as a
+            duplicate or handled as a negative/expense row.
+        """
+        self.results["total"] += 1
+
+        payer_name_lower = parsed["payer_name"].lower().strip()
+        is_self_payment = payer_name_lower == self.practice.name.lower().strip()
+
+        # IBAN-based capital contribution detection takes priority over name matching.
+        # Check both the payer_iban field AND the reference text (bank embeds IBANs there).
+        payer_iban_normalized = self._normalize_iban(parsed["payer_iban"])
+        reference_normalized = self._normalize_iban(parsed["reference"])
+        is_private_contribution = bool(
+            self.private_iban
+            and (
+                payer_iban_normalized == self.private_iban
+                or self.private_iban in reference_normalized
+            )
+        )
+
+        if parsed["amount"] < 0 and self._handle_negative_row(parsed, skip_negatives):
+            return None
+
+        # Duplicate check for non-negative (and unhandled negative) rows
+        existing = (
+            BankTransaction.objects.for_practice(self.practice)
+            .filter(
+                transaction_date=parsed["transaction_date"],
+                amount=parsed["amount"],
+                reference=parsed["reference"],
+            )
+            .first()
+        )
+        if existing:
+            self.results["ignored"] += 1
+            return None
+
+        invoice_number = self.extract_invoice_number(parsed["reference"])
+        confidence, notes, matched_invoice, linked_withdrawal = self._classify_transaction(
+            parsed, is_private_contribution, is_self_payment, invoice_number
+        )
+
+        bank_transaction = BankTransaction.objects.create(
+            practice=self.practice,
+            transaction_date=parsed["transaction_date"],
+            value_date=parsed["value_date"],
+            payer_name=parsed["payer_name"],
+            payer_iban=parsed["payer_iban"],
+            reference=parsed["reference"],
+            amount=parsed["amount"],
+            balance_after=parsed["balance_after"],
+            account_iban=self.account_iban,
+            matched_invoice=matched_invoice,
+            match_confidence=confidence,
+            extracted_invoice_number=invoice_number or "",
+            linked_withdrawal=linked_withdrawal,
+            notes=notes,
+            processed=matched_invoice is not None,
+        )
+
+        if matched_invoice:
+            matched_invoice.status = "paid"
+            matched_invoice.paid_date = parsed["transaction_date"]
+            matched_invoice.save()
+
+        self.results["transactions"].append(bank_transaction)
+        return bank_transaction
 
 
 def build_counterparty_key(payer_iban: str, payer_name: str) -> str | None:
