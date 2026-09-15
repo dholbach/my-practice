@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="400" viewBox="0 0 840 400" role="img" aria-label="Relative growth (first tracked month = 100)">
+<title>Relative growth (first tracked month = 100)</title>
+<text x="76" y="26" font-family="sans-serif" font-size="15" font-weight="600" fill="#8b949e">Relative growth (first tracked month = 100)</text>
+<line x1="76" y1="350.0" x2="672" y2="350.0" stroke="#8b949e" stroke-opacity="0.22" stroke-width="1"/>
+<text x="66" y="354.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="end">0</text>
+<line x1="76" y1="289.2" x2="672" y2="289.2" stroke="#8b949e" stroke-opacity="0.22" stroke-width="1"/>
+<text x="66" y="293.2" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="end">100</text>
+<line x1="76" y1="228.4" x2="672" y2="228.4" stroke="#8b949e" stroke-opacity="0.22" stroke-width="1"/>
+<text x="66" y="232.4" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="end">200</text>
+<line x1="76" y1="167.6" x2="672" y2="167.6" stroke="#8b949e" stroke-opacity="0.22" stroke-width="1"/>
+<text x="66" y="171.6" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="end">300</text>
+<line x1="76" y1="106.8" x2="672" y2="106.8" stroke="#8b949e" stroke-opacity="0.22" stroke-width="1"/>
+<text x="66" y="110.8" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="end">400</text>
+<line x1="76" y1="46.0" x2="672" y2="46.0" stroke="#8b949e" stroke-opacity="0.22" stroke-width="1"/>
+<text x="66" y="50.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="end">500</text>
+<line x1="76" y1="289.2" x2="672" y2="289.2" stroke="#8b949e" stroke-width="1" stroke-dasharray="4 3" stroke-opacity="0.7"/>
+<text x="16" y="198.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle" transform="rotate(-90 16 198.0)">index</text>
+<text x="76.0" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-06</text>
+<text x="274.7" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-07</text>
+<text x="473.3" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-08</text>
+<text x="672.0" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-09</text>
+<polyline points="76.0,289.2 274.7,285.2 473.3,283.1 672.0,282.4" fill="none" stroke="#58a6ff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="289.2" r="3" fill="#58a6ff"/>
+<circle cx="274.7" cy="285.2" r="3" fill="#58a6ff"/>
+<circle cx="473.3" cy="283.1" r="3" fill="#58a6ff"/>
+<circle cx="672.0" cy="282.4" r="3" fill="#58a6ff"/>
+<polyline points="76.0,289.2 274.7,269.2 473.3,248.1 672.0,241.7" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="289.2" r="3" fill="#3fb950"/>
+<circle cx="274.7" cy="269.2" r="3" fill="#3fb950"/>
+<circle cx="473.3" cy="248.1" r="3" fill="#3fb950"/>
+<circle cx="672.0" cy="241.7" r="3" fill="#3fb950"/>
+<polyline points="76.0,289.2 274.7,290.1 473.3,290.4 672.0,290.0" fill="none" stroke="#d29922" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="289.2" r="3" fill="#d29922"/>
+<circle cx="274.7" cy="290.1" r="3" fill="#d29922"/>
+<circle cx="473.3" cy="290.4" r="3" fill="#d29922"/>
+<circle cx="672.0" cy="290.0" r="3" fill="#d29922"/>
+<polyline points="76.0,289.2 274.7,291.5 473.3,286.9 672.0,289.1" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="289.2" r="3" fill="#a371f7"/>
+<circle cx="274.7" cy="291.5" r="3" fill="#a371f7"/>
+<circle cx="473.3" cy="286.9" r="3" fill="#a371f7"/>
+<circle cx="672.0" cy="289.1" r="3" fill="#a371f7"/>
+<polyline points="76.0,289.2 274.7,289.3 473.3,289.3 672.0,283.9" fill="none" stroke="#39c5cf" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="289.2" r="3" fill="#39c5cf"/>
+<circle cx="274.7" cy="289.3" r="3" fill="#39c5cf"/>
+<circle cx="473.3" cy="289.3" r="3" fill="#39c5cf"/>
+<circle cx="672.0" cy="283.9" r="3" fill="#39c5cf"/>
+<polyline points="76.0,289.2 274.7,126.3 473.3,90.7 672.0,90.7" fill="none" stroke="#db6d28" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="289.2" r="3" fill="#db6d28"/>
+<circle cx="274.7" cy="126.3" r="3" fill="#db6d28"/>
+<circle cx="473.3" cy="90.7" r="3" fill="#db6d28"/>
+<circle cx="672.0" cy="90.7" r="3" fill="#db6d28"/>
+<polyline points="76.0,289.2 274.7,289.1 473.3,285.6 672.0,292.4" fill="none" stroke="#ff7b72" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="289.2" r="3" fill="#ff7b72"/>
+<circle cx="274.7" cy="289.1" r="3" fill="#ff7b72"/>
+<circle cx="473.3" cy="285.6" r="3" fill="#ff7b72"/>
+<circle cx="672.0" cy="292.4" r="3" fill="#ff7b72"/>
+<rect x="694" y="45" width="14" height="4" rx="2" fill="#58a6ff"/>
+<text x="716" y="52" font-family="sans-serif" font-size="12" fill="#8b949e">app</text>
+<text x="716" y="67" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">111</text>
+<rect x="694" y="75" width="14" height="4" rx="2" fill="#3fb950"/>
+<text x="716" y="82" font-family="sans-serif" font-size="12" fill="#8b949e">tests</text>
+<text x="716" y="97" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">178</text>
+<rect x="694" y="105" width="14" height="4" rx="2" fill="#d29922"/>
+<text x="716" y="112" font-family="sans-serif" font-size="12" fill="#8b949e">templates</text>
+<text x="716" y="127" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">99</text>
+<rect x="694" y="135" width="14" height="4" rx="2" fill="#a371f7"/>
+<text x="716" y="142" font-family="sans-serif" font-size="12" fill="#8b949e">js</text>
+<text x="716" y="157" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">100</text>
+<rect x="694" y="165" width="14" height="4" rx="2" fill="#39c5cf"/>
+<text x="716" y="172" font-family="sans-serif" font-size="12" fill="#8b949e">css</text>
+<text x="716" y="187" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">109</text>
+<rect x="694" y="195" width="14" height="4" rx="2" fill="#db6d28"/>
+<text x="716" y="202" font-family="sans-serif" font-size="12" fill="#8b949e">migrations</text>
+<text x="716" y="217" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">426</text>
+<rect x="694" y="225" width="14" height="4" rx="2" fill="#ff7b72"/>
+<text x="716" y="232" font-family="sans-serif" font-size="12" fill="#8b949e">docs</text>
+<text x="716" y="247" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">95</text>
+</svg>

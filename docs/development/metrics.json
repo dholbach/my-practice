@@ -1,6 +1,6 @@
 {
   "generated": "2026-09-15",
-  "head": "ecc35ba",
+  "head": "12ffa01",
   "months": [
     {
       "classified": 156,
@@ -111,12 +111,12 @@
       }
     },
     {
-      "classified": 34,
-      "commits": 41,
+      "classified": 35,
+      "commits": 42,
       "loc": {
         "app": 28300,
         "css": 2878,
-        "docs": 13024,
+        "docs": 12937,
         "js": 2721,
         "migrations": 4389,
         "templates": 12645,
@@ -129,7 +129,7 @@
         "v0.6.1"
       ],
       "types": {
-        "chore": 11,
+        "chore": 12,
         "ci": 1,
         "docs": 3,
         "feat": 3,

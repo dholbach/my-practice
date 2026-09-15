@@ -72,7 +72,10 @@ CATEGORIES = {
     ],
     "css": ["app/static/css/tailwind.css"],
     "migrations": ["app/my_practice/migrations/*.py"],
-    "docs": ["*.md", ":(exclude)*node_modules*"],
+    # docs/development is excluded on purpose: it is generated, and this page
+    # is itself Markdown, so counting it made the docs figure drift by its own
+    # size on every refresh.
+    "docs": ["*.md", ":(exclude)*node_modules*", ":(exclude)docs/development/*"],
 }
 
 # Conventional-commit types worth reporting separately. Anything else that
@@ -214,24 +217,176 @@ def delta(series: list[int]) -> str:
     return f"{change:+.0f}%"
 
 
-def xychart(title: str, months: list[str], axis: str, series: list[list[int]], kind: str) -> str:
-    """A Mermaid xychart-beta block; GitHub renders these natively in Markdown."""
-    peak = max((v for s in series for v in s), default=0)
-    top = max(int(peak * 1.15), 1)
-    labels = ", ".join(f'"{m}"' for m in months)
-    lines = [
-        "```mermaid",
-        "xychart-beta",
-        f'    title "{title}"',
-        f"    x-axis [{labels}]",
-        f'    y-axis "{axis}" 0 --> {top}',
+# One colour per category, reused by every chart so a category keeps its colour
+# across the page. Chosen from GitHub's own palette: saturated enough to stay
+# legible on a white background, light enough to stay legible on a dark one.
+# `docs` deliberately is not grey — grey is the axis colour.
+# Hues are assigned with the absolute chart in mind: templates and docs sit in
+# the same band there, as do js and css, so each of those pairs is given
+# maximally separated hues rather than neighbouring ones.
+PALETTE = {
+    "app": "#58a6ff",  # blue
+    "tests": "#3fb950",  # green
+    "templates": "#d29922",  # amber
+    "js": "#a371f7",  # purple
+    "css": "#39c5cf",  # cyan
+    "migrations": "#db6d28",  # orange
+    "docs": "#ff7b72",  # salmon
+}
+INK = "#8b949e"  # axes, gridlines and labels; readable on light and dark alike
+
+# Chart geometry, in SVG user units.
+WIDTH, HEIGHT = 840, 400
+PAD_L, PAD_R, PAD_T, PAD_B = 76, 168, 46, 50
+PLOT_W = WIDTH - PAD_L - PAD_R
+PLOT_H = HEIGHT - PAD_T - PAD_B
+
+
+def esc(text: str) -> str:
+    """Minimal XML escaping for text nodes and attribute values."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def nice_max(peak: float) -> int:
+    """Round an axis maximum up to a readable round number."""
+    if peak <= 0:
+        return 1
+    step = 10 ** (len(str(int(peak))) - 1)
+    for multiple in (1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10):
+        top = step * multiple
+        if top >= peak:
+            return int(top)
+    return int(step * 10)
+
+
+def svg_chart(
+    title: str,
+    months: list[str],
+    series: list[tuple[str, str, list[float]]],
+    y_label: str,
+    kind: str = "line",
+    baseline: float | None = None,
+) -> str:
+    """Render a line or bar chart as a standalone SVG, with a real legend.
+
+    Written by hand rather than with Mermaid because Mermaid's xychart-beta has
+    no legend: every series is drawn in a palette colour that nothing on the
+    page names, so a reader cannot tell which line is which. That is fine for
+    one series and useless for seven, which is why "lines by category" was a
+    table only.
+
+    The output deliberately uses presentation attributes and no <style>, <script>
+    or external references. GitHub serves an SVG referenced from Markdown through
+    an <img>, and sanitises anything richer — this stays inside what survives.
+    The background is transparent and every ink colour is mid-tone, so one file
+    works in both GitHub themes without needing a <picture> element and two
+    renders.
+    """
+    values = [v for _, _, vs in series for v in vs]
+    top = nice_max(max(values, default=0))
+    n = len(months)
+
+    def x_at(i: int) -> float:
+        # Bars are centred in a band so the first one does not straddle the
+        # y-axis and collide with its "0" label; lines span edge to edge so the
+        # series fills the full plot width.
+        if kind == "bar":
+            return PAD_L + (i + 0.5) * PLOT_W / max(n, 1)
+        if n == 1:
+            return PAD_L + PLOT_W / 2
+        return PAD_L + i * PLOT_W / (n - 1)
+
+    def y_at(v: float) -> float:
+        return PAD_T + PLOT_H * (1 - v / top)
+
+    out = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" '
+        f'viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="{esc(title)}">',
+        f"<title>{esc(title)}</title>",
+        f'<text x="{PAD_L}" y="26" font-family="sans-serif" font-size="15" '
+        f'font-weight="600" fill="{INK}">{esc(title)}</text>',
     ]
-    lines += [f"    {kind} [{', '.join(str(v) for v in s)}]" for s in series]
-    lines.append("```")
-    return "\n".join(lines)
+
+    # Horizontal gridlines and their y-axis labels.
+    for tick in range(6):
+        v = top * tick / 5
+        y = y_at(v)
+        out.append(
+            f'<line x1="{PAD_L}" y1="{y:.1f}" x2="{PAD_L + PLOT_W}" y2="{y:.1f}" '
+            f'stroke="{INK}" stroke-opacity="0.22" stroke-width="1"/>'
+        )
+        out.append(
+            f'<text x="{PAD_L - 10}" y="{y + 4:.1f}" font-family="sans-serif" '
+            f'font-size="11" fill="{INK}" text-anchor="end">{v:,.0f}</text>'
+        )
+
+    # A dashed rule at the index baseline, so "no growth" is visible at a glance.
+    if baseline is not None and baseline <= top:
+        y = y_at(baseline)
+        out.append(
+            f'<line x1="{PAD_L}" y1="{y:.1f}" x2="{PAD_L + PLOT_W}" y2="{y:.1f}" '
+            f'stroke="{INK}" stroke-width="1" stroke-dasharray="4 3" stroke-opacity="0.7"/>'
+        )
+
+    out.append(
+        f'<text x="16" y="{PAD_T + PLOT_H / 2:.1f}" font-family="sans-serif" font-size="11" '
+        f'fill="{INK}" text-anchor="middle" '
+        f'transform="rotate(-90 16 {PAD_T + PLOT_H / 2:.1f})">{esc(y_label)}</text>'
+    )
+
+    # X-axis labels.
+    for i, month in enumerate(months):
+        out.append(
+            f'<text x="{x_at(i):.1f}" y="{PAD_T + PLOT_H + 20:.1f}" font-family="sans-serif" '
+            f'font-size="11" fill="{INK}" text-anchor="middle">{esc(month)}</text>'
+        )
+
+    if kind == "bar":
+        band = PLOT_W / max(n, 1)
+        width = min(band * 0.45, 46)
+        for _, colour, vs in series:
+            for i, v in enumerate(vs):
+                y = y_at(v)
+                out.append(
+                    f'<rect x="{x_at(i) - width / 2:.1f}" y="{y:.1f}" width="{width:.1f}" '
+                    f'height="{PAD_T + PLOT_H - y:.1f}" fill="{colour}" rx="2"/>'
+                )
+                out.append(
+                    f'<text x="{x_at(i):.1f}" y="{y - 7:.1f}" font-family="sans-serif" '
+                    f'font-size="11" fill="{INK}" text-anchor="middle">{v:,.0f}</text>'
+                )
+    else:
+        for _, colour, vs in series:
+            points = " ".join(f"{x_at(i):.1f},{y_at(v):.1f}" for i, v in enumerate(vs))
+            out.append(
+                f'<polyline points="{points}" fill="none" stroke="{colour}" '
+                f'stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
+            )
+            for i, v in enumerate(vs):
+                out.append(f'<circle cx="{x_at(i):.1f}" cy="{y_at(v):.1f}" r="3" fill="{colour}"/>')
+
+    # Legend — the whole reason this is hand-rolled SVG rather than Mermaid.
+    legend_x = PAD_L + PLOT_W + 22
+    for row, (label, colour, vs) in enumerate(series):
+        y = PAD_T + 6 + row * 30
+        out.append(
+            f'<rect x="{legend_x}" y="{y - 7}" width="14" height="4" rx="2" fill="{colour}"/>'
+        )
+        out.append(
+            f'<text x="{legend_x + 22}" y="{y}" font-family="sans-serif" font-size="12" '
+            f'fill="{INK}">{esc(label)}</text>'
+        )
+        out.append(
+            f'<text x="{legend_x + 22}" y="{y + 15}" font-family="sans-serif" font-size="10" '
+            f'fill="{INK}" fill-opacity="0.75">{vs[-1]:,.0f}</text>'
+        )
+
+    out.append("</svg>")
+    return "\n".join(out) + "\n"
 
 
-def render(data: dict) -> str:
+def build(data: dict) -> dict[str, str]:
+    """Produce every output file as {relative filename: content}."""
     months = data["months"]
     labels = [m["month"] for m in months]
     latest = months[-1]
@@ -244,6 +399,53 @@ def render(data: dict) -> str:
     ratio = tests[-1] / app[-1] if app[-1] else 0
     total = sum(latest["loc"].values())
 
+    files = {
+        "chart-feature-commits.svg": svg_chart(
+            "feat: commits per month",
+            labels,
+            [("feat", PALETTE["app"], [float(v) for v in feats])],
+            "commits",
+            kind="bar",
+        ),
+        "chart-app-vs-tests.svg": svg_chart(
+            "App code vs. test code",
+            labels,
+            [
+                ("app", PALETTE["app"], [float(v) for v in app]),
+                ("tests", PALETTE["tests"], [float(v) for v in tests]),
+            ],
+            "lines",
+        ),
+        "chart-lines-by-category.svg": svg_chart(
+            "Lines by category",
+            labels,
+            [(name, PALETTE[name], [float(v) for v in loc(name)]) for name in CATEGORIES],
+            "lines",
+        ),
+        # Indexed to the first tracked month. The absolute chart above answers
+        # "how big is each part?" but squashes every small category onto the
+        # baseline, where templates/docs and js/css overlap within a pixel or
+        # two. This one answers "what is actually growing?", which is the
+        # question the page exists for, and spreads those same lines apart.
+        "chart-relative-growth.svg": svg_chart(
+            "Relative growth (first tracked month = 100)",
+            labels,
+            [
+                (
+                    name,
+                    PALETTE[name],
+                    [
+                        round(v / loc(name)[0] * 100, 1) if loc(name)[0] else 100.0
+                        for v in loc(name)
+                    ],
+                )
+                for name in CATEGORIES
+            ],
+            "index",
+            baseline=100,
+        ),
+    }
+
     out: list[str] = []
     add = out.append
 
@@ -252,7 +454,7 @@ def render(data: dict) -> str:
     add(
         "Generated by [`scripts/codebase_metrics.py`](../../scripts/codebase_metrics.py) — "
         "do not edit by hand. Refresh with `scripts/codebase_metrics.py`; a scheduled "
-        "workflow also opens a refresh branch on the first of each month."
+        "workflow also pushes a refresh branch on the first of each month."
     )
     add("")
     add(f"**Snapshot — {data['generated']} (`{data['head']}`)**")
@@ -273,7 +475,7 @@ def render(data: dict) -> str:
         "fine if chosen, worth noticing if not."
     )
     add("")
-    add(xychart("feat: commits per month", labels, "commits", [feats], "bar"))
+    add("![feat: commits per month](chart-feature-commits.svg)")
     add("")
     add("## What is actually growing?")
     add("")
@@ -283,15 +485,19 @@ def render(data: dict) -> str:
         "warning sign."
     )
     add("")
-    add(
-        f"Mermaid draws these without a legend, so: app code is the series "
-        f"ending at {app[-1]:,} lines, test code the one ending at "
-        f"{tests[-1]:,}."
-    )
-    add("")
-    add(xychart("App code vs. test code (lines)", labels, "lines", [app, tests], "line"))
+    add("![App code vs. test code](chart-app-vs-tests.svg)")
     add("")
     add("### Lines by category")
+    add("")
+    add("![Lines by category](chart-lines-by-category.svg)")
+    add("")
+    add(
+        "The same series indexed to their first tracked month, which separates "
+        "the categories the chart above stacks onto the baseline. Anything flat "
+        "along the dashed line is holding steady; docs below it are shrinking."
+    )
+    add("")
+    add("![Relative growth](chart-relative-growth.svg)")
     add("")
     header = "| Category | " + " | ".join(labels) + " | Change |"
     add(header)
@@ -335,7 +541,10 @@ def render(data: dict) -> str:
         names = ", ".join(f"`{t}`" for t in m["releases"]) or "—"
         add(f"| {m['month']} | {len(m['releases'])} | {names} |")
     add("")
-    return "\n".join(out)
+
+    files["README.md"] = "\n".join(out)
+    files["metrics.json"] = json.dumps(data, indent=2, sort_keys=True) + "\n"
+    return files
 
 
 def main() -> int:
@@ -344,31 +553,29 @@ def main() -> int:
     parser.add_argument("--stdout", action="store_true", help="print README instead of writing")
     args = parser.parse_args()
 
-    data = collect()
-    readme = render(data)
-    payload = json.dumps(data, indent=2, sort_keys=True) + "\n"
+    files = build(collect())
 
     if args.stdout:
-        print(readme)
+        print(files["README.md"])
         return 0
 
     if args.check:
         stale = [
-            path.name
-            for path, want in ((JSON_PATH, payload), (README_PATH, readme))
-            if not path.is_file() or path.read_text(encoding="utf-8") != want
+            name
+            for name, want in files.items()
+            if not (OUT_DIR / name).is_file() or (OUT_DIR / name).read_text("utf-8") != want
         ]
         if stale:
-            print("Stale metrics output: " + ", ".join(stale), file=sys.stderr)
+            print("Stale metrics output: " + ", ".join(sorted(stale)), file=sys.stderr)
             print("Run scripts/codebase_metrics.py to refresh.", file=sys.stderr)
             return 1
         print("Metrics output is current.")
         return 0
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    JSON_PATH.write_text(payload, encoding="utf-8")
-    README_PATH.write_text(readme, encoding="utf-8")
-    print(f"Wrote {JSON_PATH.relative_to(REPO_ROOT)} and {README_PATH.relative_to(REPO_ROOT)}")
+    for name, content in files.items():
+        (OUT_DIR / name).write_text(content, encoding="utf-8")
+    print(f"Wrote {len(files)} files to {OUT_DIR.relative_to(REPO_ROOT)}/")
     return 0
 
 

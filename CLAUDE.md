@@ -472,8 +472,8 @@ When adding new features:
 - No strict format required; date-prefix filenames recommended
 
 #### docs/development/ - Codebase Metrics (generated)
-**Use for**: nothing by hand — `scripts/codebase_metrics.py` generates both files
-from git history (LOC by category, commit-type mix, release cadence, monthly).
+**Use for**: nothing by hand — `scripts/codebase_metrics.py` generates every file
+in it (Markdown plus the SVG charts) from git history (LOC by category, commit-type mix, release cadence, monthly).
 A scheduled workflow pushes a refresh branch on the 1st of each month. Read it
 when deciding whether the project needs features or maintenance next; never edit
 it directly.
