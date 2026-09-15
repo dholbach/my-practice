@@ -18,20 +18,20 @@
 <text x="274.7" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-07</text>
 <text x="473.3" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-08</text>
 <text x="672.0" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-09</text>
-<polyline points="76.0,156.6 274.7,144.0 473.3,137.3 672.0,134.9" fill="none" stroke="#58a6ff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="76.0,156.6 274.7,144.0 473.3,136.9 672.0,134.0" fill="none" stroke="#58a6ff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="76.0" cy="156.6" r="3" fill="#58a6ff"/>
 <circle cx="274.7" cy="144.0" r="3" fill="#58a6ff"/>
-<circle cx="473.3" cy="137.3" r="3" fill="#58a6ff"/>
-<circle cx="672.0" cy="134.9" r="3" fill="#58a6ff"/>
-<polyline points="76.0,190.5 274.7,138.0 473.3,82.6 672.0,65.7" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="473.3" cy="136.9" r="3" fill="#58a6ff"/>
+<circle cx="672.0" cy="134.0" r="3" fill="#58a6ff"/>
+<polyline points="76.0,190.5 274.7,138.0 473.3,79.6 672.0,64.1" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="76.0" cy="190.5" r="3" fill="#3fb950"/>
 <circle cx="274.7" cy="138.0" r="3" fill="#3fb950"/>
-<circle cx="473.3" cy="82.6" r="3" fill="#3fb950"/>
-<circle cx="672.0" cy="65.7" r="3" fill="#3fb950"/>
+<circle cx="473.3" cy="79.6" r="3" fill="#3fb950"/>
+<circle cx="672.0" cy="64.1" r="3" fill="#3fb950"/>
 <rect x="694" y="45" width="14" height="4" rx="2" fill="#58a6ff"/>
 <text x="716" y="52" font-family="sans-serif" font-size="12" fill="#8b949e">app</text>
-<text x="716" y="67" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">28,300</text>
+<text x="716" y="67" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">28,427</text>
 <rect x="694" y="75" width="14" height="4" rx="2" fill="#3fb950"/>
 <text x="716" y="82" font-family="sans-serif" font-size="12" fill="#8b949e">tests</text>
-<text x="716" y="97" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">37,405</text>
+<text x="716" y="97" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">37,623</text>
 </svg>
