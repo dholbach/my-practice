@@ -60,6 +60,7 @@ class PracticeTodo(TimestampedModel):
         SUPERVISION = "supervision"
         RECURRING_REVIEW = "recurring_review"
         OPERATIONAL_CHECKLIST = "operational_checklist"
+        BANK_UNMATCHED = "bank_unmatched"
 
     TASK_TYPE_CHOICES = [
         (TaskType.MANUAL, _("Manual")),
@@ -69,7 +70,16 @@ class PracticeTodo(TimestampedModel):
         (TaskType.SUPERVISION, _("Supervision")),
         (TaskType.RECURRING_REVIEW, _("Recurring review")),
         (TaskType.OPERATIONAL_CHECKLIST, _("Operational checklist")),
+        (TaskType.BANK_UNMATCHED, _("Unmatched bank transactions")),
     ]
+
+    # Aggregate task types carry no related_object — one row stands for a whole
+    # pile of work — so their row links to the page where that work gets done
+    # instead of to a detail page. Keyed by task_type rather than content type,
+    # which is what _RELATED_OBJECT_URL_NAMES above covers.
+    TASK_TYPE_URL_NAMES = {
+        TaskType.BANK_UNMATCHED: "bank_import",
+    }
 
     CATEGORY_CHOICES = [
         (Category.ADMIN, _("Administrative")),
@@ -181,7 +191,8 @@ class PracticeTodo(TimestampedModel):
     def related_object_url(self) -> str | None:
         """URL to the related object's detail page, if there is one we know how to link."""
         if self.related_object is None:
-            return None
+            url_name = self.TASK_TYPE_URL_NAMES.get(self.task_type)
+            return reverse(url_name) if url_name else None
         model_name = self.content_type.model
         if model_name == "session":
             # No SessionLog exists yet — link to the create form, pre-filled

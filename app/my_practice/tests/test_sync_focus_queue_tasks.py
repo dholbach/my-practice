@@ -8,6 +8,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from ..models import (
+    BankTransaction,
     Client,
     Invoice,
     InvoiceItem,
@@ -342,3 +343,110 @@ class SyncOperationalChecklistTests(TestCase):
 
         task.refresh_from_db()
         self.assertTrue(task.is_completed)
+
+
+class SyncBankUnmatchedTests(TestCase):
+    """Aggregate bank task (#422, option B) — one row per practice, not per transaction."""
+
+    def setUp(self):
+        self.practice = _make_practice()
+
+    def _transaction(self, *, amount="90.00", reference="Test", **overrides):
+        fields = {
+            "practice": self.practice,
+            "transaction_date": date(2026, 1, 15),
+            "value_date": date(2026, 1, 15),
+            "payer_name": "Max Mustermann",
+            "payer_iban": "",
+            "reference": reference,
+            "amount": Decimal(amount),
+            "balance_after": Decimal("1000.00"),
+            "match_confidence": "unmatched",
+            "processed": False,
+        }
+        fields.update(overrides)
+        return BankTransaction.objects.create(**fields)
+
+    def _task(self):
+        return PracticeTodo.objects.filter(
+            task_type=PracticeTodo.TaskType.BANK_UNMATCHED,
+            completed_at__isnull=True,
+        ).first()
+
+    def test_no_task_when_nothing_unmatched(self):
+        call_command("sync_focus_queue_tasks")
+        self.assertIsNone(self._task())
+
+    def test_creates_one_task_for_many_transactions(self):
+        for i in range(4):
+            self._transaction(reference=f"Ref {i}")
+        call_command("sync_focus_queue_tasks")
+
+        self.assertEqual(
+            PracticeTodo.objects.filter(task_type=PracticeTodo.TaskType.BANK_UNMATCHED).count(),
+            1,
+        )
+        self.assertIn("4", self._task().title)
+
+    def test_title_updated_in_place_as_count_changes(self):
+        first = self._transaction(reference="Ref 1")
+        self._transaction(reference="Ref 2")
+        call_command("sync_focus_queue_tasks")
+        task_pk = self._task().pk
+        self.assertIn("2", self._task().title)
+
+        first.processed = True
+        first.save(update_fields=["processed"])
+        call_command("sync_focus_queue_tasks")
+
+        # Same row, retitled — not closed and recreated, so any snooze or
+        # due-date the user set on it survives.
+        self.assertEqual(self._task().pk, task_pk)
+        self.assertIn("1", self._task().title)
+
+    def test_auto_closes_when_last_transaction_resolved(self):
+        transaction = self._transaction()
+        call_command("sync_focus_queue_tasks")
+        self.assertIsNotNone(self._task())
+
+        transaction.processed = True
+        transaction.save(update_fields=["processed"])
+        call_command("sync_focus_queue_tasks")
+
+        self.assertIsNone(self._task())
+        self.assertEqual(
+            PracticeTodo.objects.filter(
+                task_type=PracticeTodo.TaskType.BANK_UNMATCHED,
+                completed_at__isnull=False,
+            ).count(),
+            1,
+        )
+
+    def test_ignored_and_matched_transactions_do_not_count(self):
+        self._transaction(reference="Ignored", match_confidence="ignored")
+        call_command("sync_focus_queue_tasks")
+        self.assertIsNone(self._task())
+
+    def test_idempotent(self):
+        self._transaction()
+        call_command("sync_focus_queue_tasks")
+        call_command("sync_focus_queue_tasks")
+        self.assertEqual(
+            PracticeTodo.objects.filter(task_type=PracticeTodo.TaskType.BANK_UNMATCHED).count(),
+            1,
+        )
+
+    def test_row_links_to_bank_import_despite_no_related_object(self):
+        """Aggregate tasks have no related_object, so the link comes from task_type."""
+        self._transaction()
+        call_command("sync_focus_queue_tasks")
+        task = self._task()
+
+        self.assertIsNone(task.related_object)
+        self.assertEqual(task.related_object_url, "/bank/import/")
+
+    def test_title_carries_no_counterparty_name(self):
+        """A per-transaction title would leak a client name; the aggregate cannot."""
+        self._transaction(payer_name="Anna Schmidt")
+        call_command("sync_focus_queue_tasks")
+        self.assertNotIn("Anna", self._task().title)

@@ -3,7 +3,8 @@ Management command to materialize derived Task rows for the P-050 Focus Queue.
 
 Creates a PracticeTodo (task_type != manual) for each currently-outstanding
 derived signal (missing session log, unpaid/unsent invoices, pending
-operational checklists, open supervision topics) and auto-closes ones whose
+operational checklists, unmatched bank transactions, open supervision
+topics) and auto-closes ones whose
 underlying signal has since resolved. Reuses the same detection logic as the
 dashboard's "Braucht Aktion" widget builders (or, for supervision, the
 existing SupervisionItem model) rather than re-deriving it.
@@ -23,7 +24,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Model, Q
 from django.utils import timezone
 
-from ...models import Invoice, Practice, PracticeTodo
+from ...models import BankTransaction, Invoice, Practice, PracticeTodo
 from ...models.clinical import SupervisionItem
 from ...models.session import Session
 from ...utils.dashboard_widgets import ChecklistWidgetBuilder, InvoiceActionsWidgetBuilder
@@ -33,8 +34,8 @@ from ...utils.tag_helpers import get_sessions_missing_log
 class Command(BaseCommand):
     help = (
         "Materialize derived Focus Queue Task rows (missing session log, "
-        "unpaid/unsent invoices, operational checklists, open supervision "
-        "topics) and auto-close resolved ones."
+        "unpaid/unsent invoices, operational checklists, unmatched bank "
+        "transactions, open supervision topics) and auto-close resolved ones."
     )
 
     def handle(self, *args, **options):
@@ -45,6 +46,7 @@ class Command(BaseCommand):
             self._sync_invoice_unpaid(practice, totals)
             self._sync_invoice_unsent(practice, totals)
             self._sync_operational_checklist(practice, totals)
+            self._sync_bank_unmatched(practice, totals)
             self._sync_supervision(practice, totals)
 
         self.stdout.write(
@@ -130,6 +132,69 @@ class Command(BaseCommand):
             lambda invoice: invoice.invoice_number,
             totals,
         )
+
+    def _sync_bank_unmatched(self, practice: Practice, totals: dict) -> None:
+        """
+        Unmatched bank transactions, aggregated into a single Task per practice.
+
+        Aggregated rather than one Task per transaction, for the same reason
+        _sync_operational_checklist aggregates: these are worked through in one
+        sitting on /bank/import, not picked off individually from the queue, and
+        a CSV import of forty unmatched rows would bury everything else in a
+        queue whose whole value is being scannable.
+
+        Aggregating also sidesteps a privacy trap. A per-transaction title would
+        have to name the counterparty to be useful, and a counterparty is often
+        a client — putting a real name in a Focus Queue row, which is exactly
+        the kind of render that the .sensitive-data contract exists to catch
+        (M-PAT-08). A count has nobody's name in it.
+
+        The predicate is the one the conditional nav badge used to compute in
+        PracticeScopeMiddleware (removed along with the badge in this change):
+        unprocessed, unmatched, and not deliberately ignored.
+        """
+        count = (
+            BankTransaction.objects.filter(
+                practice=practice,
+                processed=False,
+                matched_invoice__isnull=True,
+            )
+            .exclude(match_confidence="ignored")
+            .count()
+        )
+
+        existing = (
+            PracticeTodo.objects.filter(
+                practice=practice,
+                task_type=PracticeTodo.TaskType.BANK_UNMATCHED,
+                completed_at__isnull=True,
+            )
+            .order_by("created_at")
+            .first()
+        )
+
+        if not count:
+            if existing:
+                existing.mark_completed()
+                totals["closed"] += 1
+            return
+
+        # Untranslated on purpose: this command runs outside any request, so
+        # there is no admin UI language to render into (see module docstring).
+        # The row's task-type badge is translated by the UI; the title only has
+        # to carry the number.
+        title = f"{count} unmatched bank transactions"
+        if existing:
+            if existing.title != title:
+                existing.title = title
+                existing.save(update_fields=["title"])
+        else:
+            PracticeTodo.objects.create(
+                practice=practice,
+                title=title,
+                task_type=PracticeTodo.TaskType.BANK_UNMATCHED,
+            )
+            totals["created"] += 1
 
     def _sync_supervision(self, practice: Practice, totals: dict) -> None:
         """

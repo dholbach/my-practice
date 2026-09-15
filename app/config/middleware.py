@@ -31,11 +31,8 @@ class PracticeScopeMiddleware:
     def __call__(self, request):
         if request.user.is_authenticated:
             request.current_practice = self.get_practice(request)
-            # Add unmatched bank transaction count for navigation badge
-            request.unmatched_bank_count = self.get_unmatched_bank_count(request)
         else:
             request.current_practice = None
-            request.unmatched_bank_count = 0
 
         response = self.get_response(request)
         return response
@@ -80,25 +77,3 @@ class PracticeScopeMiddleware:
             return any_practice
 
         return None
-
-    def get_unmatched_bank_count(self, request):
-        """
-        Count unmatched bank transactions for navigation badge.
-
-        Returns:
-            int: Number of unprocessed, unmatched transactions (excludes ignored)
-        """
-        if not request.current_practice:
-            return 0
-
-        from my_practice.models import BankTransaction
-
-        return (
-            BankTransaction.objects.filter(
-                practice=request.current_practice,
-                processed=False,
-                matched_invoice__isnull=True,
-            )
-            .exclude(match_confidence="ignored")
-            .count()
-        )

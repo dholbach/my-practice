@@ -100,14 +100,6 @@
                 <a href="{% url 'client_list' %}" {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_intake' or request.resolver_match.url_name == 'client_detail' %}class="active"{% endif %}>📋 {% trans "Clients" %}</a>
                 <a href="{% url 'invoice_list' %}" {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' or request.resolver_match.url_name == 'invoice_create' or request.resolver_match.url_name == 'invoice_edit' or request.resolver_match.url_name == 'monthly_billing' or request.resolver_match.url_name == 'monthly_billing_overview' or request.resolver_match.url_name == 'billing_open_overview' %}class="active"{% endif %}>📄 {% trans "Invoices" %}</a>
                 <a href="{% url 'focus_queue' %}" {% if request.resolver_match.url_name == 'focus_queue' or 'todo' in request.resolver_match.url_name %}class="active"{% endif %}>🎯 {% trans "Focus Queue" %}</a>
-                {% comment %} The unmatched-transaction count was the only alert for bank work
-                   waiting to be assigned, and it used to ride on the Finances
-                   dropdown. Rather than lose it, the link appears only while there
-                   is something to match — the nav is four links the rest of the
-                   time. Proper home is a Focus Queue task type (see P-047 doc). {% endcomment %}
-                {% if request.unmatched_bank_count %}
-                <a href="{% url 'bank_import' %}" {% if 'bank' in request.resolver_match.url_name %}class="active"{% endif %}>🏦 {% trans "Bank import" %} <span class="badge">{{ request.unmatched_bank_count }}</span></a>
-                {% endif %}
             </nav>
         </div>
 
