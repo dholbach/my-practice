@@ -16,7 +16,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from my_practice.models import (
     Client,
@@ -38,6 +38,9 @@ from my_practice.utils.financial_list_context_builder import FinancialListContex
 User = get_user_model()
 
 YEAR = 2026
+
+# Deterministic Fernet key so encrypted fields work in CI, where no .env exists.
+TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
 
 
 class BuilderTestBase(TestCase):
@@ -267,6 +270,7 @@ class ClientDetailBillingTest(BuilderTestBase):
         self.assertEqual(int(year), date.today().year)
 
 
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
 class ClientDetailTimelineTest(BuilderTestBase):
     """Supervision items are interleaved with sessions in log_entries."""
 
