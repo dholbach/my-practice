@@ -16,7 +16,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from my_practice.models import (
     Client,
@@ -27,6 +27,7 @@ from my_practice.models import (
     Practice,
     ServiceType,
     Session,
+    SupervisionItem,
     TimeOff,
     UserPractice,
 )
@@ -37,6 +38,9 @@ from my_practice.utils.financial_list_context_builder import FinancialListContex
 User = get_user_model()
 
 YEAR = 2026
+
+# Deterministic Fernet key so encrypted fields work in CI, where no .env exists.
+TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
 
 
 class BuilderTestBase(TestCase):
@@ -264,6 +268,45 @@ class ClientDetailBillingTest(BuilderTestBase):
         year, month = context["current_month_str"].split("-")
         self.assertEqual(len(month), 2)
         self.assertEqual(int(year), date.today().year)
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class ClientDetailTimelineTest(BuilderTestBase):
+    """Supervision items are interleaved with sessions in log_entries."""
+
+    def build_entries(self):
+        client = Client.objects.get(pk=self.client_a.pk)
+        context = ClientDetailContextBuilder(client, self.make_request()).build()
+        return [(e["type"], e["date"]) for e in context["log_entries"]]
+
+    def test_discussed_item_lands_on_its_resolved_date(self):
+        Session.objects.create(client=self.client_a, session_date=date(YEAR, 3, 10), duration=60)
+        Session.objects.create(client=self.client_a, session_date=date(YEAR, 3, 24), duration=60)
+        SupervisionItem.objects.create(
+            client=self.client_a,
+            content="Wie weiter?",
+            status=SupervisionItem.Status.BESPROCHEN,
+            resolution_notes="Ressourcen stärken.",
+            resolved_date=date(YEAR, 3, 17),
+        )
+
+        self.assertEqual(
+            self.build_entries(),
+            [
+                ("session", date(YEAR, 3, 24)),
+                ("supervision", date(YEAR, 3, 17)),
+                ("session", date(YEAR, 3, 10)),
+            ],
+        )
+
+    def test_open_item_lands_on_the_day_it_was_raised(self):
+        item = SupervisionItem.objects.create(client=self.client_a, content="Offen")
+
+        client = Client.objects.get(pk=self.client_a.pk)
+        context = ClientDetailContextBuilder(client, self.make_request()).build()
+
+        self.assertEqual(self.build_entries(), [("supervision", item.created_at.date())])
+        self.assertEqual(context["open_supervision_count"], 1)
 
 
 # ── FinancialListContextBuilder ───────────────────────────────────────────────

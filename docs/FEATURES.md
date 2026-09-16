@@ -28,8 +28,9 @@ chronological record; this document only tracks current state.
 ### Clinical Documentation (Protokoll Tab)
 - ✅ Session log entries (SessionLog) — structured per-session notes with interventions, mood tags, session type
 - ✅ Freeform dated notes (ClientNote) — encrypted Markdown, user-supplied date
-- ✅ `+ Notiz` and `+ Supervision` quick-entry in Protokoll toolbar (Supervision section collapsed by default behind the toggle)
+- ✅ `+ Notiz` and `+ Supervision` quick-entry in Protokoll toolbar (the add forms are collapsed by default behind the toggles)
 - ✅ Supervision — single unified workflow: `SupervisionItem` agenda entries with a `besprochen` toggle, optional resolution notes/date filled in via a resolve view when marked discussed
+- ✅ Supervision topics and their feedback are interleaved with session logs in the Protokoll timeline — a discussed topic sits on the day it was discussed, an open one on the day it was raised — so preparing the next session shows the supervisor's input right next to the sessions it refers to
 - ✅ Chronological unified log view (sessions + notes, newest first, collapse >10)
 - ✅ Unbilled session delete (blocked if already invoiced)
 - ✅ GebüH-recorded indicator on session rows — the GebüH button shows a visual marker once a code has been entered for that session
