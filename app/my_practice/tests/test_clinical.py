@@ -413,6 +413,26 @@ class SupervisionViewTests(ClinicalTestBase):
         self.assertIn("status", data)
         self.assertEqual(data["status"], SupervisionItem.Status.BESPROCHEN)
 
+    def test_feedback_rendered_in_client_timeline(self):
+        """Discussed supervision feedback appears in the Protocol timeline, dated
+        by the day it was discussed, between the surrounding sessions."""
+        Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 10), duration=60)
+        Session.objects.create(client=self.client_obj, session_date=date(2026, 3, 24), duration=60)
+        SupervisionItem.objects.create(
+            client=self.client_obj,
+            content="Frage zur Abgrenzung",
+            status=SupervisionItem.Status.BESPROCHEN,
+            resolution_notes="Rat: Körperwahrnehmung stärker einbeziehen.",
+            resolved_date=date(2026, 3, 17),
+        )
+        response = self.http.get(reverse("client_detail", kwargs={"pk": self.client_obj.pk}))
+        html = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        timeline = html[html.index('class="cn-session-list"') :]
+        self.assertLess(timeline.index("24.03.2026"), timeline.index("Frage zur Abgrenzung"))
+        self.assertLess(timeline.index("Frage zur Abgrenzung"), timeline.index("10.03.2026"))
+        self.assertIn("Körperwahrnehmung stärker einbeziehen", timeline)
+
     def test_supervision_queue_loads(self):
         """GET /supervision/ renders queue template."""
         SupervisionItem.objects.create(client=self.client_obj, content="Queue item")

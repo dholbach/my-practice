@@ -375,7 +375,7 @@
         </form>
     </div>
 
-    <!-- Supervision section, above the chronological timeline so open topics aren't buried -->
+    <!-- Supervision items themselves are interleaved with the timeline below -->
     <div class="cn-supervision-section" x-show="showSupervision">
         <h3 class="cn-supervision-heading">🔍 {% trans "Supervision" %}</h3>
         <form method="post" action="{% url 'supervision_item_create' client.pk %}" class="cn-field cn-supervision-new-form">
@@ -384,50 +384,6 @@
                       placeholder="{% trans 'Supervision topic or question…' %}" rows="3"></textarea>
             <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
         </form>
-        {% if supervision_items %}
-        <div class="cn-supervision-list">
-        {% for item in supervision_items %}
-        {% trans "Delete supervision topic?" as confirm_del_supervision %}
-        <div class="cn-supervision-item cn-status-{{ item.status }}" x-data="{ resolving: false }">
-            <div class="cn-supervision-content">{{ item.content }}</div>
-            {% if item.resolution_notes %}
-            <div class="cn-supervision-resolution md-rendered">{{ item.resolution_notes|render_markdown }}</div>
-            {% endif %}
-            <div class="cn-supervision-meta">
-                <span class="cn-status-badge cn-status-{{ item.status }}">{{ item.get_status_display }}</span>
-                {% if item.resolved_date %}
-                <span class="cn-date-hint">{{ item.resolved_date|date:"d.m.Y" }}</span>
-                {% else %}
-                <span class="cn-date-hint">{{ item.created_at|date:"d.m.Y" }}</span>
-                {% endif %}
-            </div>
-            <div class="cn-supervision-actions">
-            {% if item.status == "offen" %}
-            <button type="button" class="btn btn-secondary btn-sm" x-on:click="resolving = !resolving">✓ {% trans "Mark discussed" %}</button>
-            {% else %}
-            {% url 'supervision_item_toggle' client.pk item.pk as toggle_url %}
-            {% trans "↩ Reopen" as lbl_reopen %}
-            {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=lbl_reopen button_class='btn btn-secondary btn-sm' %}
-            {% endif %}
-            {% url 'supervision_item_delete' client.pk item.pk as delete_url %}
-            {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm=confirm_del_supervision %}
-            </div>
-            {% if item.status == "offen" %}
-            <div class="cn-supervision-resolve-form" x-show="resolving">
-                <form method="post" action="{% url 'supervision_item_resolve' client.pk item.pk %}">
-                    {% csrf_token %}
-                    <input type="date" name="resolved_date" class="form-control" value="{% now 'Y-m-d' %}">
-                    <textarea name="resolution_notes" class="cn-textarea-small" rows="3" placeholder="{% trans 'Feedback or outcome (optional, Markdown)…' %}"></textarea>
-                    <button type="submit" class="btn btn-primary btn-sm">{% trans "Mark discussed" %}</button>
-                </form>
-            </div>
-            {% endif %}
-        </div>
-        {% endfor %}
-        </div>
-        {% else %}
-        <p class="cn-empty-state">{% trans "No supervision topics for this client yet." %}</p>
-        {% endif %}
     </div>
 
     {% if log_entries %}
@@ -557,6 +513,46 @@
                 </div>
             </form>
         </div>
+    </div>
+    {% endwith %}
+
+    {% elif entry.type == "supervision" %}
+    {% with item=entry.obj %}
+    {% trans "Delete supervision topic?" as confirm_del_supervision %}
+    <div class="cn-supervision-item cn-status-{{ item.status }}" x-data="{ resolving: false }">
+        <div class="cn-supervision-meta">
+            <span class="cn-supervision-label">🔍 {% trans "Supervision" %}</span>
+            <span class="cn-status-badge cn-status-{{ item.status }}">{{ item.get_status_display }}</span>
+            <span class="cn-date-hint">{% trans "Raised on" %} {{ item.created_at|date:"d.m.Y" }}</span>
+            {% if item.resolved_date %}
+            <span class="cn-date-hint">{% trans "Discussed on" %} {{ item.resolved_date|date:"d.m.Y" }}</span>
+            {% endif %}
+        </div>
+        <div class="cn-supervision-content">{{ item.content }}</div>
+        {% if item.resolution_notes %}
+        <div class="cn-supervision-resolution md-rendered">{{ item.resolution_notes|render_markdown }}</div>
+        {% endif %}
+        <div class="cn-supervision-actions">
+        {% if item.status == "offen" %}
+        <button type="button" class="btn btn-secondary btn-sm" x-on:click="resolving = !resolving">✓ {% trans "Mark discussed" %}</button>
+        {% else %}
+        {% url 'supervision_item_toggle' client.pk item.pk as toggle_url %}
+        {% trans "↩ Reopen" as lbl_reopen %}
+        {% include 'includes/inline_post_button.html' with action_url=toggle_url button_text=lbl_reopen button_class='btn btn-secondary btn-sm' %}
+        {% endif %}
+        {% url 'supervision_item_delete' client.pk item.pk as delete_url %}
+        {% include 'includes/inline_post_button.html' with action_url=delete_url button_text='🗑' button_class='btn btn-danger btn-sm' confirm=confirm_del_supervision %}
+        </div>
+        {% if item.status == "offen" %}
+        <div class="cn-supervision-resolve-form" x-show="resolving">
+            <form method="post" action="{% url 'supervision_item_resolve' client.pk item.pk %}">
+                {% csrf_token %}
+                <input type="date" name="resolved_date" class="form-control" value="{% now 'Y-m-d' %}">
+                <textarea name="resolution_notes" class="cn-textarea-small" rows="3" placeholder="{% trans 'Feedback or outcome (optional, Markdown)…' %}"></textarea>
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Mark discussed" %}</button>
+            </form>
+        </div>
+        {% endif %}
     </div>
     {% endwith %}
     {% endif %}

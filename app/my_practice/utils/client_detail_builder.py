@@ -264,10 +264,23 @@ class ClientDetailContextBuilder:
         notes_qs = ClientNote.objects.filter(client=self.client).order_by(
             "-note_date", "-created_at"
         )
+        supervision_items = list(self.client.supervision_items.order_by("-created_at"))
+        # Supervision items are interleaved with the session timeline so feedback
+        # from supervision sits next to the sessions it refers to when preparing
+        # the next one. A discussed item lands on the day it was discussed (that's
+        # when the feedback arrived); an open one on the day it was raised.
         log_entries = sorted(
             chain(
                 [{"type": "session", "date": s.session_date, "obj": s} for s in sessions_qs],
                 [{"type": "note", "date": n.note_date, "obj": n} for n in notes_qs],
+                [
+                    {
+                        "type": "supervision",
+                        "date": item.resolved_date or item.created_at.date(),
+                        "obj": item,
+                    }
+                    for item in supervision_items
+                ],
             ),
             key=lambda e: e["date"],
             reverse=True,
@@ -290,10 +303,9 @@ class ClientDetailContextBuilder:
             "log_entries": log_entries,
             "recent_sessions_needing_log": recent_sessions_needing_log,
             "no_log_needed_session_ids": no_log_needed_session_ids,
-            "supervision_items": self.client.supervision_items.order_by("-created_at"),
-            "open_supervision_count": self.client.supervision_items.filter(
-                status=SupervisionItem.Status.OFFEN
-            ).count(),
+            "open_supervision_count": sum(
+                1 for item in supervision_items if item.status == SupervisionItem.Status.OFFEN
+            ),
             "session_type_choices": SessionLog.SessionType.choices,
             "mood_tag_choices": MoodTag.choices,
             "intake_notes_template": INTAKE_NOTES_TEMPLATE,
