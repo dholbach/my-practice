@@ -23,7 +23,7 @@ from ..models import (
     Session,
     UserPractice,
 )
-from ..views.invoice_views import (
+from ..views.billing_views import (
     _build_billing_summary,
     _build_client_rows,
     _determine_client_billing_status,

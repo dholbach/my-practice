@@ -71,7 +71,8 @@ app/my_practice/
 │   ├── expense_views.py       # Expense CRUD + list
 │   ├── focus_queue_views.py   # Focus Queue (P-050) — unified manual + materialized task list
 │   ├── inquiry_views.py       # Lead tracking + funnel analytics
-│   ├── invoice_views.py       # Invoice CRUD + billing overview + monthly batch billing
+│   ├── billing_views.py       # Billing overview + monthly batch billing
+│   ├── invoice_views.py       # Invoice CRUD
 │   ├── operational_views.py   # Operational checklist
 │   ├── practice_views.py      # Practice settings + multi-practice management
 │   ├── search_views.py        # Global search
@@ -217,7 +218,8 @@ Weekly capacity is no longer hard-coded at 2023-08-01. The `CapacityPeriod` mode
 | Module | Responsibility | Notable patterns |
 |--------|---------------|-----------------|
 | `dashboard_views.py` | Dashboard home | Pure dispatcher; delegates to `DashboardContextAssembler` |
-| `invoice_views.py` | Invoice CRUD + billing overview | `InvoiceFormsetMixin`; `billing_helpers` for session items |
+| `billing_views.py` | Billing overview + monthly batch billing | `billing_helpers` for session items |
+| `invoice_views.py` | Invoice CRUD | `InvoiceFormsetMixin`; `billing_helpers` for session items |
 | `client_views.py` | Client list + intake | `PracticeScopedListView` |
 | `clinical_views.py` | SessionLog, Notes, Supervision, triage | Fernet encryption for notes/sessions |
 | `calendar_views.py` | Google Calendar OAuth + event approval | `CalendarImportProcessor`; `resolve_session_rate` |
