@@ -89,7 +89,7 @@ jobs:
           ## Privacy check
 
           - [x] No real names, contact details, or practice data
-          - [x] \`metrics.json\` holds only commit counts, type labels and release tags — no message bodies, no paths into client data
+          - [x] \`metrics.json\` holds only commit counts, type labels, release tags and line counts of tracked source files — no message bodies, no paths into client data
 
           ## Testing
 

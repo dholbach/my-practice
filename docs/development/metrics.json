@@ -1,18 +1,110 @@
 {
-  "generated": "2026-09-15",
-  "head": "bb4afb6",
+  "generated": "2026-09-17",
+  "head": "21aba41",
+  "largest": [
+    {
+      "category": "app",
+      "lines": 1360,
+      "path": "app/my_practice/management/commands/seed_sample_data.py"
+    },
+    {
+      "category": "templates",
+      "lines": 1101,
+      "path": "app/templates/my_practice/analytics.html"
+    },
+    {
+      "category": "tests",
+      "lines": 975,
+      "path": "app/my_practice/tests/test_views_client.py"
+    },
+    {
+      "category": "app",
+      "lines": 934,
+      "path": "app/my_practice/views/invoice_views.py"
+    },
+    {
+      "category": "tests",
+      "lines": 874,
+      "path": "app/my_practice/tests/test_clinical.py"
+    },
+    {
+      "category": "app",
+      "lines": 872,
+      "path": "app/my_practice/views/bank_import_views.py"
+    },
+    {
+      "category": "tests",
+      "lines": 832,
+      "path": "app/my_practice/tests/test_email_views.py"
+    },
+    {
+      "category": "tests",
+      "lines": 813,
+      "path": "app/static/js/command_palette.test.js"
+    },
+    {
+      "category": "templates",
+      "lines": 813,
+      "path": "app/templates/my_practice/client_detail.html"
+    },
+    {
+      "category": "tests",
+      "lines": 784,
+      "path": "app/my_practice/tests/test_models.py"
+    },
+    {
+      "category": "app",
+      "lines": 725,
+      "path": "app/my_practice/views/email_views.py"
+    },
+    {
+      "category": "app",
+      "lines": 694,
+      "path": "app/my_practice/views/clinical_views.py"
+    }
+  ],
   "months": [
     {
-      "classified": 156,
-      "commits": 166,
+      "classified": 148,
+      "commits": 158,
+      "files": {
+        "app": {
+          "files": 101,
+          "long": 12,
+          "max": 1212,
+          "median": 191,
+          "p90": 540
+        },
+        "js": {
+          "files": 19,
+          "long": 0,
+          "max": 358,
+          "median": 112,
+          "p90": 338
+        },
+        "templates": {
+          "files": 91,
+          "long": 3,
+          "max": 1067,
+          "median": 82,
+          "p90": 273
+        },
+        "tests": {
+          "files": 73,
+          "long": 7,
+          "max": 700,
+          "median": 284,
+          "p90": 454
+        }
+      },
       "loc": {
-        "app": 25445,
-        "css": 2647,
-        "docs": 13657,
+        "app": 25347,
+        "css": 2646,
+        "docs": 13601,
         "js": 2719,
         "migrations": 1029,
-        "templates": 12806,
-        "tests": 20986
+        "templates": 12807,
+        "tests": 20985
       },
       "month": "2026-06",
       "releases": [
@@ -26,21 +118,51 @@
         "v0.2.6"
       ],
       "types": {
-        "chore": 51,
+        "chore": 49,
         "ci": 3,
         "docs": 15,
-        "feat": 41,
-        "fix": 40,
+        "feat": 40,
+        "fix": 36,
         "other": 2,
         "perf": 0,
-        "refactor": 3,
+        "refactor": 2,
         "style": 1,
         "test": 0
       }
     },
     {
-      "classified": 137,
-      "commits": 146,
+      "classified": 145,
+      "commits": 154,
+      "files": {
+        "app": {
+          "files": 105,
+          "long": 13,
+          "max": 1374,
+          "median": 188,
+          "p90": 540
+        },
+        "js": {
+          "files": 19,
+          "long": 0,
+          "max": 363,
+          "median": 103,
+          "p90": 339
+        },
+        "templates": {
+          "files": 88,
+          "long": 3,
+          "max": 1101,
+          "median": 87,
+          "p90": 311
+        },
+        "tests": {
+          "files": 89,
+          "long": 14,
+          "max": 938,
+          "median": 312,
+          "p90": 608
+        }
+      },
       "loc": {
         "app": 27099,
         "css": 2641,
@@ -63,29 +185,59 @@
         "v0.4.1"
       ],
       "types": {
-        "chore": 27,
+        "chore": 29,
         "ci": 0,
         "docs": 8,
-        "feat": 46,
-        "fix": 33,
+        "feat": 47,
+        "fix": 37,
         "other": 4,
         "perf": 1,
-        "refactor": 10,
+        "refactor": 11,
         "style": 1,
         "test": 7
       }
     },
     {
       "classified": 111,
-      "commits": 119,
+      "commits": 114,
+      "files": {
+        "app": {
+          "files": 123,
+          "long": 12,
+          "max": 1196,
+          "median": 167,
+          "p90": 486
+        },
+        "js": {
+          "files": 19,
+          "long": 0,
+          "max": 363,
+          "median": 110,
+          "p90": 342
+        },
+        "templates": {
+          "files": 88,
+          "long": 3,
+          "max": 1101,
+          "median": 87,
+          "p90": 318
+        },
+        "tests": {
+          "files": 103,
+          "long": 21,
+          "max": 957,
+          "median": 325,
+          "p90": 625
+        }
+      },
       "loc": {
-        "app": 28036,
+        "app": 27981,
         "css": 2645,
-        "docs": 14481,
-        "js": 2822,
+        "docs": 14474,
+        "js": 2788,
         "migrations": 4389,
         "templates": 12564,
-        "tests": 35581
+        "tests": 35111
       },
       "month": "2026-08",
       "releases": [
@@ -111,16 +263,46 @@
       }
     },
     {
-      "classified": 43,
-      "commits": 47,
+      "classified": 47,
+      "commits": 56,
+      "files": {
+        "app": {
+          "files": 124,
+          "long": 12,
+          "max": 1360,
+          "median": 173,
+          "p90": 486
+        },
+        "js": {
+          "files": 19,
+          "long": 0,
+          "max": 378,
+          "median": 110,
+          "p90": 339
+        },
+        "templates": {
+          "files": 92,
+          "long": 3,
+          "max": 1101,
+          "median": 84,
+          "p90": 277
+        },
+        "tests": {
+          "files": 110,
+          "long": 23,
+          "max": 975,
+          "median": 316,
+          "p90": 638
+        }
+      },
       "loc": {
-        "app": 28427,
-        "css": 2880,
-        "docs": 12941,
+        "app": 28439,
+        "css": 2883,
+        "docs": 12942,
         "js": 2721,
         "migrations": 1023,
-        "templates": 12637,
-        "tests": 37623
+        "templates": 12633,
+        "tests": 37686
       },
       "month": "2026-09",
       "releases": [
@@ -129,16 +311,16 @@
         "v0.6.1"
       ],
       "types": {
-        "chore": 16,
+        "chore": 18,
         "ci": 2,
         "docs": 3,
-        "feat": 5,
+        "feat": 6,
         "fix": 13,
         "other": 2,
         "perf": 1,
         "refactor": 1,
         "style": 0,
-        "test": 0
+        "test": 1
       }
     }
   ]

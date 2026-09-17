@@ -845,7 +845,8 @@ def cmd_review(args):
     Runs automated checks and prints the manual checklist.
 
     Options:
-        --full      Quarterly mode: also runs complexity analysis (radon)
+        --full      Quarterly mode: also runs complexity analysis (radon) and
+                    lists files over the long-file threshold
         --verbose   Show full tool output instead of summaries
         --no-tests  Skip the test-coverage step (faster, no DB required)
         -h, --help  Show this help message
@@ -854,7 +855,7 @@ def cmd_review(args):
         print("Usage: ./dev.py review [--full] [--verbose] [--no-tests]")
         print()
         print("Options:")
-        print("  --full      Quarterly mode: adds radon complexity analysis")
+        print("  --full      Quarterly mode: adds radon complexity + long-file listing")
         print("  --verbose   Show full tool output instead of summaries")
         print("  --no-tests  Skip the test-coverage step (faster, no DB required)")
         print("  -h, --help  Show this help message")
@@ -996,6 +997,18 @@ def cmd_review(args):
                 ]
             )
             results.append(("Complexity (radon)", radon_result.returncode))
+        print()
+
+        # --- 7. Long files (quarterly only) ---
+        # Same threshold and pathspecs as docs/development/ so the two never
+        # disagree; that page has the month-by-month trend, this is the list.
+        print("7️⃣  Long files (scripts/codebase_metrics.py --largest)")
+        print("-" * 30)
+        long_result = subprocess.run(
+            [sys.executable, "scripts/codebase_metrics.py", "--largest"],
+            cwd=os.path.dirname(os.path.abspath(__file__)),
+        )
+        results.append(("Long files", long_result.returncode))
         print()
 
     # --- Summary ---

@@ -473,7 +473,8 @@ When adding new features:
 
 #### docs/development/ - Codebase Metrics (generated)
 **Use for**: nothing by hand — `scripts/codebase_metrics.py` generates every file
-in it (Markdown plus the SVG charts) from git history (LOC by category, commit-type mix, release cadence, monthly).
+in it (Markdown plus the SVG charts) from git history (LOC by category, file-length
+distribution and longest files, commit-type mix, release cadence, monthly).
 A scheduled workflow pushes a refresh branch on the 1st of each month. Read it
 when deciding whether the project needs features or maintenance next; never edit
 it directly.
@@ -600,6 +601,7 @@ Full scan checklist and canonical patterns: [docs/guides/CODEBASE_STANDARDS.md](
 **Automated** (`./dev.py review --full`):
 - Everything in the monthly run, plus:
 - Complexity hotspots: functions over 50 lines or cyclomatic complexity > 10 (radon)
+- Long files: every app/test/template/JS file of 500+ lines (`scripts/codebase_metrics.py --largest`; the trend lives in `docs/development/`)
 - Dead CSS selectors: `npx purgecss --css app/static/css/tailwind.out.css --content "app/templates/**/*.html" "app/static/js/**/*.js" --output /tmp/purged/` then diff vs `/tmp/purged/tailwind.out.css`. Watch for false positives from dynamically-built class names (e.g. `class="billing-row--{{ row.status }}"` — those classes are real even if purgecss can't see them).
 
 **Manual**:
