@@ -655,16 +655,15 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.largest:
-        sizes = {name: lines_per_file("HEAD", CATEGORIES[name]) for name in FILE_SIZE_CATEGORIES}
-        for name, files in sizes.items():
-            long_files = sum(v >= LONG_FILE_LINES for v in files.values())
-            print(f"{name:<10} {len(files):>4} files, {long_files:>3} of {LONG_FILE_LINES}+ lines")
-        print()
-        for files in sizes.values():
-            for path, lines in sorted(files.items(), key=lambda kv: -kv[1]):
-                if lines < LONG_FILE_LINES:
-                    break
-                print(f"{lines:>6}  {path}")
+        for name in FILE_SIZE_CATEGORIES:
+            files = lines_per_file("HEAD", CATEGORIES[name])
+            long_files = [
+                (lines, path) for path, lines in files.items() if lines >= LONG_FILE_LINES
+            ]
+            print(f"{name}: {len(files)} files, {len(long_files)} of {LONG_FILE_LINES}+ lines")
+            for lines, path in sorted(long_files, key=lambda f: (-f[0], f[1])):
+                print(f"  {lines:>6}  {path}")
+            print()
         return 0
 
     files = build(collect())
