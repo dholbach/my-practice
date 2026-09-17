@@ -11,7 +11,10 @@ lose track of on a long-running solo project:
     maintenance (the commit mix), and
   * which part of the repo is actually growing (app code vs. tests vs. docs vs.
     migrations), since "the repo feels big" and "the app got bigger" are very
-    different problems with different fixes.
+    different problems with different fixes, and
+  * whether that growth is spread across files or piling into a few — total
+    lines can rise harmlessly while one views module quietly becomes the place
+    every new feature gets bolted onto.
 
 Everything is recomputed from scratch on every run rather than appended to, so
 the output is idempotent and self-healing: a rewritten history, a corrected
@@ -27,6 +30,8 @@ Usage:
     scripts/codebase_metrics.py --check   # exit 1 if regeneration would change
                                           # them (for CI / pre-release checks)
     scripts/codebase_metrics.py --stdout  # print the README instead of writing
+    scripts/codebase_metrics.py --largest # print only the longest files at HEAD
+                                          # (used by `./dev.py review --full`)
 """
 
 import argparse
@@ -77,6 +82,16 @@ CATEGORIES = {
     # size on every refresh.
     "docs": ["*.md", ":(exclude)*node_modules*", ":(exclude)docs/development/*"],
 }
+
+# Categories where the length of an individual file is a design signal, and
+# the line count past which a file is reported as "long". css is a single file
+# by rule (M-PAT-04), migrations accumulate by design and docs are prose, so
+# none of those is a candidate. 500 is the same order of magnitude as the
+# radon "function over 50 lines" check in `./dev.py review --full`: the point
+# where a views module or template has usually been asked to hold two features.
+FILE_SIZE_CATEGORIES = ["app", "tests", "templates", "js"]
+LONG_FILE_LINES = 500
+LARGEST_FILES_SHOWN = 12
 
 # Conventional-commit types worth reporting separately. Anything else that
 # parses as `type:` lands in "other"; anything unparseable is ignored rather
@@ -132,8 +147,8 @@ def commit_at_month_end(month: str) -> str:
     return git("rev-list", "-n1", f"--before={end}", "HEAD").strip()
 
 
-def count_lines(rev: str, pathspec: list[str]) -> int:
-    """Total lines across every file matching `pathspec` at `rev`.
+def lines_per_file(rev: str, pathspec: list[str]) -> dict[str, int]:
+    """Line count of every file matching `pathspec` at `rev`, keyed by path.
 
     `git grep -c ''` matches every line of every tracked text file and prints
     `rev:path:count`, which is orders of magnitude faster than checking out or
@@ -141,7 +156,33 @@ def count_lines(rev: str, pathspec: list[str]) -> int:
     second. Binary files are skipped automatically, which is what we want.
     """
     out = git("grep", "-c", "", rev, "--", *pathspec)
-    return sum(int(line.rsplit(":", 1)[1]) for line in out.splitlines() if ":" in line)
+    sizes: dict[str, int] = {}
+    for line in out.splitlines():
+        if ":" not in line:
+            continue
+        rev_path, count = line.rsplit(":", 1)
+        sizes[rev_path.split(":", 1)[1]] = int(count)
+    return sizes
+
+
+def file_size_stats(sizes: dict[str, int]) -> dict[str, int]:
+    """Distribution of one category's file lengths, all as plain ints.
+
+    p90 uses the nearest-rank method (the 90th-percentile file itself) rather
+    than an interpolated value: it stays a real file length, and with a hundred
+    files the two agree to within a line anyway.
+    """
+    ordered = sorted(sizes.values())
+    n = len(ordered)
+    if not n:
+        return {"files": 0, "median": 0, "p90": 0, "max": 0, "long": 0}
+    return {
+        "files": n,
+        "median": ordered[n // 2],
+        "p90": ordered[min(n - 1, -(-n * 9 // 10) - 1)],
+        "max": ordered[-1],
+        "long": sum(v >= LONG_FILE_LINES for v in ordered),
+    }
 
 
 def collect() -> dict:
@@ -178,6 +219,9 @@ def collect() -> dict:
             kind = match.group(1).lower()
             counts[kind if kind in counts else "other"] += 1
 
+        sizes = {
+            name: lines_per_file(rev, spec) if rev else {} for name, spec in CATEGORIES.items()
+        }
         months.append(
             {
                 "month": month,
@@ -187,16 +231,29 @@ def collect() -> dict:
                 # Already in creatordate order from for-each-ref. Sorting here
                 # would be a string sort, which puts v0.2.10 before v0.2.7.
                 "releases": tags_by_month.get(month, []),
-                "loc": {
-                    name: count_lines(rev, spec) if rev else 0 for name, spec in CATEGORIES.items()
-                },
+                "loc": {name: sum(files.values()) for name, files in sizes.items()},
+                "files": {name: file_size_stats(sizes[name]) for name in FILE_SIZE_CATEGORIES},
             }
         )
+
+    # The per-file breakdown is only kept for HEAD: the month series answers
+    # "is it getting worse?", this answers "where, right now?". Paths are of
+    # tracked source files only — nothing under the data directory is tracked.
+    head_sizes = {name: lines_per_file("HEAD", CATEGORIES[name]) for name in FILE_SIZE_CATEGORIES}
+    largest = sorted(
+        (
+            {"path": path, "lines": lines, "category": name}
+            for name, files in head_sizes.items()
+            for path, lines in files.items()
+        ),
+        key=lambda f: (-f["lines"], f["path"]),
+    )[:LARGEST_FILES_SHOWN]
 
     return {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "head": git("rev-parse", "--short", "HEAD").strip(),
         "months": months,
+        "largest": largest,
     }
 
 
@@ -444,6 +501,15 @@ def build(data: dict) -> dict[str, str]:
             "index",
             baseline=100,
         ),
+        "chart-long-files.svg": svg_chart(
+            f"Files of {LONG_FILE_LINES}+ lines",
+            labels,
+            [
+                (name, PALETTE[name], [float(m["files"][name]["long"]) for m in months])
+                for name in FILE_SIZE_CATEGORIES
+            ],
+            "files",
+        ),
     }
 
     out: list[str] = []
@@ -507,6 +573,38 @@ def build(data: dict) -> dict[str, str]:
         cells = " | ".join(f"{v:,}" for v in series)
         add(f"| {name} | {cells} | {delta(series)} |")
     add("")
+    add("## Is growth spread out, or piling up?")
+    add("")
+    add(
+        "Total lines can rise harmlessly while one module quietly becomes the "
+        "place every new feature gets bolted onto. The count of files past "
+        f"{LONG_FILE_LINES} lines is the figure to keep flat; the largest-file "
+        "list below is where to start when it is not. Test files are held to "
+        "the same bar — a long test module is as hard to navigate as a long "
+        "view, it just fails less loudly."
+    )
+    add("")
+    add(f"![Files of {LONG_FILE_LINES}+ lines](chart-long-files.svg)")
+    add("")
+    add(f"| Category | Files | Median | p90 | Largest | {LONG_FILE_LINES}+ lines | Change |")
+    add("| --- | ---: | ---: | ---: | ---: | ---: | ---: |")
+    for name in FILE_SIZE_CATEGORIES:
+        now = latest["files"][name]
+        long_series = [m["files"][name]["long"] for m in months]
+        add(
+            f"| {name} | {now['files']} | {now['median']} | {now['p90']} | "
+            f"{now['max']:,} | {now['long']} | {delta(long_series)} |"
+        )
+    add("")
+    add("*Change* is the movement in the long-file count across the tracked window.")
+    add("")
+    add("### Longest files right now")
+    add("")
+    add("| Lines | File | Category |")
+    add("| ---: | --- | --- |")
+    for f in data["largest"]:
+        add(f"| {f['lines']:,} | [`{f['path']}`](../../{f['path']}) | {f['category']} |")
+    add("")
     add("## Where does the effort go?")
     add("")
     add(
@@ -551,7 +649,23 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="exit 1 if output is stale")
     parser.add_argument("--stdout", action="store_true", help="print README instead of writing")
+    parser.add_argument(
+        "--largest", action="store_true", help="print the longest files at HEAD and exit"
+    )
     args = parser.parse_args()
+
+    if args.largest:
+        sizes = {name: lines_per_file("HEAD", CATEGORIES[name]) for name in FILE_SIZE_CATEGORIES}
+        for name, files in sizes.items():
+            long_files = sum(v >= LONG_FILE_LINES for v in files.values())
+            print(f"{name:<10} {len(files):>4} files, {long_files:>3} of {LONG_FILE_LINES}+ lines")
+        print()
+        for files in sizes.values():
+            for path, lines in sorted(files.items(), key=lambda kv: -kv[1]):
+                if lines < LONG_FILE_LINES:
+                    break
+                print(f"{lines:>6}  {path}")
+        return 0
 
     files = build(collect())
 
