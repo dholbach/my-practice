@@ -1,8 +1,8 @@
 # P-023: SMS Sending via seven.io
 
-**Status**: TODO  
-**Priority**: Medium  
-**Estimated effort**: ~4h  
+**Status**: TODO
+**Priority**: Medium
+**Estimated effort**: ~4h
 **Created**: March 2026
 
 ---

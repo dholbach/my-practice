@@ -1,6 +1,6 @@
 # P-011: Security Foundation
 
-**Status**: ✅ Complete (Phase 1–3 done; Phase 4 = Fernet field encryption, done in P-009)  
+**Status**: ✅ Complete (Phase 1–3 done; Phase 4 = Fernet field encryption, done in P-009)
 **Completed**: Feb 2026
 
 ---

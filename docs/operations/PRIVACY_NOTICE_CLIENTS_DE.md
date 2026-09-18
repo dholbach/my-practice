@@ -152,9 +152,9 @@ Anfragen richten Sie bitte direkt an die Praxis.
 
 ## Verantwortliche Stelle
 
-[Praxisname]  
-[Adresse]  
-[E-Mail]  
+[Praxisname]
+[Adresse]
+[E-Mail]
 [Telefon]
 
 *Kein Datenschutzbeauftragter erforderlich (Einzelpraxis)*

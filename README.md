@@ -5,7 +5,7 @@
 [![Django 6](https://img.shields.io/badge/Django-6.1-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
-**Self-hosted practice management for independent, private-pay practices** — therapy, coaching, and similar.  
+**Self-hosted practice management for independent, private-pay practices** — therapy, coaching, and similar.
 Invoicing, session tracking, notes, analytics — on your own hardware, under your own control.
 
 > **Pre-release.** The code is production-grade — 1,400+ tests, used daily since early 2026. But it has only been tested on one setup (Germany, GLS Bank, Berlin public holidays, single practitioner). No stable API is promised and there are no support guarantees. Issues and PRs welcome.
@@ -38,22 +38,22 @@ Fork it, rename it, make it yours.
 
 You don't need to run the app to get value from this project. Running a private practice means handling Art. 9 health data under GDPR — and most of what that requires, SaaS tools handle silently on your behalf, without you ever seeing how. Building this system meant answering those questions explicitly. The documents below are usable as standalone references:
 
-**[DPIA template](docs/operations/DPIA-template.md)**  
+**[DPIA template](docs/operations/DPIA-template.md)**
 When you systematically process Art. 9 health data, GDPR Art. 35 requires a Data Protection Impact Assessment before you start. Many solo practitioners don't know they need one. This is a filled-in template for a single-practitioner psychotherapy practice — adapt it to your setup and you're most of the way there.
 
-**[Emergency access planning](docs/guides/EMERGENCY_ACCESS_PLANNING.md)**  
+**[Emergency access planning](docs/guides/EMERGENCY_ACCESS_PLANNING.md)**
 What happens to your clients and your data if you're suddenly unavailable — illness, accident, incapacitation? Your clients need continuity of care; your practice needs an administrative handover. This guide walks through a concrete model for solo practitioners: who can reach clients, who can access records, and what the legal boundaries are.
 
-**[Backup and § 147 AO retention](docs/guides/BACKUP_SETUP.md)**  
+**[Backup and § 147 AO retention](docs/guides/BACKUP_SETUP.md)**
 German law requires keeping business records — including invoices — for ten years (§ 147 AO). That's not a technical problem; it's a compliance question every practice has to answer, regardless of what software they use. The backup guide explains the strategy used here; the questions it raises apply universally.
 
-**[Clinical data security](docs/guides/CLINICAL_DATA_SECURITY.md)**  
+**[Clinical data security](docs/guides/CLINICAL_DATA_SECURITY.md)**
 Session notes and client profiles are the most sensitive data in a practice. This guide explains the two-key model used here — full-disk encryption plus a separate Fernet key for clinical content — what each layer protects against, and the questions every practitioner should be able to answer about wherever their data lives.
 
-**[Client privacy notices](docs/operations/PRIVACY_NOTICE_CLIENTS_DE.md)**  
+**[Client privacy notices](docs/operations/PRIVACY_NOTICE_CLIENTS_DE.md)**
 Ready-to-adapt privacy notices (DE + EN) for informing clients about data processing under GDPR Art. 13. Most practices need these and most don't have them written down.
 
-**[Record of processing activities](docs/operations/DATA_REGISTER.md)**  
+**[Record of processing activities](docs/operations/DATA_REGISTER.md)**
 A Verzeichnis von Verarbeitungstätigkeiten as required under GDPR Art. 30 — the register of what data you hold, why, how long, and who has access. Filled in for a solo psychotherapy practice.
 
 ---
@@ -116,13 +116,13 @@ Full feature list: [docs/FEATURES.md](docs/FEATURES.md)
 
 A conventional Django 6 monolith backed by PostgreSQL (psycopg3, async-capable), 1,400+ tests, no external services required beyond the database. A few non-obvious choices:
 
-**Encrypted clinical fields**  
+**Encrypted clinical fields**
 Session notes and sensitive client data use a custom [`EncryptedTextField`](app/my_practice/fields.py) backed by Fernet symmetric encryption (`cryptography` library). The key lives in `FERNET_KEY` (env var), separate from the LUKS full-disk-encryption key — two independent keys, two independent attack surfaces. A plain SQL `SELECT` on an encrypted column returns `gAAAAA...` ciphertext; the ORM is the only path to plaintext. Trade-off: no `.filter()`/`.exclude()` on encrypted columns — navigate clinical records by client, date, and tags instead.
 
-**Why PostgreSQL**  
+**Why PostgreSQL**
 Performance indexes on the invoice/client foreign keys (migrations 0013, 0014), and psycopg3's async driver for Django's async views. The load of a single-practitioner practice doesn't require it, but it keeps the deployment realistic and the door open for async features.
 
-**Pattern layer**  
+**Pattern layer**
 Views stay thin by delegating to builder classes (`AnalyticsDashboardBuilder`, `FinancialListContextBuilder`) and filter helpers (`InvoiceFilterHelper`). Models, views, and utils are split into domain-focused modules under `app/my_practice/{models,views,utils}/`. The full pattern catalogue — including the builder API, CRUD mixins, and query helpers — is in [`CLAUDE.md`](CLAUDE.md). It was written as AI-assistant instructions but reads as a practical architecture reference for anyone contributing to the codebase.
 
 ---

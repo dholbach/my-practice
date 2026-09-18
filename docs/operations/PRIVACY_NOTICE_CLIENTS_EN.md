@@ -150,9 +150,9 @@ Please direct any requests directly to the practice.
 
 ## Controller
 
-[Practice name]  
-[Address]  
-[Email]  
+[Practice name]
+[Address]
+[Email]
 [Phone]
 
 *No data protection officer required (single-person practice)*

@@ -1,7 +1,7 @@
 # P-035 — Session-Centric Calculations
 
-**Status:** DONE — all follow-up items resolved (2026-04-02)  
-**Priority:** Medium  
+**Status:** DONE — all follow-up items resolved (2026-04-02)
+**Priority:** Medium
 **Estimated effort:** ~4–6h
 
 ## Completed

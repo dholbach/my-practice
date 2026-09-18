@@ -1,21 +1,59 @@
 version: 2
+
+# Grouping: patch and minor bumps arrive as one PR per ecosystem per week
+# instead of one PR per package. Four ecosystems updating individually produced
+# more review load than a solo maintainer clears in a week, and a backlog of
+# dependency PRs is how a security update ends up waiting behind nine cosmetic
+# ones. Major bumps stay ungrouped — those need to be read one at a time.
+#
+# Dependabot security updates are never grouped by this config; they always
+# arrive as their own PR, which is what you want.
+
 updates:
+    # Was `directory: "/"` — where there is no requirements file. Both manifests
+    # live in /app, so Dependabot found no Python dependencies at all and every
+    # pin here has been bumped by hand. npm and docker below always pointed at
+    # the right place.
+    #
+    # requirements.txt and requirements-dev.txt duplicate every runtime pin on
+    # purpose; Dependabot updates each file the package appears in, and
+    # scripts/check_requirements_sync.py fails the PR if one is ever missed.
     - package-ecosystem: "pip"
-      directory: "/"
+      directory: "/app"
       schedule:
         interval: "weekly"
+      open-pull-requests-limit: 5
+      groups:
+        python-minor-and-patch:
+          patterns: ["*"]
+          update-types: ["minor", "patch"]
 
     - package-ecosystem: "npm"
       directory: "/app"
       schedule:
         interval: "weekly"
+      open-pull-requests-limit: 5
+      groups:
+        npm-minor-and-patch:
+          patterns: ["*"]
+          update-types: ["minor", "patch"]
 
     - package-ecosystem: "github-actions"
       directory: "/"
       schedule:
         interval: "weekly"
+      open-pull-requests-limit: 5
+      groups:
+        actions-minor-and-patch:
+          patterns: ["*"]
+          update-types: ["minor", "patch"]
 
     - package-ecosystem: "docker"
       directory: "/app"
       schedule:
         interval: "weekly"
+      open-pull-requests-limit: 5
+      groups:
+        docker-minor-and-patch:
+          patterns: ["*"]
+          update-types: ["minor", "patch"]

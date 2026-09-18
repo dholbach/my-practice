@@ -735,6 +735,18 @@ def cmd_quality(args):
             print("❌ Duplicated helpers have drifted")
         print()
 
+        # Same reasoning as above, for the other pair of files that duplicate
+        # content on purpose: requirements.txt and requirements-dev.txt.
+        print("2️⃣ ¾ Requirements pins (requirements.txt ↔ requirements-dev.txt)")
+        print("-" * 30)
+        req_result = subprocess.run([sys.executable, "scripts/check_requirements_sync.py"])
+        results.append(("Requirements sync", req_result.returncode))
+        if req_result.returncode == 0:
+            print("✅ Runtime pins in sync")
+        else:
+            print("❌ Runtime pins have drifted")
+        print()
+
     # Tailwind CSS build
     if run_format:
         print("3️⃣  Tailwind CSS build")
@@ -944,13 +956,15 @@ def cmd_review(args):
         print("⏭️  Skipped (--no-tests)")
         results.append(("Coverage", None))
     else:
+        # source/omit/skip flags and the fail_under floor all live in
+        # app/pyproject.toml, so a `coverage report` run by hand reports the
+        # same thing this does.
         run_docker_command(
             [
                 "python",
                 "-m",
                 "coverage",
                 "run",
-                "--source=my_practice",
                 "manage.py",
                 "test",
                 "my_practice",
@@ -958,19 +972,13 @@ def cmd_review(args):
                 "--verbosity=0",
             ]
         )
-        cov_cmd = [
-            "python",
-            "-m",
-            "coverage",
-            "report",
-            "--skip-covered",
-            "--skip-empty",
-            "--omit=*/migrations/*,*/tests/*",
-        ]
+        cov_cmd = ["python", "-m", "coverage", "report"]
         if not verbose:
             cov_cmd.extend(["--sort=miss"])
         cov_result = run_docker_command(cov_cmd)
         results.append(("Coverage", cov_result.returncode))
+        if cov_result.returncode != 0:
+            print("❌ Coverage is below the floor in app/pyproject.toml")
     print()
 
     # --- 6. Complexity (quarterly only) ---
@@ -1240,18 +1248,39 @@ def cmd_smoke(args):
 
 
 def cmd_install_hooks(_args):
-    """Configure git to use the committed .githooks/ directory.
+    """Install the pre-commit hooks from .pre-commit-config.yaml.
 
-    Run once after cloning. The pre-commit hook auto-formats staged Python
-    files with ruff before each commit (uses host ruff, no Docker needed).
+    Run once after cloning. The hooks run ruff, gitleaks, the PII guard and the
+    file-sync checks before each commit (host tools, no Docker needed).
     """
-    result = subprocess.run(
-        ["git", "config", "core.hooksPath", ".githooks"],
-        cwd=os.path.dirname(os.path.abspath(__file__)),
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+
+    if shutil.which("pre-commit") is None:
+        print("❌ pre-commit is not installed on the host.")
+        print("   Install it, then re-run this command:")
+        print("     pip install pre-commit    # or: pipx install pre-commit")
+        print("   (it is pinned in app/requirements-dev.txt)")
+        return subprocess.CompletedProcess(args=[], returncode=1)
+
+    # An earlier version of this command pointed git at a committed .githooks/
+    # directory. core.hooksPath overrides .git/hooks/ wholesale, so leaving it
+    # set makes `pre-commit install` refuse — and, worse, silently bypasses
+    # every hook below on a clone where it was set before the migration.
+    existing = subprocess.run(
+        ["git", "config", "--get", "core.hooksPath"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
     )
+    if existing.returncode == 0 and existing.stdout.strip():
+        print(f"ℹ️  Clearing core.hooksPath (was: {existing.stdout.strip()})")
+        subprocess.run(["git", "config", "--unset", "core.hooksPath"], cwd=repo_root)
+
+    result = subprocess.run(["pre-commit", "install"], cwd=repo_root)
     if result.returncode == 0:
-        print("✅ Git hooks installed — .githooks/pre-commit will run on every commit.")
-        print("   To skip the hook for one commit: git commit --no-verify")
+        print("✅ Hooks installed — .pre-commit-config.yaml runs on every commit.")
+        print("   Run them over the whole tree: pre-commit run --all-files")
+        print("   To skip the hooks for one commit: git commit --no-verify")
     return result
 
 

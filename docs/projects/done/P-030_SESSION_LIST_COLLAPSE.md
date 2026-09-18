@@ -11,14 +11,14 @@ Um die Ladezeit der Übersichtlichkeit und Performance willen, sollen lange List
 
 2. **Styling (`client_detail.css` oder inline über Block)**:
    - CSS Regel: `.old-entries.collapsed { display: none; }`
-   
+
 3. **Interaktivität (JS)**:
    - Ein Toggle Button unterhalb der Liste:
      - Initiale Beschriftung: "Ältere Einträge anzeigen (X mehr)"
      - Beim Klicken entfernt er die `collapsed` Klasse.
      - Ändert den Text dann auf "Einklappen".
      - Beim erneuten Klicken wird die Klasse wieder hinzugefügt und der Text zurückgesetzt.
-   
+
 4. **Backend**:
    - **Keine Änderung am Backend nötig.** Es ist eine reine Rendering- und Frontend-Lösung.
 

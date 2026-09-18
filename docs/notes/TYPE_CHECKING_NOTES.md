@@ -69,13 +69,13 @@ Affects `invoice_forms.py`. False positive.
 
 ### Return type annotation in `FinancialListContextBuilder`
 
-File: `utils/financial_list_context_builder.py`, lines 105 and 107.  
+File: `utils/financial_list_context_builder.py`, lines 105 and 107.
 Return type annotation says `dict` but the actual return value is `list[dict]`.
 Fix: narrow the annotation to `list[dict[str, Any]]`.
 
 ### Circular import in `import_helpers.py`
 
-File: `utils/import_helpers.py`, line 15.  
+File: `utils/import_helpers.py`, line 15.
 `Client` imported at module level causes a circular import.
 Fix: move it into a `TYPE_CHECKING` guard.
 

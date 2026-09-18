@@ -75,11 +75,22 @@ See [PROJECTS.md](PROJECTS.md) for numbered projects with status tracking (TODO/
 ./dev.py lint               # Run ruff format + ruff lint only (fast, no tests)
 ./dev.py quality            # Run lint + Tailwind CSS build + full test suite (pre-release)
 ./dev.py i18n               # Extract + compile translation strings
+./dev.py install-hooks      # Install the pre-commit hooks (once per clone)
 ./dev.py smoke [vX.Y.Z]     # Boot a released GHCR image with throwaway DB, verify, tear down
 ```
 
 ### Git workflow
 **`main` is branch-protected — all changes require a PR**, even trivial ones like generated files or docs. Always work on a feature branch and open a PR via `gh pr create`.
+
+Install the hooks once per clone: `pip install pre-commit && ./dev.py install-hooks`. `.pre-commit-config.yaml` is the **only** hook mechanism — never add a second one via `core.hooksPath`, which overrides `.git/hooks/` wholesale and silently disables everything in it (that is how the gitleaks scan sat dead for months). CI runs the same config, so skipping the install only moves the feedback to the PR.
+
+### Guardrails that run in CI but not in `./dev.py test`
+- `gitleaks detect` over the full git history (the pre-commit hook only scans the index, so it is skipped in CI — see CODEBASE_STANDARDS.md for why).
+- `manage.py check --deploy` against the hardened config. The suite runs with `DJANGO_DEBUG=True`, so the whole `if not DEBUG:` block in `config/settings.py` is otherwise never evaluated.
+- `mypy --follow-imports=silent` over the modules `mypy.ini` declares strict. Widen that path list and the `mypy.ini` overrides together.
+- `scripts/check_requirements_sync.py` — `requirements.txt` and `requirements-dev.txt` duplicate every runtime pin on purpose (Dependabot does not resolve `-r` includes) and had already drifted once.
+
+Full contract: [docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Repository Tooling & Guardrails.
 
 ### Release process
 Full checklist: [docs/operations/RELEASE.md](docs/operations/RELEASE.md). Summary:

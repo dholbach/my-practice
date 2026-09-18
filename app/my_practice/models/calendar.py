@@ -176,7 +176,8 @@ class PendingCalendarEvent(models.Model):
         if (
             self.matched_client_id
             and self.practice_id
-            and self.matched_client.practice_id != self.practice_id
+            # matched_client_id is checked above, so matched_client is loadable.
+            and self.matched_client.practice_id != self.practice_id  # type: ignore[union-attr]
         ):
             raise ValidationError(
                 {"matched_client": gettext("Client does not belong to the selected practice")}
