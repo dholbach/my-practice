@@ -100,6 +100,11 @@ Left unset (the default), the app assumes plain HTTP and none of the above apply
   case-insensitive substring match) — it holds the sensitive strings themselves,
   so it must never be committed; keeping it inside `.git/` makes that impossible
 - No denylist present → the check passes silently (contributors are unaffected)
+- Install the hooks with `./dev.py install-hooks`; until that is run, none of
+  them fire. `.pre-commit-config.yaml` is the only hook mechanism — a second
+  one via `core.hooksPath` silently disables it (see CODEBASE_STANDARDS.md)
+- Secret scanning does not rely on the hook alone: CI runs `gitleaks detect`
+  over the full git history on every PR and every push to `main`
 - Full-tree audit: `python3 scripts/check_pii.py --all`
 - Populate it with real client names, payer names, addresses, and distinctive
   client codes for your own installation

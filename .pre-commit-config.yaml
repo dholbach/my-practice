@@ -1,26 +1,54 @@
-# Pre-commit hooks for code quality
-# Install: pre-commit install
+# Pre-commit hooks for code quality.
+#
+# Install: ./dev.py install-hooks   (or: pre-commit install)
 # Run manually: pre-commit run --all-files
+#
+# This is the *only* hook mechanism in the repo. There used to be a second one
+# — a committed .githooks/pre-commit installed via `git config core.hooksPath`
+# — and the two silently disabled each other: core.hooksPath overrides
+# .git/hooks/ wholesale, so installing the .githooks one turned off every hook
+# below, including the gitleaks secret scan, with no output saying so. CI now
+# runs this file too (`pre-commit run --all-files` in .github/workflows/ci.yml),
+# so a clone that never installed the hooks is still covered.
 
 repos:
-  # Ruff - Python formatter + linter
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.6
+  # Ruff — formatter + linter.
+  #
+  # Deliberately a `system` hook rather than the upstream ruff-pre-commit repo:
+  # that would pin a *second* ruff version alongside app/requirements-dev.txt,
+  # and the two had already drifted (config said v0.15.6, the pin said 0.16.8),
+  # which silently changes what "lint passes" means depending on which entry
+  # point you used. CI resolves ruff from the same pin for the same reason.
+  #
+  # --force-exclude makes the `exclude` in app/pyproject.toml and ruff.toml
+  # apply to the filenames pre-commit passes explicitly. Without it the hook
+  # reformats generated migrations that both configs say to leave alone — that
+  # is how an 806-line 0001_initial once landed as 3,106 formatted lines.
+  #
+  # Config is resolved per file: app/**.py picks up app/pyproject.toml
+  # (target-version py314), dev.py / prod.py / scripts/*.py pick up the root
+  # ruff.toml (py310, because they run on the host Python).
+  - repo: local
     hooks:
       - id: ruff-format
-        exclude: ^(app/payments_app/migrations/|scripts/archive/)
-      - id: ruff
-        args: [--fix]
-        exclude: ^(app/payments_app/migrations/|scripts/archive/)
+        name: ruff format
+        entry: ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        exclude: ^scripts/archive/
 
-  # isort - Import sorting
-  - repo: https://github.com/pycqa/isort
-    rev: 8.0.1
-    hooks:
-      - id: isort
-        language_version: python3.14
-        args: [--profile=black, --line-length=100]
-        exclude: ^(app/payments_app/migrations/|scripts/archive/)
+      - id: ruff-check
+        name: ruff check
+        entry: ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi]
+        exclude: ^scripts/archive/
+
+  # Import sorting is ruff's job too ("I" is in `select` in both configs).
+  # A standalone isort hook used to run here as well; it did not know about
+  # `known-first-party = ["my_practice"]` in ruff.toml, so the two disagreed
+  # about import grouping in scripts/*.py — the exact ambiguity that setting
+  # exists to resolve.
 
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -43,10 +71,10 @@ repos:
     hooks:
       - id: gitleaks
 
-  # .env is gitignored, so pre-commit's normal file-discovery never sees it —
-  # this hook reads it straight off disk instead of relying on staged files.
   - repo: local
     hooks:
+      # .env is gitignored, so pre-commit's normal file-discovery never sees it —
+      # this hook reads it straight off disk instead of relying on staged files.
       - id: check-env
         name: check .env against .env.example
         entry: python3 scripts/check_env.py
@@ -54,6 +82,35 @@ repos:
         pass_filenames: false
         always_run: true
 
-# Run specific hooks only
+      # Blocks commits containing terms from the local, untracked denylist
+      # (.git/pii-denylist). No-op if the denylist doesn't exist, so clones and
+      # outside contributors are unaffected. Reads the staged diff itself.
+      # Migrated here from .githooks/pre-commit — see the note at the top.
+      - id: check-pii
+        name: PII guard (staged changes vs .git/pii-denylist)
+        entry: python3 scripts/check_pii.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # requirements.txt and requirements-dev.txt duplicate every runtime pin
+      # on purpose (Dependabot does not resolve `-r` includes). They had
+      # already drifted once — see the script's docstring.
+      - id: check-requirements-sync
+        name: runtime pins match between requirements files
+        entry: python3 scripts/check_requirements_sync.py
+        language: system
+        pass_filenames: false
+        files: ^app/requirements(-dev)?\.txt$
+
+      # prod.py ships as a single stdlib-only file, so one helper is duplicated
+      # in dev.py on purpose. Ruff has no opinion about that; this does.
+      - id: check-shared-helpers
+        name: duplicated helpers stay in sync (dev.py ↔ prod.py)
+        entry: python3 scripts/check_shared_helpers.py
+        language: system
+        pass_filenames: false
+        files: ^(dev|prod)\.py$
+
 default_stages: [pre-commit]
 fail_fast: false
