@@ -120,6 +120,67 @@ class RevenueAnalyzerTests(TestCase):
         self.assertIn(2020, years)
         self.assertIn(2021, years)
 
+    def test_get_monthly_trends_revenue_matches_invoice_totals(self):
+        """Monthly revenue should equal the sum of that month's paid invoices."""
+        Invoice.objects.create(
+            client=self.client,
+            invoice_number="TEST-JAN",
+            invoice_date=date(2025, 1, 15),
+            paid_date=date(2025, 1, 20),
+            status="paid",
+            total=Decimal("180.00"),
+            practice=self.practice,
+        )
+        Invoice.objects.create(
+            client=self.client,
+            invoice_number="TEST-FEB",
+            invoice_date=date(2025, 2, 15),
+            paid_date=date(2025, 2, 20),
+            status="paid",
+            total=Decimal("270.00"),
+            practice=self.practice,
+        )
+
+        trends = RevenueAnalyzer.get_monthly_trends(start_year=2025, end_date=date(2025, 2, 28))
+
+        jan_data = [t for t in trends if t["year"] == 2025 and t["month_name"] == "January"][0]
+        self.assertEqual(jan_data["revenue"], 180.0)
+
+        feb_data = [t for t in trends if t["year"] == 2025 and t["month_name"] == "February"][0]
+        self.assertEqual(feb_data["revenue"], 270.0)
+
+    def test_get_yearly_comparison_computes_remaining(self):
+        """remaining = revenue - expenses - withdrawals for the year."""
+        Invoice.objects.create(
+            client=self.client,
+            invoice_number="TEST-1",
+            invoice_date=date(2025, 1, 15),
+            paid_date=date(2025, 1, 20),
+            status="paid",
+            total=Decimal("450.00"),
+            practice=self.practice,
+        )
+        CompanyExpense.objects.create(
+            date=date(2025, 1, 15),
+            amount=Decimal("50.00"),
+            category="software",
+            practice=self.practice,
+        )
+        CompanyWithdrawal.objects.create(
+            date=date(2025, 1, 20),
+            amount=Decimal("100.00"),
+            category="salary",
+            practice=self.practice,
+        )
+
+        comparison = RevenueAnalyzer.get_yearly_comparison(start_year=2025)
+        data_2025 = [d for d in comparison if d["year"] == 2025][0]
+
+        self.assertEqual(data_2025["revenue"], 450.0)
+        self.assertEqual(data_2025["expenses"], 50.0)
+        self.assertEqual(data_2025["withdrawals"], 100.0)
+        self.assertEqual(data_2025["remaining"], 300.0)
+
 
 class SessionAnalyzerTests(TestCase):
     """Test SessionAnalyzer class"""
@@ -309,6 +370,41 @@ class ClientAnalyzerTests(TestCase):
 
         self.assertEqual(len(result), 2)
 
+    def test_get_top_by_revenue_sums_invoice_items(self):
+        """Revenue aggregates from invoice items, not just a stored invoice.total."""
+        service = ServiceType.objects.create(
+            code="therapy_60",
+            name="60-Min Session",
+            default_duration=60,
+            practice=self.practice,
+        )
+        invoice = Invoice.objects.create(
+            client=self.client1,
+            invoice_number="CL1-ITEMS",
+            invoice_date=date.today(),
+            status="paid",
+            practice=self.practice,
+        )
+        for _ in range(5):
+            session = Session.objects.create(
+                client=self.client1,
+                session_date=date.today(),
+                duration=60,
+            )
+            InvoiceItem.objects.create(
+                invoice=invoice,
+                session=session,
+                service_type=service,
+                rate=Decimal("100.00"),
+                quantity=Decimal("1.00"),
+                total=Decimal("100.00"),
+            )
+
+        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+
+        self.assertEqual(result[0]["client"].client_code, "CL1")
+        self.assertEqual(result[0]["total_revenue"], 500.0)
+
 
 class ExpenseAnalyzerTests(TestCase):
     """Test ExpenseAnalyzer class"""
@@ -336,6 +432,31 @@ class ExpenseAnalyzerTests(TestCase):
             self.assertIn("month", item)
             self.assertIn("expenses", item)
             self.assertIn("year", item)
+
+    def test_get_monthly_trends_distributes_evenly_across_months(self):
+        """A yearly expense total is distributed equally across all 12 months."""
+        CompanyExpense.objects.create(
+            date=date(2025, 12, 31),
+            amount=Decimal("100.00"),
+            category="software",
+            is_tax_deductible=True,
+            practice=self.practice,
+        )
+        CompanyExpense.objects.create(
+            date=date(2025, 12, 31),
+            amount=Decimal("50.00"),
+            category="materialien",
+            is_tax_deductible=True,
+            practice=self.practice,
+        )
+
+        trends = ExpenseAnalyzer.get_monthly_trends(start_year=2025, end_date=date(2025, 2, 28))
+
+        expected_monthly = 12.5  # 150.00 / 12 months
+        jan_data = [t for t in trends if t["month_name"] == "January"][0]
+        self.assertAlmostEqual(jan_data["expenses"], expected_monthly, places=2)
+        feb_data = [t for t in trends if t["month_name"] == "February"][0]
+        self.assertAlmostEqual(feb_data["expenses"], expected_monthly, places=2)
 
     def test_get_category_breakdown_with_no_expenses(self):
         """Test category breakdown with no data"""
@@ -366,6 +487,7 @@ class ExpenseAnalyzerTests(TestCase):
         self.assertEqual(len(result["categories"]), 2)
         # Should be ordered by amount descending
         self.assertEqual(result["categories"][0]["amount"], 200.0)
+        self.assertEqual(result["categories"][0]["percentage"], 66.7)
 
 
 class ProfitCalculatorTests(TestCase):
@@ -432,6 +554,7 @@ class ProfitCalculatorTests(TestCase):
         self.assertEqual(year_data["expenses"], 300.0)
         self.assertEqual(year_data["profit"], 700.0)  # 1000 - 300
         self.assertEqual(year_data["withdrawals"], 200.0)
+        self.assertEqual(year_data["cumulative_profit"], 700.0)  # only year in range
 
     def test_calculate_yearly_cumulative_profit(self):
         """Test cumulative profit calculation across years"""

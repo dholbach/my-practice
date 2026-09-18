@@ -1029,19 +1029,7 @@ function switchTab(tabName, clickedButton) {
     // Charts rendered in hidden tabs (display: none) have incorrect dimensions
     // because container.clientHeight returns 0
     setTimeout(function() {
-        const tabContainer = document.getElementById(tabName + '-tab');
-        if (tabContainer) {
-            const canvases = tabContainer.querySelectorAll('canvas');
-            canvases.forEach(canvas => {
-                const canvasId = canvas.id;
-                if (canvasId && typeof chartRegistry !== 'undefined' && chartRegistry[canvasId]) {
-                    // Clear and redraw the chart
-                    const ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    chartRegistry[canvasId](canvas);
-                }
-            });
-        }
+        redrawChartsIn(document.getElementById(tabName + '-tab'));
     }, 50); // Small delay to ensure tab is fully visible
 }
 
@@ -1079,17 +1067,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Redraw charts in the active tab after a short delay
     // This ensures charts in non-revenue tabs are rendered correctly
     setTimeout(function() {
-        if (tabContent) {
-            const canvases = tabContent.querySelectorAll('canvas');
-            canvases.forEach(canvas => {
-                const canvasId = canvas.id;
-                if (canvasId && typeof chartRegistry !== 'undefined' && chartRegistry[canvasId]) {
-                    const ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    chartRegistry[canvasId](canvas);
-                }
-            });
-        }
+        redrawChartsIn(tabContent);
     }, 100); // Delay to ensure DOM is fully rendered
 });
 </script>

@@ -54,9 +54,6 @@
 
 <!-- ══ Tab: Overview + Profile (merged) ══════════════════════════════════════ -->
 <div id="ptab-profil" class="page-tab-content page-tab-active">
-    {% load markdown_filters %}
-    {% load i18n %}
-
     <!-- 4 stat cards -->
     <div class="cockpit-stats">
         <div class="info-card">
@@ -355,9 +352,6 @@
 
 <!-- ══ Tab: Protokoll ══════════════════════════════════════════════════════ -->
 <div id="ptab-protokoll" class="page-tab-content" x-data="{ showNote: false, showSupervision: false }">
-    {% load markdown_filters %}
-    {% load i18n %}
-
     <div class="cn-actions cn-actions-top">
         <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary btn-sm">{% trans "+ Session log" %}</a>
         <button type="button" class="btn btn-secondary btn-sm" x-on:click="showNote = !showNote">{% trans "+ Note" %}</button>
@@ -704,14 +698,7 @@ function pageTab(tabName, btn) {
     // M-PAT-03: charts drawn while their tab was display:none get zero-sized
     // canvases; redraw once the tab (and its real dimensions) are visible.
     setTimeout(function() {
-        tabContainer.querySelectorAll('canvas').forEach(canvas => {
-            const canvasId = canvas.id;
-            if (canvasId && typeof chartRegistry !== 'undefined' && chartRegistry[canvasId]) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                chartRegistry[canvasId](canvas);
-            }
-        });
+        redrawChartsIn(tabContainer);
     }, 50);
 }
 
