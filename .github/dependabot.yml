@@ -1,32 +1,41 @@
 version: 2
 
-# Grouping: patch and minor bumps arrive as one PR per ecosystem per week
-# instead of one PR per package. Four ecosystems updating individually produced
-# more review load than a solo maintainer clears in a week, and a backlog of
-# dependency PRs is how a security update ends up waiting behind nine cosmetic
-# ones. Major bumps stay ungrouped — those need to be read one at a time.
+# Grouping: one PR per ecosystem per severity per week, instead of one per
+# package. Four ecosystems updating individually produced more review load than
+# a solo maintainer clears in a week, and a backlog of dependency PRs is how a
+# security update ends up waiting behind nine cosmetic ones.
 #
-# Dependabot security updates are never grouped by this config; they always
-# arrive as their own PR, which is what you want.
+# Patch and minor are deliberately *separate* groups rather than one combined
+# group. dependabot/fetch-metadata reports a grouped PR's update-type as the
+# highest bump in the group, so a single patch+minor group would report
+# `semver-minor` almost every week and the patch auto-merge in
+# dependabot-auto-merge.yml would never fire. Split, the patch group merges
+# itself once CI is green and only the minor group needs reading.
+#
+# Major bumps stay ungrouped — those need to be read one at a time. Dependabot
+# security updates are never grouped by this config; they always arrive as
+# their own PR, which is what you want.
+#
+# requirements.txt and requirements-dev.txt duplicate every runtime pin on
+# purpose; Dependabot updates each file the package appears in, and
+# scripts/check_requirements_sync.py fails the PR if one is ever missed.
 
 updates:
-    # Was `directory: "/"` — where there is no requirements file. Both manifests
-    # live in /app, so Dependabot found no Python dependencies at all and every
-    # pin here has been bumped by hand. npm and docker below always pointed at
-    # the right place.
-    #
-    # requirements.txt and requirements-dev.txt duplicate every runtime pin on
-    # purpose; Dependabot updates each file the package appears in, and
-    # scripts/check_requirements_sync.py fails the PR if one is ever missed.
+    # `directory` must point at the manifests, not the repo root. This said "/"
+    # until 2026-09, where there is no requirements file, so Dependabot found no
+    # Python dependencies at all and every pin was bumped by hand.
     - package-ecosystem: "pip"
       directory: "/app"
       schedule:
         interval: "weekly"
       open-pull-requests-limit: 5
       groups:
-        python-minor-and-patch:
+        python-patch:
           patterns: ["*"]
-          update-types: ["minor", "patch"]
+          update-types: ["patch"]
+        python-minor:
+          patterns: ["*"]
+          update-types: ["minor"]
 
     - package-ecosystem: "npm"
       directory: "/app"
@@ -34,9 +43,12 @@ updates:
         interval: "weekly"
       open-pull-requests-limit: 5
       groups:
-        npm-minor-and-patch:
+        npm-patch:
           patterns: ["*"]
-          update-types: ["minor", "patch"]
+          update-types: ["patch"]
+        npm-minor:
+          patterns: ["*"]
+          update-types: ["minor"]
 
     - package-ecosystem: "github-actions"
       directory: "/"
@@ -44,9 +56,12 @@ updates:
         interval: "weekly"
       open-pull-requests-limit: 5
       groups:
-        actions-minor-and-patch:
+        actions-patch:
           patterns: ["*"]
-          update-types: ["minor", "patch"]
+          update-types: ["patch"]
+        actions-minor:
+          patterns: ["*"]
+          update-types: ["minor"]
 
     - package-ecosystem: "docker"
       directory: "/app"
@@ -54,6 +69,9 @@ updates:
         interval: "weekly"
       open-pull-requests-limit: 5
       groups:
-        docker-minor-and-patch:
+        docker-patch:
           patterns: ["*"]
-          update-types: ["minor", "patch"]
+          update-types: ["patch"]
+        docker-minor:
+          patterns: ["*"]
+          update-types: ["minor"]
