@@ -2,6 +2,10 @@
 # can patch this file's pins directly — it doesn't resolve `-r` includes when
 # generating security-update PRs, which left every runtime CVE alert stuck
 # against this file with no way for Dependabot to fix it.
+#
+# scripts/check_requirements_sync.py enforces the duplication: every pin in
+# requirements.txt must appear here at the same version. Extra entries here
+# (the tooling below) are expected and never reach the production image.
 Django==6.1.1
 psycopg[binary]==3.3.5
 cryptography==50.0.1
@@ -17,6 +21,7 @@ python-dateutil==2.9.0.post0
 pdfplumber==0.11.10
 pypdf==6.19.0
 urllib3==2.8.0
+sqlparse==0.6.0  # transitive via Django (>=0.5.0); pinned to close PYSEC-2026-3696..3699
 
 # Google Calendar API
 google-auth==2.58.0
@@ -29,6 +34,7 @@ uvicorn==0.53.0
 
 # Dev-only tools
 ruff==0.16.8
+pre-commit==4.6.2
 vulture==2.16
 radon==6.0.1
 pip-audit==2.10.1

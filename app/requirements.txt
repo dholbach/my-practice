@@ -1,5 +1,6 @@
 # requirements-dev.txt duplicates these pins instead of using `-r` (see the
-# comment there for why) — update both files together.
+# comment there for why) — update both files together;
+# scripts/check_requirements_sync.py fails the build if you don't.
 Django==6.1.1
 psycopg[binary]==3.3.5
 cryptography==50.0.1
