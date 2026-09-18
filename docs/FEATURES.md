@@ -44,7 +44,7 @@ chronological record; this document only tracks current state.
 - ✅ Tab buttons show a dot indicator + "Unsaved changes" tooltip when a draft-guarded form inside them has unsaved edits — the browser's own beforeunload dialog can't say which tab the edit is in
 
 ### Focus Queue (P-050)
-- ✅ Unified task list (`/focus/`) — replaces the old `/todos/` list and the dashboard's "Needs Action" pane; manual tasks and materialized system signals (missing session log, unpaid/unsent invoice, pending checklist, open supervision topic) live side by side as real, closeable rows
+- ✅ Unified task list (`/focus/`) — replaces the old `/todos/` list and the dashboard's "Needs Action" pane; manual tasks and materialized system signals (missing session log, unpaid/unsent invoice, pending checklist, open supervision topic, unmatched bank transactions) live side by side as real, closeable rows
 - ✅ `sync_focus_queue_tasks` management command materializes and auto-closes derived tasks; runs via the shared hourly `run_scheduled_jobs` systemd timer (consolidated with calendar-fetch and client-tag jobs)
 - ✅ Type filter — colour-coded pill buttons matching each task type's badge colour
 - ✅ Reference date per row — invoice date, session date, or task creation date, whichever is most relevant
