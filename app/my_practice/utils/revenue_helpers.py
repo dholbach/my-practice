@@ -67,7 +67,7 @@ class RevenueCalculator:
             return Q(paid_date__year=year) | Q(paid_date__isnull=True, invoice_date__year=year)
 
     @staticmethod
-    def build_paid_date_range_filter(start_date, end_date) -> Q:
+    def build_paid_date_range_filter(start_date: date, end_date: date) -> Q:
         """
         Build Q object for filtering by paid_date within a date range, with
         invoice_date fallback for invoices where paid_date is null.

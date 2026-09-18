@@ -211,7 +211,9 @@ class Invoice(TimestampedModel):
         """Return the correct invoice_date for a draft: max(today, latest_session_date)."""
         today = timezone.localdate()
         item_dates = [
-            item.session.session_date
+            # Guarded by item.session_id, which mypy does not connect to
+            # item.session being non-None.
+            item.session.session_date  # type: ignore[union-attr]
             for item in self.items.select_related("session").all()
             if item.session_id
         ]
@@ -328,7 +330,8 @@ class InvoiceItem(models.Model):
 
     def __str__(self) -> str:
         if self.session_id:
-            return f"{self.invoice.invoice_number} - {self.session.session_date}"
+            # Same session_id/session narrowing gap as computed_invoice_date().
+            return f"{self.invoice.invoice_number} - {self.session.session_date}"  # type: ignore[union-attr]
         return f"{self.invoice.invoice_number} - {self.description}"
 
     @property

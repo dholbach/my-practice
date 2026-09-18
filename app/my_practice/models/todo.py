@@ -3,6 +3,7 @@ Practice TODO/Task tracking model.
 For managing practice-related tasks, notes, and weekly planning.
 """
 
+from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -77,7 +78,7 @@ class PracticeTodo(TimestampedModel):
     # pile of work — so their row links to the page where that work gets done
     # instead of to a detail page. Keyed by task_type rather than content type,
     # which is what _RELATED_OBJECT_URL_NAMES above covers.
-    TASK_TYPE_URL_NAMES = {
+    TASK_TYPE_URL_NAMES: dict[str, str] = {
         TaskType.BANK_UNMATCHED: "bank_import",
     }
 
@@ -193,7 +194,9 @@ class PracticeTodo(TimestampedModel):
         if self.related_object is None:
             url_name = self.TASK_TYPE_URL_NAMES.get(self.task_type)
             return reverse(url_name) if url_name else None
-        model_name = self.content_type.model
+        # related_object is not None implies content_type is set; mypy can't
+        # see that invariant through the GenericForeignKey.
+        model_name = self.content_type.model  # type: ignore[union-attr]
         if model_name == "session":
             # No SessionLog exists yet — link to the create form, pre-filled
             # with this session's date, rather than a detail/edit page.
@@ -212,7 +215,7 @@ class PracticeTodo(TimestampedModel):
         return reverse(url_name, kwargs={"pk": self.object_id})
 
     @property
-    def reference_date(self):
+    def reference_date(self) -> date:
         """
         The date most relevant to why this task exists — invoice date for
         an Invoice-linked task, session date for a Session-linked task, and
@@ -226,12 +229,17 @@ class PracticeTodo(TimestampedModel):
         from Client to Session), and older rows may still carry the
         previous model — this stays correct either way instead of assuming.
         """
-        if self.related_object is not None:
-            model_name = self.content_type.model
+        related = self.related_object
+        if related is not None:
+            model_name = self.content_type.model  # type: ignore[union-attr]
+            # A GenericForeignKey is typed Any, so name the date before
+            # returning it — otherwise the declared return type is unchecked.
             if model_name == "invoice":
-                return self.related_object.invoice_date
+                invoice_date: date = related.invoice_date
+                return invoice_date
             if model_name == "session":
-                return self.related_object.session_date
+                session_date: date = related.session_date
+                return session_date
         return self.created_at.date()
 
     def mark_completed(self) -> None:
