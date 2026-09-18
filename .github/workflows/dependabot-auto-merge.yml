@@ -1,0 +1,59 @@
+name: Dependabot auto-merge
+
+# Turns the weekly patch-level dependency PR into something that lands on its
+# own once CI is green, so the only dependency PR that needs reading is the
+# minor one. Patch only: `python-patch`, `npm-patch`, `actions-patch` and
+# `docker-patch` in dependabot.yml exist so this can fire without also waving
+# through a minor bump.
+#
+# This does not weaken the gate. `main`'s ruleset requires `lint` and `test`
+# with no bypass actors, and --auto queues the merge *behind* them: a red PR
+# sits there exactly as it does today. What it removes is the click, not the
+# check.
+#
+# `pull_request_target` rather than `pull_request`: a workflow triggered by
+# `pull_request` from Dependabot gets a read-only GITHUB_TOKEN regardless of
+# the permissions block below, so it cannot enable auto-merge.
+# `pull_request_target` runs in the *base* branch's context with a writable
+# token — which is only safe because nothing here checks out or executes the
+# PR's code. Do not add actions/checkout to this workflow.
+
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Belt and braces: the event is also only reachable from this repo's own
+    # Dependabot, but check the actor explicitly rather than relying on that.
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+
+      # For a grouped PR, update-type is the highest bump in the group — so
+      # this is true only when every package in the group is a patch bump.
+      - name: Enable auto-merge for patch updates
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh pr merge --auto --squash "$PR_URL"; then
+            echo "Auto-merge queued; it will land once lint and test pass."
+          else
+            # The usual cause is repository Settings → General → "Allow
+            # auto-merge" being off, which is a one-time click and not
+            # something this workflow can set for itself. Warn rather than
+            # fail: without auto-merge the PR simply waits for a manual merge,
+            # which is exactly the behaviour before this workflow existed, and
+            # a red check on every dependency PR would be worse than the
+            # click it is trying to save.
+            echo "::warning title=Auto-merge not enabled::Could not queue auto-merge for $PR_URL. Enable repository Settings -> General -> 'Allow auto-merge', or merge dependency PRs by hand."
+          fi

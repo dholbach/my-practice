@@ -201,130 +201,22 @@ helper = DateRangeHelper(start_date, end_date)
 months = helper.get_month_list()
 ```
 
-#### Error Handling Patterns (M-PAT-01)
-Use consistent error handling based on context:
+#### Numbered patterns (M-PAT-01 … M-PAT-08)
 
-```python
-# Form Views: Use messages.error() + form_invalid()
-from django.contrib import messages
+Each exists because the bug it prevents is invisible in code review. The rule is
+here; the worked example and the failure it came from are in
+[CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Patterns Reference.
 
-class MyUpdateView(UpdateView):
-    def form_invalid(self, form):
-        messages.error(self.request, "Bitte korrigieren Sie die Fehler im Formular.")
-        for field, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, f"{field}: {error}")
-        return super().form_invalid(form)
-
-# API Views: Return JsonResponse with appropriate status codes
-from django.http import JsonResponse
-
-def api_endpoint(request):
-    try:
-        # ... processing ...
-        return JsonResponse({"success": True, "data": result})
-    except ValueError as e:
-        return JsonResponse({"error": str(e)}, status=400)
-    except Exception as e:
-        return JsonResponse({"error": "Internal server error"}, status=500)
-
-# Management Commands: Raise exceptions with logging
-import logging
-logger = logging.getLogger(__name__)
-
-class Command(BaseCommand):
-    def handle(self, *args, **options):
-        try:
-            # ... processing ...
-            self.stdout.write(self.style.SUCCESS("Success"))
-        except Exception as e:
-            logger.error(f"Command failed: {e}")
-            raise CommandError(f"Operation failed: {e}")
-```
-
-#### Date Filter Patterns (M-PAT-02)
-Always use RevenueCalculator methods for consistent date filtering:
-
-```python
-# Good - Use RevenueCalculator
-from my_practice.utils import RevenueCalculator
-year_stats = RevenueCalculator.get_year_revenue(
-    2026,
-    use_paid_date=True,  # Use invoice.paid_date instead of invoice_date
-    practice=request.current_practice,
-)
-revenue = year_stats["total"]
-
-# Avoid - Manual filter building
-# invoice_qs = Invoice.objects.filter(invoice_date__year=year, status='paid')
-```
-
-#### Chart Rendering in Hidden Tabs (M-PAT-03)
-Charts rendered in hidden tabs (display: none) get incorrect dimensions because container.clientHeight returns 0.
-
-```javascript
-// Problem: Chart in hidden tab has zero height
-.tab-content { display: none; }  // container.clientHeight = 0
-
-// Solution: Redraw charts when tab becomes visible
-function switchTab(tabName) {
-    // Show tab first
-    document.getElementById(tabName + '-tab').classList.add('active');
-
-    // Redraw charts after small delay (DOM must be visible)
-    setTimeout(function() {
-        const canvases = document.querySelectorAll(`#${tabName}-tab canvas`);
-        canvases.forEach(canvas => {
-            if (chartRegistry[canvas.id]) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                chartRegistry[canvas.id](canvas);  // Redraw with correct dimensions
-            }
-        });
-    }, 50);
-}
-
-// Also redraw on initial load if non-default tab is active
-```
-
-**Key Points**:
-- Charts use `container.clientHeight` for sizing
-- Hidden containers return 0 → canvas gets wrong dimensions
-- Always redraw charts after tab visibility changes
-- Use 50-100ms delay to ensure DOM is rendered
-- Leverage `chartRegistry` from chart_core.js for redraws
-
-#### Form Draft Guard (M-PAT-06)
-Long-text forms (session logs, case notes) lose typed content if the user accidentally navigates away (e.g. Alt+Left/Right browser back/forward) before submitting. `app/static/js/form_draft_guard.js` is a reusable, opt-in guard loaded globally in `base.html` (like `widgets.js`) — no per-template `extra_js` needed.
-
-```html
-<form method="post" action="..." id="my-form"
-      data-draft-guard
-      data-draft-message="{% trans "You have an unsaved draft from an earlier attempt." %}"
-      data-draft-restore-label="{% trans "Restore draft" %}"
-      data-draft-discard-label="{% trans "Discard" %}">
-    {% csrf_token %}
-    ...
-</form>
-```
-
-**Key Points**:
-- Opt in per form with `data-draft-guard` — a stable `id` on the form keeps drafts scoped correctly if a page ever has more than one guarded form
-- Autosaves all named fields (text/textarea/select/checkbox/radio) to `localStorage` on input/change (debounced), keyed by URL path + form id
-- Offers a restore-or-discard banner (`.draft-restore-banner` in `tailwind.css`) on page load if a draft exists
-- Warns via the native `beforeunload` dialog while the form is dirty and unsubmitted
-- Clears the draft on successful submit
-- The three `data-draft-*` label strings are reused verbatim across forms (see `session_log_form.html`, `client_detail.html`) — reuse the same msgids rather than minting new ones
-- Emits a bubbling `draftguard:dirty` CustomEvent on the form whenever its dirty state flips, with `event.detail.dirty` as a boolean. Use it when the form can be scrolled or tabbed out of view, since `beforeunload` alone can't tell the user *where* the unsaved edit is. `client_detail.html` listens for it and toggles `.page-tab-btn--dirty` (a dot indicator, `tailwind.css`) plus a "Unsaved changes" `title` on the owning tab button:
-
-```javascript
-document.addEventListener('draftguard:dirty', function (e) {
-    const tabContent = e.target.closest('.page-tab-content');
-    if (!tabContent) return;
-    const btn = document.querySelector('.page-tab-btn[data-tab="' + tabContent.id.replace('ptab-', '') + '"]');
-    if (btn) btn.classList.toggle('page-tab-btn--dirty', e.detail.dirty);
-});
-```
+| | Rule |
+| --- | --- |
+| **M-PAT-01** Error handling | Form views: `messages.error()` + `form_invalid()`. API views: `JsonResponse` with a status code. Management commands: log, then raise `CommandError`. |
+| **M-PAT-02** Date filters | Always go through `RevenueCalculator`; never hand-build `invoice_date__year` / `status` filters. |
+| **M-PAT-03** Charts in hidden tabs | A chart drawn in a `display: none` container gets zero height. Redraw from `chartRegistry` 50–100 ms after the tab becomes visible. |
+| **M-PAT-04** CSS | No inline `<style>`, no new `.css` files — everything in `tailwind.css`. Full rule in § CSS Architecture below. |
+| **M-PAT-05** Working days | `DateRangeHelper.count_working_days` with Berlin holidays; never `round(days * 5/7)`. See § Working-Day Calculations below. |
+| **M-PAT-06** Form draft guard | Opt long-text forms in with `data-draft-guard` plus the three `data-draft-*` labels; reuse those msgids verbatim rather than minting new ones. |
+| **M-PAT-07** CSS tokens | Use real `--color-*` tokens (grep the `@theme` block); never invent a name, never hardcode hex on a semantic class. |
+| **M-PAT-08** Privacy mode | `.sensitive-data` for a name beside its code, `\|privacy_name` where there is no code, nothing for codes / inputs / `<option>` text. |
 
 ## Code Style & Patterns
 
@@ -440,87 +332,10 @@ When adding new features:
 
 ## Documentation Guidelines
 
-### Documentation Structure Pattern
-
-**Organization Principle**: Clear separation between status tracking, reference documentation, and project planning.
-
-#### PROJECTS.md (Root) - Project Index
-**Use for**:
-- Central index of all projects (P-001 to P-XXX)
-- Status tracking: TODO → WIP → DONE
-- Cross-references to detailed project docs
-- Project metrics and priorities
-
-#### docs/projects/{todo,wip,done}/ - Project Documentation
-**Use for**:
-- Detailed project documentation with P-XXX numbering
-- Project-specific tasks, timelines, and decisions
-- Cross-referenced from PROJECTS.md
-- **Pattern**: Project tracking lives here, technical guides live in docs/guides/ or docs/operations/
-
-#### docs/guides/ - User Guides
-**Use for**:
-- User-facing how-to guides (EMAIL_IMPLEMENTATION.md, CLIENT_TAGGING.md, BACKUP_SETUP.md)
-- Feature usage documentation
-- Setup and configuration guides
-
-#### docs/architecture/ - Architecture Reference
-**Use for**:
-- CODE_STRUCTURE.md - Current architecture, patterns, module organization
-- PERFORMANCE.md - Query optimization, indexes, N+1 solutions
-- Active reference documentation (NOT archived)
-
-#### docs/operations/ - Housekeeping
-**Use for**:
-- SCRIPTS.md, SECURITY.md — running and maintaining this specific installation
-- REINSTALL_CHECKLIST.md, DPIA.md — operational and compliance docs
-- Not for user-facing guides; not for architecture reference
-
-#### docs/notes/ - Random Notes
-**Use for**:
-- One-off analyses, workarounds, observations that don't fit elsewhere
-- Type-checking quirks, contrast issues, status snapshots
-- No strict format required; date-prefix filenames recommended
-
-#### docs/development/ - Codebase Metrics (generated)
-**Use for**: nothing by hand — `scripts/codebase_metrics.py` generates every file
-in it (Markdown plus the SVG charts) from git history (LOC by category, file-length
-distribution and longest files, commit-type mix, release cadence, monthly).
-A scheduled workflow pushes a refresh branch on the 1st of each month. Read it
-when deciding whether the project needs features or maintenance next; never edit
-it directly.
-
-#### docs/archive/ - Historical Documentation
-**Use for**:
-- Completed projects and refactorings (with dates: 2025-12-23_IMPROVEMENTS.md)
-- Historical analyses and planning documents
-- Subdirectories: bugfixes/, completed/
-- **Date format**: YYYY-MM-DD_ or YYYY-MM_ prefix
-
-#### Code-Level Documentation (Docstrings)
-**Use for**: Function/class behavior, parameters, return values
-```python
-def calculate_revenue(invoice_items, year=None):
-    """
-    Calculate total revenue from invoice items.
-
-    Args:
-        invoice_items: QuerySet or list of InvoiceItem objects
-        year: Optional year filter (int)
-
-    Returns:
-        Decimal: Total revenue amount
-    """
-```
-
-#### Inline Comments
-**Use sparingly for**:
-- Non-obvious business rules
-- Edge case handling
-- Workarounds (with ticket references)
-**Avoid for**:
-- Obvious code explanations
-- Outdated information (delete instead)
+Where each kind of document belongs, plus the docstring and inline-comment
+rules: [CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Documentation.
+Decisions that would otherwise only survive as a code comment go in
+[docs/decisions/](docs/decisions/) as an ADR — its README says when one is warranted.
 
 ### Documentation Principles
 1. **One source of truth per topic** - PROJECTS.md is the index, P-XXX docs have details
@@ -535,29 +350,14 @@ def calculate_revenue(invoice_items, year=None):
 
 ## Working-Day Calculations (M-PAT-05)
 
-**Rule: Always use `DateRangeHelper.count_working_days` with Berlin public holidays. Never use the `round(days * 5/7)` calendar approximation.**
+**Always use `DateRangeHelper.count_working_days` with Berlin public holidays. Never the `round(days * 5/7)` approximation** — it diverges badly over Easter and Christmas, producing materially wrong utilisation figures.
 
-The `5/7` approximation diverges badly on holiday-heavy periods (Easter, Christmas), producing materially wrong utilisation figures.
+- `count_working_days(start, end)` is inclusive at both ends, Mon–Fri, no holidays.
+- Pass a holiday set to exclude them; build it **once per function call**, not inside a loop.
+- For "days elapsed before a milestone" (half-open `[start, end)`), pass `end - timedelta(days=1)` so a same-day event counts as 0.
+- `berlin_public_holidays(year)` lives in `utils/practice_days.py` and is **not** re-exported from `utils/__init__.py` — import it directly.
 
-```python
-from my_practice.utils.date_helpers import DateRangeHelper
-from my_practice.utils.practice_days import berlin_public_holidays
-
-# Build the holiday set once, covering all years in the date range
-holidays: set[date] = set()
-for yr in range(start_date.year, end_date.year + 1):
-    holidays |= berlin_public_holidays(yr)
-
-# Then pass it to every working-day count in the function
-days = DateRangeHelper.count_working_days(start, end, holidays)
-```
-
-**Key points:**
-- `count_working_days(start, end)` — inclusive both ends, Mon–Fri only (no holidays). Safe for callers that don't need holidays.
-- `count_working_days(start, end, holidays)` — same but also excludes the given holiday dates.
-- Build the holiday set **once per function call**, not inside a loop.
-- For "days elapsed before a milestone" (half-open `[start, end)`): pass `end - timedelta(days=1)` as the end argument so that a same-day event counts as 0 elapsed days.
-- `berlin_public_holidays(year)` lives in `utils/practice_days.py` and is NOT re-exported from `utils/__init__.py` — import it directly.
+Worked example: [CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Patterns Reference.
 
 ## Available Utility Classes (Use Before Creating New Code!)
 - `AnalyticsDashboardBuilder` - Dashboard context preparation
@@ -589,36 +389,10 @@ At the end of each coding session, do a quick gardening pass before committing.
 
 ## Periodic Review
 
-Larger-scale health checks to keep the codebase fresh and consolidated.
-Run `./dev.py review` for the automated parts, then work through the manual checklist.
-Full scan checklist and canonical patterns: [docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md)
+`./dev.py review` monthly, `./dev.py review --full` quarterly. It runs the
+automated checks (dead code, CVEs, outdated packages, coverage; plus complexity
+and long files in `--full`) and prints the manual checklist to work through, so
+there is nothing to remember here.
 
-### Monthly (~45 min)
-
-**Automated** (`./dev.py review`):
-- Dead code: unused imports, functions, variables (vulture + ruff F401/F841)
-- Dependency security: known CVEs (pip-audit)
-- Outdated packages: patch/minor version drift (pip list --outdated)
-- Test coverage: uncovered lines in views and models (coverage report)
-
-**Manual**:
-- [ ] Scan git log for repeated fixes in the same area — sign of a design problem
-- [ ] Check for German comments/identifiers in recently touched files (P-038)
-- [ ] GH issues: close stale items older than ~2 months with no activity
-- [ ] Any new views bypassing mixins/builders? Consolidate if so
-
-### Quarterly (~2-3h)
-
-**Automated** (`./dev.py review --full`):
-- Everything in the monthly run, plus:
-- Complexity hotspots: functions over 50 lines or cyclomatic complexity > 10 (radon)
-- Long files: every app/test/template/JS file of 500+ lines (`scripts/codebase_metrics.py --largest`; the trend lives in `docs/development/`)
-- Dead CSS selectors: `npx purgecss --css app/static/css/tailwind.out.css --content "app/templates/**/*.html" "app/static/js/**/*.js" --output /tmp/purged/` then diff vs `/tmp/purged/tailwind.out.css`. Watch for false positives from dynamically-built class names (e.g. `class="billing-row--{{ row.status }}"` — those classes are real even if purgecss can't see them).
-
-**Manual**:
-- [ ] Duplication scan: look for similar blocks across views/utils — extract a helper
-- [ ] Dependency major versions: check Django, Python, WeasyPrint, psycopg release notes
-- [ ] Pattern audit: are new utils/views following the established builder/helper patterns?
-- [ ] Archive PROJECTS.md: move stale WIPs to done/cancelled, keep backlog honest
-- [ ] docs/architecture/CODE_STRUCTURE.md: still accurate? Update if not
-- [ ] New Django/Python features available that simplify existing code?
+Cadence, what each mode covers and the full scan checklist:
+[CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Periodic Review Cadence.
