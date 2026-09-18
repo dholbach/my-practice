@@ -242,6 +242,36 @@ def cmd_restart(args):
         return subprocess.run(cmd)
 
 
+def run_django_tests(test_args):
+    """Run `manage.py test`, re-running serially if a parallel run fails.
+
+    Django's parallel runner pickles results back to the parent, and an errored
+    test whose traceback can't be pickled kills the whole run with "cannot
+    pickle 'traceback' object" at the first error — so any later failures stay
+    hidden. The serial re-run costs nothing on a green build and produces a
+    complete report when it matters. Mirrors the fallback in ci.yml.
+    """
+    result = run_docker_command(test_args)
+    if result.returncode == 0 or not any(a.startswith("--parallel") for a in test_args):
+        return result
+
+    # Django accepts `--parallel`, `--parallel N` and `--parallel=N`.
+    serial_args = []
+    args_iter = iter(test_args)
+    for arg in args_iter:
+        if arg.startswith("--parallel="):
+            continue
+        if arg == "--parallel":
+            following = next(args_iter, None)
+            if following is not None and not following.isdigit():
+                serial_args.append(following)
+            continue
+        serial_args.append(arg)
+
+    print("\n⚠️  Parallel run failed — re-running serially for a complete report...")
+    return run_docker_command(serial_args)
+
+
 def cmd_test(args):
     """Run Django tests and JavaScript tests
 
@@ -310,7 +340,7 @@ def cmd_test(args):
     # Add --fast flags after positional arguments
     test_args.extend(fast_flags)
 
-    django_result = run_docker_command(test_args)
+    django_result = run_django_tests(test_args)
     results.append(("Django", django_result.returncode))
 
     # Only run JavaScript tests if no specific Django tests were requested and not django-only
@@ -768,7 +798,7 @@ def cmd_quality(args):
         cmd = ["python", "manage.py", "test", "my_practice", "--keepdb", "--parallel"]
         if not verbose:
             cmd.append("--verbosity=1")
-        test_result = run_docker_command(cmd)
+        test_result = run_django_tests(cmd)
         results.append(("Tests", test_result.returncode))
         print()
     else:
