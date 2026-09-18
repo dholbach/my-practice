@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Fetch Dependabot metadata
         id: meta
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@v3
 
       # For a grouped PR, update-type is the highest bump in the group — so
       # this is true only when every package in the group is a patch bump.
