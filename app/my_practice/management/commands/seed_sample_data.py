@@ -109,39 +109,6 @@ SEED_TIMEOFF_TITLES: frozenset[str] = frozenset(
     ]
 )
 
-# ── Legacy German seed strings ────────────────────────────────────────────────
-# The seeder produced German todo/tag/time-off titles until the demo data was
-# translated. `--clear` matches these rows by exact title, so the old spellings
-# stay listed here; without them `--clear` silently leaves pre-translation demo
-# data behind. Safe to drop once no installation holds an older demo dataset.
-LEGACY_TODO_TITLES: frozenset[str] = frozenset(
-    [
-        "Steuererklärung 2024 einreichen",
-        "Supervision buchen für nächsten Monat",
-        "Praxishandbuch aktualisieren",
-        "Fortbildung zu Traumatherapie recherchieren",
-        "Datenschutzerklärung überprüfen",
-        "Neue Klientenmappe vorbereiten",
-    ]
-)
-LEGACY_TAG_NAMES: frozenset[str] = frozenset(
-    ["Einzeltherapie", "Langzeitklient", "Kurzzeitintervention", "Gruppentherapie"]
-)
-LEGACY_TIMEOFF_TITLES: frozenset[str] = frozenset(
-    [
-        "Osterurlaub",
-        "Fortbildung Traumatherapie",
-        "Sommerurlaub",
-        "Herbstpause",
-        "Weihnachtsurlaub",
-        "Supervision-Intensivtag",
-    ]
-)
-
-CLEARABLE_TODO_TITLES: frozenset[str] = SEED_TODO_TITLES | LEGACY_TODO_TITLES
-CLEARABLE_TAG_NAMES: frozenset[str] = SEED_TAG_NAMES | LEGACY_TAG_NAMES
-CLEARABLE_TIMEOFF_TITLES: frozenset[str] = SEED_TIMEOFF_TITLES | LEGACY_TIMEOFF_TITLES
-
 
 class Command(BaseCommand):
     help = "Seed demo practice with fictional clients, sessions, and invoices"
@@ -867,12 +834,12 @@ class Command(BaseCommand):
     def _clear(self, skip_confirm: bool) -> None:
         seeded = Client.objects.filter(full_name__in=SEED_NAMES)
         demo_practice = Practice.objects.filter(slug=DEMO_SLUG).first()
-        has_todos = PracticeTodo.objects.filter(title__in=CLEARABLE_TODO_TITLES).exists()
+        has_todos = PracticeTodo.objects.filter(title__in=SEED_TODO_TITLES).exists()
         has_expenses = (
             demo_practice and CompanyExpense.objects.filter(practice=demo_practice).exists()
         )
         has_inquiries = ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).exists()
-        has_timeoff = TimeOff.objects.filter(title__in=CLEARABLE_TIMEOFF_TITLES).exists()
+        has_timeoff = TimeOff.objects.filter(title__in=SEED_TIMEOFF_TITLES).exists()
 
         if (
             not seeded.exists()
@@ -915,8 +882,8 @@ class Command(BaseCommand):
             ).delete()
             seeded.delete()
             ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).delete()
-            PracticeTodo.objects.filter(title__in=CLEARABLE_TODO_TITLES).delete()
-            TimeOff.objects.filter(title__in=CLEARABLE_TIMEOFF_TITLES).delete()
+            PracticeTodo.objects.filter(title__in=SEED_TODO_TITLES).delete()
+            TimeOff.objects.filter(title__in=SEED_TIMEOFF_TITLES).delete()
             if demo_practice:
                 self._clear_demo_practice(demo_practice)
 
@@ -924,7 +891,7 @@ class Command(BaseCommand):
             # Deleting seed clients above already removed the M2M associations, so
             # any remaining .clients are real clients — leave those tags alone.
             deleted_tags = ClientTag.objects.filter(
-                name__in=CLEARABLE_TAG_NAMES, clients__isnull=True
+                name__in=SEED_TAG_NAMES, clients__isnull=True
             ).delete()
         n_tags = deleted_tags[0]
 
