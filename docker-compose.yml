@@ -44,15 +44,17 @@ services:
       - GOOGLE_CALENDAR_CLIENT_SECRET=${GOOGLE_CALENDAR_CLIENT_SECRET:-}
       - FERNET_KEY=${FERNET_KEY:-}
       - MY_PRACTICE_DATA_DIR=/my-practice-data
+      - MY_PRACTICE_REPO_ROOT=/repo
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./app:/app
-      # Only ./app is mounted, so tests that read repo-root files resolve
-      # BASE_DIR.parent to `/`. test_release_guardrails needs these two to
-      # compare version strings; without them it only ever ran in CI.
-      - ./prod.py:/prod.py:ro
-      - ./docker-compose.prod.yml:/docker-compose.prod.yml:ro
+      # test_release_guardrails compares version strings across prod.py and
+      # docker-compose.prod.yml at the repo root, which only ./app:/app can't
+      # reach. Mounted as a directory, not per file: a single-file bind mount
+      # pins the inode, and `sed -i` or an editor save replaces the file, so
+      # the container kept seeing the pre-bump version until recreated.
+      - .:/repo:ro
       # Backups and media live OUTSIDE the repo at $MY_PRACTICE_DATA_DIR (set in .env).
       # Default: ../my-practice-data (sibling directory next to the repo clone).
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/backups:/app/backups
