@@ -28,6 +28,13 @@ from .bank_import_views import (
     BankWithdrawalReviewView,
 )
 
+# Billing views
+from .billing_views import (
+    billing_open_overview,
+    monthly_billing_overview,
+    monthly_billing_redirect,
+)
+
 # Calendar import views
 from .calendar_views import (
     calendar_approval_queue,
@@ -130,11 +137,8 @@ from .invoice_views import (
     InvoiceEditView,
     InvoiceListView,
     add_sessions_to_invoice,
-    billing_open_overview,
     create_invoice_with_sessions,
     invoice_delete,
-    monthly_billing_overview,
-    monthly_billing_redirect,
 )
 
 # Operational checklist views
