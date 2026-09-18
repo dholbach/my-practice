@@ -53,6 +53,27 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * Redraw every registered chart whose canvas lives inside a container.
+ *
+ * M-PAT-03: a chart drawn while its tab/container was display:none gets a
+ * zero-sized canvas — call this shortly after the container becomes visible
+ * (e.g. on tab switch) to redraw it at its real dimensions.
+ *
+ * @param {HTMLElement} container - Element to search for canvases in
+ */
+function redrawChartsIn(container) {
+    if (!container) return;
+    container.querySelectorAll('canvas').forEach(canvas => {
+        const canvasId = canvas.id;
+        if (canvasId && typeof chartRegistry !== 'undefined' && chartRegistry[canvasId]) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            chartRegistry[canvasId](canvas);
+        }
+    });
+}
+
+/**
  * Get CSS color variable value with adaptive fallback
  */
 function getCSSVariable(varName, fallback) {
@@ -89,6 +110,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         initChart,
         getCSSVariable,
+        redrawChartsIn,
         chartRegistry
     };
 }

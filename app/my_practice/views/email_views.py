@@ -1,6 +1,7 @@
 """Email sending views for invoices."""
 
 import logging
+from collections.abc import Callable
 
 from django.conf import settings
 from django.contrib import messages
@@ -62,16 +63,21 @@ def _dispatch_email(
     *,
     success_html: str,
     redirect_url: str,
+    on_success: Callable[[], None] | None = None,
 ) -> HttpResponse:
     """
     Send *msg*, set a Django message for the result, and redirect.
 
     Returns an HttpResponse redirect in all cases (success, soft failure,
     or exception), so callers can ``return _dispatch_email(...)`` directly.
+    *on_success*, if given, runs after a successful send but before the
+    success message/redirect — for side effects like updating invoice status.
     """
     try:
         result = msg.send()
         if result == 1:
+            if on_success is not None:
+                on_success()
             messages.success(request, success_html)
         else:
             messages.error(
@@ -347,33 +353,19 @@ class SendInvoiceEmailView(View):
         )
         msg.attach(filename, pdf_content, "application/pdf")
 
-        # _dispatch_email handles send + messages + redirect, but we need to
-        # update invoice status on success — so we send manually and then use
-        # the helper only for the error path.
-        try:
-            result = msg.send()
-            logger.info(f"Email send result: {result}")
-        except Exception as e:
-            logger.exception(f"Exception while sending invoice email: {e}")
-            messages.error(request, _("Error sending the email: %(error)s") % {"error": e})
-            return redirect("invoice_detail", pk=invoice.id)
-
-        if result == 1:
+        def _mark_invoice_sent() -> None:
             if invoice.status == "draft":
                 invoice.status = "sent"
                 invoice.save()
                 logger.info("Invoice status updated to 'sent'")
-            messages.success(
-                request,
-                _success_html(_("✅ Invoice successfully sent to {recipient}"), recipient),
-            )
-        else:
-            logger.error(f"Email send failed with result: {result}")
-            messages.error(
-                request, _("Email sending failed (result: %(result)s).") % {"result": result}
-            )
 
-        return redirect("invoice_detail", pk=invoice.id)
+        return _dispatch_email(
+            request,
+            msg,
+            success_html=_success_html(_("✅ Invoice successfully sent to {recipient}"), recipient),
+            redirect_url=reverse("invoice_detail", kwargs={"pk": invoice.id}),
+            on_success=_mark_invoice_sent,
+        )
 
     def _generate_pdf(self, invoice: Invoice, practice: Practice) -> bytes:
         """Generate PDF bytes for invoice via shared api_views helpers."""
