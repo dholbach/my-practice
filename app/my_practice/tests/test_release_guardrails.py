@@ -15,6 +15,7 @@ suite is green, and the damage lands at deploy time or in a published release.
    which `./prod.py update` does something surprising.
 """
 
+import os
 import re
 from pathlib import Path
 
@@ -24,7 +25,10 @@ from django.test import SimpleTestCase, TestCase
 
 from my_practice.version import VERSION
 
-REPO_ROOT = Path(settings.BASE_DIR).parent
+# CI runs from the checkout, where the repo root is BASE_DIR's parent. The dev
+# container mounts only ./app there, so docker-compose.yml mounts the whole
+# repo read-only at $MY_PRACTICE_REPO_ROOT instead.
+REPO_ROOT = Path(os.environ.get("MY_PRACTICE_REPO_ROOT") or Path(settings.BASE_DIR).parent)
 
 
 class MigrationDriftTests(TestCase):
