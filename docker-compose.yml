@@ -49,6 +49,12 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./app:/app
+      # Named volume so the image's `npm install` (app/Dockerfile's development
+      # stage) isn't shadowed by the ./app:/app bind mount above — the host
+      # checkout has no node_modules/ of its own (see app/.dockerignore).
+      # Separate volume per service: both containers populate it from their
+      # own image on first start, and sharing one volume races the two.
+      - node_modules_django:/app/node_modules
       # test_release_guardrails compares version strings across prod.py and
       # docker-compose.prod.yml at the repo root, which only ./app:/app can't
       # reach. Mounted as a directory, not per file: a single-file bind mount
@@ -84,6 +90,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./app:/app
+      - node_modules_tailwind:/app/node_modules
     working_dir: /app
     command: npm run watch:css
 
@@ -91,4 +98,8 @@ volumes:
   postgres_data:
     driver: local
   static_data:
+    driver: local
+  node_modules_django:
+    driver: local
+  node_modules_tailwind:
     driver: local
