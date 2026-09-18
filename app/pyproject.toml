@@ -100,6 +100,23 @@ min_confidence = 80
 # Paths to check
 paths = ["app"]
 
+[tool.coverage.run]
+source = ["my_practice"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.coverage.report]
+omit = ["*/migrations/*", "*/tests/*"]
+skip_covered = true
+skip_empty = true
+# `./dev.py review` measured coverage every month and printed a number nobody
+# could act on — there was no threshold, so it could only slide. The suite was
+# at 92% (824 of 10,025 statements uncovered) when this floor went in; 90 keeps
+# ~2 points of headroom for normal churn without making the gate decorative.
+#
+# This is a ratchet: raise it when the real figure has comfortably cleared the
+# next step, never lower it to make a change pass.
+fail_under = 90
+
 [tool.pytest.ini_options]
 # pytest-django: point at Django settings
 DJANGO_SETTINGS_MODULE = "config.settings"

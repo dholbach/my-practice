@@ -6,6 +6,21 @@ on:
   pull_request:
     branches: [main]
 
+# Only the token scope the jobs actually use. Nothing here writes to the repo;
+# the one workflow that does (codebase-metrics.yml) asks for `contents: write`
+# explicitly.
+permissions:
+  contents: read
+
+# Superseded runs on a PR branch are pointless — the newer push already covers
+# the same tree. Pushes to main are never cancelled: every commit on main must
+# be verified on its own, and cancelling mid-run would leave a gap in that
+# record. `github.ref` is the branch on a push and refs/pull/N/merge on a PR,
+# so the group is per-branch either way.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 # Docs-only pull requests skip the expensive steps in both jobs. The skip is a
 # short-circuit *inside* each job, deliberately not `paths-ignore:` on the
 # workflow and not `if:` on the job — `lint` and `test` are required status
@@ -14,39 +29,29 @@ on:
 # unmergeable. Short-circuiting keeps both jobs running and reporting a real
 # success, so the gate is satisfied in seconds instead of two minutes.
 #
-# Pushes to main are never skipped: main must stay fully verified regardless of
-# what a PR was allowed to skip.
+# The decision itself lives in scripts/ci_docs_only.sh — it used to be two
+# inline copies that had to be edited in lockstep. See that script for why it
+# is not a separate job wired up with `needs:`.
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      # fetch-depth: 0 so the docs-only diff below can reach the PR base commit.
+      # fetch-depth: 0 so the docs-only diff below can reach the PR base commit,
+      # and so the secret scan sees the whole history rather than one commit.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Detect docs-only change
         id: scope
-        run: |
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            echo "Not a pull request — running everything."
-            echo "code=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # A leading `.` is required: a pathspec of only :(exclude) patterns
-          # matches nothing. Plain `*` spans `/` in a git pathspec, so `*.md`
-          # covers Markdown at any depth, not just the repo root.
-          if git diff --quiet \
-              "${{ github.event.pull_request.base.sha }}" \
-              "${{ github.event.pull_request.head.sha }}" \
-              -- . ':(exclude)docs/**' ':(exclude)*.md'; then
-            echo "Docs-only change — skipping lint."
-            echo "code=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "code=true" >> "$GITHUB_OUTPUT"
-          fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: scripts/ci_docs_only.sh
 
       - name: Set up Python 3.14
         if: steps.scope.outputs.code == 'true'
@@ -56,13 +61,17 @@ jobs:
           cache: pip
           cache-dependency-path: app/requirements-dev.txt
 
-      # Read the pin from requirements-dev.txt rather than duplicating it here.
-      # A second copy of the version drifted once already (CI ran 0.15.18 while
-      # `./dev.py quality` ran 0.16.3), which silently changes what "lint
-      # passes" means between CI and a local run.
-      - name: Install ruff
+      # Read the pins from requirements-dev.txt rather than duplicating them
+      # here. A second copy of the ruff version drifted once already (CI ran
+      # 0.15.18 while `./dev.py quality` ran 0.16.3), which silently changes
+      # what "lint passes" means between CI and a local run. The same pin is
+      # what the pre-commit hooks resolve to, since those are `system` hooks.
+      - name: Install lint tooling
         if: steps.scope.outputs.code == 'true'
-        run: pip install "$(grep -E '^ruff==' app/requirements-dev.txt)"
+        run: |
+          pip install \
+            "$(grep -E '^ruff==' app/requirements-dev.txt)" \
+            "$(grep -E '^pre-commit==' app/requirements-dev.txt)"
 
       - name: Lint
         if: steps.scope.outputs.code == 'true'
@@ -95,6 +104,16 @@ jobs:
         if: steps.scope.outputs.code == 'true'
         run: python scripts/check_shared_helpers.py
 
+      # requirements-dev.txt duplicates every runtime pin (Dependabot does not
+      # resolve `-r` includes when raising a security-update PR). The two had
+      # already drifted: requirements.txt pinned sqlparse to close
+      # PYSEC-2026-3696..3699 and requirements-dev.txt — the file CI installs —
+      # did not carry the pin at all, so the suite ran against the vulnerable
+      # version the production image did not ship.
+      - name: Check requirements files stay in sync
+        if: steps.scope.outputs.code == 'true'
+        run: python scripts/check_requirements_sync.py
+
       # shellcheck ships preinstalled on GitHub-hosted ubuntu-latest runners.
       # -S warning skips style/info-level nitpicks (SC2181 "$?" checks, SC2162
       # "read -r", etc.) so the gate catches real bugs — like the inline .env
@@ -104,8 +123,52 @@ jobs:
         if: steps.scope.outputs.code == 'true'
         run: shellcheck -S warning scripts/*.sh
 
+      # The hooks are only as good as each clone's `pre-commit install`, and
+      # nothing makes that happen. Running the same config here means a
+      # contributor who never installed them still gets the checks, and it
+      # proves the hook config itself still works before someone hits a broken
+      # one mid-commit.
+      #
+      # SKIP=gitleaks: that hook is `gitleaks protect --staged`, which scans
+      # the *index*. Under `--all-files` nothing is staged, so it reports a
+      # pass without looking at anything — worse than not running it. The step
+      # below does the real scan.
+      - name: Cache pre-commit environments
+        if: steps.scope.outputs.code == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Pre-commit hooks
+        if: steps.scope.outputs.code == 'true'
+        env:
+          SKIP: gitleaks
+        run: pre-commit run --all-files --show-diff-on-failure
+
+      # The version comes out of .pre-commit-config.yaml so there is one
+      # gitleaks version in the repo, not two that can drift.
+      #
+      # `detect` walks git history, not just the working tree: a secret that
+      # was committed and later deleted is still a leaked secret. History is
+      # clean as of this workflow landing. If a genuinely false positive ever
+      # turns up, add its fingerprint to .gitleaksignore rather than dropping
+      # the step.
+      - name: Scan for secrets (gitleaks)
+        if: steps.scope.outputs.code == 'true'
+        run: |
+          rev="$(awk '/gitleaks\/gitleaks/ {found=1} found && /rev:/ {print $2; exit}' \
+            .pre-commit-config.yaml)"
+          version="${rev#v}"
+          echo "gitleaks ${version} (from .pre-commit-config.yaml)"
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz" \
+            | tar -xz -C /usr/local/bin gitleaks
+          gitleaks detect --source . --redact --no-banner --verbose
+
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -145,21 +208,11 @@ jobs:
 
       - name: Detect docs-only change
         id: scope
-        run: |
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            echo "Not a pull request — running everything."
-            echo "code=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if git diff --quiet \
-              "${{ github.event.pull_request.base.sha }}" \
-              "${{ github.event.pull_request.head.sha }}" \
-              -- . ':(exclude)docs/**' ':(exclude)*.md'; then
-            echo "Docs-only change — skipping tests."
-            echo "code=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "code=true" >> "$GITHUB_OUTPUT"
-          fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: scripts/ci_docs_only.sh
 
       # Mirrors the production stage's runtime packages in app/Dockerfile:
       # cairo/pango/gdk-pixbuf for WeasyPrint's PDF rendering, ghostscript for
@@ -213,6 +266,46 @@ jobs:
         if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: python manage.py test --parallel || python manage.py test
+
+      # Runs after the tests so a type error never hides a test report.
+      #
+      # Scoped to the modules mypy.ini already declares `disallow_untyped_defs`
+      # for — the config had that strictness ladder from the start but nothing
+      # ever ran it, so "typed" meant whatever survived review. --follow-imports
+      # =silent keeps the gate on those modules instead of failing on errors in
+      # everything they happen to import; widen the path list as more of the
+      # tree is annotated.
+      - name: Type check (mypy)
+        if: steps.scope.outputs.code == 'true'
+        working-directory: app
+        run: |
+          mypy --follow-imports=silent \
+            my_practice/models \
+            my_practice/utils/calculations.py \
+            my_practice/utils/date_helpers.py \
+            my_practice/utils/invoice_helpers.py \
+            my_practice/utils/revenue_helpers.py
+
+      # The suite runs with DJANGO_DEBUG=True (see the note on the job env), so
+      # the whole `if not DEBUG:` block in config/settings.py — every security
+      # header, cookie and HSTS setting — is never evaluated by any test. This
+      # step is the only thing that looks at it.
+      #
+      # SECURE_SSL_REDIRECT is opt-in by design (the app supports running behind
+      # a plain-HTTP reverse proxy), so check the hardened configuration: that is
+      # the one whose regressions matter. --fail-level WARNING because every
+      # finding `--deploy` reports is a warning; without it the step always
+      # passes. The key is generated rather than reusing the job's placeholder,
+      # which would trip security.W009 on its `django-insecure-` prefix.
+      - name: Django deployment checks
+        if: steps.scope.outputs.code == 'true'
+        working-directory: app
+        env:
+          DJANGO_DEBUG: "False"
+          SECURE_SSL_REDIRECT: "true"
+        run: |
+          DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')" \
+            python manage.py check --deploy --fail-level WARNING
 
       # Plain `node <file>` runners, the same set ./dev.py test-js executes.
       # They import nothing from node_modules, so the runner's preinstalled Node
