@@ -48,6 +48,11 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./app:/app
+      # Only ./app is mounted, so tests that read repo-root files resolve
+      # BASE_DIR.parent to `/`. test_release_guardrails needs these two to
+      # compare version strings; without them it only ever ran in CI.
+      - ./prod.py:/prod.py:ro
+      - ./docker-compose.prod.yml:/docker-compose.prod.yml:ro
       # Backups and media live OUTSIDE the repo at $MY_PRACTICE_DATA_DIR (set in .env).
       # Default: ../my-practice-data (sibling directory next to the repo clone).
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/backups:/app/backups
