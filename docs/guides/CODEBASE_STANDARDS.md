@@ -257,6 +257,105 @@ in #424).
 
 ---
 
+## Repository Tooling & Guardrails
+
+### One hook mechanism
+
+`.pre-commit-config.yaml` is the only one. Install it with `./dev.py
+install-hooks` (which needs the host `pre-commit`, pinned in
+`app/requirements-dev.txt`).
+
+There used to be a second mechanism — a committed `.githooks/pre-commit`
+installed by pointing `core.hooksPath` at it. The two silently disabled each
+other: `core.hooksPath` overrides `.git/hooks/` wholesale, so whichever was
+installed last turned the other off with no output saying so, and the gitleaks
+secret scan was the usual casualty. Do not add a second mechanism back.
+
+CI runs `pre-commit run --all-files`, so a clone that never installed the hooks
+is still covered — but the feedback arrives on the PR instead of at `git
+commit`.
+
+**`SKIP=gitleaks` in CI is deliberate.** The gitleaks hook is `gitleaks protect
+--staged`, which scans the git *index*. Under `--all-files` nothing is staged,
+so it reports a pass without looking at anything. A separate CI step runs
+`gitleaks detect` over the full history instead; it reads the version out of
+`.pre-commit-config.yaml` so there is one gitleaks version in the repo rather
+than two that can drift.
+
+### Files that duplicate content on purpose
+
+Two pairs, each with a checker, because no linter has an opinion about
+cross-file duplication:
+
+| Pair | Why duplicated | Checker |
+| --- | --- | --- |
+| `dev.py` ↔ `prod.py` | `prod.py` ships as a single stdlib-only file and cannot import a shared module | `scripts/check_shared_helpers.py` |
+| `app/requirements.txt` ↔ `app/requirements-dev.txt` | Dependabot does not resolve `-r` includes when raising a security-update PR | `scripts/check_requirements_sync.py` |
+
+The requirements pair had already drifted before the checker existed:
+`requirements.txt` pinned `sqlparse` to close PYSEC-2026-3696..3699 and
+`requirements-dev.txt` — the file CI installs — did not carry the pin, so the
+suite ran against the vulnerable version the production image did not ship.
+
+Both run in the pre-commit hooks, in `./dev.py quality`, and in CI.
+
+### Type checking (mypy)
+
+`app/mypy.ini` has had a per-module strictness ladder since it was written, but
+nothing ever ran it, so "typed" meant whatever survived review. CI now runs it
+over exactly the modules the ladder declares strict:
+
+```
+mypy --follow-imports=silent \
+  my_practice/models \
+  my_practice/utils/calculations.py \
+  my_practice/utils/date_helpers.py \
+  my_practice/utils/invoice_helpers.py \
+  my_practice/utils/revenue_helpers.py
+```
+
+`--follow-imports=silent` keeps the gate on those modules rather than failing
+on errors in everything they happen to import (133 errors across 34 files
+without it, 0 with it). Widen the path list as more of the tree is annotated —
+and widen `mypy.ini`'s `disallow_untyped_defs` overrides in the same commit, so
+the two never disagree about what "strict" covers.
+
+`warn_unused_ignores = True` is on, so a `# type: ignore[...]` that stops being
+necessary becomes an error rather than quiet cruft. The ones in `models/` mark
+a single django-stubs limitation: a set FK id (`self.session_id`) does not
+narrow the FK object (`self.session`) to non-`None`.
+
+### Guardrail tests
+
+Ratchets that encode a contract review cannot see. Shrink the allowlists, never
+grow them.
+
+| Test | Contract |
+| --- | --- |
+| `test_i18n_coverage.py` | Templates wrapped, no German msgids, no fuzzy `.po` entries (P-039) |
+| `test_css_tokens.py` | No undefined `var(--x)`, no new hardcoded hex on semantic classes (M-PAT-07) |
+| `test_privacy_coverage.py` | Personal fields blurred, non-personal fields not (M-PAT-08) |
+| `test_code_language_policy.py` | English identifiers and comments (P-038) |
+| `test_release_guardrails.py` | No model change without its migration; the three version strings agree |
+
+`test_release_guardrails.py` covers the two failure modes that only surface
+after the fact: the suite builds its schema from the models, so a missing
+migration stays green until `migrate` runs against a real database; and
+`version.py` / `prod.py` / `docker-compose.prod.yml` drifting apart is what
+makes `./prod.py update` behave surprisingly.
+
+### What CI checks that a local run does not
+
+- `gitleaks detect` over the full git history.
+- `manage.py check --deploy --fail-level WARNING` against the hardened
+  configuration (`DJANGO_DEBUG=False`, `SECURE_SSL_REDIRECT=true`). The suite
+  runs with `DJANGO_DEBUG=True`, so the entire `if not DEBUG:` block in
+  `config/settings.py` — every security header, cookie and HSTS setting — is
+  otherwise never evaluated by anything.
+- `shellcheck -S warning scripts/*.sh`.
+
+---
+
 ## Scan Checklist (use alongside `./dev.py review`)
 
 Copy this block when starting a manual review pass:
