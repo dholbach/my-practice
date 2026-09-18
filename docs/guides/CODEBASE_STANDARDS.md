@@ -236,16 +236,60 @@ in #424).
 
 ## Documentation
 
+Organising principle: status tracking, reference documentation and project
+planning stay separate.
+
 ### Where things live
 
 | Content | Location |
 |---------|----------|
-| Project status & backlog | `PROJECTS.md` (index), `docs/projects/{todo,wip,done}/` (details) |
-| User-facing feature docs | `docs/guides/` |
-| Architecture reference | `docs/architecture/` — keep current |
+| Project status & backlog | `PROJECTS.md` (index, P-001…P-XXX, TODO → WIP → DONE), `docs/projects/{todo,wip,done}/` (details) |
+| User-facing feature docs | `docs/guides/` — how-tos (`EMAIL_IMPLEMENTATION.md`, `CLIENT_TAGGING.md`, `BACKUP_SETUP.md`), setup and configuration |
+| Architecture reference | `docs/architecture/` — `CODE_STRUCTURE.md` (modules, patterns), `PERFORMANCE.md` (query optimisation, indexes, N+1); keep current |
 | Operational / security | `docs/operations/` |
 | Completed project archives | `docs/projects/done/` with date prefix |
-| One-off notes & observations | `docs/notes/` |
+| One-off notes & observations | `docs/notes/` — type-checking quirks, contrast issues, status snapshots; no strict format, date-prefix filenames |
+| Why something is built the way it is | `docs/decisions/` — ADRs; its README says when one is warranted |
+| Generated codebase metrics | `docs/development/` — **never edit by hand**; `scripts/codebase_metrics.py` writes every file in it (LOC by category, file-length distribution and longest files, commit-type mix, release cadence) |
+| Historical / superseded docs | `docs/archive/` (`bugfixes/`, `completed/`) with a `YYYY-MM-DD_` or `YYYY-MM_` prefix |
+
+Finer points that decide which of these a file belongs in:
+
+- **`docs/projects/`** holds project *tracking*; technical guides go in
+  `docs/guides/` or `docs/operations/`, even when they came out of a project.
+- **`docs/operations/`** is for running and maintaining this specific
+  installation (`SCRIPTS.md`, `SECURITY.md`, `REINSTALL_CHECKLIST.md`,
+  `DPIA.md`) — not user-facing guides, not architecture reference.
+- **`docs/architecture/`** is active reference, not an archive:
+  `CODE_STRUCTURE.md` and `PERFORMANCE.md` are expected to be current.
+- **`docs/development/`** is read, not written: a scheduled workflow pushes a
+  refresh branch on the 1st of each month. Read it when deciding whether the
+  project needs features or maintenance next.
+
+### Code-Level Documentation (Docstrings)
+**Use for**: Function/class behavior, parameters, return values
+```python
+def calculate_revenue(invoice_items, year=None):
+    """
+    Calculate total revenue from invoice items.
+
+    Args:
+        invoice_items: QuerySet or list of InvoiceItem objects
+        year: Optional year filter (int)
+
+    Returns:
+        Decimal: Total revenue amount
+    """
+```
+
+### Inline Comments
+**Use sparingly for**:
+- Non-obvious business rules
+- Edge case handling
+- Workarounds (with ticket references)
+**Avoid for**:
+- Obvious code explanations
+- Outdated information (delete instead)
 
 ### Anti-patterns to flag
 
@@ -254,6 +298,169 @@ in #424).
 - `docs/architecture/CODE_STRUCTURE.md` references a module that no longer exists
 - `PROJECTS.md` with more than 2 "Recent Activity" entries → trim oldest
 - Docstring missing on a new public function or class
+
+---
+
+## Patterns Reference (M-PAT-01 … M-PAT-08)
+
+Each numbered pattern exists because the bug it prevents is invisible in
+review. CLAUDE.md states each rule in one line; this is the worked example,
+the failure it came from, and the exact contract.
+
+M-PAT-04 (no inline style blocks, no new `.css` files) stays in CLAUDE.md
+§ CSS Architecture — it is a prohibition, not a pattern with an example.
+M-PAT-07 and M-PAT-08 have their own contracts under § Templates & CSS above.
+
+### Error Handling Patterns (M-PAT-01)
+Use consistent error handling based on context:
+
+```python
+# Form Views: Use messages.error() + form_invalid()
+from django.contrib import messages
+
+class MyUpdateView(UpdateView):
+    def form_invalid(self, form):
+        messages.error(self.request, "Bitte korrigieren Sie die Fehler im Formular.")
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
+        return super().form_invalid(form)
+
+# API Views: Return JsonResponse with appropriate status codes
+from django.http import JsonResponse
+
+def api_endpoint(request):
+    try:
+        # ... processing ...
+        return JsonResponse({"success": True, "data": result})
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": "Internal server error"}, status=500)
+
+# Management Commands: Raise exceptions with logging
+import logging
+logger = logging.getLogger(__name__)
+
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        try:
+            # ... processing ...
+            self.stdout.write(self.style.SUCCESS("Success"))
+        except Exception as e:
+            logger.error(f"Command failed: {e}")
+            raise CommandError(f"Operation failed: {e}")
+```
+
+### Date Filter Patterns (M-PAT-02)
+Always use RevenueCalculator methods for consistent date filtering:
+
+```python
+# Good - Use RevenueCalculator
+from my_practice.utils import RevenueCalculator
+year_stats = RevenueCalculator.get_year_revenue(
+    2026,
+    use_paid_date=True,  # Use invoice.paid_date instead of invoice_date
+    practice=request.current_practice,
+)
+revenue = year_stats["total"]
+
+# Avoid - Manual filter building
+# invoice_qs = Invoice.objects.filter(invoice_date__year=year, status='paid')
+```
+
+### Chart Rendering in Hidden Tabs (M-PAT-03)
+Charts rendered in hidden tabs (display: none) get incorrect dimensions because container.clientHeight returns 0.
+
+```javascript
+// Problem: Chart in hidden tab has zero height
+.tab-content { display: none; }  // container.clientHeight = 0
+
+// Solution: Redraw charts when tab becomes visible
+function switchTab(tabName) {
+    // Show tab first
+    document.getElementById(tabName + '-tab').classList.add('active');
+
+    // Redraw charts after small delay (DOM must be visible)
+    setTimeout(function() {
+        const canvases = document.querySelectorAll(`#${tabName}-tab canvas`);
+        canvases.forEach(canvas => {
+            if (chartRegistry[canvas.id]) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                chartRegistry[canvas.id](canvas);  // Redraw with correct dimensions
+            }
+        });
+    }, 50);
+}
+
+// Also redraw on initial load if non-default tab is active
+```
+
+**Key Points**:
+- Charts use `container.clientHeight` for sizing
+- Hidden containers return 0 → canvas gets wrong dimensions
+- Always redraw charts after tab visibility changes
+- Use 50-100ms delay to ensure DOM is rendered
+- Leverage `chartRegistry` from chart_core.js for redraws
+
+### Form Draft Guard (M-PAT-06)
+Long-text forms (session logs, case notes) lose typed content if the user accidentally navigates away (e.g. Alt+Left/Right browser back/forward) before submitting. `app/static/js/form_draft_guard.js` is a reusable, opt-in guard loaded globally in `base.html` (like `widgets.js`) — no per-template `extra_js` needed.
+
+```html
+<form method="post" action="..." id="my-form"
+      data-draft-guard
+      data-draft-message="{% trans "You have an unsaved draft from an earlier attempt." %}"
+      data-draft-restore-label="{% trans "Restore draft" %}"
+      data-draft-discard-label="{% trans "Discard" %}">
+    {% csrf_token %}
+    ...
+</form>
+```
+
+**Key Points**:
+- Opt in per form with `data-draft-guard` — a stable `id` on the form keeps drafts scoped correctly if a page ever has more than one guarded form
+- Autosaves all named fields (text/textarea/select/checkbox/radio) to `localStorage` on input/change (debounced), keyed by URL path + form id
+- Offers a restore-or-discard banner (`.draft-restore-banner` in `tailwind.css`) on page load if a draft exists
+- Warns via the native `beforeunload` dialog while the form is dirty and unsubmitted
+- Clears the draft on successful submit
+- The three `data-draft-*` label strings are reused verbatim across forms (see `session_log_form.html`, `client_detail.html`) — reuse the same msgids rather than minting new ones
+- Emits a bubbling `draftguard:dirty` CustomEvent on the form whenever its dirty state flips, with `event.detail.dirty` as a boolean. Use it when the form can be scrolled or tabbed out of view, since `beforeunload` alone can't tell the user *where* the unsaved edit is. `client_detail.html` listens for it and toggles `.page-tab-btn--dirty` (a dot indicator, `tailwind.css`) plus a "Unsaved changes" `title` on the owning tab button:
+
+```javascript
+document.addEventListener('draftguard:dirty', function (e) {
+    const tabContent = e.target.closest('.page-tab-content');
+    if (!tabContent) return;
+    const btn = document.querySelector('.page-tab-btn[data-tab="' + tabContent.id.replace('ptab-', '') + '"]');
+    if (btn) btn.classList.toggle('page-tab-btn--dirty', e.detail.dirty);
+});
+```
+
+### Working-Day Calculations (M-PAT-05)
+
+**Rule: Always use `DateRangeHelper.count_working_days` with Berlin public holidays. Never use the `round(days * 5/7)` calendar approximation.**
+
+The `5/7` approximation diverges badly on holiday-heavy periods (Easter, Christmas), producing materially wrong utilisation figures.
+
+```python
+from my_practice.utils.date_helpers import DateRangeHelper
+from my_practice.utils.practice_days import berlin_public_holidays
+
+# Build the holiday set once, covering all years in the date range
+holidays: set[date] = set()
+for yr in range(start_date.year, end_date.year + 1):
+    holidays |= berlin_public_holidays(yr)
+
+# Then pass it to every working-day count in the function
+days = DateRangeHelper.count_working_days(start, end, holidays)
+```
+
+**Key points:**
+- `count_working_days(start, end)` — inclusive both ends, Mon–Fri only (no holidays). Safe for callers that don't need holidays.
+- `count_working_days(start, end, holidays)` — same but also excludes the given holiday dates.
+- Build the holiday set **once per function call**, not inside a loop.
+- For "days elapsed before a milestone" (half-open `[start, end)`): pass `end - timedelta(days=1)` as the end argument so that a same-day event counts as 0 elapsed days.
+- `berlin_public_holidays(year)` lives in `utils/practice_days.py` and is NOT re-exported from `utils/__init__.py` — import it directly.
 
 ---
 
@@ -391,3 +598,41 @@ Documentation
 [ ] CODE_STRUCTURE.md still accurate?
 [ ] New public functions missing docstrings?
 ```
+
+---
+
+## Periodic Review Cadence
+
+Larger-scale health checks to keep the codebase fresh and consolidated.
+Run `./dev.py review` for the automated parts, then work through the manual checklist.
+The scan checklist below is the manual half.
+
+### Monthly (~45 min)
+
+**Automated** (`./dev.py review`):
+- Dead code: unused imports, functions, variables (vulture + ruff F401/F841)
+- Dependency security: known CVEs (pip-audit)
+- Outdated packages: patch/minor version drift (pip list --outdated)
+- Test coverage: uncovered lines in views and models (coverage report)
+
+**Manual**:
+- [ ] Scan git log for repeated fixes in the same area — sign of a design problem
+- [ ] Check for German comments/identifiers in recently touched files (P-038)
+- [ ] GH issues: close stale items older than ~2 months with no activity
+- [ ] Any new views bypassing mixins/builders? Consolidate if so
+
+### Quarterly (~2-3h)
+
+**Automated** (`./dev.py review --full`):
+- Everything in the monthly run, plus:
+- Complexity hotspots: functions over 50 lines or cyclomatic complexity > 10 (radon)
+- Long files: every app/test/template/JS file of 500+ lines (`scripts/codebase_metrics.py --largest`; the trend lives in `docs/development/`)
+- Dead CSS selectors: `npx purgecss --css app/static/css/tailwind.out.css --content "app/templates/**/*.html" "app/static/js/**/*.js" --output /tmp/purged/` then diff vs `/tmp/purged/tailwind.out.css`. Watch for false positives from dynamically-built class names (e.g. `class="billing-row--{{ row.status }}"` — those classes are real even if purgecss can't see them).
+
+**Manual**:
+- [ ] Duplication scan: look for similar blocks across views/utils — extract a helper
+- [ ] Dependency major versions: check Django, Python, WeasyPrint, psycopg release notes
+- [ ] Pattern audit: are new utils/views following the established builder/helper patterns?
+- [ ] Archive PROJECTS.md: move stale WIPs to done/cancelled, keep backlog honest
+- [ ] docs/architecture/CODE_STRUCTURE.md: still accurate? Update if not
+- [ ] New Django/Python features available that simplify existing code?
