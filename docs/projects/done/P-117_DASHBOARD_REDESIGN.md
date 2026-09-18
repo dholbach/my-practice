@@ -1,7 +1,7 @@
 # P-117 Dashboard Redesign
 
-**Status**: Done  
-**Completed**: July 2026  
+**Status**: Done
+**Completed**: July 2026
 **PRs**: #134, #136, #138, #139, #140, #145
 
 ## Goal

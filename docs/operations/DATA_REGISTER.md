@@ -1,7 +1,7 @@
 # Data Register — External Data Flows
 
-**Scope**: Data that leaves the local system or reaches a third-party processor.  
-Internal-only processing (database, backups, PDF rendering) is covered in [DPIA-template.md](DPIA-template.md).  
+**Scope**: Data that leaves the local system or reaches a third-party processor.
+Internal-only processing (database, backups, PDF rendering) is covered in [DPIA-template.md](DPIA-template.md).
 **Last updated**: May 2026
 
 ---
@@ -36,7 +36,7 @@ using a client code like "AG" or "KC" rather than a full name).
 appointments. Calendar data is read by the practice management system to pre-fill
 session records; nothing is written back.
 
-**Legal basis**: Art. 6(1)(b) GDPR — administration of the therapeutic contract.  
+**Legal basis**: Art. 6(1)(b) GDPR — administration of the therapeutic contract.
 **DPA with Google**: Google Workspace Terms of Service + Data Processing Amendment.
 
 ---
@@ -55,7 +55,7 @@ with the sender. No clinical information in the message body.
 **Client-facing description**: Invoice reminders and appointment cancellation notices
 are sent by email from the practitioner's personal email account.
 
-**Legal basis**: Art. 6(1)(b) GDPR — performance of contract.  
+**Legal basis**: Art. 6(1)(b) GDPR — performance of contract.
 **DPA with email provider**: Depends on provider (Posteo, Google, etc.); user is
 responsible for ensuring their email provider meets GDPR requirements.
 
@@ -99,7 +99,7 @@ German company, GDPR-compliant, ISO 27001 certified. EU data residency.
 **Consent mechanism**: Explicit opt-in field on client record (`sms_consent` boolean).
 No SMS is sent without `sms_consent = True`. Consent and consent date are logged.
 
-**Legal basis**: Art. 6(1)(a) GDPR — freely given, specific, informed consent.  
+**Legal basis**: Art. 6(1)(a) GDPR — freely given, specific, informed consent.
 **DPA with seven.io**: AVV must be signed before activating the API key (see P-023).
 
 ---

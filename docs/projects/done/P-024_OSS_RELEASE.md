@@ -1,9 +1,9 @@
 # P-024 — OSS Release
 
-**Status**: ✅ DONE  
-**Priority**: Medium  
-**Created**: March 2026  
-**Updated**: June 2026  
+**Status**: ✅ DONE
+**Priority**: Medium
+**Created**: March 2026
+**Updated**: June 2026
 **Completed**: June 2026
 
 ---

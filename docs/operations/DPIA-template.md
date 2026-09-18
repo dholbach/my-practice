@@ -154,9 +154,9 @@ income and expense tracking for tax purposes.
 The data protection impact assessment shows that the identified risks have been reduced to
 an acceptable residual risk through the implemented technical and organisational measures.
 
-**Practitioner**: [YOUR FULL NAME]  
-**Practice**: [PRACTICE NAME / ADDRESS]  
-**Date completed**: [DATE]  
+**Practitioner**: [YOUR FULL NAME]
+**Practice**: [PRACTICE NAME / ADDRESS]
+**Date completed**: [DATE]
 **Last reviewed**: [DATE]
 
 **Assessment**:
