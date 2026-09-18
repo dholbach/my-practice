@@ -439,6 +439,30 @@ class BankExpenseReviewViewTest(BankImportViewBase):
         self.assertEqual(trans.match_confidence, "ignored")
         self.assertTrue(trans.processed)
 
+    def test_ignore_deletes_linked_auto_expense(self):
+        # An "auto-expense" transaction carries an expense the importer created
+        # from a category rule; ignoring it must not leave that in the books.
+        expense = CompanyExpense.objects.create(
+            practice=self.practice,
+            date=date(2026, 1, 15),
+            amount=Decimal("120.00"),
+            description="Miete",
+            category="miete",
+        )
+        trans = self._make_expense_transaction()
+        trans.match_confidence = "auto-expense"
+        trans.linked_expense = expense
+        trans.save()
+
+        self.http.post(
+            reverse("bank_expense_review"),
+            {"action": "ignore", "transactions": [trans.id]},
+        )
+        self.assertFalse(CompanyExpense.objects.filter(id=expense.id).exists())
+        trans.refresh_from_db()
+        self.assertEqual(trans.match_confidence, "ignored")
+        self.assertIsNone(trans.linked_expense)
+
     def test_group_learns_category_rule_by_name(self):
         trans = self._make_expense_transaction()
         self.http.post(

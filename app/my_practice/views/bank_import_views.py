@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from django.utils.translation import ngettext
+from django.utils.translation import gettext_lazy, ngettext, ngettext_lazy
 from django.views.generic import FormView
 from django.views.generic.edit import FormMixin
 
@@ -550,118 +550,208 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         )
 
 
-class BankExpenseReviewView(PracticeScopedListView):
+class BankFinancialReviewView(PracticeScopedListView):
     """
-    Review and group negative bank transactions into expenses.
+    Review outgoing bank transactions and group them into a financial record.
 
-    Shows unmatched negative transactions with form to group them into CompanyExpenses.
+    Shared by the expense and withdrawal review pages, which differ only in
+    which transactions they list, which record they create and how it is
+    labelled. Each subclass sets the class attributes below; the grouping and
+    ignoring flow — including cleanup of per-transaction records the importer
+    auto-created and which the manual decision now supersedes — is the same.
     """
 
     model = BankTransaction
-    template_name = "my_practice/bank_expense_review.html"
     context_object_name = "transactions"
     paginate_by = 50
 
+    # The record type a group of transactions becomes, and the BankTransaction
+    # field that links a transaction to one of them.
+    record_model: type[CompanyExpense] | type[CompanyWithdrawal]
+    link_field: str
+    redirect_name: str
+    page_title: str
+    default_category: str
+    # Data strings, not UI: written into the record's description / the
+    # transaction's notes, so they are deliberately not passed through i18n.
+    record_label: str
+    grouped_note_prefix: str
+    group_success_message: str  # ngettext_lazy with %(count)s and %(amount)s
+
     def get_queryset(self):
-        """Get unmatched/ignored/auto-created negative transactions (potential expenses)"""
-        return (
-            super()
-            .get_queryset()
-            .filter(
-                amount__lt=0,  # Negative amounts
-                match_confidence__in=["unmatched", "ignored", "auto-expense"],
-                processed=False,
-            )
-            .order_by("-transaction_date")
-        )
+        return super().get_queryset().filter(**self.queryset_filter()).order_by("-transaction_date")
+
+    def queryset_filter(self) -> dict:
+        """Filter selecting the transactions this page reviews."""
+        raise NotImplementedError
+
+    def total_amount(self, transactions: list[BankTransaction]) -> Decimal:
+        """Headline total for the stats card."""
+        return sum((abs(trans.amount) for trans in transactions), Decimal("0"))
+
+    def record_fields(self, request) -> dict:
+        """Extra fields for the created record, read from the grouping form."""
+        return {}
+
+    def after_group(self, request, transactions, category: str) -> None:
+        """Hook run after the grouped record is created and linked."""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["page_title"] = _("Bank Import - Assign Expenses")
+        context["page_title"] = self.page_title
 
-        qs = self.get_queryset()
-        transactions = list(qs)
+        transactions = list(self.get_queryset())
         context["stats"] = {
             "unmatched": len(transactions),
-            "total_amount": sum(trans.amount for trans in transactions),
+            "total_amount": self.total_amount(transactions),
         }
+        context["category_choices"] = self.record_model.CATEGORY_CHOICES
         return context
 
     def post(self, request, *args, **kwargs):
-        """Handle expense grouping"""
         action = request.POST.get("action")
         if action == "group":
             return self._handle_group(request)
         if action == "ignore":
             return self._handle_ignore(request)
-        return redirect("bank_expense_review")
+        return redirect(self.redirect_name)
 
-    def _handle_group(self, request):
-        # Get selected transaction IDs
+    def _selected_transactions(self, request):
+        """The selected transactions scoped to the current practice, or None with an error set."""
         transaction_ids = request.POST.getlist("transactions")
         if not transaction_ids:
             messages.error(request, _("Please select at least one transaction."))
-            return redirect("bank_expense_review")
+            return None
+        return BankTransaction.objects.for_current_practice(request).filter(id__in=transaction_ids)
 
-        transactions = BankTransaction.objects.for_current_practice(request).filter(
-            id__in=transaction_ids,
-        )
+    def _orphan_record_ids(self, transactions) -> list[int]:
+        """Per-transaction records the importer auto-created for these transactions."""
+        link_id = f"{self.link_field}_id"
+        return [getattr(trans, link_id) for trans in transactions if getattr(trans, link_id)]
 
-        if not transactions.exists():
-            messages.error(request, _("No transactions found."))
-            return redirect("bank_expense_review")
+    def _handle_group(self, request):
+        transactions = self._selected_transactions(request)
+        if transactions is None or not transactions.exists():
+            if transactions is not None:
+                messages.error(request, _("No transactions found."))
+            return redirect(self.redirect_name)
 
-        # Get form data
-        category = request.POST.get("category", "other")
+        category = request.POST.get("category", self.default_category)
         description = request.POST.get("description", "")
-        has_invoice = request.POST.get("has_invoice") == "on"
-        is_tax_deductible = request.POST.get("is_tax_deductible") == "on"
-
-        # Calculate total amount (absolute value)
         total_amount = sum(abs(trans.amount) for trans in transactions)
-
-        # Get date range for description
         dates = [trans.transaction_date for trans in transactions]
-        min_date = min(dates)
-        max_date = max(dates)
+        min_date, max_date = min(dates), max(dates)
 
-        # Generate description if not provided
         if not description:
-            count = len(transaction_ids)
+            count = transactions.count()
             if count == 1:
-                first_trans = transactions.first()
-                description = first_trans.reference if first_trans else ""
+                description = transactions.first().reference
             else:
-                description = f"{count}x {dict(CompanyExpense.CATEGORY_CHOICES).get(category, 'Ausgabe')} ({min_date.strftime('%d.%m.%Y')} - {max_date.strftime('%d.%m.%Y')})"
+                label = dict(self.record_model.CATEGORY_CHOICES).get(category, self.record_label)
+                description = f"{count}x {label} ({min_date.strftime('%d.%m.%Y')} – {max_date.strftime('%d.%m.%Y')})"
 
-        # Delete any per-transaction auto-created expenses being superseded
-        orphan_expense_ids = [
-            trans.linked_expense_id for trans in transactions if trans.linked_expense_id is not None
-        ]
+        # Collected before the grouped record exists so it can never be in the list.
+        orphan_ids = self._orphan_record_ids(transactions)
 
-        # Create CompanyExpense
-        expense = CompanyExpense.objects.create(
+        record = self.record_model.objects.create(
             practice=request.current_practice,
-            date=max_date,  # Use most recent date
+            date=max_date,
             amount=total_amount,
             description=description,
             category=category,
-            has_invoice=has_invoice,
-            is_tax_deductible=is_tax_deductible,
+            **self.record_fields(request),
         )
 
-        # Mark transactions as processed and link to grouped expense, and learn
-        # a category rule per distinct counterparty in the selection so future
-        # imports from the same payer are pre-categorized.
-        transaction_notes = f"Zu Ausgabe zusammengefasst: {expense} (ID: {expense.id})"
-        learned_keys = set()
+        notes = f"{self.grouped_note_prefix}: {record} (ID: {record.id})"
         for trans in transactions:
             trans.match_confidence = "ignored"
-            trans.linked_expense = expense
-            trans.notes = transaction_notes
+            setattr(trans, self.link_field, record)
+            trans.notes = notes
             trans.processed = True
             trans.save()
 
+        self.after_group(request, transactions, category)
+
+        if orphan_ids:
+            self.record_model.objects.filter(id__in=orphan_ids).delete()
+
+        messages.success(
+            request,
+            self.group_success_message
+            % {"count": transactions.count(), "amount": f"{total_amount:.2f}"},
+        )
+        return redirect(self.redirect_name)
+
+    def _handle_ignore(self, request):
+        transactions = self._selected_transactions(request)
+        if transactions is None:
+            return redirect(self.redirect_name)
+
+        # Ignoring says "this was never a record": drop what the importer
+        # auto-created for it, otherwise the amount stays in the books.
+        orphan_ids = self._orphan_record_ids(transactions)
+        if orphan_ids:
+            self.record_model.objects.filter(id__in=orphan_ids).delete()
+
+        count = transactions.update(
+            match_confidence="ignored",
+            notes="Manuell ignoriert",
+            processed=True,
+            **{self.link_field: None},
+        )
+
+        messages.success(
+            request,
+            ngettext(
+                "%(count)s transaction ignored.",
+                "%(count)s transactions ignored.",
+                count,
+            )
+            % {"count": count},
+        )
+        return redirect(self.redirect_name)
+
+
+class BankExpenseReviewView(BankFinancialReviewView):
+    """Group unmatched negative transactions into CompanyExpenses."""
+
+    template_name = "my_practice/bank_expense_review.html"
+    record_model = CompanyExpense
+    link_field = "linked_expense"
+    redirect_name = "bank_expense_review"
+    page_title = gettext_lazy("Bank Import - Assign Expenses")
+    default_category = "other"
+    record_label = "Ausgabe"
+    grouped_note_prefix = "Zu Ausgabe zusammengefasst"
+    group_success_message = ngettext_lazy(
+        "%(count)s transaction successfully grouped into expense: %(amount)s €",
+        "%(count)s transactions successfully grouped into expense: %(amount)s €",
+        "count",
+    )
+
+    def queryset_filter(self) -> dict:
+        return {
+            "amount__lt": 0,
+            "match_confidence__in": ["unmatched", "ignored", "auto-expense"],
+            "processed": False,
+        }
+
+    def total_amount(self, transactions):
+        # Shown signed: every listed amount is an outflow and the page renders
+        # it as such.
+        return sum((trans.amount for trans in transactions), Decimal("0"))
+
+    def record_fields(self, request) -> dict:
+        return {
+            "has_invoice": request.POST.get("has_invoice") == "on",
+            "is_tax_deductible": request.POST.get("is_tax_deductible") == "on",
+        }
+
+    def after_group(self, request, transactions, category: str) -> None:
+        # Learn a category rule per distinct counterparty in the selection so
+        # future imports from the same payer are pre-categorized.
+        learned_keys = set()
+        for trans in transactions:
             match_key = build_counterparty_key(trans.payer_iban, trans.payer_name)
             if match_key and match_key not in learned_keys:
                 learned_keys.add(match_key)
@@ -671,202 +761,23 @@ class BankExpenseReviewView(PracticeScopedListView):
                     defaults={"category": category},
                 )
 
-        # Clean up orphaned per-transaction auto-created expenses
-        if orphan_expense_ids:
-            CompanyExpense.objects.filter(id__in=orphan_expense_ids).delete()
 
-        # Success message
-        messages.success(
-            request,
-            ngettext(
-                "%(count)s transaction successfully grouped into expense: %(amount)s €",
-                "%(count)s transactions successfully grouped into expense: %(amount)s €",
-                len(transaction_ids),
-            )
-            % {"count": len(transaction_ids), "amount": f"{total_amount:.2f}"},
-        )
-        return redirect("bank_expense_review")
+class BankWithdrawalReviewView(BankFinancialReviewView):
+    """Confirm auto-created withdrawal transactions and group them into CompanyWithdrawals."""
 
-    def _handle_ignore(self, request):
-        # Mark selected transactions as ignored
-        transaction_ids = request.POST.getlist("transactions")
-        if not transaction_ids:
-            messages.error(request, _("Please select at least one transaction."))
-            return redirect("bank_expense_review")
-
-        count = (
-            BankTransaction.objects.for_current_practice(request)
-            .filter(
-                id__in=transaction_ids,
-            )
-            .update(
-                match_confidence="ignored",
-                notes="Manuell ignoriert",
-                processed=True,
-            )
-        )
-
-        messages.success(
-            request,
-            ngettext(
-                "%(count)s transaction ignored.",
-                "%(count)s transactions ignored.",
-                count,
-            )
-            % {"count": count},
-        )
-        return redirect("bank_expense_review")
-
-
-class BankWithdrawalReviewView(PracticeScopedListView):
-    """
-    Review and group auto-created withdrawal transactions.
-
-    Shows auto-withdrawal transactions for confirmation and grouping into CompanyWithdrawals.
-    """
-
-    model = BankTransaction
     template_name = "my_practice/bank_withdrawal_review.html"
-    context_object_name = "transactions"
-    paginate_by = 50
+    record_model = CompanyWithdrawal
+    link_field = "linked_withdrawal"
+    redirect_name = "bank_withdrawal_review"
+    page_title = gettext_lazy("Bank Import - Assign Withdrawals")
+    default_category = "salary"
+    record_label = "Entnahme"
+    grouped_note_prefix = "Zu Entnahme zusammengefasst"
+    group_success_message = ngettext_lazy(
+        "%(count)s transaction successfully grouped into withdrawal: %(amount)s €",
+        "%(count)s transactions successfully grouped into withdrawal: %(amount)s €",
+        "count",
+    )
 
-    def get_queryset(self):
-        """Get auto-created withdrawal transactions pending review"""
-        return (
-            super()
-            .get_queryset()
-            .filter(
-                match_confidence="auto-withdrawal",
-                processed=False,
-            )
-            .order_by("-transaction_date")
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["page_title"] = _("Bank Import - Assign Withdrawals")
-
-        qs = self.get_queryset()
-        context["stats"] = {
-            "unmatched": qs.count(),
-            "total_amount": sum(abs(trans.amount) for trans in qs),
-        }
-        context["category_choices"] = CompanyWithdrawal.CATEGORY_CHOICES
-        return context
-
-    def post(self, request, *args, **kwargs):
-        """Handle withdrawal grouping and ignoring"""
-        action = request.POST.get("action")
-        if action == "group":
-            return self._handle_group(request)
-        if action == "ignore":
-            return self._handle_ignore(request)
-        return redirect("bank_withdrawal_review")
-
-    def _handle_group(self, request):
-        transaction_ids = request.POST.getlist("transactions")
-        if not transaction_ids:
-            messages.error(request, _("Please select at least one transaction."))
-            return redirect("bank_withdrawal_review")
-
-        transactions = BankTransaction.objects.for_current_practice(request).filter(
-            id__in=transaction_ids,
-        )
-
-        if not transactions.exists():
-            messages.error(request, _("No transactions found."))
-            return redirect("bank_withdrawal_review")
-
-        category = request.POST.get("category", "salary")
-        description = request.POST.get("description", "")
-
-        total_amount = sum(abs(trans.amount) for trans in transactions)
-        dates = [trans.transaction_date for trans in transactions]
-        min_date = min(dates)
-        max_date = max(dates)
-
-        if not description:
-            count = len(transaction_ids)
-            if count == 1:
-                first_trans = transactions.first()
-                description = first_trans.reference if first_trans else ""
-            else:
-                description = (
-                    f"{count}x {dict(CompanyWithdrawal.CATEGORY_CHOICES).get(category, 'Entnahme')}"
-                    f" ({min_date.strftime('%d.%m.%Y')} – {max_date.strftime('%d.%m.%Y')})"
-                )
-
-        # Collect orphaned auto-created withdrawals to delete after creating the grouped one
-        orphan_ids = [
-            trans.linked_withdrawal_id
-            for trans in transactions
-            if trans.linked_withdrawal_id is not None
-        ]
-
-        withdrawal = CompanyWithdrawal.objects.create(
-            practice=request.current_practice,
-            date=max_date,
-            amount=total_amount,
-            description=description,
-            category=category,
-        )
-
-        notes = f"Zu Entnahme zusammengefasst: {withdrawal} (ID: {withdrawal.id})"
-        for trans in transactions:
-            trans.match_confidence = "ignored"
-            trans.linked_withdrawal = withdrawal
-            trans.notes = notes
-            trans.processed = True
-            trans.save()
-
-        # Delete orphaned single-transaction auto-created withdrawals
-        if orphan_ids:
-            CompanyWithdrawal.objects.filter(id__in=orphan_ids).exclude(id=withdrawal.id).delete()
-
-        messages.success(
-            request,
-            ngettext(
-                "%(count)s transaction successfully grouped into withdrawal: %(amount)s €",
-                "%(count)s transactions successfully grouped into withdrawal: %(amount)s €",
-                len(transaction_ids),
-            )
-            % {"count": len(transaction_ids), "amount": f"{total_amount:.2f}"},
-        )
-        return redirect("bank_withdrawal_review")
-
-    def _handle_ignore(self, request):
-        transaction_ids = request.POST.getlist("transactions")
-        if not transaction_ids:
-            messages.error(request, _("Please select at least one transaction."))
-            return redirect("bank_withdrawal_review")
-
-        transactions_qs = BankTransaction.objects.for_current_practice(request).filter(
-            id__in=transaction_ids,
-        )
-
-        # Delete orphaned auto-created withdrawals before ignoring
-        orphan_ids = [
-            trans.linked_withdrawal_id
-            for trans in transactions_qs
-            if trans.linked_withdrawal_id is not None
-        ]
-        if orphan_ids:
-            CompanyWithdrawal.objects.filter(id__in=orphan_ids).delete()
-
-        count = transactions_qs.update(
-            match_confidence="ignored",
-            notes="Manuell ignoriert",
-            processed=True,
-            linked_withdrawal=None,
-        )
-
-        messages.success(
-            request,
-            ngettext(
-                "%(count)s transaction ignored.",
-                "%(count)s transactions ignored.",
-                count,
-            )
-            % {"count": count},
-        )
-        return redirect("bank_withdrawal_review")
+    def queryset_filter(self) -> dict:
+        return {"match_confidence": "auto-withdrawal", "processed": False}
