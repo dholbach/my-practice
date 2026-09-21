@@ -128,13 +128,13 @@ app/my_practice/
 │
 ├── templatetags/
 │   ├── payment_tags.py        # Custom template tags/filters (query_string, etc.)
-│   ├── dashboard_extras.py    # Dashboard-specific filters
+│   ├── markdown_filters.py    # Markdown rendering for clinical notes (P-009)
 │   └── number_filters.py      # Number formatting filters
 │
 ├── management/
 │   └── commands/              # Management commands (see docs/operations/SCRIPTS.md)
 │
-└── tests/                      # Test suite (1,400+ tests)
+└── tests/                      # Test suite (1,800+ tests)
     └── ...                    # One file per module; see test_*.py files
 ```
 
