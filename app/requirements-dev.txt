@@ -7,7 +7,7 @@
 # requirements.txt must appear here at the same version. Extra entries here
 # (the tooling below) are expected and never reach the production image.
 Django==6.1.1
-psycopg[binary]==3.3.5
+psycopg[binary]==3.3.6
 cryptography==50.0.1
 markdown==3.10.3
 nh3==0.3.7

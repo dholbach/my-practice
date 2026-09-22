@@ -2,7 +2,7 @@
 # comment there for why) — update both files together;
 # scripts/check_requirements_sync.py fails the build if you don't.
 Django==6.1.1
-psycopg[binary]==3.3.5
+psycopg[binary]==3.3.6
 cryptography==50.0.1
 markdown==3.10.3
 nh3==0.3.7
