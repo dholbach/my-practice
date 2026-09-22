@@ -1140,6 +1140,9 @@
   .sidebar-source-link { color: var(--color-link); font-size: 0.9rem; text-decoration: none; }
   .stat-value-bold { color: var(--color-text-primary); font-weight: 600; }
   .no-email-hint { font-size: 0.85em; }
+  .questionnaire-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--color-border); }
+  .questionnaire-row:last-of-type { border-bottom: none; }
+  .questionnaire-title { font-size: 0.85rem; color: var(--color-text-primary); min-width: 0; overflow-wrap: break-word; }
   .section-card-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
   .section-card-header h3 { margin: 0; }
   .current-month-alert { font-size: 0.8rem; font-weight: 600; color: var(--color-warning); background: var(--color-warning-bg); padding: 0.2rem 0.6rem; border-radius: 12px; text-decoration: none; white-space: nowrap; transition: opacity 0.15s; }
