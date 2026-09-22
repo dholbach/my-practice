@@ -280,8 +280,8 @@
                     {% else %}<div class="step-pending-hint">{% trans "Send contract by email, receive signed copy back" %}</div>{% endif %}
                 </div>
                 <div class="step-actions">
-                    {% if client.email %}<a href="{% url 'send_contract_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>
-                    {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
+                    {% if client.email %}<a href="{% url 'send_contract_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>{% endif %}
+                    <a href="{% url 'contract_pdf' client.pk %}" class="btn btn-secondary btn-sm">📄 PDF</a>
                     {% trans "undo" as lbl_undo %}
                     {% trans "✓ Done" as lbl_done %}
                     {% url 'client_onboarding_step' client.pk as onboarding_url %}
@@ -330,12 +330,15 @@
     <div class="section-card">
         <div class="sidebar-section-label">🧠 {% trans "Assessments" %}</div>
         {% for q in available_questionnaires %}
-        <div class="step-actions">
-            {% if client.email %}<a href="{% url 'send_questionnaire_pdf_email' client.pk q.code %}" class="btn btn-secondary btn-sm">📧 {% blocktrans with title=q.title|dict_get:client.language %}Send {{ title }}{% endblocktrans %}</a>
-            {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
-            <a href="{% url 'questionnaire_pdf' q.code %}?lang={{ client.language }}" target="_blank" class="btn btn-secondary btn-sm">📄 PDF</a>
+        <div class="questionnaire-row">
+            <span class="questionnaire-title">{{ q.title|dict_get:client.language }}</span>
+            <div class="step-actions">
+                {% if client.email %}<a href="{% url 'send_questionnaire_pdf_email' client.pk q.code %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>{% endif %}
+                <a href="{% url 'questionnaire_pdf' q.code %}?lang={{ client.language }}" target="_blank" class="btn btn-secondary btn-sm">📄 PDF</a>
+            </div>
         </div>
         {% endfor %}
+        {% if not client.email %}<div class="text-muted no-email-hint">{% trans "No email address — hand over or print the PDF." %}</div>{% endif %}
     </div>
     {% endif %}
 

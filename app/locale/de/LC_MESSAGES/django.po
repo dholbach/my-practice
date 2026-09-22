@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-18 20:34+0200\n"
+"POT-Creation-Date: 2026-09-22 14:55+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -47,8 +47,8 @@ msgstr "Zuordnung"
 #: templates/my_practice/bank_import.html:87
 #: templates/my_practice/billing_open_overview.html:64
 #: templates/my_practice/calendar_import.html:99
-#: templates/my_practice/client_detail.html:596
-#: templates/my_practice/client_detail.html:640
+#: templates/my_practice/client_detail.html:593
+#: templates/my_practice/client_detail.html:637
 #: templates/my_practice/inquiry_confirm_delete.html:22
 #: templates/my_practice/invoice_confirm_delete.html:24
 #: templates/my_practice/invoice_detail.html:33
@@ -69,7 +69,7 @@ msgstr "Zahler"
 #: my_practice/models/financial.py:147
 #: templates/my_practice/bank_import.html:86
 #: templates/my_practice/bank_review.html:195
-#: templates/my_practice/client_detail.html:640
+#: templates/my_practice/client_detail.html:637
 #: templates/my_practice/expense_confirm_delete.html:23
 #: templates/my_practice/expense_list.html:81
 #: templates/my_practice/invoice_list.html:169
@@ -222,7 +222,7 @@ msgstr "Vor Ort"
 
 #: my_practice/admin/client.py:125 my_practice/admin/clinical.py:66
 #: my_practice/models/client.py:203 templates/includes/command_palette.html:58
-#: templates/my_practice/client_detail.html:154
+#: templates/my_practice/client_detail.html:151
 #: templates/my_practice/client_list_cards.html:26
 #: templates/my_practice/tag_list.html:6
 msgid "Tags"
@@ -234,7 +234,7 @@ msgstr "Zuordnung"
 
 #: my_practice/admin/client_alias.py:29 my_practice/admin/financial.py:21
 #: my_practice/admin/financial.py:114 my_practice/admin/invoice.py:187
-#: templates/my_practice/client_detail.html:131
+#: templates/my_practice/client_detail.html:128
 msgid "Details"
 msgstr "Details"
 
@@ -438,7 +438,7 @@ msgstr "Basis-Informationen über die Praxis"
 
 #: my_practice/admin/practice.py:31 my_practice/forms.py:124
 #: my_practice/models/client.py:111
-#: templates/my_practice/client_detail.html:223
+#: templates/my_practice/client_detail.html:220
 #: templates/my_practice/practice_form.html:78
 msgid "Address"
 msgstr "Adresse"
@@ -683,7 +683,7 @@ msgstr "Klientenkürzel"
 
 #: my_practice/forms.py:122 my_practice/models/client.py:109
 #: my_practice/models/inquiry.py:99 my_practice/models/practice.py:82
-#: templates/my_practice/client_detail.html:214
+#: templates/my_practice/client_detail.html:211
 #: templates/my_practice/client_list_cards.html:109
 #: templates/my_practice/inquiry_convert_confirm.html:21
 #: templates/my_practice/practice_confirm_delete.html:36
@@ -695,14 +695,14 @@ msgstr "E-Mail"
 #: my_practice/models/financial.py:116 my_practice/models/inquiry.py:100
 #: my_practice/models/practice.py:99
 #: templates/my_practice/bank_expense_review.html:34
-#: templates/my_practice/client_detail.html:218
+#: templates/my_practice/client_detail.html:215
 #: templates/my_practice/inquiry_convert_confirm.html:25
 #: templates/my_practice/practice_form.html:120
 msgid "Phone"
 msgstr "Telefon"
 
 #: my_practice/forms.py:125 my_practice/models/client.py:115
-#: templates/my_practice/client_detail.html:228
+#: templates/my_practice/client_detail.html:225
 msgid "Cost carrier"
 msgstr "Kostenträger"
 
@@ -745,8 +745,8 @@ msgstr "Honorar 90 Min (€)"
 #: templates/my_practice/bank_review.html:191
 #: templates/my_practice/calendar_approval_queue.html:90
 #: templates/my_practice/calendar_import.html:93
-#: templates/my_practice/client_detail.html:596
-#: templates/my_practice/client_detail.html:640
+#: templates/my_practice/client_detail.html:593
+#: templates/my_practice/client_detail.html:637
 #: templates/my_practice/expense_confirm_delete.html:11
 #: templates/my_practice/expense_list.html:78
 #: templates/my_practice/inquiry_list.html:178
@@ -1226,7 +1226,7 @@ msgstr "läuft ab"
 
 #: my_practice/models/calendar.py:97
 #: templates/my_practice/bank_withdrawal_review.html:13
-#: templates/my_practice/client_detail.html:604
+#: templates/my_practice/client_detail.html:601
 msgid "Pending"
 msgstr "Ausstehend"
 
@@ -1260,7 +1260,7 @@ msgstr "Zusammenfassung"
 #: my_practice/models/calendar.py:116 my_practice/models/session.py:28
 #: templates/my_practice/calendar_approval_queue.html:91
 #: templates/my_practice/calendar_import.html:94
-#: templates/my_practice/client_detail.html:596
+#: templates/my_practice/client_detail.html:593
 #: templates/my_practice/inquiry_form.html:121
 msgid "Time"
 msgstr "Zeit"
@@ -1295,14 +1295,14 @@ msgid "Client does not belong to the selected practice"
 msgstr "Klient:in gehört nicht zur ausgewählten Praxis"
 
 #: my_practice/models/client.py:80 my_practice/models/inquiry.py:79
-#: my_practice/views/inquiry_views.py:278
+#: my_practice/views/inquiry_views.py:142
 #: templates/my_practice/send_cancellation_email.html:7
 #: templates/my_practice/time_off_notice_form.html:52
 msgid "German"
 msgstr "Deutsch"
 
 #: my_practice/models/client.py:81 my_practice/models/inquiry.py:80
-#: my_practice/views/inquiry_views.py:278
+#: my_practice/views/inquiry_views.py:142
 #: templates/my_practice/send_cancellation_email.html:7
 #: templates/my_practice/time_off_notice_form.html:71
 msgid "English"
@@ -1435,7 +1435,7 @@ msgstr "Überweisung"
 
 #: my_practice/models/client.py:256 my_practice/models/financial.py:31
 #: my_practice/models/financial.py:132 my_practice/models/inquiry.py:33
-#: my_practice/models/todo.py:91 my_practice/views/inquiry_views.py:391
+#: my_practice/models/todo.py:91 my_practice/views/inquiry_views.py:255
 #: templates/my_practice/bank_expense_review.html:50
 msgid "Other"
 msgstr "Sonstiges"
@@ -1553,7 +1553,7 @@ msgid "Initial session + clinical assessment (encrypted)"
 msgstr "Erstgespräch + klinische Bewertung (verschlüsselt)"
 
 #: my_practice/models/clinical.py:183
-#: templates/my_practice/client_detail.html:193
+#: templates/my_practice/client_detail.html:190
 msgid "Case notes"
 msgstr "Fallnotizen"
 
@@ -1562,8 +1562,8 @@ msgid "Themes, dynamics, challenges, future work (encrypted)"
 msgstr "Themen, Dynamik, Herausforderungen, Zukünftige Arbeit (verschlüsselt)"
 
 #: my_practice/models/clinical.py:190
-#: templates/my_practice/client_detail.html:63
-#: templates/my_practice/client_detail.html:177
+#: templates/my_practice/client_detail.html:60
+#: templates/my_practice/client_detail.html:174
 msgid "Working diagnosis"
 msgstr "Arbeitsdiagnose"
 
@@ -1644,7 +1644,7 @@ msgid "Techniques and interventions applied (encrypted)"
 msgstr "Angewandte Techniken und Interventionen (verschlüsselt)"
 
 #: my_practice/models/clinical.py:265
-#: templates/my_practice/client_detail.html:429
+#: templates/my_practice/client_detail.html:426
 #: templates/my_practice/session_log_form.html:79
 msgid "Own reflection"
 msgstr "Eigene Reflexion"
@@ -1654,7 +1654,7 @@ msgid "How I felt about it — countertransference (encrypted, separate)"
 msgstr "Wie ging es mir dabei — Gegenübertragung (verschlüsselt, separat)"
 
 #: my_practice/models/clinical.py:271
-#: templates/my_practice/client_detail.html:435
+#: templates/my_practice/client_detail.html:432
 #: templates/my_practice/session_log_form.html:111
 msgid "Ideas for next session"
 msgstr "Ideen für nächste Sitzung"
@@ -1696,7 +1696,7 @@ msgid "Feedback or outcome once discussed (optional, encrypted)"
 msgstr "Feedback oder Ergebnis nach der Besprechung (optional, verschlüsselt)"
 
 #: my_practice/models/clinical.py:332
-#: templates/my_practice/client_detail.html:528
+#: templates/my_practice/client_detail.html:525
 msgid "Discussed on"
 msgstr "Besprochen am"
 
@@ -1829,8 +1829,8 @@ msgstr "Selbsterfahrung"
 
 #: my_practice/models/financial.py:124 my_practice/models/todo.py:71
 #: templates/my_practice/bank_expense_review.html:42
-#: templates/my_practice/client_detail.html:380
-#: templates/my_practice/client_detail.html:524
+#: templates/my_practice/client_detail.html:377
+#: templates/my_practice/client_detail.html:521
 #: templates/my_practice/supervision_queue.html:5
 msgid "Supervision"
 msgstr "Supervision"
@@ -2025,22 +2025,22 @@ msgstr "Therapeutenliste"
 msgid "Network / colleagues"
 msgstr "Netzwerk / Kolleg:innen"
 
-#: my_practice/models/inquiry.py:52 my_practice/views/inquiry_views.py:211
-#: my_practice/views/inquiry_views.py:375
+#: my_practice/models/inquiry.py:52 my_practice/views/inquiry_views.py:75
+#: my_practice/views/inquiry_views.py:239
 msgid "New"
 msgstr "Neu"
 
-#: my_practice/models/inquiry.py:53 my_practice/views/inquiry_views.py:212
-#: my_practice/views/inquiry_views.py:376
+#: my_practice/models/inquiry.py:53 my_practice/views/inquiry_views.py:76
+#: my_practice/views/inquiry_views.py:240
 msgid "Contacted"
 msgstr "Kontaktiert"
 
-#: my_practice/models/inquiry.py:54 my_practice/views/inquiry_views.py:213
-#: my_practice/views/inquiry_views.py:377
+#: my_practice/models/inquiry.py:54 my_practice/views/inquiry_views.py:77
+#: my_practice/views/inquiry_views.py:241
 msgid "Intro meeting"
 msgstr "Vorgespräch"
 
-#: my_practice/models/inquiry.py:55 my_practice/views/inquiry_views.py:214
+#: my_practice/models/inquiry.py:55 my_practice/views/inquiry_views.py:78
 msgid "Waitlist"
 msgstr "Warteliste"
 
@@ -2048,8 +2048,8 @@ msgstr "Warteliste"
 msgid "Intake in progress"
 msgstr "Aufnahme läuft"
 
-#: my_practice/models/inquiry.py:57 my_practice/views/inquiry_views.py:216
-#: my_practice/views/inquiry_views.py:379
+#: my_practice/models/inquiry.py:57 my_practice/views/inquiry_views.py:80
+#: my_practice/views/inquiry_views.py:243
 msgid "Onboarded"
 msgstr "Aufgenommen"
 
@@ -2089,7 +2089,7 @@ msgid "Source"
 msgstr "Quelle"
 
 #: my_practice/models/inquiry.py:120
-#: templates/my_practice/client_detail.html:232
+#: templates/my_practice/client_detail.html:229
 #: templates/my_practice/inquiry_list.html:100
 #: templates/my_practice/inquiry_list.html:181
 #: templates/my_practice/inquiry_list.html:227
@@ -2857,7 +2857,7 @@ msgstr "Google Calendar Event-ID, falls importiert"
 #: my_practice/models/session.py:64 templates/includes/client_card.html:19
 #: templates/includes/heatmap.html:13
 #: templates/my_practice/billing_open_overview.html:61
-#: templates/my_practice/client_detail.html:640
+#: templates/my_practice/client_detail.html:637
 #: templates/my_practice/monthly_billing_overview.html:49
 #: templates/my_practice/tax_workday_audit.html:62
 msgid "Sessions"
@@ -3228,28 +3228,28 @@ msgid "since %(start)s"
 msgstr "seit %(start)s"
 
 #: my_practice/utils/client_detail_builder.py:232
-#: my_practice/views/inquiry_views.py:215
-#: templates/my_practice/client_detail.html:264
+#: my_practice/views/inquiry_views.py:79
+#: templates/my_practice/client_detail.html:261
 msgid "Intake"
 msgstr "Aufnahme"
 
 #: my_practice/utils/client_detail_builder.py:233
-#: templates/my_practice/client_detail.html:281
+#: templates/my_practice/client_detail.html:278
 msgid "Contract"
 msgstr "Behandlungsvertrag"
 
 #: my_practice/utils/client_detail_builder.py:234
-#: templates/my_practice/client_detail.html:298
+#: templates/my_practice/client_detail.html:295
 msgid "Anamnesis"
 msgstr "Anamnese"
 
 #: my_practice/utils/client_detail_builder.py:235
-#: templates/my_practice/client_detail.html:315
+#: templates/my_practice/client_detail.html:312
 msgid "Intake complete"
 msgstr "Aufnahme abgeschlossen"
 
 #: my_practice/utils/dashboard_context_builder.py:129
-#: templates/my_practice/client_detail.html:74
+#: templates/my_practice/client_detail.html:71
 #, python-format
 msgid "%(count)s session"
 msgid_plural "%(count)s sessions"
@@ -3290,6 +3290,38 @@ msgstr "unbekannt"
 #, python-format
 msgid "File '%(name)s' is too large (max %(max_mb)s MB)."
 msgstr "Datei '%(name)s' ist zu groß (max. %(max_mb)s MB)."
+
+#: my_practice/utils/inquiry_email_templates.py:16
+msgid "Acknowledge receipt"
+msgstr "Eingangsbestätigung"
+
+#: my_practice/utils/inquiry_email_templates.py:48
+msgid "Propose intro meeting"
+msgstr "Terminvorschlag Vorgespräch"
+
+#: my_practice/utils/inquiry_email_templates.py:64
+msgid "After intro meeting"
+msgstr "Nach dem Vorgespräch"
+
+#: my_practice/utils/inquiry_email_templates.py:77
+msgid "Waitlist spot available"
+msgstr "Platz frei — Wartelistenmeldung"
+
+#: my_practice/utils/inquiry_email_templates.py:89
+msgid "Intake documents"
+msgstr "Aufnahme — Unterlagen"
+
+#: my_practice/utils/inquiry_email_templates.py:102
+msgid "Friendly decline"
+msgstr "Freundliche Absage"
+
+#: my_practice/utils/inquiry_email_templates.py:118
+msgid "Friendly decline (not a match)"
+msgstr "Freundliche Absage (kein Match)"
+
+#: my_practice/utils/inquiry_email_templates.py:134
+msgid "Closing — unreachable"
+msgstr "Abschluss — nicht erreichbar"
 
 #: my_practice/utils/practice_analysis.py:251
 #, python-format
@@ -3813,92 +3845,87 @@ msgstr "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
 msgid "Permission denied."
 msgstr "Zugriff verweigert."
 
-#: my_practice/views/email_views.py:78 my_practice/views/email_views.py:373
+#: my_practice/views/email_views.py:84
 #, python-format
 msgid "Email sending failed (result: %(result)s)."
 msgstr "E-Mail-Versand fehlgeschlagen (Ergebnis: %(result)s)."
 
-#: my_practice/views/email_views.py:82
+#: my_practice/views/email_views.py:88
 #, python-format
 msgid "Error while sending: %(error)s"
 msgstr "Fehler beim Senden: %(error)s"
 
-#: my_practice/views/email_views.py:151 my_practice/views/email_views.py:175
+#: my_practice/views/email_views.py:157 my_practice/views/email_views.py:181
 #: my_practice/views/timeoff_views.py:93 my_practice/views/timeoff_views.py:125
 msgid "Practice settings not configured."
 msgstr "Praxis-Einstellungen nicht konfiguriert."
 
-#: my_practice/views/email_views.py:157
+#: my_practice/views/email_views.py:163
 #, python-format
 msgid "Client %(code)s has no email address on file."
 msgstr "Klient %(code)s hat keine E-Mail-Adresse hinterlegt."
 
-#: my_practice/views/email_views.py:191
+#: my_practice/views/email_views.py:197
 #, python-format
 msgid "Error creating attachment: %(error)s"
 msgstr "Fehler beim Erstellen des Anhangs: %(error)s"
 
-#: my_practice/views/email_views.py:233 my_practice/views/email_views.py:268
+#: my_practice/views/email_views.py:239 my_practice/views/email_views.py:274
 #, python-format
 msgid "Invoice %(number)s has already been sent. Change the status to send it again."
 msgstr "Rechnung %(number)s wurde bereits versendet. Status ändern, um erneut zu senden."
 
-#: my_practice/views/email_views.py:325
+#: my_practice/views/email_views.py:331
 #, python-format
 msgid "Invoice date was updated to %(date)s"
 msgstr "Rechnungsdatum wurde auf %(date)s aktualisiert"
 
-#: my_practice/views/email_views.py:334
+#: my_practice/views/email_views.py:340
 #, python-format
 msgid "Error creating the PDF: %(error)s"
 msgstr "Fehler beim Erstellen der PDF: %(error)s"
 
-#: my_practice/views/email_views.py:358
-#, python-format
-msgid "Error sending the email: %(error)s"
-msgstr "Fehler beim Senden der E-Mail: %(error)s"
-
-#: my_practice/views/email_views.py:368
+#: my_practice/views/email_views.py:365
 #, python-brace-format
 msgid "✅ Invoice successfully sent to {recipient}"
 msgstr "✅ Rechnung erfolgreich gesendet an {recipient}"
 
-#: my_practice/views/email_views.py:411
+#: my_practice/views/email_views.py:403
 #, python-format
 msgid "No open invoices for %(code)s."
 msgstr "Keine offenen Rechnungen für %(code)s."
 
-#: my_practice/views/email_views.py:429
+#: my_practice/views/email_views.py:421
 #, python-brace-format
 msgid "✅ Payment reminder sent to {recipient}"
 msgstr "✅ Zahlungserinnerung gesendet an {recipient}"
 
-#: my_practice/views/email_views.py:554
+#: my_practice/views/email_views.py:546
 #, python-brace-format
 msgid "✅ Cancellation sent to {recipient}"
 msgstr "✅ Absage gesendet an {recipient}"
 
-#: my_practice/views/email_views.py:579
+#: my_practice/views/email_views.py:571
 #, python-format
 msgid "File not found: %(path)s. Please place the .docx file under MY_PRACTICE_DATA_DIR/documents/."
 msgstr "Datei nicht gefunden: %(path)s. Bitte die .docx-Datei unter MY_PRACTICE_DATA_DIR/documents/ ablegen."
 
-#: my_practice/views/email_views.py:600
+#: my_practice/views/email_views.py:592
 #, python-format
 msgid "File not found: %(path)s."
 msgstr "Datei nicht gefunden: %(path)s."
 
-#: my_practice/views/email_views.py:615 my_practice/views/email_views.py:725
+#: my_practice/views/email_views.py:607 my_practice/views/email_views.py:717
 #, python-brace-format
 msgid "✅ Questionnaire sent to {recipient}"
 msgstr "✅ Anamnesebogen gesendet an {recipient}"
 
-#: my_practice/views/email_views.py:644
+#: my_practice/views/email_views.py:636
 #, python-brace-format
 msgid "✅ Treatment contract sent to {recipient}"
 msgstr "✅ Behandlungsvertrag gesendet an {recipient}"
 
-#: my_practice/views/email_views.py:673
+#: my_practice/views/email_views.py:665
 #, python-brace-format
 msgid "✅ Intake form sent to {recipient}"
 msgstr "✅ Aufnahmebogen gesendet an {recipient}"
@@ -3938,90 +3965,58 @@ msgstr "Ausgabe zusammengeführt: %(txns)s Buchung(en) und %(receipts)s Beleg(e)
 msgid "Link with transaction from %(date)s removed."
 msgstr "Verknüpfung mit Transaktion vom %(date)s aufgehoben."
 
-#: my_practice/views/inquiry_views.py:45
-msgid "Acknowledge receipt"
-msgstr "Eingangsbestätigung"
-
-#: my_practice/views/inquiry_views.py:77
-msgid "Propose intro meeting"
-msgstr "Terminvorschlag Vorgespräch"
-
-#: my_practice/views/inquiry_views.py:93
-msgid "After intro meeting"
-msgstr "Nach dem Vorgespräch"
-
-#: my_practice/views/inquiry_views.py:106
-msgid "Waitlist spot available"
-msgstr "Platz frei — Wartelistenmeldung"
-
-#: my_practice/views/inquiry_views.py:118
-msgid "Intake documents"
-msgstr "Aufnahme — Unterlagen"
-
-#: my_practice/views/inquiry_views.py:131
-msgid "Friendly decline"
-msgstr "Freundliche Absage"
-
-#: my_practice/views/inquiry_views.py:147
-msgid "Friendly decline (not a match)"
-msgstr "Freundliche Absage (kein Match)"
-
-#: my_practice/views/inquiry_views.py:163
-msgid "Closing — unreachable"
-msgstr "Abschluss — nicht erreichbar"
-
-#: my_practice/views/inquiry_views.py:256
+#: my_practice/views/inquiry_views.py:120
 msgid "Received → response"
 msgstr "Eingang → Rückmeldung"
 
-#: my_practice/views/inquiry_views.py:257
+#: my_practice/views/inquiry_views.py:121
 msgid "Response → intro meeting"
 msgstr "Rückmeldung → Vorgespräch"
 
-#: my_practice/views/inquiry_views.py:258
+#: my_practice/views/inquiry_views.py:122
 msgid "Intro meeting → decision"
 msgstr "Vorgespräch → Entscheidung"
 
-#: my_practice/views/inquiry_views.py:259
+#: my_practice/views/inquiry_views.py:123
 msgid "Decision → onboarded"
 msgstr "Entscheidung → Aufgenommen"
 
-#: my_practice/views/inquiry_views.py:378
+#: my_practice/views/inquiry_views.py:242
 msgid "Waitlist / intake"
 msgstr "Warteliste / Aufnahme"
 
-#: my_practice/views/inquiry_views.py:380
+#: my_practice/views/inquiry_views.py:244
 msgid "Closed"
 msgstr "Geschlossen"
 
-#: my_practice/views/inquiry_views.py:410
+#: my_practice/views/inquiry_views.py:274
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} recorded."
 msgstr "Anfrage von {obj.full_name} erfasst."
 
-#: my_practice/views/inquiry_views.py:420
+#: my_practice/views/inquiry_views.py:284
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} saved."
 msgstr "Anfrage von {obj.full_name} gespeichert."
 
-#: my_practice/views/inquiry_views.py:453
+#: my_practice/views/inquiry_views.py:317
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} deleted."
 msgstr "Anfrage von {obj.full_name} gelöscht."
 
-#: my_practice/views/inquiry_views.py:463
+#: my_practice/views/inquiry_views.py:327
 msgid "Marketing period recorded."
 msgstr "Marketing-Zeitraum erfasst."
 
-#: my_practice/views/inquiry_views.py:473
+#: my_practice/views/inquiry_views.py:337
 msgid "Marketing period saved."
 msgstr "Marketing-Zeitraum gespeichert."
 
-#: my_practice/views/inquiry_views.py:483
+#: my_practice/views/inquiry_views.py:347
 msgid "Marketing period deleted."
 msgstr "Marketing-Zeitraum gelöscht."
 
-#: my_practice/views/inquiry_views.py:543
+#: my_practice/views/inquiry_views.py:407
 #, python-format
 msgid "Client %(name)s (%(code)s) created successfully."
 msgstr "Klient:in %(name)s (%(code)s) wurde erfolgreich angelegt."
@@ -4366,7 +4361,7 @@ msgid "New client"
 msgstr "Neue Klient:in"
 
 #: templates/base.html:22 templates/includes/command_palette.html:66
-#: templates/my_practice/client_detail.html:575
+#: templates/my_practice/client_detail.html:572
 #: templates/my_practice/invoice_list.html:136
 msgid "New invoice"
 msgstr "Neue Rechnung"
@@ -4473,7 +4468,7 @@ msgstr "Datum (Rechnung)"
 #: templates/includes/calendar_preflight_widget.html:26
 #: templates/my_practice/calendar_approval_queue.html:92
 #: templates/my_practice/calendar_import.html:96
-#: templates/my_practice/client_detail.html:596
+#: templates/my_practice/client_detail.html:593
 #: templates/my_practice/invoice_detail.html:85
 #: templates/my_practice/time_off_list.html:35
 #: templates/my_practice/time_off_list.html:80
@@ -4547,7 +4542,7 @@ msgid "Revenue this month: %(current)s € / %(target)s €"
 msgstr "Umsatz diesen Monat: %(current)s € / %(target)s €"
 
 #: templates/includes/client_card.html:11
-#: templates/my_practice/client_detail.html:455
+#: templates/my_practice/client_detail.html:452
 msgid "Log missing"
 msgstr "Protokoll fehlt"
 
@@ -4687,8 +4682,8 @@ msgstr "E-Mail-Textbausteine"
 #: templates/includes/command_palette.html:65
 #: templates/my_practice/billing_open_overview.html:65
 #: templates/my_practice/calendar_import.html:100
-#: templates/my_practice/client_detail.html:596
-#: templates/my_practice/client_detail.html:640
+#: templates/my_practice/client_detail.html:593
+#: templates/my_practice/client_detail.html:637
 #: templates/my_practice/expense_list.html:85
 #: templates/my_practice/inquiry_list.html:183
 #: templates/my_practice/inquiry_list.html:229
@@ -4818,8 +4813,8 @@ msgid "Snooze 1 week"
 msgstr "1 Woche zurückstellen"
 
 #: templates/includes/focus_queue_row.html:56
-#: templates/my_practice/client_detail.html:442
-#: templates/my_practice/client_detail.html:461
+#: templates/my_practice/client_detail.html:439
+#: templates/my_practice/client_detail.html:458
 #: templates/my_practice/expense_list.html:127
 #: templates/my_practice/inquiry_list.html:26
 #: templates/my_practice/inquiry_list.html:203
@@ -4941,7 +4936,7 @@ msgstr "Ja, löschen"
 
 #: templates/my_practice/_confirm_delete_base.html:31
 #: templates/my_practice/calendar_import.html:83
-#: templates/my_practice/client_detail.html:512
+#: templates/my_practice/client_detail.html:509
 #: templates/my_practice/client_detail_documents.html:28
 #: templates/my_practice/client_gdpr_delete_confirm.html:55
 #: templates/my_practice/client_intake.html:144
@@ -5113,7 +5108,7 @@ msgid "Hours"
 msgstr "Stunden"
 
 #: templates/my_practice/analytics.html:352
-#: templates/my_practice/client_detail.html:244
+#: templates/my_practice/client_detail.html:241
 #: templates/my_practice/revenue_report.html:26
 #: templates/my_practice/tax_year_summary.html:37
 #: templates/my_practice/tax_year_summary.html:354
@@ -5154,7 +5149,7 @@ msgid "Dormant"
 msgstr "Ruhend"
 
 #: templates/my_practice/analytics.html:426
-#: templates/my_practice/client_detail.html:237
+#: templates/my_practice/client_detail.html:234
 msgid "💻 Online"
 msgstr "💻 Online"
 
@@ -5390,7 +5385,7 @@ msgstr "Ausgaben-Trends"
 msgid "Annual operating expenses %(start_year)s–today"
 msgstr "Jährliche Betriebsausgaben %(start_year)s–heute"
 
-#: templates/my_practice/analytics.html:1098
+#: templates/my_practice/analytics.html:1076
 #: templates/my_practice/checklist.html:38
 msgid "Back to overview"
 msgstr "Zur Übersicht"
@@ -5416,7 +5411,7 @@ msgstr "Zu Ausgabe zusammenfassen"
 #: templates/my_practice/bank_review.html:295
 #: templates/my_practice/bank_review.html:326
 #: templates/my_practice/bank_withdrawal_review.html:50
-#: templates/my_practice/client_detail.html:616
+#: templates/my_practice/client_detail.html:613
 msgid "Ignore"
 msgstr "Ignorieren"
 
@@ -6319,142 +6314,143 @@ msgstr "← Liste"
 msgid "✏️ Edit"
 msgstr "✏️ Bearbeiten"
 
-#: templates/my_practice/client_detail.html:67
+#: templates/my_practice/client_detail.html:64
 #: templates/my_practice/client_list_cards.html:108
 #: templates/my_practice/time_off_notice_form.html:30
 msgid "Last session"
 msgstr "Letzte Sitzung"
 
-#: templates/my_practice/client_detail.html:69
+#: templates/my_practice/client_detail.html:66
 #, python-format
 msgid "%(ago)s ago"
 msgstr "vor %(ago)s"
 
-#: templates/my_practice/client_detail.html:72
+#: templates/my_practice/client_detail.html:69
 msgid "Session hours"
 msgstr "Sitzungsstunden"
 
-#: templates/my_practice/client_detail.html:77
+#: templates/my_practice/client_detail.html:74
 msgid "Open balance"
 msgstr "Offener Betrag"
 
-#: templates/my_practice/client_detail.html:92
+#: templates/my_practice/client_detail.html:89
 msgid "Recent sessions"
 msgstr "Letzte Sitzungen"
 
-#: templates/my_practice/client_detail.html:93
+#: templates/my_practice/client_detail.html:90
 msgid "full protocol →"
 msgstr "ganzes Protokoll →"
 
-#: templates/my_practice/client_detail.html:110
+#: templates/my_practice/client_detail.html:107
 msgid "No sessions with log yet."
 msgstr "Noch keine Sitzungen mit Protokoll."
 
-#: templates/my_practice/client_detail.html:118
-#: templates/my_practice/client_detail.html:257
+#: templates/my_practice/client_detail.html:115
+#: templates/my_practice/client_detail.html:254
 msgid "Intake process"
 msgstr "Aufnahmeprozess"
 
-#: templates/my_practice/client_detail.html:139
-#: templates/my_practice/client_detail.html:362
+#: templates/my_practice/client_detail.html:136
+#: templates/my_practice/client_detail.html:359
 msgid "+ Session log"
 msgstr "+ Sitzungsprotokoll"
 
-#: templates/my_practice/client_detail.html:140
+#: templates/my_practice/client_detail.html:137
 msgid "+ Task"
 msgstr "+ Aufgabe"
 
-#: templates/my_practice/client_detail.html:143
-#: templates/my_practice/client_detail.html:363
+#: templates/my_practice/client_detail.html:140
+#: templates/my_practice/client_detail.html:360
 msgid "+ Note"
 msgstr "+ Notiz"
 
-#: templates/my_practice/client_detail.html:147
-#: templates/my_practice/client_detail.html:364
+#: templates/my_practice/client_detail.html:144
+#: templates/my_practice/client_detail.html:361
 msgid "+ Supervision"
 msgstr "+ Supervision"
 
-#: templates/my_practice/client_detail.html:161
+#: templates/my_practice/client_detail.html:158
 msgid "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis."
 msgstr "Diagnose noch nicht gesetzt — die probatorische Phase scheint abgeschlossen. Bitte Diagnose aktualisieren."
 
-#: templates/my_practice/client_detail.html:163
+#: templates/my_practice/client_detail.html:160
 msgid "Diagnosis not yet set — invoices currently show \"Probationary phase\". Please update once the probationary phase is complete."
 msgstr "Diagnose noch nicht gesetzt — aktuell wird \"Probatorik\" auf der Rechnung verwendet. Nach Abschluss der probatorischen Phase bitte Diagnose aktualisieren."
 
-#: templates/my_practice/client_detail.html:165
+#: templates/my_practice/client_detail.html:162
 msgid "Edit →"
 msgstr "Bearbeiten →"
 
-#: templates/my_practice/client_detail.html:171
+#: templates/my_practice/client_detail.html:168
 #: templates/my_practice/session_log_form.html:18
 msgid "You have an unsaved draft from an earlier attempt."
 msgstr "Es gibt einen nicht gespeicherten Entwurf von einem früheren Versuch."
 
-#: templates/my_practice/client_detail.html:172
+#: templates/my_practice/client_detail.html:169
 #: templates/my_practice/session_log_form.html:19
 msgid "Restore draft"
 msgstr "Entwurf wiederherstellen"
 
-#: templates/my_practice/client_detail.html:173
+#: templates/my_practice/client_detail.html:170
 #: templates/my_practice/session_log_form.html:20
 msgid "Discard"
 msgstr "Verwerfen"
 
-#: templates/my_practice/client_detail.html:182
+#: templates/my_practice/client_detail.html:179
 msgid "Intake & Anamnesis"
 msgstr "Aufnahme & Anamnese"
 
-#: templates/my_practice/client_detail.html:184
+#: templates/my_practice/client_detail.html:181
 msgid "Clinical initial assessment…"
 msgstr "Klinische Erstbewertung…"
 
-#: templates/my_practice/client_detail.html:187
-#: templates/my_practice/client_detail.html:198
+#: templates/my_practice/client_detail.html:184
+#: templates/my_practice/client_detail.html:195
 msgid "Preview"
 msgstr "Vorschau"
 
-#: templates/my_practice/client_detail.html:195
+#: templates/my_practice/client_detail.html:192
 msgid "Topics, dynamics, challenges…"
 msgstr "Themen, Dynamik, Herausforderungen…"
 
-#: templates/my_practice/client_detail.html:204
+#: templates/my_practice/client_detail.html:201
 msgid "Save profile"
 msgstr "Profil speichern"
 
-#: templates/my_practice/client_detail.html:211
+#: templates/my_practice/client_detail.html:208
 msgid "Contact & Conditions"
 msgstr "Kontakt & Konditionen"
 
-#: templates/my_practice/client_detail.html:236
+#: templates/my_practice/client_detail.html:233
 msgid "Session format"
 msgstr "Sitzungsformat"
 
-#: templates/my_practice/client_detail.html:237
+#: templates/my_practice/client_detail.html:234
 msgid "🏢 In-person"
 msgstr "🏢 Vor Ort"
 
-#: templates/my_practice/client_detail.html:240
+#: templates/my_practice/client_detail.html:237
 msgid "Hourly rate"
 msgstr "Stundensatz"
 
-#: templates/my_practice/client_detail.html:255
+#: templates/my_practice/client_detail.html:252
 #, python-format
 msgid "✅ Intake completed on %(date)s"
 msgstr "✅ Aufnahmeprozess abgeschlossen am %(date)s"
 
-#: templates/my_practice/client_detail.html:265
+#: templates/my_practice/client_detail.html:262
 #, python-format
 msgid "Handed out on %(date)s"
 msgstr "Ausgehändigt am %(date)s"
 
-#: templates/my_practice/client_detail.html:266
+#: templates/my_practice/client_detail.html:263
 msgid "Send by email or download the PDF and hand it out"
 msgstr "Per E-Mail senden oder PDF herunterladen und aushändigen"
 
-#: templates/my_practice/client_detail.html:269
-#: templates/my_practice/client_detail.html:286
-#: templates/my_practice/client_detail.html:303
+#: templates/my_practice/client_detail.html:266
+#: templates/my_practice/client_detail.html:283
+#: templates/my_practice/client_detail.html:300
+#: templates/my_practice/client_detail.html:336
 #: templates/my_practice/send_contract_email.html:62
 #: templates/my_practice/send_intake_form_email.html:62
 #: templates/my_practice/send_invoice_email.html:69
@@ -6463,71 +6459,68 @@ msgstr "Per E-Mail senden oder PDF herunterladen und aushändigen"
 msgid "Send"
 msgstr "Senden"
 
-#: templates/my_practice/client_detail.html:271
-#: templates/my_practice/client_detail.html:288
-#: templates/my_practice/client_detail.html:305
-#: templates/my_practice/client_detail.html:320
+#: templates/my_practice/client_detail.html:268
+#: templates/my_practice/client_detail.html:285
+#: templates/my_practice/client_detail.html:302
+#: templates/my_practice/client_detail.html:317
 msgid "undo"
 msgstr "rückgängig"
 
-#: templates/my_practice/client_detail.html:272
-#: templates/my_practice/client_detail.html:289
-#: templates/my_practice/client_detail.html:306
+#: templates/my_practice/client_detail.html:269
+#: templates/my_practice/client_detail.html:286
+#: templates/my_practice/client_detail.html:303
 msgid "✓ Done"
 msgstr "✓ Erledigt"
 
-#: templates/my_practice/client_detail.html:282
+#: templates/my_practice/client_detail.html:279
 #, python-format
 msgid "Signed on %(date)s"
 msgstr "Unterzeichnet am %(date)s"
 
-#: templates/my_practice/client_detail.html:283
+#: templates/my_practice/client_detail.html:280
 msgid "Send contract by email, receive signed copy back"
 msgstr "Vertrag per E-Mail zusenden, unterschrieben zurückerhalten"
 
-#: templates/my_practice/client_detail.html:287
-#: templates/my_practice/client_detail.html:304
-#: templates/my_practice/client_detail.html:338
-msgid "no email"
-msgstr "keine E-Mail"
-
-#: templates/my_practice/client_detail.html:299
+#: templates/my_practice/client_detail.html:296
 #, python-format
 msgid "Sent on %(date)s"
 msgstr "Gesendet am %(date)s"
 
-#: templates/my_practice/client_detail.html:300
+#: templates/my_practice/client_detail.html:297
 msgid "Send questionnaire by email"
 msgstr "Fragebogen per E-Mail zusenden"
 
-#: templates/my_practice/client_detail.html:316
+#: templates/my_practice/client_detail.html:301
+msgid "no email"
+msgstr "keine E-Mail"
+
+#: templates/my_practice/client_detail.html:313
 #, python-format
 msgid "Completed on %(date)s"
 msgstr "Abgeschlossen am %(date)s"
 
-#: templates/my_practice/client_detail.html:317
+#: templates/my_practice/client_detail.html:314
 msgid "All documents complete — finalise intake"
 msgstr "Alle Unterlagen vollständig — Aufnahme abschließen"
 
-#: templates/my_practice/client_detail.html:321
+#: templates/my_practice/client_detail.html:318
 msgid "✓ Finalise"
 msgstr "✓ Abschließen"
 
-#: templates/my_practice/client_detail.html:334
+#: templates/my_practice/client_detail.html:331
 msgid "Assessments"
 msgstr "Fragebögen"
 
-#: templates/my_practice/client_detail.html:337
-#, python-format
-msgid "Send %(title)s"
-msgstr "%(title)s senden"
+#: templates/my_practice/client_detail.html:341
+msgid "No email address — hand over or print the PDF."
+msgstr "Keine E-Mail-Adresse — PDF aushändigen oder ausdrucken."
 
 #: templates/my_practice/client_detail.html:347
 msgid "Source inquiry"
 msgstr "Anfragequelle"
 
-#: templates/my_practice/client_detail.html:372
-#: templates/my_practice/client_detail.html:511
+#: templates/my_practice/client_detail.html:369
+#: templates/my_practice/client_detail.html:508
 #: templates/my_practice/expense_form.html:99
 #: templates/my_practice/gebueh_leistung_form.html:41
 #: templates/my_practice/inquiry_form.html:190
@@ -6541,210 +6534,210 @@ msgstr "Anfragequelle"
 msgid "Save"
 msgstr "Speichern"
 
-#: templates/my_practice/client_detail.html:374
+#: templates/my_practice/client_detail.html:371
 msgid "Note (Markdown supported)…"
 msgstr "Notiz (Markdown unterstützt)…"
 
-#: templates/my_practice/client_detail.html:384
+#: templates/my_practice/client_detail.html:381
 msgid "Supervision topic or question…"
 msgstr "Supervisionsthema oder -frage…"
 
-#: templates/my_practice/client_detail.html:385
+#: templates/my_practice/client_detail.html:382
 #: templates/my_practice/inquiry_list.html:30
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: templates/my_practice/client_detail.html:390
+#: templates/my_practice/client_detail.html:387
 msgid "▴ Collapse"
 msgstr "▴ Einklappen"
 
-#: templates/my_practice/client_detail.html:391
+#: templates/my_practice/client_detail.html:388
 msgid "▾ Show older entries"
 msgstr "▾ Ältere Einträge anzeigen"
 
-#: templates/my_practice/client_detail.html:392
+#: templates/my_practice/client_detail.html:389
 msgid "more"
 msgstr "mehr"
 
-#: templates/my_practice/client_detail.html:406
+#: templates/my_practice/client_detail.html:403
 msgid "🧾 To invoice"
 msgstr "🧾 Zur Rechnung"
 
-#: templates/my_practice/client_detail.html:407
+#: templates/my_practice/client_detail.html:404
 msgid "🚷 Non-billable"
 msgstr "🚷 Nicht abrechenbar"
 
-#: templates/my_practice/client_detail.html:408
+#: templates/my_practice/client_detail.html:405
 msgid "✅ Billable"
 msgstr "✅ Abrechenbar"
 
-#: templates/my_practice/client_detail.html:409
+#: templates/my_practice/client_detail.html:406
 msgid "🚫 No-show"
 msgstr "🚫 Ausfall"
 
-#: templates/my_practice/client_detail.html:410
+#: templates/my_practice/client_detail.html:407
 msgid "Delete session log?"
 msgstr "Sitzungsprotokoll löschen?"
 
-#: templates/my_practice/client_detail.html:411
+#: templates/my_practice/client_detail.html:408
 msgid "Delete session?"
 msgstr "Sitzung löschen?"
 
-#: templates/my_practice/client_detail.html:417
-#: templates/my_practice/client_detail.html:453
-#: templates/my_practice/client_detail.html:603
+#: templates/my_practice/client_detail.html:414
+#: templates/my_practice/client_detail.html:450
+#: templates/my_practice/client_detail.html:600
 #: templates/my_practice/gebueh_leistung_form.html:6
 #: templates/my_practice/invoice_detail.html:111
 #: templates/my_practice/invoice_detail.html:143
 msgid "min"
 msgstr "Min"
 
-#: templates/my_practice/client_detail.html:418
-#: templates/my_practice/client_detail.html:454
+#: templates/my_practice/client_detail.html:415
+#: templates/my_practice/client_detail.html:451
 msgid "Unbilled"
 msgstr "Unberechnet"
 
-#: templates/my_practice/client_detail.html:418
-#: templates/my_practice/client_detail.html:454
+#: templates/my_practice/client_detail.html:415
+#: templates/my_practice/client_detail.html:451
 msgid "Non-billable"
 msgstr "Nicht abrechenbar"
 
-#: templates/my_practice/client_detail.html:472
+#: templates/my_practice/client_detail.html:469
 msgid "+ Log"
 msgstr "+ Protokoll"
 
-#: templates/my_practice/client_detail.html:476
+#: templates/my_practice/client_detail.html:473
 msgid "Duration in minutes"
 msgstr "Dauer in Minuten"
 
-#: templates/my_practice/client_detail.html:477
+#: templates/my_practice/client_detail.html:474
 msgid "Save min."
 msgstr "Min. speichern"
 
-#: templates/my_practice/client_detail.html:490
+#: templates/my_practice/client_detail.html:487
 msgid "Delete note?"
 msgstr "Notiz löschen?"
 
-#: templates/my_practice/client_detail.html:521
+#: templates/my_practice/client_detail.html:518
 #: templates/my_practice/supervision_queue.html:31
 msgid "Delete supervision topic?"
 msgstr "Supervisionsthema wirklich löschen?"
 
-#: templates/my_practice/client_detail.html:526
+#: templates/my_practice/client_detail.html:523
 msgid "Raised on"
 msgstr "Erfasst am"
 
-#: templates/my_practice/client_detail.html:537
-#: templates/my_practice/client_detail.html:552
+#: templates/my_practice/client_detail.html:534
+#: templates/my_practice/client_detail.html:549
 msgid "Mark discussed"
 msgstr "Als besprochen markieren"
 
-#: templates/my_practice/client_detail.html:540
+#: templates/my_practice/client_detail.html:537
 msgid "↩ Reopen"
 msgstr "↩ Öffnen"
 
-#: templates/my_practice/client_detail.html:551
+#: templates/my_practice/client_detail.html:548
 msgid "Feedback or outcome (optional, Markdown)…"
 msgstr "Feedback oder Ergebnis (optional, Markdown)…"
 
-#: templates/my_practice/client_detail.html:564
+#: templates/my_practice/client_detail.html:561
 msgid "No entries yet. Session logs are created when adding new entries."
 msgstr "Noch keine Einträge. Sitzungsprotokolle entstehen beim Erstellen neuer Einträge."
 
-#: templates/my_practice/client_detail.html:578
+#: templates/my_practice/client_detail.html:575
 #, python-format
 msgid "Oldest open invoice: over %(days)s days"
 msgstr "Älteste offene Rechnung: über %(days)s Tage"
 
-#: templates/my_practice/client_detail.html:578
-#: templates/my_practice/client_detail.html:580
-#: templates/my_practice/client_detail.html:582
-#: templates/my_practice/client_detail.html:584
+#: templates/my_practice/client_detail.html:575
+#: templates/my_practice/client_detail.html:577
+#: templates/my_practice/client_detail.html:579
+#: templates/my_practice/client_detail.html:581
 msgid "Payment reminder"
 msgstr "Zahlungserinnerung"
 
-#: templates/my_practice/client_detail.html:580
+#: templates/my_practice/client_detail.html:577
 #, python-format
 msgid "Oldest open invoice: %(min_days)s–%(max_days)s days"
 msgstr "Älteste offene Rechnung: %(min_days)s–%(max_days)s Tage"
 
-#: templates/my_practice/client_detail.html:582
+#: templates/my_practice/client_detail.html:579
 msgid "Open invoice exists"
 msgstr "Offene Rechnung vorhanden"
 
-#: templates/my_practice/client_detail.html:584
+#: templates/my_practice/client_detail.html:581
 msgid "No outstanding sent invoices"
 msgstr "Keine gesendeten Rechnungen offen"
 
-#: templates/my_practice/client_detail.html:586
+#: templates/my_practice/client_detail.html:583
 msgid "Prepare cancellation email due to illness"
 msgstr "Absage-Mail wegen Krankheit vorbereiten"
 
-#: templates/my_practice/client_detail.html:586
+#: templates/my_practice/client_detail.html:583
 msgid "Cancel session"
 msgstr "Sitzung absagen"
 
-#: templates/my_practice/client_detail.html:593
+#: templates/my_practice/client_detail.html:590
 msgid "Pending sessions"
 msgstr "Ausstehende Sitzungen"
 
-#: templates/my_practice/client_detail.html:609
+#: templates/my_practice/client_detail.html:606
 #, python-format
 msgid "+ Invoice %(num)s"
 msgstr "+ Rechnung %(num)s"
 
-#: templates/my_practice/client_detail.html:610
+#: templates/my_practice/client_detail.html:607
 #, python-format
 msgid "Add to invoice %(num)s"
 msgstr "Zu Rechnung %(num)s hinzufügen"
 
-#: templates/my_practice/client_detail.html:612
+#: templates/my_practice/client_detail.html:609
 msgid "+ Separate invoice"
 msgstr "+ Separate Rechnung"
 
-#: templates/my_practice/client_detail.html:614
+#: templates/my_practice/client_detail.html:611
 #: templates/my_practice/dashboard.html:41
 msgid "+ New invoice"
 msgstr "+ Neue Rechnung"
 
-#: templates/my_practice/client_detail.html:628
+#: templates/my_practice/client_detail.html:625
 msgid "Invoice history"
 msgstr "Rechnungshistorie"
 
-#: templates/my_practice/client_detail.html:631
+#: templates/my_practice/client_detail.html:628
 #, python-format
 msgid "⚠️ %(count)s appointment pending"
 msgid_plural "⚠️ %(count)s appointments pending"
 msgstr[0] "⚠️ %(count)s Termin ausstehend"
 msgstr[1] "⚠️ %(count)s Termine ausstehend"
 
-#: templates/my_practice/client_detail.html:633
+#: templates/my_practice/client_detail.html:630
 #, python-format
 msgid "📝 %(count)s session open"
 msgid_plural "📝 %(count)s sessions open"
 msgstr[0] "📝 %(count)s Sitzung offen"
 msgstr[1] "📝 %(count)s Sitzungen offen"
 
-#: templates/my_practice/client_detail.html:640
+#: templates/my_practice/client_detail.html:637
 #: templates/my_practice/send_payment_reminder.html:19
 #: templates/my_practice/tax_year_summary.html:125
 msgid "Invoice no."
 msgstr "Rechnungsnr."
 
-#: templates/my_practice/client_detail.html:650
+#: templates/my_practice/client_detail.html:647
 #: templates/my_practice/invoice_list.html:184
 msgid "View"
 msgstr "Ansehen"
 
-#: templates/my_practice/client_detail.html:656
+#: templates/my_practice/client_detail.html:653
 msgid "No invoices for this client yet."
 msgstr "Noch keine Rechnungen für diese Klient:in."
 
-#: templates/my_practice/client_detail.html:662
+#: templates/my_practice/client_detail.html:659
 msgid "Session activity"
 msgstr "Sitzungsaktivität"
 
-#: templates/my_practice/client_detail.html:677
+#: templates/my_practice/client_detail.html:674
 msgid "Uploaded documents"
 msgstr "Hochgeladene Dokumente"
 
@@ -8984,6 +8977,14 @@ msgstr "Benutzername"
 #: templates/registration/login.html:20
 msgid "Password"
 msgstr "Passwort"
+
+#, python-format
+#~ msgid "Error sending the email: %(error)s"
+#~ msgstr "Fehler beim Senden der E-Mail: %(error)s"
+
+#, python-format
+#~ msgid "Send %(title)s"
+#~ msgstr "%(title)s senden"
 
 #~ msgid "No supervision topics for this client yet."
 #~ msgstr "Noch keine Supervisionsthemen für diese Klient:in."
