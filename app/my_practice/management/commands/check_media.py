@@ -8,35 +8,44 @@ Checks for:
 import os
 from pathlib import Path
 
+from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import models
 
-from ...models import CompanyExpense, Practice
+
+def _models_with_file_fields() -> list[tuple[type[models.Model], list[str]]]:
+    """Every concrete model that stores a path under MEDIA_ROOT, with its field names.
+
+    Discovered from the app registry rather than hand-listed, because this
+    command deletes whatever no field references. A model left off a hand-list
+    does not merely go unreported — every one of its files is named as an
+    orphan and removed by --delete-orphans. ClientDocument was missing for
+    exactly that reason, which put every signed treatment contract, intake
+    form and doctor's letter in the delete list.
+
+    ImageField subclasses FileField, so Practice.logo/signature are included.
+    """
+    found = []
+    for model in apps.get_models():
+        field_names = [f.name for f in model._meta.get_fields() if isinstance(f, models.FileField)]
+        if field_names:
+            found.append((model, field_names))
+    return found
 
 
 def _db_media_paths() -> dict[str, list[str]]:
     """Return all relative media paths currently stored in the DB, grouped by model."""
     paths: dict[str, list[str]] = {}
-
-    # Practice: logo + signature
-    practice_paths = []
-    for p in Practice.objects.all():
-        if p.logo:
-            practice_paths.append(str(p.logo))
-        if p.signature:
-            practice_paths.append(str(p.signature))
-    if practice_paths:
-        paths["Practice"] = practice_paths
-
-    # CompanyExpense receipts (stored via related ExpenseReceipt objects)
-    expense_paths = list(
-        CompanyExpense.objects.filter(receipts__isnull=False)
-        .values_list("receipts__file", flat=True)
-        .distinct()
-    )
-    if expense_paths:
-        paths["CompanyExpense"] = expense_paths
-
+    for model, field_names in _models_with_file_fields():
+        values = [
+            value
+            for row in model._default_manager.values_list(*field_names)
+            for value in row
+            if value
+        ]
+        if values:
+            paths[model.__name__] = values
     return paths
 
 
