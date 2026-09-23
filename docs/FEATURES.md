@@ -36,7 +36,7 @@ chronological record; this document only tracks current state.
 - ✅ GebüH-recorded indicator on session rows — the GebüH button shows a visual marker once a code has been entered for that session
 
 ### Client Detail Cockpit (P-094)
-- ✅ Tabbed layout: Overview / Protokoll / Abrechnung / Dokumente — replaces sidebar layout
+- ✅ Tabbed layout: Overview / Protokoll / Abrechnung — replaces sidebar layout; the former Dokumente tab now sits on the Overview tab beside the intake and questionnaire sections it belongs with
 - ✅ Overview tab: stat cards (diagnosis, last session, session hours, open balance), intake progress widget (4-step bar from existing date fields), recent session one-liners, and the client's profile/tag/onboarding detail further down the same tab — originally two separate tabs (Überblick + Profil), merged once the split proved to be mostly duplicated content
 - ✅ `SessionLog.summary` — unencrypted one-liner field (max 120 chars) shown in the Overview tab without Fernet decryption; editable in session log form
 - ✅ Tag add/remove UI in the Overview tab; duplicate tags removed from page header
