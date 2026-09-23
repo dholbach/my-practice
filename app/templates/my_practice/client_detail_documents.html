@@ -3,6 +3,22 @@
 <div class="section-card" id="client-documents">
     <h3>📎 {% trans "Documents" %}</h3>
 
+    <!-- Uploaded documents. The <ul> is rendered even when empty so newly
+         uploaded rows can be appended without a page reload. -->
+    <ul class="sidebar-doc-list">
+        {% for doc in documents %}
+        <li id="doc-{{ doc.pk }}" class="sidebar-doc-item">
+            <span class="doc-type-badge sidebar-doc-badge">{{ doc.get_document_type_display }}</span>
+            <a href="{{ doc.file.url }}" target="_blank" class="sidebar-doc-name" title="{{ doc.filename }}">{% if doc.description %}{{ doc.description }}{% else %}{{ doc.filename }}{% endif %}</a>
+            <span class="sidebar-doc-date">{{ doc.document_date|date:"d.m.Y" }}</span>
+            <button class="btn btn-danger btn-sm" onclick="docDelete(this)"
+                    data-doc-id="{{ doc.pk }}"
+                    data-csrf="{{ csrf_token }}">🗑️</button>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if not documents %}<p class="cn-empty-state" id="docEmptyState">{% trans "No documents uploaded yet." %}</p>{% endif %}
+
     <!-- Upload zone -->
     <div class="doc-upload-zone" id="docDropZone">
         <p>{% blocktrans %}Drag file here or <strong>click</strong> to select{% endblocktrans %}</p>
@@ -151,18 +167,14 @@
             });
     });
 
-    /* Append the freshly uploaded file to the visible list in the Dokumente tab,
-       mirroring the server-rendered <li> in client_detail.html (same id and delete
-       button, so docDelete() works on it without a reload). Built with DOM calls
-       rather than innerHTML: description and filename are user-supplied. */
+    /* Append the freshly uploaded file to the visible list, mirroring the
+       server-rendered <li> above (same id and delete button, so docDelete()
+       works on it without a reload). Built with DOM calls rather than
+       innerHTML: description and filename are user-supplied. */
     function appendDocRow(doc) {
         const list = document.querySelector('.sidebar-doc-list');
-        if (!list) {
-            // No list yet — this is the client's first document, and the section
-            // around it is only rendered when documents exist. Let the server draw it.
-            location.reload();
-            return;
-        }
+        const empty = document.getElementById('docEmptyState');
+        if (empty) empty.remove();
 
         const li = document.createElement('li');
         li.id = 'doc-' + doc.id;

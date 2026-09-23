@@ -45,7 +45,6 @@
     <button class="page-tab-btn" data-tab="abrechnung" onclick="pageTab('abrechnung', this)">💶 {% trans "Billing" %}
         {% if stats.open_amount %}<span class="cn-badge cn-badge-warn">{{ stats.open_amount|floatformat:0 }} €</span>{% endif %}
     </button>
-    <button class="page-tab-btn" data-tab="dokumente" onclick="pageTab('dokumente', this)">📎 {% trans "Documents" %}</button>
     <div class="cd-header-actions">
         <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">{% trans "← List" %}</a>
         <a href="{% url 'client_edit' client.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm">{% trans "✏️ Edit" %}</a>
@@ -341,6 +340,8 @@
         {% if not client.email %}<div class="text-muted no-email-hint">{% trans "No email address — hand over or print the PDF." %}</div>{% endif %}
     </div>
     {% endif %}
+
+    {% include 'my_practice/client_detail_documents.html' %}
 
     {% if client.source_inquiry %}
     <div class="section-card">
@@ -665,29 +666,6 @@
 
 </div><!-- /ptab-abrechnung -->
 
-<!-- ══ Tab: Dokumente ═════════════════════════════════════════════════════ -->
-<div id="ptab-dokumente" class="page-tab-content">
-    {% include 'my_practice/client_detail_documents.html' %}
-
-    {% if documents %}
-    <div class="section-card mt-2">
-        <h3>{% trans "Uploaded documents" %}</h3>
-        <ul class="sidebar-doc-list">
-            {% for doc in documents %}
-            <li id="doc-{{ doc.pk }}" class="sidebar-doc-item">
-                <span class="doc-type-badge sidebar-doc-badge">{{ doc.get_document_type_display }}</span>
-                <a href="{{ doc.file.url }}" target="_blank" class="sidebar-doc-name" title="{{ doc.filename }}">{% if doc.description %}{{ doc.description }}{% else %}{{ doc.filename }}{% endif %}</a>
-                <span class="sidebar-doc-date">{{ doc.document_date|date:"d.m.Y" }}</span>
-                <button class="btn btn-danger btn-sm" onclick="docDelete(this)"
-                        data-doc-id="{{ doc.pk }}"
-                        data-csrf="{{ csrf_token }}">🗑️</button>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-</div><!-- /ptab-dokumente -->
-
 <script>
 function pageTab(tabName, btn) {
     document.querySelectorAll('.page-tab-content').forEach(el => el.classList.remove('page-tab-active'));
@@ -708,7 +686,7 @@ function pageTab(tabName, btn) {
 // Restore tab from URL hash on load
 (function() {
     const hash = window.location.hash;
-    const valid = ['protokoll', 'profil', 'abrechnung', 'dokumente'];
+    const valid = ['protokoll', 'profil', 'abrechnung'];
     if (hash.startsWith('#ptab-')) {
         const tabName = hash.replace('#ptab-', '');
         if (valid.includes(tabName)) {
