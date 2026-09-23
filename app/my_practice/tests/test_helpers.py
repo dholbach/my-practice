@@ -37,6 +37,69 @@ def make_pdf_bytes(num_pages: int = 1, rotate: int = 0) -> bytes:
     return buf.getvalue()
 
 
+VISUAL_PDF_WIDTH = 400
+VISUAL_PDF_HEIGHT = 800
+
+
+def make_visual_pdf_bytes(rotations: tuple[int, ...] = (0,), bulk: int = 0) -> bytes:
+    """Return a PDF whose page orientation is actually observable when rendered.
+
+    make_pdf_bytes() produces square, blank pages, which is fine for the upload
+    path but useless for anything about rotation: a blank square looks identical
+    at 0°, 90°, 180° and 270°, and its MediaBox does not change shape when a
+    viewer rotates it. A rotation bug is invisible against that fixture.
+
+    These pages are portrait (so a quarter turn changes the page shape) and
+    carry a black bar across the top (so a half turn changes the pixels).
+
+    `rotations` gives the /Rotate value for each page. `bulk` appends that many
+    filler drawing operations, to make a file large enough that Ghostscript
+    actually shrinks it — compression is skipped, and the original bytes
+    returned, when the output would not be smaller.
+
+    Built as raw PDF rather than through pypdf because attaching a content
+    stream to a page needs pypdf's private object API.
+    """
+    content = [b"0 0 0 rg 20 700 360 80 re f"]
+    content.extend(
+        b"0.5 0.5 0.5 rg %d %d 3 3 re f" % (20 + (i % 100), 20 + (i % 500)) for i in range(bulk)
+    )
+    stream = b"\n".join(content)
+
+    objects: list[bytes] = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [{}] /Count {} >>".format(
+            " ".join(f"{3 + 2 * i} 0 R" for i in range(len(rotations))), len(rotations)
+        ).encode(),
+    ]
+    for i, rotate in enumerate(rotations):
+        objects.append(
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents {} 0 R{} >>".format(
+                VISUAL_PDF_WIDTH,
+                VISUAL_PDF_HEIGHT,
+                3 + 2 * i + 1,
+                f" /Rotate {rotate}" if rotate else "",
+            ).encode()
+        )
+        objects.append(b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream))
+
+    out = bytearray(b"%PDF-1.4\n")
+    offsets = []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out += b"%d 0 obj\n" % number + body + b"\nendobj\n"
+
+    xref_offset = len(out)
+    out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    for offset in offsets:
+        out += b"%010d 00000 n \n" % offset
+    out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (
+        len(objects) + 1,
+        xref_offset,
+    )
+    return bytes(out)
+
+
 def _repeated_queries(before, after, limit: int = 3) -> list[str]:
     """Name the SQL whose frequency grew, for an N+1 failure message.
 

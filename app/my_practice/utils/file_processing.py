@@ -39,6 +39,28 @@ _PDF_EXTENSIONS = {".pdf"}
 _ALLOWED_EXTENSIONS = _IMAGE_EXTENSIONS | _PDF_EXTENSIONS | {".docx"}
 
 
+# Why there is no code here that preserves page /Rotate through compression.
+#
+# It looks like there should be: Ghostscript's output carries no /Rotate even
+# when the input page had one, so it reads as if pdfwrite drops the attribute.
+# It does not. gs *applies* the rotation — it rotates the page content and
+# swaps the MediaBox — and then writes no /Rotate because the page no longer
+# needs one. Appearance is already correct; the metadata is just gone because
+# it has been consumed.
+#
+# Reading /Rotate beforehand and writing it back afterwards (which this module
+# did, on the strength of that misreading) therefore rotates every scanned
+# document a second time: a 90° page comes out on its side, and a 180° page —
+# an upside-down scan that /Rotate had been correcting — comes back upside
+# down. compress_media's --rotate-pages flag was added to repair those by
+# hand, treating the symptom.
+#
+# Verify with appearance, never with the /Rotate value: rasterise the page
+# before and after and compare the pixels. That is what
+# PdfCompressionRotationTest does, and it is the only check that can tell
+# "rotation preserved" from "rotation applied twice".
+
+
 # ---------------------------------------------------------------------------
 # New-upload helpers (operate on in-memory file objects)
 # ---------------------------------------------------------------------------
@@ -59,58 +81,6 @@ def compress_image_upload(upload) -> ContentFile:
     img.save(buf, format="JPEG", quality=JPEG_QUALITY, optimize=True)
     stem = Path(getattr(upload, "name", "file")).stem
     return ContentFile(buf.getvalue(), name=f"{stem}.jpg")
-
-
-def _read_page_rotations(data: bytes) -> list[int]:
-    """
-    Return the /Rotate value for each page in the given PDF bytes.
-    Ghostscript's pdfwrite device strips /Rotate entries, so we read them
-    before compression and restore them afterwards.
-    """
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            reader = pypdf.PdfReader(io.BytesIO(data))
-            return [int(page.get("/Rotate", 0) or 0) for page in reader.pages]
-    except Exception:
-        # Broad by necessity — pypdf raises a wide and unstable set of types for
-        # malformed input — but not silent. Uploads are rejected before they get
-        # here (see _pdf_is_parseable); this path is reached by the in-place
-        # helpers, which run over files already stored, where the right answer
-        # is to compress what we can rather than refuse. Losing every page's
-        # /Rotate should still not be something you discover by eye.
-        logger.warning(
-            "Could not read PDF page rotations — the file may not be a valid PDF. "
-            "It will be compressed without preserving page rotations.",
-            exc_info=True,
-        )
-        return []
-
-
-def _restore_page_rotations(data: bytes, rotations: list[int]) -> bytes:
-    """
-    Write /Rotate back onto each page of the PDF. Used to undo Ghostscript's
-    rotation-stripping after compression.
-    Returns unmodified data if rotations are all 0, empty, or pypdf fails.
-    """
-    if not rotations or all(r == 0 for r in rotations):
-        return data
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            reader = pypdf.PdfReader(io.BytesIO(data))
-        writer = pypdf.PdfWriter()
-        writer.append(reader)
-        for i, page in enumerate(writer.pages):
-            rot = rotations[i] if i < len(rotations) else 0
-            if rot:
-                page[pypdf.generic.NameObject("/Rotate")] = pypdf.generic.NumberObject(rot)
-        buf = io.BytesIO()
-        writer.write(buf)
-        return buf.getvalue()
-    except Exception:
-        logger.warning("Could not restore PDF page rotations; returning as-is")
-        return data
 
 
 def _pdf_is_parseable(data: bytes) -> bool:
@@ -141,11 +111,10 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
     """
     Compress PDF bytes via Ghostscript. Returns compressed bytes, or the
     original bytes if gs is unavailable, fails, or makes the file larger.
-    Page /Rotate attributes are preserved — Ghostscript strips them, so we
-    read them beforehand and restore them after compression.
-    """
-    rotations = _read_page_rotations(data)
 
+    Page rotation needs no help from us — see the page-rotation note at the
+    top of this module before adding any.
+    """
     with (
         tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f_in,
         tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f_out,
@@ -183,7 +152,7 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
             logger.warning("gs failed (upload): %s", result.stderr.strip())
             return data
 
-        compressed = _restore_page_rotations(Path(tmp_out).read_bytes(), rotations)
+        compressed = Path(tmp_out).read_bytes()
         return compressed if len(compressed) < len(data) else data
     except FileNotFoundError:
         logger.warning("ghostscript not found; storing PDF uncompressed")
@@ -332,12 +301,12 @@ def compress_pdf_inplace(path: str) -> int:
     Compress a PDF file in-place using Ghostscript.
     Writes to a temp file in the same directory (ensures atomic rename works).
     Returns bytes saved (0 if skipped, gs unavailable, or no improvement).
+    Page rotation is preserved by Ghostscript itself — see the page-rotation
+    note at the top of this module before adding any code to "fix" it.
     """
     original_size = os.path.getsize(path)
     if original_size <= PDF_SKIP_BYTES:
         return 0
-
-    rotations = _read_page_rotations(Path(path).read_bytes())
 
     parent = Path(path).parent
     tmp_path: str | None = None
@@ -374,10 +343,6 @@ def compress_pdf_inplace(path: str) -> int:
             logger.warning("gs failed on %s: %s", path, result.stderr.strip())
             return 0
 
-        compressed = Path(tmp_path).read_bytes()
-        fixed = _restore_page_rotations(compressed, rotations)
-        if fixed is not compressed:  # _restore_page_rotations returns same object if no-op
-            Path(tmp_path).write_bytes(fixed)
         compressed_size = os.path.getsize(tmp_path)
         saved = original_size - compressed_size
         if saved > 0:
