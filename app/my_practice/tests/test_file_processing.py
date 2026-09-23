@@ -2,10 +2,14 @@
 Tests for file_processing.py — image/PDF compression for uploads and in-place files.
 """
 
+import hashlib
 import io
 import os
+import shutil
+import subprocess
 import tempfile
 from pathlib import Path
+from unittest import skipIf
 
 import pypdf
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -18,14 +22,12 @@ from ..utils.file_processing import (
     PDF_SKIP_BYTES,
     _compress_pdf_bytes,
     _pdf_is_parseable,
-    _read_page_rotations,
-    _restore_page_rotations,
     compress_image_inplace,
     compress_image_upload,
     compress_pdf_inplace,
     process_upload,
 )
-from .test_helpers import make_pdf_bytes
+from .test_helpers import make_pdf_bytes, make_visual_pdf_bytes
 
 
 def _make_jpeg_bytes(size=(800, 600), color=(200, 50, 50)) -> bytes:
@@ -133,29 +135,7 @@ class ProcessUploadTest(TestCase):
         self.assertEqual(result.name, "doc.pdf")
 
 
-class PageRotationTest(TestCase):
-    def test_read_page_rotations_returns_zero_for_unrotated(self):
-        pdf_bytes = make_pdf_bytes(num_pages=2)
-        self.assertEqual(_read_page_rotations(pdf_bytes), [0, 0])
-
-    def test_read_page_rotations_reads_actual_rotation(self):
-        pdf_bytes = make_pdf_bytes(num_pages=1, rotate=90)
-        self.assertEqual(_read_page_rotations(pdf_bytes), [90])
-
-    def test_read_page_rotations_logs_when_it_cannot_parse(self):
-        # The one handler in this module that used to swallow silently. If pypdf
-        # ever started failing across the board, every upload would quietly lose
-        # its page rotations with nothing in the log to say so.
-        with self.assertLogs("my_practice.utils.file_processing", level="WARNING") as logs:
-            _read_page_rotations(b"not a pdf")
-        self.assertTrue(
-            any("page rotations" in line for line in logs.output),
-            f"expected a warning about page rotations, got: {logs.output}",
-        )
-
-    def test_read_page_rotations_returns_empty_on_garbage(self):
-        self.assertEqual(_read_page_rotations(b"not a pdf"), [])
-
+class PdfParseabilityTest(TestCase):
     def test_pdf_is_parseable_accepts_a_real_pdf(self):
         self.assertTrue(_pdf_is_parseable(make_pdf_bytes()))
 
@@ -163,23 +143,75 @@ class PageRotationTest(TestCase):
         self.assertFalse(_pdf_is_parseable(b"not a pdf"))
         self.assertFalse(_pdf_is_parseable(b""))
 
-    def test_restore_page_rotations_noop_when_all_zero(self):
-        pdf_bytes = make_pdf_bytes(num_pages=1)
-        self.assertIs(_restore_page_rotations(pdf_bytes, [0]), pdf_bytes)
 
-    def test_restore_page_rotations_noop_when_empty(self):
-        pdf_bytes = make_pdf_bytes(num_pages=1)
-        self.assertIs(_restore_page_rotations(pdf_bytes, []), pdf_bytes)
+def _render_pages(data: bytes) -> list[str]:
+    """Rasterise every page and return a hash per page.
 
-    def test_restore_page_rotations_applies_rotation(self):
-        pdf_bytes = make_pdf_bytes(num_pages=1)  # rotation stripped, as gs would do
-        restored = _restore_page_rotations(pdf_bytes, [90])
-        reader = pypdf.PdfReader(io.BytesIO(restored))
-        self.assertEqual(int(reader.pages[0].get("/Rotate", 0)), 90)
+    Appearance is the only sound assertion about rotation. Checking the
+    /Rotate value cannot distinguish "rotation preserved" from "rotation
+    applied twice": Ghostscript consumes an input /Rotate by rotating the
+    content and swapping the MediaBox, so an output page that looks right
+    carries no /Rotate at all, and one that has been turned a second time
+    carries exactly the value the original had. This module used to restore
+    /Rotate onto gs output on that misreading, and every rotation test passed
+    while scanned documents came back on their side or upside down.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / "in.pdf"
+        src.write_bytes(data)
+        subprocess.run(
+            [
+                "gs",
+                "-sDEVICE=png16m",
+                "-r18",
+                "-dNOPAUSE",
+                "-dQUIET",
+                "-dBATCH",
+                f"-sOutputFile={Path(tmp) / 'page-%03d.png'}",
+                str(src),
+            ],
+            check=True,
+            capture_output=True,
+        )
+        return [
+            hashlib.md5(png.read_bytes()).hexdigest()
+            for png in sorted(Path(tmp).glob("page-*.png"))
+        ]
 
-    def test_restore_page_rotations_returns_original_on_garbage(self):
-        garbage = b"not a pdf"
-        self.assertEqual(_restore_page_rotations(garbage, [90]), garbage)
+
+@skipIf(shutil.which("gs") is None, "ghostscript not installed")
+class PdfCompressionRotationTest(TestCase):
+    """Compression must not change how a rotated page looks."""
+
+    def test_compression_preserves_appearance_for_every_rotation(self):
+        for rotate in (0, 90, 180, 270):
+            with self.subTest(rotate=rotate):
+                original = make_visual_pdf_bytes((rotate,), bulk=500)
+                compressed = _compress_pdf_bytes(original)
+                self.assertLess(
+                    len(compressed),
+                    len(original),
+                    "fixture must be large enough that gs actually compresses it, "
+                    "otherwise the original bytes are returned and nothing is tested",
+                )
+                self.assertEqual(_render_pages(original), _render_pages(compressed))
+
+    def test_compression_preserves_appearance_of_mixed_rotations(self):
+        original = make_visual_pdf_bytes((0, 90, 180, 270), bulk=500)
+        compressed = _compress_pdf_bytes(original)
+        self.assertLess(len(compressed), len(original))
+        self.assertEqual(_render_pages(original), _render_pages(compressed))
+
+    def test_inplace_compression_preserves_appearance(self):
+        # bulk large enough to clear PDF_SKIP_BYTES, or the file is skipped.
+        original = make_visual_pdf_bytes((90, 180), bulk=20_000)
+        self.assertGreater(len(original), PDF_SKIP_BYTES)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "scan.pdf"
+            path.write_bytes(original)
+            saved = compress_pdf_inplace(str(path))
+            self.assertGreater(saved, 0)
+            self.assertEqual(_render_pages(original), _render_pages(path.read_bytes()))
 
 
 class CompressPdfBytesTest(TestCase):
@@ -189,12 +221,6 @@ class CompressPdfBytesTest(TestCase):
         # gs may not shrink a trivial blank page below its own overhead;
         # either way the result must still be a valid, readable PDF.
         pypdf.PdfReader(io.BytesIO(result))
-
-    def test_preserves_rotation_through_compression(self):
-        pdf_bytes = make_pdf_bytes(num_pages=1, rotate=90)
-        result = _compress_pdf_bytes(pdf_bytes)
-        reader = pypdf.PdfReader(io.BytesIO(result))
-        self.assertEqual(int(reader.pages[0].get("/Rotate", 0)), 90)
 
     def test_gs_not_found_returns_original(self):
         from unittest.mock import patch

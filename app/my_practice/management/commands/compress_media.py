@@ -9,7 +9,7 @@ Usage:
     ./dev.py manage compress_media --path taxes/2025
     ./dev.py manage compress_media --dry-run
     ./dev.py manage compress_media --force                  # bypass size threshold for images
-    ./dev.py manage compress_media --rotate-pages 180 --path clients/ml  # fix upside-down PDFs
+    ./dev.py manage compress_media --rotate-pages 0 --path clients/ml    # repair page rotation
 """
 
 import io
@@ -75,9 +75,12 @@ class Command(BaseCommand):
             type=int,
             metavar="DEGREES",
             help=(
-                "Set /Rotate on every page of all PDFs under --path to DEGREES "
-                "(e.g. 180 to fix upside-down scans whose rotation metadata was stripped). "
-                "Skips compression; only modifies PDFs."
+                "Set /Rotate on every page of all PDFs under --path to DEGREES. "
+                "A repair tool, applied to a path you have checked by eye — it overwrites "
+                "the rotation of every page it touches, correct or not. Use 0 on documents "
+                "left double-rotated by the compression bug (see the page-rotation note in "
+                "utils/file_processing.py), where the content is already the right way up "
+                "and only the leftover /Rotate turns it. Skips compression; only modifies PDFs."
             ),
         )
 
