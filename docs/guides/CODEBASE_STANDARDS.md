@@ -301,7 +301,7 @@ def calculate_revenue(invoice_items, year=None):
 
 ---
 
-## Patterns Reference (M-PAT-01 … M-PAT-08)
+## Patterns Reference (M-PAT-01 … M-PAT-09)
 
 Each numbered pattern exists because the bug it prevents is invisible in
 review. CLAUDE.md states each rule in one line; this is the worked example,
@@ -310,6 +310,61 @@ the failure it came from, and the exact contract.
 M-PAT-04 (no inline style blocks, no new `.css` files) stays in CLAUDE.md
 § CSS Architecture — it is a prohibition, not a pattern with an example.
 M-PAT-07 and M-PAT-08 have their own contracts under § Templates & CSS above.
+M-PAT-09 has its own section below.
+
+### Narrow-window layout (M-PAT-09)
+
+**The minimum supported viewport is 768px** — 736px of content once `body`'s
+1rem side padding is removed. That is a small laptop, or a window dragged to
+half the desktop; it is deliberately *not* a phone. Above 768px nothing may
+overflow horizontally. Below it, nothing is promised.
+
+Why this needs a pattern: none of these render differently until the window is
+narrow, so every instance ships and is only ever seen by whoever happens to
+resize. Four were live at once when this was written.
+
+Three rules, all enforced by `test_responsive_layout.py`:
+
+1. **Every flex button group declares `flex-wrap: wrap`.** A group with
+   `display: flex` and no wrap sizes to max-content; with `flex-shrink: 0` (or
+   as a plain block, which behaves the same way as a flex item) it refuses to
+   compress and paints its buttons outside the parent. Wrapping is never worse
+   than overflowing and changes nothing at full width, so the allowlist is
+   empty and stays empty.
+
+   ```css
+   /* BAD — runs past the card edge at ~830px */
+   .cn-session-actions { flex-shrink: 0; }
+
+   /* GOOD */
+   .cn-session-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; min-width: 0; }
+   ```
+
+2. **Every `<table>` has `<div class="table-container">` as its immediate
+   parent.**
+
+3. **A table of 6+ columns also carries `table-container--wide`.** This is the
+   one that matters and the one that looks redundant. `.table-container table`
+   is `width: 100%`, so the wrapper *on its own does nothing* — the table
+   shrinks to the container and crushes its columns exactly as before, while
+   the markup now looks correct. The `min-width: 700px` the modifier adds is
+   what `overflow-x` scrolls against.
+
+   ```html
+   <!-- BAD — wrapped, but still crushes: nothing exceeds the container -->
+   <div class="table-container"><table class="data-table">…7 columns…</table></div>
+
+   <!-- GOOD -->
+   <div class="table-container table-container--wide"><table class="data-table">…</table></div>
+   ```
+
+Six columns is a threshold, not a measurement — a five-column table of long
+free text can still crush. The checks read source only: they cannot see a width
+set from JavaScript, an inline `style`, or a long unbreakable string in real
+data. When in doubt, drag the window to 800px and look.
+
+Full rationale, including why 768px and why phones are out of scope:
+[ADR-0006](../decisions/ADR-0006-minimum-supported-window-width.md).
 
 ### Error Handling Patterns (M-PAT-01)
 Use consistent error handling based on context:
@@ -543,6 +598,7 @@ grow them.
 | `test_css_tokens.py` | No undefined `var(--x)`, no new hardcoded hex on semantic classes (M-PAT-07) |
 | `test_privacy_coverage.py` | Personal fields blurred, non-personal fields not (M-PAT-08) |
 | `test_code_language_policy.py` | English identifiers and comments (P-038) |
+| `test_responsive_layout.py` | Button groups wrap; tables scroll instead of crushing (M-PAT-09) |
 | `test_release_guardrails.py` | No model change without its migration; the three version strings agree |
 
 `test_release_guardrails.py` covers the two failure modes that only surface

@@ -130,8 +130,8 @@ document.addEventListener('DOMContentLoaded', function() {
             {% blocktrans with start_year=data_start_year %}Business profit {{ start_year }}–today · Cumulative development{% endblocktrans %}
         </p>
 
-        <div class="table-container">
-            <table class="data-table data-table--wide">
+        <div class="table-container table-container--wide">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th class="text-left">{% trans "Year" %}</th>
@@ -342,32 +342,34 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="analytics-card mb-4">
         <h3>👑 {% trans "Top 10 Clients by Revenue" %}</h3>
         {% if top_clients %}
-        <table class="client-table">
-            <thead>
-                <tr>
-                    <th>{% trans "Rank" %}</th>
-                    <th>{% trans "Code" %}</th>
-                    <th>{% trans "Invoices" %}</th>
-                    <th>{% trans "Hours" %}</th>
-                    <th class="text-right">{% trans "Total revenue" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for client_data in top_clients %}
-                <tr>
-                    <td class="rank">#{{ forloop.counter }}</td>
-                    <td>
-                        <a href="{% url 'client_detail' client_data.client.id %}" class="client-code link-plain">
-                            {{ client_data.client.client_code }}
-                        </a>
-                    </td>
-                    <td class="text-primary">{{ client_data.invoice_count }}</td>
-                    <td class="text-primary">{{ client_data.session_hours }}h</td>
-                    <td class="revenue-amount text-right fw-700">{{ client_data.total_revenue|floatformat:2 }}&nbsp;€</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="client-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Rank" %}</th>
+                        <th>{% trans "Code" %}</th>
+                        <th>{% trans "Invoices" %}</th>
+                        <th>{% trans "Hours" %}</th>
+                        <th class="text-right">{% trans "Total revenue" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client_data in top_clients %}
+                    <tr>
+                        <td class="rank">#{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{% url 'client_detail' client_data.client.id %}" class="client-code link-plain">
+                                {{ client_data.client.client_code }}
+                            </a>
+                        </td>
+                        <td class="text-primary">{{ client_data.invoice_count }}</td>
+                        <td class="text-primary">{{ client_data.session_hours }}h</td>
+                        <td class="revenue-amount text-right fw-700">{{ client_data.total_revenue|floatformat:2 }}&nbsp;€</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
         <p class="text-muted">{% trans "No revenue data available" %}</p>
         {% endif %}
@@ -386,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </label>
         </div>
 
-        <div class="table-container">
+        <div class="table-container table-container--wide">
             <table class="client-table">
                 <thead>
                     <tr>
@@ -653,30 +655,32 @@ document.addEventListener('DOMContentLoaded', function() {
     {% if yearly_timeoff %}
     <div class="analytics-card mb-4">
         <h3>📅 {% trans "Time Off by Year" %}</h3>
-        <table class="timeoff-table">
-            <thead>
-                <tr>
-                    <th>{% trans "Year" %}</th>
-                    <th>{% trans "Workdays" %}</th>
-                    <th>{% trans "Wk." %}</th>
-                    <th title="{% trans "Time off" %}">🏖️</th>
-                    <th title="{% trans "Training" %}">📚</th>
-                    <th title="{% trans "Sick" %}">🤒</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in yearly_timeoff %}
-                <tr>
-                    <td>{{ item.year }}</td>
-                    <td>{{ item.workdays }}</td>
-                    <td class="timeoff-table__muted">{{ item.total_weeks }}</td>
-                    <td class="timeoff-table__vacation">{% if item.vacation %}{{ item.vacation }}{% else %}-{% endif %}</td>
-                    <td class="timeoff-table__training">{% if item.training %}{{ item.training }}{% else %}-{% endif %}</td>
-                    <td class="timeoff-table__sick">{% if item.sick %}{{ item.sick }}{% else %}-{% endif %}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-container table-container--wide">
+            <table class="timeoff-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Year" %}</th>
+                        <th>{% trans "Workdays" %}</th>
+                        <th>{% trans "Wk." %}</th>
+                        <th title="{% trans "Time off" %}">🏖️</th>
+                        <th title="{% trans "Training" %}">📚</th>
+                        <th title="{% trans "Sick" %}">🤒</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in yearly_timeoff %}
+                    <tr>
+                        <td>{{ item.year }}</td>
+                        <td>{{ item.workdays }}</td>
+                        <td class="timeoff-table__muted">{{ item.total_weeks }}</td>
+                        <td class="timeoff-table__vacation">{% if item.vacation %}{{ item.vacation }}{% else %}-{% endif %}</td>
+                        <td class="timeoff-table__training">{% if item.training %}{{ item.training }}{% else %}-{% endif %}</td>
+                        <td class="timeoff-table__sick">{% if item.sick %}{{ item.sick }}{% else %}-{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     {% endif %}
 

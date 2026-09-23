@@ -589,35 +589,37 @@
     {% if pending_sessions %}
     <div class="section-card">
         <h3>📅 {% trans "Pending sessions" %}</h3>
-        <table class="data-table">
-            <thead>
-                <tr><th>{% trans "Date" %}</th><th>{% trans "Time" %}</th><th>{% trans "Duration" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr>
-            </thead>
-            <tbody>
-            {% for event in pending_sessions %}
-            <tr>
-                <td>{{ event.event_date|date:"d.m.Y" }}</td>
-                <td>{{ event.event_time|time:"H:i"|default:"–" }}</td>
-                <td>{{ event.duration_minutes }} {% trans "min" %}</td>
-                <td><span class="status-badge pending">{% trans "Pending" %}</span></td>
-                <td>
-                    <form method="post" action="{% url 'calendar_event_quick_action' event.pk %}" class="pending-session-actions">
-                        {% csrf_token %}
-                        {% if current_draft_invoice %}
-                        {% blocktrans with num=current_draft_invoice.invoice_number asvar lbl_add_invoice %}+ Invoice {{ num }}{% endblocktrans %}
-                        {% blocktrans with num=current_draft_invoice.invoice_number asvar title_add_invoice %}Add to invoice {{ num }}{% endblocktrans %}
-                        <button type="submit" name="action" value="current_invoice" class="btn btn-sm" title="{{ title_add_invoice }}">{{ lbl_add_invoice }}</button>
-                        <button type="submit" name="action" value="new_invoice" class="btn btn-secondary btn-sm">{% trans "+ Separate invoice" %}</button>
-                        {% else %}
-                        <button type="submit" name="action" value="current_invoice" class="btn btn-sm">{% trans "+ New invoice" %}</button>
-                        {% endif %}
-                        <button type="submit" name="action" value="ignore" class="btn btn-secondary btn-sm">{% trans "Ignore" %}</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr><th>{% trans "Date" %}</th><th>{% trans "Time" %}</th><th>{% trans "Duration" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr>
+                </thead>
+                <tbody>
+                {% for event in pending_sessions %}
+                <tr>
+                    <td>{{ event.event_date|date:"d.m.Y" }}</td>
+                    <td>{{ event.event_time|time:"H:i"|default:"–" }}</td>
+                    <td>{{ event.duration_minutes }} {% trans "min" %}</td>
+                    <td><span class="status-badge pending">{% trans "Pending" %}</span></td>
+                    <td>
+                        <form method="post" action="{% url 'calendar_event_quick_action' event.pk %}" class="pending-session-actions">
+                            {% csrf_token %}
+                            {% if current_draft_invoice %}
+                            {% blocktrans with num=current_draft_invoice.invoice_number asvar lbl_add_invoice %}+ Invoice {{ num }}{% endblocktrans %}
+                            {% blocktrans with num=current_draft_invoice.invoice_number asvar title_add_invoice %}Add to invoice {{ num }}{% endblocktrans %}
+                            <button type="submit" name="action" value="current_invoice" class="btn btn-sm" title="{{ title_add_invoice }}">{{ lbl_add_invoice }}</button>
+                            <button type="submit" name="action" value="new_invoice" class="btn btn-secondary btn-sm">{% trans "+ Separate invoice" %}</button>
+                            {% else %}
+                            <button type="submit" name="action" value="current_invoice" class="btn btn-sm">{% trans "+ New invoice" %}</button>
+                            {% endif %}
+                            <button type="submit" name="action" value="ignore" class="btn btn-secondary btn-sm">{% trans "Ignore" %}</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     {% endif %}
 
@@ -633,23 +635,25 @@
             {% endif %}
         </div>
         {% if invoices %}
-        <table class="data-table">
-            <thead>
-                <tr><th>{% trans "Invoice no." %}</th><th>{% trans "Date" %}</th><th>{% trans "Sessions" %}</th><th>{% trans "Status" %}</th><th class="text-right">{% trans "Amount" %}</th><th>{% trans "Actions" %}</th></tr>
-            </thead>
-            <tbody>
-            {% for invoice in invoices %}
-            <tr>
-                <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-primary"><span class="invoice-number">{{ invoice.invoice_number }}</span></a></td>
-                <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
-                <td>{{ invoice.items.count }}</td>
-                <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
-                <td class="text-right fw-700">{{ invoice.total|currency }}</td>
-                <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-secondary">👁️ {% trans "View" %}</a></td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-container table-container--wide">
+            <table class="data-table">
+                <thead>
+                    <tr><th>{% trans "Invoice no." %}</th><th>{% trans "Date" %}</th><th>{% trans "Sessions" %}</th><th>{% trans "Status" %}</th><th class="text-right">{% trans "Amount" %}</th><th>{% trans "Actions" %}</th></tr>
+                </thead>
+                <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-primary"><span class="invoice-number">{{ invoice.invoice_number }}</span></a></td>
+                    <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                    <td>{{ invoice.items.count }}</td>
+                    <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
+                    <td class="text-right fw-700">{{ invoice.total|currency }}</td>
+                    <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-secondary">👁️ {% trans "View" %}</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
         <p class="empty-state-msg">{% trans "No invoices for this client yet." %}</p>
         {% endif %}

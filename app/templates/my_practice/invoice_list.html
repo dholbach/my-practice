@@ -159,34 +159,36 @@
 </div>
 
 {% if invoices %}
-<table class="data-table table-fixed">
-    <thead>
-        <tr>
-            <th class="w-[140px]">{% trans "Invoice No." %}</th>
-            <th class="w-[220px]">{% trans "Client" %}</th>
-            <th class="w-[110px]">{% trans "Date" %}</th>
-            <th class="w-[120px]">{% trans "Status" %}</th>
-            <th class="w-[130px] text-right">{% trans "Amount" %}</th>
-            <th class="w-[100px]">{% trans "Actions" %}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for invoice in invoices %}
-        <tr>
-            <td class="truncate"><a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain"><span class="invoice-number">{{ invoice.invoice_number }}</span></a></td>
-            <td class="truncate"><span class="sensitive-data">{{ invoice.client.full_name }}</span></td>
-            <td class="truncate">{{ invoice.invoice_date|date:"d.m.Y" }}</td>
-            <td id="invoice-status-{{ invoice.pk }}">
-                {% include 'includes/invoice_status_badge.html' %}
-            </td>
-            <td class="truncate text-right">{{ invoice.total|floatformat:2 }}&nbsp;€</td>
-            <td class="truncate">
-                <a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain font-semibold">👁️ {% trans "View" %}</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-container table-container--wide">
+    <table class="data-table table-fixed">
+        <thead>
+            <tr>
+                <th class="w-[140px]">{% trans "Invoice No." %}</th>
+                <th class="w-[220px]">{% trans "Client" %}</th>
+                <th class="w-[110px]">{% trans "Date" %}</th>
+                <th class="w-[120px]">{% trans "Status" %}</th>
+                <th class="w-[130px] text-right">{% trans "Amount" %}</th>
+                <th class="w-[100px]">{% trans "Actions" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td class="truncate"><a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain"><span class="invoice-number">{{ invoice.invoice_number }}</span></a></td>
+                <td class="truncate"><span class="sensitive-data">{{ invoice.client.full_name }}</span></td>
+                <td class="truncate">{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                <td id="invoice-status-{{ invoice.pk }}">
+                    {% include 'includes/invoice_status_badge.html' %}
+                </td>
+                <td class="truncate text-right">{{ invoice.total|floatformat:2 }}&nbsp;€</td>
+                <td class="truncate">
+                    <a href="{% url 'invoice_detail' invoice.pk %}" class="link-plain font-semibold">👁️ {% trans "View" %}</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 {% if is_paginated %}
 {% include 'includes/pagination.html' with page_obj=page_obj %}

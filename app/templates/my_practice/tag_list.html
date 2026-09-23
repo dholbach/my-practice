@@ -18,60 +18,62 @@
 
 {% if tags %}
 <div class="section-card">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>{% trans "Name" %}</th>
-                <th>{% trans "Color" %}</th>
-                <th>{% trans "Description" %}</th>
-                <th>{% trans "Used by" %}</th>
-                <th>{% trans "Actions" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tag in tags %}
-            <tr>
-                <td>
-                    <span class="tag {{ tag.color }}">
-                        {{ tag.name }}
-                        {% if tag.is_system %}
-                            <span class="ml-[0.25rem] opacity-70 text-[0.625rem]">(System)</span>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Color" %}</th>
+                    <th>{% trans "Description" %}</th>
+                    <th>{% trans "Used by" %}</th>
+                    <th>{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tag in tags %}
+                <tr>
+                    <td>
+                        <span class="tag {{ tag.color }}">
+                            {{ tag.name }}
+                            {% if tag.is_system %}
+                                <span class="ml-[0.25rem] opacity-70 text-[0.625rem]">(System)</span>
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="tag-preview {{ tag.color }}">
+                            {{ tag.get_color_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if tag.description %}
+                            {{ tag.description }}
+                        {% else %}
+                            <span class="text-muted-light italic">{% trans "No description" %}</span>
                         {% endif %}
-                    </span>
-                </td>
-                <td>
-                    <span class="tag-preview {{ tag.color }}">
-                        {{ tag.get_color_display }}
-                    </span>
-                </td>
-                <td>
-                    {% if tag.description %}
-                        {{ tag.description }}
-                    {% else %}
-                        <span class="text-muted-light italic">{% trans "No description" %}</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="{% url 'client_list' %}?tag={{ tag.slug }}" class="text-link no-underline font-semibold">
-                        {% blocktrans count count=tag.client_count %}{{ count }} client{% plural %}{{ count }} clients{% endblocktrans %}
-                    </a>
-                </td>
-                <td>
-                    {% if not tag.is_system %}
-                        <a href="{% url 'tag_update' tag.pk %}" class="btn btn-sm btn-secondary mr-2">
-                            ✏️ {% trans "Edit" %}
+                    </td>
+                    <td>
+                        <a href="{% url 'client_list' %}?tag={{ tag.slug }}" class="text-link no-underline font-semibold">
+                            {% blocktrans count count=tag.client_count %}{{ count }} client{% plural %}{{ count }} clients{% endblocktrans %}
                         </a>
-                        <a href="{% url 'tag_delete' tag.pk %}" class="btn btn-sm btn-danger">
-                            🗑️ {% trans "Delete" %}
-                        </a>
-                    {% else %}
-                        <span class="text-muted-light text-sm">{% trans "System tag" %}</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    </td>
+                    <td>
+                        {% if not tag.is_system %}
+                            <a href="{% url 'tag_update' tag.pk %}" class="btn btn-sm btn-secondary mr-2">
+                                ✏️ {% trans "Edit" %}
+                            </a>
+                            <a href="{% url 'tag_delete' tag.pk %}" class="btn btn-sm btn-danger">
+                                🗑️ {% trans "Delete" %}
+                            </a>
+                        {% else %}
+                            <span class="text-muted-light text-sm">{% trans "System tag" %}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% else %}
 <div class="empty-state">

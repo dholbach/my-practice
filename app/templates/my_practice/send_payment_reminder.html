@@ -13,37 +13,39 @@
 <!-- Open invoices summary -->
 <div class="form-section border-l-4 border-l-warning">
     <h3 class="m-0 mb-2">📄 {% trans "Open invoices" %} ({{ open_invoices|length }})</h3>
-    <table class="open-invoices-table">
-        <thead>
-            <tr>
-                <th>{% trans "Invoice no." %}</th>
-                <th>{% trans "Date" %}</th>
-                <th>{% trans "Status" %}</th>
-                <th class="text-right">{% trans "Amount" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for invoice in open_invoices %}
-            <tr>
-                <td>
-                    <a href="{% url 'invoice_detail' invoice.pk %}" target="_blank"
-                       class="link-primary">
-                        {{ invoice.invoice_number }}
-                    </a>
-                </td>
-                <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
-                <td>{% include 'includes/invoice_status_badge.html' with invoice=invoice static_only=True %}</td>
-                <td class="text-right font-semibold">{{ invoice.total|currency }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr class="total-row">
-                <td colspan="3">{% trans "Total open" %}</td>
-                <td class="text-right"><strong>{{ open_invoices_total|floatformat:2 }} €</strong></td>
-            </tr>
-        </tfoot>
-    </table>
+    <div class="table-container">
+        <table class="open-invoices-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Invoice no." %}</th>
+                    <th>{% trans "Date" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th class="text-right">{% trans "Amount" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in open_invoices %}
+                <tr>
+                    <td>
+                        <a href="{% url 'invoice_detail' invoice.pk %}" target="_blank"
+                           class="link-primary">
+                            {{ invoice.invoice_number }}
+                        </a>
+                    </td>
+                    <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                    <td>{% include 'includes/invoice_status_badge.html' with invoice=invoice static_only=True %}</td>
+                    <td class="text-right font-semibold">{{ invoice.total|currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3">{% trans "Total open" %}</td>
+                    <td class="text-right"><strong>{{ open_invoices_total|floatformat:2 }} €</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
 
 <!-- Email form -->

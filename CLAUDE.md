@@ -201,7 +201,7 @@ helper = DateRangeHelper(start_date, end_date)
 months = helper.get_month_list()
 ```
 
-#### Numbered patterns (M-PAT-01 … M-PAT-08)
+#### Numbered patterns (M-PAT-01 … M-PAT-09)
 
 Each exists because the bug it prevents is invisible in code review. The rule is
 here; the worked example and the failure it came from are in
@@ -217,6 +217,7 @@ here; the worked example and the failure it came from are in
 | **M-PAT-06** Form draft guard | Opt long-text forms in with `data-draft-guard` plus the three `data-draft-*` labels; reuse those msgids verbatim rather than minting new ones. |
 | **M-PAT-07** CSS tokens | Use real `--color-*` tokens (grep the `@theme` block); never invent a name, never hardcode hex on a semantic class. |
 | **M-PAT-08** Privacy mode | `.sensitive-data` for a name beside its code, `\|privacy_name` where there is no code, nothing for codes / inputs / `<option>` text. |
+| **M-PAT-09** Narrow windows | Minimum supported viewport is 768px (a half-screen laptop, not a phone). Flex button groups declare `flex-wrap: wrap`; every `<table>` sits directly in `.table-container`; 6+ columns also needs `table-container--wide`. |
 
 ## Code Style & Patterns
 
@@ -347,6 +348,27 @@ Decisions that would otherwise only survive as a code comment go in
 7. **Update docs with code changes** - outdated docs are worse than no docs
 8. **Link between docs** - use relative links to connect related documentation
 9. **Archive with dates** - Historical docs get YYYY-MM-DD_ prefixes
+
+## Narrow-Window Layout (M-PAT-09)
+
+The UI must work down to a **768px viewport** — a small laptop, or a window dragged to
+half the desktop while the news plays beside it. Phones are explicitly out of scope.
+Nothing here renders differently until the window is narrow, so every instance ships
+unseen; four were live at once when this was automated.
+
+- **Flex button groups declare `flex-wrap: wrap`.** A group with `display: flex` and no
+  wrap sizes to max-content and paints its buttons outside the parent. Wrapping is never
+  worse than overflowing and changes nothing at full width.
+- **Every `<table>` sits directly inside `<div class="table-container">`**, and a table
+  of **6+ columns** also needs `table-container--wide`. The wrapper alone is a no-op:
+  `.table-container table` is `width: 100%`, so without the modifier's `min-width` the
+  table just crushes its columns while the markup looks correct.
+
+**Guardrail test**: `my_practice/tests/test_responsive_layout.py` ratchets all three,
+plus any fixed px floor wider than the 736px content box. Its allowlists are empty —
+keep them that way. Full contract:
+[docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) (M-PAT-09);
+rationale: [ADR-0006](docs/decisions/ADR-0006-minimum-supported-window-width.md).
 
 ## Working-Day Calculations (M-PAT-05)
 

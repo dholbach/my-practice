@@ -323,7 +323,7 @@
   input[type="file"]::file-selector-button:hover { background: var(--color-border); }
   .checkbox-group { display: flex; align-items: center; gap: 0.5rem; }
   .checkbox-group input[type="checkbox"] { width: auto; }
-  .form-actions { display: flex; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); flex-wrap: wrap; }
+  .form-actions { display: flex; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); flex-wrap: wrap; }
   .error-message, .error { color: var(--color-danger); font-size: 0.875rem; margin-top: 0.25rem; }
   .help-text, .form-text { color: var(--color-text-secondary); font-size: 0.875rem; margin-top: 0.25rem; }
   .alert { padding: 1rem; border-radius: 6px; margin-bottom: 1.25rem; }
@@ -371,7 +371,12 @@
   @media (max-width: 768px) { .stats-grid-2col { grid-template-columns: 1fr; } }
 
   /* Table containers */
+  /* A width:100% table inside a scroll container squashes its columns instead of
+     scrolling, so the container only earns its keep paired with a min-width to
+     scroll against. 700px is below the narrowest supported window, so this is
+     inert at normal sizes. See ADR-0006. */
   .table-container { overflow-x: auto; }
+  .table-container--wide > table { min-width: 700px; }
   .table-container table { width: 100%; border-collapse: collapse; }
 
   /* Pagination */
@@ -604,8 +609,7 @@
   .period-filter-form__custom-dates { display: none; flex: 2; gap: 1rem; min-width: 400px; }
   .period-filter-form__date-field { flex: 1; }
   .filter-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text-primary); }
-  .tab-actions { margin-bottom: 2rem; display: flex; gap: 1rem; justify-content: flex-end; }
-  .data-table--wide { width: 100%; min-width: 700px; }
+  .tab-actions { margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: flex-end; }
   .stat-display__value { font-size: 2rem; font-weight: 700; color: var(--color-text-primary); }
   .stat-display__label { font-size: 0.875rem; color: var(--color-text-secondary); }
   .stat-note { color: var(--color-text-secondary); margin-left: 0.5rem; }
@@ -653,7 +657,7 @@
   .cn-textarea-small  { width: 100%; min-height: 80px; font-size: 0.875rem; resize: vertical; padding: 0.5rem 0.75rem; border: 1.5px solid var(--color-border); border-radius: 6px; background: var(--color-input-bg); color: var(--color-text-primary); transition: border-color 0.18s; box-sizing: border-box; }
   .cn-textarea-large:focus, .cn-textarea-medium:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); background: var(--color-surface); }
   .cn-textarea-small:focus  { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
-  .cn-actions { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; }
+  .cn-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 1rem; }
   .cn-actions-top { margin-bottom: 1rem; margin-top: 0; }
   /* Mood tag checkboxes */
   .cn-tag-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -676,7 +680,7 @@
   .cn-session-list { display: flex; flex-direction: column; gap: 0.5rem; }
   .cn-session-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 0.6rem 0.75rem; border-radius: 6px; background: var(--color-bg-muted); border: 1px solid var(--color-border); }
   .cn-session-row.cn-has-log { border-left: 3px solid var(--color-primary); }
-  .cn-session-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+  .cn-session-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; min-width: 0; }
   .cn-session-date { font-weight: 600; font-size: 0.9rem; min-width: 80px; }
   .cn-session-duration { font-size: 0.8rem; color: var(--color-text-secondary); }
   .cn-session-type { font-size: 0.8rem; color: var(--color-text-secondary); font-style: italic; }
@@ -685,7 +689,7 @@
   [data-theme="dark"] .cn-session-not-billable { color: #94a3b8; background: #1e293b; border-color: #334155; }
   .cn-session-missing-log  { font-size: 0.75rem; color: #c05621; background: #fff5f5; border: 1px solid #feb2b2; border-radius: 3px; padding: 0 0.35rem; font-weight: 500; }
   .cn-needs-log { border-left-color: #e53e3e; }
-  .cn-session-actions { flex-shrink: 0; }
+  .cn-session-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; min-width: 0; }
   .cn-duration-edit-form { display: inline-flex; align-items: center; gap: 0.25rem; }
   .cn-duration-input { width: 4.5rem; padding: 0.2rem 0.4rem; font-size: 0.85rem; }
   /* Session two-column grid */
@@ -693,7 +697,7 @@
   .cn-session-left { display: flex; flex-direction: column; gap: 0.15rem; padding-top: 0.1rem; }
   .cn-session-summary { font-size: 0.875rem; font-weight: 500; color: var(--color-text-primary); margin: 0 0 0.35rem 0; }
   .cn-session-interventions { font-size: 0.78rem; color: var(--color-text-secondary); font-style: italic; margin-top: 0.35rem; border-top: 1px solid var(--color-border); padding-top: 0.3rem; }
-  .cn-session-actions-bar { display: flex; justify-content: flex-end; width: 100%; margin-top: 0.35rem; flex-wrap: wrap; gap: 0.35rem; }
+  .cn-session-actions-bar { justify-content: flex-end; width: 100%; margin-top: 0.35rem; }
   /* GebüH Ziffer chips shown inline on session rows */
   .cn-gebueh-ziffern { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.2rem; }
   .cn-gebueh-chip { font-size: 0.7rem; font-weight: 600; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 3px; padding: 0.05rem 0.4rem; color: var(--color-text-secondary); }
@@ -737,7 +741,6 @@
   .cn-note-item { padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid var(--color-border); border-left: 3px solid var(--color-text-secondary); background: var(--color-bg-muted); }
   .cn-note-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; gap: 0.5rem; }
   .cn-note-date { font-weight: 600; font-size: 0.9rem; color: var(--color-text-secondary); }
-  .cn-note-actions { flex-shrink: 0; }
   .cn-note-content .md-rendered { padding: 0; }
   .cn-note-new-form { background: var(--color-bg-muted); border: 1px solid var(--color-border); border-radius: 6px; padding: 1rem; margin-bottom: 1.25rem; }
   .cn-old-toggle { display: block; margin: 0.25rem 0 0.5rem; font-size: 0.8rem; width: 100%; text-align: center; opacity: 0.75; border-style: dashed; }
@@ -752,7 +755,7 @@
   .cn-supervision-label { font-size: 0.8rem; font-weight: 600; color: var(--color-text-secondary); }
   .cn-supervision-content { font-size: 0.9rem; margin-bottom: 0.5rem; white-space: pre-line; }
   .cn-supervision-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
-  .cn-supervision-actions { display: flex; gap: 0.5rem; align-items: center; }
+  .cn-supervision-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
   .cn-supervision-new-form { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; margin-bottom: 1.25rem; }
   .cn-supervision-new-form .cn-textarea-small { align-self: stretch; }
   .cn-supervision-resolution { font-size: 0.875rem; margin-bottom: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 6px; background: var(--color-surface); }
@@ -761,7 +764,7 @@
   .cn-note-edit-form { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--color-border); }
   .cn-note-edit-date-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
   .cn-note-edit-date { width: auto; }
-  .cn-note-edit-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+  .cn-note-edit-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
   .cn-status-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
   .cn-status-badge.cn-status-offen      { background: var(--color-badge-amber-bg); color: var(--color-badge-amber-text); }
   .cn-status-badge.cn-status-besprochen { background: var(--color-success-bg); color: var(--color-success); }
@@ -1017,7 +1020,7 @@
      these onto their own line instead of overlapping the tab buttons.
      align-self:center keeps the bar itself on the default stretch alignment, so
      the active tab's underline stays flush with the bar's bottom border. */
-  .cd-header-actions { display: flex; gap: 0.5rem; margin-left: auto; align-self: center; }
+  .cd-header-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-left: auto; align-self: center; }
   .cd-status-pill { font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px; vertical-align: middle; margin-left: 0.4rem; }
   .cd-status-active   { background: var(--color-success-bg); color: var(--color-success); }
   .cd-status-inactive { background: var(--color-bg-secondary); color: var(--color-text-secondary); }
@@ -1088,7 +1091,7 @@
   .step-date { font-size: 0.8rem; color: var(--color-success); margin-top: 0.125rem; }
   .step-pending-hint { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.2s ease, opacity 0.15s ease, margin-top 0.2s ease; }
   .onboarding-step:hover .step-pending-hint { max-height: 3rem; opacity: 1; margin-top: 0.125rem; }
-  .step-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+  .step-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; flex-shrink: 0; }
   .step-pending .step-actions { flex-direction: column; align-items: flex-end; gap: 0.3rem; }
   .step-actions .btn-sm { font-size: 0.8rem; padding: 0.25rem 0.625rem; }
   .btn-undo { background: none; border: none; color: var(--color-text-secondary); font-size: 0.75rem; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: 4px; text-decoration: underline; text-underline-offset: 2px; }
@@ -1104,8 +1107,8 @@
   .pending-session-actions { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
   .placeholder-warning { margin-top: 1.5rem; padding: 1rem; background: var(--color-status-cancelled-bg); border-left: 4px solid #e53e3e; border-radius: 4px; color: var(--color-status-cancelled-text); }
   .placeholder-warning a { color: var(--color-status-cancelled-text); text-decoration: underline; font-weight: 600; }
-  .client-actions { margin-top: 1.5rem; margin-bottom: 2rem; display: flex; gap: 1rem; justify-content: space-between; }
-  .client-actions-left, .client-actions-right { display: flex; gap: 1rem; }
+  .client-actions { margin-top: 1.5rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
+  .client-actions-left, .client-actions-right { display: flex; flex-wrap: wrap; gap: 1rem; }
   /* Compound selectors: these are always used as `class="btn btn-invoice-*"`, and
      .btn is defined further down the file. At equal specificity the later rule
      wins, so the plain .btn-invoice-* forms lost to .btn's own background and the
@@ -1225,7 +1228,7 @@
   .stats-strip-hint { font-size: 0.6875rem; margin-top: 0.25rem; }
   .stats-strip-hint--green { color: var(--color-success); }
   .stats-strip-hint--purple { color: var(--color-link); }
-  .dashboard-quick-actions { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: flex-start; padding-top: 0.25rem; }
+  .dashboard-quick-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; flex-shrink: 0; align-items: flex-start; padding-top: 0.25rem; }
   @media (max-width: 640px) { .dashboard-header-row { flex-direction: column; } .dashboard-quick-actions { flex-direction: row; } }
 
   .weekly-sessions-list { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-direction: column; gap: 0.25rem; }
@@ -1291,7 +1294,7 @@
   .tax-note-widget__label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--color-text-primary); margin-bottom: 0.5rem; }
   .tax-note-widget__textarea { width: 100%; min-height: 72px; padding: 0.6rem 0.75rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-input-bg); color: var(--color-text-primary); font-size: 0.875rem; resize: vertical; box-sizing: border-box; }
   .tax-note-widget__textarea:focus { outline: none; border-color: var(--color-primary); }
-  .tax-note-widget__actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
+  .tax-note-widget__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
   .tax-note-widget__btn { padding: 0.35rem 1rem; background: var(--color-primary); color: white; border: none; border-radius: 5px; font-size: 0.85rem; cursor: pointer; }
   .tax-note-widget__btn:hover { opacity: 0.9; }
   .tax-note-widget__status { font-size: 0.8rem; color: var(--color-text-secondary); }
@@ -1401,7 +1404,7 @@
   .trans-list { display: flex; flex-direction: column; gap: 0.5rem; }
   .trans-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--color-surface); border-radius: 6px; }
   .trans-row__meta { display: flex; gap: 1rem; align-items: center; flex: 1; }
-  .trans-row__actions { display: flex; gap: 0.5rem; align-items: center; }
+  .trans-row__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
   .match-badge { padding: 0.125rem 0.5rem; border-radius: 8px; font-size: 0.625rem; font-weight: 700; }
   .match-badge--exact  { background: var(--color-success-bg); color: var(--color-success); }
   .match-badge--fuzzy  { background: var(--color-warning-bg); color: var(--color-warning); }
@@ -1498,7 +1501,7 @@
   .expenses-table .amount { text-align: right; }
   .expenses-table .center { text-align: center; }
   .expenses-table .empty { text-align: center; color: var(--color-text-secondary); padding: 40px; font-style: italic; }
-  .expenses-table .actions { display: flex; gap: 8px; align-items: center; justify-content: flex-start; margin: 0; white-space: nowrap; min-width: 80px; }
+  .expenses-table .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start; margin: 0; white-space: nowrap; min-width: 80px; }
   .expense-category { font-weight: 500; color: var(--color-text-primary); }
   /* .summary-cards scoped to avoid conflict with calendar_import.css */
   .expenses-container .summary-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 280px)); gap: 15px; margin-bottom: 20px; }
@@ -1586,7 +1589,7 @@
   .expense-action-panel__checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
   .expense-action-panel__checkbox-label input[type="checkbox"] { cursor: pointer; }
   .expense-action-panel__checkbox-text { font-size: 0.875rem; color: var(--color-text-primary); }
-  .expense-action-panel__buttons { display: flex; gap: 0.5rem; margin-top: 1rem; }
+  .expense-action-panel__buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
   .expense-trans-card { background: var(--color-surface); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--color-border); }
   .expense-trans-card__row { display: flex; align-items: flex-start; gap: 1rem; }
   .expense-trans-card__checkbox { margin-top: 0.25rem; cursor: pointer; }
@@ -1828,7 +1831,7 @@
     background: var(--color-bg-primary);
     color: var(--color-text-primary);
   }
-  .filter-panel__actions { display: flex; gap: 0.5rem; align-items: flex-end; }
+  .filter-panel__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; }
   .filter-panel__btn { flex: 1; }
   .filter-results-summary {
     margin-top: 1rem;
@@ -1858,7 +1861,7 @@
   .queue-group-header__title-link { color: var(--color-link); text-decoration: none; font-weight: 600; }
   .queue-group-header__subtitle { font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem; }
   .queue-group-header__unknown { color: var(--color-text-secondary); }
-  .queue-group-header__actions { display: flex; gap: 0.5rem; align-items: center; }
+  .queue-group-header__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
   .invoice-select { width: auto; font-size: 0.875rem; padding: 0.375rem 0.625rem; }
   .btn-import-group {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1969,6 +1972,7 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
   }
+  @media (max-width: 900px) { .todo-stats { grid-template-columns: 1fr 1fr; } }
   .todo-filters {
     display: flex;
     gap: 1rem;
@@ -2056,7 +2060,7 @@
   .todo-due-date { color: var(--color-text-secondary); font-size: 0.8125rem; }
   .todo-due-date.overdue { color: #f56565; font-weight: 600; }
   .todo-reference-date { color: var(--color-text-secondary); font-size: 0.8125rem; }
-  .todo-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+  .todo-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; flex-shrink: 0; }
   .focus-queue-snooze-group { display: flex; gap: 0.25rem; }
   .btn-snooze {
     background: var(--color-bg-secondary);
@@ -2148,12 +2152,6 @@
     gap: 1rem;
     margin-top: 1rem;
   }
-  .form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-  }
-
   /* Revenue report invoice table — th/td have no class names so we
      scope styles via the parent class rather than tagging each cell. */
   .invoice-table {
