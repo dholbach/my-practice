@@ -77,79 +77,81 @@
 
 <h3 class="mb-2">📋 {% trans "Line items" %}</h3>
 
-<table class="data-table">
-    <thead>
-        <tr>
-            <th>{% trans "Date" %}</th>
-            <th>{% trans "Service" %}</th>
-            <th>{% trans "Duration" %}</th>
-            <th class="text-right">{% trans "Rate" %}</th>
-            <th class="text-right">{% trans "Total" %}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% if gebueh_blocks %}
-        {% if arbeitsdiagnose and not invoice.client.gebueh_no_diagnosis %}
-        <tr>
-            <td colspan="5" class="text-secondary italic">
-                {% trans "Diagnosis" %}: {{ arbeitsdiagnose }}
-            </td>
-        </tr>
-        {% endif %}
-        {% for block in gebueh_blocks %}
-        <tr>
-            <td{% if block.leistungen %} class="border-b-0"{% endif %}>{{ block.item.session.session_date|date:"d.m.Y" }}</td>
-            <td class="font-semibold{% if block.leistungen %} border-b-0{% endif %}">
-                {% if block.item.service_type %}
-                    {% if invoice.client.language == 'en' %}
-                        {{ block.item.service_type.name_en|default:block.item.service_type.name }}
-                    {% else %}
-                        {{ block.item.service_type.name_de|default:block.item.service_type.name }}
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "Service" %}</th>
+                <th>{% trans "Duration" %}</th>
+                <th class="text-right">{% trans "Rate" %}</th>
+                <th class="text-right">{% trans "Total" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if gebueh_blocks %}
+            {% if arbeitsdiagnose and not invoice.client.gebueh_no_diagnosis %}
+            <tr>
+                <td colspan="5" class="text-secondary italic">
+                    {% trans "Diagnosis" %}: {{ arbeitsdiagnose }}
+                </td>
+            </tr>
+            {% endif %}
+            {% for block in gebueh_blocks %}
+            <tr>
+                <td{% if block.leistungen %} class="border-b-0"{% endif %}>{{ block.item.session.session_date|date:"d.m.Y" }}</td>
+                <td class="font-semibold{% if block.leistungen %} border-b-0{% endif %}">
+                    {% if block.item.service_type %}
+                        {% if invoice.client.language == 'en' %}
+                            {{ block.item.service_type.name_en|default:block.item.service_type.name }}
+                        {% else %}
+                            {{ block.item.service_type.name_de|default:block.item.service_type.name }}
+                        {% endif %}
                     {% endif %}
-                {% endif %}
-            </td>
-            <td{% if block.leistungen %} class="border-b-0"{% endif %}>{{ block.item.session.duration }} {% trans "min" %}</td>
-            <td class="text-right{% if block.leistungen %} border-b-0{% endif %}">{{ block.vereinbarter_betrag|currency }}</td>
-            <td class="text-right font-bold{% if block.leistungen %} border-b-0{% endif %}">{{ block.vereinbarter_betrag|currency }}</td>
-        </tr>
-        {% if block.leistungen %}
-        <tr class="text-secondary text-sm">
-            <td></td>
-            <td colspan="4">
-                {% for le in block.leistungen %}{% trans "Code" %} {{ le.ziffer.nummer }} · {{ le.ziffer.bezeichnung }} — {{ le.betrag|currency }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if block.restbetrag %} + {% trans "Remaining amount" %} {{ block.restbetrag|currency }}{% endif %}
-            </td>
-        </tr>
-        {% endif %}
-        {% endfor %}
-        {% else %}
-        {% for item in invoice.items.all %}
-        <tr>
-            <td>{% if item.session_id %}{{ item.session.session_date|date:"d.m.Y" }}{% endif %}</td>
-            <td>
-                {% if item.service_type %}
-                    {% if invoice.client.language == 'en' %}
-                        {{ item.service_type.name_en|default:item.service_type.name }}
+                </td>
+                <td{% if block.leistungen %} class="border-b-0"{% endif %}>{{ block.item.session.duration }} {% trans "min" %}</td>
+                <td class="text-right{% if block.leistungen %} border-b-0{% endif %}">{{ block.vereinbarter_betrag|currency }}</td>
+                <td class="text-right font-bold{% if block.leistungen %} border-b-0{% endif %}">{{ block.vereinbarter_betrag|currency }}</td>
+            </tr>
+            {% if block.leistungen %}
+            <tr class="text-secondary text-sm">
+                <td></td>
+                <td colspan="4">
+                    {% for le in block.leistungen %}{% trans "Code" %} {{ le.ziffer.nummer }} · {{ le.ziffer.bezeichnung }} — {{ le.betrag|currency }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if block.restbetrag %} + {% trans "Remaining amount" %} {{ block.restbetrag|currency }}{% endif %}
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            {% else %}
+            {% for item in invoice.items.all %}
+            <tr>
+                <td>{% if item.session_id %}{{ item.session.session_date|date:"d.m.Y" }}{% endif %}</td>
+                <td>
+                    {% if item.service_type %}
+                        {% if invoice.client.language == 'en' %}
+                            {{ item.service_type.name_en|default:item.service_type.name }}
+                        {% else %}
+                            {{ item.service_type.name_de|default:item.service_type.name }}
+                        {% endif %}
                     {% else %}
-                        {{ item.service_type.name_de|default:item.service_type.name }}
+                        <em class="text-muted">{% trans "No service type" %}</em>
                     {% endif %}
-                {% else %}
-                    <em class="text-muted">{% trans "No service type" %}</em>
-                {% endif %}
-                {% if item.description %}
-                    <br><small class="text-muted">{{ item.description }}</small>
-                {% endif %}
-            </td>
-            <td>
-                {% if item.session_id %}{{ item.session.duration }} {% trans "min" %}
-                {% elif item.quantity != 1 %}× {{ item.quantity }}{% endif %}
-            </td>
-            <td class="text-right">{{ item.rate|currency }}</td>
-            <td class="text-right font-bold">{{ item.total|currency }}</td>
-        </tr>
-        {% endfor %}
-        {% endif %}
-    </tbody>
-</table>
+                    {% if item.description %}
+                        <br><small class="text-muted">{{ item.description }}</small>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.session_id %}{{ item.session.duration }} {% trans "min" %}
+                    {% elif item.quantity != 1 %}× {{ item.quantity }}{% endif %}
+                </td>
+                <td class="text-right">{{ item.rate|currency }}</td>
+                <td class="text-right font-bold">{{ item.total|currency }}</td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
 
 <div class="form-section">
     <div class="flex-between mb-2">

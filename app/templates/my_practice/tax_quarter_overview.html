@@ -69,68 +69,70 @@
     <div class="section-card">
         <h2>📊 {% blocktrans %}Quarterly figures {{ year }}{% endblocktrans %}</h2>
 
-        <table class="quarter-table">
-            <thead>
-                <tr>
-                    <th>{% trans "Quarter" %}</th>
-                    <th>{% trans "Period" %}</th>
-                    <th class="text-right">{% trans "Revenue" %}</th>
-                    <th class="text-right">{% trans "Expenses" %}</th>
-                    <th class="text-right">{% trans "Net profit" %}</th>
-                    <th class="text-right">{% trans "Advance payment" %}</th>
-                    <th>{% trans "Status" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for q in quarters %}
-                <tr class="{% if q.needs_attention %}quarter-row--attention{% elif q.is_current %}quarter-row--current{% endif %}">
-                    <td>
-                        <strong>{{ q.label }}</strong>
-                        {% if q.is_current %}<span class="text-xs text-secondary"> ({% trans "current" %})</span>{% endif %}
-                    </td>
-                    <td class="text-sm text-secondary">
-                        {{ q.start|date:"d.m." }} – {{ q.end|date:"d.m.Y" }}
-                    </td>
-                    <td class="text-right">{{ q.revenue|currency }}</td>
-                    <td class="text-right">{{ q.expenses|currency }}</td>
-                    <td class="text-right">{{ q.net_profit|currency }}</td>
-                    <td class="text-right">
-                        {% if q.tax_paid %}
-                            {{ q.tax_paid|currency }}
-                            <ul class="withdrawal-list">
-                                {% for w in q.tax_withdrawals %}
-                                <li>{{ w.date|date:"d.m." }}: {{ w.amount|currency }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <span class="text-secondary">–</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if q.needs_attention %}
-                            <span class="badge--warn">⚠️ {% trans "Missing" %}</span>
-                        {% elif q.tax_paid %}
-                            <span class="badge--ok">✅ {% trans "Recorded" %}</span>
-                        {% elif q.revenue == 0 %}
-                            <span class="badge--neutral">{% trans "no revenue" %}</span>
-                        {% else %}
-                            <span class="badge--neutral">{% trans "pending" %}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            <tfoot>
-                <tr class="totals-row">
-                    <td colspan="2"><strong>{% blocktrans %}Total {{ year }}{% endblocktrans %}</strong></td>
-                    <td class="text-right">{{ total_revenue|currency }}</td>
-                    <td class="text-right">{{ total_expenses|currency }}</td>
-                    <td class="text-right">{{ total_net_profit|currency }}</td>
-                    <td class="text-right">{{ total_tax_paid|currency }}</td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
+        <div class="table-container table-container--wide">
+            <table class="quarter-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Quarter" %}</th>
+                        <th>{% trans "Period" %}</th>
+                        <th class="text-right">{% trans "Revenue" %}</th>
+                        <th class="text-right">{% trans "Expenses" %}</th>
+                        <th class="text-right">{% trans "Net profit" %}</th>
+                        <th class="text-right">{% trans "Advance payment" %}</th>
+                        <th>{% trans "Status" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in quarters %}
+                    <tr class="{% if q.needs_attention %}quarter-row--attention{% elif q.is_current %}quarter-row--current{% endif %}">
+                        <td>
+                            <strong>{{ q.label }}</strong>
+                            {% if q.is_current %}<span class="text-xs text-secondary"> ({% trans "current" %})</span>{% endif %}
+                        </td>
+                        <td class="text-sm text-secondary">
+                            {{ q.start|date:"d.m." }} – {{ q.end|date:"d.m.Y" }}
+                        </td>
+                        <td class="text-right">{{ q.revenue|currency }}</td>
+                        <td class="text-right">{{ q.expenses|currency }}</td>
+                        <td class="text-right">{{ q.net_profit|currency }}</td>
+                        <td class="text-right">
+                            {% if q.tax_paid %}
+                                {{ q.tax_paid|currency }}
+                                <ul class="withdrawal-list">
+                                    {% for w in q.tax_withdrawals %}
+                                    <li>{{ w.date|date:"d.m." }}: {{ w.amount|currency }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-secondary">–</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if q.needs_attention %}
+                                <span class="badge--warn">⚠️ {% trans "Missing" %}</span>
+                            {% elif q.tax_paid %}
+                                <span class="badge--ok">✅ {% trans "Recorded" %}</span>
+                            {% elif q.revenue == 0 %}
+                                <span class="badge--neutral">{% trans "no revenue" %}</span>
+                            {% else %}
+                                <span class="badge--neutral">{% trans "pending" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="totals-row">
+                        <td colspan="2"><strong>{% blocktrans %}Total {{ year }}{% endblocktrans %}</strong></td>
+                        <td class="text-right">{{ total_revenue|currency }}</td>
+                        <td class="text-right">{{ total_expenses|currency }}</td>
+                        <td class="text-right">{{ total_net_profit|currency }}</td>
+                        <td class="text-right">{{ total_tax_paid|currency }}</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 
     <!-- Annual Tax Settlement (Steuerbescheid) -->

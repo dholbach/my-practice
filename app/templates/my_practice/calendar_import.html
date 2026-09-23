@@ -84,91 +84,93 @@
         </button>
     </div>
 
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th class="th-checkbox">
-                    <input type="checkbox" class="select-checkbox" id="selectAll">
-                </th>
-                <th>{% trans "Date" %}</th>
-                <th>{% trans "Time" %}</th>
-                <th>{% trans "Event" %}</th>
-                <th>{% trans "Duration" %}</th>
-                <th>{% trans "Client" %}</th>
-                <th>{% trans "Service" %}</th>
-                <th>{% trans "Status" %}</th>
-                <th class="th-actions" title="{% trans 'Skip event (will not be imported)' %}">{% trans "Actions" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for event in events %}
-            <tr class="event-row {% if event.is_duplicate %}event-duplicate{% endif %} {% if event.matched_client and not event.is_cancelled and not event.is_duplicate %}event-ready{% endif %}"
-                data-event-id="{{ event.id }}"
-                data-is-ready="{% if event.matched_client and not event.is_cancelled and not event.is_duplicate %}true{% else %}false{% endif %}"
-                id="event-{{ event.id }}">
-                <td>
-                    <input type="checkbox"
-                           class="select-checkbox event-checkbox"
-                           {% if event.is_cancelled or event.is_duplicate %}disabled{% endif %}>
-                </td>
-                <td>
-                    {% if event.start %}{{ event.start|date:'d.m.Y' }}{% else %}-{% endif %}
-                </td>
-                <td>
-                    {% if event.start %}{{ event.start|date:'H:i' }}{% else %}-{% endif %}
-                </td>
-                <td>
-                    <strong>{{ event.summary }}</strong>
-                </td>
-                <td>
-                    {% if event.duration_minutes > 0 %}
-                        {{ event.duration_minutes }} min
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td>
-                    <select class="form-control client-select" {% if event.is_duplicate %}disabled{% endif %}>
-                        <option value="">-- {% trans "Select client" %} --</option>
-                        {% for client in clients %}
-                        <option value="{{ client.id }}"
-                                {% if event.matched_client and event.matched_client.id == client.id %}selected{% endif %}>
-                            {{ client.client_code }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    <select class="form-control service-select" {% if event.is_duplicate %}disabled{% endif %}>
-                        <option value="">-- {% trans "Select service" %} --</option>
-                        {% for service in service_types %}
-                        <option value="{{ service.id }}"
-                                {% if event.suggested_service_type_obj and event.suggested_service_type_obj.id == service.id %}selected{% endif %}>
-                            {% if CURRENT_LANGUAGE == "en" %}{{ service.name_en|default:service.name }}{% else %}{{ service.name_de|default:service.name }}{% endif %}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    {% if event.is_duplicate %}
-                        <span class="badge badge-info" title="{% trans 'Already imported as invoice item' %}">🔄 {% trans "Duplicate" %}</span>
-                    {% elif event.matched_client and not event.is_cancelled %}
-                        <span class="badge badge-success" title="{% trans 'Client recognized, ready for import' %}">✅ {% trans "Ready" %}</span>
-                    {% elif event.is_cancelled %}
-                        <span class="badge badge-danger" title="{% trans 'Event was cancelled' %}">❌ {% trans "Cancelled" %}</span>
-                    {% else %}
-                        <span class="badge badge-warning" title="{% trans 'Client not recognized – please assign manually' %}">⚠️ {% trans "Unknown" %}</span>
-                    {% endif %}
-                </td>
-                <td class="td-actions">
-                    <button class="btn btn-sm btn-secondary" data-event-id="{{ event.id }}" title="{% trans 'Skip event (will not be imported)' %}" {% if event.is_duplicate %}disabled{% endif %}>
-                        ⏭️
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container table-container--wide">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="th-checkbox">
+                        <input type="checkbox" class="select-checkbox" id="selectAll">
+                    </th>
+                    <th>{% trans "Date" %}</th>
+                    <th>{% trans "Time" %}</th>
+                    <th>{% trans "Event" %}</th>
+                    <th>{% trans "Duration" %}</th>
+                    <th>{% trans "Client" %}</th>
+                    <th>{% trans "Service" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th class="th-actions" title="{% trans 'Skip event (will not be imported)' %}">{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr class="event-row {% if event.is_duplicate %}event-duplicate{% endif %} {% if event.matched_client and not event.is_cancelled and not event.is_duplicate %}event-ready{% endif %}"
+                    data-event-id="{{ event.id }}"
+                    data-is-ready="{% if event.matched_client and not event.is_cancelled and not event.is_duplicate %}true{% else %}false{% endif %}"
+                    id="event-{{ event.id }}">
+                    <td>
+                        <input type="checkbox"
+                               class="select-checkbox event-checkbox"
+                               {% if event.is_cancelled or event.is_duplicate %}disabled{% endif %}>
+                    </td>
+                    <td>
+                        {% if event.start %}{{ event.start|date:'d.m.Y' }}{% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if event.start %}{{ event.start|date:'H:i' }}{% else %}-{% endif %}
+                    </td>
+                    <td>
+                        <strong>{{ event.summary }}</strong>
+                    </td>
+                    <td>
+                        {% if event.duration_minutes > 0 %}
+                            {{ event.duration_minutes }} min
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <select class="form-control client-select" {% if event.is_duplicate %}disabled{% endif %}>
+                            <option value="">-- {% trans "Select client" %} --</option>
+                            {% for client in clients %}
+                            <option value="{{ client.id }}"
+                                    {% if event.matched_client and event.matched_client.id == client.id %}selected{% endif %}>
+                                {{ client.client_code }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-control service-select" {% if event.is_duplicate %}disabled{% endif %}>
+                            <option value="">-- {% trans "Select service" %} --</option>
+                            {% for service in service_types %}
+                            <option value="{{ service.id }}"
+                                    {% if event.suggested_service_type_obj and event.suggested_service_type_obj.id == service.id %}selected{% endif %}>
+                                {% if CURRENT_LANGUAGE == "en" %}{{ service.name_en|default:service.name }}{% else %}{{ service.name_de|default:service.name }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        {% if event.is_duplicate %}
+                            <span class="badge badge-info" title="{% trans 'Already imported as invoice item' %}">🔄 {% trans "Duplicate" %}</span>
+                        {% elif event.matched_client and not event.is_cancelled %}
+                            <span class="badge badge-success" title="{% trans 'Client recognized, ready for import' %}">✅ {% trans "Ready" %}</span>
+                        {% elif event.is_cancelled %}
+                            <span class="badge badge-danger" title="{% trans 'Event was cancelled' %}">❌ {% trans "Cancelled" %}</span>
+                        {% else %}
+                            <span class="badge badge-warning" title="{% trans 'Client not recognized – please assign manually' %}">⚠️ {% trans "Unknown" %}</span>
+                        {% endif %}
+                    </td>
+                    <td class="td-actions">
+                        <button class="btn btn-sm btn-secondary" data-event-id="{{ event.id }}" title="{% trans 'Skip event (will not be imported)' %}" {% if event.is_duplicate %}disabled{% endif %}>
+                            ⏭️
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <div class="cal-import-bottom-bar">
         <button class="action-btn primary" id="js-import-bottom">

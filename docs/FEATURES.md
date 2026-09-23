@@ -272,7 +272,7 @@ chronological record; this document only tracks current state.
 - ✅ Bilingual app UI (German/English) with a DE/EN language switcher — every template, view, model, and admin label wrapped via Django i18n (P-039)
 - ✅ Dark mode with theme toggle
 - ✅ Privacy mode (blur sensitive data) — client names, contact details and diagnoses blur on toggle, while client codes, invoice numbers and form labels stay legible; inquiries keep their initials visible so a record is still tellable apart. Coverage is enforced by a guardrail test in both directions (M-PAT-08)
-- ✅ Responsive design
+- ✅ Works in a narrow window — the UI holds together down to a 768px viewport, so a half-screen laptop window (invoices on one side, something else on the other) lays out properly: button rows wrap instead of running off the card edge, and wide tables scroll inside their own container instead of crushing their columns. Enforced by a guardrail test (M-PAT-09). Phones are deliberately out of scope
 - ✅ Interactive charts
 - ✅ Toast notifications
 - ✅ Modal dialogs

@@ -53,38 +53,40 @@
     </div>
 
     <!-- Day table -->
-    <table class="audit-table">
-        <thead>
-            <tr>
-                <th>{% trans "Date" %}</th>
-                <th>{% trans "Weekday" %}</th>
-                <th>{% trans "Type" %}</th>
-                <th class="text-right">{% trans "Sessions" %}</th>
-                <th>{% trans "Note" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for entry in audit.entries %}
-            <tr class="audit-row--{{ entry.day_type }}">
-                <td>{{ entry.day|date:"d.m.Y" }}</td>
-                <td>{{ entry.day|date:"l" }}</td>
-                <td>
-                    {% if entry.day_type == "practice" %}
-                        <span class="badge badge--practice">{% trans "Practice" %}</span>
-                    {% elif entry.day_type == "home_office" %}
-                        <span class="badge badge--home-office">{% trans "Home office" %}</span>
-                    {% elif entry.day_type == "holiday" %}
-                        <span class="badge badge--holiday">{% trans "Holiday" %}</span>
-                    {% elif entry.day_type == "timeoff" %}
-                        <span class="badge badge--timeoff">{% trans "Vacation / time off" %}</span>
-                    {% endif %}
-                </td>
-                <td class="text-right">{% if entry.sessions %}{{ entry.sessions }}{% else %}&ndash;{% endif %}</td>
-                <td class="muted">{{ entry.holiday_name }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="audit-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Date" %}</th>
+                    <th>{% trans "Weekday" %}</th>
+                    <th>{% trans "Type" %}</th>
+                    <th class="text-right">{% trans "Sessions" %}</th>
+                    <th>{% trans "Note" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in audit.entries %}
+                <tr class="audit-row--{{ entry.day_type }}">
+                    <td>{{ entry.day|date:"d.m.Y" }}</td>
+                    <td>{{ entry.day|date:"l" }}</td>
+                    <td>
+                        {% if entry.day_type == "practice" %}
+                            <span class="badge badge--practice">{% trans "Practice" %}</span>
+                        {% elif entry.day_type == "home_office" %}
+                            <span class="badge badge--home-office">{% trans "Home office" %}</span>
+                        {% elif entry.day_type == "holiday" %}
+                            <span class="badge badge--holiday">{% trans "Holiday" %}</span>
+                        {% elif entry.day_type == "timeoff" %}
+                            <span class="badge badge--timeoff">{% trans "Vacation / time off" %}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{% if entry.sessions %}{{ entry.sessions }}{% else %}&ndash;{% endif %}</td>
+                    <td class="muted">{{ entry.holiday_name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     {% now "d.m.Y H:i" as generated_at %}
     <p class="audit-footer">

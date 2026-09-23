@@ -42,57 +42,59 @@
 </div>
 
 <h3 class="mb-4">📋 {% trans "Detailed invoice list" %}</h3>
-<table class="invoice-table">
-    <thead>
-        <tr>
-            <th>{% trans "Invoice No." %}</th>
-            <th>{% trans "Client" %}</th>
-            <th>{% trans "Invoice date" %}</th>
-            <th>{% trans "Payment date" %}</th>
-            <th>{% trans "Year difference" %}</th>
-            <th>{% trans "Status" %}</th>
-            <th class="text-right">{% trans "Amount" %}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for invoice in invoices %}
-        <tr class="hover:bg-dropdown-hover{% if invoice.year_diff %} opacity-95{% endif %}">
-            <td><a href="{% url 'invoice_detail' invoice.pk %}" class="link-primary">{{ invoice.invoice_number }}</a></td>
-            <td class="sensitive-data">{{ invoice.client.full_name }}</td>
-            <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
-            <td>
-                {% if invoice.paid_date %}
-                    {{ invoice.paid_date|date:"d.m.Y" }}
-                    {% if invoice.year_diff %}<span class="font-semibold text-red-500"> ({% trans "Prior year" %})</span>{% endif %}
-                {% else %}
-                    <em class="text-muted">{% trans "No date" %}</em>
-                {% endif %}
-            </td>
-            <td>
-                {% if invoice.year_diff %}
-                    <span class="font-semibold text-red-500">{{ invoice.invoice_date.year }}</span>
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-            <td><span class="status-badge status-{{ invoice.status }}">{{ invoice.get_status_display }}</span></td>
-            <td class="text-right font-semibold">{{ invoice.total|currency }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="7" class="empty-state-msg">
-                {% blocktrans with year=selected_year %}No invoices found for {{ year }}{% endblocktrans %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-    <tfoot>
-        <tr class="tr-summary">
-            <td colspan="6" class="text-right">{% trans "Total:" %}</td>
-            <td class="text-right">{{ summary.total|currency }}</td>
-        </tr>
-    </tfoot>
-</table>
+<div class="table-container table-container--wide">
+    <table class="invoice-table">
+        <thead>
+            <tr>
+                <th>{% trans "Invoice No." %}</th>
+                <th>{% trans "Client" %}</th>
+                <th>{% trans "Invoice date" %}</th>
+                <th>{% trans "Payment date" %}</th>
+                <th>{% trans "Year difference" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th class="text-right">{% trans "Amount" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr class="hover:bg-dropdown-hover{% if invoice.year_diff %} opacity-95{% endif %}">
+                <td><a href="{% url 'invoice_detail' invoice.pk %}" class="link-primary">{{ invoice.invoice_number }}</a></td>
+                <td class="sensitive-data">{{ invoice.client.full_name }}</td>
+                <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                <td>
+                    {% if invoice.paid_date %}
+                        {{ invoice.paid_date|date:"d.m.Y" }}
+                        {% if invoice.year_diff %}<span class="font-semibold text-red-500"> ({% trans "Prior year" %})</span>{% endif %}
+                    {% else %}
+                        <em class="text-muted">{% trans "No date" %}</em>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if invoice.year_diff %}
+                        <span class="font-semibold text-red-500">{{ invoice.invoice_date.year }}</span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td><span class="status-badge status-{{ invoice.status }}">{{ invoice.get_status_display }}</span></td>
+                <td class="text-right font-semibold">{{ invoice.total|currency }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="empty-state-msg">
+                    {% blocktrans with year=selected_year %}No invoices found for {{ year }}{% endblocktrans %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="tr-summary">
+                <td colspan="6" class="text-right">{% trans "Total:" %}</td>
+                <td class="text-right">{{ summary.total|currency }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
 
 <div class="text-center mt-8">
     <a href="{% url 'analytics' %}" class="btn btn-secondary">← {% trans "Back to Analytics" %}</a>

@@ -52,37 +52,39 @@
     </div>
 
     {% if outgoing %}
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>{% trans "Date" %}</th>
-                <th class="text-right">{% trans "Amount" %}</th>
-                <th>{% trans "Category" %}</th>
-                <th>{% trans "Notes" %}</th>
-                <th class="text-center">{% trans "Actions" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for withdrawal in outgoing %}
-            <tr>
-                <td>{{ withdrawal.date|date:"d.m.Y" }}</td>
-                <td class="text-right font-bold">
-                    {{ withdrawal.amount|currency }}
-                </td>
-                <td>
-                    <span class="badge {% if withdrawal.category == 'tax' %}badge-draft{% elif withdrawal.category == 'private_transfer' %}badge-info{% else %}badge-paid{% endif %}">
-                        {{ withdrawal.get_category_display }}
-                    </span>
-                </td>
-                <td class="text-secondary">{{ withdrawal.description|default:"–" }}</td>
-                <td class="text-center whitespace-nowrap">
-                    <a href="{% url 'withdrawal_update' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-secondary" title="{% trans 'Edit' %}">✏️</a>
-                    <a href="{% url 'withdrawal_delete' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-danger" title="{% trans 'Delete' %}">🗑️</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Date" %}</th>
+                    <th class="text-right">{% trans "Amount" %}</th>
+                    <th>{% trans "Category" %}</th>
+                    <th>{% trans "Notes" %}</th>
+                    <th class="text-center">{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for withdrawal in outgoing %}
+                <tr>
+                    <td>{{ withdrawal.date|date:"d.m.Y" }}</td>
+                    <td class="text-right font-bold">
+                        {{ withdrawal.amount|currency }}
+                    </td>
+                    <td>
+                        <span class="badge {% if withdrawal.category == 'tax' %}badge-draft{% elif withdrawal.category == 'private_transfer' %}badge-info{% else %}badge-paid{% endif %}">
+                            {{ withdrawal.get_category_display }}
+                        </span>
+                    </td>
+                    <td class="text-secondary">{{ withdrawal.description|default:"–" }}</td>
+                    <td class="text-center whitespace-nowrap">
+                        <a href="{% url 'withdrawal_update' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-secondary" title="{% trans 'Edit' %}">✏️</a>
+                        <a href="{% url 'withdrawal_delete' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-danger" title="{% trans 'Delete' %}">🗑️</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
     <p class="empty-state-msg">
         {% trans "No withdrawals for this period." %}
@@ -101,37 +103,39 @@
     </div>
 
     {% if incoming %}
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>{% trans "Date" %}</th>
-                <th class="text-right">{% trans "Amount" %}</th>
-                <th>{% trans "Category" %}</th>
-                <th>{% trans "Notes" %}</th>
-                <th class="text-center">{% trans "Actions" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for withdrawal in incoming %}
-            <tr>
-                <td>{{ withdrawal.date|date:"d.m.Y" }}</td>
-                <td class="text-right font-bold {{ withdrawal.amount|highlight_diff }}">
-                    {% if withdrawal.category == 'contribution' %}-{% endif %}{{ withdrawal.amount|currency }}
-                </td>
-                <td>
-                    <span class="badge {% if withdrawal.category == 'correction' %}badge-cancelled{% else %}badge-success{% endif %}">
-                        {% if withdrawal.category == 'contribution' %}💰 {% endif %}{{ withdrawal.get_category_display }}
-                    </span>
-                </td>
-                <td class="text-secondary">{{ withdrawal.description|default:"–" }}</td>
-                <td class="text-center whitespace-nowrap">
-                    <a href="{% url 'withdrawal_update' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-secondary" title="{% trans 'Edit' %}">✏️</a>
-                    <a href="{% url 'withdrawal_delete' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-danger" title="{% trans 'Delete' %}">🗑️</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Date" %}</th>
+                    <th class="text-right">{% trans "Amount" %}</th>
+                    <th>{% trans "Category" %}</th>
+                    <th>{% trans "Notes" %}</th>
+                    <th class="text-center">{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for withdrawal in incoming %}
+                <tr>
+                    <td>{{ withdrawal.date|date:"d.m.Y" }}</td>
+                    <td class="text-right font-bold {{ withdrawal.amount|highlight_diff }}">
+                        {% if withdrawal.category == 'contribution' %}-{% endif %}{{ withdrawal.amount|currency }}
+                    </td>
+                    <td>
+                        <span class="badge {% if withdrawal.category == 'correction' %}badge-cancelled{% else %}badge-success{% endif %}">
+                            {% if withdrawal.category == 'contribution' %}💰 {% endif %}{{ withdrawal.get_category_display }}
+                        </span>
+                    </td>
+                    <td class="text-secondary">{{ withdrawal.description|default:"–" }}</td>
+                    <td class="text-center whitespace-nowrap">
+                        <a href="{% url 'withdrawal_update' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-secondary" title="{% trans 'Edit' %}">✏️</a>
+                        <a href="{% url 'withdrawal_delete' withdrawal.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-danger" title="{% trans 'Delete' %}">🗑️</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
     <p class="empty-state-msg">
         {% trans "No deposits or corrections for this period." %}

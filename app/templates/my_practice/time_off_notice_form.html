@@ -18,31 +18,33 @@
         <h3>👥 {% trans "Recipients" %}</h3>
         {% if form.recipients.errors %}<div class="error">{{ form.recipients.errors }}</div>{% endif %}
         {% if form.recipients.field.queryset.exists %}
-        <table class="data-table w-auto">
-            <thead>
-                <tr>
-                    <th class="py-0.5 px-2">
-                        <input type="checkbox" id="recipients-select-all" class="form-check-input" checked
-                               title="{% trans 'Select/unselect all' %}" aria-label="{% trans 'Select/unselect all' %}">
-                    </th>
-                    <th class="py-0.5 px-2">{% trans "Code" %}</th>
-                    <th class="py-0.5 px-2">{% trans "Language" %}</th>
-                    <th class="py-0.5 px-2">{% trans "Last session" %}</th>
-                    <th class="py-0.5 px-2">{% trans "Next session" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for client in form.recipients.field.queryset %}
-                <tr>
-                    <td class="py-0.5 px-2"><input type="checkbox" name="recipients" value="{{ client.pk }}" class="form-check-input recipient-checkbox" {% if client.pk|stringformat:"s" in checked_ids %}checked{% endif %} aria-label="{% trans 'Select recipient' %}"></td>
-                    <td class="py-0.5 px-2 font-mono font-bold text-base">{{ client.client_code }}</td>
-                    <td class="py-0.5 px-2"><span class="badge badge-{{ client.language }} py-0.5 px-2">{{ client.language|upper }}</span></td>
-                    <td class="py-0.5 px-2">{{ client.last_session_date|date:"Y-m-d"|default:"–" }}</td>
-                    <td class="py-0.5 px-2">{{ client.next_session_date|date:"Y-m-d"|default:"–" }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="data-table w-auto">
+                <thead>
+                    <tr>
+                        <th class="py-0.5 px-2">
+                            <input type="checkbox" id="recipients-select-all" class="form-check-input" checked
+                                   title="{% trans 'Select/unselect all' %}" aria-label="{% trans 'Select/unselect all' %}">
+                        </th>
+                        <th class="py-0.5 px-2">{% trans "Code" %}</th>
+                        <th class="py-0.5 px-2">{% trans "Language" %}</th>
+                        <th class="py-0.5 px-2">{% trans "Last session" %}</th>
+                        <th class="py-0.5 px-2">{% trans "Next session" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in form.recipients.field.queryset %}
+                    <tr>
+                        <td class="py-0.5 px-2"><input type="checkbox" name="recipients" value="{{ client.pk }}" class="form-check-input recipient-checkbox" {% if client.pk|stringformat:"s" in checked_ids %}checked{% endif %} aria-label="{% trans 'Select recipient' %}"></td>
+                        <td class="py-0.5 px-2 font-mono font-bold text-base">{{ client.client_code }}</td>
+                        <td class="py-0.5 px-2"><span class="badge badge-{{ client.language }} py-0.5 px-2">{{ client.language|upper }}</span></td>
+                        <td class="py-0.5 px-2">{{ client.last_session_date|date:"Y-m-d"|default:"–" }}</td>
+                        <td class="py-0.5 px-2">{{ client.next_session_date|date:"Y-m-d"|default:"–" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
         <p class="empty-state-msg">{% trans "No active clients with an email address on file." %}</p>
         {% endif %}

@@ -19,48 +19,50 @@ Context expected:
         {% endif %}
     </strong>
 
-    <table class="preflight-table">
-        <thead>
-            <tr>
-                <th>{% trans "Date (invoice)" %}</th>
-                <th>{% trans "Duration" %}</th>
-                <th>{% trans "Status" %}</th>
-                <th>{% trans "Note" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for result in calendar_preflight.item_results %}
-            <tr class="{% if result.status == 'cancelled' %}row-cancelled{% elif result.status == 'moved' %}row-moved{% endif %}">
-                <td class="preflight-td-primary">
-                    {{ result.item.session.session_date|date:"d.m.Y"|default:"–" }}
-                </td>
-                <td class="preflight-td-secondary">
-                    {{ result.item.session.duration }} min
-                </td>
-                <td>
-                    {% if result.status == 'confirmed' %}
-                        <span class="preflight-status-confirmed">✅ {% trans "Confirmed" %}</span>
-                    {% elif result.status == 'cancelled' %}
-                        <span class="preflight-status-cancelled">🚫 {% trans "Cancelled" %}</span>
-                    {% elif result.status == 'moved' %}
-                        <span class="preflight-status-moved">📅 {% trans "Moved" %}</span>
-                    {% else %}
-                        <span class="preflight-status-unmatched">❓ {% trans "No match" %}</span>
-                    {% endif %}
-                </td>
-                <td class="preflight-td-note">
-                    {% if result.status == 'cancelled' %}
-                        {% trans "Appointment was cancelled in the calendar — check the invoice" %}
-                    {% elif result.status == 'moved' %}
-                        {% blocktrans with suggested_date=result.suggested_date|date:"d.m.Y" %}Calendar date: {{ suggested_date }} — update the invoice date if needed{% endblocktrans %}
-                    {% elif result.status == 'unmatched' %}
-                        {% trans "No matching calendar entry found" %}
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="preflight-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Date (invoice)" %}</th>
+                    <th>{% trans "Duration" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Note" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in calendar_preflight.item_results %}
+                <tr class="{% if result.status == 'cancelled' %}row-cancelled{% elif result.status == 'moved' %}row-moved{% endif %}">
+                    <td class="preflight-td-primary">
+                        {{ result.item.session.session_date|date:"d.m.Y"|default:"–" }}
+                    </td>
+                    <td class="preflight-td-secondary">
+                        {{ result.item.session.duration }} min
+                    </td>
+                    <td>
+                        {% if result.status == 'confirmed' %}
+                            <span class="preflight-status-confirmed">✅ {% trans "Confirmed" %}</span>
+                        {% elif result.status == 'cancelled' %}
+                            <span class="preflight-status-cancelled">🚫 {% trans "Cancelled" %}</span>
+                        {% elif result.status == 'moved' %}
+                            <span class="preflight-status-moved">📅 {% trans "Moved" %}</span>
+                        {% else %}
+                            <span class="preflight-status-unmatched">❓ {% trans "No match" %}</span>
+                        {% endif %}
+                    </td>
+                    <td class="preflight-td-note">
+                        {% if result.status == 'cancelled' %}
+                            {% trans "Appointment was cancelled in the calendar — check the invoice" %}
+                        {% elif result.status == 'moved' %}
+                            {% blocktrans with suggested_date=result.suggested_date|date:"d.m.Y" %}Calendar date: {{ suggested_date }} — update the invoice date if needed{% endblocktrans %}
+                        {% elif result.status == 'unmatched' %}
+                            {% trans "No matching calendar entry found" %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     {% if calendar_preflight.unaccounted_events %}
     <div class="preflight-unaccounted">
