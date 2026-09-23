@@ -18,26 +18,26 @@
 <text x="274.7" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-07</text>
 <text x="473.3" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-08</text>
 <text x="672.0" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-09</text>
-<polyline points="76.0,157.4 274.7,144.0 473.3,137.3 672.0,133.9" fill="none" stroke="#58a6ff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="76.0" cy="157.4" r="3" fill="#58a6ff"/>
+<polyline points="76.0,156.8 274.7,144.0 473.3,137.3 672.0,133.6" fill="none" stroke="#58a6ff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="156.8" r="3" fill="#58a6ff"/>
 <circle cx="274.7" cy="144.0" r="3" fill="#58a6ff"/>
 <circle cx="473.3" cy="137.3" r="3" fill="#58a6ff"/>
-<circle cx="672.0" cy="133.9" r="3" fill="#58a6ff"/>
-<polyline points="76.0,190.5 274.7,138.0 473.3,83.2 672.0,63.6" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="672.0" cy="133.6" r="3" fill="#58a6ff"/>
+<polyline points="76.0,190.5 274.7,138.0 473.3,83.2 672.0,62.2" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="76.0" cy="190.5" r="3" fill="#3fb950"/>
 <circle cx="274.7" cy="138.0" r="3" fill="#3fb950"/>
 <circle cx="473.3" cy="83.2" r="3" fill="#3fb950"/>
-<circle cx="672.0" cy="63.6" r="3" fill="#3fb950"/>
-<polyline points="76.0,252.7 274.7,254.1 473.3,254.5 672.0,254.0" fill="none" stroke="#d29922" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="672.0" cy="62.2" r="3" fill="#3fb950"/>
+<polyline points="76.0,252.7 274.7,254.1 473.3,254.5 672.0,254.3" fill="none" stroke="#d29922" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="76.0" cy="252.7" r="3" fill="#d29922"/>
 <circle cx="274.7" cy="254.1" r="3" fill="#d29922"/>
 <circle cx="473.3" cy="254.5" r="3" fill="#d29922"/>
-<circle cx="672.0" cy="254.0" r="3" fill="#d29922"/>
-<polyline points="76.0,329.3 274.7,330.1 473.3,328.8 672.0,329.3" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="672.0" cy="254.3" r="3" fill="#d29922"/>
+<polyline points="76.0,329.3 274.7,330.1 473.3,328.8 672.0,329.2" fill="none" stroke="#a371f7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="76.0" cy="329.3" r="3" fill="#a371f7"/>
 <circle cx="274.7" cy="330.1" r="3" fill="#a371f7"/>
 <circle cx="473.3" cy="328.8" r="3" fill="#a371f7"/>
-<circle cx="672.0" cy="329.3" r="3" fill="#a371f7"/>
+<circle cx="672.0" cy="329.2" r="3" fill="#a371f7"/>
 <polyline points="76.0,329.9 274.7,329.9 473.3,329.9 672.0,328.1" fill="none" stroke="#39c5cf" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="76.0" cy="329.9" r="3" fill="#39c5cf"/>
 <circle cx="274.7" cy="329.9" r="3" fill="#39c5cf"/>
@@ -48,30 +48,30 @@
 <circle cx="274.7" cy="321.2" r="3" fill="#db6d28"/>
 <circle cx="473.3" cy="316.6" r="3" fill="#db6d28"/>
 <circle cx="672.0" cy="342.2" r="3" fill="#db6d28"/>
-<polyline points="76.0,246.6 274.7,246.0 473.3,240.0 672.0,251.6" fill="none" stroke="#ff7b72" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="76.0" cy="246.6" r="3" fill="#ff7b72"/>
+<polyline points="76.0,246.2 274.7,246.0 473.3,240.0 672.0,248.8" fill="none" stroke="#ff7b72" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="246.2" r="3" fill="#ff7b72"/>
 <circle cx="274.7" cy="246.0" r="3" fill="#ff7b72"/>
 <circle cx="473.3" cy="240.0" r="3" fill="#ff7b72"/>
-<circle cx="672.0" cy="251.6" r="3" fill="#ff7b72"/>
+<circle cx="672.0" cy="248.8" r="3" fill="#ff7b72"/>
 <rect x="694" y="45" width="14" height="4" rx="2" fill="#58a6ff"/>
 <text x="716" y="52" font-family="sans-serif" font-size="12" fill="#8b949e">app</text>
-<text x="716" y="67" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">28,439</text>
+<text x="716" y="67" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">28,471</text>
 <rect x="694" y="75" width="14" height="4" rx="2" fill="#3fb950"/>
 <text x="716" y="82" font-family="sans-serif" font-size="12" fill="#8b949e">tests</text>
-<text x="716" y="97" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">37,686</text>
+<text x="716" y="97" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">37,867</text>
 <rect x="694" y="105" width="14" height="4" rx="2" fill="#d29922"/>
 <text x="716" y="112" font-family="sans-serif" font-size="12" fill="#8b949e">templates</text>
-<text x="716" y="127" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">12,633</text>
+<text x="716" y="127" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">12,591</text>
 <rect x="694" y="135" width="14" height="4" rx="2" fill="#a371f7"/>
 <text x="716" y="142" font-family="sans-serif" font-size="12" fill="#8b949e">js</text>
-<text x="716" y="157" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">2,721</text>
+<text x="716" y="157" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">2,743</text>
 <rect x="694" y="165" width="14" height="4" rx="2" fill="#39c5cf"/>
 <text x="716" y="172" font-family="sans-serif" font-size="12" fill="#8b949e">css</text>
-<text x="716" y="187" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">2,883</text>
+<text x="716" y="187" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">2,886</text>
 <rect x="694" y="195" width="14" height="4" rx="2" fill="#db6d28"/>
 <text x="716" y="202" font-family="sans-serif" font-size="12" fill="#8b949e">migrations</text>
 <text x="716" y="217" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">1,023</text>
 <rect x="694" y="225" width="14" height="4" rx="2" fill="#ff7b72"/>
 <text x="716" y="232" font-family="sans-serif" font-size="12" fill="#8b949e">docs</text>
-<text x="716" y="247" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">12,942</text>
+<text x="716" y="247" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">13,313</text>
 </svg>
