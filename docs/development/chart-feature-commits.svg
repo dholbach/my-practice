@@ -18,15 +18,15 @@
 <text x="299.5" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-07</text>
 <text x="448.5" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-08</text>
 <text x="597.5" y="370.0" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">2026-09</text>
-<rect x="127.5" y="106.8" width="46.0" height="243.2" fill="#58a6ff" rx="2"/>
-<text x="150.5" y="99.8" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">40</text>
-<rect x="276.5" y="64.2" width="46.0" height="285.8" fill="#58a6ff" rx="2"/>
-<text x="299.5" y="57.2" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">47</text>
+<rect x="127.5" y="100.7" width="46.0" height="249.3" fill="#58a6ff" rx="2"/>
+<text x="150.5" y="93.7" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">41</text>
+<rect x="276.5" y="70.3" width="46.0" height="279.7" fill="#58a6ff" rx="2"/>
+<text x="299.5" y="63.3" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">46</text>
 <rect x="425.5" y="313.5" width="46.0" height="36.5" fill="#58a6ff" rx="2"/>
 <text x="448.5" y="306.5" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">6</text>
-<rect x="574.5" y="313.5" width="46.0" height="36.5" fill="#58a6ff" rx="2"/>
-<text x="597.5" y="306.5" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">6</text>
+<rect x="574.5" y="301.4" width="46.0" height="48.6" fill="#58a6ff" rx="2"/>
+<text x="597.5" y="294.4" font-family="sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">8</text>
 <rect x="694" y="45" width="14" height="4" rx="2" fill="#58a6ff"/>
 <text x="716" y="52" font-family="sans-serif" font-size="12" fill="#8b949e">feat</text>
-<text x="716" y="67" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">6</text>
+<text x="716" y="67" font-family="sans-serif" font-size="10" fill="#8b949e" fill-opacity="0.75">8</text>
 </svg>
