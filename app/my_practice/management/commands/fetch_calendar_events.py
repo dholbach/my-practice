@@ -3,7 +3,8 @@ Management command to fetch Google Calendar events into the pending queue (P-013
 
 Run every few hours via systemd timer. Idempotent: google_event_id unique constraint
 prevents duplicates. On each run, also marks previously-fetched events as 'cancelled'
-if they no longer appear in Google Calendar.
+if they no longer appear in Google Calendar — unless the same session simply moved
+to a new Google event id, which _supersede_moved_events() re-binds first.
 """
 
 import logging
@@ -23,6 +24,11 @@ logger = logging.getLogger(__name__)
 
 OVERLAP_HOURS = 2  # Re-fetch this many hours of overlap to catch late additions
 FIRST_RUN_DAYS = 30  # How far back to go on the very first run per practice
+
+
+def _format_time(value) -> str:
+    """Render an event time for the console; all-day events have none."""
+    return value.strftime("%H:%M") if value else "–"
 
 
 class Command(BaseCommand):
@@ -127,11 +133,16 @@ class Command(BaseCommand):
         # for the next update_client_tags timer run.
         affected_clients: set = set()
 
+        # Must run before both passes below: it re-binds rows whose Google id
+        # changed, so they are neither cancelled as stale nor re-created as new.
+        moved_count = self._supersede_moved_events(
+            practice, start_dt, end_dt, parsed, live_ids, dry_run
+        )
         cancelled_count, flagged_count = self._cancel_stale_future_events(
             practice, start_dt, end_dt, live_ids, dry_run, affected_clients
         )
         counts = self._upsert_all_events(parsed, practice, dry_run, affected_clients)
-        self._report_fetch_summary(dry_run, cancelled_count, flagged_count, counts)
+        self._report_fetch_summary(dry_run, cancelled_count, flagged_count, moved_count, counts)
 
         if not dry_run:
             self._sync_no_next_session_tags(affected_clients)
@@ -147,7 +158,12 @@ class Command(BaseCommand):
         return counts
 
     def _report_fetch_summary(
-        self, dry_run: bool, cancelled_count: int, flagged_count: int, counts: dict
+        self,
+        dry_run: bool,
+        cancelled_count: int,
+        flagged_count: int,
+        moved_count: int,
+        counts: dict,
     ) -> None:
         action = "[dry-run] Would create" if dry_run else "Created"
         parts = [
@@ -155,6 +171,8 @@ class Command(BaseCommand):
             f"{cancelled_count} marked as cancelled",
             f"{counts['skipped']} already present",
         ]
+        if moved_count:
+            parts.append(f"{moved_count} moved to a new calendar entry")
         if flagged_count:
             parts.append(f"{flagged_count} newly missing (cancels next run if still absent)")
         if counts["rescheduled"]:
@@ -216,6 +234,111 @@ class Command(BaseCommand):
                 break
         return raw_events
 
+    @staticmethod
+    def _pending_events_in_window(practice, start_dt, end_dt):
+        """Future PENDING rows inside the fetch window — the set both the
+        supersede and the cancel pass reason about."""
+        return PendingCalendarEvent.objects.filter(
+            practice=practice,
+            event_date__range=(start_dt.date(), end_dt.date()),
+            event_date__gt=timezone.localdate(),
+            status=PendingCalendarEvent.Status.PENDING,
+        )
+
+    def _supersede_moved_events(
+        self, practice, start_dt, end_dt, parsed_events: list, live_ids: set, dry_run: bool
+    ) -> int:
+        """Re-bind a pending event whose Google id changed but whose session is
+        still on the calendar, same client and same day.
+
+        Google mints a *new* event id when a recurring series is edited with
+        "this and following events" — and when an event is cut/pasted or
+        deleted and recreated. The old id then vanishes from events.list()
+        while a new one appears, so without this pass a session that merely
+        moved to another time gets cancelled *and* duplicated: the stale row is
+        cancelled (along with its Session) and the new id creates a second row
+        and Session for the same slot.
+
+        Matching on (client, date) keeps the original row and its Session, so
+        anything already linked to them survives the move. The stale row must
+        have vanished from live_ids and the replacement must not be known yet,
+        so two genuinely separate same-day sessions never collapse into one.
+
+        Returns the number of rows re-bound.
+        """
+        replacements = self._collect_replacement_candidates(parsed_events, live_ids)
+        if not replacements:
+            return 0
+
+        moved = 0
+        stale = self._pending_events_in_window(practice, start_dt, end_dt).exclude(
+            google_event_id__in=live_ids
+        )
+        for db_event in stale.select_related("matched_client"):
+            candidates = replacements.get((db_event.matched_client_id, db_event.event_date))
+            if not candidates:
+                continue
+            # One replacement can only stand in for one stale row
+            candidate = candidates.pop(0)
+            moved += 1
+            if not dry_run:
+                self._rebind_to_replacement(db_event, candidate)
+            self._report_move(db_event, candidate)
+        return moved
+
+    @classmethod
+    def _collect_replacement_candidates(cls, parsed_events: list, live_ids: set) -> dict:
+        """Group live events that have no PendingCalendarEvent row yet by
+        (client_id, date) — the pool a stale row can be re-bound to."""
+        known_ids = set(
+            PendingCalendarEvent.objects.filter(google_event_id__in=live_ids).values_list(
+                "google_event_id", flat=True
+            )
+        )
+        candidates: dict = {}
+        for event in parsed_events:
+            client = event.get("matched_client")
+            if not event.get("id") or not event.get("start") or not client:
+                continue
+            if event["id"] in known_ids:
+                continue
+            if cls._resolve_event_status(event) != PendingCalendarEvent.Status.PENDING:
+                continue
+            event_date, _ = cls._split_event_datetime(event["start"])
+            candidates.setdefault((client.pk, event_date), []).append(event)
+        return candidates
+
+    @classmethod
+    def _rebind_to_replacement(cls, db_event: "PendingCalendarEvent", candidate) -> None:
+        """Point an existing row (and its Session) at the replacement event's id
+        and start time. The date is the match key, so it cannot have changed."""
+        _, event_time = cls._split_event_datetime(candidate["start"])
+        new_duration = candidate.get("duration_minutes") or db_event.duration_minutes
+        PendingCalendarEvent.objects.filter(pk=db_event.pk).update(
+            google_event_id=candidate["id"],
+            summary=candidate.get("summary", ""),
+            event_time=event_time,
+            duration_minutes=new_duration,
+            missing_since=None,
+        )
+        if db_event.session_id:
+            Session.objects.filter(pk=db_event.session_id).update(
+                session_time=event_time,
+                duration=new_duration,
+                calendar_event_id=candidate["id"],
+            )
+
+    def _report_move(self, db_event: "PendingCalendarEvent", candidate) -> None:
+        _, event_time = self._split_event_datetime(candidate["start"])
+        code = db_event.matched_client.client_code if db_event.matched_client else "?"
+        self.stdout.write(
+            self.style.WARNING(
+                f"  🔀 Moved: {code} on {db_event.event_date} "
+                f"{_format_time(db_event.event_time)} → {_format_time(event_time)} "
+                "(new calendar entry)"
+            )
+        )
+
     def _cancel_stale_future_events(
         self,
         practice,
@@ -234,12 +357,7 @@ class Command(BaseCommand):
         """
         cancelled = 0
         flagged = 0
-        existing = PendingCalendarEvent.objects.filter(
-            practice=practice,
-            event_date__range=(start_dt.date(), end_dt.date()),
-            event_date__gt=timezone.localdate(),
-            status=PendingCalendarEvent.Status.PENDING,
-        )
+        existing = self._pending_events_in_window(practice, start_dt, end_dt)
         for db_event in existing:
             if db_event.google_event_id in live_ids:
                 if db_event.missing_since and not dry_run:
@@ -388,30 +506,30 @@ class Command(BaseCommand):
         event_time,
         affected_clients: set | None,
     ) -> bool:
-        """Detect a rescheduled or updated event (date or duration changed), apply
-        the change, and report it. Returns True if anything changed."""
-        new_duration = event.get("duration_minutes", 0)
-        date_changed = obj.event_date != event_date
-        duration_changed = bool(new_duration and obj.duration_minutes != new_duration)
+        """Detect a rescheduled or updated event (date, time or duration
+        changed), apply the change, and report it. Returns True if anything
+        changed.
 
-        if not (date_changed or duration_changed):
+        The time is compared separately from the date: an event dragged to a
+        new time on the *same* day keeps both its Google id and its date, so
+        without that comparison the move is silently dropped and the stored
+        session time stays wrong forever.
+        """
+        new_duration = event.get("duration_minutes", 0)
+        changes = {
+            "date": obj.event_date != event_date,
+            "time": obj.event_time != event_time,
+            "duration": bool(new_duration and obj.duration_minutes != new_duration),
+        }
+
+        if not any(changes.values()):
             return False
 
-        self._apply_reschedule_updates(
-            obj, event_date, event_time, new_duration, date_changed, duration_changed
-        )
+        self._apply_reschedule_updates(obj, event_date, event_time, new_duration, changes)
         self._propagate_reschedule_to_session(
-            obj,
-            event_date,
-            event_time,
-            new_duration,
-            date_changed,
-            duration_changed,
-            affected_clients,
+            obj, event_date, event_time, new_duration, changes, affected_clients
         )
-        self._report_reschedule(
-            obj, event, event_date, new_duration, date_changed, duration_changed
-        )
+        self._report_reschedule(obj, event, event_date, event_time, new_duration, changes)
         return True
 
     @staticmethod
@@ -420,14 +538,14 @@ class Command(BaseCommand):
         event_date,
         event_time,
         new_duration,
-        date_changed,
-        duration_changed,
+        changes: dict,
     ) -> None:
         updates: dict = {}
-        if date_changed:
+        if changes["date"]:
             updates["event_date"] = event_date
+        if changes["time"]:
             updates["event_time"] = event_time
-        if duration_changed:
+        if changes["duration"]:
             updates["duration_minutes"] = new_duration
         if obj.status == PendingCalendarEvent.Status.IMPORTED and obj.session is None:
             updates["status"] = PendingCalendarEvent.Status.PENDING
@@ -439,18 +557,18 @@ class Command(BaseCommand):
         event_date,
         event_time,
         new_duration,
-        date_changed,
-        duration_changed,
+        changes: dict,
         affected_clients: set | None,
     ) -> None:
         if not obj.session_id:
             return
         session_updates: dict = {}
-        if duration_changed:
+        if changes["duration"]:
             session_updates["duration"] = new_duration
-        if date_changed:
-            session_updates["session_date"] = event_date
+        if changes["time"]:
             session_updates["session_time"] = event_time
+        if changes["date"]:
+            session_updates["session_date"] = event_date
             # A date change can move the session across the
             # past/future boundary the tag depends on
             if obj.matched_client and affected_clients is not None:
@@ -463,19 +581,26 @@ class Command(BaseCommand):
         obj: "PendingCalendarEvent",
         event,
         event_date,
+        event_time,
         new_duration,
-        date_changed,
-        duration_changed,
+        changes: dict,
     ) -> None:
         code = event.get("matched_client")
         code = code.client_code if code else "?"
-        if date_changed:
+        if changes["date"]:
             self.stdout.write(
                 self.style.WARNING(
                     f"  📅 Rescheduled: {code} moved from {obj.event_date} → {event_date}"
                 )
             )
-        if duration_changed:
+        elif changes["time"]:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  🕑 Time changed: {code} on {event_date} "
+                    f"{_format_time(obj.event_time)} → {_format_time(event_time)}"
+                )
+            )
+        if changes["duration"]:
             self.stdout.write(
                 self.style.WARNING(
                     f"  ⏱ Duration updated: {code} on {event_date} "

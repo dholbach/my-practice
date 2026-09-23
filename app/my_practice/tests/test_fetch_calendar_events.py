@@ -4,7 +4,7 @@ Command.handle() -> _fetch_for_practice() -> _upsert_event() pipeline that
 syncs Google Calendar events into the pending approval queue.
 """
 
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from io import StringIO
 from unittest.mock import MagicMock, patch
 
@@ -147,6 +147,29 @@ class UpsertEventRescheduleTest(UpsertEventTestBase):
         self.assertEqual(self.pce.event_date, new_date)
         self.assertEqual(self.session.session_date, new_date)
         self.assertIn(self.test_client, affected)
+
+    def test_time_change_on_same_day_reschedules_and_propagates_to_session(self):
+        """A session dragged to a new time on the same day keeps its Google id
+        and its date, so only the time comparison can catch it. Without that it
+        was reported as 'already present' and the stored time stayed wrong."""
+        moved = self._event(start=datetime(2026, 3, 1, 16, 30))
+        affected: set = set()
+        result = self.cmd._upsert_event(
+            moved, self.practice, dry_run=False, affected_clients=affected
+        )
+        self.assertEqual(result, "rescheduled")
+        self.pce.refresh_from_db()
+        self.session.refresh_from_db()
+        self.assertEqual(self.pce.event_date, date(2026, 3, 1))
+        self.assertEqual(self.pce.event_time, time(16, 30))
+        self.assertEqual(self.session.session_date, date(2026, 3, 1))
+        self.assertEqual(self.session.session_time, time(16, 30))
+
+    def test_time_change_refetched_is_skipped_not_rescheduled(self):
+        moved = self._event(start=datetime(2026, 3, 1, 16, 30))
+        self.cmd._upsert_event(moved, self.practice, dry_run=False)
+        result = self.cmd._upsert_event(moved, self.practice, dry_run=False)
+        self.assertEqual(result, "skipped")
 
     def test_duration_change_reschedules_and_propagates_to_session(self):
         result = self.cmd._upsert_event(
@@ -484,6 +507,218 @@ class CancelStaleFutureEventsTest(TestCase):
         self.assertEqual(flagged, 0)
         pce = PendingCalendarEvent.objects.get(google_event_id="gone-event")
         self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
+
+
+class SupersedeMovedEventsTest(TestCase):
+    """Google mints a new event id when a recurring series is edited with
+    'this and following events' (also on cut/paste and delete+recreate). The
+    old id vanishes from events.list() while a new one appears, which used to
+    cancel the session *and* create a duplicate one for the same slot."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="supersede-moved-test",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.test_client = Client.objects.create(
+            practice=self.practice, client_code="TC", full_name="Max Mustermann"
+        )
+        self.other_client = Client.objects.create(
+            practice=self.practice, client_code="AS", full_name="Anna Schmidt"
+        )
+        self.cmd = _make_command()
+        self.future_date = date.today() + timedelta(days=5)
+        self.start = timezone.now()
+        self.end = timezone.now() + timedelta(days=10)
+
+    def _stale_row(self, client=None, event_date=None, **overrides):
+        client = client or self.test_client
+        event_date = event_date or self.future_date
+        session = Session.objects.create(
+            client=client,
+            session_date=event_date,
+            session_time=time(14, 0),
+            duration=60,
+        )
+        defaults = {
+            "practice": self.practice,
+            "google_event_id": "old-series_20260101T120000Z",
+            "summary": "TC 60min",
+            "event_date": event_date,
+            "event_time": time(14, 0),
+            "duration_minutes": 60,
+            "matched_client": client,
+            "status": PendingCalendarEvent.Status.PENDING,
+            "session": session,
+        }
+        defaults.update(overrides)
+        return PendingCalendarEvent.objects.create(**defaults)
+
+    def _live_event(self, client=None, start=None, **overrides):
+        base = {
+            "id": "new-series_20260101T143000Z",
+            "start": start or datetime.combine(self.future_date, time(16, 30)),
+            "summary": "TC 60min",
+            "duration_minutes": 60,
+            "matched_client": client or self.test_client,
+            "suggested_service_type_obj": None,
+            "is_cancelled": False,
+        }
+        base.update(overrides)
+        return base
+
+    def _supersede(self, parsed, dry_run=False):
+        live_ids = {e["id"] for e in parsed}
+        return self.cmd._supersede_moved_events(
+            self.practice, self.start, self.end, parsed, live_ids, dry_run
+        )
+
+    def test_same_day_move_rebinds_row_and_session(self):
+        pce = self._stale_row()
+        session_pk = pce.session_id
+
+        moved = self._supersede([self._live_event()])
+
+        self.assertEqual(moved, 1)
+        pce.refresh_from_db()
+        self.assertEqual(pce.google_event_id, "new-series_20260101T143000Z")
+        self.assertEqual(pce.event_time, time(16, 30))
+        self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
+        self.assertIsNone(pce.missing_since)
+        # Same Session row, moved — not a cancelled one plus a duplicate
+        self.assertEqual(pce.session_id, session_pk)
+        session = Session.objects.get(pk=session_pk)
+        self.assertFalse(session.cancelled)
+        self.assertEqual(session.session_time, time(16, 30))
+        self.assertEqual(session.calendar_event_id, "new-series_20260101T143000Z")
+        self.assertEqual(Session.objects.filter(client=self.test_client).count(), 1)
+
+    def test_rebound_row_is_no_longer_cancelled_as_stale(self):
+        """The regression in full: supersede runs first, so the cancel pass no
+        longer sees the row as missing and the upsert finds it already present."""
+        pce = self._stale_row(missing_since=timezone.now() - timedelta(hours=6))
+        parsed = [self._live_event()]
+        live_ids = {e["id"] for e in parsed}
+
+        self.cmd._supersede_moved_events(
+            self.practice, self.start, self.end, parsed, live_ids, dry_run=False
+        )
+        cancelled, flagged = self.cmd._cancel_stale_future_events(
+            self.practice, self.start, self.end, live_ids, dry_run=False
+        )
+        counts = self.cmd._upsert_all_events(parsed, self.practice, False, set())
+
+        self.assertEqual((cancelled, flagged), (0, 0))
+        self.assertEqual(counts["created"], 0)
+        self.assertEqual(counts["skipped"], 1)
+        pce.refresh_from_db()
+        self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
+        self.assertEqual(PendingCalendarEvent.objects.count(), 1)
+        self.assertEqual(Session.objects.count(), 1)
+
+    def test_duration_change_carried_over_with_the_move(self):
+        pce = self._stale_row()
+        self._supersede([self._live_event(duration_minutes=90)])
+        pce.refresh_from_db()
+        self.assertEqual(pce.duration_minutes, 90)
+        self.assertEqual(Session.objects.get(pk=pce.session_id).duration, 90)
+
+    def test_replacement_on_another_date_does_not_supersede(self):
+        pce = self._stale_row()
+        other_day = datetime.combine(self.future_date + timedelta(days=1), time(16, 30))
+
+        moved = self._supersede([self._live_event(start=other_day)])
+
+        self.assertEqual(moved, 0)
+        pce.refresh_from_db()
+        self.assertEqual(pce.google_event_id, "old-series_20260101T120000Z")
+
+    def test_replacement_for_another_client_does_not_supersede(self):
+        pce = self._stale_row()
+
+        moved = self._supersede([self._live_event(client=self.other_client)])
+
+        self.assertEqual(moved, 0)
+        pce.refresh_from_db()
+        self.assertEqual(pce.google_event_id, "old-series_20260101T120000Z")
+
+    def test_live_event_already_known_does_not_supersede(self):
+        """A second same-day session that is simply still on the calendar must
+        not be stolen by an unrelated stale row for the same client."""
+        stale = self._stale_row()
+        known = self._stale_row(
+            google_event_id="still-here",
+            event_time=time(9, 0),
+        )
+        parsed = [
+            self._live_event(id="still-here", start=datetime.combine(self.future_date, time(9, 0)))
+        ]
+
+        moved = self._supersede(parsed)
+
+        self.assertEqual(moved, 0)
+        stale.refresh_from_db()
+        known.refresh_from_db()
+        self.assertEqual(stale.google_event_id, "old-series_20260101T120000Z")
+        self.assertEqual(known.event_time, time(9, 0))
+
+    def test_one_replacement_supersedes_only_one_stale_row(self):
+        first = self._stale_row(google_event_id="gone-a", event_time=time(14, 0))
+        second = self._stale_row(google_event_id="gone-b", event_time=time(9, 0))
+
+        moved = self._supersede([self._live_event()])
+
+        self.assertEqual(moved, 1)
+        first.refresh_from_db()
+        second.refresh_from_db()
+        rebound = [e for e in (first, second) if e.google_event_id.startswith("new-series")]
+        self.assertEqual(len(rebound), 1)
+
+    def test_cancelled_replacement_does_not_supersede(self):
+        pce = self._stale_row()
+
+        moved = self._supersede([self._live_event(is_cancelled=True)])
+
+        self.assertEqual(moved, 0)
+        pce.refresh_from_db()
+        self.assertEqual(pce.google_event_id, "old-series_20260101T120000Z")
+
+    def test_unmatched_replacement_does_not_supersede(self):
+        pce = self._stale_row()
+
+        moved = self._supersede([self._live_event(matched_client=None)])
+
+        self.assertEqual(moved, 0)
+        pce.refresh_from_db()
+        self.assertEqual(pce.google_event_id, "old-series_20260101T120000Z")
+
+    def test_past_event_is_left_alone(self):
+        past = self._stale_row(event_date=date.today() - timedelta(days=3))
+
+        moved = self._supersede(
+            [
+                self._live_event(
+                    start=datetime.combine(date.today() - timedelta(days=3), time(16, 30))
+                )
+            ]
+        )
+
+        self.assertEqual(moved, 0)
+        past.refresh_from_db()
+        self.assertEqual(past.google_event_id, "old-series_20260101T120000Z")
+
+    def test_dry_run_counts_without_writing(self):
+        pce = self._stale_row()
+
+        moved = self._supersede([self._live_event()], dry_run=True)
+
+        self.assertEqual(moved, 1)
+        pce.refresh_from_db()
+        self.assertEqual(pce.google_event_id, "old-series_20260101T120000Z")
+        self.assertEqual(pce.event_time, time(14, 0))
 
 
 class HandleAndFetchForPracticeTest(TestCase):
