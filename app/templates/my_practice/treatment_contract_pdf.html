@@ -262,14 +262,6 @@ reusable — only the contract text needs to be replaced.
                 <span class="party-value"><span class="blank">&nbsp;</span></span>
                 {% endif %}
             </div>
-            <div class="party-row">
-                <span class="party-label">{% if lang == "en" %}Paying body{% else %}Kostentr&auml;ger{% endif %}</span>
-                {% if client.cost_carrier %}
-                <span class="party-value filled">{{ client.cost_carrier }}</span>
-                {% else %}
-                <span class="party-value"><span class="blank">&nbsp;</span></span>
-                {% endif %}
-            </div>
         </div>
     </div>
 
