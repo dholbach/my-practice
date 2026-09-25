@@ -86,7 +86,7 @@ reusable — only the contract text needs to be replaced.
         }
 
         .paragraph {
-            margin: 0.4cm 0 0.15cm 0;
+            margin: 0.3cm 0 0.15cm 0;
         }
         .paragraph h2 {
             font-size: 10pt;
@@ -108,11 +108,16 @@ reusable — only the contract text needs to be replaced.
         @page { margin-bottom: 1.5cm; }
 
         .signature-block {
-            margin-top: 0.6cm;
+            margin-top: 0.45cm;
+            break-inside: avoid;
         }
         .sig-row {
             display: table;
             width: 100%;
+            break-inside: avoid;
+        }
+        .sig-row + .sig-row {
+            margin-top: 0.35cm;
         }
         .sig-cell {
             display: table-cell;
@@ -253,14 +258,6 @@ reusable — only the contract text needs to be replaced.
                 <span class="party-label">{% if lang == "en" %}Telephone number{% else %}Telefonnummer{% endif %}</span>
                 {% if client.phone %}
                 <span class="party-value filled">{{ client.phone }}</span>
-                {% else %}
-                <span class="party-value"><span class="blank">&nbsp;</span></span>
-                {% endif %}
-            </div>
-            <div class="party-row">
-                <span class="party-label">{% if lang == "en" %}Paying body{% else %}Kostentr&auml;ger{% endif %}</span>
-                {% if client.cost_carrier %}
-                <span class="party-value filled">{{ client.cost_carrier }}</span>
                 {% else %}
                 <span class="party-value"><span class="blank">&nbsp;</span></span>
                 {% endif %}
@@ -507,7 +504,7 @@ reusable — only the contract text needs to be replaced.
                 <div class="sig-label">{% if lang == "en" %}(Place, date){% else %}(Ort, Datum){% endif %}</div>
             </div>
         </div>
-        <div class="sig-row" style="margin-top:0.5cm;">
+        <div class="sig-row">
             <div class="sig-cell">
                 <div class="sig-line">&nbsp;</div>
                 <div class="sig-label">{% if lang == "en" %}(Patient&rsquo;s signature){% else %}(Unterschrift Patient/in){% endif %}</div>
@@ -610,7 +607,7 @@ reusable — only the contract text needs to be replaced.
                 </div>
                 <div class="sig-cell">&nbsp;</div>
             </div>
-            <div class="sig-row" style="margin-top:0.5cm;">
+            <div class="sig-row">
                 <div class="sig-cell">
                     <div class="sig-line">&nbsp;</div>
                     <div class="sig-label">{% if lang == "en" %}(Patient&rsquo;s signature){% else %}(Unterschrift Patient/in){% endif %}</div>

@@ -3,6 +3,7 @@ Tests for contract_form.py — sig-label detection and AcroForm field overlay.
 """
 
 import io
+from collections import defaultdict
 from decimal import Decimal
 
 from django.template.loader import render_to_string
@@ -147,3 +148,52 @@ class DetectAndOverlaySigFieldsTest(TestCase):
         pdf_bytes = HTML(string=html_string).write_pdf()
         result = add_contract_form_fields(pdf_bytes)
         self.assertEqual(result, pdf_bytes)
+
+
+class SignatureBlockPaginationTest(TestCase):
+    """
+    A signature block must never be split by a page break.
+
+    When it is, the date lines stay on one page and the signature lines land
+    alone on the next, so there is nowhere to sign and date in one place. The
+    German contract shipped that way: §1-§8 ran ~10pt too long for the block
+    to fit, and nothing in the template source shows it.
+    """
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="contract-pagination-test",
+            title="Heilpraktikerin für Psychotherapie",
+            email="practice@example.com",
+            city="Berlin",
+        )
+        self.test_client = Client.objects.create(
+            client_code="TC",
+            full_name="Max Mustermann",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+
+    def test_every_signature_line_shares_a_page_with_its_date_line(self):
+        # Every signature column of every block pairs one date line with one
+        # signature line, so a column holding only one of the two means the
+        # block straddles a page break.
+        for lang in ("de", "en"):
+            with self.subTest(lang=lang):
+                columns: dict[tuple[int, str], set[str]] = defaultdict(set)
+                for spec in _detect_sig_fields(
+                    _render_raw_contract_pdf(self.test_client, self.practice, lang)
+                ):
+                    side = spec["name"].rsplit("_", 1)[1]
+                    kind = "date" if spec["tooltip"].startswith("Ort, Datum") else "signature"
+                    columns[(spec["page"], side)].add(kind)
+
+                self.assertTrue(columns, "no signature fields detected")
+                for (page, side), kinds in columns.items():
+                    where = f"page {page + 1}, {side} column"
+                    self.assertEqual(
+                        kinds,
+                        {"date", "signature"},
+                        f"signature block split across a page break: {where} has only {kinds}",
+                    )
