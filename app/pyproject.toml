@@ -84,7 +84,6 @@ ignore_names = [
     "process_response",
 
     # Framework-required callback parameters (not used but required by API)
-    "server",  # Gunicorn callbacks (on_starting, on_reload, when_ready)
     "sender",  # Django signal handlers (required by @receiver decorator)
     "db",      # pytest fixtures (required for database access in tests)
 

@@ -23,6 +23,3 @@ google-auth==2.58.0
 google-auth-oauthlib==1.4.1
 google-auth-httplib2==0.4.2
 google-api-python-client==2.200.0
-
-# Async support (Django 5.1+)
-uvicorn==0.53.0
