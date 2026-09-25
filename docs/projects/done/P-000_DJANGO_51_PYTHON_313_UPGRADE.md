@@ -206,6 +206,20 @@ clients_ranked = Client.objects.annotate(
 4. Monitor performance in production
 5. Gradually migrate routes to async versions
 
+> **⚠️ Retired 2026-09-25 — the async spike was never adopted; the five files
+> above are all deleted.** Step 3 never happened: every compose file runs plain
+> WSGI (`gunicorn config.wsgi:application`), so `gunicorn_async.py` was never
+> invoked and the codebase contains no `async def` views. The two async view
+> modules and the benchmark script were deleted before the public-release
+> squash; `test_async_views.py` and `gunicorn_async.py` outlived them as
+> residue, along with the `uvicorn` and `pytest-asyncio` pins that existed only
+> to serve them. `test_async_views.py` had rotted unnoticed in the meantime —
+> Django's runner collected 0 tests from it (pytest-style classes, not
+> `unittest.TestCase`) while pytest errored on a `ServiceType(duration=...)`
+> field that no longer exists. Section kept for the measurements and the
+> caveats below, which still hold if async is ever revisited; reinstating the
+> pins is a one-line change.
+
 ### Phase 2C: Advanced Features (optional)
 8. ⏳ Explore JSONField for flexible Practice settings
 9. ⏳ Window functions for analytics rankings

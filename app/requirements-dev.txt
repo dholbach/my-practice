@@ -29,9 +29,6 @@ google-auth-oauthlib==1.4.1
 google-auth-httplib2==0.4.2
 google-api-python-client==2.200.0
 
-# Async support (Django 5.1+)
-uvicorn==0.53.0
-
 # Dev-only tools
 ruff==0.16.8
 pre-commit==4.6.2
@@ -39,7 +36,6 @@ vulture==2.16
 radon==6.0.1
 pip-audit==2.10.1
 pytest==9.1.1
-pytest-asyncio==1.4.0
 pytest-django==4.14.0
 pytest-testmon==2.2.0
 mypy==2.3.1
