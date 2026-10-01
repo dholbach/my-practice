@@ -1,10 +1,10 @@
 {
-  "generated": "2026-09-23",
-  "head": "a6a6184",
+  "generated": "2026-10-01",
+  "head": "7663d33",
   "largest": [
     {
       "category": "templates",
-      "lines": 1079,
+      "lines": 1083,
       "path": "app/templates/my_practice/analytics.html"
     },
     {
@@ -38,6 +38,11 @@
       "path": "app/static/js/command_palette.test.js"
     },
     {
+      "category": "templates",
+      "lines": 785,
+      "path": "app/templates/my_practice/client_detail.html"
+    },
+    {
       "category": "tests",
       "lines": 784,
       "path": "app/my_practice/tests/test_models.py"
@@ -48,28 +53,23 @@
       "path": "app/my_practice/views/bank_import_views.py"
     },
     {
-      "category": "templates",
-      "lines": 781,
-      "path": "app/templates/my_practice/client_detail.html"
+      "category": "tests",
+      "lines": 765,
+      "path": "app/my_practice/tests/test_google_calendar.py"
     },
     {
       "category": "app",
       "lines": 717,
       "path": "app/my_practice/views/email_views.py"
-    },
-    {
-      "category": "app",
-      "lines": 694,
-      "path": "app/my_practice/views/clinical_views.py"
     }
   ],
   "months": [
     {
-      "classified": 155,
-      "commits": 165,
+      "classified": 148,
+      "commits": 158,
       "files": {
         "app": {
-          "files": 102,
+          "files": 101,
           "long": 12,
           "max": 1212,
           "median": 191,
@@ -98,13 +98,13 @@
         }
       },
       "loc": {
-        "app": 25425,
-        "css": 2647,
-        "docs": 13657,
+        "app": 25347,
+        "css": 2646,
+        "docs": 13601,
         "js": 2719,
         "migrations": 1029,
-        "templates": 12809,
-        "tests": 20986
+        "templates": 12807,
+        "tests": 20985
       },
       "month": "2026-06",
       "releases": [
@@ -118,21 +118,21 @@
         "v0.2.6"
       ],
       "types": {
-        "chore": 51,
+        "chore": 49,
         "ci": 3,
         "docs": 15,
-        "feat": 41,
-        "fix": 39,
+        "feat": 40,
+        "fix": 36,
         "other": 2,
         "perf": 0,
-        "refactor": 3,
+        "refactor": 2,
         "style": 1,
         "test": 0
       }
     },
     {
-      "classified": 138,
-      "commits": 147,
+      "classified": 145,
+      "commits": 154,
       "files": {
         "app": {
           "files": 105,
@@ -185,14 +185,14 @@
         "v0.4.1"
       ],
       "types": {
-        "chore": 27,
+        "chore": 29,
         "ci": 0,
         "docs": 8,
-        "feat": 46,
-        "fix": 34,
+        "feat": 47,
+        "fix": 37,
         "other": 4,
         "perf": 1,
-        "refactor": 10,
+        "refactor": 11,
         "style": 1,
         "test": 7
       }
@@ -263,8 +263,8 @@
       }
     },
     {
-      "classified": 77,
-      "commits": 86,
+      "classified": 86,
+      "commits": 95,
       "files": {
         "app": {
           "files": 127,
@@ -283,9 +283,9 @@
         "templates": {
           "files": 92,
           "long": 3,
-          "max": 1079,
+          "max": 1083,
           "median": 84,
-          "p90": 277
+          "p90": 279
         },
         "tests": {
           "files": 110,
@@ -296,32 +296,90 @@
         }
       },
       "loc": {
-        "app": 28471,
-        "css": 2886,
-        "docs": 13313,
+        "app": 28497,
+        "css": 2884,
+        "docs": 13493,
         "js": 2743,
         "migrations": 1023,
-        "templates": 12591,
-        "tests": 37867
+        "templates": 12660,
+        "tests": 38067
       },
       "month": "2026-09",
       "releases": [
         "v0.5.5",
         "v0.6.0",
         "v0.6.1",
-        "v0.7.0"
+        "v0.7.0",
+        "v0.7.1"
       ],
       "types": {
-        "chore": 26,
+        "chore": 32,
         "ci": 4,
         "docs": 7,
         "feat": 8,
-        "fix": 23,
+        "fix": 26,
         "other": 2,
         "perf": 1,
         "refactor": 4,
         "style": 0,
         "test": 2
+      }
+    },
+    {
+      "classified": 0,
+      "commits": 0,
+      "files": {
+        "app": {
+          "files": 127,
+          "long": 11,
+          "max": 950,
+          "median": 173,
+          "p90": 454
+        },
+        "js": {
+          "files": 19,
+          "long": 0,
+          "max": 378,
+          "median": 116,
+          "p90": 339
+        },
+        "templates": {
+          "files": 92,
+          "long": 3,
+          "max": 1083,
+          "median": 84,
+          "p90": 279
+        },
+        "tests": {
+          "files": 110,
+          "long": 23,
+          "max": 975,
+          "median": 315,
+          "p90": 638
+        }
+      },
+      "loc": {
+        "app": 28497,
+        "css": 2884,
+        "docs": 13493,
+        "js": 2743,
+        "migrations": 1023,
+        "templates": 12660,
+        "tests": 38067
+      },
+      "month": "2026-10",
+      "releases": [],
+      "types": {
+        "chore": 0,
+        "ci": 0,
+        "docs": 0,
+        "feat": 0,
+        "fix": 0,
+        "other": 0,
+        "perf": 0,
+        "refactor": 0,
+        "style": 0,
+        "test": 0
       }
     }
   ]
