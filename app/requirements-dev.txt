@@ -8,11 +8,11 @@
 # (the tooling below) are expected and never reach the production image.
 Django==6.1.1
 psycopg[binary]==3.3.6
-cryptography==50.0.1
+cryptography==50.0.2
 markdown==3.11
 nh3==0.3.7
 gunicorn==26.2.0
-python-dotenv==1.2.3
+python-dotenv==1.2.4
 weasyprint==70.0
 pydyf==0.12.1
 pillow==12.3.0
@@ -26,11 +26,11 @@ sqlparse==0.6.0  # transitive via Django (>=0.5.0); pinned to close PYSEC-2026-3
 # Google Calendar API
 google-auth==2.58.1
 google-auth-oauthlib==1.4.1
-google-auth-httplib2==0.4.2
+google-auth-httplib2==0.4.4
 google-api-python-client==2.200.0
 
 # Dev-only tools
-ruff==0.16.9
+ruff==0.16.10
 pre-commit==4.6.2
 vulture==2.16
 radon==6.0.1
