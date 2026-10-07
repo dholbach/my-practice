@@ -19,6 +19,12 @@ version: 2
 # requirements.txt and requirements-dev.txt duplicate every runtime pin on
 # purpose; Dependabot updates each file the package appears in, and
 # scripts/check_requirements_sync.py fails the PR if one is ever missed.
+#
+# `cooldown` holds back any release younger than three days. Patch PRs merge
+# themselves (dependabot-auto-merge.yml), so without it a hijacked maintainer
+# account publishing a poisoned patch release would reach `main` the same
+# morning. Most such releases are spotted and yanked within a day or two; the
+# delay costs nothing because cooldown never applies to security updates.
 
 updates:
     # `directory` must point at the manifests, not the repo root. This said "/"
@@ -28,6 +34,8 @@ updates:
       directory: "/app"
       schedule:
         interval: "weekly"
+      cooldown:
+        default-days: 3
       open-pull-requests-limit: 5
       groups:
         python-patch:
@@ -41,6 +49,8 @@ updates:
       directory: "/app"
       schedule:
         interval: "weekly"
+      cooldown:
+        default-days: 3
       open-pull-requests-limit: 5
       groups:
         npm-patch:
@@ -50,10 +60,16 @@ updates:
           patterns: ["*"]
           update-types: ["minor"]
 
+    # Workflows pin every action to a commit SHA with the version as a trailing
+    # comment. A tag like `@v7` can be repointed at different code by whoever
+    # controls the action's repo; a SHA cannot. Dependabot bumps the SHA and
+    # the comment together, so the pins cost nothing to keep current.
     - package-ecosystem: "github-actions"
       directory: "/"
       schedule:
         interval: "weekly"
+      cooldown:
+        default-days: 3
       open-pull-requests-limit: 5
       groups:
         actions-patch:
@@ -67,6 +83,8 @@ updates:
       directory: "/app"
       schedule:
         interval: "weekly"
+      cooldown:
+        default-days: 3
       open-pull-requests-limit: 5
       groups:
         docker-patch:
