@@ -176,6 +176,20 @@ class TodoToggleCompleteTest(TestCase):
         self.todo.refresh_from_db()
         self.assertTrue(self.todo.is_completed)
 
+    def test_get_redirects_back_to_same_site_referer(self):
+        response = self.tc.get(
+            reverse("todo_toggle", args=[self.todo.pk]),
+            HTTP_REFERER="http://testserver/focus/",
+        )
+        self.assertEqual(response["Location"], "/focus/")
+
+    def test_get_ignores_protocol_relative_referer_path(self):
+        response = self.tc.get(
+            reverse("todo_toggle", args=[self.todo.pk]),
+            HTTP_REFERER="https://evil.example.com//evil.example.com/steal",
+        )
+        self.assertEqual(response["Location"], reverse("dashboard"))
+
     def test_htmx_post_returns_content(self):
         response = self.tc.post(
             reverse("todo_toggle", args=[self.todo.pk]),

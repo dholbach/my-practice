@@ -4,6 +4,7 @@ Includes OAuth2 flow and event approval/import functionality.
 """
 
 import json
+import logging
 from datetime import datetime
 from decimal import Decimal
 
@@ -26,6 +27,8 @@ from ..utils.google_calendar import (
     GoogleCalendarOAuth,
     list_calendars,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def calendar_authorize(request: HttpRequest) -> HttpResponse:
@@ -233,8 +236,17 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
 
     except json.JSONDecodeError:
         return JsonResponse({"success": False, "error": _("Invalid JSON")}, status=400)
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
+    except Exception:
+        logger.exception("Calendar import failed")
+        return JsonResponse(
+            {
+                "success": False,
+                "error": _(
+                    "Import failed due to an unexpected error. Details are in the server log."
+                ),
+            },
+            status=500,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -393,8 +405,16 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
 
     except json.JSONDecodeError:
         return JsonResponse({"error": _("Invalid JSON")}, status=400)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    except Exception:
+        logger.exception("Calendar queue import failed")
+        return JsonResponse(
+            {
+                "error": _(
+                    "Import failed due to an unexpected error. Details are in the server log."
+                )
+            },
+            status=500,
+        )
 
 
 @require_POST

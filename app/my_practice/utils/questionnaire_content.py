@@ -11,6 +11,7 @@ committed. See docs/projects/todo/P-118_QUESTIONNAIRE_PDFS.md.
 """
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -45,7 +46,14 @@ class QuestionnaireContent:
     filename_label: str | None = None
 
 
+# Instrument codes are lowercase slugs ("gad7", "adnm-20"). The code arrives
+# from the URL, so anything else is refused before it touches a path.
+_CODE_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+
+
 def _content_path(code: str) -> Path | None:
+    if not _CODE_RE.match(code):
+        return None
     instance_path = settings.MY_PRACTICE_DATA_DIR / "questionnaires" / f"{code}.json"
     if instance_path.exists():
         return instance_path

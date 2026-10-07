@@ -8,8 +8,6 @@ manual task — as does todo_toggle_complete, still used inline by the
 dashboard's WeeklyFocus widget.
 """
 
-from urllib.parse import urlparse
-
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -19,6 +17,7 @@ from django.utils.translation import gettext_lazy
 
 from ..models import Client, PracticeTodo
 from ..utils import WeeklyFocusWidgetBuilder
+from ..utils.view_helpers import safe_referer_path
 from .crud_mixins import (
     NextRedirectMixin,
     PracticeScopedCreateView,
@@ -123,5 +122,4 @@ def todo_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse | JsonRe
     messages.success(request, message)
 
     # Redirect to referrer if available, otherwise to dashboard
-    referrer_path = urlparse(request.META.get("HTTP_REFERER", "")).path
-    return redirect(referrer_path or reverse("dashboard"))
+    return redirect(safe_referer_path(request, fallback=reverse("dashboard")))
