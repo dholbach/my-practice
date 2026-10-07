@@ -220,7 +220,10 @@ def client_document_upload_path(instance: "ClientDocument", filename: str) -> st
     """Store client documents under clients/<code>/<year>/<type>-<date>.<ext> with collision handling."""
     from django.conf import settings
 
-    client_code = instance.client.client_code.lower()
+    # client_code is free text (max 10 chars, no validator); slugify so a code
+    # containing "/" or ".." cannot steer the path outside clients/. For the
+    # usual letters-dash-digit codes this is identical to .lower().
+    client_code = slugify(instance.client.client_code) or "client"
     doc_date = instance.document_date or timezone.localdate()
     year = doc_date.year
     doc_type = instance.document_type

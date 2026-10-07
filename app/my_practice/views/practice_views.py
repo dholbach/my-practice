@@ -5,7 +5,6 @@ Views for multi-practice management.
 import logging
 import re
 from typing import Any, cast
-from urllib.parse import urlparse
 
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -19,6 +18,7 @@ from ..forms import CapacityPeriodFormSet, PracticeEditForm
 from ..models import Practice, UserPractice
 from ..utils import get_user_practices, is_practice_owner, switch_practice
 from ..utils.file_processing import compress_image_inplace
+from ..utils.view_helpers import safe_referer_path
 from .crud_mixins import PracticeOwnerRequiredMixin
 
 logger = logging.getLogger(__name__)
@@ -40,8 +40,7 @@ def practice_switch(request, slug):
         # User was on a practice edit page - redirect to new practice's edit page
         return redirect("practice_edit", slug=slug)
 
-    # Extract path only to prevent open redirect via HTTP_REFERER
-    referer_path = urlparse(referer).path
+    referer_path = safe_referer_path(request, fallback="")
 
     # A referer pointing at a specific object (e.g. /invoices/5451/) almost
     # always 404s after switching practice — that pk belongs to exactly one

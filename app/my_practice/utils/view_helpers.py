@@ -3,6 +3,7 @@ Reusable view helper functions.
 """
 
 from typing import Any, Callable
+from urllib.parse import urlparse
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest
@@ -50,6 +51,20 @@ def safe_next(request: HttpRequest, fallback: str = "/") -> str:
         url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
         return url
+    return fallback
+
+
+def safe_referer_path(request: HttpRequest, fallback: str) -> str:
+    """
+    Return the path of the Referer header if it is safe to redirect to.
+
+    Taking `urlparse(referer).path` alone is not enough: a referer of
+    `https://evil.example//evil.example/x` has the path `//evil.example/x`,
+    which a browser follows as a protocol-relative URL to another host.
+    """
+    path = urlparse(request.META.get("HTTP_REFERER", "")).path
+    if path and url_has_allowed_host_and_scheme(path, allowed_hosts={request.get_host()}):
+        return path
     return fallback
 
 

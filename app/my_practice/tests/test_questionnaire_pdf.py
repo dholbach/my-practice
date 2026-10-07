@@ -67,6 +67,12 @@ class LoadQuestionnaireTest(TestCase):
             load_questionnaire("does-not-exist")
         self.assertIn("does-not-exist", str(ctx.exception))
 
+    def test_code_with_path_segments_is_refused(self):
+        """The code comes from the URL; it must never reach the filesystem as a path."""
+        for code in ("../gad7", "..", "GAD7", "gad7/../shutd", ""):
+            with self.subTest(code=code), self.assertRaises(QuestionnaireNotFoundError):
+                load_questionnaire(code)
+
     def test_instance_local_file_takes_precedence_over_shipped_fixture(self):
         """MY_PRACTICE_DATA_DIR/questionnaires/gad7.json, if present, wins."""
         import json

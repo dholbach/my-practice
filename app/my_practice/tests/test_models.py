@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from my_practice.models import (
     Client,
@@ -782,3 +782,28 @@ class ClientTagModelTestCase(TestCase):
         # Should be: follow-up, urgent (alphabetically)
         self.assertEqual(sorted_tags[0].name, "follow-up")
         self.assertEqual(sorted_tags[1].name, "urgent")
+
+
+class ClientDocumentUploadPathTest(SimpleTestCase):
+    """client_document_upload_path builds a path from the free-text client code."""
+
+    def _path(self, client_code):
+        from datetime import date
+        from types import SimpleNamespace
+
+        from my_practice.models.client import client_document_upload_path
+
+        instance = SimpleNamespace(
+            client=SimpleNamespace(client_code=client_code),
+            document_date=date(2026, 1, 15),
+            document_type="contract",
+        )
+        return client_document_upload_path(instance, "Scan.PDF")
+
+    def test_ordinary_code_is_lowercased(self):
+        self.assertEqual(self._path("XX-1"), "clients/xx-1/2026/contract-2026-01-15-scan.pdf")
+
+    def test_code_cannot_escape_clients_directory(self):
+        path = self._path("../../x")
+        self.assertTrue(path.startswith("clients/"))
+        self.assertNotIn("..", path)

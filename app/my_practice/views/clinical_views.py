@@ -597,7 +597,7 @@ def gebueh_leistung_create(request, client_pk, session_pk):
             selected_ids = [int(x) for x in selected_ids_raw]
         except ValueError:
             messages.error(request, _("Invalid input."))
-            return redirect(request.path)
+            return redirect("gebueh_leistung_create", client_pk=client_pk, session_pk=session_pk)
 
         selected_ziffern = list(GebuhZiffer.objects.filter(pk__in=selected_ids))
 

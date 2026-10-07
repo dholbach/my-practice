@@ -68,6 +68,19 @@ class PracticeSwitchTest(TestCase):
         # Must not redirect to an external domain
         self.assertFalse(location.startswith("https://evil.example.com"))
 
+    def test_no_open_redirect_via_protocol_relative_referer_path(self):
+        """A referer whose *path* is `//host/...` must not become the redirect.
+
+        Keeping only urlparse(referer).path is not enough: the path of
+        https://evil.example.com//evil.example.com/steal is
+        //evil.example.com/steal, which browsers follow off-site.
+        """
+        response = self.tc.get(
+            reverse("practice_switch", args=[self.practice2.slug]),
+            HTTP_REFERER="https://evil.example.com//evil.example.com/steal",
+        )
+        self.assertFalse(response["Location"].startswith("//"))
+
     def test_switch_from_object_detail_page_goes_up_a_level(self):
         """A referer like /invoices/5451/ almost always 404s for the newly
         switched practice (that pk belongs to exactly one practice) — redirect
