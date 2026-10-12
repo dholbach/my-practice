@@ -180,15 +180,17 @@ class BankTransaction(models.Model):
     def __str__(self) -> str:
         return f"{self.transaction_date} - {self.payer_name}: {self.amount}€"
 
+    # amount is None on an unsaved instance (the admin add form renders these
+    # read-only fields before anything is entered), so guard the comparison.
     @property
     def is_income(self) -> bool:
         """Check if transaction is income (positive amount)"""
-        return self.amount > 0
+        return self.amount is not None and self.amount > 0
 
     @property
     def is_expense(self) -> bool:
         """Check if transaction is expense (negative amount)"""
-        return self.amount < 0
+        return self.amount is not None and self.amount < 0
 
     @property
     def is_matched(self) -> bool:
