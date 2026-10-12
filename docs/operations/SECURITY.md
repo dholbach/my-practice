@@ -150,15 +150,22 @@ server {
     }
 
     location /static/ {
-        alias /path/to/payments/app/staticfiles/;
-    }
-
-    location /media/ {
-        # Media files live outside the repo under $MY_PRACTICE_DATA_DIR/media/
-        alias /path/to/payments-data/media/;
+        alias /path/to/my-practice/app/staticfiles/;
     }
 }
 ```
+
+In `.env`, set `SECURE_SSL_REDIRECT=true` and add the proxy's domain to
+`DJANGO_ALLOWED_HOSTS`. With `SECURE_SSL_REDIRECT=true` Django trusts the
+`X-Forwarded-Proto` header to tell HTTPS from HTTP, so the proxy must always set
+it (as `proxy_set_header ... $scheme` above does, overwriting anything the client
+sent), and port 8000 should not be reachable except through the proxy.
+
+**Do not add a `location /media/` alias.** Uploaded files — signed treatment
+contracts, intake forms, doctors' letters, receipts — are Art. 9 health data
+stored at predictable paths. Django serves them itself, only to a logged-in
+member of the practice that owns each file; a web-server alias would hand them
+to anyone who guesses a URL, without a login.
 
 ## Backup & Disaster Recovery
 
