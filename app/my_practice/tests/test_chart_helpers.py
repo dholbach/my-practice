@@ -6,7 +6,15 @@ from datetime import date
 
 from django.test import TestCase
 
-from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
+from my_practice.models import (
+    Client,
+    Invoice,
+    InvoiceItem,
+    Practice,
+    ServiceType,
+    Session,
+    allow_issued_invoice_writes,
+)
 from my_practice.utils.chart_helpers import (
     aggregate_invoice_items_by_month,
     format_month_key,
@@ -103,6 +111,7 @@ class AggregateInvoiceItemsByMonthTests(TestCase):
             practice=self.practice,
         )
 
+    @allow_issued_invoice_writes()
     def test_aggregate_basic(self):
         """Test basic aggregation by month."""
         # Create practice
@@ -148,6 +157,7 @@ class AggregateInvoiceItemsByMonthTests(TestCase):
         self.assertEqual(result["2025-01"], 2.0)  # 2 hours
         self.assertEqual(result["2025-02"], 1.5)  # 1.5 hours
 
+    @allow_issued_invoice_writes()
     def test_aggregate_exclude_cancellations(self):
         """Test that cancellations are excluded."""
         s1 = Session.objects.create(client=self.client, session_date=date(2025, 1, 15), duration=60)
@@ -172,6 +182,7 @@ class AggregateInvoiceItemsByMonthTests(TestCase):
 
         self.assertEqual(result["2025-01"], 1.0)  # Only one session counted
 
+    @allow_issued_invoice_writes()
     def test_aggregate_include_cancellations(self):
         """Test that cancellations are included when specified."""
         s1 = Session.objects.create(client=self.client, session_date=date(2025, 1, 15), duration=60)
@@ -196,6 +207,7 @@ class AggregateInvoiceItemsByMonthTests(TestCase):
 
         self.assertEqual(result["2025-01"], 2.0)  # Both counted
 
+    @allow_issued_invoice_writes()
     def test_aggregate_no_session_date(self):
         """Test that items are indexed by their session's date."""
         s1 = Session.objects.create(client=self.client, session_date=date(2025, 1, 15), duration=60)
@@ -214,6 +226,7 @@ class AggregateInvoiceItemsByMonthTests(TestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("2025-01", result)
 
+    @allow_issued_invoice_writes()
     def test_aggregate_multiple_quantities(self):
         """Test items with quantity > 1."""
         s1 = Session.objects.create(client=self.client, session_date=date(2025, 1, 15), duration=60)

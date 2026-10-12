@@ -4,7 +4,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.translation import gettext_lazy, ngettext
+from django.utils.translation import gettext, gettext_lazy, ngettext
 
 from ..models import Invoice, InvoiceItem
 
@@ -54,10 +54,52 @@ class InvoiceItemInline(admin.TabularInline):
     fields = ["session", "description", "service_type", "rate", "quantity", "group_size", "total"]
     readonly_fields = ["total"]
 
+    # Items of an issued invoice are frozen (signals.py); show them read-only
+    # rather than letting a save fail with an error page.
+    def has_add_permission(self, request, obj=None):
+        return not (obj and obj.is_protected) and super().has_add_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return not (obj and obj.is_protected) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return not (obj and obj.is_protected) and super().has_delete_permission(request, obj)
+
+
+class InvoiceAdminForm(forms.ModelForm):
+    """Refuses moving an issued invoice back to draft as a form error, rather
+    than as the signal's InvoiceLockedError surfacing as an error page."""
+
+    class Meta:
+        model = Invoice
+        # Matches InvoiceAdmin.fieldsets minus the read-only fields.
+        fields = [
+            "invoice_number",
+            "client",
+            "invoice_date",
+            "status",
+            "paid_date",
+            "tax_rate",
+            "notes",
+        ]
+
+    def clean_status(self):
+        status = self.cleaned_data["status"]
+        if self.instance.pk and self.instance.is_protected and status == Invoice.Status.DRAFT:
+            raise forms.ValidationError(
+                gettext(
+                    "An issued invoice cannot be set back to draft. "
+                    "Cancel it and create a corrected copy instead."
+                )
+            )
+        return status
+
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     """Invoice admin with improved search (Django 5.1)"""
+
+    form = InvoiceAdminForm
 
     list_display = [
         "invoice_number",
@@ -161,10 +203,41 @@ class InvoiceAdmin(admin.ModelAdmin):
     def total_formatted(self, obj):
         return format_html("<strong>{} €</strong>", f"{obj.total:.2f}")
 
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if obj and obj.is_protected:
+            # What the client was sent (LOCKED_INVOICE_FIELDS); status,
+            # paid_date and notes stay editable.
+            readonly += ["invoice_number", "client", "invoice_date", "tax_rate"]
+        return readonly
+
+    def has_delete_permission(self, request, obj=None):
+        return not (obj and obj.is_protected) and super().has_delete_permission(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        """Bulk delete skips issued invoices still within retention."""
+        protected = [invoice for invoice in queryset if invoice.is_protected]
+        if protected:
+            self.message_user(
+                request,
+                ngettext(
+                    "%(count)s issued invoice was kept: it is still within its retention period.",
+                    "%(count)s issued invoices were kept: they are still within their "
+                    "retention period.",
+                    len(protected),
+                )
+                % {"count": len(protected)},
+                messages.WARNING,
+            )
+        super().delete_queryset(request, queryset.exclude(pk__in=[i.pk for i in protected]))
+
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        obj.calculate_total()
-        obj.save()
+        # An issued invoice keeps the totals it was sent with (signals.py), even
+        # where older data disagrees with its items.
+        if not obj.is_locked:
+            obj.calculate_total()
+            obj.save()
 
 
 @admin.register(InvoiceItem)
@@ -180,6 +253,16 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     list_filter = ["service_type"]
     search_fields = ["invoice__invoice_number", "description"]
     readonly_fields = ["total"]
+
+    def has_change_permission(self, request, obj=None):
+        return not (obj and obj.invoice.is_protected) and super().has_change_permission(
+            request, obj
+        )
+
+    def has_delete_permission(self, request, obj=None):
+        return not (obj and obj.invoice.is_protected) and super().has_delete_permission(
+            request, obj
+        )
 
     fieldsets = (
         (gettext_lazy("Session"), {"fields": ("invoice", "session", "service_type")}),

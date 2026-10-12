@@ -17,6 +17,7 @@ from ..models import (
     Practice,
     ServiceType,
     Session,
+    allow_issued_invoice_writes,
 )
 from ..utils.analytics_utils import (
     ClientAnalyzer,
@@ -229,6 +230,7 @@ class SessionAnalyzerTests(TestCase):
         self.assertEqual(result["total"], 0)
         self.assertEqual(result["types"], [])
 
+    @allow_issued_invoice_writes()
     def test_get_type_distribution_with_sessions(self):
         """Test session type distribution with actual sessions"""
         invoice = Invoice.objects.create(
@@ -370,6 +372,7 @@ class ClientAnalyzerTests(TestCase):
 
         self.assertEqual(len(result), 2)
 
+    @allow_issued_invoice_writes()
     def test_get_top_by_revenue_sums_invoice_items(self):
         """Revenue aggregates from invoice items, not just a stored invoice.total."""
         service = ServiceType.objects.create(

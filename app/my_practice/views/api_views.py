@@ -415,6 +415,16 @@ def update_invoice_status(request, pk):
     }
     if new_status not in valid_statuses:
         return JsonResponse({"error": _("Invalid status")}, status=400)
+    if invoice.is_locked and new_status == Invoice.Status.DRAFT:
+        return JsonResponse(
+            {
+                "error": _(
+                    "An issued invoice cannot be set back to draft. "
+                    "Cancel it and create a corrected copy instead."
+                )
+            },
+            status=400,
+        )
 
     invoice.status = new_status
 

@@ -19,7 +19,14 @@ from .inquiry import (
     InquiryStatus,
     MarketingPeriod,
 )
-from .invoice import Invoice, InvoiceItem, InvoiceQuerySet
+from .invoice import (
+    INVOICE_RETENTION_YEARS,
+    Invoice,
+    InvoiceItem,
+    InvoiceLockedError,
+    InvoiceQuerySet,
+    allow_issued_invoice_writes,
+)
 from .operational import ChecklistItemPause, OperationalChecklistCompletion
 from .practice import CapacityPeriod, Practice, UserPractice
 from .service import ServiceType
@@ -44,8 +51,11 @@ __all__ = [
     "ClientProfile",
     "ClientNote",
     "ServiceType",
+    "INVOICE_RETENTION_YEARS",
     "Invoice",
     "InvoiceItem",
+    "InvoiceLockedError",
+    "allow_issued_invoice_writes",
     "InvoiceQuerySet",
     "Session",
     "SessionLog",

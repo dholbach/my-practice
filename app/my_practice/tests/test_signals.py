@@ -8,7 +8,15 @@ from decimal import Decimal
 from django.core.files.storage import default_storage
 from django.test import TestCase
 
-from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
+from my_practice.models import (
+    Client,
+    Invoice,
+    InvoiceItem,
+    Practice,
+    ServiceType,
+    Session,
+    allow_issued_invoice_writes,
+)
 
 
 class InvoiceSignalTests(TestCase):
@@ -176,8 +184,12 @@ class InvoiceSignalTests(TestCase):
         invoice.refresh_from_db()
         self.assertEqual(invoice.invoice_date, tomorrow)
 
+    @allow_issued_invoice_writes()
     def test_sent_invoice_date_not_updated(self):
-        """Test that sent invoice date is NOT updated automatically."""
+        """Test that sent invoice date is NOT updated automatically.
+
+        Outside a historical load an item can't be added to a sent invoice at all
+        (test_invoice_lock); this covers the recalculation when one is."""
         today = date.today()
         tomorrow = today + timedelta(days=1)
         original_date = today - timedelta(days=5)

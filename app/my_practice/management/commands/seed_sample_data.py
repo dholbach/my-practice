@@ -37,6 +37,7 @@ from ...models import (
     Session,
     TimeOff,
     UserPractice,
+    allow_issued_invoice_writes,
 )
 from ...models.clinical import ClientProfile, SessionLog
 from ...models.gebueh import Leistungserfassung
@@ -571,6 +572,9 @@ class Command(BaseCommand):
 
     # ── Invoice creation ──────────────────────────────────────────────────────
 
+    # Sample data is historical: invoices are created already "paid" and
+    # their items added afterwards, and --clear removes them again.
+    @allow_issued_invoice_writes()
     def _create_invoices(
         self,
         practice: Practice,
@@ -831,6 +835,7 @@ class Command(BaseCommand):
 
     # ── Clear ─────────────────────────────────────────────────────────────────
 
+    @allow_issued_invoice_writes()
     def _clear(self, skip_confirm: bool) -> None:
         seeded = Client.objects.filter(full_name__in=SEED_NAMES)
         demo_practice = Practice.objects.filter(slug=DEMO_SLUG).first()
@@ -912,6 +917,7 @@ class Command(BaseCommand):
             parts.append("demo practice")
         self.stdout.write(self.style.WARNING(f"🗑  Cleared seeded: {', '.join(parts)}."))
 
+    @allow_issued_invoice_writes()
     def _clear_demo_practice(self, demo_practice: Practice) -> None:
         """Delete every row still pointing at the demo practice, then the practice.
 

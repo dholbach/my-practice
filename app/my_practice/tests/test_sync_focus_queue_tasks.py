@@ -18,6 +18,7 @@ from ..models import (
     ServiceType,
     Session,
     SupervisionItem,
+    allow_issued_invoice_writes,
 )
 
 TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
@@ -60,6 +61,7 @@ def _make_session_missing_log(client, days_ago=5, duration=60):
     )
 
 
+@allow_issued_invoice_writes()
 def _make_invoice(practice, client, status, days_ago, number):
     inv_date = date.today() - timedelta(days=days_ago)
     invoice = Invoice.objects.create(

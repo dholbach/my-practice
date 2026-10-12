@@ -21,7 +21,14 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from ..forms import ClientIntakeForm
-from ..models import Client, ClientDocument, ClientTag, Invoice, InvoiceItem
+from ..models import (
+    INVOICE_RETENTION_YEARS,
+    Client,
+    ClientDocument,
+    ClientTag,
+    Invoice,
+    InvoiceItem,
+)
 from ..utils import (
     RevenueCalculator,
     annotate_activity_status,
@@ -373,6 +380,16 @@ def _gdpr_cutoff() -> date:
     return timezone.localdate() - timedelta(days=365 * GDPR_RETENTION_YEARS + 2)
 
 
+def _has_retained_invoices(client: Client) -> bool:
+    """True if any issued invoice of this client is still within § 147 AO retention.
+
+    Checked before anything else happens — the notification email included —
+    because those invoices refuse deletion (signals.py) and would abort the
+    erasure halfway.
+    """
+    return any(invoice.is_protected for invoice in client.invoices.all())
+
+
 def client_gdpr_delete_confirm(request: HttpRequest, pk: int) -> HttpResponse:
     """Confirmation page before GDPR deletion of a client record."""
 
@@ -387,6 +404,16 @@ def client_gdpr_delete_confirm(request: HttpRequest, pk: int) -> HttpResponse:
                 "(inactive + last session more than %(years)s years ago)."
             )
             % {"code": client.client_code, "years": GDPR_RETENTION_YEARS},
+        )
+        return redirect("client_list")
+    if _has_retained_invoices(client):
+        messages.error(
+            request,
+            _(
+                "Client %(code)s still has invoices within their %(years)s-year retention "
+                "period (§ 147 AO) and cannot be deleted yet."
+            )
+            % {"code": client.client_code, "years": INVOICE_RETENTION_YEARS},
         )
         return redirect("client_list")
 
@@ -453,7 +480,12 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
     last_session = client.sessions.aggregate(last=Max("session_date"))["last"]
 
-    if client.active or not last_session or last_session > _gdpr_cutoff():
+    if (
+        client.active
+        or not last_session
+        or last_session > _gdpr_cutoff()
+        or _has_retained_invoices(client)
+    ):
         messages.error(request, _("Requirements for GDPR deletion not met."))
         return redirect("client_list")
 
@@ -463,10 +495,12 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     _send_gdpr_deletion_email(request, client, practice)
     doc_file_paths = _collect_document_file_paths(client)
 
-    # Delete in FK dependency order (PROTECT constraints first)
+    # Delete in FK dependency order: invoices first, because InvoiceItem.session
+    # is PROTECT — deleting the sessions while billed items still point at them
+    # raises ProtectedError for any client who was ever invoiced.
     with transaction.atomic():
-        client.sessions.all().delete()  # cascades SessionLog
         client.invoices.all().delete()  # cascades InvoiceItem
+        client.sessions.all().delete()  # cascades SessionLog
         client.delete()  # cascades ClientDocument records, ClientProfile,
         # SupervisionItem, ClientNote, ClientAlias
 

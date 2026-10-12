@@ -22,6 +22,7 @@ from ..models import (
     ServiceType,
     Session,
     UserPractice,
+    allow_issued_invoice_writes,
 )
 from ..utils.tag_helpers import SESSION_LOG_MIN_DURATION
 from .test_helpers import make_pdf_bytes
@@ -130,6 +131,7 @@ class ClientListViewTest(TestCase):
 class ClientDetailViewTest(TestCase):
     """Test client detail view."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Set up test data."""
         # Create practice
@@ -314,6 +316,7 @@ class NoLogNeededSessionIdsTest(TestCase):
     sessions. Now detection uses service_type__name__icontains='cancel'.
     """
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         self.practice = Practice.objects.create(
             name="Test Practice",

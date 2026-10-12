@@ -21,12 +21,14 @@ from ..models import (
     ServiceType,
     Session,
     UserPractice,
+    allow_issued_invoice_writes,
 )
 
 
 class AnalyticsDashboardViewTest(TestCase):
     """Test analytics dashboard view."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Set up test data."""
         # Create practice
@@ -169,10 +171,11 @@ class AnalyticsDashboardViewTest(TestCase):
     def test_analytics_dashboard_empty_data(self):
         """Test analytics dashboard with no data."""
         # Delete in reverse FK order: InvoiceItem → Session → Invoice → Client
-        InvoiceItem.objects.all().delete()
-        Session.objects.all().delete()
-        Invoice.objects.all().delete()
-        Client.objects.all().delete()
+        with allow_issued_invoice_writes():  # clearing fixtures, not the code under test
+            InvoiceItem.objects.all().delete()
+            Session.objects.all().delete()
+            Invoice.objects.all().delete()
+            Client.objects.all().delete()
 
         response = self.client_instance.get(reverse("analytics"))
         self.assertEqual(response.status_code, 200)

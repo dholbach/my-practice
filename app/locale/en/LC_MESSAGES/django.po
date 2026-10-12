@@ -8981,6 +8981,58 @@ msgid "Password"
 msgstr ""
 
 #, python-format
+#: my_practice/admin/invoice.py:91 my_practice/views/api_views.py:422
+msgid "An issued invoice cannot be set back to draft. Cancel it and create a corrected copy instead."
+msgstr ""
+
+#: my_practice/admin/invoice.py:224
+#, python-format
+msgid "%(count)s issued invoice was kept: it is still within its retention period."
+msgid_plural "%(count)s issued invoices were kept: they are still within their retention period."
+msgstr[0] ""
+msgstr[1] ""
+
+#: my_practice/signals.py:27 my_practice/views/invoice_views.py:318
+#, python-format
+msgid "Invoice %(number)s has been issued and can no longer be changed. Cancel it and create a corrected copy instead."
+msgstr ""
+
+#: my_practice/signals.py:74 my_practice/views/invoice_views.py:438
+#, python-format
+msgid "Invoice %(number)s has been issued and must be kept until the end of %(year)s. Cancel it instead of deleting it."
+msgstr ""
+
+#: my_practice/views/client_views.py:413
+#, python-format
+msgid "Client %(code)s still has invoices within their %(years)s-year retention period (§ 147 AO) and cannot be deleted yet."
+msgstr ""
+
+#: my_practice/views/invoice_views.py:483
+msgid "Only a sent invoice can be cancelled and corrected."
+msgstr ""
+
+#: my_practice/views/invoice_views.py:495
+#, python-format
+msgid "Corrects invoice %(number)s."
+msgstr ""
+
+#: my_practice/views/invoice_views.py:505
+#, python-format
+msgid "Invoice %(old)s was cancelled. %(new)s is an editable copy — correct it and send it as usual."
+msgstr ""
+
+#: templates/my_practice/invoice_detail.html:209
+msgid "Cancel this invoice and create an editable copy with a new number?"
+msgstr ""
+
+#: templates/my_practice/invoice_detail.html:211
+msgid "Cancel & correct"
+msgstr ""
+
+#: templates/my_practice/invoice_detail.html:223
+msgid "Issued invoices are kept unchanged. To fix a mistake, cancel the invoice and correct a copy."
+msgstr ""
+
 #~ msgid "Error sending the email: %(error)s"
 #~ msgstr "Error sending the email: %(error)s"
 

@@ -14,6 +14,7 @@ from my_practice.models import (
     ServiceType,
     Session,
     TimeOff,
+    allow_issued_invoice_writes,
 )
 from my_practice.utils.practice_analysis import (
     ClientClassification,
@@ -25,6 +26,7 @@ from my_practice.utils.practice_analysis import (
 class PracticeAnalyzerTestCase(TestCase):
     """Tests for PracticeAnalyzer class"""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Create test data"""
         # Create practice
@@ -386,6 +388,7 @@ class PracticeAnalyzerTestCase(TestCase):
         analysis = analyzer.analyze()
         self.assertEqual(analysis["period"]["label"], "2025")
 
+    @allow_issued_invoice_writes()
     def test_online_client_counting(self):
         """Test online client counting"""
         # Add online client
@@ -453,6 +456,7 @@ class PracticeAnalyzerTestCase(TestCase):
 class CalculateQuarterTrendsTestCase(TestCase):
     """Tests for calculate_quarter_trends function"""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Create test data spanning multiple quarters"""
         # Create practice

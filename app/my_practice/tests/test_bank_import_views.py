@@ -28,11 +28,13 @@ from ..models import (
     ServiceType,
     Session,
     UserPractice,
+    allow_issued_invoice_writes,
 )
 
 PRACTICE_IBAN = "DE89370400440532013000"
 
 
+@allow_issued_invoice_writes()
 def _make_invoice_item(invoice, practice, client_obj, rate=Decimal("90.00")):
     """Create the minimum supporting objects for an InvoiceItem."""
     service_type, _ = ServiceType.objects.get_or_create(

@@ -18,6 +18,7 @@ from my_practice.models import (
     Practice,
     ServiceType,
     Session,
+    allow_issued_invoice_writes,
 )
 from my_practice.utils import count_sessions
 from my_practice.utils.analytics_utils import ClientAnalyzer
@@ -30,6 +31,7 @@ from my_practice.utils.revenue_helpers import RevenueCalculator
 class SessionCountConsistencyTests(TestCase):
     """Test that session counts are consistent across different calculation methods."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Create test data with known session counts."""
         # Create practice
@@ -146,6 +148,7 @@ class SessionCountConsistencyTests(TestCase):
         booked = _get_booked_hours(date(2025, 6, 1), date(2025, 6, 30))
         self.assertEqual(booked, 4.0)
 
+    @allow_issued_invoice_writes()
     def test_heatmap_sessions_for_month(self):
         """Test heatmap calculation (for months >= 2026)."""
         # Create data in 2026 (after cutoff)
@@ -197,6 +200,7 @@ class SessionCountConsistencyTests(TestCase):
 class RevenueConsistencyTests(TestCase):
     """Test that revenue calculations are consistent across different views."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Create test data with known revenue."""
         # Create practice
@@ -327,6 +331,7 @@ class RevenueConsistencyTests(TestCase):
 class ClientViewsConsistencyTests(TestCase):
     """Test that client-related views show consistent data."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Create test data."""
         # Create practice
@@ -420,6 +425,7 @@ class ClientViewsConsistencyTests(TestCase):
 class CancellationHandlingConsistencyTests(TestCase):
     """Test that cancellations are handled consistently across all methods."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Create test data with cancellations."""
         # Create practice

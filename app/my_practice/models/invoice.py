@@ -1,5 +1,8 @@
 """Invoice and invoice item models"""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -18,6 +21,61 @@ from .service import ServiceType
 
 if TYPE_CHECKING:
     from .practice import Practice
+
+
+# § 147 AO: invoices are kept for ten years, counted from the end of the
+# calendar year they were issued in — so an invoice dated any day in 2026 may
+# be deleted from 1 Jan 2037 on.
+INVOICE_RETENTION_YEARS = 10
+
+# What the client was sent. Frozen once an invoice leaves DRAFT, together with
+# its line items (GoBD: an issued invoice is not altered after the fact — a
+# mistake is corrected by cancelling it and issuing a new one). status,
+# paid_date and the internal-only notes stay editable.
+LOCKED_INVOICE_FIELDS = (
+    "invoice_number",
+    "client_id",
+    "practice_id",
+    "invoice_date",
+    "tax_rate",
+    "subtotal",
+    "tax_amount",
+    "total",
+)
+
+
+_issued_invoice_writes_allowed: ContextVar[bool] = ContextVar(
+    "issued_invoice_writes_allowed", default=False
+)
+
+
+@contextmanager
+def allow_issued_invoice_writes() -> Iterator[None]:
+    """Suspend the issued-invoice lock while writing historical data as-is.
+
+    For loading invoices that were issued elsewhere and earlier — sample-data
+    seeding and test fixtures, which create a "paid" invoice and then its
+    items. Never use it in a request path: there the lock is the point.
+    Usable as a decorator too.
+    """
+    token = _issued_invoice_writes_allowed.set(True)
+    try:
+        yield
+    finally:
+        _issued_invoice_writes_allowed.reset(token)
+
+
+def issued_invoice_writes_allowed() -> bool:
+    """Whether allow_issued_invoice_writes() is active (checked by signals.py)."""
+    return _issued_invoice_writes_allowed.get()
+
+
+class InvoiceLockedError(ValidationError):
+    """Raised when something tries to alter or delete an issued invoice.
+
+    Enforced by pre_save/pre_delete signals (signals.py), so it holds for every
+    write path — views, admin, helpers and queryset deletes alike.
+    """
 
 
 class InvoiceQuerySet(PracticeScopedQuerySet):
@@ -206,6 +264,30 @@ class Invoice(TimestampedModel):
             self.full_clean()
 
         super().save(*args, **kwargs)
+
+    @property
+    def is_locked(self) -> bool:
+        """True once the invoice has left DRAFT: its content can no longer change."""
+        return self.status != Invoice.Status.DRAFT
+
+    def retention_expired(self, today: date | None = None) -> bool:
+        """True once the § 147 AO retention period for this invoice has run out."""
+        today = today or timezone.localdate()
+        return today.year > self.retention_end_year
+
+    @property
+    def retention_end_year(self) -> int:
+        """Last calendar year this invoice must be kept (§ 147 AO)."""
+        return self.invoice_date.year + INVOICE_RETENTION_YEARS
+
+    @property
+    def is_protected(self) -> bool:
+        """Issued and still within retention: content frozen, deletion refused.
+
+        Drafts are never protected; an issued invoice stops being protected
+        once its retention period has run out (and may then be deleted, e.g. by
+        a GDPR erasure)."""
+        return self.is_locked and not self.retention_expired()
 
     def computed_invoice_date(self) -> date:
         """Return the correct invoice_date for a draft: max(today, latest_session_date)."""

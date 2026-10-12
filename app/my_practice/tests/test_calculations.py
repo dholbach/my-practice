@@ -7,7 +7,15 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
+from my_practice.models import (
+    Client,
+    Invoice,
+    InvoiceItem,
+    Practice,
+    ServiceType,
+    Session,
+    allow_issued_invoice_writes,
+)
 from my_practice.utils import count_sessions, count_sessions_rounded
 
 
@@ -312,6 +320,7 @@ class DatabaseIntegrationTest(TestCase):
             practice=self.practice,
         )
 
+    @allow_issued_invoice_writes()
     def test_database_items_60min(self):
         """Test counting with real database items (60min)."""
         # Create practice
@@ -345,6 +354,7 @@ class DatabaseIntegrationTest(TestCase):
         result = count_sessions_rounded(items)
         self.assertEqual(result, 2)
 
+    @allow_issued_invoice_writes()
     def test_database_items_mixed(self):
         """Test counting with mixed duration items from database."""
         s1 = Session.objects.create(client=self.client, session_date=date(2024, 1, 5), duration=60)
@@ -372,6 +382,7 @@ class DatabaseIntegrationTest(TestCase):
         result_rounded = count_sessions_rounded(items)
         self.assertEqual(result_rounded, 2)  # 2.5 uses banker's rounding
 
+    @allow_issued_invoice_writes()
     def test_database_with_cancellation(self):
         """Test that cancellation-fee items are excluded."""
         s1 = Session.objects.create(client=self.client, session_date=date(2024, 1, 5), duration=60)
@@ -396,6 +407,7 @@ class DatabaseIntegrationTest(TestCase):
         result = count_sessions_rounded(items)
         self.assertEqual(result, 1)  # Only non-Ausfall counted
 
+    @allow_issued_invoice_writes()
     def test_database_with_quantity_greater_than_one(self):
         """Test database items with quantity > 1."""
         s1 = Session.objects.create(client=self.client, session_date=date(2024, 1, 5), duration=60)

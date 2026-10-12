@@ -20,12 +20,14 @@ from ..models import (
     ServiceType,
     Session,
     UserPractice,
+    allow_issued_invoice_writes,
 )
 
 
 class AnalyticsTimeFilterTest(TestCase):
     """Test analytics dashboard time period filter functionality"""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Set up test data"""
         self.client_http = TestClient()

@@ -8,7 +8,15 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
+from my_practice.models import (
+    Client,
+    Invoice,
+    InvoiceItem,
+    Practice,
+    ServiceType,
+    Session,
+    allow_issued_invoice_writes,
+)
 from my_practice.utils.analytics_utils import ClientAnalyzer, SessionAnalyzer
 from my_practice.utils.heatmap_utils import get_sessions_for_month
 
@@ -66,6 +74,7 @@ class HeatmapIntegrationTest(TestCase):
             practice=self.practice,
         )
 
+    @allow_issued_invoice_writes()
     def test_heatmap_respects_quantity(self):
         """Test that heatmap correctly multiplies by quantity."""
         # Create practice
@@ -93,6 +102,7 @@ class HeatmapIntegrationTest(TestCase):
         month_data = get_sessions_for_month(date(2026, 3, 1))
         self.assertEqual(month_data["HM"], 2.0)
 
+    @allow_issued_invoice_writes()
     def test_heatmap_respects_duration(self):
         """Test that heatmap correctly normalizes by duration."""
         # 90min session = 1.5 hours
@@ -111,6 +121,7 @@ class HeatmapIntegrationTest(TestCase):
         month_data = get_sessions_for_month(date(2026, 3, 1))
         self.assertEqual(month_data["HM"], 1.5)
 
+    @allow_issued_invoice_writes()
     def test_heatmap_excludes_cancellations(self):
         """Test that heatmap excludes Ausfall items."""
         InvoiceItem.objects.create(
@@ -140,6 +151,7 @@ class HeatmapIntegrationTest(TestCase):
         month_data = get_sessions_for_month(date(2026, 3, 1))
         self.assertEqual(month_data["HM"], 1.0)  # Only non-cancel counted
 
+    @allow_issued_invoice_writes()
     def test_heatmap_mixed_clients(self):
         """Test heatmap with multiple clients."""
         client2 = Client.objects.create(
@@ -250,6 +262,7 @@ class BusiestMonthsIntegrationTest(TestCase):
             practice=self.practice,
         )
 
+    @allow_issued_invoice_writes()
     def test_busiest_months_respects_quantity(self):
         """Test that busiest months correctly multiplies by quantity."""
         # February: 3 x 60min = 3.0 hours
@@ -288,6 +301,7 @@ class BusiestMonthsIntegrationTest(TestCase):
         self.assertEqual(result[1]["month_date"], date(2026, 3, 1))
         self.assertEqual(result[1]["session_hours"], 1.0)
 
+    @allow_issued_invoice_writes()
     def test_busiest_months_respects_duration(self):
         """Test that busiest months correctly normalizes by duration."""
         # February: 2 x 90min = 3.0 hours
@@ -308,6 +322,7 @@ class BusiestMonthsIntegrationTest(TestCase):
         feb_data = [m for m in result if m["month_date"] == date(2026, 2, 1)][0]
         self.assertEqual(feb_data["session_hours"], 3.0)
 
+    @allow_issued_invoice_writes()
     def test_busiest_months_excludes_cancellations(self):
         """Test that busiest months excludes Ausfall items."""
         # Regular session
@@ -394,6 +409,7 @@ class TopClientsIntegrationTest(TestCase):
             practice=self.practice,
         )
 
+    @allow_issued_invoice_writes()
     def test_top_clients_respects_quantity(self):
         """Test that top clients correctly multiplies by quantity."""
         # Client A: 1 invoice with 3 x 60min sessions
@@ -424,6 +440,7 @@ class TopClientsIntegrationTest(TestCase):
         self.assertEqual(result[0]["client"], self.client_a)
         self.assertEqual(result[0]["session_hours"], 3.0)
 
+    @allow_issued_invoice_writes()
     def test_top_clients_respects_duration(self):
         """Test that top clients correctly normalizes by duration."""
         # Client A: 2 x 90min sessions = 3.0 hours
@@ -452,6 +469,7 @@ class TopClientsIntegrationTest(TestCase):
 
         self.assertEqual(result[0]["session_hours"], 3.0)
 
+    @allow_issued_invoice_writes()
     def test_top_clients_excludes_cancellations(self):
         """Test that top clients excludes Ausfall items."""
         invoice_a = Invoice.objects.create(
@@ -493,6 +511,7 @@ class TopClientsIntegrationTest(TestCase):
 
         self.assertEqual(result[0]["session_hours"], 1.0)  # Only non-cancel counted
 
+    @allow_issued_invoice_writes()
     def test_top_clients_mixed_durations_and_quantities(self):
         """Test top clients with complex mix of durations and quantities."""
         # Client A: High revenue, complex sessions
@@ -563,6 +582,7 @@ class TopClientsIntegrationTest(TestCase):
         self.assertEqual(result[1]["client"], self.client_b)
         self.assertEqual(result[1]["session_hours"], 1.0)
 
+    @allow_issued_invoice_writes()
     def test_top_clients_only_counts_paid_invoices(self):
         """Test that only paid invoices are counted."""
         # Paid invoice

@@ -20,12 +20,14 @@ from ..models import (
     Practice,
     ServiceType,
     Session,
+    allow_issued_invoice_writes,
 )
 
 
 class TaxYearSummaryViewTest(TestCase):
     """Test tax year summary view."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client_instance = TestClient()
@@ -282,6 +284,7 @@ class TaxQuarterOverviewConsistencyTest(TestCase):
     """Quarterly revenue must follow the same paid-date rule as the year summary,
     so the four quarters always sum to the yearly total."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         self.user = User.objects.create_user(username="quarteruser", password="12345")
         self.client_instance = TestClient()
