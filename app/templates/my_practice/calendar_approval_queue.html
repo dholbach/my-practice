@@ -139,7 +139,7 @@
 
 {% blocktrans asvar events_imported_singular %}event imported{% endblocktrans %}
 {% blocktrans asvar events_imported_plural %}events imported{% endblocktrans %}
-<script>
+<script nonce="{{ csp_nonce }}">
 const CSRF_TOKEN = document.cookie.split('; ')
     .find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
 

@@ -189,7 +189,7 @@
     {% endif %}
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 // Track selected events
 let selectedEvents = new Set();
 let duplicatesHidden = false;

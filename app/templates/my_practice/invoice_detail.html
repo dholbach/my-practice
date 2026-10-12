@@ -224,7 +224,7 @@
 </p>
 {% endif %}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 {% trans "Status changed to:" as js_status_changed %}
 {% trans "Error changing status" as js_error %}
 {% trans "Paid on" as js_paid_on %}

@@ -304,6 +304,8 @@ Never add bare `<style>` blocks:
 
 `base.html` has two blocks for page-specific `<script>` tags, neither for CSS: `extra_head_scripts` (in `<head>`, for scripts an inline script further down the page calls synchronously — e.g. chart libs) and `extra_js` (near the end of `<body>`, for everything else). Pick whichever matches your load-order need; don't repurpose either for CSS.
 
+Inline `<script>` blocks need `nonce="{{ csp_nonce }}"`, and event handlers are wired with `addEventListener` or Alpine `x-on:` — never an `onclick=`-style attribute. `script-src` has no `'unsafe-inline'`, so the browser silently skips either one (nothing fails in the test client). **Guardrail test**: `my_practice/tests/test_csp_coverage.py`, whose allowlists are empty.
+
 ### Forms
 - Use `StyledFormMixin` for all ModelForms — no manual `attrs={"class": "form-control"}` on field widgets
 - Use `DateFormField` for all date inputs — handles `date` input type automatically

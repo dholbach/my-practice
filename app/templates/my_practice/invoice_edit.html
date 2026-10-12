@@ -152,7 +152,7 @@
     </div>
 </form>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 // Client rates data
 const clientRates = {
     {% for client in form.fields.client.queryset %}
