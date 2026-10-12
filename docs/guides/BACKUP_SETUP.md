@@ -133,7 +133,7 @@ If backups aren't running:
 1. Check timer is active: `systemctl is-active my-practice-backup.timer`
 2. Check for errors: `journalctl -u my-practice-backup.service -n 50`
 3. Verify Docker is running: `docker ps`
-4. Test manual backup: `./scripts/backup.sh`
+4. Test manual backup: `./scripts/backup.sh` — it exits non-zero (and the unit shows as failed) whenever the dump or media archive fails verification; a `❌` line names the step
 
 If you encounter SELinux errors like `status=203/EXEC` or `execute-access on backup.sh`:
 

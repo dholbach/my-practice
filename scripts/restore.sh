@@ -1,10 +1,12 @@
 #!/bin/bash
 #
-# Restore script for Payments System
+# Restore script for My Practice
 # Restores PostgreSQL database and media files from backup
 #
 
-set -e
+# pipefail: without it a failing `docker compose exec ... psql` hides behind
+# gunzip's exit status and the restore reports success.
+set -euo pipefail
 
 # Resolve paths relative to this script so the script works regardless of cwd
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,6 +33,17 @@ fi
 MY_PRACTICE_DATA_DIR="${MY_PRACTICE_DATA_DIR:-$(dirname "$REPO_DIR")/my-practice-data}"
 BACKUP_DIR="${MY_PRACTICE_DATA_DIR}/backups"
 
+# Use docker directly; fall back to flatpak-spawn only inside a Flatpak sandbox
+# (see backup.sh).
+if command -v docker >/dev/null 2>&1; then
+    DOCKER=(docker)
+elif [ -f /.flatpak-info ] && command -v flatpak-spawn >/dev/null 2>&1; then
+    DOCKER=(flatpak-spawn --host docker)
+else
+    echo -e "${RED}❌ docker not found on PATH${NC}"
+    exit 1
+fi
+
 # Check if backup file is provided
 if [ $# -lt 1 ]; then
     echo -e "${RED}Usage: $0 <db_backup_file> [media_backup_file]${NC}"
@@ -56,7 +69,6 @@ fi
 # Set defaults if not in .env
 POSTGRES_DB=${POSTGRES_DB:-my_practice}
 POSTGRES_USER=${POSTGRES_USER:-my_practice}
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme123}
 
 # docker compose must be called from the repo directory
 cd "$REPO_DIR"
@@ -68,7 +80,7 @@ if [ -n "${MEDIA_BACKUP_FILE}" ]; then
     echo -e "${YELLOW}   Media file: ${MEDIA_BACKUP_FILE}${NC}"
 fi
 echo ""
-read -p "Are you sure you want to continue? (yes/no): " CONFIRM
+read -r -p "Are you sure you want to continue? (yes/no): " CONFIRM
 
 if [ "${CONFIRM}" != "yes" ]; then
     echo -e "${BLUE}Restore cancelled.${NC}"
@@ -80,12 +92,13 @@ echo -e "${BLUE}🔄 Starting restore at $(date)${NC}"
 # Restore PostgreSQL database
 echo -e "${BLUE}🗄️  Restoring PostgreSQL database...${NC}"
 
-gunzip -c "${DB_BACKUP_FILE}" | flatpak-spawn --host docker compose exec -T postgres psql \
+# ON_ERROR_STOP: psql otherwise logs a failed statement and carries on, exiting
+# 0 over a half-restored database.
+if gunzip -c "${DB_BACKUP_FILE}" | "${DOCKER[@]}" compose exec -T postgres psql \
     -U "${POSTGRES_USER}" \
     -d "${POSTGRES_DB}" \
-    --quiet
-
-if [ $? -eq 0 ]; then
+    --quiet \
+    -v ON_ERROR_STOP=1; then
     echo -e "${GREEN}✅ Database restore complete${NC}"
 else
     echo -e "${RED}❌ Database restore failed${NC}"
@@ -97,10 +110,8 @@ if [ -n "${MEDIA_BACKUP_FILE}" ] && [ -f "${MEDIA_BACKUP_FILE}" ]; then
     echo -e "${BLUE}📁 Restoring media files...${NC}"
 
     # Extract media files into Django container
-    flatpak-spawn --host docker compose exec -T django sh -c "rm -rf /app/media/* && tar xzf - -C /app" \
-        < "${MEDIA_BACKUP_FILE}"
-
-    if [ $? -eq 0 ]; then
+    if "${DOCKER[@]}" compose exec -T django sh -c "rm -rf /app/media/* && tar xzf - -C /app" \
+        < "${MEDIA_BACKUP_FILE}"; then
         echo -e "${GREEN}✅ Media restore complete${NC}"
     else
         echo -e "${RED}❌ Media restore failed${NC}"
