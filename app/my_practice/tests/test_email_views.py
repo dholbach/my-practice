@@ -469,6 +469,54 @@ class SendPaymentReminderViewTest(TestCase):
         self.assertIn("Gesamtbetrag offen: 150", body)
         self.assertEqual(response.context["open_invoices_total"], 150.00)
 
+    def _client_with_open_invoices(self, language, *totals):
+        test_client = Client.objects.create(
+            client_code="FM",
+            full_name="Anna Schmidt",
+            email="anna@example.com",
+            practice=self.practice,
+            language=language,
+        )
+        for n, total in enumerate(totals, start=1):
+            Invoice.objects.create(
+                client=test_client,
+                invoice_number=f"FM-{n}",
+                invoice_date=date(2026, 3, n),
+                status="sent",
+                total=Decimal(total),
+                practice=self.practice,
+            )
+        return test_client
+
+    def test_german_amounts_use_german_number_format(self):
+        # Used to be f"{x:,.2f}".replace(",", "."): "1.234.50 €" and "80.00 €".
+        response = self.client_http.get(
+            self._url(self._client_with_open_invoices("de", "1234.50", "80.00"))
+        )
+        body = response.context["form"].initial["body"]
+        self.assertIn("1.234,50\u00a0€", body)
+        self.assertIn("80,00\u00a0€", body)
+        self.assertIn("Gesamtbetrag offen: 1.314,50\u00a0€", body)
+        self.assertNotIn("1.234.50", body)
+        self.assertNotIn("80.00", body)
+
+    def test_english_reminder_uses_the_same_amount_format_as_its_invoices(self):
+        # The invoice PDFs format amounts the German way in both languages, so
+        # the reminder quoting them must match.
+        response = self.client_http.get(
+            self._url(self._client_with_open_invoices("en", "1234.50", "80.00"))
+        )
+        body = response.context["form"].initial["body"]
+        self.assertIn("Total outstanding: 1.314,50\u00a0€", body)
+        self.assertNotIn("1.314.50", body)
+
+    def test_page_total_matches_the_row_format(self):
+        response = self.client_http.get(
+            self._url(self._client_with_open_invoices("de", "1234.50", "80.00"))
+        )
+        self.assertEqual(response.context["open_invoices_total"], Decimal("1314.50"))
+        self.assertContains(response, "1.314,50\u00a0€")
+
     def test_no_iban_omits_bank_lines(self):
         self.practice.iban = ""
         self.practice.save()

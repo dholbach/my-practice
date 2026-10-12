@@ -41,7 +41,7 @@
             <tfoot>
                 <tr class="total-row">
                     <td colspan="3">{% trans "Total open" %}</td>
-                    <td class="text-right"><strong>{{ open_invoices_total|floatformat:2 }} €</strong></td>
+                    <td class="text-right"><strong>{{ open_invoices_total|currency }}</strong></td>
                 </tr>
             </tfoot>
         </table>

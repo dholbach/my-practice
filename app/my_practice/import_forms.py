@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
 from .forms import StyledFormMixin
+from .utils.formatting import format_currency_de
 
 # Bank statement import forms
 
@@ -90,10 +91,8 @@ class TransactionMatchForm(StyledFormMixin, forms.Form):
     def _invoice_label(self, invoice):
         """Generate custom label for invoice dropdown"""
         total = invoice.calculate_total()
-        # Format: XX-1 (2025-12-15): 90,00 €
-        return f"{invoice.invoice_number} ({invoice.invoice_date}): {total:,.2f} €".replace(
-            ",", " "
-        )
+        # Format: XX-1 (2025-12-15): 1.090,00 €
+        return f"{invoice.invoice_number} ({invoice.invoice_date}): {format_currency_de(total)}"
 
 
 class ExpenseGroupForm(StyledFormMixin, forms.Form):

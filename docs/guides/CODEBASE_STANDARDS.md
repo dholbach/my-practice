@@ -603,6 +603,7 @@ grow them.
 | `test_code_language_policy.py` | English identifiers and comments (P-038) |
 | `test_responsive_layout.py` | Button groups wrap; tables scroll instead of crushing (M-PAT-09) |
 | `test_csp_coverage.py` | Inline scripts carry the CSP nonce, no inline `on*=` handlers, flash messages escaped |
+| `test_currency_formatting.py` | Money goes through `format_currency_de` / `|currency`, never a hand-rolled `:,.2f` |
 | `test_release_guardrails.py` | No model change without its migration; the three version strings agree |
 
 `test_release_guardrails.py` covers the two failure modes that only surface

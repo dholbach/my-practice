@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Callable
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib import messages
@@ -23,6 +24,7 @@ from ..utils.email_utils import (
     get_questionnaire_email_content,
     get_questionnaire_pdf_email_content,
 )
+from ..utils.formatting import format_currency_de
 from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
 from .api_views import (
     _prepare_practice_images,
@@ -411,7 +413,7 @@ class SendPaymentReminderView(BaseClientEmailView):
 
     def get_extra_context(self, client: Client, practice: Practice) -> dict:
         open_invoices = self._get_open_invoices(client, practice)
-        total = sum(float(inv.total) for inv in open_invoices)
+        total = sum((inv.total for inv in open_invoices), Decimal("0"))
         return {
             "open_invoices": open_invoices,
             "open_invoices_total": total,
@@ -424,7 +426,7 @@ class SendPaymentReminderView(BaseClientEmailView):
         self, client: Client, practice: Practice, open_invoices: list[Invoice]
     ) -> tuple[str, str]:
         """Build default subject and body for the payment reminder."""
-        total = sum(float(inv.total) for inv in open_invoices)
+        total = sum((inv.total for inv in open_invoices), Decimal("0"))
         count = len(open_invoices)
         lang = client.language  # 'de' or 'en'
 
@@ -436,7 +438,7 @@ class SendPaymentReminderView(BaseClientEmailView):
         for inv in open_invoices:
             num = inv.invoice_number.ljust(max_num_len)
             date_str = inv.invoice_date.strftime("%d.%m.%Y")
-            invoice_rows.append(f"  {num}  {date_str}  {float(inv.total):,.2f} €".replace(",", "."))
+            invoice_rows.append(f"  {num}  {date_str}  {format_currency_de(inv.total)}")
 
         if lang == "en":
             invoice_word = "invoice" if count == 1 else "invoices"
@@ -448,7 +450,7 @@ class SendPaymentReminderView(BaseClientEmailView):
             lines.append("")
             lines.extend(invoice_rows)
             lines.append("")
-            lines.append(f"Total outstanding: {total:,.2f} €".replace(",", "."))
+            lines.append(f"Total outstanding: {format_currency_de(total)}")
             lines.append("")
             lines.append(
                 "I'm happy to re-send if they got lost in transit. "
@@ -475,7 +477,7 @@ class SendPaymentReminderView(BaseClientEmailView):
             lines.append("")
             lines.extend(invoice_rows)
             lines.append("")
-            lines.append(f"Gesamtbetrag offen: {total:,.2f} €".replace(",", "."))
+            lines.append(f"Gesamtbetrag offen: {format_currency_de(total)}")
             lines.append("")
             lines.append(
                 "Ich schicke sie gerne noch einmal, falls sie verloren gegangen sind. "
