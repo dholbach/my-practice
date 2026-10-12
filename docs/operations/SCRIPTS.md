@@ -28,8 +28,13 @@ The script creates (CWD-independent — uses `$SCRIPT_DIR` for path resolution):
 ### Features:
 - ✅ Timestamped backups (sortable)
 - ✅ Compressed (saves storage)
-- ✅ Automatic cleanup (keeps last 30 days)
+- ✅ Verified before it counts: the dump must end with pg_dump's "dump complete" trailer and the media archive must list every file, otherwise the script exits non-zero and leaves no file behind
+- ✅ Automatic cleanup (keeps last 30 days) — runs only after a verified backup, so repeated failures never rotate out the last good one
 - ✅ Coloured output with size information
+
+Runs `docker compose` from the repo root, which honours `COMPOSE_FILE` from `.env` — set
+`COMPOSE_FILE=docker-compose.prod.yml` in a checkout that runs the production stack.
+`flatpak-spawn --host` is used only when `docker` is not on `PATH` inside a Flatpak sandbox.
 
 ### Example Output:
 ```
@@ -149,4 +154,4 @@ In an emergency (e.g. data loss):
 - **Before Django migrations**: Create a backup
 - **Test regularly**: Perform a restore on a test system monthly
 - **Monitoring**: Check `backups/backup.log` for errors
-- **Retention**: Default 30 days, configurable in `backup.sh` (line 95, `-mtime +30`)
+- **Retention**: Default 30 days, configurable in `backup.sh` (the `-mtime +30` cleanup at the end)
