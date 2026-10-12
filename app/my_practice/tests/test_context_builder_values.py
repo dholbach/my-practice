@@ -26,6 +26,7 @@ from my_practice.models import (
     Session,
     TimeOff,
     UserPractice,
+    allow_issued_invoice_writes,
 )
 from my_practice.utils.dashboard_context_builder import DashboardContextAssembler
 from my_practice.utils.tax_context_builder import TaxYearContextBuilder, available_data_years
@@ -51,6 +52,7 @@ class BuilderTestBase(TestCase):
             UserPractice.objects.create(user=self.user, practice=practice, is_owner=True)
         return practice
 
+    @allow_issued_invoice_writes()
     def make_invoice(
         self, *, practice=None, client=None, total, status, invoice_date, paid_date=None
     ):

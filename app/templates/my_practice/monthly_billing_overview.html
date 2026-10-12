@@ -127,7 +127,7 @@
                         {% endfor %}
                         <button type="submit" class="action-link action-link--button" title="{% blocktrans count count=row.unbilled_count with number=row.primary_invoice.invoice_number %}Add {{ count }} session to {{ number }}{% plural %}Add {{ count }} sessions to {{ number }}{% endblocktrans %}">➕</button>
                     </form>
-                    {% elif row.cancelled_billed_count %}
+                    {% elif row.cancelled_billed_count and row.primary_invoice.status == 'draft' %}
                     <a href="{% url 'invoice_edit' row.primary_invoice.pk %}" class="action-link" title="{% trans 'Edit invoice' %}">✏️</a>
                     {% endif %}
                     {% else %}

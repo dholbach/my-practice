@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
+from django.views.decorators.http import require_POST
 from django.views.generic import DetailView
 
 from ..invoice_forms import InvoiceForm
@@ -38,6 +39,22 @@ from .crud_mixins import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _issue_after_items(invoice: Invoice, target_status: str, invoice_date) -> None:
+    """Move a just-saved draft to the status the form asked for.
+
+    The form's status is applied only after the line items are saved: an
+    issued invoice is locked (signals.py), so saving it as "sent" first would
+    refuse its own items. The form's invoice date is restored too, since the
+    draft-only date recalculation may have moved it while the items were saved.
+    """
+    if target_status == Invoice.Status.DRAFT:
+        return
+    invoice.refresh_from_db()
+    invoice.status = target_status
+    invoice.invoice_date = invoice_date
+    invoice.save()
 
 
 class InvoiceListView(PracticeScopedListView):
@@ -203,10 +220,13 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
                 if not form.instance.invoice_number:
                     form.instance.invoice_number = get_next_invoice_number(form.instance.client)
 
+                target_status = form.instance.status
+                form.instance.status = Invoice.Status.DRAFT
                 self.object = form.save()
                 items.instance = self.object
                 self.attach_sessions_to_formset(items, self.object.client)
                 items.save()  # signals handle total + date recalculation
+                _issue_after_items(self.object, target_status, form.cleaned_data["invoice_date"])
                 self.object.refresh_from_db()
         except Exception as e:
             logger.exception("Error creating invoice")
@@ -289,6 +309,20 @@ class InvoiceEditView(NextRedirectMixin, InvoiceFormsetMixin, PracticeScopedUpda
         queryset = super().get_queryset()  # Already practice-scoped
         return queryset.select_related("client").prefetch_related("items")
 
+    def dispatch(self, request, *args, **kwargs):
+        invoice = self.get_object()
+        if invoice.is_locked:
+            messages.error(
+                request,
+                _(
+                    "Invoice %(number)s has been issued and can no longer be changed. "
+                    "Cancel it and create a corrected copy instead."
+                )
+                % {"number": invoice.invoice_number},
+            )
+            return redirect("invoice_detail", pk=invoice.pk)
+        return super().dispatch(request, *args, **kwargs)
+
     def get_success_url(self) -> str:
         return safe_next(
             self.request,
@@ -323,6 +357,8 @@ class InvoiceEditView(NextRedirectMixin, InvoiceFormsetMixin, PracticeScopedUpda
 
         try:
             with transaction.atomic():
+                target_status = form.instance.status
+                form.instance.status = Invoice.Status.DRAFT
                 invoice = form.save()
                 self.attach_sessions_to_formset(formset, invoice.client)
 
@@ -331,10 +367,10 @@ class InvoiceEditView(NextRedirectMixin, InvoiceFormsetMixin, PracticeScopedUpda
                 formset.save()
 
                 # Signals handle total/date recalculation when items change.
-                # For DRAFT invoices where no items changed, ensure the date is
-                # still refreshed to max(today, latest_session_date).
-                if invoice.status == Invoice.Status.DRAFT:
-                    recalculate_invoice_total(invoice)
+                # Where no items changed, ensure the draft's date is still
+                # refreshed to max(today, latest_session_date).
+                recalculate_invoice_total(invoice)
+                _issue_after_items(invoice, target_status, form.cleaned_data["invoice_date"])
 
                 # Refresh invoice from DB to get updated values
                 invoice.refresh_from_db()
@@ -395,6 +431,17 @@ def invoice_delete(request, pk):
     """Delete an invoice (with confirmation page)"""
     invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=pk)
 
+    if invoice.is_protected:
+        messages.error(
+            request,
+            _(
+                "Invoice %(number)s has been issued and must be kept until the end of "
+                "%(year)s. Cancel it instead of deleting it."
+            )
+            % {"number": invoice.invoice_number, "year": invoice.retention_end_year},
+        )
+        return redirect("invoice_detail", pk=invoice.pk)
+
     if request.method == "POST":
         # Store data for success message
         invoice_number = invoice.invoice_number
@@ -417,6 +464,50 @@ def invoice_delete(request, pk):
         "my_practice/invoice_confirm_delete.html",
         {"invoice": invoice, "next": next_url},
     )
+
+
+@require_POST
+def invoice_cancel_and_correct(request, pk):
+    """Cancel a sent invoice and open an editable draft copy of it.
+
+    The way to fix a mistake on an issued invoice: the original stays on record
+    as cancelled (it was sent, so it is kept unchanged), and the copy gets a new
+    number, carries the same line items, and is a normal draft to edit and send.
+    Limited to SENT — a paid invoice has money against it, and a cancelled or
+    written-off one is already closed.
+    """
+    invoice = get_object_or_404(
+        Invoice.objects.for_current_practice(request).select_related("client"), pk=pk
+    )
+    if invoice.status != Invoice.Status.SENT:
+        messages.error(request, _("Only a sent invoice can be cancelled and corrected."))
+        return redirect("invoice_detail", pk=invoice.pk)
+
+    with transaction.atomic():
+        invoice.status = Invoice.Status.CANCELLED
+        invoice.save()
+
+        correction = Invoice.objects.create(
+            practice=invoice.practice,
+            client=invoice.client,
+            invoice_number=get_next_invoice_number(invoice.client),
+            tax_rate=invoice.tax_rate,
+            notes=_("Corrects invoice %(number)s.") % {"number": invoice.invoice_number},
+        )
+        for item in invoice.items.all():
+            item.pk = None
+            item.invoice = correction
+            item.save()
+
+    messages.success(
+        request,
+        _(
+            "Invoice %(old)s was cancelled. %(new)s is an editable copy — "
+            "correct it and send it as usual."
+        )
+        % {"old": invoice.invoice_number, "new": correction.invoice_number},
+    )
+    return redirect("invoice_edit", pk=correction.pk)
 
 
 @login_required

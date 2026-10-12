@@ -78,6 +78,11 @@ urlpatterns = [
         name="invoice_create_with_sessions",
     ),
     path("invoices/<int:pk>/delete/", views.invoice_delete, name="invoice_delete"),
+    path(
+        "invoices/<int:pk>/cancel-and-correct/",
+        views.invoice_cancel_and_correct,
+        name="invoice_cancel_and_correct",
+    ),
     path("invoices/<int:pk>/pdf/", views.invoice_pdf, name="invoice_pdf"),
     path("clients/<int:pk>/contract-pdf/", views.contract_pdf, name="contract_pdf"),
     path(

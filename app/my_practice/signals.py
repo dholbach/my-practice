@@ -4,15 +4,111 @@ Signals for automatic invoice total calculation
 Automatically recalculates Invoice.total when InvoiceItems are saved or deleted.
 Also syncs Session.cancelled and Session.group_size from InvoiceItems (P-035).
 
+Also guards issued invoices: once an Invoice leaves DRAFT its content and
+line items are frozen, and it can only be deleted after the § 147 AO
+retention period (see LOCKED_INVOICE_FIELDS in models/invoice.py). Signals
+rather than model methods, so queryset deletes and the admin are covered too.
+
 Also cleans up Practice.logo/signature files on the filesystem — ImageField
 doesn't do this on its own, so without these signals every re-upload in
 Practice settings leaves the previous file behind forever.
 """
 
-from django.db.models.signals import post_delete, post_save, pre_save
+from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
 from django.dispatch import receiver
+from django.utils.translation import gettext as _
 
-from .models import Invoice, InvoiceItem, Practice
+from .models import Invoice, InvoiceItem, InvoiceLockedError, Practice
+from .models.invoice import LOCKED_INVOICE_FIELDS, issued_invoice_writes_allowed
+
+
+def _locked_message(number: str) -> str:
+    return _(
+        "Invoice %(number)s has been issued and can no longer be changed. "
+        "Cancel it and create a corrected copy instead."
+    ) % {"number": number}
+
+
+@receiver(pre_save, sender=Invoice)
+def guard_issued_invoice_content(
+    sender,
+    instance,
+    update_fields=None,
+    **kwargs,  # noqa: ARG001, vulture
+):  # pylint: disable=unused-argument
+    """Refuse changes to an issued invoice's content, and moving it back to draft.
+
+    Checks the stored row, not the in-memory status, so the save that issues a
+    draft (draft -> sent) may still carry its final content.
+    """
+    if not instance.pk or issued_invoice_writes_allowed():
+        return
+    stored = Invoice.objects.filter(pk=instance.pk).first()
+    if stored is None or not stored.is_protected:
+        return
+    if instance.status == Invoice.Status.DRAFT:
+        raise InvoiceLockedError(_locked_message(stored.invoice_number))
+
+    fields = LOCKED_INVOICE_FIELDS
+    if update_fields is not None:
+        # update_fields may name "client" or "client_id"; only those get written.
+        written = {name.removesuffix("_id") for name in update_fields}
+        fields = tuple(f for f in fields if f.removesuffix("_id") in written)
+    if any(getattr(instance, field) != getattr(stored, field) for field in fields):
+        raise InvoiceLockedError(_locked_message(stored.invoice_number))
+
+
+@receiver(pre_delete, sender=Invoice)
+def guard_issued_invoice_delete(
+    sender,
+    instance,
+    **kwargs,  # noqa: ARG001, vulture
+):  # pylint: disable=unused-argument
+    """Refuse deleting an issued invoice still inside its retention period."""
+    if issued_invoice_writes_allowed():
+        return
+    stored = Invoice.objects.filter(pk=instance.pk).first()
+    if stored is not None and stored.is_protected:
+        raise InvoiceLockedError(
+            _(
+                "Invoice %(number)s has been issued and must be kept until the end of "
+                "%(year)s. Cancel it instead of deleting it."
+            )
+            % {"number": stored.invoice_number, "year": stored.retention_end_year}
+        )
+
+
+def _raise_if_protected(invoice_ids) -> None:
+    if issued_invoice_writes_allowed():
+        return
+    for invoice in Invoice.objects.filter(pk__in=invoice_ids).exclude(status=Invoice.Status.DRAFT):
+        if invoice.is_protected:
+            raise InvoiceLockedError(_locked_message(invoice.invoice_number))
+
+
+@receiver(pre_save, sender=InvoiceItem)
+def guard_items_of_issued_invoice(
+    sender,
+    instance,
+    **kwargs,  # noqa: ARG001, vulture
+):  # pylint: disable=unused-argument
+    """Refuse adding or changing a line item on an issued invoice (or moving one off it)."""
+    invoice_ids = {instance.invoice_id}
+    if instance.pk:
+        invoice_ids.update(
+            InvoiceItem.objects.filter(pk=instance.pk).values_list("invoice_id", flat=True)
+        )
+    _raise_if_protected(invoice_ids)
+
+
+@receiver(pre_delete, sender=InvoiceItem)
+def guard_item_delete_of_issued_invoice(
+    sender,
+    instance,
+    **kwargs,  # noqa: ARG001, vulture
+):  # pylint: disable=unused-argument
+    """Refuse removing a line item from an issued invoice still within retention."""
+    _raise_if_protected({instance.invoice_id})
 
 
 @receiver(post_save, sender=InvoiceItem)

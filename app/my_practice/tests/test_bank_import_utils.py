@@ -23,6 +23,7 @@ from ..models import (
     Practice,
     ServiceType,
     Session,
+    allow_issued_invoice_writes,
 )
 from ..utils import BankStatementImporter, build_counterparty_key
 
@@ -70,6 +71,7 @@ def _make_practice(**kwargs):
     return Practice.objects.create(**defaults)
 
 
+@allow_issued_invoice_writes()
 def _make_invoice_item(invoice, practice, client_obj, rate=Decimal("90.00"), duration=60):
     """Create the minimum required objects for an InvoiceItem."""
     service_type, _ = ServiceType.objects.get_or_create(

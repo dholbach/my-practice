@@ -30,6 +30,7 @@ from my_practice.models import (
     SupervisionItem,
     TimeOff,
     UserPractice,
+    allow_issued_invoice_writes,
 )
 from my_practice.utils.analytics_dashboard_builder import AnalyticsDashboardBuilder
 from my_practice.utils.client_detail_builder import ClientDetailContextBuilder
@@ -58,6 +59,7 @@ class BuilderTestBase(TestCase):
         request.current_practice = practice if practice is not None else self.practice
         return request
 
+    @allow_issued_invoice_writes()
     def make_invoice(self, *, status="sent", total="100.00", invoice_date=None, client=None):
         invoice = Invoice.objects.create(
             client=client or self.client_a,
@@ -88,6 +90,7 @@ class ClientDetailStatsTest(BuilderTestBase):
         )
         self.invoice = self.make_invoice(invoice_date=date(YEAR, 3, 10))
 
+    @allow_issued_invoice_writes()
     def add_session_item(self, *, day, duration=60, cancelled=False, rate="50.00"):
         # Session.cancelled is not set directly: a P-035 signal derives it from
         # whether any of the session's invoice items uses a "cancel" service
@@ -103,6 +106,7 @@ class ClientDetailStatsTest(BuilderTestBase):
             quantity=Decimal("1"),
         )
 
+    @allow_issued_invoice_writes()
     def add_free_form_item(self, *, description="Consulting day rate", rate="500.00"):
         return InvoiceItem.objects.create(
             invoice=self.invoice,
@@ -249,6 +253,7 @@ class ClientDetailBillingTest(BuilderTestBase):
 
         self.assertIsNone(self.build_context()["reminder_urgency"])
 
+    @allow_issued_invoice_writes()
     def test_reminder_urgency_escalates_with_age(self):
         today = date.today()
         cases = {

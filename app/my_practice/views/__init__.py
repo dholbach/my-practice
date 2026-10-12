@@ -138,6 +138,7 @@ from .invoice_views import (
     InvoiceListView,
     add_sessions_to_invoice,
     create_invoice_with_sessions,
+    invoice_cancel_and_correct,
     invoice_delete,
 )
 
@@ -221,6 +222,7 @@ __all__ = [
     "add_sessions_to_invoice",
     "billing_open_overview",
     "create_invoice_with_sessions",
+    "invoice_cancel_and_correct",
     "invoice_delete",
     "monthly_billing_overview",
     "monthly_billing_redirect",

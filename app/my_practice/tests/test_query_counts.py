@@ -31,6 +31,7 @@ from ..models import (
     PracticeTodo,
     ServiceType,
     Session,
+    allow_issued_invoice_writes,
 )
 from .test_helpers import QueryCountMixin, link_user_to_practice
 
@@ -72,6 +73,7 @@ class QueryCountTestBase(QueryCountMixin, TestCase):
             hourly_rate_60=Decimal("90.00"),
         )
 
+    @allow_issued_invoice_writes()
     def make_invoice(self, client, number, days_ago=0, paid=False):
         """Create an invoice with one 60-minute item.
 

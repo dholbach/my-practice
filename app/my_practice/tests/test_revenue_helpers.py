@@ -7,13 +7,14 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from my_practice.models import Client, Invoice, Practice
+from my_practice.models import Client, Invoice, Practice, allow_issued_invoice_writes
 from my_practice.utils.revenue_helpers import RevenueCalculator
 
 
 class RevenueCalculatorTests(TestCase):
     """Tests for the RevenueCalculator class."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Set up test data."""
         # Create practice
@@ -242,6 +243,7 @@ class RevenueCalculatorTests(TestCase):
         self.assertEqual(result["draft"]["count"], 0)
         self.assertEqual(result["cancelled"]["count"], 0)
 
+    @allow_issued_invoice_writes()
     def test_get_status_breakdown_with_year_param_uses_paid_date(self):
         """Test status breakdown with year param filters paid by paid_date."""
         # Create invoice sent in 2025 but paid in 2030 (future year unlikely to have data)
@@ -337,6 +339,7 @@ class RevenueCalculatorTests(TestCase):
         total = RevenueCalculator.get_paid_revenue_for_range(date(2020, 1, 1), date(2020, 12, 31))
         self.assertEqual(total, Decimal("0"))
 
+    @allow_issued_invoice_writes()
     def test_no_invoices(self):
         """Test calculations when no invoices exist."""
         # Delete all invoices
@@ -385,6 +388,7 @@ class RevenueCalculatorTests(TestCase):
 class ApplyYearFilterTests(TestCase):
     """Tests for the apply_year_filter method."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Set up test data."""
         # Create practice
@@ -467,6 +471,7 @@ class ApplyYearFilterTests(TestCase):
 class RevenueSubqueryTests(TestCase):
     """Tests for centralized subquery methods."""
 
+    @allow_issued_invoice_writes()
     def setUp(self):
         """Set up test data with items."""
         # Create practice

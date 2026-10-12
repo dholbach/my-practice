@@ -37,7 +37,7 @@
                 </span>
                 <select id="status-select" class="form-control ml-1 py-1 px-2 rounded w-auto inline-block">
                     <option value="">{% trans "Change status…" %}</option>
-                    <option value="draft">{% trans "Draft" %}</option>
+                    {% if not invoice.is_locked %}<option value="draft">{% trans "Draft" %}</option>{% endif %}
                     <option value="sent">{% trans "Sent" %}</option>
                     <option value="paid">{% trans "Paid" %}</option>
                     <option value="cancelled">{% trans "Cancelled" %}</option>
@@ -192,7 +192,9 @@
 
 <div class="actions">
     <a href="{% url 'invoice_list' %}" class="btn btn-secondary">← {% trans "Back to list" %}</a>
+    {% if not invoice.is_locked %}
     <a href="{% url 'invoice_edit' invoice.pk %}" class="btn btn-gradient">✏️ {% trans "Edit" %}</a>
+    {% endif %}
     <a href="{% url 'invoice_pdf' invoice.pk %}" class="btn btn-secondary" target="_blank">📄 {% trans "View PDF" %}</a>
 
     {% if invoice.status != 'sent' %}
@@ -203,9 +205,24 @@
     </span>
     {% endif %}
 
+    {% if invoice.status == 'sent' %}
+    {% trans "Cancel this invoice and create an editable copy with a new number?" as confirm_correct %}
+    {% url 'invoice_cancel_and_correct' invoice.pk as correct_url %}
+    {% trans "Cancel & correct" as correct_text %}
+    {% include 'includes/inline_post_button.html' with action_url=correct_url button_text=correct_text button_class='btn-secondary' confirm=confirm_correct %}
+    {% endif %}
+
+    {% if not invoice.is_protected %}
     {% trans "Do you really want to delete this invoice? This action cannot be undone." as confirm_delete %}
     <a href="{% url 'invoice_delete' invoice.pk %}" class="btn btn-danger" x-data x-on:click="confirm('{{ confirm_delete }}') || $event.preventDefault()">🗑️ {% trans "Delete" %}</a>
+    {% endif %}
 </div>
+
+{% if invoice.is_locked %}
+<p class="text-muted text-sm mt-2">
+    🔒 {% trans "Issued invoices are kept unchanged. To fix a mistake, cancel the invoice and correct a copy." %}
+</p>
+{% endif %}
 
 <script>
 {% trans "Status changed to:" as js_status_changed %}

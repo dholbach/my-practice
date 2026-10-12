@@ -5,7 +5,15 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
+from ..models import (
+    Client,
+    Invoice,
+    InvoiceItem,
+    Practice,
+    ServiceType,
+    Session,
+    allow_issued_invoice_writes,
+)
 from ..utils.billing_helpers import (
     build_service_type_map,
     create_invoice_item_for_session,
@@ -169,6 +177,7 @@ class IsSessionAlreadyBilledTests(TestCase):
         )
         self.assertTrue(is_session_already_billed(session))
 
+    @allow_issued_invoice_writes()
     def test_session_on_cancelled_invoice_returns_false(self):
         session = _make_session(self.client)
         invoice = _make_invoice(self.client, status=Invoice.Status.CANCELLED)
@@ -221,14 +230,15 @@ class CreateInvoiceItemForSessionTests(TestCase):
             invoice_date=date.today(),
             status=Invoice.Status.CANCELLED,
         )
-        InvoiceItem.objects.create(
-            invoice=cancelled_invoice,
-            session=session,
-            service_type=self.st60,
-            rate=Decimal("100.00"),
-            quantity=Decimal("1.00"),
-            total=Decimal("100.00"),
-        )
+        with allow_issued_invoice_writes():  # fixture only — not the code under test
+            InvoiceItem.objects.create(
+                invoice=cancelled_invoice,
+                session=session,
+                service_type=self.st60,
+                rate=Decimal("100.00"),
+                quantity=Decimal("1.00"),
+                total=Decimal("100.00"),
+            )
         item = create_invoice_item_for_session(self.invoice, session, self.service_type_map)
         self.assertIsNotNone(item)
 
