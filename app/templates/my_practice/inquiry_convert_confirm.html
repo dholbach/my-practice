@@ -83,22 +83,35 @@
     </form>
 </div>
 
-<script>
+{% trans "Suggestions:" as js_suggestions %}
+{% trans "Click to use" as js_click_to_use %}
+<script nonce="{{ csp_nonce }}">
 (function () {
     const codeEl = document.getElementById("id_client_code");
     const strip = document.getElementById("convert-code-suggestions");
     if (!codeEl || !strip) return;
 
+    // Built with DOM calls and addEventListener: the CSP does not run inline
+    // onclick= handlers, and the codes are derived from a user-entered name.
     function renderSuggestions(suggestions) {
-        if (!suggestions.length) { strip.innerHTML = ""; return; }
-        strip.innerHTML =
-            '<span class="hint-label">{% trans "Suggestions:" %}</span>' +
-            suggestions.map(c =>
-                `<span class="code-chip clickable" title="{% trans "Click to use" %}"
-                       onclick="document.getElementById('id_client_code').value='${c}';renderStrip([]);">${c}</span>`
-            ).join("");
+        strip.replaceChildren();
+        if (!suggestions.length) return;
+        const label = document.createElement("span");
+        label.className = "hint-label";
+        label.textContent = "{{ js_suggestions|escapejs }}";
+        strip.appendChild(label);
+        suggestions.forEach(function (code) {
+            const chip = document.createElement("span");
+            chip.className = "code-chip clickable";
+            chip.title = "{{ js_click_to_use|escapejs }}";
+            chip.textContent = code;
+            chip.addEventListener("click", function () {
+                codeEl.value = code;
+                renderSuggestions([]);
+            });
+            strip.appendChild(chip);
+        });
     }
-    function renderStrip(s) { renderSuggestions(s); }
 
     // Pre-load suggestions for the inquiry name on page load
     const inquiryName = "{{ inquiry.full_name|escapejs }}";

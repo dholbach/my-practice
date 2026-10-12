@@ -205,12 +205,15 @@ in #424).
 - Chart drawing always registers itself in `chartRegistry` for redraw on tab reveal (M-PAT-03)
 - Charts in hidden tabs: call redraw after `classList.add('active')` with 50ms delay
 - HTMX requests: check `HX-Request` header and return a partial render, not a full page
+- Inline `<script>` blocks carry `nonce="{{ csp_nonce }}"`; handlers are wired with `addEventListener` or Alpine `x-on:`. The CSP's `script-src` has no `'unsafe-inline'`, so anything else is skipped by the browser — silently, and only in a browser (`test_csp_coverage.py`)
 
 ### Anti-patterns to flag
 
 - `chart.destroy()` + recreate on every tab switch → use `chartRegistry` redraw instead
 - `document.querySelector` for a chart container whose parent can be hidden → add tab-reveal hook
 - Inline `<script>` blocks with business logic → move to a static `.js` file
+- `onclick=`/`onchange=`/… attributes, in templates or in HTML built by JavaScript → they never run under the CSP
+- `|safe` on text that can contain user or external data (flash messages, names, exception text) → build trusted markup with `format_html` instead; it survives the messages framework as safe
 
 ---
 
@@ -599,6 +602,7 @@ grow them.
 | `test_privacy_coverage.py` | Personal fields blurred, non-personal fields not (M-PAT-08) |
 | `test_code_language_policy.py` | English identifiers and comments (P-038) |
 | `test_responsive_layout.py` | Button groups wrap; tables scroll instead of crushing (M-PAT-09) |
+| `test_csp_coverage.py` | Inline scripts carry the CSP nonce, no inline `on*=` handlers, flash messages escaped |
 | `test_release_guardrails.py` | No model change without its migration; the three version strings agree |
 
 `test_release_guardrails.py` covers the two failure modes that only surface

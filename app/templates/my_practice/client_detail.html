@@ -37,12 +37,12 @@
      than taking a band of their own (they push right via margin-left:auto, and
      drop onto their own line if the tabs wrap). -->
 <div class="page-tab-bar" data-unsaved-label="{% trans "Unsaved changes" %}">
-    <button class="page-tab-btn page-tab-active" data-tab="profil" onclick="pageTab('profil', this)">{% trans "Overview" %}</button>
-    <button class="page-tab-btn" data-tab="protokoll" onclick="pageTab('protokoll', this)">📝 {% trans "Protocol" %}
+    <button class="page-tab-btn page-tab-active" data-tab="profil">{% trans "Overview" %}</button>
+    <button class="page-tab-btn" data-tab="protokoll">📝 {% trans "Protocol" %}
         {% if log_entries %}<span class="cn-badge">{{ log_entries|length }}</span>{% endif %}
         {% if open_supervision_count %}<span class="cn-badge cn-badge-warn" title="{% trans 'Open supervision topics' %}">🔍 {{ open_supervision_count }}</span>{% endif %}
     </button>
-    <button class="page-tab-btn" data-tab="abrechnung" onclick="pageTab('abrechnung', this)">💶 {% trans "Billing" %}
+    <button class="page-tab-btn" data-tab="abrechnung">💶 {% trans "Billing" %}
         {% if stats.open_amount %}<span class="cn-badge cn-badge-warn">{{ stats.open_amount|floatformat:0 }} €</span>{% endif %}
     </button>
     <div class="cd-header-actions">
@@ -73,7 +73,7 @@
             <h4>{% trans "Open balance" %}</h4>
             <div class="value">
                 {% if stats.open_amount %}{{ stats.open_amount|currency }}
-                    <a href="#" onclick="pageTab('abrechnung', document.querySelector('[data-tab=abrechnung]')); return false;" class="cockpit-stat-arrow">→</a>
+                    <a href="#ptab-abrechnung" data-page-tab="abrechnung" class="cockpit-stat-arrow">→</a>
                 {% else %}–{% endif %}
             </div>
         </div>
@@ -86,7 +86,7 @@
         <div class="section-card">
             <div class="section-card-header">
                 <h3>{% trans "Recent sessions" %}</h3>
-                <a href="#" onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); return false;" class="cockpit-link">{% trans "full protocol →" %}</a>
+                <a href="#ptab-protokoll" data-page-tab="protokoll" class="cockpit-link">{% trans "full protocol →" %}</a>
             </div>
             {% if recent_session_logs %}
             <div class="cockpit-session-list">
@@ -123,8 +123,7 @@
                     {% endfor %}
                 </div>
                 <div class="cockpit-intake-detail-link">
-                    <a href="#onboarding" class="cockpit-link"
-                       onclick="document.getElementById('onboarding').scrollIntoView({behavior:'smooth'}); return false;">{% trans "Details" %} ↓</a>
+                    <a href="#onboarding" class="cockpit-link" data-smooth-scroll>{% trans "Details" %} ↓</a>
                 </div>
             </div>
         </div>
@@ -134,12 +133,10 @@
     <div class="cockpit-actions">
         <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary">{% trans "+ Session log" %}</a>
         <a href="{% url 'todo_create' %}?client={{ client.pk }}&next={{ request.path|urlencode }}" class="btn btn-secondary">{% trans "+ Task" %}</a>
-        <button type="button" class="btn btn-secondary"
-                onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); setTimeout(function(){ var el=document.querySelector('#ptab-protokoll [x-on\\:click*=showNote]'); if(el) el.click(); }, 100);">
+        <button type="button" class="btn btn-secondary" data-page-tab="protokoll" data-click-in-tab="showNote">
             {% trans "+ Note" %}
         </button>
-        <button type="button" class="btn btn-secondary"
-                onclick="pageTab('protokoll', document.querySelector('[data-tab=protokoll]')); setTimeout(function(){ var el=document.querySelector('#ptab-protokoll [x-on\\:click*=showSupervision]'); if(el) el.click(); }, 100);">
+        <button type="button" class="btn btn-secondary" data-page-tab="protokoll" data-click-in-tab="showSupervision">
             🔍 {% trans "+ Supervision" %}
         </button>
     </div>
@@ -670,7 +667,7 @@
 
 </div><!-- /ptab-abrechnung -->
 
-<script>
+<script nonce="{{ csp_nonce }}">
 function pageTab(tabName, btn) {
     document.querySelectorAll('.page-tab-content').forEach(el => el.classList.remove('page-tab-active'));
     document.querySelectorAll('.page-tab-btn').forEach(el => el.classList.remove('page-tab-active'));
@@ -686,6 +683,32 @@ function pageTab(tabName, btn) {
         redrawChartsIn(tabContainer);
     }, 50);
 }
+
+// Tab switching and the cockpit shortcuts into a tab, wired here rather than
+// with inline onclick= attributes, which the CSP (script-src without
+// 'unsafe-inline') does not run. A trigger names its tab with data-tab (the tab
+// buttons) or data-page-tab, and may name an Alpine toggle inside that tab to
+// click once it is visible (data-click-in-tab, e.g. "showNote").
+document.addEventListener('click', function(e) {
+    const scrollLink = e.target.closest('[data-smooth-scroll]');
+    if (scrollLink) {
+        e.preventDefault();
+        document.querySelector(scrollLink.getAttribute('href')).scrollIntoView({behavior: 'smooth'});
+        return;
+    }
+    const trigger = e.target.closest('.page-tab-btn[data-tab], [data-page-tab]');
+    if (!trigger) return;
+    e.preventDefault();
+    const tabName = trigger.dataset.pageTab || trigger.dataset.tab;
+    pageTab(tabName, document.querySelector('.page-tab-btn[data-tab="' + tabName + '"]'));
+    const toggle = trigger.dataset.clickInTab;
+    if (toggle) {
+        setTimeout(function() {
+            const el = document.querySelector('#ptab-' + tabName + ' [x-on\\:click*=' + toggle + ']');
+            if (el) el.click();
+        }, 100);
+    }
+});
 
 // Restore tab from URL hash on load
 (function() {
@@ -715,7 +738,7 @@ document.addEventListener('draftguard:dirty', function(e) {
 </script>
 
 {% if monthly_sessions %}
-<script>
+<script nonce="{{ csp_nonce }}">
 initChart('sessionTimeline', function(canvas) {
     const months = [{% for item in monthly_sessions %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
     const hours = [{% for item in monthly_sessions %}{{ item.hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];

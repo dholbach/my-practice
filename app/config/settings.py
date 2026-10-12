@@ -90,6 +90,9 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "my_practice.context_processors.update_check",
                 "django.template.context_processors.i18n",
+                # Puts csp_nonce in the context for <script nonce="{{ csp_nonce }}">;
+                # without it the nonce renders empty (see SECURE_CSP below).
+                "django.template.context_processors.csp",
             ],
             # Disable template caching in DEBUG mode for instant updates
             "debug": DEBUG,
@@ -297,23 +300,21 @@ GOOGLE_CALENDAR_CLIENT_ID = os.environ.get("GOOGLE_CALENDAR_CLIENT_ID", "")
 GOOGLE_CALENDAR_CLIENT_SECRET = os.environ.get("GOOGLE_CALENDAR_CLIENT_SECRET", "")
 
 # Content Security Policy
-# Phase 2: script-src uses nonce (no unsafe-inline for scripts).
-# style-src keeps unsafe-inline: ~809 inline style="" attrs throughout templates
-# would need auditing before removing it; removing style-src unsafe-inline
-# breaks chart containers (height: Xpx), tables, logo sizing, etc.
-# script-src: CSP.NONCE investigated but non-functional — request.csp_nonce renders
-# as empty string and no 'nonce-...' token appears in the outgoing CSP header.
-# Restored unsafe-inline for scripts. Key security win remains: all external scripts
-# are vendored locally (no CDN), so CSP blocks any injected external script sources.
-# Nonce-based script-src is deferred to M-11 Phase 3.
+# script-src: no 'unsafe-inline'. Inline <script> blocks carry
+# nonce="{{ csp_nonce }}" (from the csp context processor above) and there are
+# no inline on*= handlers — both enforced by tests/test_csp_coverage.py — so an
+# injected <script> or onerror= attribute does not run. 'unsafe-eval' stays
+# because Alpine.js evaluates x-* expressions with new Function(); dropping it
+# needs Alpine's CSP build and rewriting those expressions. It also means
+# injected markup carrying Alpine attributes (x-init="…") would still execute,
+# so template autoescaping remains the primary XSS defence; CSP is the backstop.
+# style-src keeps 'unsafe-inline' for style="" attributes and the inline styles
+# Alpine/htmx set at runtime; styles cannot execute code.
+# All scripts are vendored locally (no CDN), so 'self' covers every src=.
 SECURE_CSP = {
     "default-src": [CSP.SELF],
-    "script-src": [
-        CSP.SELF,
-        CSP.UNSAFE_INLINE,
-        CSP.UNSAFE_EVAL,
-    ],  # unsafe-eval required by Alpine.js (new Function()); nonce deferred Phase 3
-    "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],  # unsafe-inline needed for style="" attrs
+    "script-src": [CSP.SELF, CSP.NONCE, CSP.UNSAFE_EVAL],
+    "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],
     "img-src": [CSP.SELF, "data:"],  # data: for base64 logos/signatures
     "connect-src": [CSP.SELF],  # AJAX/fetch calls
     "font-src": [CSP.SELF],

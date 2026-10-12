@@ -10,7 +10,7 @@
 {% block page_subtitle %}{% trans "Revenue, Clients, Capacity & Expenses" %}{% endblock %}
 
 {% block extra_head_scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 const CHART_MESSAGES = {
     noData:     "{% trans 'No data available' %}",
     allZero:    "{% trans 'No data in selected period' %}",
@@ -76,7 +76,7 @@ const LOCALE = (navigator.language || 'de-DE').replace('_', '-');
     </form>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 function toggleCustomDates() {
     const period = document.getElementById('period').value;
     const customDates = document.getElementById('customDates');
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
     initChart('comparisonChart', function(canvas) {
         const years = [{% for item in comparison_data %}'{{ item.year }}'{% if not forloop.last %},{% endif %}{% endfor %}];
         const revenues = [{% for item in comparison_data %}{{ item.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
     initChart('revenueLineChart', function(canvas) {
         const rawData   = [{% for month in revenue_trends %}{{ month.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
         const rawLabels = [{% for month in revenue_trends %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <canvas id="daysToPaymentChart" width="100%" height="100%"></canvas>
         </div>
     </div>
-    <script>
+    <script nonce="{{ csp_nonce }}">
     initChart('daysToPaymentChart', function(canvas) {
         const raw = JSON.parse(document.getElementById('days-to-payment-data').textContent);
         if (!raw || raw.length === 0) return;
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endif %}
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
     function toggleDormantClients() {
         const checkbox = document.getElementById('toggle-dormant');
         if (!checkbox) return;
@@ -696,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
     initChart('capacityTrendsChart', function(canvas) {
         const rawData = [{% for item in capacity_trends %}{{ item.capacity_percentage|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
         const rawLabels = [{% for item in capacity_trends %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
@@ -750,7 +750,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <canvas id="cumulativeYearsChart" width="100%" height="100%"></canvas>
         </div>
     </div>
-    <script>
+    <script nonce="{{ csp_nonce }}">
     initChart('cumulativeYearsChart', function(canvas) {
         const cyd = JSON.parse(document.getElementById('cumulative-year-data').textContent);
         if (!cyd || !cyd.years || cyd.years.length === 0) return;
@@ -883,7 +883,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <canvas id="cancellationTrendsChart" width="100%" height="100%"></canvas>
         </div>
     </div>
-    <script>
+    <script nonce="{{ csp_nonce }}">
     initChart('cancellationTrendsChart', function(canvas) {
         const raw = JSON.parse(document.getElementById('cancellation-trends-data').textContent);
         if (!raw || raw.length === 0) return;
@@ -980,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
     initChart('expenseTrendsChart', function(canvas) {
         // Use yearly totals from comparison_data (same source as profit table)
         // so the current year shows actual expenses, not a partial-year sum of
@@ -1000,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Tab Switching Script -->
-<script>
+<script nonce="{{ csp_nonce }}">
 function switchTab(tabName, clickedButton) {
     // Update URL with tab parameter
     const url = new URL(window.location);

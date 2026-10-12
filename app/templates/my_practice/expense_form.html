@@ -123,7 +123,7 @@
         </div>
         {% endfor %}
     </div>
-    <script>
+    <script nonce="{{ csp_nonce }}">
         // Move the receipts list into the placeholder inside the card
         (function () {
             var list = document.getElementById("receipts-existing");

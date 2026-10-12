@@ -107,7 +107,7 @@
         <div class="messages">
             {% for message in messages %}
             <div class="message {{ message.tags }}">
-                {{ message|safe }}
+                {{ message }}
             </div>
             {% endfor %}
         </div>
@@ -126,7 +126,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
         // Dark Mode Toggle
         (function() {
             const themeToggle = document.getElementById('themeToggle');

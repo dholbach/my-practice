@@ -427,7 +427,7 @@
 {% trans "Saved: " as note_saved_prefix %}
 {% trans "Error saving." as note_save_error_msg %}
 {% trans "Network error." as note_network_error_msg %}
-<script>
+<script nonce="{{ csp_nonce }}">
 (function () {
     const widget = document.querySelector('.tax-note-widget');
     if (!widget) return;

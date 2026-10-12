@@ -11,7 +11,7 @@
             <span class="doc-type-badge sidebar-doc-badge">{{ doc.get_document_type_display }}</span>
             <a href="{{ doc.file.url }}" target="_blank" class="sidebar-doc-name" title="{{ doc.filename }}">{% if doc.description %}{{ doc.description }}{% else %}{{ doc.filename }}{% endif %}</a>
             <span class="sidebar-doc-date">{{ doc.document_date|date:"d.m.Y" }}</span>
-            <button class="btn btn-danger btn-sm" onclick="docDelete(this)"
+            <button class="btn btn-danger btn-sm"
                     data-doc-id="{{ doc.pk }}"
                     data-csrf="{{ csrf_token }}">🗑️</button>
         </li>
@@ -52,7 +52,7 @@
 {% trans "Upload failed." as doc_upload_failed_msg %}
 {% trans "Delete document?" as doc_delete_confirm_msg %}
 {% trans "Delete failed." as doc_delete_failed_msg %}
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
     const uploadUrl = "{% url 'client_document_upload' client.pk %}";
     const csrfToken = "{{ csrf_token }}";
@@ -229,4 +229,10 @@ function docDelete(btn) {
     })
     .catch(() => alert('{{ doc_delete_failed_msg|escapejs }}'));
 }
+
+// Server-rendered rows; appendDocRow() wires the ones added after an upload.
+// (Not onclick= in the markup: the CSP does not run inline handlers.)
+document.querySelectorAll('.sidebar-doc-list button[data-doc-id]').forEach(function (btn) {
+    btn.addEventListener('click', function () { docDelete(btn); });
+});
 </script>

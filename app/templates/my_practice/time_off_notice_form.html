@@ -98,7 +98,7 @@
     </div>
 </form>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.getElementById('recipients-select-all')?.addEventListener('change', function () {
     document.querySelectorAll('.recipient-checkbox').forEach(cb => {
         cb.checked = this.checked;

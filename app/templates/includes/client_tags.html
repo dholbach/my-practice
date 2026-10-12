@@ -37,7 +37,7 @@ Usage: {% include 'includes/client_tags.html' with client=client editable=True %
 </div>
 
 {% if editable %}
-<script>
+<script nonce="{{ csp_nonce }}">
 (function () {
     const clientId = {{ client.id }};
 
