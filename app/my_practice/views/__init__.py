@@ -141,6 +141,9 @@ from .invoice_views import (
     invoice_delete,
 )
 
+# Media views
+from .media_views import serve_media
+
 # Operational checklist views
 from .operational_views import (
     OperationalChecklistView,
@@ -244,6 +247,8 @@ __all__ = [
     "focus_queue_toggle_complete",
     "focus_queue_snooze",
     "focus_queue_set_due_today",
+    # Media views
+    "serve_media",
     # API views
     "contract_pdf",
     "intake_form_pdf",

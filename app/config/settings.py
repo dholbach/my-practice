@@ -327,8 +327,16 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = SECURE_SSL_REDIRECT
     CSRF_COOKIE_SECURE = SECURE_SSL_REDIRECT
 
-    # HSTS (HTTP Strict Transport Security) — only meaningful with HTTPS
     if SECURE_SSL_REDIRECT:
+        # gunicorn never terminates TLS itself, so HTTPS here always means a
+        # reverse proxy in front. Without trusting its X-Forwarded-Proto every
+        # request looks like plain HTTP: SECURE_SSL_REDIRECT redirects forever,
+        # and the CSRF origin check rejects every form post (the browser sends
+        # Origin: https://…, Django expects http://…). The proxy must set this
+        # header itself, overwriting any client-supplied value — see SECURITY.md.
+        SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+        # HSTS (HTTP Strict Transport Security) — only meaningful with HTTPS
         SECURE_HSTS_SECONDS = 31536000  # 1 year
         SECURE_HSTS_INCLUDE_SUBDOMAINS = True
         SECURE_HSTS_PRELOAD = True
