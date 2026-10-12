@@ -587,3 +587,29 @@ class BankWithdrawalReviewViewTest(BankImportViewBase):
         self.assertFalse(CompanyWithdrawal.objects.filter(id=wd.id).exists())
         trans.refresh_from_db()
         self.assertEqual(trans.match_confidence, "ignored")
+
+
+class TransactionMatchFormLabelTest(TestCase):
+    """The manual-match dropdown labels invoices with German-formatted amounts."""
+
+    def test_invoice_label_uses_german_currency_format(self):
+        from ..import_forms import TransactionMatchForm
+
+        practice = Practice.objects.create(name="Label Practice", slug="label-practice", title="T")
+        client_obj = Client.objects.create(
+            client_code="LB", full_name="Max Mustermann", practice=practice
+        )
+        invoice = Invoice.objects.create(
+            client=client_obj,
+            invoice_number="LB-1",
+            invoice_date=date(2026, 1, 15),
+            status="sent",
+            practice=practice,
+        )
+        _make_invoice_item(invoice, practice, client_obj, rate=Decimal("1090.00"))
+
+        form = TransactionMatchForm(practice=practice)
+        label = form.fields["invoice"].label_from_instance(invoice)
+
+        # Used to be "LB-1 (2026-01-15): 1 090.00 €".
+        self.assertEqual(label, "LB-1 (2026-01-15): 1.090,00 €")
