@@ -77,15 +77,6 @@ class HeatmapIntegrationTest(TestCase):
     @allow_issued_invoice_writes()
     def test_heatmap_respects_quantity(self):
         """Test that heatmap correctly multiplies by quantity."""
-        # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
-
         # 2 x 60min sessions = 2.0 hours
         InvoiceItem.objects.create(
             invoice=self.invoice,
@@ -99,7 +90,7 @@ class HeatmapIntegrationTest(TestCase):
             quantity=Decimal("2.00"),
         )
 
-        month_data = get_sessions_for_month(date(2026, 3, 1))
+        month_data = get_sessions_for_month(date(2026, 3, 1), practice=self.practice)
         self.assertEqual(month_data["HM"], 2.0)
 
     @allow_issued_invoice_writes()
@@ -118,7 +109,7 @@ class HeatmapIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        month_data = get_sessions_for_month(date(2026, 3, 1))
+        month_data = get_sessions_for_month(date(2026, 3, 1), practice=self.practice)
         self.assertEqual(month_data["HM"], 1.5)
 
     @allow_issued_invoice_writes()
@@ -148,7 +139,7 @@ class HeatmapIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        month_data = get_sessions_for_month(date(2026, 3, 1))
+        month_data = get_sessions_for_month(date(2026, 3, 1), practice=self.practice)
         self.assertEqual(month_data["HM"], 1.0)  # Only non-cancel counted
 
     @allow_issued_invoice_writes()
@@ -196,7 +187,7 @@ class HeatmapIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        month_data = get_sessions_for_month(date(2026, 3, 1))
+        month_data = get_sessions_for_month(date(2026, 3, 1), practice=self.practice)
         self.assertEqual(month_data["HM"], 1.0)
         self.assertEqual(month_data["HM2"], 1.5)
 
@@ -291,7 +282,7 @@ class BusiestMonthsIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        result = SessionAnalyzer.get_busiest_months(start_year=2026)
+        result = SessionAnalyzer.get_busiest_months(start_year=2026, practice=self.practice)
 
         # February should be first (3.0 hours)
         self.assertEqual(result[0]["month_date"], date(2026, 2, 1))
@@ -317,7 +308,7 @@ class BusiestMonthsIntegrationTest(TestCase):
             quantity=Decimal("2.00"),
         )
 
-        result = SessionAnalyzer.get_busiest_months(start_year=2026)
+        result = SessionAnalyzer.get_busiest_months(start_year=2026, practice=self.practice)
 
         feb_data = [m for m in result if m["month_date"] == date(2026, 2, 1)][0]
         self.assertEqual(feb_data["session_hours"], 3.0)
@@ -351,7 +342,7 @@ class BusiestMonthsIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        result = SessionAnalyzer.get_busiest_months(start_year=2026)
+        result = SessionAnalyzer.get_busiest_months(start_year=2026, practice=self.practice)
 
         feb_data = [m for m in result if m["month_date"] == date(2026, 2, 1)][0]
         self.assertEqual(feb_data["session_hours"], 1.0)  # Only non-cancel counted
@@ -434,7 +425,7 @@ class TopClientsIntegrationTest(TestCase):
             quantity=Decimal("3.00"),
         )
 
-        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+        result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["client"], self.client_a)
@@ -465,7 +456,7 @@ class TopClientsIntegrationTest(TestCase):
             quantity=Decimal("2.00"),
         )
 
-        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+        result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(result[0]["session_hours"], 3.0)
 
@@ -507,7 +498,7 @@ class TopClientsIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+        result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(result[0]["session_hours"], 1.0)  # Only non-cancel counted
 
@@ -573,7 +564,7 @@ class TopClientsIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+        result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         # Should be sorted by revenue (A first)
         self.assertEqual(result[0]["client"], self.client_a)
@@ -629,7 +620,7 @@ class TopClientsIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+        result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["session_hours"], 1.0)  # Only paid invoice counted

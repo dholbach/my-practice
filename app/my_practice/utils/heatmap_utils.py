@@ -5,10 +5,11 @@ Utilities for generating activity heatmap data from InvoiceItems.
 from datetime import date
 
 from ..models import InvoiceItem
+from ..models.base import PracticeScope, scope_to_practice
 from . import DateRangeHelper, count_sessions
 
 
-def get_sessions_for_month(month_date, practice=None):
+def get_sessions_for_month(month_date, *, practice: PracticeScope):
     """
     Get session data from InvoiceItems for a given month.
 
@@ -27,8 +28,7 @@ def get_sessions_for_month(month_date, practice=None):
         invoice__client__isnull=False,
     )
 
-    if practice:
-        invoice_items = invoice_items.filter(invoice__practice=practice)
+    invoice_items = scope_to_practice(invoice_items, practice, "invoice__practice")
 
     invoice_items = invoice_items.select_related("invoice__client", "session", "service_type")
 
@@ -48,7 +48,13 @@ def get_sessions_for_month(month_date, practice=None):
 
 
 def get_heatmap_data(
-    current_year, current_month, months_to_show=12, start_offset=0, practice=None, sort="total"
+    current_year,
+    current_month,
+    months_to_show=12,
+    start_offset=0,
+    *,
+    practice: PracticeScope,
+    sort="total",
 ):
     """
     Generate heatmap data from InvoiceItems only.
@@ -86,8 +92,7 @@ def get_heatmap_data(
         invoice__client__isnull=False,
     ).select_related("invoice__client", "session", "service_type")
 
-    if practice:
-        qs = qs.filter(invoice__practice=practice)
+    qs = scope_to_practice(qs, practice, "invoice__practice")
 
     # Build per-month and per-client buckets in one pass
     month_buckets: dict[tuple, dict[str, list]] = {}  # (year, month) -> {client_code: [items]}

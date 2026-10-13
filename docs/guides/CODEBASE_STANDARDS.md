@@ -16,6 +16,7 @@ and provides the anti-patterns checklist used during periodic reviews
 | Client revenue subquery | `RevenueCalculator.get_client_revenue_subquery()` |
 | Invoice filtering (search, year, status, amount) | `InvoiceFilterHelper(qs).apply_filters(...)` |
 | Practice-scoped queryset | inherit `PracticeScopedListView` or call `.for_current_practice(request)` |
+| Practice filter inside a helper | `scope_to_practice(qs, practice)` with `practice` a required keyword; `None` → no rows, `ALL_PRACTICES` → explicit cross-practice |
 | Date ranges | `DateRangeHelper(start, end)` |
 | Working days with holidays | `DateRangeHelper.count_working_days(start, end, holidays)` — never `round(days*5/7)` |
 | Session counting | `count_sessions(items)` — never inline `(duration/60)*quantity` |
@@ -25,6 +26,7 @@ and provides the anti-patterns checklist used during periodic reviews
 - `Invoice.objects.filter(invoice_date__year=year, status='paid')` inline in a view → use `RevenueCalculator`
 - `for client in clients: client.invoices.all()` → N+1; use `prefetch_related`
 - `.filter(practice=request.current_practice)` duplicated across views → use `for_current_practice()`
+- `if practice: qs = qs.filter(practice=practice)` or a `practice=None` default on a query helper → fails open (no practice = every practice); use `scope_to_practice()` and a required keyword
 - `Client.objects.all()` without `.select_related()` when FK fields are accessed → add `.select_related()`
 - Manual session sum loops → `count_sessions()` / `count_session_hours()`
 - `round(days * 5/7)` for working day approximation → `DateRangeHelper.count_working_days`
@@ -602,6 +604,7 @@ grow them.
 | `test_privacy_coverage.py` | Personal fields blurred, non-personal fields not (M-PAT-08) |
 | `test_code_language_policy.py` | English identifiers and comments (P-038) |
 | `test_responsive_layout.py` | Button groups wrap; tables scroll instead of crushing (M-PAT-09) |
+| `test_practice_scoping.py` | No query helper defaults `practice` to `None`; no `if practice:` filters; a user without a practice sees no data |
 | `test_csp_coverage.py` | Inline scripts carry the CSP nonce, no inline `on*=` handlers, flash messages escaped |
 | `test_currency_formatting.py` | Money goes through `format_currency_de` / `|currency`, never a hand-rolled `:,.2f` |
 | `test_release_guardrails.py` | No model change without its migration; the three version strings agree |

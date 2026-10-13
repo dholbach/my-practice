@@ -137,7 +137,9 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_year_revenue_with_paid_date(self):
         """Test year revenue using paid_date."""
-        result = RevenueCalculator.get_year_revenue(2025, use_paid_date=True)
+        result = RevenueCalculator.get_year_revenue(
+            2025, use_paid_date=True, practice=self.practice
+        )
 
         self.assertEqual(result["total"], Decimal("200.00"))
         self.assertEqual(result["count"], 1)
@@ -145,7 +147,9 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_year_revenue_with_invoice_date(self):
         """Test year revenue using invoice_date."""
-        result = RevenueCalculator.get_year_revenue(2025, use_paid_date=False)
+        result = RevenueCalculator.get_year_revenue(
+            2025, use_paid_date=False, practice=self.practice
+        )
 
         # Using invoice_date: TEST-1 (200) is from 2025
         self.assertEqual(result["total"], Decimal("200.00"))
@@ -164,7 +168,9 @@ class RevenueCalculatorTests(TestCase):
             practice=self.practice,
         )
 
-        result = RevenueCalculator.get_year_revenue(2025, use_paid_date=True)
+        result = RevenueCalculator.get_year_revenue(
+            2025, use_paid_date=True, practice=self.practice
+        )
 
         # Should include both: TEST-1 (200) + TEST-6 (400) = 600
         self.assertEqual(result["total"], Decimal("600.00"))
@@ -172,7 +178,7 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_month_revenue(self):
         """Test monthly revenue calculation."""
-        result = RevenueCalculator.get_month_revenue(2025, 3)
+        result = RevenueCalculator.get_month_revenue(2025, 3, practice=self.practice)
 
         # March 2025: TEST-1 (200)
         self.assertEqual(result["total"], Decimal("200.00"))
@@ -180,7 +186,7 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_month_revenue_empty(self):
         """Test monthly revenue for month with no invoices."""
-        result = RevenueCalculator.get_month_revenue(2025, 12)
+        result = RevenueCalculator.get_month_revenue(2025, 12, practice=self.practice)
 
         self.assertEqual(result["total"], Decimal("0"))
         self.assertEqual(result["count"], 0)
@@ -281,7 +287,9 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_paid_revenue_for_range_basic(self):
         """Test paid revenue for a date range covering only the 2025 paid invoice."""
-        total = RevenueCalculator.get_paid_revenue_for_range(date(2025, 1, 1), date(2025, 12, 31))
+        total = RevenueCalculator.get_paid_revenue_for_range(
+            date(2025, 1, 1), date(2025, 12, 31), practice=self.practice
+        )
         self.assertEqual(total, Decimal("200.00"))
 
     def test_get_paid_revenue_for_range_null_paid_date_fallback(self):
@@ -296,7 +304,9 @@ class RevenueCalculatorTests(TestCase):
             practice=self.practice,
         )
 
-        total = RevenueCalculator.get_paid_revenue_for_range(date(2025, 1, 1), date(2025, 12, 31))
+        total = RevenueCalculator.get_paid_revenue_for_range(
+            date(2025, 1, 1), date(2025, 12, 31), practice=self.practice
+        )
 
         # TEST-1 (200, paid_date in range) + TEST-RANGE-NULL (400, invoice_date fallback)
         self.assertEqual(total, Decimal("600.00"))
@@ -336,7 +346,9 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_paid_revenue_for_range_no_matches(self):
         """Range with no matching invoices should return Decimal('0'), not None."""
-        total = RevenueCalculator.get_paid_revenue_for_range(date(2020, 1, 1), date(2020, 12, 31))
+        total = RevenueCalculator.get_paid_revenue_for_range(
+            date(2020, 1, 1), date(2020, 12, 31), practice=self.practice
+        )
         self.assertEqual(total, Decimal("0"))
 
     @allow_issued_invoice_writes()

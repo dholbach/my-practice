@@ -9,6 +9,7 @@ from decimal import Decimal
 from django.test import TestCase
 
 from ..models import (
+    ALL_PRACTICES,
     Client,
     CompanyExpense,
     CompanyWithdrawal,
@@ -66,7 +67,7 @@ class RevenueAnalyzerTests(TestCase):
         )
 
         trends = RevenueAnalyzer.get_monthly_trends(
-            start_year=date.today().year, end_date=date.today()
+            start_year=date.today().year, end_date=date.today(), practice=self.practice
         )
 
         self.assertIsInstance(trends, list)
@@ -83,7 +84,7 @@ class RevenueAnalyzerTests(TestCase):
     def test_get_monthly_trends_with_no_data(self):
         """Test that get_monthly_trends works with no invoices"""
         trends = RevenueAnalyzer.get_monthly_trends(
-            start_year=date.today().year, end_date=date.today()
+            start_year=date.today().year, end_date=date.today(), practice=self.practice
         )
 
         self.assertIsInstance(trends, list)
@@ -114,7 +115,7 @@ class RevenueAnalyzerTests(TestCase):
             practice=self.practice,
         )
 
-        comparison = RevenueAnalyzer.get_yearly_comparison(start_year=2020)
+        comparison = RevenueAnalyzer.get_yearly_comparison(start_year=2020, practice=self.practice)
 
         self.assertIsInstance(comparison, list)
         years = [item["year"] for item in comparison]
@@ -142,7 +143,9 @@ class RevenueAnalyzerTests(TestCase):
             practice=self.practice,
         )
 
-        trends = RevenueAnalyzer.get_monthly_trends(start_year=2025, end_date=date(2025, 2, 28))
+        trends = RevenueAnalyzer.get_monthly_trends(
+            start_year=2025, end_date=date(2025, 2, 28), practice=self.practice
+        )
 
         jan_data = [t for t in trends if t["year"] == 2025 and t["month_name"] == "January"][0]
         self.assertEqual(jan_data["revenue"], 180.0)
@@ -174,7 +177,7 @@ class RevenueAnalyzerTests(TestCase):
             practice=self.practice,
         )
 
-        comparison = RevenueAnalyzer.get_yearly_comparison(start_year=2025)
+        comparison = RevenueAnalyzer.get_yearly_comparison(start_year=2025, practice=self.practice)
         data_2025 = [d for d in comparison if d["year"] == 2025][0]
 
         self.assertEqual(data_2025["revenue"], 450.0)
@@ -225,7 +228,7 @@ class SessionAnalyzerTests(TestCase):
 
     def test_get_type_distribution_empty(self):
         """Test session type distribution with no data"""
-        result = SessionAnalyzer.get_type_distribution()
+        result = SessionAnalyzer.get_type_distribution(practice=self.practice)
 
         self.assertEqual(result["total"], 0)
         self.assertEqual(result["types"], [])
@@ -272,7 +275,7 @@ class SessionAnalyzerTests(TestCase):
             total=Decimal("90.00"),
         )
 
-        result = SessionAnalyzer.get_type_distribution()
+        result = SessionAnalyzer.get_type_distribution(practice=self.practice)
 
         self.assertEqual(result["total"], 2)
         self.assertIn("types", result)
@@ -313,7 +316,7 @@ class ClientAnalyzerTests(TestCase):
 
     def test_get_top_by_revenue_empty(self):
         """Test top clients with no invoices"""
-        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+        result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(len(result), 0)
 
@@ -339,7 +342,7 @@ class ClientAnalyzerTests(TestCase):
             practice=self.practice,
         )
 
-        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+        result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(len(result), 2)
         # Client 2 should be first (higher revenue)
@@ -368,7 +371,7 @@ class ClientAnalyzerTests(TestCase):
                 practice=self.practice,
             )
 
-        result = ClientAnalyzer.get_top_by_revenue(limit=2)
+        result = ClientAnalyzer.get_top_by_revenue(limit=2, practice=self.practice)
 
         self.assertEqual(len(result), 2)
 
@@ -403,7 +406,7 @@ class ClientAnalyzerTests(TestCase):
                 total=Decimal("100.00"),
             )
 
-        result = ClientAnalyzer.get_top_by_revenue(limit=10)
+        result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(result[0]["client"].client_code, "CL1")
         self.assertEqual(result[0]["total_revenue"], 500.0)
@@ -425,7 +428,7 @@ class ExpenseAnalyzerTests(TestCase):
     def test_get_monthly_trends_returns_correct_structure(self):
         """Test monthly expense trends structure"""
         trends = ExpenseAnalyzer.get_monthly_trends(
-            start_year=date.today().year, end_date=date.today()
+            start_year=date.today().year, end_date=date.today(), practice=self.practice
         )
 
         self.assertIsInstance(trends, list)
@@ -453,7 +456,9 @@ class ExpenseAnalyzerTests(TestCase):
             practice=self.practice,
         )
 
-        trends = ExpenseAnalyzer.get_monthly_trends(start_year=2025, end_date=date(2025, 2, 28))
+        trends = ExpenseAnalyzer.get_monthly_trends(
+            start_year=2025, end_date=date(2025, 2, 28), practice=self.practice
+        )
 
         expected_monthly = 12.5  # 150.00 / 12 months
         jan_data = [t for t in trends if t["month_name"] == "January"][0]
@@ -463,7 +468,7 @@ class ExpenseAnalyzerTests(TestCase):
 
     def test_get_category_breakdown_with_no_expenses(self):
         """Test category breakdown with no data"""
-        result = ExpenseAnalyzer.get_expense_breakdown()
+        result = ExpenseAnalyzer.get_expense_breakdown(practice=self.practice)
 
         self.assertEqual(result["total"], 0)
         self.assertEqual(result["categories"], [])
@@ -484,7 +489,7 @@ class ExpenseAnalyzerTests(TestCase):
             practice=self.practice,
         )
 
-        result = ExpenseAnalyzer.get_expense_breakdown()
+        result = ExpenseAnalyzer.get_expense_breakdown(practice=self.practice)
 
         self.assertEqual(result["total"], 300.0)
         self.assertEqual(len(result["categories"]), 2)
@@ -548,7 +553,9 @@ class ProfitCalculatorTests(TestCase):
             practice=self.practice,
         )
 
-        result = ProfitCalculator.calculate_yearly(start_year=year, end_year=year)
+        result = ProfitCalculator.calculate_yearly(
+            start_year=year, end_year=year, practice=self.practice
+        )
 
         self.assertEqual(len(result), 1)
         year_data = result[0]
@@ -595,7 +602,9 @@ class ProfitCalculatorTests(TestCase):
             practice=self.practice,
         )
 
-        result = ProfitCalculator.calculate_yearly(start_year=2020, end_year=2021)
+        result = ProfitCalculator.calculate_yearly(
+            start_year=2020, end_year=2021, practice=self.practice
+        )
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]["cumulative_profit"], 500.0)
@@ -616,11 +625,11 @@ class AnalyzerAPITests(TestCase):
         )
 
         # Just check they're callable and return expected types
-        self.assertIsInstance(RevenueAnalyzer.get_monthly_trends(), list)
-        self.assertIsInstance(SessionAnalyzer.get_type_distribution(), dict)
-        self.assertIsInstance(ClientAnalyzer.get_top_by_revenue(), list)
-        self.assertIsInstance(SessionAnalyzer.get_busiest_months(), list)
-        self.assertIsInstance(RevenueAnalyzer.get_yearly_comparison(), list)
-        self.assertIsInstance(ExpenseAnalyzer.get_monthly_trends(), list)
-        self.assertIsInstance(ExpenseAnalyzer.get_expense_breakdown(), dict)
-        self.assertIsInstance(ProfitCalculator.calculate_yearly(), list)
+        self.assertIsInstance(RevenueAnalyzer.get_monthly_trends(practice=ALL_PRACTICES), list)
+        self.assertIsInstance(SessionAnalyzer.get_type_distribution(practice=ALL_PRACTICES), dict)
+        self.assertIsInstance(ClientAnalyzer.get_top_by_revenue(practice=ALL_PRACTICES), list)
+        self.assertIsInstance(SessionAnalyzer.get_busiest_months(practice=ALL_PRACTICES), list)
+        self.assertIsInstance(RevenueAnalyzer.get_yearly_comparison(practice=ALL_PRACTICES), list)
+        self.assertIsInstance(ExpenseAnalyzer.get_monthly_trends(practice=ALL_PRACTICES), list)
+        self.assertIsInstance(ExpenseAnalyzer.get_expense_breakdown(practice=ALL_PRACTICES), dict)
+        self.assertIsInstance(ProfitCalculator.calculate_yearly(practice=ALL_PRACTICES), list)

@@ -41,6 +41,8 @@ class AnalyticsDashboardViewTest(TestCase):
         )
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
+        # Without a practice the user sees no figures at all (scope_to_practice).
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 

@@ -11,6 +11,7 @@ from django.db.models import Min
 from django.utils import timezone
 
 from ..models import CompanyExpense, CompanyWithdrawal, Invoice, TimeOff
+from ..models.base import scope_to_practice
 from ..utils.capacity_helpers import get_capacity_trends
 from ..utils.date_helpers import DateRangeHelper
 from ..utils.practice_days import berlin_public_holidays
@@ -147,14 +148,14 @@ class AnalyticsDashboardBuilder:
 
     def _get_earliest_data_year(self) -> int:
         """Return the earliest year with any financial data for this practice."""
-        practice_filter = {"practice": self.practice} if self.practice else {}
         candidates = []
         for model, field in (
             (Invoice, "invoice_date"),
             (CompanyExpense, "date"),
             (CompanyWithdrawal, "date"),
         ):
-            earliest = model.objects.filter(**practice_filter).aggregate(v=Min(field))["v"]
+            qs = scope_to_practice(model.objects.all(), self.practice)
+            earliest = qs.aggregate(v=Min(field))["v"]
             if earliest:
                 candidates.append(earliest.year)
         return min(candidates) if candidates else self.today.year

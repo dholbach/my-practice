@@ -4,7 +4,7 @@ Split from monolithic models.py into domain-focused modules.
 """
 
 from .bank_statement import BankTransaction
-from .base import TimestampedModel
+from .base import ALL_PRACTICES, TimestampedModel, scope_to_practice
 from .calendar import GoogleCalendarToken, PendingCalendarEvent
 from .client import Client, ClientDocument
 from .client_alias import ClientAlias
@@ -51,11 +51,13 @@ __all__ = [
     "ClientProfile",
     "ClientNote",
     "ServiceType",
+    "ALL_PRACTICES",
     "INVOICE_RETENTION_YEARS",
     "Invoice",
     "InvoiceItem",
     "InvoiceLockedError",
     "allow_issued_invoice_writes",
+    "scope_to_practice",
     "InvoiceQuerySet",
     "Session",
     "SessionLog",

@@ -20,6 +20,7 @@ from ..models import (
     InvoiceItem,
     Session,
 )
+from ..models.base import PracticeScope, scope_to_practice
 from . import (
     DateRangeHelper,
     RevenueCalculator,
@@ -97,7 +98,8 @@ def _get_year_financials(
     today: date,
     start_date: date,
     end_date: date,
-    practice=None,
+    *,
+    practice: PracticeScope,
 ) -> tuple["Decimal", "Decimal", "Decimal"]:
     """
     Return (revenue, expenses, withdrawals) for a single calendar year.
@@ -118,14 +120,12 @@ def _get_year_financials(
 
     # Expenses dated 31.12. each year — filter by year only
     expense_qs = CompanyExpense.objects.filter(date__year=year)
-    if practice:
-        expense_qs = expense_qs.filter(practice=practice)
+    expense_qs = scope_to_practice(expense_qs, practice)
     expenses = expense_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0")
 
     # Withdrawals — year filter for consistency with expenses
     withdrawal_qs = CompanyWithdrawal.objects.filter(date__year=year)
-    if practice:
-        withdrawal_qs = withdrawal_qs.filter(practice=practice)
+    withdrawal_qs = scope_to_practice(withdrawal_qs, practice)
     withdrawals = withdrawal_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0")
 
     return revenue, expenses, withdrawals
@@ -135,7 +135,8 @@ def get_yearly_financials_series(
     start_year: int = 2020,
     start_date: date | None = None,
     end_date: date | None = None,
-    practice=None,
+    *,
+    practice: PracticeScope,
 ) -> list[dict]:
     """
     Per-year {year, revenue, expenses, withdrawals} series (Decimal values).
@@ -155,7 +156,7 @@ def get_yearly_financials_series(
     series = []
     for year in range(start_date.year, end_date.year + 1):
         revenue, expenses, withdrawals = _get_year_financials(
-            year, today, start_date, end_date, practice
+            year, today, start_date, end_date, practice=practice
         )
         series.append(
             {
@@ -172,7 +173,9 @@ class RevenueAnalyzer:
     """Handles all revenue-related calculations and analysis."""
 
     @staticmethod
-    def get_monthly_trends(start_year=2020, end_date=None, start_date=None, practice=None):
+    def get_monthly_trends(
+        start_year=2020, end_date=None, start_date=None, *, practice: PracticeScope
+    ):
         """
         Get monthly revenue data from start_date (or start_year) to end_date.
         Based on payment date (paid_date) for tax purposes.
@@ -192,8 +195,7 @@ class RevenueAnalyzer:
             .annotate(effective_date=Coalesce("paid_date", "invoice_date"))
             .filter(effective_date__gte=start_date, effective_date__lte=end_date)
         )
-        if practice:
-            qs = qs.filter(practice=practice)
+        qs = scope_to_practice(qs, practice)
 
         rows = (
             qs.annotate(month=TruncMonth("effective_date"))
@@ -207,7 +209,7 @@ class RevenueAnalyzer:
         return _build_monthly_series(monthly_totals, start_date, end_date, value_key="revenue")
 
     @staticmethod
-    def get_days_to_payment_trends(months: int = 24, practice=None) -> list[dict]:
+    def get_days_to_payment_trends(months: int = 24, *, practice: PracticeScope) -> list[dict]:
         """
         Average days from invoice_date to paid_date, grouped by month (paid_date).
 
@@ -232,8 +234,7 @@ class RevenueAnalyzer:
             ),
             month=TruncMonth("paid_date"),
         )
-        if practice:
-            qs = qs.filter(practice=practice)
+        qs = scope_to_practice(qs, practice)
 
         rows = (
             qs.values("month").annotate(avg_delta=Avg("delta"), count=Count("id")).order_by("month")
@@ -257,7 +258,12 @@ class RevenueAnalyzer:
 
     @staticmethod
     def get_yearly_comparison(
-        start_year=2020, start_date=None, end_date=None, practice=None, yearly_financials=None
+        start_year=2020,
+        start_date=None,
+        end_date=None,
+        *,
+        practice: PracticeScope,
+        yearly_financials=None,
     ):
         """
         Get yearly comparison of revenue vs withdrawals vs expenses.
@@ -271,7 +277,7 @@ class RevenueAnalyzer:
         """
         if yearly_financials is None:
             yearly_financials = get_yearly_financials_series(
-                start_year, start_date, end_date, practice
+                start_year, start_date, end_date, practice=practice
             )
 
         comparison_data = []
@@ -295,7 +301,7 @@ class SessionAnalyzer:
     """Handles all session-related statistics and analysis."""
 
     @staticmethod
-    def get_type_distribution(practice=None):
+    def get_type_distribution(*, practice: PracticeScope):
         """
         Get distribution of session types from InvoiceItems.
         Returns dict with counts and percentages.
@@ -306,8 +312,7 @@ class SessionAnalyzer:
 
         # Get all non-cancelled invoice items
         base_qs = InvoiceItem.objects.filter(session__cancelled=False)
-        if practice:
-            base_qs = base_qs.filter(invoice__practice=practice)
+        base_qs = scope_to_practice(base_qs, practice, "invoice__practice")
         total_items = base_qs.count()
 
         if total_items == 0:
@@ -362,7 +367,7 @@ class SessionAnalyzer:
         }
 
     @staticmethod
-    def get_busiest_months(start_year=2020, practice=None):
+    def get_busiest_months(start_year=2020, *, practice: PracticeScope):
         """
         Get session counts per month to identify busiest periods from InvoiceItems.
         Uses InvoiceItems as data source.
@@ -377,8 +382,7 @@ class SessionAnalyzer:
         items_qs = InvoiceItem.objects.filter(
             session__session_date__year__gte=start_year
         ).select_related("invoice", "session", "service_type")
-        if practice:
-            items_qs = items_qs.filter(invoice__practice=practice)
+        items_qs = scope_to_practice(items_qs, practice, "invoice__practice")
         invoice_items = items_qs
 
         # Group items by month for proper session counting
@@ -419,7 +423,7 @@ class SessionAnalyzer:
         return result
 
     @staticmethod
-    def get_cancellation_trends(months: int = 24, practice=None) -> list[dict]:
+    def get_cancellation_trends(months: int = 24, *, practice: PracticeScope) -> list[dict]:
         """
         Get monthly cancellation rates for the last N months.
 
@@ -436,8 +440,7 @@ class SessionAnalyzer:
         qs = Session.objects.filter(session_date__gte=start).annotate(
             month=TruncMonth("session_date")
         )
-        if practice:
-            qs = qs.filter(client__practice=practice)
+        qs = scope_to_practice(qs, practice, "client__practice")
 
         rows = (
             qs.values("month")
@@ -471,7 +474,7 @@ class ClientAnalyzer:
     """Handles client-related statistics and rankings."""
 
     @staticmethod
-    def get_top_by_revenue(limit=10, practice=None):
+    def get_top_by_revenue(limit=10, *, practice: PracticeScope):
         """
         Get top clients ranked by total revenue (paid invoices).
         Returns list of {client, total_revenue, invoice_count, session_hours} dicts.
@@ -485,8 +488,7 @@ class ClientAnalyzer:
             total_revenue=Sum("invoices__total", filter=Q(invoices__status="paid")),
             invoice_count=Count("invoices", filter=Q(invoices__status="paid"), distinct=True),
         ).filter(total_revenue__gt=0)
-        if practice:
-            clients_qs = clients_qs.filter(practice=practice)
+        clients_qs = scope_to_practice(clients_qs, practice)
         clients_with_revenue = list(clients_qs.order_by("-total_revenue")[:limit])
 
         # One query for every top client's items, grouped in Python, rather than
@@ -523,7 +525,9 @@ class ExpenseAnalyzer:
     """Handles expense-related calculations and breakdowns."""
 
     @staticmethod
-    def get_monthly_trends(start_year=2020, end_date=None, start_date=None, practice=None):
+    def get_monthly_trends(
+        start_year=2020, end_date=None, start_date=None, *, practice: PracticeScope
+    ):
         """
         Get monthly expense data from start_date (or start_year) to end_date.
         Note: All expenses are dated 31.12. of each year, so we aggregate by year
@@ -539,8 +543,7 @@ class ExpenseAnalyzer:
         expense_qs = CompanyExpense.objects.filter(
             date__year__gte=start_date.year, date__year__lte=end_date.year
         )
-        if practice:
-            expense_qs = expense_qs.filter(practice=practice)
+        expense_qs = scope_to_practice(expense_qs, practice)
         year_totals = dict(
             expense_qs.values_list("date__year")
             .annotate(total=Sum("amount"))
@@ -557,7 +560,7 @@ class ExpenseAnalyzer:
         return _build_monthly_series(monthly_totals, start_date, end_date, value_key="expenses")
 
     @staticmethod
-    def get_expense_breakdown(practice=None):
+    def get_expense_breakdown(*, practice: PracticeScope):
         """
         Get expense breakdown by category with totals and percentages.
         Returns dict with category breakdown.
@@ -567,8 +570,7 @@ class ExpenseAnalyzer:
         """
         # Start with all expenses (filtered by practice if provided)
         expense_qs = CompanyExpense.objects.all()
-        if practice:
-            expense_qs = expense_qs.filter(practice=practice)
+        expense_qs = scope_to_practice(expense_qs, practice)
         total_expenses = expense_qs.aggregate(total=Sum("amount"))["total"] or Decimal("0")
 
         if total_expenses == 0:
@@ -613,7 +615,8 @@ class ProfitCalculator:
         end_year=None,
         start_date=None,
         end_date=None,
-        practice=None,
+        *,
+        practice: PracticeScope,
         yearly_financials=None,
     ):
         """
@@ -641,7 +644,7 @@ class ProfitCalculator:
             yearly_financials = []
             for year in range(start_date.year, end_year + 1):
                 revenue, expenses, withdrawals = _get_year_financials(
-                    year, today, start_date, end_date, practice
+                    year, today, start_date, end_date, practice=practice
                 )
                 yearly_financials.append(
                     {

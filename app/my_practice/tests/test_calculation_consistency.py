@@ -173,7 +173,7 @@ class SessionCountConsistencyTests(TestCase):
             total=Decimal("180.00"),
         )
 
-        sessions = get_sessions_for_month(date(2026, 1, 1))
+        sessions = get_sessions_for_month(date(2026, 1, 1), practice=self.practice)
         self.assertIn("TEST", sessions)
         self.assertEqual(sessions["TEST"], 2.0)
 
@@ -296,12 +296,14 @@ class RevenueConsistencyTests(TestCase):
 
     def test_revenue_calculator_year_revenue(self):
         """Test RevenueCalculator.get_year_revenue()."""
-        year_stats = RevenueCalculator.get_year_revenue(2025, use_paid_date=True)
+        year_stats = RevenueCalculator.get_year_revenue(
+            2025, use_paid_date=True, practice=self.practice
+        )
         self.assertEqual(year_stats["total"], Decimal("280.00"))
 
     def test_client_analyzer_top_by_revenue(self):
         """Test ClientAnalyzer.get_top_by_revenue()."""
-        top_clients = ClientAnalyzer.get_top_by_revenue(limit=10)
+        top_clients = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(len(top_clients), 2)
         self.assertEqual(top_clients[0]["client"], self.client1)
@@ -320,7 +322,9 @@ class RevenueConsistencyTests(TestCase):
         sum_of_clients = c1_revenue + c2_revenue
 
         # Method 3: Year revenue
-        year_revenue = RevenueCalculator.get_year_revenue(2025, use_paid_date=True)["total"]
+        year_revenue = RevenueCalculator.get_year_revenue(
+            2025, use_paid_date=True, practice=self.practice
+        )["total"]
 
         # All should be equal
         self.assertEqual(total_revenue, Decimal("280.00"))
