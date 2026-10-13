@@ -3,10 +3,12 @@
 from datetime import date
 from decimal import Decimal
 
+from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
 from django.test import Client as TestClient
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
+from django.urls import reverse
 
 from my_practice.admin import (
     BankTransactionAdmin,
@@ -385,6 +387,35 @@ class AdminIntegrationTestCase(TestCase):
         self.assertEqual(Client.objects.count(), 1)
         client = Client.objects.first()
         self.assertEqual(client.client_code, "TC")
+
+
+class AdminPageSweepTests(TestCase):
+    """Every registered admin opens its list and add page without a server error.
+
+    The admin builds these pages from model properties and display methods that
+    no view ever calls, so nothing else exercises them: BankTransaction's add
+    page returned 500 because its read-only is_income property compared an
+    unset amount with 0.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_superuser(
+            username="sweep", email="sweep@example.com", password="testpass123"
+        )
+        self.test_client = TestClient()
+        self.test_client.login(username="sweep", password="testpass123")
+
+    def test_changelist_and_add_pages_load(self):
+        request = RequestFactory().get("/admin/")
+        request.user = self.user
+        for model, model_admin in admin.site._registry.items():
+            opts = model._meta
+            pages = [f"admin:{opts.app_label}_{opts.model_name}_changelist"]
+            if model_admin.has_add_permission(request):
+                pages.append(f"admin:{opts.app_label}_{opts.model_name}_add")
+            for name in pages:
+                with self.subTest(page=name):
+                    self.assertEqual(self.test_client.get(reverse(name)).status_code, 200)
 
 
 class InvoiceItemAdminFormTests(TestCase):
