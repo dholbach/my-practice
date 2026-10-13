@@ -3,15 +3,56 @@ Base models and managers for practice-scoped data.
 
 Provides QuerySet and Manager classes that automatically filter
 by practice, enabling multi-practice data separation.
+
+Models without a practice are shared on purpose: TimeOff (the practitioner's
+own absences, which affect every practice), ClientTag (a tag vocabulary; the
+tagged clients are scoped), the operational checklists (instance-level backup
+routines) and GebuhZiffer (a published fee schedule).
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 from django.db import models
 from django.http import HttpRequest
 
 if TYPE_CHECKING:
     from .practice import Practice
+
+
+class _AllPractices:
+    """Type of ALL_PRACTICES; see scope_to_practice()."""
+
+    def __repr__(self) -> str:
+        return "ALL_PRACTICES"
+
+
+# Explicit request for data across every practice (e.g. income tax is per
+# person, not per practice). Never the default: see scope_to_practice().
+ALL_PRACTICES = _AllPractices()
+
+# What every practice-scoped query helper takes: a practice, ALL_PRACTICES, or
+# None (= nothing, see scope_to_practice).
+PracticeScope: TypeAlias = "Practice | _AllPractices | None"
+
+
+def scope_to_practice[QS: models.QuerySet[Any]](
+    queryset: QS,
+    practice: PracticeScope,
+    field: str = "practice",
+) -> QS:
+    """Restrict ``queryset`` to one practice, failing closed.
+
+    - a Practice: rows of that practice (via ``field``, e.g. "invoice__practice")
+    - ALL_PRACTICES: every row — the caller has to ask for this explicitly
+    - None: no rows. ``request.current_practice`` is None for a user with no
+      practice; the old ``if practice: qs = qs.filter(...)`` pattern handed
+      such a user every practice's figures instead of none.
+    """
+    if practice is ALL_PRACTICES:
+        return queryset
+    if practice is None:
+        return queryset.none()
+    return queryset.filter(**{field: practice})
 
 
 class PracticeScopedQuerySet(models.QuerySet):

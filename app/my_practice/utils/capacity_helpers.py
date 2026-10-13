@@ -15,6 +15,7 @@ from django.db.models.functions import Cast
 from django.utils import timezone
 
 from ..models import CapacityPeriod, Session
+from ..models.base import PracticeScope, scope_to_practice
 from .date_helpers import DateRangeHelper
 from .practice_days import berlin_public_holidays
 from .timeoff_helpers import calculate_timeoff_for_period
@@ -28,7 +29,7 @@ def _build_holiday_set(start_year: int, end_year: int) -> set[date]:
     return holidays
 
 
-def _get_capacity_periods(practice=None) -> list[tuple[date, int]]:
+def _get_capacity_periods(*, practice: PracticeScope) -> list[tuple[date, int]]:
     """
     Return capacity periods as a list of (start_date, hours_per_week) tuples, ascending.
 
@@ -36,13 +37,12 @@ def _get_capacity_periods(practice=None) -> list[tuple[date, int]]:
     periods across all practices (used by standalone scripts without a request context).
     """
     qs = CapacityPeriod.objects.order_by("start_date")
-    if practice is not None:
-        qs = qs.filter(practice=practice)
+    qs = scope_to_practice(qs, practice)
     return [(cp.start_date, cp.hours_per_week) for cp in qs]
 
 
 def get_weekly_capacity_for_date(
-    target_date: date, practice=None, periods: list[tuple[date, int]] | None = None
+    target_date: date, *, practice: PracticeScope, periods: list[tuple[date, int]] | None = None
 ) -> float:
     """
     Get the weekly capacity (hours) for a specific date.
@@ -57,7 +57,7 @@ def get_weekly_capacity_for_date(
         Hours per week available for client sessions
     """
     if periods is None:
-        periods = _get_capacity_periods(practice)
+        periods = _get_capacity_periods(practice=practice)
     if not periods:
         return 0.0
     capacity = periods[0][1]
@@ -70,7 +70,7 @@ def get_weekly_capacity_for_date(
 
 
 def calculate_period_capacity(
-    start_date: date, end_date: date, include_timeoff: bool = True, practice=None
+    start_date: date, end_date: date, include_timeoff: bool = True, *, practice: PracticeScope
 ) -> dict:
     """
     Calculate capacity metrics for a date range.
@@ -132,7 +132,7 @@ def calculate_period_capacity(
         available_working_days,
         _holidays,
         practice=practice,
-        periods=_get_capacity_periods(practice),
+        periods=_get_capacity_periods(practice=practice),
     )
 
     # Calculate booked hours (uses same horizon)
@@ -159,7 +159,8 @@ def _calculate_weighted_capacity(
     end_date: date,
     available_working_days: int,
     holidays: set[date] | frozenset[date] = frozenset(),
-    practice=None,
+    *,
+    practice: PracticeScope,
     periods: list[tuple[date, int]] | None = None,
 ) -> float:
     """
@@ -175,7 +176,7 @@ def _calculate_weighted_capacity(
             CapacityPeriod when this is called repeatedly (e.g. in a loop)
     """
     if periods is None:
-        periods = _get_capacity_periods(practice)
+        periods = _get_capacity_periods(practice=practice)
 
     # Check if period spans a capacity change
     capacity_changes_in_period = [
@@ -253,7 +254,9 @@ def _get_booked_hours(start_date: date, end_date: date) -> float:
     return (result["total_minutes"] or 0) / 60
 
 
-def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practice=None):
+def get_capacity_trends(
+    start_year=2020, end_date=None, start_date=None, *, practice: PracticeScope
+):
     """
     Calculate capacity utilization trends over time (monthly).
 
@@ -295,14 +298,16 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
     # Query 1: Get all booked therapist hours grouped by month (single query).
     # Excludes cancelled sessions; divides by group_size so group sessions count
     # once for the therapist regardless of participant count.
-    practice_filter = {"client__practice": practice} if practice else {}
     booked_by_month = defaultdict(float)
     monthly_sessions = (
-        Session.objects.filter(
-            session_date__gte=start_date,
-            session_date__lte=end_date,
-            cancelled=False,
-            **practice_filter,
+        scope_to_practice(
+            Session.objects.filter(
+                session_date__gte=start_date,
+                session_date__lte=end_date,
+                cancelled=False,
+            ),
+            practice,
+            "client__practice",
         )
         .annotate(month=TruncMonth("session_date"))
         .values("month")
@@ -324,7 +329,7 @@ def get_capacity_trends(start_year=2020, end_date=None, start_date=None, practic
     _holidays = _build_holiday_set(start_date.year, end_date.year)
 
     # Query 3: capacity periods, fetched once and reused for every month below
-    _periods = _get_capacity_periods(practice)
+    _periods = _get_capacity_periods(practice=practice)
 
     # Build capacity data iterating through months (no DB queries in loop)
     capacity_data = []

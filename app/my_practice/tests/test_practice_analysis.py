@@ -258,7 +258,7 @@ class PracticeAnalyzerTestCase(TestCase):
             city="Berlin",
         )
 
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         self.assertIn("period", analysis)
@@ -269,7 +269,7 @@ class PracticeAnalyzerTestCase(TestCase):
 
     def test_client_classification_established(self):
         """Test established client classification (>=5 sessions, active in period)"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         est_client = next(
@@ -282,7 +282,7 @@ class PracticeAnalyzerTestCase(TestCase):
 
     def test_client_classification_probatoric(self):
         """Test probatoric client classification (<5 sessions total)"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         pro_client = next(
@@ -295,7 +295,7 @@ class PracticeAnalyzerTestCase(TestCase):
 
     def test_client_classification_dormant(self):
         """Test dormant client classification (no sessions in period)"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         dor_client = next(
@@ -308,7 +308,7 @@ class PracticeAnalyzerTestCase(TestCase):
 
     def test_client_counts(self):
         """Test client count aggregations"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         self.assertEqual(analysis["clients"]["established"], 1)
@@ -318,7 +318,7 @@ class PracticeAnalyzerTestCase(TestCase):
 
     def test_capacity_calculation(self):
         """Test capacity metrics calculation"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         capacity = analysis["capacity"]
@@ -347,7 +347,7 @@ class PracticeAnalyzerTestCase(TestCase):
 
     def test_timeoff_integration(self):
         """Test time off data integration"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         timeoff = analysis["timeoff"]
@@ -360,7 +360,7 @@ class PracticeAnalyzerTestCase(TestCase):
 
     def test_insights_generation(self):
         """Test that insights are generated"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze_with_insights()
 
         self.assertIn("insights", analysis)
@@ -374,17 +374,17 @@ class PracticeAnalyzerTestCase(TestCase):
     def test_period_label_formatting(self):
         """Test period label formatting for different ranges"""
         # Same year, same month
-        analyzer = PracticeAnalyzer(date(2025, 11, 1), date(2025, 11, 30))
+        analyzer = PracticeAnalyzer(date(2025, 11, 1), date(2025, 11, 30), practice=self.practice)
         analysis = analyzer.analyze()
         self.assertEqual(analysis["period"]["label"], "November 2025")
 
         # Same year, different months
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
         self.assertEqual(analysis["period"]["label"], "Oct - Dec 2025")
 
         # Full year
-        analyzer = PracticeAnalyzer(date(2025, 1, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 1, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
         self.assertEqual(analysis["period"]["label"], "2025")
 
@@ -435,14 +435,14 @@ class PracticeAnalyzerTestCase(TestCase):
             quantity=1,
         )
 
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         self.assertEqual(analysis["clients"]["online"], 1)
 
     def test_revenue_in_period(self):
         """Test revenue calculation for period"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         est_client = next(
@@ -528,7 +528,7 @@ class CalculateQuarterTrendsTestCase(TestCase):
 
     def test_calculate_quarter_trends_structure(self):
         """Test that quarter trends returns correct structure"""
-        trends = calculate_quarter_trends(date(2025, 12, 31))
+        trends = calculate_quarter_trends(date(2025, 12, 31), practice=self.practice)
 
         self.assertEqual(len(trends), 4)
 
@@ -541,7 +541,7 @@ class CalculateQuarterTrendsTestCase(TestCase):
 
     def test_quarter_trends_ordering(self):
         """Test that trends are ordered chronologically (oldest first)"""
-        trends = calculate_quarter_trends(date(2025, 12, 31))
+        trends = calculate_quarter_trends(date(2025, 12, 31), practice=self.practice)
 
         # Should start with Q1 and end with Q4
         self.assertIn("2025", trends[0]["label"])
@@ -552,7 +552,7 @@ class CalculateQuarterTrendsTestCase(TestCase):
 
     def test_quarter_trends_active_clients(self):
         """Test active client counting in trends"""
-        trends = calculate_quarter_trends(date(2025, 12, 31))
+        trends = calculate_quarter_trends(date(2025, 12, 31), practice=self.practice)
 
         # Should have 1 active client in each quarter
         for trend in trends:
@@ -560,7 +560,7 @@ class CalculateQuarterTrendsTestCase(TestCase):
 
     def test_quarter_trends_capacity_percentage(self):
         """Test capacity percentage is calculated"""
-        trends = calculate_quarter_trends(date(2025, 12, 31))
+        trends = calculate_quarter_trends(date(2025, 12, 31), practice=self.practice)
 
         for trend in trends:
             self.assertIsInstance(trend["capacity_percentage"], int)
@@ -583,7 +583,7 @@ class PracticeAnalyzerEdgeCasesTestCase(TestCase):
 
     def test_empty_period(self):
         """Test analysis with no clients or sessions"""
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         self.assertEqual(analysis["clients"]["active_in_period"], 0)
@@ -594,7 +594,7 @@ class PracticeAnalyzerEdgeCasesTestCase(TestCase):
     def test_single_day_period(self):
         """Test analysis for single day"""
         # Nov 17, 2025 is a Monday
-        analyzer = PracticeAnalyzer(date(2025, 11, 17), date(2025, 11, 17))
+        analyzer = PracticeAnalyzer(date(2025, 11, 17), date(2025, 11, 17), practice=self.practice)
         analysis = analyzer.analyze()
 
         self.assertEqual(analysis["period"]["days"], 1)
@@ -603,7 +603,7 @@ class PracticeAnalyzerEdgeCasesTestCase(TestCase):
     def test_weekend_only_period(self):
         """Test period that's only weekends"""
         # Nov 1-2, 2025 is Sat-Sun
-        analyzer = PracticeAnalyzer(date(2025, 11, 1), date(2025, 11, 2))
+        analyzer = PracticeAnalyzer(date(2025, 11, 1), date(2025, 11, 2), practice=self.practice)
         analysis = analyzer.analyze()
 
         self.assertEqual(analysis["capacity"]["working_days_total"], 0)
@@ -619,7 +619,7 @@ class PracticeAnalyzerEdgeCasesTestCase(TestCase):
             practice=self.practice,
         )
 
-        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31))
+        analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
 
         # Client with no history should not appear in list

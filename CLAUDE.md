@@ -192,7 +192,7 @@ Available base classes: `PracticeScopedListView`, `PracticeScopedCreateView`, `P
 ```python
 # Revenue calculations
 from my_practice.utils import RevenueCalculator
-revenue = RevenueCalculator.get_year_revenue(2026, use_paid_date=True)["total"]
+revenue = RevenueCalculator.get_year_revenue(2026, practice=request.current_practice)["total"]
 breakdown = RevenueCalculator.get_status_breakdown(year=2026)
 
 # Date ranges
@@ -200,6 +200,9 @@ from my_practice.utils import DateRangeHelper
 helper = DateRangeHelper(start_date, end_date)
 months = helper.get_month_list()
 ```
+
+#### Practice scoping fails closed
+Query helpers take `practice` as a **required keyword** (`*, practice: PracticeScope`) and filter with `scope_to_practice(qs, practice[, "client__practice"])`: a practice gives its rows, `None` (a user without a practice) gives **nothing**, and `ALL_PRACTICES` — only where every practice is genuinely wanted — gives everything. Never `if practice: qs = qs.filter(practice=practice)`: that showed a practice-less user every practice's figures. `TimeOff`, `ClientTag`, the operational checklists and `GebuhZiffer` are deliberately shared (the practitioner's absences, a tag vocabulary, instance operations, a fee schedule). **Guardrail test**: `my_practice/tests/test_practice_scoping.py`.
 
 #### Numbered patterns (M-PAT-01 … M-PAT-09)
 

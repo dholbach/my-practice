@@ -29,22 +29,26 @@ class GetWeeklyCapacityTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        _make_capacity_periods()
+        cls.practice = _make_capacity_periods()
 
     def test_before_first_period_uses_first_config(self):
-        self.assertEqual(get_weekly_capacity_for_date(date(2019, 6, 1)), 10)
+        self.assertEqual(get_weekly_capacity_for_date(date(2019, 6, 1), practice=self.practice), 10)
 
     def test_building_phase(self):
-        self.assertEqual(get_weekly_capacity_for_date(date(2022, 3, 15)), 10)
+        self.assertEqual(
+            get_weekly_capacity_for_date(date(2022, 3, 15), practice=self.practice), 10
+        )
 
     def test_day_before_capacity_change(self):
-        self.assertEqual(get_weekly_capacity_for_date(date(2023, 7, 31)), 10)
+        self.assertEqual(
+            get_weekly_capacity_for_date(date(2023, 7, 31), practice=self.practice), 10
+        )
 
     def test_day_of_capacity_change(self):
-        self.assertEqual(get_weekly_capacity_for_date(date(2023, 8, 1)), 20)
+        self.assertEqual(get_weekly_capacity_for_date(date(2023, 8, 1), practice=self.practice), 20)
 
     def test_after_capacity_change(self):
-        self.assertEqual(get_weekly_capacity_for_date(date(2026, 1, 1)), 20)
+        self.assertEqual(get_weekly_capacity_for_date(date(2026, 1, 1), practice=self.practice), 20)
 
 
 class WeightedCapacityTests(TestCase):
@@ -56,7 +60,7 @@ class WeightedCapacityTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        _make_capacity_periods()
+        cls.practice = _make_capacity_periods()
 
     START = date(2023, 7, 1)
     END = date(2023, 8, 31)
@@ -66,13 +70,17 @@ class WeightedCapacityTests(TestCase):
     def test_single_config_period(self):
         """A period without a capacity change: available_days / 5 * hours_per_week."""
         # June 2026, 22 working days assumed by caller
-        result = _calculate_weighted_capacity(date(2026, 6, 1), date(2026, 6, 30), 22)
+        result = _calculate_weighted_capacity(
+            date(2026, 6, 1), date(2026, 6, 30), 22, practice=self.practice
+        )
         self.assertAlmostEqual(result, 22 / 5 * 20)
 
     def test_spanning_period_without_timeoff(self):
         """Spanning the 2023-08-01 change weights each config by its working days."""
         total_days = self.JULY_DAYS + self.AUG_DAYS
-        result = _calculate_weighted_capacity(self.START, self.END, total_days)
+        result = _calculate_weighted_capacity(
+            self.START, self.END, total_days, practice=self.practice
+        )
         expected = (self.JULY_DAYS * 10 + self.AUG_DAYS * 20) / 5
         self.assertAlmostEqual(result, expected)
 
@@ -80,15 +88,19 @@ class WeightedCapacityTests(TestCase):
         """Regression: time off must reduce capacity even when the period spans
         a capacity change (available_working_days was previously ignored)."""
         total_days = self.JULY_DAYS + self.AUG_DAYS
-        full = _calculate_weighted_capacity(self.START, self.END, total_days)
-        reduced = _calculate_weighted_capacity(self.START, self.END, total_days - 10)
+        full = _calculate_weighted_capacity(
+            self.START, self.END, total_days, practice=self.practice
+        )
+        reduced = _calculate_weighted_capacity(
+            self.START, self.END, total_days - 10, practice=self.practice
+        )
 
         self.assertLess(reduced, full)
         # Reduction is proportional to lost working days
         self.assertAlmostEqual(reduced, full * (total_days - 10) / total_days)
 
     def test_zero_available_days(self):
-        result = _calculate_weighted_capacity(self.START, self.END, 0)
+        result = _calculate_weighted_capacity(self.START, self.END, 0, practice=self.practice)
         self.assertEqual(result, 0.0)
 
 
@@ -98,12 +110,14 @@ class PeriodCapacityWithTimeoffTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        _make_capacity_periods()
+        cls.practice = _make_capacity_periods()
 
     def test_timeoff_reduces_capacity_across_capacity_change(self):
         start, end = date(2023, 7, 1), date(2023, 8, 31)
 
-        without = calculate_period_capacity(start, end, include_timeoff=False)
+        without = calculate_period_capacity(
+            start, end, include_timeoff=False, practice=self.practice
+        )
 
         # Two vacation weeks straddling the capacity change (Jul 24 – Aug 4)
         TimeOff.objects.create(
@@ -112,7 +126,9 @@ class PeriodCapacityWithTimeoffTests(TestCase):
             start_date=date(2023, 7, 24),
             end_date=date(2023, 8, 4),
         )
-        with_timeoff = calculate_period_capacity(start, end, include_timeoff=True)
+        with_timeoff = calculate_period_capacity(
+            start, end, include_timeoff=True, practice=self.practice
+        )
 
         self.assertEqual(without["working_days_total"], 44)
         self.assertEqual(with_timeoff["timeoff_days"], 10)

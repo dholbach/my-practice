@@ -14,6 +14,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from ..models import Client, Invoice
+from ..models.base import PracticeScope, scope_to_practice
 from ..models.session import Session
 
 
@@ -33,7 +34,7 @@ class PracticeAnalyzer:
     Provides insights into client activity, capacity usage, and planning metrics.
     """
 
-    def __init__(self, start_date, end_date, practice=None):
+    def __init__(self, start_date, end_date, *, practice: PracticeScope):
         """
         Initialize analyzer for a time period.
 
@@ -55,9 +56,7 @@ class PracticeAnalyzer:
             dict: Comprehensive analysis data
         """
         # Fetch all clients for this practice (including dormant — needed for full classification)
-        clients = (
-            Client.objects.filter(practice=self.practice) if self.practice else Client.objects.all()
-        )
+        clients = scope_to_practice(Client.objects.all(), self.practice)
         clients = self._annotate_clients(clients)
 
         # Get session data for period
@@ -137,12 +136,14 @@ class PracticeAnalyzer:
         so group-session clients are counted individually).
         """
         hours_by_client: dict[int, float] = {}
-        practice_filter = {"client__practice": self.practice} if self.practice else {}
-        qs = Session.objects.filter(
-            session_date__gte=self.start_date,
-            session_date__lte=self.end_date,
-            cancelled=False,
-            **practice_filter,
+        qs = scope_to_practice(
+            Session.objects.filter(
+                session_date__gte=self.start_date,
+                session_date__lte=self.end_date,
+                cancelled=False,
+            ),
+            self.practice,
+            "client__practice",
         ).values("client_id", "duration")
         for row in qs:
             hours_by_client[row["client_id"]] = (
@@ -400,7 +401,7 @@ class PracticeAnalyzer:
         return []
 
 
-def calculate_quarter_trends(target_date, practice=None):
+def calculate_quarter_trends(target_date, *, practice: PracticeScope):
     """Calculate capacity and activity trends for last 4 quarters ending with target_date."""
     from .date_helpers import DateRangeHelper
 

@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from django.db.models import QuerySet
 from django.utils import timezone
 
+from ..models.base import PracticeScope, scope_to_practice
+
 if TYPE_CHECKING:
     from ..models import Client, ClientTag
 
@@ -25,7 +27,7 @@ SESSION_LOG_MIN_DURATION = 30
 RECENT_ACTIVITY_WINDOW_DAYS = 90
 
 
-def get_sessions_missing_log(practice=None) -> QuerySet:
+def get_sessions_missing_log(*, practice: PracticeScope) -> QuerySet:
     """
     Sessions in the last SESSION_LOG_WINDOW_DAYS still missing a SessionLog.
 
@@ -64,8 +66,7 @@ def get_sessions_missing_log(practice=None) -> QuerySet:
         .exclude(pk__in=cancellation_fee_session_ids)
         .select_related("client")
     )
-    if practice is not None:
-        qs = qs.filter(client__practice=practice)
+    qs = scope_to_practice(qs, practice, "client__practice")
     return qs
 
 

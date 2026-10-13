@@ -101,7 +101,7 @@ class Command(BaseCommand):
             totals["created"] += 1
 
     def _sync_missing_session_log(self, practice: Practice, totals: dict) -> None:
-        sessions = list(get_sessions_missing_log(practice))
+        sessions = list(get_sessions_missing_log(practice=practice))
         self._sync_object_tasks(
             practice,
             PracticeTodo.TaskType.MISSING_SESSION_LOG,

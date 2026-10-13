@@ -23,9 +23,10 @@ from django.db.models import (
 from django.db.models.functions import Cast
 
 if TYPE_CHECKING:
-    from ..models import Client, Practice
+    from ..models import Client
 
 from ..models import Invoice, InvoiceItem
+from ..models.base import PracticeScope, scope_to_practice
 
 
 class RevenueCalculator:
@@ -87,7 +88,7 @@ class RevenueCalculator:
 
     @staticmethod
     def get_paid_revenue_for_range(
-        start_date: date, end_date: date, practice: "Practice" | None = None
+        start_date: date, end_date: date, *, practice: PracticeScope
     ) -> Decimal:
         """
         Get total paid revenue within a date range (paid_date, with invoice_date
@@ -109,8 +110,7 @@ class RevenueCalculator:
             RevenueCalculator.build_paid_date_range_filter(start_date, end_date),
             status="paid",
         )
-        if practice:
-            qs = qs.filter(practice=practice)
+        qs = scope_to_practice(qs, practice)
         result = qs.aggregate(total=Sum("total"))["total"]
         return result if result is not None else Decimal("0")
 
@@ -292,7 +292,7 @@ class RevenueCalculator:
 
     @staticmethod
     def get_year_revenue(
-        year: int, use_paid_date: bool = True, practice: "Practice" | None = None
+        year: int, use_paid_date: bool = True, *, practice: PracticeScope
     ) -> dict[str, Any]:
         """
         Get revenue statistics for a specific year.
@@ -310,13 +310,12 @@ class RevenueCalculator:
             }
 
         Example:
-            >>> RevenueCalculator.get_year_revenue(2025)
+            >>> RevenueCalculator.get_year_revenue(2025, practice=practice)
             {'total': Decimal('4200.00'), 'count': 21, 'avg': Decimal('200.00')}
         """
         qs = Invoice.objects.filter(status="paid")
 
-        if practice:
-            qs = qs.filter(practice=practice)
+        qs = scope_to_practice(qs, practice)
 
         if use_paid_date:
             qs = qs.filter(RevenueCalculator.build_paid_date_filter(year))
@@ -342,7 +341,8 @@ class RevenueCalculator:
         year: int,
         month: int,
         use_paid_date: bool = True,
-        practice: "Practice" | None = None,
+        *,
+        practice: PracticeScope,
     ) -> dict[str, Any]:
         """
         Get revenue statistics for a specific month.
@@ -361,13 +361,12 @@ class RevenueCalculator:
             }
 
         Example:
-            >>> RevenueCalculator.get_month_revenue(2025, 12)
+            >>> RevenueCalculator.get_month_revenue(2025, 12, practice=practice)
             {'total': Decimal('420.00'), 'count': 3, 'avg': Decimal('140.00')}
         """
         qs = Invoice.objects.filter(status="paid")
 
-        if practice:
-            qs = qs.filter(practice=practice)
+        qs = scope_to_practice(qs, practice)
 
         if use_paid_date:
             qs = qs.filter(RevenueCalculator.build_paid_date_filter(year, month))

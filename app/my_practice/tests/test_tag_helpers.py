@@ -50,7 +50,7 @@ class GetSessionsMissingLogTest(TestCase):
         self.old = self.today - timedelta(days=SESSION_LOG_WINDOW_DAYS + 5)
 
     def _session_ids(self):
-        return set(get_sessions_missing_log().values_list("id", flat=True))
+        return set(get_sessions_missing_log(practice=self.practice).values_list("id", flat=True))
 
     def test_regular_session_is_included(self):
         session = Session.objects.create(
@@ -150,5 +150,7 @@ class GetSessionsMissingLogTest(TestCase):
             duration=SESSION_LOG_MIN_DURATION + 10,
             cancelled=False,
         )
-        self.assertNotIn(session.id, {s.id for s in get_sessions_missing_log(self.practice)})
-        self.assertIn(session.id, {s.id for s in get_sessions_missing_log(other_practice)})
+        self.assertNotIn(
+            session.id, {s.id for s in get_sessions_missing_log(practice=self.practice)}
+        )
+        self.assertIn(session.id, {s.id for s in get_sessions_missing_log(practice=other_practice)})
