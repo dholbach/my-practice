@@ -191,6 +191,13 @@ else:
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
+# Sessions end after this long without a request (sliding: every request
+# renews it), instead of Django's fixed two weeks. A forgotten open tab on a
+# shared or lost laptop should not stay signed in to health data for days.
+# Default 8 hours, i.e. a working day; DJANGO_SESSION_IDLE_HOURS overrides it.
+SESSION_COOKIE_AGE = int(os.getenv("DJANGO_SESSION_IDLE_HOURS", "8")) * 3600
+SESSION_SAVE_EVERY_REQUEST = True
+
 # Tests don't need PBKDF2's deliberately slow iteration count — MD5 is
 # insecure but fine for throwaway test users, and cuts time on every test
 # that calls create_user()/set_password().
