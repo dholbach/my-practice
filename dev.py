@@ -369,86 +369,37 @@ def cmd_test(args):
 
 
 def cmd_test_js(args):
-    """Run JavaScript chart tests"""
+    """Run the Node.js JavaScript test suites (the same set CI runs)."""
+    print("📊 Running Node.js-based JS Tests...")
 
-    # Check if --browser flag is present
-    browser_only = "--browser" in args
-    node_only = "--node" in args
-
-    if browser_only:
-        print("📊 JavaScript Chart Tests (Browser-based)")
-        print("\nThe browser tests run in the browser console.")
-        print(
-            "They are automatically executed when you visit the analytics page in development mode."
-        )
-        print("\nTo run the tests:")
-        print("  1. Make sure the server is running: ./dev.py start")
-        print("  2. Open http://localhost:8000/analytics/ in your browser")
-        print("  3. Open the browser console (F12)")
-        print("  4. Tests will run automatically and show results in the console")
-        print("\nBrowser Test files:")
-        print("  - test_chart_config.js (18 tests)")
-        print("  - test_chart_tooltip.js (13 tests)")
-        print("  - test_chart_builder.js (17 tests)")
-        print("  - test_chart_math.js (math & parsing)")
-        print("  - test_chart_helpers.js (validation)")
-        print("\nTotal: 48+ test functions covering 1,621 lines of chart code")
-        print("\nNote: Tests only run when DEBUG=True (development mode)")
-        return subprocess.CompletedProcess(args=[], returncode=0)
+    # Discovered, not listed. This used to be a hand-maintained list, and so
+    # did the copy in .github/workflows/ci.yml — which broke the build the
+    # first time a suite was deleted (global-search.test.js, P-047). Both
+    # sides glob now, so adding or removing a suite needs no edit here.
+    js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app", "static", "js")
+    suites = sorted(
+        os.path.basename(p)
+        for pattern in ("*.test.js", "*.test.extended.js")
+        for p in glob.glob(os.path.join(js_dir, pattern))
+    )
 
     results = []
+    for suite in suites:
+        stem = suite.replace(".test.extended.js", " (extended)").replace(".test.js", "")
+        print(f"\n--- {suite} ---")
+        result = run_docker_command(["node", f"/app/static/js/{suite}"])
+        results.append((f"JS {stem}", result.returncode))
 
-    # Run Node.js-based tests (if not browser-only)
-    if not browser_only:
-        print("📊 Running Node.js-based JS Tests...")
+    print("\n" + "=" * 50)
+    print("Node.js Test Summary:")
+    print("=" * 50)
+    for test_type, code in results:
+        status = "✓ PASSED" if code == 0 else "✗ FAILED"
+        print(f"{test_type:12} {status}")
+    print("=" * 50)
 
-        # Discovered, not listed. This used to be a hand-maintained list, and so
-        # did the copy in .github/workflows/ci.yml — which broke the build the
-        # first time a suite was deleted (global-search.test.js, P-047). Both
-        # sides glob now, so adding or removing a suite needs no edit here.
-        # The browser-only suites under static/js/tests/ are named test_*.js and
-        # correctly don't match.
-        js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app", "static", "js")
-        suites = sorted(os.path.basename(p) for p in glob.glob(os.path.join(js_dir, "*.test.js")))
-        if not node_only:
-            suites.append("chart_utils.test.extended.js")
-
-        for suite in suites:
-            stem = suite.replace(".test.extended.js", " (extended)").replace(".test.js", "")
-            label = f"JS {stem}"
-            print(f"\n--- {suite} ---")
-            result = run_docker_command(["node", f"/app/static/js/{suite}"])
-            results.append((label, result.returncode))
-
-    # Show browser test info (if not node-only)
-    if not node_only:
-        print("\n" + "=" * 50)
-        print("📊 Browser-based Tests (Phase 2b)")
-        print("=" * 50)
-        print("\nThe new browser tests (Phase 2b infrastructure) run automatically")
-        print("when you visit http://localhost:8000/analytics/ with DEBUG=True")
-        print("\nBrowser Test Coverage:")
-        print("  - ChartConfig system (18 tests)")
-        print("  - ChartTooltip classes (13 tests)")
-        print("  - ChartBuilder API (17 tests)")
-        print("\nTo run browser tests:")
-        print("  ./dev.py test-js --browser")
-
-    # Print Node.js test summary
-    if results:
-        print("\n" + "=" * 50)
-        print("Node.js Test Summary:")
-        print("=" * 50)
-        for test_type, code in results:
-            status = "✓ PASSED" if code == 0 else "✗ FAILED"
-            print(f"{test_type:12} {status}")
-        print("=" * 50)
-
-        # Return non-zero if any test failed
-        failed = any(code != 0 for _, code in results)
-        return subprocess.CompletedProcess(args=[], returncode=1 if failed else 0)
-
-    return subprocess.CompletedProcess(args=[], returncode=0)
+    failed = any(code != 0 for _, code in results)
+    return subprocess.CompletedProcess(args=[], returncode=1 if failed else 0)
 
 
 def cmd_manage(args):
@@ -1439,11 +1390,9 @@ def print_help():
     print("  build [--no-cache]   - Rebuild Docker image(s)")
     print("  restart [--force]    - Restart the Django container (--force: full down/up)")
     print("  test [args]          - Run tests (default: Django + JS)")
-    print("  test --js-only       - Run only JavaScript tests (Node.js + browser info)")
+    print("  test --js-only       - Run only JavaScript tests (Node.js)")
     print("  test --django-only   - Run only Django tests")
     print("  test-js              - Run JavaScript tests (Node.js-based)")
-    print("  test-js --browser    - Show browser test instructions")
-    print("  test-js --node       - Run only Node.js tests (skip browser info)")
     print("  manage <cmd> [args]  - Run Django management commands")
     print("  python [args]        - Run Python in the container")
     print('  shell [-c "cmd"]     - Open Django shell or execute command with -c')
@@ -1492,9 +1441,7 @@ def print_help():
     print("  ./dev.py test                                 # Run all tests")
     print("  ./dev.py test --django-only                   # Run only Django tests")
     print("  ./dev.py test --js-only                       # Run only JavaScript tests")
-    print("  ./dev.py test-js                              # Run Node.js JS tests + browser info")
-    print("  ./dev.py test-js --node                       # Run only Node.js tests")
-    print("  ./dev.py test-js --browser                    # Show browser test instructions")
+    print("  ./dev.py test-js                              # Run Node.js JS tests")
     print("  ./dev.py test my_practice.tests.test_imports # Run specific tests")
     print("  ./dev.py manage createsuperuser               # Create superuser")
     print("  ./dev.py shell                                # Open Django shell")

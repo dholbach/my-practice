@@ -7,8 +7,10 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-my_practice}
       - POSTGRES_USER=${POSTGRES_USER:-my_practice}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme123}
+    # Loopback only: the dev password is a published default, and a bare
+    # "5432:5432" listens on every interface (Docker also bypasses ufw).
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

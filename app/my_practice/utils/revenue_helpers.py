@@ -101,7 +101,7 @@ class RevenueCalculator:
         Args:
             start_date: Inclusive start date
             end_date: Inclusive end date
-            practice: Optional Practice to scope the query to
+            practice: Practice to scope the query to (None gives nothing)
 
         Returns:
             Decimal: Total paid revenue in the range

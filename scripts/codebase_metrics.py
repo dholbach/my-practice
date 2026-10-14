@@ -66,13 +66,11 @@ CATEGORIES = {
     "tests": [
         "app/my_practice/tests/*.py",
         "app/static/js/*.test.js",
-        "app/static/js/tests/*.js",
     ],
     "templates": ["app/templates/*.html"],
     "js": [
         "app/static/js/*.js",
         ":(exclude)app/static/js/*.test.js",
-        ":(exclude)app/static/js/tests/*",
         ":(exclude)*node_modules*",
     ],
     "css": ["app/static/css/tailwind.css"],

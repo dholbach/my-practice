@@ -234,18 +234,17 @@
   .font-medium  { font-weight: 500; }
   .underline    { text-decoration: underline; }
   .rounded { border-radius: 8px; } .rounded-sm { border-radius: 4px; } .rounded-lg { border-radius: 12px; }
-  .border { border: 1px solid var(--color-border); } .border-0 { border: none; }
+  .border { border: 1px solid var(--color-border); }
   .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; color: var(--color-text-primary); }
   .card h3 { margin-top: 0; margin-bottom: 1rem; color: var(--color-text-primary); }
-  .d-inline-block { display: inline-block; } .d-grid { display: grid; }
-  .w-full { width: 100%; } .w-auto { width: auto; } .w-50 { width: 50%; } .w-25 { width: 25%; } .w-75 { width: 75%; }
-  .h-full { height: 100%; } .h-auto { height: auto; }
+  .d-inline-block { display: inline-block; }
+  .w-full { width: 100%; } .w-auto { width: auto; }
   .flex-col { flex-direction: column; } .flex-row { flex-direction: row; }
   .items-start { align-items: flex-start; } .items-center { align-items: center; } .items-end { align-items: flex-end; }
-  .justify-start { justify-content: flex-start; } .justify-center { justify-content: center; } .justify-end { justify-content: flex-end; } .justify-between { justify-content: space-between; }
-  .flex-wrap { flex-wrap: wrap; } .flex-nowrap { flex-wrap: nowrap; }
-  .overflow-auto { overflow: auto; } .overflow-hidden { overflow: hidden; } .overflow-visible { overflow: visible; } .overflow-x-auto { overflow-x: auto; } .overflow-y-auto { overflow-y: auto; }
-  .relative { position: relative; } .absolute { position: absolute; } .sticky { position: sticky; }
+  .justify-center { justify-content: center; } .justify-end { justify-content: flex-end; } .justify-between { justify-content: space-between; }
+  .flex-wrap { flex-wrap: wrap; }
+  .overflow-x-auto { overflow-x: auto; }
+  .relative { position: relative; } .absolute { position: absolute; }
 
   /* Tag color picker boxes */
   .color-box { display: block; padding: 0.75rem; border-radius: 8px; text-align: center; font-size: 0.75rem; font-weight: 600; color: white; border: 3px solid transparent; transition: transform 0.15s, box-shadow 0.15s; }
@@ -347,7 +346,6 @@
 
   /* Grid layouts */
   .stats-grid       { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
-  @media (max-width: 768px) { .stats-grid-2col { grid-template-columns: 1fr; } }
 
   /* Table containers */
   /* A width:100% table inside a scroll container squashes its columns instead of
@@ -1852,7 +1850,6 @@
   .bp-copy-btn { font-size: 0.8rem; padding: 0.3rem 0.9rem; }
 
   /* ── Todo list page ── */
-  @media (max-width: 900px) { .todo-stats { grid-template-columns: 1fr 1fr; } }
   .todo-list { display: flex; flex-direction: column; gap: 0.75rem; }
   .todo-item {
     background: var(--color-surface);

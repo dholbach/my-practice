@@ -1,6 +1,6 @@
 # Performance Optimizations
 
-**Last updated: 2026-08-17** — corrected stale references (see note below); the
+**Last updated: 2026-10-14** — corrected stale references (see note below); the
 optimizations themselves are historical and still in effect.
 
 ## Overview
@@ -41,12 +41,6 @@ migration history. The indexes themselves are still in effect; see `0001_initial
 - **`date`**: Index for withdrawal date queries
 
 **Impact**: Faster profit calculations and withdrawal reports
-
-### SessionHistory Model
-- **`month`**: Index for month-based queries
-- **`client_id + month`**: Composite index for client session history
-
-**Impact**: Faster reconciliation views and session tracking
 
 ## Query Optimizations
 
@@ -191,15 +185,10 @@ subtotal_sum = self.items.aggregate(total=Sum('total'))['total'] or Decimal('0')
 
 ### Code Deduplication
 
-**heatmap_utils.py** - Unified session data retrieval:
-```python
-# New helper functions
-def get_sessions_for_month(month_date):
-    """Automatically chooses SessionHistory or InvoiceItems"""
-    if month_date < SESSION_HISTORY_CUTOFF:
-        return _get_sessions_from_history(month_date)
-    return _get_sessions_from_invoices(month_date)
-```
+**heatmap_utils.py** - Unified session data retrieval. `get_sessions_for_month(month_date, *, practice)`
+is the one place monthly session hours are read; it originally switched between a separate
+`SessionHistory` table and `InvoiceItem`s, and now reads `InvoiceItem`s only (`SessionHistory`
+has since been removed).
 - **Impact**: DRY principle, centralized logic, easier maintenance
 - **Lines saved**: ~40 lines of duplicate code
 

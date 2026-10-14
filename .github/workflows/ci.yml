@@ -313,8 +313,7 @@ jobs:
       #
       # Globbed, not listed: this used to be a hand-maintained copy of the file
       # list in dev.py, and it broke the build the first time a test file was
-      # deleted (global-search.test.js, P-047). The browser-only suites under
-      # static/js/tests/ are named test_*.js and correctly don't match.
+      # deleted (global-search.test.js, P-047).
       # The step shell is `bash -e`, so the first failing file fails the step.
       - name: JavaScript tests
         if: steps.scope.outputs.code == 'true'
