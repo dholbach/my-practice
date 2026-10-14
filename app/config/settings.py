@@ -123,10 +123,11 @@ DATABASES = {
 # Cache
 #
 # Without this block Django falls back to per-process LocMemCache: each gunicorn
-# worker warms its own copy and every restart starts cold. The only thing cached
-# today is the GitHub release lookup in context_processors.update_check, which
-# runs on every authenticated page render — so a cold or per-worker cache means
-# that outbound call happens far more often than its 24-hour TTL implies.
+# worker would keep its own copy and every restart would start cold. Two things
+# need it shared: the sign-in attempt counters (views/auth_views.py), which must
+# count across workers to limit anything, and the GitHub release lookup in
+# context_processors.update_check, which should run once a day, not once per
+# worker and restart.
 #
 # The database backend is the one that needs no extra service. Its table is
 # created by migration 0032 rather than a manual `createcachetable`, so there is
