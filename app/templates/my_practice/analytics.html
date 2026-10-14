@@ -875,9 +875,10 @@ document.addEventListener('DOMContentLoaded', function() {
     {% if cancellation_trends %}
     {{ cancellation_trends|json_script:"cancellation-trends-data" }}
     <div class="analytics-card mt-3">
-        <h3>❌ {% trans "Cancellation Rate (last 24 months)" %}</h3>
+        <h3>❌ {% trans "Cancellation Rate" %}</h3>
         <p class="chart-subtitle">
             {% trans "Cancelled sessions in % of all sessions per month" %}
+            ({% blocktrans with start=cancellation_trends.0.date|date:"F Y" %}since {{ start }}, not counting cancellations during your own time off{% endblocktrans %})
         </p>
         <div class="chart-wrapper chart-wrapper--sm">
             <canvas id="cancellationTrendsChart" width="100%" height="100%"></canvas>

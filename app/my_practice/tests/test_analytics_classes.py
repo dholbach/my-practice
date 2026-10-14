@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase
+from django.utils import timezone
 
 from ..models import (
     ALL_PRACTICES,
@@ -18,8 +19,10 @@ from ..models import (
     Practice,
     ServiceType,
     Session,
+    TimeOff,
     allow_issued_invoice_writes,
 )
+from ..utils import DateRangeHelper
 from ..utils.analytics_utils import (
     ClientAnalyzer,
     ExpenseAnalyzer,
@@ -280,6 +283,72 @@ class SessionAnalyzerTests(TestCase):
         self.assertEqual(result["total"], 2)
         self.assertIn("types", result)
         self.assertGreater(len(result["types"]), 0)
+
+
+class CancellationTrendsTests(TestCase):
+    """SessionAnalyzer.get_cancellation_trends — what counts as a client cancellation."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice", slug="cancellation-trends", email="test@practice.com"
+        )
+        self.client = Client.objects.create(
+            client_code="XX-1", full_name="Max Mustermann", practice=self.practice
+        )
+        today = timezone.localdate()
+        self.this_month = date(today.year, today.month, 1)
+        self.last_month = DateRangeHelper.add_months(self.this_month, -1)
+
+    def _session(self, day, *, cancelled=False, synced=True):
+        return Session.objects.create(
+            client=self.client,
+            session_date=day,
+            cancelled=cancelled,
+            calendar_event_id="evt" if synced else "",
+        )
+
+    def _trends(self):
+        return SessionAnalyzer.get_cancellation_trends(practice=self.practice)
+
+    def test_counts_cancelled_share_per_month(self):
+        self._session(self.this_month)
+        self._session(self.this_month, cancelled=True)
+
+        [row] = self._trends()
+        self.assertEqual((row["total"], row["cancelled"], row["rate"]), (2, 1, 50.0))
+
+    def test_cancellation_during_time_off_is_not_counted(self):
+        """Clearing the diary for a vacation is not a client cancelling."""
+        self._session(self.this_month)
+        self._session(self.this_month, cancelled=True)
+        off_day = self.this_month.replace(day=2)
+        TimeOff.objects.create(start_date=off_day, end_date=off_day, type="vacation")
+        self._session(off_day, cancelled=True)
+
+        [row] = self._trends()
+        self.assertEqual((row["total"], row["cancelled"]), (2, 1))
+
+    def test_session_held_during_time_off_still_counts(self):
+        off_day = self.this_month.replace(day=2)
+        TimeOff.objects.create(start_date=off_day, end_date=off_day, type="vacation")
+        self._session(off_day)
+
+        [row] = self._trends()
+        self.assertEqual((row["total"], row["cancelled"]), (1, 0))
+
+    def test_starts_at_first_calendar_linked_month(self):
+        """Before the calendar sync only invoiced no-shows were marked cancelled."""
+        self._session(self.last_month, synced=False)
+        self._session(self.this_month)
+
+        rows = self._trends()
+        self.assertEqual([r["date"] for r in rows], [self.this_month])
+
+    def test_keeps_full_window_without_calendar_sync(self):
+        self._session(self.last_month, synced=False)
+        self._session(self.this_month, synced=False)
+
+        self.assertEqual(len(self._trends()), 2)
 
 
 class ClientAnalyzerTests(TestCase):
