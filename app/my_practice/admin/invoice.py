@@ -7,6 +7,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext, gettext_lazy, ngettext
 
 from ..models import Invoice, InvoiceItem
+from ..utils.formatting import format_currency_de
 
 
 class InvoiceItemAdminForm(forms.ModelForm):
@@ -201,7 +202,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 
     @admin.display(description=gettext_lazy("Total"))
     def total_formatted(self, obj):
-        return format_html("<strong>{} €</strong>", f"{obj.total:.2f}")
+        return format_html("<strong>{}</strong>", format_currency_de(obj.total))
 
     def get_readonly_fields(self, request, obj=None):
         readonly = list(super().get_readonly_fields(request, obj))

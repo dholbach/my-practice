@@ -102,13 +102,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Database - using existing PostgreSQL
+# Database
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "n8n"),
-        "USER": os.getenv("POSTGRES_USER", "n8n"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "n8n_password"),
+        "NAME": os.getenv("POSTGRES_DB", "my_practice"),
+        "USER": os.getenv("POSTGRES_USER", "my_practice"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
         "HOST": os.getenv("POSTGRES_HOST", "localhost"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
@@ -352,7 +352,6 @@ if not DEBUG:
     # Security headers
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
-DEFAULT_EXCEPTION_REPORTER_FILTER = "config.exception_reporter.PIIExceptionReporterFilter"
 
 # Update check — context processor polls GitHub releases API (once per day, cached).
 # Set UPDATE_CHECK_DISABLED=true in .env to opt out.

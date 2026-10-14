@@ -6,6 +6,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy, ngettext
 
 from ..models import CompanyExpense, CompanyWithdrawal
+from ..utils.formatting import format_currency_de
 
 
 @admin.register(CompanyWithdrawal)
@@ -131,5 +132,4 @@ class CompanyExpenseAdmin(admin.ModelAdmin):
     @admin.display(description=gettext_lazy("Amount"))
     def amount_display(self, obj):
         """Format amount with Euro symbol"""
-        amount_str = f"{float(obj.amount):.2f}"
-        return format_html("<strong>{} €</strong>", amount_str)
+        return format_html("<strong>{}</strong>", format_currency_de(obj.amount))

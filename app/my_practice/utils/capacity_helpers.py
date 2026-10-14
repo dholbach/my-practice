@@ -49,7 +49,7 @@ def get_weekly_capacity_for_date(
 
     Args:
         target_date: The date to get capacity for
-        practice: Optional Practice instance to scope periods to
+        practice: Practice to scope periods to (None gives nothing)
         periods: Optional pre-fetched periods list (from _get_capacity_periods),
             to avoid re-querying when called repeatedly (e.g. in a loop)
 

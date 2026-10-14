@@ -37,7 +37,7 @@ def get_sessions_missing_log(*, practice: PracticeScope) -> QuerySet:
     actual sessions, for a per-session materialized task).
 
     Args:
-        practice: Optional Practice to scope the query to.
+        practice: Practice to scope the query to (None gives nothing).
 
     Returns:
         QuerySet of Session, select_related("client").

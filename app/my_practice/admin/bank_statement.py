@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
 
 from ..models import BankTransaction
+from ..utils.formatting import format_currency_de
 
 
 @admin.register(BankTransaction)
@@ -95,11 +96,12 @@ class BankTransactionAdmin(admin.ModelAdmin):
     def amount_display(self, obj):
         """Display amount with color coding."""
         color = "#16a34a" if obj.is_income else "#dc2626"  # green : red
-        amount_str = f"{obj.amount:+.2f}"
+        sign = "+" if obj.amount > 0 else ""
         return format_html(
-            '<span style="color: {}; font-weight: 600;">{} €</span>',
+            '<span style="color: {}; font-weight: 600;">{}{}</span>',
             color,
-            amount_str,
+            sign,
+            format_currency_de(obj.amount),
         )
 
     @admin.display(description=gettext_lazy("Match"), ordering="match_confidence")

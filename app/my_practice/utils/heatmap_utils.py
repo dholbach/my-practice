@@ -15,7 +15,7 @@ def get_sessions_for_month(month_date, *, practice: PracticeScope):
 
     Args:
         month_date: Date object representing the month
-        practice: Optional Practice instance for multi-practice filtering
+        practice: Practice to scope to; None gives nothing, ALL_PRACTICES everything
 
     Returns dict: {client_code: hours}
     """
@@ -64,7 +64,7 @@ def get_heatmap_data(
         current_month: Current month (1-12)
         months_to_show: Number of months to display
         start_offset: How many months back from today to start (can be negative for future)
-        practice: Optional Practice instance for multi-practice filtering
+        practice: Practice to scope to; None gives nothing, ALL_PRACTICES everything
 
     Returns:
         dict with keys:
