@@ -9,7 +9,7 @@
 Django==6.1.2
 psycopg[binary]==3.3.6
 cryptography==50.0.2
-markdown==3.11
+markdown==3.11.1
 nh3==0.3.7
 gunicorn==26.2.0
 python-dotenv==1.2.4
@@ -19,19 +19,19 @@ pillow==12.3.0
 whitenoise==6.12.0
 python-dateutil==2.9.0.post0
 pdfplumber==0.11.10
-pypdf==6.20.0
+pypdf==6.20.1
 urllib3==2.8.0
 sqlparse==0.6.0  # transitive via Django (>=0.5.0); pinned to close PYSEC-2026-3696..3699
 
 # Google Calendar API
-google-auth==2.61.0
+google-auth==2.62.0
 google-auth-oauthlib==1.5.0
 google-auth-httplib2==0.4.4
 google-api-python-client==2.201.0
 
 # Dev-only tools
 ruff==0.17.0
-pre-commit==4.6.2
+pre-commit==4.7.0
 vulture==2.16
 radon==6.0.1
 pip-audit==2.10.1
