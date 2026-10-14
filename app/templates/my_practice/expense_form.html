@@ -216,7 +216,7 @@
         </p>
         {% trans 'Really merge expense? The source will be deleted.' as confirm_merge_expense %}
         <form method="post" action="{% url 'expense_merge' expense.pk %}"
-              x-data x-on:submit="confirm('{{ confirm_merge_expense }}') || $event.preventDefault()">
+              data-confirm="{{ confirm_merge_expense }}">
             {% csrf_token %}
             <div class="bank-link-search__form">
                 {% trans "(no description)" as no_description %}

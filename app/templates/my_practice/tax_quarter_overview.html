@@ -23,7 +23,7 @@
     <div class="year-selector mb-6">
         <form method="get">
             <label for="year">{% trans "Year:" %}</label>
-            <select name="year" id="year" x-data x-on:change="$el.form.submit()">
+            <select name="year" id="year" data-submit-on-change>
                 {% for y in available_years %}
                     <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
@@ -136,7 +136,7 @@
     </div>
 
     <!-- Annual Tax Settlement (Steuerbescheid) -->
-    <div class="section-card mt-6" x-data="taxSettlement()" x-init="init()">
+    <div class="section-card mt-6" x-data="taxSettlement">
         <h2>📄 {% trans "Tax Assessment (Steuerbescheid)" %}</h2>
         <p class="text-sm text-secondary mb-4">
             {% trans "Record the outcome of your annual tax return once the assessment notice arrives." %}
@@ -180,7 +180,7 @@
                 </label>
                 <input type="number" step="0.01" class="form-control"
                        x-model="amount"
-                       placeholder="z. B. 320.00 oder -150.00">
+                       placeholder="{% trans 'e.g. 320.00 or -150.00' %}">
             </div>
             <div class="form-row mb-4">
                 <label class="form-label">{% trans "Assessment date" %}</label>
@@ -209,8 +209,6 @@ function taxSettlement() {
         error: "",
         amount: "{{ settlement_amount|default:'' }}",
         settlementDate: "{{ settlement_date|date:'Y-m-d'|default:'' }}",
-
-        init() {},
 
         startEdit() {
             this.error = "";
@@ -252,5 +250,11 @@ function taxSettlement() {
         },
     };
 }
+
+// Registered by name: the CSP build of Alpine (script-src has no
+// 'unsafe-eval') cannot call a global function from x-data.
+document.addEventListener("alpine:init", function () {
+    Alpine.data("taxSettlement", taxSettlement);
+});
 </script>
 {% endblock %}

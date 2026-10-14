@@ -21,16 +21,12 @@
             <span class="bp-subject-text">{{ subject_de }}</span>
             <button type="button" class="btn btn-secondary bp-copy-btn"
                     data-copy="{{ subject_de }}"
-                    x-data="{ copied: false }"
-                    x-on:click="navigator.clipboard.writeText($el.dataset.copy).then(() => { copied = true; setTimeout(() => copied = false, 1800) })"
-                    x-text="copied ? '✓ Kopiert' : 'Kopieren'">Kopieren</button>
+                    data-copied-label="✓ Kopiert">Kopieren</button>
         </div>
         {% endif %}
         <pre class="bp-text">{{ body_de }}</pre>
         <button type="button" class="btn btn-secondary bp-copy-btn"
-                x-data="{ copied: false }"
-                x-on:click="navigator.clipboard.writeText($el.previousElementSibling.textContent).then(() => { copied = true; setTimeout(() => copied = false, 1800) })"
-                x-text="copied ? '✓ Kopiert' : 'Kopieren'">Kopieren</button>
+                data-copy-previous data-copied-label="✓ Kopiert">Kopieren</button>
     </div>
     {% if body_en %}
     <div id="{{ card_id }}-en" class="bp-body" :class="{ active: tab === 'en' }">
@@ -40,16 +36,12 @@
             <span class="bp-subject-text">{{ subject_en }}</span>
             <button type="button" class="btn btn-secondary bp-copy-btn"
                     data-copy="{{ subject_en }}"
-                    x-data="{ copied: false }"
-                    x-on:click="navigator.clipboard.writeText($el.dataset.copy).then(() => { copied = true; setTimeout(() => copied = false, 1800) })"
-                    x-text="copied ? '✓ Copied' : 'Copy'">Copy</button>
+                    data-copied-label="✓ Copied">Copy</button>
         </div>
         {% endif %}
         <pre class="bp-text">{{ body_en }}</pre>
         <button type="button" class="btn btn-secondary bp-copy-btn"
-                x-data="{ copied: false }"
-                x-on:click="navigator.clipboard.writeText($el.previousElementSibling.textContent).then(() => { copied = true; setTimeout(() => copied = false, 1800) })"
-                x-text="copied ? '✓ Copied' : 'Copy'">Copy</button>
+                data-copy-previous data-copied-label="✓ Copied">Copy</button>
     </div>
     {% endif %}
 </section>

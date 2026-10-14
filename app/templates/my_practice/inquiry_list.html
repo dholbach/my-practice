@@ -138,13 +138,13 @@
 
     {# Filter bar #}
     <form method="get" class="filter-bar">
-        <select name="status" class="form-control filter-select" x-data x-on:change="$el.form.submit()">
+        <select name="status" class="form-control filter-select" data-submit-on-change>
             <option value="">{% trans "All statuses" %}</option>
             {% for value, label in status_choices %}
             <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
         </select>
-        <select name="source" class="form-control filter-select" x-data x-on:change="$el.form.submit()">
+        <select name="source" class="form-control filter-select" data-submit-on-change>
             <option value="">{% trans "All sources" %}</option>
             {% for value, label in source_choices %}
             <option value="{{ value }}" {% if source_filter == value %}selected{% endif %}>{{ label }}</option>

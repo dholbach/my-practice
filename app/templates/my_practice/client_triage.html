@@ -8,7 +8,7 @@
 
 {% block content %}
 <div class="mb-6 flex gap-4 items-center">
-    <button x-data x-on:click="window.print()" class="btn btn-secondary">🖨️ {% trans "Print" %}</button>
+    <button data-print class="btn btn-secondary">🖨️ {% trans "Print" %}</button>
     <span class="text-sm text-text-secondary">
         {% trans "This view contains only unencrypted metadata. Clinical content is not visible." %}
     </span>

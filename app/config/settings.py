@@ -327,17 +327,18 @@ GOOGLE_CALENDAR_CLIENT_SECRET = os.environ.get("GOOGLE_CALENDAR_CLIENT_SECRET", 
 # script-src: no 'unsafe-inline'. Inline <script> blocks carry
 # nonce="{{ csp_nonce }}" (from the csp context processor above) and there are
 # no inline on*= handlers — both enforced by tests/test_csp_coverage.py — so an
-# injected <script> or onerror= attribute does not run. 'unsafe-eval' stays
-# because Alpine.js evaluates x-* expressions with new Function(); dropping it
-# needs Alpine's CSP build and rewriting those expressions. It also means
-# injected markup carrying Alpine attributes (x-init="…") would still execute,
-# so template autoescaping remains the primary XSS defence; CSP is the backstop.
+# injected <script> or onerror= attribute does not run. No 'unsafe-eval'
+# either: Alpine is its CSP build (static/js/alpine-csp.min.js), which
+# interprets x-* expressions itself and refuses globals, so injected markup
+# carrying Alpine attributes can at most touch the data of the component it
+# lands in. Template autoescaping remains the primary XSS defence; CSP is the
+# backstop.
 # style-src keeps 'unsafe-inline' for style="" attributes and the inline styles
 # Alpine/htmx set at runtime; styles cannot execute code.
 # All scripts are vendored locally (no CDN), so 'self' covers every src=.
 SECURE_CSP = {
     "default-src": [CSP.SELF],
-    "script-src": [CSP.SELF, CSP.NONCE, CSP.UNSAFE_EVAL],
+    "script-src": [CSP.SELF, CSP.NONCE],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],
     "img-src": [CSP.SELF, "data:"],  # data: for base64 logos/signatures
     "connect-src": [CSP.SELF],  # AJAX/fetch calls

@@ -91,6 +91,45 @@ class InlineScriptNonceTests(SimpleTestCase):
         self.assertNotIn(CSP.UNSAFE_INLINE, script_src)
         self.assertIn(CSP.NONCE, script_src)
 
+    def test_script_src_does_not_allow_unsafe_eval(self):
+        # Alpine's CSP build interprets x-* expressions itself; with
+        # 'unsafe-eval' back, injected markup could run arbitrary JS again.
+        self.assertNotIn(CSP.UNSAFE_EVAL, settings.SECURE_CSP["script-src"])
+
+
+# x-data / x-on:… / :attr / @event attribute values, per template.
+ALPINE_ATTR = re.compile(r'\s(?:x-[a-z:.-]+|:[a-z-]+|@[a-z.-]+)\s*=\s*"([^"]*)"')
+# What the CSP build of Alpine refuses (globals) or cannot parse (functions).
+# A refused global throws when the handler runs — for `confirm(...) ||
+# $event.preventDefault()` that meant the delete went ahead unconfirmed. Use
+# the data-confirm / data-print / data-navigate / data-copy attributes of
+# static/js/ui_actions.js, or a component registered with Alpine.data().
+ALPINE_FORBIDDEN = re.compile(
+    r"\b(?:window|document|navigator|localStorage|sessionStorage|location|console|"
+    r"confirm|alert|prompt|setTimeout|setInterval|fetch|eval|Function|function)\b|=>"
+)
+# x-data="factory()" calls a global; the CSP build needs x-data="factory".
+ALPINE_GLOBAL_FACTORY = re.compile(r"^\s*[A-Za-z_$][\w$]*\s*\(")
+
+
+class AlpineCspBuildTests(SimpleTestCase):
+    def test_base_loads_the_csp_build(self):
+        base = (TEMPLATE_DIR / "base.html").read_text()
+        self.assertIn("js/alpine-csp.min.js", base)
+        self.assertNotIn("js/alpine.min.js", base)
+
+    def test_alpine_expressions_avoid_globals_and_functions(self):
+        offenders = []
+        for name, source in _templates():
+            for match in ALPINE_ATTR.finditer(source):
+                expression = re.sub(r"\{%.*?%\}|\{\{.*?\}\}|'[^']*'", "", match.group(1))
+                if ALPINE_FORBIDDEN.search(expression) or (
+                    match.group(0).lstrip().startswith("x-data")
+                    and ALPINE_GLOBAL_FACTORY.match(expression)
+                ):
+                    offenders.append(f"{name}: {match.group(0).strip()[:100]}")
+        self.assertEqual(offenders, [])
+
 
 class NonceRenderedTests(BaseTestCase):
     def test_page_nonce_matches_the_policy_header(self):

@@ -9209,6 +9209,10 @@ msgstr ""
 "Führen Sie ./prod.py backup aus (scripts/backup.sh in einem Git-Checkout) "
 "und stellen Sie sicher, dass es täglich läuft — siehe Backup-Anleitung."
 
+#: templates/my_practice/tax_quarter_overview.html
+msgid "e.g. 320.00 or -150.00"
+msgstr "z. B. 320.00 oder -150.00"
+
 #~ msgid "Uploaded documents"
 #~ msgstr "Hochgeladene Dokumente"
 

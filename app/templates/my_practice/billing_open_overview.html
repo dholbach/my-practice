@@ -164,7 +164,7 @@
                             <input type="hidden" name="next" value="{{ request.path }}">
                             <button type="submit" class="action-link action-link--button"
                                     title="{% trans 'Write off invoice' %}"
-                                    x-data x-on:click="confirm('{% blocktrans with number=row.primary_invoice.invoice_number %}Write off invoice {{ number }}?{% endblocktrans %}') || $event.preventDefault()">✍️</button>
+                                    data-confirm="{% blocktrans with number=row.primary_invoice.invoice_number %}Write off invoice {{ number }}?{% endblocktrans %}">✍️</button>
                         </form>
                         {% endif %}
                         {% if row.pending_count %}
