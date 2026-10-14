@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from ..models import PracticeTodo
+from ..utils.view_helpers import is_partial_request
 from .crud_mixins import PracticeScopedListView
 
 _PRIORITY_RANK = Case(
@@ -79,7 +80,7 @@ def _task_types_with_counts(request: HttpRequest) -> list[tuple[str, str, int]]:
 
 
 def _build_focus_queue_context(request: HttpRequest) -> dict[str, Any]:
-    """Build context for the focus queue partial (HTMX swap target)."""
+    """Build context for the focus queue partial (partial_post.js swap target)."""
     task_type = request.GET.get("type", "")
     today = timezone.localdate()
     snoozed_qs = PracticeTodo.objects.for_current_practice(request).filter(
@@ -130,7 +131,7 @@ def focus_queue_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse:
     """
     Toggle a task's completion status.
 
-    HTMX response swaps only this row (not the whole queue), so a
+    The partial response swaps only this row (not the whole queue), so a
     just-completed task stays visible in place — struck through, checkbox
     still checked — giving an immediate way to undo an accidental click
     instead of the row silently vanishing from the open-tasks queryset.
@@ -141,7 +142,7 @@ def focus_queue_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse:
     else:
         task.mark_completed()
 
-    if request.headers.get("HX-Request"):
+    if is_partial_request(request):
         return render(
             request,
             "includes/focus_queue_row.html",
@@ -152,12 +153,12 @@ def focus_queue_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse:
 
 @require_POST
 def focus_queue_set_due_today(request: HttpRequest, pk: int) -> HttpResponse:
-    """Set a task's due date to today, bumping it to the top of the queue. HTMX partial swap."""
+    """Set a task's due date to today, bumping it to the top of the queue. Partial swap."""
     task = get_object_or_404(PracticeTodo.objects.for_current_practice(request), pk=pk)
     task.due_date = timezone.localdate()
     task.save(update_fields=["due_date"])
 
-    if request.headers.get("HX-Request"):
+    if is_partial_request(request):
         return render(
             request, "includes/focus_queue_content.html", _build_focus_queue_context(request)
         )
@@ -166,13 +167,13 @@ def focus_queue_set_due_today(request: HttpRequest, pk: int) -> HttpResponse:
 
 @require_POST
 def focus_queue_snooze(request: HttpRequest, pk: int) -> HttpResponse:
-    """Snooze a task by a preset number of days. HTMX partial swap."""
+    """Snooze a task by a preset number of days. Partial swap."""
     task = get_object_or_404(PracticeTodo.objects.for_current_practice(request), pk=pk)
     days = SNOOZE_PRESET_DAYS.get(request.POST.get("days"), 1)
     task.snoozed_until = timezone.localdate() + timedelta(days=days)
     task.save(update_fields=["snoozed_until"])
 
-    if request.headers.get("HX-Request"):
+    if is_partial_request(request):
         return render(
             request, "includes/focus_queue_content.html", _build_focus_queue_context(request)
         )

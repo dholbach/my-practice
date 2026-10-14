@@ -1,7 +1,7 @@
 {% load i18n %}
 {% comment %}
 Single Focus Queue task row. Rendered both in the queue list and as the
-HTMX response of the complete-toggle checkbox (targets this row only, so
+partial response of the complete-toggle checkbox (targets this row only, so
 a just-completed task stays visible — struck through, still checked — as
 an in-place undo affordance instead of vanishing on the next full swap.
 {% endcomment %}
@@ -9,9 +9,8 @@ an in-place undo affordance instead of vanishing on the next full swap.
     <input type="checkbox"
            class="todo-checkbox"
            {% if task.is_completed %}checked{% endif %}
-           hx-post="{% url 'focus_queue_complete' task.pk %}?type={{ current_type }}"
-           hx-target="closest .todo-item"
-           hx-swap="outerHTML"
+           data-post="{% url 'focus_queue_complete' task.pk %}?type={{ current_type }}"
+           data-post-closest=".todo-item"
            title="{% if task.is_completed %}{% trans 'Mark as not done' %}{% else %}{% trans 'Mark as completed' %}{% endif %}">
 
     <div class="todo-content">
@@ -46,11 +45,11 @@ an in-place undo affordance instead of vanishing on the next full swap.
 
     <div class="todo-actions">
         {% if not task.is_completed %}
-        <button class="btn-due-today" hx-post="{% url 'focus_queue_due_today' task.pk %}?type={{ current_type }}" hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Set due today — bumps this task to the top of the queue' %}">📅 {% trans "Today" %}</button>
+        <button class="btn-due-today" data-post="{% url 'focus_queue_due_today' task.pk %}?type={{ current_type }}" data-post-target="#focus-queue-content" title="{% trans 'Set due today — bumps this task to the top of the queue' %}">📅 {% trans "Today" %}</button>
         <div class="focus-queue-snooze-group">
-            <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "1"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 1 day' %}">+1d</button>
-            <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "3"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 3 days' %}">+3d</button>
-            <button class="btn-snooze" hx-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" hx-vals='{"days": "7"}' hx-target="#focus-queue-content" hx-swap="outerHTML" title="{% trans 'Snooze 1 week' %}">+1w</button>
+            <button class="btn-snooze" data-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" data-post-vals='{"days": "1"}' data-post-target="#focus-queue-content" title="{% trans 'Snooze 1 day' %}">+1d</button>
+            <button class="btn-snooze" data-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" data-post-vals='{"days": "3"}' data-post-target="#focus-queue-content" title="{% trans 'Snooze 3 days' %}">+3d</button>
+            <button class="btn-snooze" data-post="{% url 'focus_queue_snooze' task.pk %}?type={{ current_type }}" data-post-vals='{"days": "7"}' data-post-target="#focus-queue-content" title="{% trans 'Snooze 1 week' %}">+1w</button>
         </div>
         {% endif %}
         <a href="{% url 'todo_edit' task.pk %}" class="link-primary" title="{% trans 'Edit' %}">✏️</a>

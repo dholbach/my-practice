@@ -91,3 +91,8 @@ def get_object_or_403(
     if practice != request.current_practice:
         raise PermissionDenied
     return obj
+
+
+def is_partial_request(request) -> bool:
+    """True for a request from static/js/partial_post.js, which swaps in an HTML fragment."""
+    return request.headers.get("X-Partial") == "1"

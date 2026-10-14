@@ -17,7 +17,7 @@ from django.utils.translation import gettext_lazy
 
 from ..models import Client, PracticeTodo
 from ..utils import WeeklyFocusWidgetBuilder
-from ..utils.view_helpers import safe_referer_path
+from ..utils.view_helpers import is_partial_request, safe_referer_path
 from .crud_mixins import (
     NextRedirectMixin,
     PracticeScopedCreateView,
@@ -114,8 +114,8 @@ def todo_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse | JsonRe
         todo.mark_completed()
         message = _("'%(title)s' marked as completed.") % {"title": todo.title}
 
-    # Return HTMX partial
-    if request.headers.get("HX-Request") and request.GET.get("ctx") == "weekly_focus":
+    # Return the partial for partial_post.js
+    if is_partial_request(request) and request.GET.get("ctx") == "weekly_focus":
         builder = WeeklyFocusWidgetBuilder(request.current_practice)
         return render(request, "includes/weekly_focus_widget_content.html", builder.build_context())
     # For GET requests (direct links): redirect with success message

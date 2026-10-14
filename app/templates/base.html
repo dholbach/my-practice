@@ -35,12 +35,9 @@
             }
         })();
     </script>
-    {# htmx evaluates hx-on / js: values / trigger filters with eval; none are used, and script-src has no 'unsafe-eval'. #}
-    <meta name="htmx-config" content='{"allowEval": false}'>
-    <script src="{% static 'js/htmx.min.js' %}" defer></script>
     <script src="{% static 'js/alpine-csp.min.js' %}" defer></script>
 </head>
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+<body data-csrf-token="{{ csrf_token }}"
     data-kbd-help="{% trans 'Help' %}"
     data-kbd-command-palette="{% trans 'Open command palette' %}"
     data-kbd-new-client="{% trans 'New client' %}"
@@ -272,6 +269,7 @@
 
     <!-- data-confirm / data-print / data-navigate / data-copy behaviours -->
     <script src="{% static 'js/ui_actions.js' %}"></script>
+    <script src="{% static 'js/partial_post.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

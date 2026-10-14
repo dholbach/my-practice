@@ -334,7 +334,7 @@ GOOGLE_CALENDAR_CLIENT_SECRET = os.environ.get("GOOGLE_CALENDAR_CLIENT_SECRET", 
 # lands in. Template autoescaping remains the primary XSS defence; CSP is the
 # backstop.
 # style-src keeps 'unsafe-inline' for style="" attributes and the inline styles
-# Alpine/htmx set at runtime; styles cannot execute code.
+# Alpine sets at runtime; styles cannot execute code.
 # All scripts are vendored locally (no CDN), so 'self' covers every src=.
 SECURE_CSP = {
     "default-src": [CSP.SELF],
