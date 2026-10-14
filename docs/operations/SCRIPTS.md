@@ -1,11 +1,11 @@
 # Backup & Restore Scripts
 
-These scripts provide easy backup and restoration of the payments system data.
+Backing up and restoring the practice data, and the systemd units that do it automatically.
 
 ## 📁 Data Directory (IMPORTANT)
 
 Backups and media files live **outside the Git repository** under `MY_PRACTICE_DATA_DIR`.
-The path is read from `.env` (default: `../payments-data` — sibling directory of the repo clone).
+The path is read from `.env` (default: `../my-practice-data` — sibling directory of the repo clone).
 
 ```
 $MY_PRACTICE_DATA_DIR/
@@ -73,56 +73,84 @@ Or with media files:
 - 📊 Shows what will be overwritten
 - ✅ Clear success/error messages
 
-## 🤖 Automatic Timers (Systemd user units)
+## 🤖 Automatic Timers and Auto-Start (systemd)
 
-Two timers run as user systemd units (no sudo needed). The unit files live in
-`scripts/` (source of truth) and are installed to `~/.config/systemd/user/`.
+The unit files live in `scripts/` (source of truth) and are installed as **system** units
+in `/etc/systemd/system/` by one script:
 
-| Timer | Schedule | What it does |
+```bash
+sudo bash scripts/install-system-jobs.sh
+```
+
+It fills in the checkout path and your username (the `User=` line, so everything still runs
+as you, not as root), enables both timers and the auto-start service, and prints their status.
+Re-run it after moving the checkout or pulling changed unit files — it overwrites the
+installed copies.
+
+| Unit | Schedule | What it does |
 | --- | --- | --- |
-| `my-practice-backup` | Daily (random offset) | PostgreSQL dump + media archive |
-| `my-practice-scheduled-jobs` | Hourly (random offset) | Runs `run_scheduled_jobs`: calendar sync, client tag recalculation, and Focus Queue materialize/auto-close, in sequence |
+| `my-practice-backup.timer` | Daily, random offset within 12 h | Runs `scripts/backup.sh`: PostgreSQL dump + media archive |
+| `my-practice-scheduled-jobs.timer` | Hourly, random offset within 5 min | Runs `run_scheduled_jobs`: calendar sync, client tag recalculation, Focus Queue materialize/auto-close, in sequence |
+| `my-practice-app.service` | At boot | `dev.py start` once network and Docker are up |
 
-`my-practice-scheduled-jobs` consolidates what used to be three separately-timed
-units (`update-client-tags`, `fetch-calendar-events`, `sync-focus-queue`) into
-one — each job is independently idempotent, so running all three hourly (rather
-than the former daily cadence for Focus Queue sync) is safe. A failure in one
-job is logged and doesn't block the others; see
-`run_scheduled_jobs` (`my_practice/management/commands/run_scheduled_jobs.py`).
-Any of the three underlying commands can still be run individually for
-manual/debug use, e.g. `./dev.py manage update_client_tags`.
+Both timers use `Persistent=true`, so a run missed while the laptop was off or asleep is
+caught up at the next start. Each scheduled job is idempotent and a failure in one is
+logged without blocking the others (`my_practice/management/commands/run_scheduled_jobs.py`);
+any of them can still be run on its own, e.g. `./dev.py manage update_client_tags`.
 
-**Upgrading from the three-timer setup**: disable and remove the old units
-before installing the new one:
+Why system units rather than user units under `~/.config/systemd/user/`: the app has to
+start at boot without anyone logging in, and the unit files set `User=`/`Group=`, which a
+user unit cannot use — copied there unedited, they fail to start.
+
+### Moving from user units
+
+Earlier versions of this page installed the timers as user units (and before that as three
+separate timers: `update-client-tags`, `fetch-calendar-events`, `sync-focus-queue`). Remove
+them before running the installer, or every backup and job runs twice:
 
 ```bash
-systemctl --user disable --now my-practice-update-client-tags.timer my-practice-fetch-calendar-events.timer my-practice-sync-focus-queue.timer
-rm ~/.config/systemd/user/my-practice-{update-client-tags,fetch-calendar-events,sync-focus-queue}.{timer,service}
+systemctl --user disable --now 'my-practice-*.timer'
+rm -f ~/.config/systemd/user/my-practice-*.{timer,service}
 systemctl --user daemon-reload
 ```
 
-### Install / reinstall after path changes
-
-```bash
-DEST=~/.config/systemd/user
-cp scripts/my-practice-backup.service          $DEST/
-cp scripts/my-practice-backup.timer            $DEST/
-cp scripts/my-practice-scheduled-jobs.service  $DEST/
-cp scripts/my-practice-scheduled-jobs.timer    $DEST/
-
-# Edit WorkingDirectory / ExecStart in each .service to match the actual repo path, then:
-systemctl --user daemon-reload
-systemctl --user enable --now my-practice-backup.timer
-systemctl --user enable --now my-practice-scheduled-jobs.timer
-```
+The installer warns if it finds any left over.
 
 ### Check status
 
 ```bash
-systemctl --user list-timers --all | grep my-practice
-journalctl --user -u my-practice-backup.service -n 20
-journalctl --user -u my-practice-scheduled-jobs.service -n 20
+systemctl list-timers 'my-practice-*'
+journalctl -u my-practice-backup.service -n 50
+journalctl -u my-practice-scheduled-jobs.service -n 50
+systemctl status my-practice-app.service --no-pager
 ```
+
+The dashboard also warns when the newest backup is older than `BACKUP_MAX_AGE_HOURS`, which
+catches a timer that stopped or was never installed.
+
+### Stop, disable, re-enable
+
+Enable or disable the **timers**, never the oneshot `.service` units they trigger.
+
+```bash
+sudo systemctl disable --now my-practice-backup.timer   # stop automatic backups
+sudo systemctl enable --now my-practice-backup.timer    # turn them back on
+sudo systemctl disable my-practice-app.service          # no auto-start at boot
+sudo systemctl start my-practice-app.service            # start the app now
+```
+
+### Troubleshooting
+
+- **Backups not running:** check `systemctl is-active my-practice-backup.timer`, then the
+  journal above. Run `./scripts/backup.sh` by hand — it exits non-zero (and the unit shows
+  as failed) whenever the dump or media archive fails verification, and a `❌` line names the
+  step. Check Docker is up: `docker ps`.
+- **`status=203/EXEC` or `Permission denied`** (SELinux, or a checkout on a filesystem
+  mounted `noexec`): the units already call their scripts through an interpreter
+  (`/usr/bin/env bash …`, `/usr/bin/env python3 …`). If you edited them, keep it that way, then
+  `sudo systemctl daemon-reload`.
+- **Immutable hosts (Bluefin, Silverblue):** `/etc/systemd/system/` is writable and
+  survives `rpm-ostree` updates, so the installer works unchanged.
 
 ## 📤 External Backups
 
@@ -147,14 +175,14 @@ In an emergency (e.g. data loss):
 
 1. **Stop containers**: `docker compose down`
 2. **Fresh start**: `docker compose up -d`
-3. **Restore latest backup**: `./scripts/restore.sh backups/db_backup_LATEST.sql.gz backups/media_backup_LATEST.tar.gz`
+3. **Restore latest backup**: `./scripts/restore.sh $MY_PRACTICE_DATA_DIR/backups/db_backup_LATEST.sql.gz $MY_PRACTICE_DATA_DIR/backups/media_backup_LATEST.tar.gz`
 4. **Restart Django**: `docker compose restart django`
-5. **Verify**: Open http://localhost:8000 and check data
+5. **Verify**: `./dev.py manage encryption check` confirms `FERNET_KEY` opens the restored data, then open http://localhost:8000 and check it
 
 ## 💡 Tips
 
 - **Before major changes**: Always run `./scripts/backup.sh` manually
 - **Before Django migrations**: Create a backup
 - **Test regularly**: Perform a restore on a test system monthly
-- **Monitoring**: Check `backups/backup.log` for errors
-- **Retention**: Default 30 days, configurable in `backup.sh` (the `-mtime +30` cleanup at the end)
+- **Monitoring**: `journalctl -u my-practice-backup.service` for the timer's runs; the dashboard warns when the newest backup is too old
+- **Retention**: 30 days, `BACKUP_RETENTION_DAYS` in `prod.py`
