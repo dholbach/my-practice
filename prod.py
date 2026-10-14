@@ -34,6 +34,13 @@ RAW_BASE = f"https://raw.githubusercontent.com/dholbach/my-practice/{VERSION}"
 # clinical notes. Compose only warns about them and carries on, so check first.
 REQUIRED_SECRETS = ("DJANGO_SECRET_KEY", "POSTGRES_PASSWORD", "FERNET_KEY")
 
+# The host address docker-compose.prod.yml publishes port 8000 on. Compose
+# defaults it to loopback: plain HTTP on every interface sends passwords and
+# client data across the network unencrypted, and behind a reverse proxy it lets
+# a client skip the proxy and claim HTTPS through X-Forwarded-Proto. Docker's
+# port publishing bypasses host firewalls such as ufw, so a firewall is no help.
+BIND_ADDRESS_KEY = "MY_PRACTICE_BIND_ADDRESS"
+
 
 def compose(*args):
     return subprocess.run([*COMPOSE, *args])
@@ -330,13 +337,22 @@ def cmd_setup(args):
     print("  data directory, HTTPS, and more). Review the full reference:")
     print(f"  {ENV_DOCS}")
 
-    # 4. Start the stack
+    # 4. Network exposure (asked once; an existing answer in .env stands)
+    url = "http://localhost:8000"
+    if BIND_ADDRESS_KEY not in env:
+        step("Choosing how the app is reached")
+        values, url = _ask_access_mode(env)
+        env.update(values)
+        _write_env(env)
+    _warn_if_proxy_bypassable()
+
+    # 5. Start the stack
     step("Starting the stack")
     result = compose("up", "-d", "--remove-orphans")
     if result.returncode != 0:
         abort("docker compose up failed.\n  Check the logs for details:\n    ./prod.py logs")
 
-    # 5. Wait for healthy
+    # 6. Wait for healthy
     if not _wait_for_healthy():
         abort(
             "Django did not become healthy in time.\n"
@@ -346,7 +362,7 @@ def cmd_setup(args):
             "  or a port conflict on 8000."
         )
 
-    # 6. Create superuser
+    # 7. Create superuser
     step("Creating your login")
     print("  You'll be prompted for a username, email address, and password.")
     print("  This will be your login for the web UI and Django admin.\n")
@@ -357,7 +373,7 @@ def cmd_setup(args):
             "    ./prod.py manage createsuperuser"
         )
 
-    # 7. Setup practice
+    # 8. Setup practice
     step("Setting up your practice")
     print("  You'll be prompted for your name, address, and bank details.")
     print("  These appear on invoices — you can edit them later in the admin.\n")
@@ -368,12 +384,12 @@ def cmd_setup(args):
             "    ./prod.py manage setup_practice"
         )
 
-    # 8. Done
+    # 9. Done
     print()
     print("=" * 50)
     print("Setup complete.")
     print()
-    print("  Open the app: http://localhost:8000")
+    print(f"  Open the app: {url}")
     print()
     print("  ⚠  Back up your .env file before anything else.")
     print("     It contains FERNET_KEY, which encrypts clinical notes (Art. 9 GDPR data).")
@@ -538,6 +554,108 @@ def _require_no_foreign_containers():
         )
 
 
+# ── network exposure ─────────────────────────────────────────────────────────
+
+
+def _is_loopback(address):
+    return address.startswith("127.") or address in ("::1", "[::1]", "localhost")
+
+
+def _ask(prompt, default=""):
+    """input() that treats a closed stdin (piped setup) as accepting the default."""
+    try:
+        return input(prompt).strip() or default
+    except EOFError:
+        print()
+        return default
+
+
+def _ask_access_mode(env):
+    """Ask how the app will be reached; return the .env values that match.
+
+    Returns (values, url) where url is what to open once the stack is up.
+    """
+    print("  How will you open the app?")
+    print("    1) Only on this machine (recommended for a single laptop or desktop)")
+    print("    2) Through an HTTPS reverse proxy (nginx, Caddy, ...) on this machine")
+    print("    3) Directly from other devices on the network, over plain HTTP")
+    choice = ""
+    while choice not in ("1", "2", "3"):
+        choice = _ask("  Choice [1]: ", "1")
+
+    hosts = [h.strip() for h in env.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()]
+    for host in ("localhost", "127.0.0.1"):
+        if host not in hosts:
+            hosts.append(host)
+
+    if choice == "1":
+        values = {BIND_ADDRESS_KEY: "127.0.0.1", "SECURE_SSL_REDIRECT": "false"}
+        url = "http://localhost:8000"
+    elif choice == "2":
+        domain = ""
+        while not domain:
+            domain = _ask("  Domain the proxy serves (e.g. practice.example): ")
+        hosts.insert(0, domain)
+        values = {BIND_ADDRESS_KEY: "127.0.0.1", "SECURE_SSL_REDIRECT": "true"}
+        url = f"https://{domain}"
+        print("  The proxy must forward to http://127.0.0.1:8000 and set X-Forwarded-Proto —")
+        print("  see the nginx example in SECURITY.md.")
+    else:
+        address = ""
+        while not address:
+            address = _ask(
+                "  This machine's IP address or hostname on the network (e.g. 192.168.1.20): "
+            )
+        hosts.insert(0, address)
+        values = {BIND_ADDRESS_KEY: "0.0.0.0", "SECURE_SSL_REDIRECT": "false"}
+        url = f"http://{address}:8000"
+        print("  ⚠  Plain HTTP: passwords and client data cross the network unencrypted,")
+        print("     readable by anyone on the same network. Use this only on a home network")
+        print("     you trust; anywhere else, put an HTTPS reverse proxy in front (option 2).")
+
+    values["DJANGO_ALLOWED_HOSTS"] = ",".join(dict.fromkeys(hosts))
+    return values, url
+
+
+def _ensure_bind_address():
+    """Keep an installation set up before v0.8.0 reachable the way it was.
+
+    Until then docker-compose.prod.yml published port 8000 on every interface;
+    it now defaults to loopback. An existing .env without the key is pinned to
+    the old behaviour, with a comment saying how to narrow it, rather than
+    silently cutting off every other device after an update.
+    """
+    if BIND_ADDRESS_KEY in _read_env():
+        return
+    with open(ENV_FILE) as f:
+        ends_with_newline = f.read().endswith("\n")
+    with open(ENV_FILE, "a") as f:
+        if not ends_with_newline:
+            f.write("\n")
+        f.write(
+            "\n# Added by prod.py: keeps the app reachable from other devices, as before v0.8.0.\n"
+            "# Set to 127.0.0.1 if only this machine (or a reverse proxy on it) needs it.\n"
+            f"{BIND_ADDRESS_KEY}=0.0.0.0\n"
+        )
+    print(f"  Added {BIND_ADDRESS_KEY}=0.0.0.0 to .env — the app stays reachable from")
+    print("  other devices as before. If only this machine or a reverse proxy on it")
+    print(f"  needs it, change that to {BIND_ADDRESS_KEY}=127.0.0.1 (see SECURITY.md).")
+
+
+def _warn_if_proxy_bypassable():
+    """Warn when HTTPS is assumed but port 8000 is open beside the proxy.
+
+    With SECURE_SSL_REDIRECT=true Django trusts X-Forwarded-Proto, which a
+    client talking to port 8000 directly can set itself.
+    """
+    env = _read_env()
+    address = env.get(BIND_ADDRESS_KEY, "127.0.0.1")
+    if env.get("SECURE_SSL_REDIRECT", "").lower() == "true" and not _is_loopback(address):
+        print(f"  ⚠  SECURE_SSL_REDIRECT=true but {BIND_ADDRESS_KEY}={address}: clients can")
+        print("     reach port 8000 without going through the proxy and claim HTTPS.")
+        print(f"     Set {BIND_ADDRESS_KEY}=127.0.0.1 if the proxy runs on this machine.")
+
+
 # ── commands ────────────────────────────────────────────────────────────────
 
 
@@ -545,6 +663,8 @@ def cmd_start(_args):
     """Start the stack."""
     _require_secrets()
     _require_no_foreign_containers()
+    _ensure_bind_address()
+    _warn_if_proxy_bypassable()
     return compose("up", "-d", "--remove-orphans")
 
 
@@ -586,6 +706,8 @@ def cmd_update(args):
     result = compose("pull")
     if result.returncode != 0:
         return result
+    _ensure_bind_address()
+    _warn_if_proxy_bypassable()
     return compose("up", "-d", "--remove-orphans")
 
 
