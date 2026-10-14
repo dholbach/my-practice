@@ -8,6 +8,7 @@ BankExpenseReviewView, BankWithdrawalReviewView.
 from datetime import date
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as TestClient
@@ -385,6 +386,38 @@ class BankReviewSingleActionsTest(BankReviewViewBase):
     def test_no_transaction_id_redirects(self):
         response = self.http.post(reverse("bank_review"), {"action": "ignore"})
         self.assertRedirects(response, reverse("bank_review"))
+
+
+class BankReviewStoredNotesTest(BankReviewViewBase):
+    """Notes the review writes to the database follow the user's language."""
+
+    def _match_two(self, language):
+        self.http.cookies[settings.LANGUAGE_COOKIE_NAME] = language
+        first = self._make_invoice(number="CN-1", payer="Max Mustermann")
+        second = self._make_invoice(number="CO-2", payer="Max Mustermann")
+        trans = self._make_unmatched(ref="CN-1 CO-2", amount="180,00", payer="M. Schmidt")
+        self.http.post(
+            reverse("bank_review"),
+            {
+                "action": "match",
+                "transaction_id": trans.id,
+                "invoice": [first.id, second.id],
+                "create_alias": "1",
+            },
+        )
+        trans.refresh_from_db()
+        alias = ClientAlias.objects.get(alias_name="M. Schmidt")
+        return trans.notes, alias.notes
+
+    def test_notes_in_german(self):
+        payment_note, alias_note = self._match_two("de")
+        self.assertEqual(payment_note, "Sammelzahlung für: CN-1, CO-2")
+        self.assertEqual(alias_note, "Angelegt beim Bankimport vom 15.01.2026")
+
+    def test_notes_in_english(self):
+        payment_note, alias_note = self._match_two("en")
+        self.assertEqual(payment_note, "Combined payment for: CN-1, CO-2")
+        self.assertIn("Created during the bank import of", alias_note)
 
 
 # ── BankExpenseReviewView ─────────────────────────────────────────────────────

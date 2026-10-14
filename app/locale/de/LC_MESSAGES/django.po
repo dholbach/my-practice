@@ -9224,6 +9224,29 @@ msgstr "Zwei-Faktor-Anmeldung einschalten"
 msgid "Sign out"
 msgstr "Abmelden"
 
+#: my_practice/utils/bank_import.py:483
+msgid "Erroneous booking / correction from private account"
+msgstr "Fehlbuchung / Korrektur vom privaten Konto"
+
+#: my_practice/utils/bank_import.py:501
+msgid "Own payment (capital contribution), ignored automatically"
+msgstr "Eigene Zahlung (Einlage), automatisch ignoriert"
+
+#: my_practice/views/bank_import_views.py:488
+#, python-format
+msgid "Combined payment for: %(numbers)s"
+msgstr "Sammelzahlung für: %(numbers)s"
+
+#: my_practice/views/bank_import_views.py:534
+#, python-format
+msgid "Created automatically on confirming the payment of %(date)s"
+msgstr "Automatisch angelegt beim Bestätigen der Zahlung vom %(date)s"
+
+#: my_practice/views/bank_import_views.py:544
+#, python-format
+msgid "Created during the bank import of %(date)s"
+msgstr "Angelegt beim Bankimport vom %(date)s"
+
 #~ msgid "Cancellation Rate (last 24 months)"
 #~ msgstr "Ausfallquote (letzte 24 Monate)"
 

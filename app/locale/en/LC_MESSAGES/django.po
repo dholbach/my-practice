@@ -9222,6 +9222,29 @@ msgstr ""
 msgid "Sign out"
 msgstr ""
 
+#: my_practice/utils/bank_import.py:483
+msgid "Erroneous booking / correction from private account"
+msgstr ""
+
+#: my_practice/utils/bank_import.py:501
+msgid "Own payment (capital contribution), ignored automatically"
+msgstr ""
+
+#: my_practice/views/bank_import_views.py:488
+#, python-format
+msgid "Combined payment for: %(numbers)s"
+msgstr ""
+
+#: my_practice/views/bank_import_views.py:534
+#, python-format
+msgid "Created automatically on confirming the payment of %(date)s"
+msgstr ""
+
+#: my_practice/views/bank_import_views.py:544
+#, python-format
+msgid "Created during the bank import of %(date)s"
+msgstr ""
+
 #~ msgid "Error sending the email: %(error)s"
 #~ msgstr "Error sending the email: %(error)s"
 
