@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import date
 from decimal import Decimal
 
-from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F, Q, Sum
+from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F, Min, Q, Sum
 from django.db.models.functions import Coalesce, TruncMonth
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -19,6 +19,7 @@ from ..models import (
     Invoice,
     InvoiceItem,
     Session,
+    TimeOff,
 )
 from ..models.base import PracticeScope, scope_to_practice
 from . import (
@@ -430,6 +431,17 @@ class SessionAnalyzer:
         Returns list of {month, year, date, total, cancelled, rate} dicts,
         oldest first, covering only months that have at least one session.
 
+        Two kinds of "cancelled" session are left out because they would
+        distort the rate:
+
+        - Sessions cancelled during the practitioner's own time off. Clearing
+          a recurring series for a vacation marks every instance cancelled,
+          which says nothing about clients cancelling.
+        - Months before the first calendar-linked session. Until then a session
+          was only marked cancelled when a cancellation fee was invoiced; the
+          calendar sync marks every deleted appointment, so the two periods
+          measure different things.
+
         Args:
             months: How many months back to look (default 24)
             practice: Practice instance for multi-practice filtering
@@ -437,10 +449,26 @@ class SessionAnalyzer:
         today = timezone.localdate()
         start = DateRangeHelper.add_months(date(today.year, today.month, 1), -(months - 1))
 
-        qs = Session.objects.filter(session_date__gte=start).annotate(
-            month=TruncMonth("session_date")
+        qs = scope_to_practice(
+            Session.objects.filter(session_date__gte=start), practice, "client__practice"
         )
-        qs = scope_to_practice(qs, practice, "client__practice")
+
+        first_synced = qs.exclude(calendar_event_id="").aggregate(first=Min("session_date"))[
+            "first"
+        ]
+        if first_synced:
+            start = max(start, first_synced.replace(day=1))
+            qs = qs.filter(session_date__gte=start)
+
+        on_time_off = Q()
+        for off_start, off_end in TimeOff.objects.filter(end_date__gte=start).values_list(
+            "start_date", "end_date"
+        ):
+            on_time_off |= Q(session_date__range=(off_start, off_end))
+        if on_time_off:
+            qs = qs.exclude(Q(cancelled=True) & on_time_off)
+
+        qs = qs.annotate(month=TruncMonth("session_date"))
 
         rows = (
             qs.values("month")
