@@ -137,4 +137,3 @@ class EnvironmentSettingsTests(SimpleTestCase):
     def test_passed_to_the_production_container(self):
         passed = _compose_django_environment("docker-compose.prod.yml")
         self.assertEqual(sorted(_env_vars_read_by_app() - passed), [])
-
