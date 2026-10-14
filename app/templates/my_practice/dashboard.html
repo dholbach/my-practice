@@ -12,6 +12,19 @@
 
 {% block content %}
 
+{% if backup_warning %}
+<div class="callout callout-warning" role="alert">
+    <strong>
+        {% if backup_warning.latest %}
+            {% blocktrans with date=backup_warning.latest|date:"d.m.Y H:i" count days=backup_warning.days %}The last backup is from {{ date }} ({{ days }} day ago).{% plural %}The last backup is from {{ date }} ({{ days }} days ago).{% endblocktrans %}
+        {% else %}
+            {% trans "No backup has been made yet." %}
+        {% endif %}
+    </strong>
+    {% trans "Run ./prod.py backup (scripts/backup.sh in a git checkout) and make sure it runs daily — see the backup guide." %}
+</div>
+{% endif %}
+
 {# Stats strip + quick-action buttons #}
 <div class="dashboard-header-row">
     <div class="stats-strip">

@@ -28,6 +28,27 @@ The in-app checklist (`/backups/checklist/quarterly/`) walks through the process
 
 ---
 
+## Without a git checkout (`prod.py` only)
+
+A self-hosted installation set up with `./prod.py setup` has no `scripts/` directory.
+Back up with:
+
+```bash
+./prod.py backup                        # database + media → $MY_PRACTICE_DATA_DIR/backups
+./prod.py restore <db_backup> [media]   # overwrites the current data; asks first
+```
+
+Schedule it daily — for example with cron (`crontab -e`):
+
+```
+17 3 * * * cd /path/to/my-practice && ./prod.py backup >> backup.log 2>&1
+```
+
+Set `BACKUP_PASSPHRASE_FILE` in `.env` to encrypt the archives with gpg (see
+`.env.example`). The dashboard shows a warning when the newest backup is more than
+48 hours old (`BACKUP_MAX_AGE_HOURS`), so a schedule that silently stopped does not go
+unnoticed. Copying the backup directory off the machine (USB, NAS) is still up to you.
+
 ## Install System Services
 
 ## Quick Install
@@ -39,10 +60,10 @@ sudo bash scripts/install-system-jobs.sh
 ```
 
 This will:
-3. Enable the app auto-start service (starts during boot after network/docker readiness)
-2. Enable the backup timer (daily, randomized execution window)
-3. Enable the app auto-start service (starts 2 minutes after boot)
-4. Start the backup timer immediately
+1. Install the backup, scheduled-jobs and app auto-start units
+2. Enable and start the backup timer (daily, randomized execution window)
+3. Enable and start the scheduled-jobs timer (hourly)
+4. Enable the app auto-start service (starts during boot after network/docker readiness)
 5. Show you the status and next scheduled run
 
 ## Manual Installation Steps

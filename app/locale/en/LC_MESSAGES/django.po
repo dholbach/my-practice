@@ -9037,6 +9037,23 @@ msgstr ""
 msgid "Too many failed sign-in attempts. Please wait 15 minutes and try again."
 msgstr ""
 
+#: templates/my_practice/dashboard.html
+#, python-format
+msgid "The last backup is from %(date)s (%(days)s day ago)."
+msgid_plural "The last backup is from %(date)s (%(days)s days ago)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/my_practice/dashboard.html
+msgid "No backup has been made yet."
+msgstr ""
+
+#: templates/my_practice/dashboard.html
+msgid ""
+"Run ./prod.py backup (scripts/backup.sh in a git checkout) and make sure it "
+"runs daily — see the backup guide."
+msgstr ""
+
 #~ msgid "Error sending the email: %(error)s"
 #~ msgstr "Error sending the email: %(error)s"
 
