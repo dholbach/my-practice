@@ -314,11 +314,14 @@ jobs:
       # list in dev.py, and it broke the build the first time a test file was
       # deleted (global-search.test.js, P-047).
       # The step shell is `bash -e`, so the first failing file fails the step.
+      # nullglob: a pattern that matches nothing (no *.test.extended.js left
+      # after chart_utils' was deleted) must expand to nothing, not to itself.
       - name: JavaScript tests
         if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: |
           node --version
+          shopt -s nullglob
           for suite in static/js/*.test.js static/js/*.test.extended.js; do
             echo "--- $suite"
             node "$suite"

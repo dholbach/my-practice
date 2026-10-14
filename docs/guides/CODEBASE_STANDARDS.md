@@ -205,16 +205,14 @@ in #424).
 
 ### Canonical patterns
 
-- Chart drawing always registers itself in `chartRegistry` for redraw on tab reveal (M-PAT-03)
-- Charts in hidden tabs: call redraw after `classList.add('active')` with 50ms delay
+- Charts go through `MPChart` in `static/js/charts.js` (Chart.js) inside a fixed-height `.chart-wrapper--*` (M-PAT-03)
 - Small in-place actions (complete a task, advance an invoice status) use `data-post` from `static/js/partial_post.js`; the view checks `is_partial_request(request)` (`X-Partial: 1`) and returns the fragment instead of a redirect. No htmx — it was removed for being a 50 KB library used for exactly this
 - Inline `<script>` blocks carry `nonce="{{ csp_nonce }}"`; handlers are wired with `addEventListener` or Alpine `x-on:`. The CSP's `script-src` has no `'unsafe-inline'`, so anything else is skipped by the browser — silently, and only in a browser (`test_csp_coverage.py`)
 - No `'unsafe-eval'` either: Alpine is its CSP build, whose expression interpreter refuses globals and cannot parse functions. Confirmations, print, select-navigation and copy buttons go through the `data-*` attributes of `static/js/ui_actions.js`; anything stateful is an `Alpine.data()` component referenced by name (`x-data="taxSettlement"`). `test_csp_coverage.py` scans every Alpine attribute for globals, arrow functions and `x-data="factory()"`
 
 ### Anti-patterns to flag
 
-- `chart.destroy()` + recreate on every tab switch → use `chartRegistry` redraw instead
-- `document.querySelector` for a chart container whose parent can be hidden → add tab-reveal hook
+- Drawing on a `<canvas>` by hand, or `new Chart(...)` directly → use `MPChart`, which carries the theme colours and dark-mode switch
 - Inline `<script>` blocks with business logic → move to a static `.js` file
 - `onclick=`/`onchange=`/… attributes, in templates or in HTML built by JavaScript → they never run under the CSP
 - `getCSSVariable('--text-primary')` and other names outside the `--color-*` tokens → they are undefined; read the real token so charts follow the theme
@@ -432,40 +430,31 @@ revenue = year_stats["total"]
 # invoice_qs = Invoice.objects.filter(invoice_date__year=year, status='paid')
 ```
 
-### Chart Rendering in Hidden Tabs (M-PAT-03)
-Charts rendered in hidden tabs (display: none) get incorrect dimensions because container.clientHeight returns 0.
+### Charts (M-PAT-03)
+Charts are Chart.js through the small wrapper in `static/js/charts.js`
+(`MPChart.init`, `MPChart.line`, `MPChart.bar`, `MPChart.empty`). It reads the
+`--color-*` tokens and re-reads them on `themeChanged`, so a chart follows dark
+mode without being rebuilt.
 
 ```javascript
-// Problem: Chart in hidden tab has zero height
-.tab-content { display: none; }  // container.clientHeight = 0
-
-// Solution: Redraw charts when tab becomes visible
-function switchTab(tabName) {
-    // Show tab first
-    document.getElementById(tabName + '-tab').classList.add('active');
-
-    // Redraw charts after small delay (DOM must be visible)
-    setTimeout(function() {
-        const canvases = document.querySelectorAll(`#${tabName}-tab canvas`);
-        canvases.forEach(canvas => {
-            if (chartRegistry[canvas.id]) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                chartRegistry[canvas.id](canvas);  // Redraw with correct dimensions
-            }
-        });
-    }, 50);
-}
-
-// Also redraw on initial load if non-default tab is active
+MPChart.init('revenueLineChart', function(canvas) {
+    if (!data.some(v => v > 0)) return MPChart.empty(canvas, CHART_MESSAGES.noData);
+    MPChart.line(canvas, {
+        labels, monthNames: MONTH_NAMES, suffix: ' €', trend: 'Trend',
+        series: [{ label: 'Revenue', data, color: 'chart1', fill: true }]
+    });
+});
 ```
 
 **Key Points**:
-- Charts use `container.clientHeight` for sizing
-- Hidden containers return 0 → canvas gets wrong dimensions
-- Always redraw charts after tab visibility changes
-- Use 50-100ms delay to ensure DOM is rendered
-- Leverage `chartRegistry` from chart_core.js for redraws
+- Put the canvas in a `.chart-wrapper--*` container: those set a fixed height,
+  and the charts fill their container (`maintainAspectRatio` is off).
+- A chart in a hidden tab needs nothing special. Chart.js watches its
+  container's size and draws itself when the tab is shown; the old
+  "redraw 50 ms after the tab switch" rule belonged to the hand-written canvas
+  code this replaced.
+- Strings go in through the template (`{% trans %}` in the inline script), like
+  any JS text.
 
 ### Form Draft Guard (M-PAT-06)
 Long-text forms (session logs, case notes) lose typed content if the user accidentally navigates away (e.g. Alt+Left/Right browser back/forward) before submitting. `app/static/js/form_draft_guard.js` is a reusable, opt-in guard loaded globally in `base.html` (like `widgets.js`) — no per-template `extra_js` needed.

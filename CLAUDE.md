@@ -215,7 +215,7 @@ here; the worked example and the failure it came from are in
 | --- | --- |
 | **M-PAT-01** Error handling | Form views: `messages.error()` + `form_invalid()`. API views: `JsonResponse` with a status code. Management commands: log, then raise `CommandError`. |
 | **M-PAT-02** Date filters | Always go through `RevenueCalculator`; never hand-build `invoice_date__year` / `status` filters. |
-| **M-PAT-03** Charts in hidden tabs | A chart drawn in a `display: none` container gets zero height. Redraw from `chartRegistry` 50–100 ms after the tab becomes visible. |
+| **M-PAT-03** Charts | Chart.js through `MPChart` (`static/js/charts.js`), in a fixed-height `.chart-wrapper--*`. It follows the theme tokens and resizes itself when a hidden tab is shown. |
 | **M-PAT-04** CSS | No inline `<style>`, no new `.css` files — everything in `tailwind.css`. Full rule in § CSS Architecture below. |
 | **M-PAT-05** Working days | `DateRangeHelper.count_working_days` with Berlin holidays; never `round(days * 5/7)`. See § Working-Day Calculations below. |
 | **M-PAT-06** Form draft guard | Opt long-text forms in with `data-draft-guard` plus the three `data-draft-*` labels; reuse those msgids verbatim rather than minting new ones. |

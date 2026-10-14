@@ -18,8 +18,8 @@
 {% endblock %}
 
 {% block extra_head_scripts %}
-<script src="{% static 'js/charts/chart_core.js' %}"></script>
-<script src="{% static 'js/charts/chart_canvas.js' %}"></script>
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/charts.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -676,12 +676,6 @@ function pageTab(tabName, btn) {
     if (btn) btn.classList.add('page-tab-active');
 
     if (history.replaceState) history.replaceState(null, '', '#ptab-' + tabName);
-
-    // M-PAT-03: charts drawn while their tab was display:none get zero-sized
-    // canvases; redraw once the tab (and its real dimensions) are visible.
-    setTimeout(function() {
-        redrawChartsIn(tabContainer);
-    }, 50);
 }
 
 // Tab switching and the cockpit shortcuts into a tab, wired here rather than
@@ -739,68 +733,15 @@ document.addEventListener('draftguard:dirty', function(e) {
 
 {% if monthly_sessions %}
 <script nonce="{{ csp_nonce }}">
-initChart('sessionTimeline', function(canvas) {
+MPChart.init('sessionTimeline', function(canvas) {
     const months = [{% for item in monthly_sessions %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
     const hours = [{% for item in monthly_sessions %}{{ item.hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-    const maxHours = Math.max(...hours, 1);
-
-    const setup = setupCanvas(canvas, { top: 15, right: 10, bottom: 35, left: 40 });
-    if (!setup) return;
-    const { ctx, padding, chartWidth, chartHeight, width, height } = setup;
-
-    drawGrid(ctx, padding, chartWidth, chartHeight);
-    drawAxes(ctx, padding, chartWidth, chartHeight);
-    drawYAxisLabels(ctx, padding, chartHeight, maxHours, 'h');
-
-    const barData = [];
-    const barWidth = chartWidth / (hours.length * 1.5);
-    const barSpacing = barWidth * 0.5;
-
-    if (hours.length > 0) {
-        hours.forEach((sessionHours, index) => {
-            const barHeight = (sessionHours / maxHours) * chartHeight;
-            const x = padding.left + (barWidth + barSpacing) * index + barSpacing;
-            const y = padding.top + chartHeight - barHeight;
-            barData.push({ x, y, width: barWidth, height: barHeight, centerX: x + barWidth / 2, centerY: y + barHeight / 2 });
-            const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
-            gradient.addColorStop(0, '#48bb78');
-            gradient.addColorStop(1, '#38a169');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(x, y, barWidth, barHeight);
-            const labelInterval = hours.length > 12 ? 3 : 2;
-            if (index % labelInterval === 0 || hours.length <= 6) {
-                ctx.fillStyle = getCSSVariable('--color-text-primary');
-                ctx.font = 'bold 10px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(months[index], x + barWidth / 2, height - 8);
-            }
-        });
-    }
-
-    const tooltip = document.createElement('div');
-    tooltip.style.cssText = 'position: fixed; background: rgba(0,0,0,0.9); color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 9999; white-space: nowrap;';
-    document.body.appendChild(tooltip);
-
-    canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        let hoveredBar = null;
-        barData.forEach((bar, index) => {
-            if (mouseX >= bar.x && mouseX <= bar.x + bar.width && mouseY >= bar.y && mouseY <= bar.y + bar.height) hoveredBar = index;
-        });
-        if (hoveredBar !== null) {
-            tooltip.innerHTML = `<strong>${months[hoveredBar]}</strong><br>${hours[hoveredBar]}h`;
-            tooltip.style.left = (e.clientX + 10) + 'px';
-            tooltip.style.top = (e.clientY - 45) + 'px';
-            tooltip.style.opacity = '1';
-            canvas.style.cursor = 'pointer';
-        } else {
-            tooltip.style.opacity = '0';
-            canvas.style.cursor = 'default';
-        }
+    MPChart.bar(canvas, {
+        labels: months,
+        suffix: ' h',
+        decimals: 1,
+        series: [{ data: hours, color: 'chart2' }]
     });
-    canvas.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; canvas.style.cursor = 'default'; });
 });
 </script>
 {% endif %}

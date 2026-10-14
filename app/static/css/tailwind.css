@@ -524,6 +524,7 @@
   .client-table .badge-dormant     { background: var(--color-badge-neutral-bg); color: var(--color-badge-neutral-text); }
   .client-table .badge-online      { background: var(--color-badge-indigo-bg);  color: var(--color-badge-indigo-text); }
   .chart-wrapper { position: relative; width: 100%; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); }
+  .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; margin: 0; color: var(--color-text-secondary); }
   .timeoff-stat { text-align: center; padding: 1rem; background: var(--color-bg-secondary); border-radius: 8px; }
   .timeoff-stat-value { font-size: 2rem; font-weight: 700; color: var(--color-text-primary); }
   .timeoff-stat-label { font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.5rem; }

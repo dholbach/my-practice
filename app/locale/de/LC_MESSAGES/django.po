@@ -9247,6 +9247,10 @@ msgstr "Automatisch angelegt beim Bestätigen der Zahlung vom %(date)s"
 msgid "Created during the bank import of %(date)s"
 msgstr "Angelegt beim Bankimport vom %(date)s"
 
+#: templates/my_practice/analytics.html:220
+msgid "Trend"
+msgstr "Trend"
+
 #~ msgid "Cancellation Rate (last 24 months)"
 #~ msgstr "Ausfallquote (letzte 24 Monate)"
 

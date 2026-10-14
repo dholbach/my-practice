@@ -9245,6 +9245,10 @@ msgstr ""
 msgid "Created during the bank import of %(date)s"
 msgstr ""
 
+#: templates/my_practice/analytics.html:220
+msgid "Trend"
+msgstr ""
+
 #~ msgid "Error sending the email: %(error)s"
 #~ msgstr "Error sending the email: %(error)s"
 
