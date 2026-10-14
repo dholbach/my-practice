@@ -26,6 +26,19 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# SCRIPTS.md used to install these as user units. Left in place next to the
+# system units, every backup and scheduled job would run twice.
+USER_UNIT_DIR="$(getent passwd "$INSTALL_USER" | cut -d: -f6)/.config/systemd/user"
+if compgen -G "${USER_UNIT_DIR}/my-practice-*" > /dev/null; then
+    echo "⚠️  Found old user units in ${USER_UNIT_DIR}:"
+    ls -1 "${USER_UNIT_DIR}"/my-practice-* | sed 's|^|     |'
+    echo "   Remove them as ${INSTALL_USER} (not root), or every job runs twice:"
+    echo "     systemctl --user disable --now 'my-practice-*.timer'"
+    echo "     rm -f ~/.config/systemd/user/my-practice-*.{timer,service}"
+    echo "     systemctl --user daemon-reload"
+    echo ""
+fi
+
 # Substitute placeholders and copy service/timer files
 echo "📋 Installing service files to /etc/systemd/system/..."
 # Listed from the files that exist: this loop used to name two unit pairs that
@@ -38,7 +51,7 @@ for f in scripts/my-practice-backup.service scripts/my-practice-backup.timer \
     sed \
         -e "s|/path/to/my-practice|${INSTALL_DIR}|g" \
         -e "s|YOUR_USERNAME|${INSTALL_USER}|g" \
-        "$f" > "/etc/systemd/system/$(basename "$f")"
+        "${INSTALL_DIR}/$f" > "/etc/systemd/system/$(basename "$f")"
 done
 
 # Reload systemd
