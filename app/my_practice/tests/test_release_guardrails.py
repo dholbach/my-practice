@@ -13,15 +13,23 @@ suite is green, and the damage lands at deploy time or in a published release.
    only thing enforcing it was remembering to. A `prod.py` that reports one
    version while docker-compose.prod.yml pulls another is exactly the state in
    which `./prod.py update` does something surprising.
+
+3. Static files that only the production storage rejects. The suite and the
+   dev stack run with DEBUG=True and plain StaticFilesStorage; the image runs
+   `collectstatic` through WhiteNoise's manifest storage, which follows every
+   url()/sourceMappingURL reference and aborts on a missing target. v0.8.0
+   shipped a vendored chart.umd.min.js pointing at a .map that was never
+   vendored, and the container could not start.
 """
 
 import os
 import re
+import tempfile
 from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from my_practice.version import VERSION
 
@@ -44,6 +52,22 @@ class MigrationDriftTests(TestCase):
                 "  The suite builds its schema from the models, so it stays green "
                 "either way — this only breaks when `migrate` runs for real."
             )
+
+
+class ProductionCollectstaticTests(SimpleTestCase):
+    """`collectstatic` as the image runs it must succeed."""
+
+    def test_collectstatic_with_production_storage(self):
+        with tempfile.TemporaryDirectory() as static_root:
+            storages = {
+                **settings.STORAGES,
+                "staticfiles": {
+                    "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+                },
+            }
+            with override_settings(STATIC_ROOT=static_root, STORAGES=storages):
+                # Same flags as the command in docker-compose.prod.yml.
+                call_command("collectstatic", "--noinput", "--ignore", "tailwind.css", verbosity=0)
 
 
 class VersionConsistencyTests(SimpleTestCase):
