@@ -85,7 +85,7 @@ chronological record; this document only tracks current state.
 - ✅ Email sending with custom templates; smart `{sessions_intro}` placeholder — "sessions in May 2026" when all items in same month, "last N sessions" otherwise
 - ✅ Status tracking (Draft/Sent/Paid/Cancelled)
 - ✅ Duplicate prevention (unique invoice numbers)
-- ✅ Issued invoices are locked — once an invoice leaves Draft, its number, client, date, tax rate, totals and line items can no longer change (UI, admin and model level alike), it cannot be set back to Draft, and it cannot be deleted until its 10-year § 147 AO retention period has run out; status, paid date and internal notes stay editable. "Cancel & correct" on a sent invoice cancels it and opens an editable copy with a new number
+- ✅ Issued invoices are locked — once an invoice leaves Draft, its number, client, date, tax rate, totals and line items can no longer change (UI, admin and model level alike), it cannot be set back to Draft, and it cannot be deleted until its 10-year retention period has run out (§ 147 AO; deliberately ten, see ADR-0007); status, paid date and internal notes stay editable. "Cancel & correct" on a sent invoice cancels it and opens an editable copy with a new number
 - ✅ Payment tracking with paid dates
 - ✅ Invoice search and filtering
 - ✅ Batch operations
