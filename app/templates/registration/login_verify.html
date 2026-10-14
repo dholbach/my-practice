@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign in" %}{% endblock %}
+{% block page_title %}{% trans "Sign in" %}{% endblock %}
+{% block page_subtitle %}{% trans "Second step" %}{% endblock %}
+
+{% block content %}
+<div class="form-container max-w-[400px] my-16 mx-auto">
+    {% if locked %}
+    <div class="alert alert-error">{% trans "Too many wrong codes. Please wait 15 minutes, then sign in again." %}</div>
+    <a href="{% url 'login' %}" class="btn btn-secondary">{% trans "Back to sign in" %}</a>
+    {% else %}
+    <form method="post">
+        {% csrf_token %}
+        {% if invalid %}
+        <div class="alert alert-error">{% trans "That code is not valid. Check that the time on your phone is correct, or use a recovery code." %}</div>
+        {% endif %}
+        <div class="form-group">
+            <label for="id_code">{% trans "Code from your authenticator app" %}</label>
+            <input type="text" name="code" id="id_code" class="form-control" required autofocus
+                   autocomplete="one-time-code" inputmode="numeric" maxlength="11">
+            <small class="help-text">{% trans "Lost your phone? Enter one of your recovery codes instead." %}</small>
+        </div>
+        <button type="submit" class="btn btn-primary">{% trans "Sign in" %}</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

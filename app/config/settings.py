@@ -72,6 +72,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "config.middleware.PracticeScopeMiddleware",  # Set current practice in request
+    "config.middleware.TwoFactorRequiredMiddleware",  # Only with REQUIRE_TWO_FACTOR
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -202,6 +203,11 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 # Default 8 hours, i.e. a working day; DJANGO_SESSION_IDLE_HOURS overrides it.
 SESSION_COOKIE_AGE = int(os.getenv("DJANGO_SESSION_IDLE_HOURS", "8")) * 3600
 SESSION_SAVE_EVERY_REQUEST = True
+
+# Require every user to set up an authenticator app (second sign-in factor)
+# before using the app. Off by default; a hosted instance reachable from the
+# internet should turn it on. See views/auth_views.py.
+REQUIRE_TWO_FACTOR = os.getenv("REQUIRE_TWO_FACTOR", "false").lower() == "true"
 
 # Tests don't need PBKDF2's deliberately slow iteration count — MD5 is
 # insecure but fine for throwaway test users, and cuts time on every test
