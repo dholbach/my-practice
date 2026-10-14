@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from ..models import Client, CompanyExpense, Invoice, TimeOff
+from .backup_status import stale_backup_warning
 from .dashboard_widgets import CapacityMonitoringWidgetBuilder
 from .practice_helpers import get_user_practices
 from .revenue_helpers import RevenueCalculator
@@ -39,6 +40,7 @@ class DashboardContextAssembler:
         context.update(self._build_timeoff())
         context.update(self._build_widgets())
         context.update(self._build_multi_practice())
+        context["backup_warning"] = stale_backup_warning()
         return context
 
     def _build_statistics(self) -> dict:
