@@ -35,3 +35,4 @@ a new record and add a line at the top of the old one pointing at it.
 | [ADR-0004](ADR-0004-prod-py-single-file.md) | `prod.py` ships as one stdlib-only file, duplicating a helper |
 | [ADR-0005](ADR-0005-ci-docs-only-short-circuit.md) | Docs-only CI skipping happens inside each job |
 | [ADR-0006](ADR-0006-minimum-supported-window-width.md) | The minimum supported window is 768px, and wide tables scroll |
+| [ADR-0007](ADR-0007-invoice-retention-ten-years.md) | Issued invoices are kept ten years, not the eight § 147 AO now requires |

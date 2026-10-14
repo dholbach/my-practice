@@ -23,9 +23,10 @@ if TYPE_CHECKING:
     from .practice import Practice
 
 
-# § 147 AO: invoices are kept for ten years, counted from the end of the
-# calendar year they were issued in — so an invoice dated any day in 2026 may
-# be deleted from 1 Jan 2037 on.
+# Invoices are kept for ten years, counted from the end of the calendar year
+# they were issued in — so an invoice dated any day in 2026 may be deleted from
+# 1 Jan 2037 on. Deliberately longer than the eight years § 147 AO has asked
+# for invoices since 2025; see docs/decisions/ADR-0007.
 INVOICE_RETENTION_YEARS = 10
 
 # What the client was sent. Frozen once an invoice leaves DRAFT, together with
