@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from ..fields import EncryptedCharField, EncryptedTextField
 from .base import PracticeScopedManager, TimestampedModel
 
 
@@ -26,12 +27,13 @@ class GoogleCalendarToken(TimestampedModel):
         null=True,
     )
 
-    # OAuth2 tokens (stored as JSON)
-    token = models.TextField(help_text=_("Encrypted OAuth2 token JSON"))
-    refresh_token = models.TextField(blank=True, help_text=_("Refresh token for token renewal"))
+    # OAuth2 credentials, encrypted: the refresh token alone grants lasting
+    # access to the practice calendar, which holds client appointments.
+    token = EncryptedTextField(help_text=_("Encrypted OAuth2 token JSON"))
+    refresh_token = EncryptedTextField(blank=True, help_text=_("Refresh token for token renewal"))
     token_uri = models.CharField(max_length=500, default="https://oauth2.googleapis.com/token")
     client_id = models.CharField(max_length=500)
-    client_secret = models.CharField(max_length=500)
+    client_secret = EncryptedCharField()
     scopes = models.JSONField(default=list, help_text=_("List of granted scopes"))
 
     # Which of the connected Google account's calendars to import sessions

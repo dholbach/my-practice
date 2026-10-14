@@ -6,6 +6,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from ..fields import EncryptedTextField
 from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
 
 
@@ -120,8 +121,10 @@ class ClientInquiry(TimestampedModel):
         verbose_name=_("Language"),
         help_text=_("Preferred language of the person inquiring"),
     )
-    notes = models.TextField(blank=True, verbose_name=_("Notes"))
-    initial_contact_notes = models.TextField(
+    # Encrypted: what someone says when first asking for therapy — their
+    # concerns — is health data (Art. 9 GDPR) before they are even a client.
+    notes = EncryptedTextField(blank=True, verbose_name=_("Notes"))
+    initial_contact_notes = EncryptedTextField(
         blank=True,
         verbose_name=_("Initial contact notes"),
         help_text=_("Notes from the initial conversation (concerns, expectations, impressions)"),

@@ -7,5 +7,6 @@ class PaymentsAppConfig(AppConfig):
     verbose_name = "Therapy Payments & Invoicing"
 
     def ready(self):
-        """Import signals when the app is ready."""
+        """Import signals and system checks when the app is ready."""
+        import my_practice.checks  # noqa: F401
         import my_practice.signals  # noqa: F401

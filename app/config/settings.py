@@ -27,10 +27,15 @@ RUNNING_TESTS = "test" in sys.argv or "PYTEST_VERSION" in os.environ
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-dev-key-change-in-production")
 
-# Fernet key for encrypting Art. 9 DSGVO clinical fields (P-009).
-# None in dev/test — encrypted fields will raise if accessed without a key,
-# but migrations and model definitions work without it.
+# Fernet key(s) for the encrypted fields (clinical records, client and inquiry
+# notes, calendar credentials). Comma-separated for rotation: the first key
+# encrypts, all of them decrypt — see my_practice/fields.py. A missing key is
+# a system-check warning (an error under --deploy).
 FERNET_KEY: str | None = os.getenv("FERNET_KEY")
+if RUNNING_TESTS and not FERNET_KEY:
+    # A fixed throwaway key, so the suite exercises encryption on a clean
+    # checkout instead of passing only where a developer .env exports one.
+    FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
 
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 

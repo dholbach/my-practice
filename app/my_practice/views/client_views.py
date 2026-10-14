@@ -59,10 +59,11 @@ class ClientListView(PracticeScopedListView):
         # Get practice-scoped queryset from parent
         queryset = cast(QuerySet[Client], super().get_queryset())
 
-        # Advanced Search — PostgreSQL FTS for name/notes, icontains for code/email
+        # PostgreSQL FTS for the name, icontains for code/email. Notes are
+        # encrypted at rest, so the database cannot search them.
         search_query = self.request.GET.get("search", "").strip()
         if search_query:
-            name_vector = SearchVector("full_name", "notes", config="german")
+            name_vector = SearchVector("full_name", config="german")
             name_q = SearchQuery(search_query, config="german", search_type="plain")
             queryset = (
                 queryset.alias(_name_search=name_vector)

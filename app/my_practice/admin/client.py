@@ -45,7 +45,6 @@ class ClientAdmin(admin.ModelAdmin):
         "client_code",
         "full_name__istartswith",  # Case-insensitive prefix search
         "email__icontains",
-        "notes__icontains",
     ]
 
     readonly_fields = ["created_at", "updated_at"]
