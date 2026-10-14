@@ -45,15 +45,7 @@ P-XXX projects are used for larger efforts that need a design document before a 
 - [GitHub Issues](https://github.com/dholbach/my-practice/issues) — Bug reports, enhancements, operational tasks
 - [projects/todo/](projects/todo/) — Detailed project docs (upcoming)
 - [projects/wip/](projects/wip/) — In-progress project docs
-- [projects/done/](projects/done/) — Completed project docs
-
----
-
-## Development Metrics
-
-How the codebase itself is trending — size by category, commit mix, release cadence:
-
-- [development/README.md](development/README.md) — Generated monthly from git history
+- [projects/done/](projects/done/) — The few completed project docs that other docs still link to; the rest of the history is in [CHANGELOG.md](CHANGELOG.md)
 
 ---
 

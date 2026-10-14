@@ -405,7 +405,7 @@ At the end of each coding session, do a quick gardening pass before committing.
 ### Done-Item Graduation Workflow
 1. **User-facing features** → add a one-line entry to `docs/FEATURES.md` under the relevant section
 2. **Technical changes** → already captured by CHANGELOG.md commit entries; no extra action needed
-3. **Project completion** → create `docs/projects/done/P-XXX_NAME.md` (if it doesn't exist), move the project doc from `wip/` or `todo/` to `done/`, add a brief "Recent Activity" entry to PROJECTS.md, and mark the row in the PROJECTS.md "Abgeschlossen" table
+3. **Project completion** → add a brief "Recent Activity" entry to PROJECTS.md and mark the row in the PROJECTS.md "Abgeschlossen" table. Then delete the project doc from `wip/` or `todo/` — CHANGELOG.md and git history keep the record. Move it to `done/` instead only when code or another doc links to it for its reasoning (which may be the cue for an ADR in `docs/decisions/`)
 
 ### Keeping PROJECTS.md Clean
 - Keep at most **2 "Recent Activity" entries** (the last two sessions only)
@@ -415,7 +415,7 @@ At the end of each coding session, do a quick gardening pass before committing.
 ### Gardening Checklist (end of each session)
 - [ ] PROJECTS.md: add new "Recent Activity" entry, drop oldest if >2 exist
 - [ ] docs/FEATURES.md: add user-facing highlights
-- [ ] docs/projects/done/: create/update P-XXX doc for completed projects
+- [ ] Completed projects: doc deleted, or moved to `done/` if something links to it
 
 ## Periodic Review
 
