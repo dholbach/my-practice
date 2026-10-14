@@ -12,23 +12,16 @@
 {% block extra_head_scripts %}
 <script nonce="{{ csp_nonce }}">
 const CHART_MESSAGES = {
-    noData:     "{% trans 'No data available' %}",
-    allZero:    "{% trans 'No data in selected period' %}",
-    invalidMax: "{% trans 'No valid data available' %}"
+    noData: "{% trans 'No data available' %}"
 };
-const LOCALE = (navigator.language || 'de-DE').replace('_', '-');
+const MONTH_NAMES = [
+    "{% trans 'Jan' %}", "{% trans 'Feb' %}", "{% trans 'Mar' %}", "{% trans 'Apr' %}",
+    "{% trans 'May' %}", "{% trans 'Jun' %}", "{% trans 'Jul' %}", "{% trans 'Aug' %}",
+    "{% trans 'Sep' %}", "{% trans 'Oct' %}", "{% trans 'Nov' %}", "{% trans 'Dec' %}"
+];
 </script>
-<!-- Modular chart utilities -->
-<script src="{% static 'js/charts/chart_core.js' %}"></script>
-<script src="{% static 'js/charts/chart_config.js' %}"></script>
-<script src="{% static 'js/charts/chart_helpers.js' %}"></script>
-<script src="{% static 'js/charts/chart_canvas.js' %}"></script>
-<script src="{% static 'js/charts/chart_primitives.js' %}"></script>
-<script src="{% static 'js/charts/chart_bar.js' %}"></script>
-<script src="{% static 'js/charts/chart_line.js' %}"></script>
-<script src="{% static 'js/charts/chart_tooltip_enhanced.js' %}"></script>
-<script src="{% static 'js/charts/chart_math.js' %}"></script>
-<script src="{% static 'js/charts/chart_builder.js' %}"></script>
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/charts.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -170,39 +163,26 @@ document.addEventListener('DOMContentLoaded', function() {
         </p>
 
         <div id="comparisonChartContainer" class="chart-wrapper chart-wrapper--xl">
-            <canvas id="comparisonChart" width="100%" height="100%"></canvas>
+            <canvas id="comparisonChart"></canvas>
         </div>
     </div>
 
     <script nonce="{{ csp_nonce }}">
-    initChart('comparisonChart', function(canvas) {
+        MPChart.init('comparisonChart', function(canvas) {
         const years = [{% for item in comparison_data %}'{{ item.year }}'{% if not forloop.last %},{% endif %}{% endfor %}];
         const revenues = [{% for item in comparison_data %}{{ item.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
         const expenses = [{% for item in comparison_data %}{{ item.expenses|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
         const withdrawals = [{% for item in comparison_data %}{{ item.withdrawals|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-
-        const datasets = [
-            { data: revenues, color: '#48bb78', colorEnd: '#38a169', label: '{% trans "Revenue" %}' },
-            { data: expenses, color: '#f56565', colorEnd: '#e53e3e', label: '{% trans "Expenses" %}' },
-            { data: withdrawals, color: '#9f7aea', colorEnd: '#805ad5', label: '{% trans "Withdrawals" %}' }
-        ];
-
-        new ChartBuilder(canvas)
-            .type('grouped-bar')
-            .labels(years)
-            .datasets(datasets)
-            .options({
-                padding: { top: 40, right: 20, bottom: 80, left: 70 },
-                showLegend: true
-            })
-            .tooltip((d) => {
-                const lines = [`<strong>${d.label}</strong>`];
-                d.values.forEach(v => {
-                    lines.push(`${v.label}: ${Math.round(v.value).toLocaleString(LOCALE)}€`);
-                });
-                return lines.join('<br>');
-            })
-            .build();
+        if (!years.length) return MPChart.empty(canvas, CHART_MESSAGES.noData);
+        MPChart.bar(canvas, {
+            labels: years,
+            suffix: ' €',
+            series: [
+                { label: '{% trans "Revenue" %}', data: revenues, color: 'chart2' },
+                { label: '{% trans "Expenses" %}', data: expenses, color: 'chart6' },
+                { label: '{% trans "Withdrawals" %}', data: withdrawals, color: 'chart7' }
+            ]
+        });
     });
     </script>
 
@@ -214,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </p>
 
         <div class="chart-wrapper chart-wrapper--lg">
-            <canvas id="revenueLineChart" width="100%" height="100%"></canvas>
+            <canvas id="revenueLineChart"></canvas>
         </div>
 
         <div class="chart-legend mt-2">
@@ -226,32 +206,18 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <script nonce="{{ csp_nonce }}">
-    initChart('revenueLineChart', function(canvas) {
+        MPChart.init('revenueLineChart', function(canvas) {
         const rawData   = [{% for month in revenue_trends %}{{ month.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
         const rawLabels = [{% for month in revenue_trends %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
-        const rawYears  = [{% for month in revenue_trends %}{{ month.year }}{% if not forloop.last %},{% endif %}{% endfor %}];
-
-        const startIndex = findFirstNonZeroIndex(rawData);
-        const data   = rawData.slice(startIndex);
-        const labels = rawLabels.slice(startIndex);
-
-        const startParsed = parseMonthString(labels[0]);
-        const chartStartYear  = startParsed ? startParsed.year  : (rawYears[startIndex] || 2020);
-        const chartStartMonth = startParsed ? startParsed.month : 1;
-
-        new ChartBuilder(canvas)
-            .type('line')
-            .data(data)
-            .labels(labels)
-            .preset('revenue')
-            .options({
-                padding: { top: 20, right: 20, bottom: 60, left: 50 },
-                showYearSeparators: true,
-                startYear: chartStartYear,
-                startMonth: chartStartMonth,
-            })
-            .tooltip((d) => `<strong>${d.label}</strong><br>${Math.round(d.value)} €`)
-            .build();
+        const start = MPChart.firstNonZero(rawData);
+        if (!rawData.some(v => v > 0)) return MPChart.empty(canvas, CHART_MESSAGES.noData);
+        MPChart.line(canvas, {
+            labels: rawLabels.slice(start),
+            monthNames: MONTH_NAMES,
+            suffix: ' €',
+            trend: '{% trans "Trend" %}',
+            series: [{ label: '{% trans "Revenue" %}', data: rawData.slice(start), color: 'chart1', fill: true }]
+        });
     });
     </script>
 
@@ -294,41 +260,25 @@ document.addEventListener('DOMContentLoaded', function() {
             {% trans "Average days from invoice date to payment received" %}
         </p>
         <div class="chart-wrapper chart-wrapper--sm">
-            <canvas id="daysToPaymentChart" width="100%" height="100%"></canvas>
+            <canvas id="daysToPaymentChart"></canvas>
         </div>
     </div>
     <script nonce="{{ csp_nonce }}">
-    initChart('daysToPaymentChart', function(canvas) {
+        MPChart.init('daysToPaymentChart', function(canvas) {
         const raw = JSON.parse(document.getElementById('days-to-payment-data').textContent);
-        if (!raw || raw.length === 0) return;
-
-        const labels = raw.map(d => d.month);
-        const days   = raw.map(d => d.avg_days);
-        const counts = raw.map(d => d.count);
-
-        const startParsed     = parseMonthString(labels[0]);
-        const chartStartYear  = startParsed ? startParsed.year  : raw[0].year;
-        const chartStartMonth = startParsed ? startParsed.month : 1;
-
-        new ChartBuilder(canvas)
-            .type('line')
-            .data(days)
-            .labels(labels)
-            .options({
-                padding: { top: 20, right: 20, bottom: 60, left: 50 },
-                showYearSeparators: true,
-                startYear: chartStartYear,
-                startMonth: chartStartMonth,
-                yAxisSuffix: 'd',
-                maxValue: Math.max(60, Math.ceil(Math.max(...days) * 1.3))
-            })
-            .tooltip((d) => {
-                const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
-                return `<strong>${d.label}</strong><br>` +
-                       `Ø ${d.value} {% trans "days" %}<br>` +
-                       `${counts[idx]} {% trans "Invoices" %}`;
-            })
-            .build();
+        if (!raw || raw.length === 0) return MPChart.empty(canvas, CHART_MESSAGES.noData);
+        const days = raw.map(d => d.avg_days);
+        MPChart.line(canvas, {
+            labels: raw.map(d => d.month),
+            monthNames: MONTH_NAMES,
+            suffix: ' d',
+            max: Math.max(60, Math.ceil(Math.max(...days) * 1.3)),
+            series: [{ data: days, color: 'chart8' }],
+            tooltipLabel: (ctx) => [
+                'Ø ' + ctx.parsed.y + ' {% trans "days" %}',
+                raw[ctx.dataIndex].count + ' {% trans "Invoices" %}'
+            ]
+        });
     });
     </script>
     {% endif %}
@@ -692,49 +642,33 @@ document.addEventListener('DOMContentLoaded', function() {
         </p>
 
         <div class="chart-wrapper chart-wrapper--lg">
-            <canvas id="capacityTrendsChart" width="100%" height="100%"></canvas>
+            <canvas id="capacityTrendsChart"></canvas>
         </div>
     </div>
 
     <script nonce="{{ csp_nonce }}">
-    initChart('capacityTrendsChart', function(canvas) {
+        MPChart.init('capacityTrendsChart', function(canvas) {
         const rawData = [{% for item in capacity_trends %}{{ item.capacity_percentage|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
         const rawLabels = [{% for item in capacity_trends %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
         const rawBookedHours = [{% for item in capacity_trends %}{{ item.booked_hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
         const rawCapacityHours = [{% for item in capacity_trends %}{{ item.capacity_hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-
-        const startIndex = findFirstNonZeroIndex(rawData);
-        const data = rawData.slice(startIndex);
-        const labels = rawLabels.slice(startIndex);
-        const bookedHours = rawBookedHours.slice(startIndex);
-        const capacityHours = rawCapacityHours.slice(startIndex);
-
-        // Parse actual start year/month so year separators align correctly after slicing
-        const startParsed = parseMonthString(labels[0]);
-        const chartStartYear = startParsed ? startParsed.year : 2020;
-        const chartStartMonth = startParsed ? startParsed.month : 1;
-
-        new ChartBuilder(canvas)
-            .type('line')
-            .data(data)
-            .labels(labels)
-            .preset('revenue')
-            .options({
-                padding: { top: 20, right: 20, bottom: 60, left: 50 },
-                showYearSeparators: true,
-                yAxisSuffix: '%',
-                maxValue: 120,
-                startYear: chartStartYear,
-                startMonth: chartStartMonth,
-            })
-            .tooltip((d) => {
-                const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
-                return `<strong>${d.label}</strong><br>` +
-                       `{% trans "Utilisation" %}: ${d.value}%<br>` +
-                       `{% trans "Booked" %}: ${bookedHours[idx]}h<br>` +
-                       `{% trans "Capacity" %}: ${capacityHours[idx]}h`;
-            })
-            .build();
+        if (!rawData.some(v => v > 0)) return MPChart.empty(canvas, CHART_MESSAGES.noData);
+        const start = MPChart.firstNonZero(rawData);
+        const booked = rawBookedHours.slice(start);
+        const capacity = rawCapacityHours.slice(start);
+        MPChart.line(canvas, {
+            labels: rawLabels.slice(start),
+            monthNames: MONTH_NAMES,
+            suffix: ' %',
+            max: 120,
+            trend: '{% trans "Trend" %}',
+            series: [{ label: '{% trans "Utilisation" %}', data: rawData.slice(start), color: 'chart1', fill: true }],
+            tooltipLabel: (ctx) => ctx.datasetIndex > 0 ? null : [
+                '{% trans "Utilisation" %}: ' + ctx.parsed.y + ' %',
+                '{% trans "Booked" %}: ' + booked[ctx.dataIndex] + ' h',
+                '{% trans "Capacity" %}: ' + capacity[ctx.dataIndex] + ' h'
+            ]
+        });
     });
     </script>
 
@@ -747,102 +681,34 @@ document.addEventListener('DOMContentLoaded', function() {
             {% trans "Therapy hours per calendar month (last 4 years + average)" %}
         </p>
         <div class="chart-wrapper chart-wrapper--xs">
-            <canvas id="cumulativeYearsChart" width="100%" height="100%"></canvas>
+            <canvas id="cumulativeYearsChart"></canvas>
         </div>
     </div>
     <script nonce="{{ csp_nonce }}">
-    initChart('cumulativeYearsChart', function(canvas) {
+        MPChart.init('cumulativeYearsChart', function(canvas) {
         const cyd = JSON.parse(document.getElementById('cumulative-year-data').textContent);
-        if (!cyd || !cyd.years || cyd.years.length === 0) return;
-
-        const MONTH_LABELS = [
-            '{% trans "Jan" %}','{% trans "Feb" %}','{% trans "Mar" %}',
-            '{% trans "Apr" %}','{% trans "May" %}','{% trans "Jun" %}',
-            '{% trans "Jul" %}','{% trans "Aug" %}','{% trans "Sep" %}',
-            '{% trans "Oct" %}','{% trans "Nov" %}','{% trans "Dec" %}'
-        ];
+        if (!cyd || !cyd.years || cyd.years.length === 0) return MPChart.empty(canvas, CHART_MESSAGES.noData);
         const YEAR_COLORS = {
             2020: '#374151', 2021: '#64748b', 2022: '#14b8a6',
             2023: '#8b5cf6', 2024: '#0ea5e9', 2025: '#22c55e', 2026: '#f59e0b'
         };
-
-        // Find max value for Y scaling
-        let maxVal = 0;
-        cyd.years.forEach(y => {
-            const vals = cyd.datasets[String(y)].filter(v => v !== null);
-            if (vals.length) maxVal = Math.max(maxVal, Math.max(...vals));
-        });
+        const n = cyd.years.length;
+        // Oldest year thinnest, newest on top and thickest.
+        const series = cyd.years.map((y, i) => ({
+            label: String(y),
+            data: cyd.datasets[String(y)],
+            color: YEAR_COLORS[y] || '#888888',
+            width: 1.5 + (i / Math.max(n - 1, 1)) * 1.5
+        }));
         if (cyd.average) {
-            const avgVals = cyd.average.filter(v => v !== null);
-            if (avgVals.length) maxVal = Math.max(maxVal, Math.max(...avgVals));
+            series.push({ label: '{% trans "Avg" %}', data: cyd.average, color: 'text', dashed: true, width: 2 });
         }
-        if (maxVal === 0) return;
-        maxVal = maxVal * 1.15;
-
-        const setup = initializeChart(canvas, { padding: { top: 20, right: 20, bottom: 50, left: 55 } });
-        if (!setup) return;
-        const { ctx, chartWidth, chartHeight, padding } = setup;
-
-        drawYAxisLabels(ctx, padding, chartHeight, maxVal, 'h');
-
-        // X-axis month labels
-        const xStep = chartWidth / 11;
-        const textSecondary = getCSSVariable('--color-text-secondary', '#718096');
-        ctx.fillStyle = textSecondary;
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'center';
-        MONTH_LABELS.forEach((label, i) => {
-            ctx.fillText(label, padding.left + i * xStep, padding.top + chartHeight + 18);
-        });
-
-        // Draw one polyline per dataset (no fill to avoid obscuring)
-        function drawLine(data, color, dashed, lineWidth) {
-            ctx.save();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = lineWidth || (dashed ? 2 : 2.5);
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            if (dashed) ctx.setLineDash([6, 4]);
-            ctx.beginPath();
-            let started = false;
-            data.forEach((val, i) => {
-                if (val === null) return;
-                const x = padding.left + i * xStep;
-                const y = padding.top + chartHeight - (val / maxVal) * chartHeight;
-                if (!started) { ctx.moveTo(x, y); started = true; }
-                else ctx.lineTo(x, y);
-            });
-            if (started) ctx.stroke();
-            ctx.restore();
-        }
-
-        // Average line first (drawn behind year lines)
-        if (cyd.average) drawLine(cyd.average, 'rgba(255,255,255,0.6)', true, 2.5);
-
-        // Draw years oldest → newest (newest on top), line width scales with recency
-        const nYears = cyd.years.length;
-        cyd.years.forEach((y, i) => {
-            const lw = 1.5 + (i / Math.max(nYears - 1, 1)) * 1.5; // 1.5px oldest → 3px newest
-            drawLine(cyd.datasets[String(y)], YEAR_COLORS[y] || '#888', false, lw);
-        });
-
-        // Legend
-        const allSeries = cyd.years.map(y => ({ label: String(y), color: YEAR_COLORS[y] || '#888', dashed: false }));
-        allSeries.push({ label: '{% trans "Avg" %}', color: 'rgba(200,200,200,0.6)', dashed: true });
-        const slotW = 58;
-        const legendTotalW = allSeries.length * slotW;
-        let lx = padding.left + (chartWidth - legendTotalW) / 2;
-        const ly = padding.top + chartHeight + 38;
-        ctx.font = '12px sans-serif';
-        allSeries.forEach(s => {
-            ctx.fillStyle = s.color;
-            ctx.beginPath();
-            ctx.arc(lx + 6, ly, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = getCSSVariable('--color-text-secondary', '#718096');
-            ctx.textAlign = 'left';
-            ctx.fillText(s.label, lx + 14, ly + 4);
-            lx += slotW;
+        MPChart.line(canvas, {
+            labels: MONTH_NAMES,
+            suffix: ' h',
+            points: false,
+            legend: true,
+            series: series
         });
     });
     </script>
@@ -881,42 +747,25 @@ document.addEventListener('DOMContentLoaded', function() {
             ({% blocktrans with start=cancellation_trends.0.date|date:"F Y" %}since {{ start }}, not counting cancellations during your own time off{% endblocktrans %})
         </p>
         <div class="chart-wrapper chart-wrapper--sm">
-            <canvas id="cancellationTrendsChart" width="100%" height="100%"></canvas>
+            <canvas id="cancellationTrendsChart"></canvas>
         </div>
     </div>
     <script nonce="{{ csp_nonce }}">
-    initChart('cancellationTrendsChart', function(canvas) {
+        MPChart.init('cancellationTrendsChart', function(canvas) {
         const raw = JSON.parse(document.getElementById('cancellation-trends-data').textContent);
-        if (!raw || raw.length === 0) return;
-
-        const labels    = raw.map(d => d.month);
-        const rates     = raw.map(d => d.rate);
-        const totals    = raw.map(d => d.total);
-        const cancelled = raw.map(d => d.cancelled);
-
-        const startParsed     = parseMonthString(labels[0]);
-        const chartStartYear  = startParsed ? startParsed.year  : raw[0].year;
-        const chartStartMonth = startParsed ? startParsed.month : 1;
-
-        new ChartBuilder(canvas)
-            .type('line')
-            .data(rates)
-            .labels(labels)
-            .options({
-                padding: { top: 20, right: 20, bottom: 60, left: 50 },
-                showYearSeparators: true,
-                startYear: chartStartYear,
-                startMonth: chartStartMonth,
-                yAxisSuffix: '%',
-                maxValue: Math.max(20, Math.ceil(Math.max(...rates) * 1.3))
-            })
-            .tooltip((d) => {
-                const idx = d.index !== undefined ? d.index : labels.indexOf(d.label);
-                return `<strong>${d.label}</strong><br>` +
-                       `{% trans "Cancellation rate" %}: ${d.value}%<br>` +
-                       `{% trans "Cancelled" %}: ${cancelled[idx]} / ${totals[idx]}`;
-            })
-            .build();
+        if (!raw || raw.length === 0) return MPChart.empty(canvas, CHART_MESSAGES.noData);
+        const rates = raw.map(d => d.rate);
+        MPChart.line(canvas, {
+            labels: raw.map(d => d.month),
+            monthNames: MONTH_NAMES,
+            suffix: ' %',
+            max: Math.max(20, Math.ceil(Math.max(...rates) * 1.3)),
+            series: [{ data: rates, color: 'chart6' }],
+            tooltipLabel: (ctx) => [
+                '{% trans "Cancellation rate" %}: ' + ctx.parsed.y + ' %',
+                '{% trans "Cancelled" %}: ' + raw[ctx.dataIndex].cancelled + ' / ' + raw[ctx.dataIndex].total
+            ]
+        });
     });
     </script>
     {% endif %}
@@ -977,25 +826,22 @@ document.addEventListener('DOMContentLoaded', function() {
         </p>
 
         <div class="chart-wrapper chart-wrapper--lg-alt">
-            <canvas id="expenseTrendsChart" width="100%" height="100%"></canvas>
+            <canvas id="expenseTrendsChart"></canvas>
         </div>
     </div>
 
     <script nonce="{{ csp_nonce }}">
-    initChart('expenseTrendsChart', function(canvas) {
-        // Use yearly totals from comparison_data (same source as profit table)
-        // so the current year shows actual expenses, not a partial-year sum of
-        // monthly-distributed values.
+        MPChart.init('expenseTrendsChart', function(canvas) {
+        // Yearly totals from comparison_data (same source as the profit table),
+        // so the current year shows actual expenses, not a partial-year sum.
         const years = [{% for item in comparison_data %}'{{ item.year }}'{% if not forloop.last %},{% endif %}{% endfor %}];
         const data  = [{% for item in comparison_data %}{{ item.expenses|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-
-        new ChartBuilder(canvas)
-            .type('bar')
-            .data(data)
-            .labels(years)
-            .preset('expense')
-            .tooltip((d) => `<strong>${d.label}</strong><br>${Math.round(d.value).toLocaleString(LOCALE)} €`)
-            .build();
+        if (!data.some(v => v > 0)) return MPChart.empty(canvas, CHART_MESSAGES.noData);
+        MPChart.bar(canvas, {
+            labels: years,
+            suffix: ' €',
+            series: [{ label: '{% trans "Expenses" %}', data: data, color: 'chart6' }]
+        });
     });
     </script>
 </div>
@@ -1030,12 +876,6 @@ function switchTab(tabName, clickedButton) {
         tabInput.value = tabName;
     }
 
-    // CRITICAL: Redraw charts in newly visible tab
-    // Charts rendered in hidden tabs (display: none) have incorrect dimensions
-    // because container.clientHeight returns 0
-    setTimeout(function() {
-        redrawChartsIn(document.getElementById(tabName + '-tab'));
-    }, 50); // Small delay to ensure tab is fully visible
 }
 
 // Initialize on page load
@@ -1068,12 +908,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tabButton) {
         tabButton.classList.add('active');
     }
-
-    // Redraw charts in the active tab after a short delay
-    // This ensures charts in non-revenue tabs are rendered correctly
-    setTimeout(function() {
-        redrawChartsIn(tabContent);
-    }, 100); // Delay to ensure DOM is fully rendered
 });
 </script>
 

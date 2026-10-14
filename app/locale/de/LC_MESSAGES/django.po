@@ -9224,6 +9224,10 @@ msgstr "Zwei-Faktor-Anmeldung einschalten"
 msgid "Sign out"
 msgstr "Abmelden"
 
+#: templates/my_practice/analytics.html:220
+msgid "Trend"
+msgstr "Trend"
+
 #~ msgid "Cancellation Rate (last 24 months)"
 #~ msgstr "Ausfallquote (letzte 24 Monate)"
 
