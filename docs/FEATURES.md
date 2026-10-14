@@ -145,7 +145,7 @@ chronological record; this document only tracks current state.
 - ✅ Session type distribution
 - ✅ Busiest months analysis
 - ✅ Year-over-year comparison
-- ✅ Interactive charts with hover tooltips
+- ✅ Interactive charts (Chart.js) with hover tooltips, following the light/dark theme and the UI language for number formatting
 - ✅ Cancellation rate trend — monthly Ausfallquote (%) over last 24 months (Kapazität tab); cancellations inside your own time off don't count, and the chart starts at the first calendar-linked session
 - ✅ Days-to-payment trend — avg days invoice→payment over last 24 months (Umsatz tab)
 
@@ -380,8 +380,9 @@ For planned and in-progress work see [PROJECTS.md](../PROJECTS.md) and [docs/pro
 
 - ✅ Pre-built multi-arch Docker image (`amd64` + `arm64`) published to GHCR — ~157 MB (down from ~260 MB as of v0.5.1, via a multi-stage build that keeps the Pillow compiler toolchain out of the shipped image)
 - ✅ `prod.py` — one-command setup: generates secrets, pulls image, starts stack, walks through login + practice creation
+- ✅ Production port published on `127.0.0.1` by default (`MY_PRACTICE_BIND_ADDRESS`); `prod.py setup` asks whether the app is for this machine, behind an HTTPS proxy, or for the LAN, and writes `.env` to match; `start`/`update` warn when a proxy could be bypassed
 - ✅ `docker-compose.prod.yml` — production compose file; downloaded automatically by `prod.py setup`
 - ✅ Version-pinned: `prod.py` and `docker-compose.prod.yml` always match; `update` notifies when a newer `prod.py` is available
 - ✅ In-app update banner — checks GitHub releases once per day; shows a dismissible banner when a newer release is available; opt-out via `UPDATE_CHECK_DISABLED=true`
 
-Last Updated: 20 August 2026
+Last Updated: 14 October 2026

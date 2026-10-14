@@ -1,7 +1,7 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-09-12
+**Last Updated**: 2026-10-14
 
 ## 🔢 Project Numbering
 
@@ -31,7 +31,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-10-14 — takeover review, unreleased**: uploaded documents served only to the owning practice (#490); client/inquiry notes, calendar credentials and client documents encrypted at rest with key rotation (#500, #501); two-factor sign-in and the `/admin/login/` bypass closed (#504); sign-in limit and 8-hour idle timeout (#496); escaped flash messages and a CSP without `unsafe-inline`/`unsafe-eval` (#492, #505); practice scoping fails closed (#495); issued invoices locked, "Cancel & correct" (#491); verified, optionally encrypted backups with a dashboard warning (#489, #503); sign-out button (#507); one documented systemd install (#508). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+- **2026-10-14 — v0.8.0 minor release (takeover review)**: uploaded documents served only to the owning practice (#490); client/inquiry notes, calendar credentials and client documents encrypted at rest with key rotation (#500, #501); two-factor sign-in and the `/admin/login/` bypass closed (#504); sign-in limit and 8-hour idle timeout (#496); escaped flash messages and a CSP without `unsafe-inline`/`unsafe-eval` (#492, #505); practice scoping fails closed (#495); issued invoices locked, "Cancel & correct" (#491); verified, optionally encrypted backups with a dashboard warning (#489, #503); sign-out button (#507); one documented systemd install (#508); production port bound to loopback by default (#521); charts on Chart.js (#519); htmx replaced by `partial_post.js` (#516); money rounded half up as `Decimal` (#515). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 - **2026-10-07 — v0.7.2 patch release**: first CodeQL scan triaged to zero — open redirects via a `//host` Referer path, `str(e)` in calendar JSON responses, and client-code / questionnaire-code path traversal fixed, the rest dismissed with reasons (#485); actions SHA-pinned, 3-day Dependabot cooldown, `image.yml` script injection closed, patch auto-merge and CodeQL switched on (#484); calendar client codes now match only as standalone tokens and intro calls map to the real service-type codes, so they are no longer billed or booked onto unrelated clients (#477); UI holds together down to 768px with a guardrail test (#474); German treatment contract keeps its signature block on one page (#475); async spike residue and the `uvicorn` pin removed (#476). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)

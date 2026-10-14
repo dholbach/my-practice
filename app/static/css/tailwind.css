@@ -1695,7 +1695,7 @@
   .audit-footer { margin-top: 1.5rem; font-size: 0.8rem; color: var(--color-text-secondary); border-top: 1px solid var(--color-border); padding-top: 0.75rem; }
   .empty-hint { color: var(--color-text-secondary); font-style: italic; }
 
-  /* ── Invoice list — HTMX status badge + filter panel ── */
+  /* ── Invoice list — clickable status badge (data-post) + filter panel ── */
   .status-badge.status-badge--action {
     border: none;
     cursor: pointer;
