@@ -83,7 +83,7 @@
                         <kbd data-cmdk-key="mac" hidden>⌘K</kbd>
                         <kbd data-cmdk-key="other">Ctrl K</kbd>
                     </button>
-                    {% if user.is_authenticated and user.practices.exists %}
+                    {% if user.is_authenticated %}
                     <div class="dropdown practice-switcher">
                         {% trans "Practice" as practice_fallback %}
                         <span>{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de|default:practice_fallback }}{% else %}{{ request.current_practice.short_title_de|default:practice_fallback }}{% endif %} ▾</span>
@@ -97,6 +97,11 @@
                             {% endfor %}
                             <a href="{% url 'practice_management' %}" class="nav-manage-link">⚙️ {% trans "Manage practices" %}</a>
                             <a href="{% url 'two_factor_settings' %}" class="nav-manage-link">🔐 {% trans "Two-factor sign-in" %}</a>
+                            {# LogoutView only accepts POST, so this is a form, not a link. #}
+                            <form action="{% url 'logout' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-signout">🚪 {% trans "Sign out" %}</button>
+                            </form>
                         </div>
                     </div>
                     {% endif %}
