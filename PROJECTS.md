@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-10-14 — takeover review, unreleased**: uploaded documents served only to the owning practice (#490); client/inquiry notes, calendar credentials and client documents encrypted at rest with key rotation (#500, #501); two-factor sign-in and the `/admin/login/` bypass closed (#504); sign-in limit and 8-hour idle timeout (#496); escaped flash messages and a CSP without `unsafe-inline`/`unsafe-eval` (#492, #505); practice scoping fails closed (#495); issued invoices locked, "Cancel & correct" (#491); verified, optionally encrypted backups with a dashboard warning (#489, #503); sign-out button (#507); one documented systemd install (#508). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 - **2026-10-07 — v0.7.2 patch release**: first CodeQL scan triaged to zero — open redirects via a `//host` Referer path, `str(e)` in calendar JSON responses, and client-code / questionnaire-code path traversal fixed, the rest dismissed with reasons (#485); actions SHA-pinned, 3-day Dependabot cooldown, `image.yml` script injection closed, patch auto-merge and CodeQL switched on (#484); calendar client codes now match only as standalone tokens and intro calls map to the real service-type codes, so they are no longer billed or booked onto unrelated clients (#477); UI holds together down to 768px with a guardrail test (#474); German treatment contract keeps its signature block on one page (#475); async spike residue and the `uvicorn` pin removed (#476). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
-- **2026-09-23 — v0.7.1 patch release**: `check_media --delete-orphans` had listed all 126 stored client documents as orphans and offered to delete them — `ClientDocument` was missing from a hand-maintained field list, now discovered from the app registry instead (#471); `compress_media` re-applied `/Rotate` to scanned PDFs because Ghostscript *applies* the attribute rather than stripping it, so the restore pass turned every page a second time — deleted, and the test that passed throughout replaced with a pixel-comparing one (#470); the Dokumente tab merged onto the Overview tab beside the intake and questionnaire sections it belongs with (#469); a session moved to a new time was cancelled and duplicated, from Google minting a new event id for "this and following events" plus a reschedule check that ignored the time (#468); Assessments and Contract rows made usable for clients with no email address (#467); dev containers no longer lose `node_modules` to the bind mount (#461); long files flagged by `codebase_metrics --largest` condensed (#462). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
@@ -43,7 +43,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 ### Open / Short-term
 
 - **P-010 Emergency Access Plan**: earlier crisis-field implementation was rolled back (too partial, was blocking other work) — redo needed → [docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md](docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md)
-- **P-011 operational remainder**: Backup timer + secrets rotation — see `memory/PERSONAL_TODO.md`
+- **P-011 operational remainder**: install the backup timer on the production host (`sudo bash scripts/install-system-jobs.sh`, #508) and rotate secrets (`FERNET_KEY` via `manage.py encryption rotate`, #500) — the tooling exists now; see `memory/PERSONAL_TODO.md`
 
 ### Stack / Infrastructure
 

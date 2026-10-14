@@ -146,7 +146,7 @@ chronological record; this document only tracks current state.
 - ✅ Busiest months analysis
 - ✅ Year-over-year comparison
 - ✅ Interactive charts with hover tooltips
-- ✅ Cancellation rate trend — monthly Ausfallquote (%) over last 24 months (Kapazität tab)
+- ✅ Cancellation rate trend — monthly Ausfallquote (%) over last 24 months (Kapazität tab); cancellations inside your own time off don't count, and the chart starts at the first calendar-linked session
 - ✅ Days-to-payment trend — avg days invoice→payment over last 24 months (Umsatz tab)
 
 ### Practice Analysis (NEW - Dec 2025)
@@ -271,7 +271,7 @@ chronological record; this document only tracks current state.
 
 ### UI/UX
 - ✅ Bilingual app UI (German/English) with a DE/EN language switcher — every template, view, model, and admin label wrapped via Django i18n (P-039)
-- ✅ Dark mode with theme toggle
+- ✅ Dark mode with theme toggle — theme and privacy mode apply before the first paint, and both themes meet WCAG AA contrast (guardrail test)
 - ✅ Privacy mode (blur sensitive data) — client names, contact details and diagnoses blur on toggle, while client codes, invoice numbers and form labels stay legible; inquiries keep their initials visible so a record is still tellable apart. Coverage is enforced by a guardrail test in both directions (M-PAT-08)
 - ✅ Works in a narrow window — the UI holds together down to a 768px viewport, so a half-screen laptop window (invoices on one side, something else on the other) lays out properly: button rows wrap instead of running off the card edge, and wide tables scroll inside their own container instead of crushing their columns. Enforced by a guardrail test (M-PAT-09). Phones are deliberately out of scope
 - ✅ Interactive charts
@@ -299,7 +299,7 @@ chronological record; this document only tracks current state.
 - ✅ CSRF protection
 - ✅ Open-redirect guard on all `next=` redirects (`safe_next()` — validates URL starts with `/`)
 - ✅ SQL injection prevention (ORM)
-- ✅ XSS protection
+- ✅ XSS protection — templates and flash messages autoescaped; Content-Security-Policy with a per-request nonce and no `unsafe-inline` / `unsafe-eval` (Alpine CSP build, `data-confirm` and friends in `ui_actions.js`)
 - ✅ Secure password hashing
 - ✅ Admin authentication
 - ✅ UniqueConstraints on critical fields
@@ -307,7 +307,9 @@ chronological record; this document only tracks current state.
 - ✅ Sign-in brute-force limit — 5 failed attempts for a username lock it for 15 minutes (correct password included)
 - ✅ Two-factor sign-in with any authenticator app (TOTP), 10 single-use recovery codes, optional `REQUIRE_TWO_FACTOR`; `/admin/login/` goes through the same throttled, two-factor sign-in
 - ✅ Idle sign-out — sessions end after 8 hours without activity (`DJANGO_SESSION_IDLE_HOURS`) instead of a fixed two weeks
-- ✅ Practice isolation enforced on all endpoints including `session_toggle` and email views
+- ✅ Sign out from the account menu (practice dropdown), next to Two-factor sign-in
+- ✅ Practice isolation enforced on all endpoints including `session_toggle` and email views, and failing closed — a user without a practice sees no practice's data (`scope_to_practice`)
+- ✅ Uploaded files (client documents, receipts, logo) served only to signed-in members of the owning practice, never straight from disk
 - ✅ Uploaded client documents are encrypted at rest (Fernet, same key); existing files are encrypted in place on upgrade, `compress_media` skips them
 - ✅ Field encryption beyond clinical records — client and inquiry notes and the Google Calendar credentials are stored as Fernet ciphertext; `FERNET_KEY` takes comma-separated keys for rotation (`manage.py encryption rotate` / `check`), and an unreadable value names its field instead of a bare `InvalidToken`
 - ✅ Pre-commit PII guard — staged content checked against a local denylist before every commit
@@ -316,7 +318,7 @@ chronological record; this document only tracks current state.
 - ✅ Scanned PDFs keep their orientation through compression — Ghostscript applies `/Rotate` rather than stripping it, so nothing re-applies it afterwards
 
 ### Testing
-- ✅ 1,400+ automated tests
+- ✅ ~2,000 automated tests
 - ✅ Model tests
 - ✅ View tests
 - ✅ Utility tests
@@ -328,7 +330,7 @@ chronological record; this document only tracks current state.
 - ✅ Docker containerization
 - ✅ Docker Compose setup
 - ✅ PostgreSQL database
-- ✅ Automated backups (systemd timer)
+- ✅ Automated backups and hourly scheduled jobs (systemd timers, installed with `sudo bash scripts/install-system-jobs.sh`)
 - ✅ Backup/Restore scripts
 - ✅ `./prod.py backup` / `restore` for installations without a git checkout — the one implementation `scripts/backup.sh` wraps; verified archives, optional gpg encryption (`BACKUP_PASSPHRASE_FILE`)
 - ✅ Dashboard warns when the newest backup is older than 48 hours (`BACKUP_MAX_AGE_HOURS`) — catches a backup timer that failed, stopped or was never installed
