@@ -45,17 +45,12 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 - **P-010 Emergency Access Plan**: earlier crisis-field implementation was rolled back (too partial, was blocking other work) — redo needed → [docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md](docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md)
 - **P-011 operational remainder**: install the backup timer on the production host (`sudo bash scripts/install-system-jobs.sh`, #508) and rotate secrets (`FERNET_KEY` via `manage.py encryption rotate`, #500) — the tooling exists now; see `memory/PERSONAL_TODO.md`
 
-### Stack / Infrastructure
-
-- **P-044 Alpine.js**: ✅ Complete — see [docs/projects/done/P-044_ALPINE_JS.md](docs/projects/done/P-044_ALPINE_JS.md)
-- **P-045 Tailwind CSS**: ✅ Complete — see [docs/projects/done/P-045_TAILWIND_CSS.md](docs/projects/done/P-045_TAILWIND_CSS.md)
-
 ### Concept / Mid-term
 
 - **P-122 General Freelance Practice Type**: Phase 1 (free-form invoice items) done — Phase 2 (standard VAT + advance-payment report) deferred until the Kleinunternehmer election is actually dropped → [docs/projects/todo/P-122_GENERAL_FREELANCE_PRACTICE.md](docs/projects/todo/P-122_GENERAL_FREELANCE_PRACTICE.md)
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
-- **OSS follow-ups** (post P-024): ~~extend CI beyond lint (pytest)~~ done 2026-08-21 (#8); GitHub Discussions + responsible-disclosure policy → [docs/projects/done/P-024_OSS_RELEASE.md §8](docs/projects/done/P-024_OSS_RELEASE.md)
+- **OSS follow-ups** (post P-024): ~~extend CI beyond lint (pytest)~~ done 2026-08-21 (#8); GitHub Discussions + responsible-disclosure policy
 
 ### ✅ Abgeschlossen
 
@@ -63,7 +58,7 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 
 | Projekt | Beschreibung | Abgeschlossen |
 | ------- | ------------ | ------------- |
-| P-047 | Command Palette (⌘K): server-rendered palette with search + 21 jump-to destinations + 8 quick-create actions; nav stripped to four links, `global-search.js` retired → [done doc](docs/projects/done/P-047_COMMAND_PALETTE.md) | Sep 2026 |
+| P-047 | Command Palette (⌘K): server-rendered palette with search + 21 jump-to destinations + 8 quick-create actions; nav stripped to four links, `global-search.js` retired | Sep 2026 |
 | P-050 | Focus Queue: unified `Task` model (extends `PracticeTodo` with `task_type`, `snoozed_until`, generic `related_object`), `sync_focus_queue_tasks` materializes derived signals (missing session log, unpaid/unsent invoices, checklists) as real rows; new `/focus/` page replaces `/todos/` and the dashboard's "Braucht Aktion" pane | Jul 2026 |
 | P-039 | Django i18n: dedicated 6-phase sweep — every template, Python view/form/util, model, `admin.py`, JS-string surface wrapped (English msgids, German `.po` translations); guardrail test as a ratchet | Jul 2026 |
 | P-121 | Time-off CRUD (`/timeoff/`, previously admin-only) + multi-period client heads-up email with date-only bilingual content and a scannable recipient table | Jul 2026 |
@@ -99,13 +94,13 @@ Alle erledigten Projekte: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/proje
 | P-019 | Zweisprachige PDFs | März 2026 |
 | P-018 | Aufnahmeprozess-Workflow | März 2026 |
 | P-017 | Behandlungsvertrag PDF | März 2026 |
-| P-016 | Stack Modernisation (M-01–M-14; M-04/M-11Ph2/M-12 Won't Do) → [done doc](docs/projects/done/P-016_MODERNISATION.md) | Apr 2026 |
+| P-016 | Stack Modernisation (M-01–M-14; M-04/M-11Ph2/M-12 Won't Do) | Apr 2026 |
 | P-015 | Steuer-PDF-Sammeldownload | Feb 2026 |
 | P-014 | Zahlungserinnerung per E-Mail | Feb 2026 |
 | P-013 | Workflow Dashboard (Phasen 1–3) | Feb 2026 |
 | P-012 | Operational Checklist + Pause | Feb 2026 |
 | P-011 | Security Foundation (LUKS + Yubikey + DPIA) | Feb 2026 |
-| P-009 | Client Documentation System: encrypted `ClientProfile`/`SessionLog`/`SupervisionItem`/`ClientNote`, triage summary, supervision queue → [done doc](docs/projects/done/P-009_CLIENT_DOCUMENTATION.md) | Feb 2026 |
+| P-009 | Client Documentation System: encrypted `ClientProfile`/`SessionLog`/`SupervisionItem`/`ClientNote`, triage summary, supervision queue | Feb 2026 |
 | P-005 | PostgreSQL 17 Upgrade | März 2026 |
 | P-004 | Analytics Consolidation | Feb 2026 |
 | P-003 | Workflow-Driven Dashboard | Feb 2026 |

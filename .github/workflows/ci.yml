@@ -6,9 +6,7 @@ on:
   pull_request:
     branches: [main]
 
-# Only the token scope the jobs actually use. Nothing here writes to the repo;
-# the one workflow that does (codebase-metrics.yml) asks for `contents: write`
-# explicitly.
+# Only the token scope the jobs actually use. Nothing here writes to the repo.
 permissions:
   contents: read
 

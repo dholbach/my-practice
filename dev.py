@@ -1020,8 +1020,8 @@ def cmd_review(args):
         print()
 
         # --- 7. Long files (quarterly only) ---
-        # Same threshold and pathspecs as docs/development/ so the two never
-        # disagree; that page has the month-by-month trend, this is the list.
+        # Same threshold and pathspecs as the generated metrics page, so the two
+        # never disagree; that page has the month-by-month trend, this is the list.
         print("7️⃣  Long files (scripts/codebase_metrics.py --largest)")
         print("-" * 30)
         long_result = subprocess.run(
