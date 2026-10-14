@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static i18n %}
+{% load static i18n payment_tags %}
 
 {% block title %}{% trans "Bank import" %}{% endblock %}
 
@@ -97,7 +97,7 @@
                                 {{ trans.reference }}
                             </td>
                             <td class="td-amount {% if trans.amount > 0 %}text-success{% else %}text-secondary{% endif %}">
-                                {{ trans.amount|floatformat:2 }}&nbsp;€
+                                {{ trans.amount|currency }}
                             </td>
                             <td>
                                 {% if trans.match_confidence == 'exact' %}

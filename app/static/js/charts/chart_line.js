@@ -31,7 +31,7 @@ function drawYearSeparators(ctx, padding, chartHeight, chartWidth, dataLength, s
  * @param {number} startMonth - 1-indexed month of the first data point (default 1 = January)
  */
 function drawYearLabels(ctx, height, points, startYear = 2020, startMonth = 1) {
-    const textSecondary = getCSSVariable('--text-secondary', '#718096');
+    const textSecondary = getCSSVariable('--color-text-secondary', '#718096');
     ctx.fillStyle = textSecondary;
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';

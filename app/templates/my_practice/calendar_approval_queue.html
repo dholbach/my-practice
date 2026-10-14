@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static i18n %}
+{% load static i18n payment_tags %}
 {% get_current_language as CURRENT_LANGUAGE %}
 
 {% block title %}{% trans "Approve calendar events" %}{% endblock %}
@@ -14,13 +14,13 @@
 
 {% if not grouped %}
 <div class="info-box">
-    <strong class="text-primary">✅ {% trans "No pending calendar events" %}</strong><br>
+    <strong class="text-link">✅ {% trans "No pending calendar events" %}</strong><br>
     <span class="text-muted">{% trans "All events have already been approved or skipped." %}</span>
 </div>
 {% else %}
 
 <div class="alert-box info mb-3">
-    <strong class="text-primary">ℹ️ {% trans "Note" %}</strong><br>
+    <strong class="text-link">ℹ️ {% trans "Note" %}</strong><br>
     <span class="text-muted">
         {% blocktrans %}Select events and add them to an existing invoice. Events are grouped by client and billing month so multiple months don't accidentally end up on one invoice.{% endblocktrans %}
     </span>
@@ -65,7 +65,7 @@
                     data-client="{{ group.client.pk }}" data-month="{{ group.month|date:'Y-m' }}">
                 <option value="">{% trans "Select invoice…" %}</option>
                 {% for invoice in group.invoices %}
-                <option value="{{ invoice.pk }}">{{ invoice.invoice_number }} ({{ invoice.invoice_date|date:"d.m.Y" }}){% if invoice.item_count %} · {% blocktrans count counter=invoice.item_count %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktrans %}{% endif %}{% if invoice.total %} · {{ invoice.total|floatformat:0 }} €{% endif %}</option>
+                <option value="{{ invoice.pk }}">{{ invoice.invoice_number }} ({{ invoice.invoice_date|date:"d.m.Y" }}){% if invoice.item_count %} · {% blocktrans count counter=invoice.item_count %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktrans %}{% endif %}{% if invoice.total %} · {{ invoice.total|currency_rounded }}{% endif %}</option>
                 {% endfor %}
                 <option value="new">+ {% trans "Create new invoice" %}</option>
             </select>
@@ -103,12 +103,12 @@
                         <input type="checkbox" class="event-checkbox event-checkbox-group-{{ forloop.parentloop.counter }}"
                                name="event_ids" value="{{ event.pk }}" checked>
                     </td>
-                    <td class="text-primary">{{ event.event_date|date:"d.m.Y" }}</td>
+                    <td class="text-link">{{ event.event_date|date:"d.m.Y" }}</td>
                     <td class="text-muted">
                         {% if event.event_time %}{{ event.event_time|time:"H:i" }}{% else %}–{% endif %}
                     </td>
                     <td class="text-muted">{{ event.duration_minutes }} min</td>
-                    <td class="text-primary">{{ event.summary }}</td>
+                    <td class="text-link">{{ event.summary }}</td>
                     <td class="text-muted text-sm">
                         {% if event.suggested_service_type %}
                             {% if CURRENT_LANGUAGE == "en" %}{{ event.suggested_service_type.name_en|default:event.suggested_service_type.name }}{% else %}{{ event.suggested_service_type.name_de|default:event.suggested_service_type.name }}{% endif %}

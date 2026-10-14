@@ -692,7 +692,7 @@ test("no static match and no search hit shows the empty message", async () => {
 // --- privacy mode ------------------------------------------------------------
 
 // Names are rendered as initial + <span class="sensitive-data pn-rest">rest</span>,
-// which body.privacy-mode blurs. These assert the markup, since whether the blur
+// which html.privacy-mode blurs. These assert the markup, since whether the blur
 // actually paints is CSS's job (tailwind.css .sensitive-data / .pn-rest).
 const sensitiveText = (item) =>
     item.children

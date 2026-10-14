@@ -12,6 +12,29 @@
          instead (see CLAUDE.md CSS Architecture); non-blocking JS that doesn't need to
          run before body content belongs in the extra_js block near the end of body. -->
     {% block extra_head_scripts %}{% endblock %}
+    {% comment %}Theme and privacy blur are set here, before the first paint: from the end of
+       <body> a dark-mode user saw a light flash on every page, and with privacy
+       mode on, names and diagnoses were drawn unblurred before the blur arrived.{% endcomment %}
+    <script nonce="{{ csp_nonce }}">
+        (function() {
+            const html = document.documentElement;
+            let theme = null;
+            let privacy = null;
+            try {
+                theme = localStorage.getItem('theme');
+                privacy = localStorage.getItem('privacyMode');
+            } catch (e) { /* storage blocked: use the defaults below */ }
+            if (!theme) {
+                theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            html.setAttribute('data-theme', theme);
+            // On unless switched off explicitly: a screen shared or glanced at
+            // should not show client names by default.
+            if (privacy !== 'false') {
+                html.classList.add('privacy-mode');
+            }
+        })();
+    </script>
     <script src="{% static 'js/htmx.min.js' %}" defer></script>
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
 </head>
@@ -132,10 +155,8 @@
             const themeToggle = document.getElementById('themeToggle');
             const htmlElement = document.documentElement;
 
-            // Load saved theme from localStorage (default: light)
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            htmlElement.setAttribute('data-theme', savedTheme);
-            themeToggle.innerHTML = savedTheme === 'dark' ? '☀️' : '🌙';
+            // The theme itself is applied in <head>; only the icon is set here.
+            themeToggle.innerHTML = htmlElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
 
             // Toggle theme
             themeToggle.addEventListener('click', function() {
@@ -156,20 +177,18 @@
         // Privacy Mode Toggle
         (function() {
             const toggle = document.getElementById('privacyToggle');
-            const body = document.body;
+            const html = document.documentElement;
 
-            // Load saved state from localStorage
-            const privacyMode = localStorage.getItem('privacyMode') === 'true';
-            if (privacyMode) {
-                body.classList.add('privacy-mode');
+            // The class itself is applied in <head>; only the button is set here.
+            if (html.classList.contains('privacy-mode')) {
                 toggle.classList.add('active');
                 toggle.innerHTML = '🔒 Privacy';
             }
 
             // Toggle privacy mode
             toggle.addEventListener('click', function() {
-                body.classList.toggle('privacy-mode');
-                const isActive = body.classList.contains('privacy-mode');
+                html.classList.toggle('privacy-mode');
+                const isActive = html.classList.contains('privacy-mode');
                 toggle.classList.toggle('active');
                 toggle.innerHTML = isActive ? '🔒 Privacy' : '👁️ Privacy';
 

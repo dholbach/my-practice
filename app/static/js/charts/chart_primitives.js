@@ -18,7 +18,7 @@ function drawBarWithGradient(ctx, x, y, width, height, color1, color2) {
  * Draw X-axis year label at standard position
  */
 function drawYearLabel(ctx, year, x, height, padding) {
-    const textPrimary = getCSSVariable('--text-primary');
+    const textPrimary = getCSSVariable('--color-text-primary');
     ctx.fillStyle = textPrimary || '#2d3748'; // Fallback if null
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
@@ -29,7 +29,7 @@ function drawYearLabel(ctx, year, x, height, padding) {
  * Draw a legend with colored boxes and labels
  */
 function drawLegend(ctx, padding, items) {
-    const textSecondary = getCSSVariable('--text-secondary');
+    const textSecondary = getCSSVariable('--color-text-secondary');
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'left';
     const legendY = padding.top - 20;

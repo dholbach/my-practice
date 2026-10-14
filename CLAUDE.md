@@ -31,8 +31,9 @@ Therapy practice payment/invoicing system built with Django, PostgreSQL, running
 directions of the `.sensitive-data` contract — a personal field rendered *outside* a blur
 (under-blur), and a blur wrapped around something that was never personal (over-blur,
 which hides a form label or the client code that is itself the privacy-safe form). Neither
-is visible in review or in normal use: `body.privacy-mode` is a client-side localStorage
-toggle, so nothing renders differently unless it happens to be switched on. That is why
+is visible in review: `html.privacy-mode` is a client-side toggle (on by default, applied
+in `<head>` before the first paint; switching it off is remembered per browser in
+localStorage), and an under-blur looks normal whenever it is off. That is why
 this bug class was fixed one site at a time three times (#321, #424, #426) before being
 automated. Use `<span class="sensitive-data">` for a name shown beside its client code,
 `|privacy_name` (initials stay legible) where there is no code to fall back on — inquiries,
@@ -306,6 +307,8 @@ Never add bare `<style>` blocks:
 ```
 
 `base.html` has two blocks for page-specific `<script>` tags, neither for CSS: `extra_head_scripts` (in `<head>`, for scripts an inline script further down the page calls synchronously — e.g. chart libs) and `extra_js` (near the end of `<body>`, for everything else). Pick whichever matches your load-order need; don't repurpose either for CSS.
+
+**Contrast guardrail**: `my_practice/tests/test_color_contrast.py` resolves both themes' tokens and requires 4.5:1 (WCAG AA) for every text-on-background pair and for white text on button/tag fills. Use `text-link` for brand-coloured text — `text-primary` is Tailwind's utility for the `--color-primary` *fill* token (it silently overrode a same-named alias), and `--color-primary` is a fill colour, not a text colour in dark mode. Money in templates goes through `|currency` / `|currency_rounded`, never `floatformat` + `€` (`test_currency_formatting.py`).
 
 Inline `<script>` blocks need `nonce="{{ csp_nonce }}"`, and event handlers are wired with `addEventListener` or Alpine `x-on:` — never an `onclick=`-style attribute. `script-src` has no `'unsafe-inline'`, so the browser silently skips either one (nothing fails in the test client). **Guardrail test**: `my_practice/tests/test_csp_coverage.py`, whose allowlists are empty.
 

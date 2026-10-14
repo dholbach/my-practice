@@ -74,35 +74,20 @@ function redrawChartsIn(container) {
 }
 
 /**
- * Get CSS color variable value with adaptive fallback
+ * Read a CSS custom property, e.g. getCSSVariable('--color-text-primary').
+ *
+ * Use the real --color-* tokens: they flip with [data-theme="dark"], so a chart
+ * redrawn after a theme change picks up the new colours. The names this used to
+ * be called with (--text-primary, --border-color, ...) were never defined, so
+ * gridlines stayed light-theme grey in dark mode.
  */
 function getCSSVariable(varName, fallback) {
-    // Browser-only functionality
+    // Node test environment: no DOM to read from.
     if (typeof getComputedStyle === 'undefined' || typeof document === 'undefined') {
-        // In Node.js testing environment, return fallback
-        if (varName === '--text-primary') return '#2d3748';
-        if (varName === '--text-secondary') return '#718096';
         return fallback || null;
     }
-
-    // Try to get the CSS variable value first
     const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-    if (value && value !== '') return value;
-
-    // If CSS variable not loaded yet, use theme-aware fallback for text colors
-    // Check both data-theme attribute and prefers-color-scheme
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
-                   (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-    if (varName === '--text-primary') {
-        return isDark ? '#f7fafc' : '#2d3748';
-    }
-
-    if (varName === '--text-secondary') {
-        return isDark ? '#a0aec0' : '#718096';
-    }
-
-    return fallback || null;
+    return value || fallback || null;
 }
 
 // Export functions

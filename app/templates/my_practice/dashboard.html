@@ -16,15 +16,15 @@
 <div class="dashboard-header-row">
     <div class="stats-strip">
         <div class="stats-strip-item">
-            <div class="stats-strip-value">{{ year_revenue|floatformat:0 }}&nbsp;€</div>
+            <div class="stats-strip-value">{{ year_revenue|currency_rounded }}</div>
             <div class="stats-strip-label">{% blocktrans with year=current_year %}{{ year }} Revenue{% endblocktrans %}</div>
         </div>
         <div class="stats-strip-item">
-            <div class="stats-strip-value">{{ year_profit|floatformat:0 }}&nbsp;€</div>
+            <div class="stats-strip-value">{{ year_profit|currency_rounded }}</div>
             <div class="stats-strip-label">{% blocktrans with year=current_year %}{{ year }} Profit{% endblocktrans %}</div>
         </div>
         <div class="stats-strip-item {% if unpaid_count %}stats-strip-item--warning{% endif %}">
-            <div class="stats-strip-value">{{ unpaid_value|floatformat:0 }}&nbsp;€</div>
+            <div class="stats-strip-value">{{ unpaid_value|currency_rounded }}</div>
             <div class="stats-strip-label">{% blocktrans with n=unpaid_count %}Outstanding ({{ n }}){% endblocktrans %}</div>
         </div>
         <div class="stats-strip-item">
@@ -77,7 +77,7 @@
             <div class="mp-card-subtitle">{{ stat.practice.title }}</div>
             <div class="mp-card-stats">
                 <div>
-                    <div class="mp-card-revenue">{{ stat.revenue|floatformat:0 }}&nbsp;€</div>
+                    <div class="mp-card-revenue">{{ stat.revenue|currency_rounded }}</div>
                     <div class="mp-card-invoice-count">
                         {% blocktrans count n=stat.invoice_count %}{{ n }} invoice{% plural %}{{ n }} invoices{% endblocktrans %}
                     </div>

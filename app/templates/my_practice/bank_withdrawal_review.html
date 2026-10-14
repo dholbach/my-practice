@@ -15,7 +15,7 @@
             </div>
             <div>
                 <div class="expense-stat__label">{% trans "Total amount" %}</div>
-                <div class="expense-stat__value expense-stat__value--primary">{{ stats.total_amount|floatformat:2 }} €</div>
+                <div class="expense-stat__value expense-stat__value--primary">{{ stats.total_amount|currency }}</div>
             </div>
         </div>
     </div>
@@ -64,7 +64,7 @@
                             <span class="expense-trans-card__date">{{ trans.transaction_date|date:"d.m.Y" }}</span>
                             <span class="expense-trans-card__payer">{{ trans.payer_name }}</span>
                         </div>
-                        <span class="expense-trans-card__amount">{{ trans.amount|floatformat:2 }} €</span>
+                        <span class="expense-trans-card__amount">{{ trans.amount|currency }}</span>
                     </div>
 
                     <div class="expense-trans-card__reference">

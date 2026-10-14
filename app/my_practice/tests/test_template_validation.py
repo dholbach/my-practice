@@ -224,3 +224,22 @@ class TemplateReferenceTests(SimpleTestCase):
             [],
             f"Views naming a template that does not exist — every hit is a 500: {missing}",
         )
+
+
+class SingleLineCommentTests(SimpleTestCase):
+    """`{# ... #}` only works on one line; spread over several, Django prints it.
+
+    The comment then shows up as literal text on the page — nothing errors, and
+    in base.html it appeared at the top of every page.
+    """
+
+    def test_no_multiline_hash_comments(self):
+        template_dir = Path(settings.BASE_DIR) / "templates"
+        offenders = []
+        for path in sorted(template_dir.rglob("*.html")):
+            for lineno, line in enumerate(path.read_text().splitlines(), start=1):
+                if "{#" in line and "#}" not in line[line.index("{#") :]:
+                    offenders.append(f"{path.relative_to(template_dir)}:{lineno}")
+        self.assertEqual(
+            offenders, [], "Use {% comment %}…{% endcomment %} for multi-line comments."
+        )

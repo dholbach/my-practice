@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tbody>
                     {% for item in profit_data %}
                     <tr>
-                        <td class="fw-700 text-primary">{{ item.year }}</td>
+                        <td class="fw-700 text-link">{{ item.year }}</td>
                         <td class="text-success text-right">{{ item.revenue|currency }}</td>
                         <td class="text-warning text-right">{{ item.expenses|currency }}</td>
                         <td class="text-right fw-700 {{ item.profit|highlight_diff }}">
@@ -362,9 +362,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 {{ client_data.client.client_code }}
                             </a>
                         </td>
-                        <td class="text-primary">{{ client_data.invoice_count }}</td>
-                        <td class="text-primary">{{ client_data.session_hours }}h</td>
-                        <td class="revenue-amount text-right fw-700">{{ client_data.total_revenue|floatformat:2 }}&nbsp;€</td>
+                        <td class="text-link">{{ client_data.invoice_count }}</td>
+                        <td class="text-link">{{ client_data.session_hours }}h</td>
+                        <td class="revenue-amount text-right fw-700">{{ client_data.total_revenue|currency }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -480,12 +480,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <ul class="session-types-list">
             {% for type_name, data in session_distribution.types.items %}
             <li>
-                <span class="text-primary">
+                <span class="text-link">
                     <span class="type-indicator {% cycle 'chart-dot-1' 'chart-dot-2' 'chart-dot-3' 'chart-dot-4' %}"></span>
                     {{ type_name }}
                 </span>
                 <span>
-                    <strong class="text-primary">{{ data.count }}</strong>
+                    <strong class="text-link">{{ data.count }}</strong>
                     <span class="stat-note">({{ data.percentage }}%)</span>
                 </span>
             </li>
@@ -618,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function() {
             {% for entry in practice_analysis.timeoff.entries %}
             <li class="timeoff-entry">
                 <span>
-                    <strong class="text-primary">{{ entry.title }}</strong>
+                    <strong class="text-link">{{ entry.title }}</strong>
                     <span class="text-muted"> ({{ entry.period_days|default:entry.full_days }} {% trans "Days" %})</span>
                 </span>
                 <span class="text-muted">{{ entry.period_start|date:"d.m." }} - {{ entry.period_end|date:"d.m.Y" }}</span>
@@ -787,7 +787,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // X-axis month labels
         const xStep = chartWidth / 11;
-        const textSecondary = getCSSVariable('--text-secondary', '#718096');
+        const textSecondary = getCSSVariable('--color-text-secondary', '#718096');
         ctx.fillStyle = textSecondary;
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'center';
@@ -839,7 +839,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.beginPath();
             ctx.arc(lx + 6, ly, 4, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = getCSSVariable('--text-secondary', '#718096');
+            ctx.fillStyle = getCSSVariable('--color-text-secondary', '#718096');
             ctx.textAlign = 'left';
             ctx.fillText(s.label, lx + 14, ly + 4);
             lx += slotW;
@@ -942,7 +942,7 @@ document.addEventListener('DOMContentLoaded', function() {
             {% if expense_distribution.total > 0 %}
             <div class="text-center mb-3">
                 <div class="stat-display__value">
-                    {{ expense_distribution.total|floatformat:0 }}&nbsp;€
+                    {{ expense_distribution.total|currency_rounded }}
                 </div>
                 <div class="stat-display__label">
                     {% trans "Total Expenses" %}
@@ -957,7 +957,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span class="text-break">{{ category.category }}</span>
                     </span>
                     <span class="expense-category-item__amount">
-                        <strong class="text-primary">{{ category.amount|floatformat:0 }}&nbsp;€</strong>
+                        <strong class="text-link">{{ category.amount|currency_rounded }}</strong>
                         <span class="stat-note">({{ category.percentage }}%)</span>
                     </span>
                 </li>

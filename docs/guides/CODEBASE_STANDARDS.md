@@ -157,10 +157,11 @@ Note: a global `a { color: var(--color-link); }` rule in `@layer base` in `tailw
 
 ### Privacy-mode contract (M-PAT-08)
 
-Privacy mode is a shoulder-surfing toggle: `body.privacy-mode` (localStorage, client-side
-only — the server never knows it is on) blurs everything inside a `.sensitive-data`
-element. Two mistakes are possible, and neither is visible in review or in normal use,
-because nothing renders differently unless the toggle happens to be on:
+Privacy mode is a shoulder-surfing toggle: `html.privacy-mode` blurs everything inside a
+`.sensitive-data` element. It is on by default and set in `<head>` before the first paint
+(from the end of `<body>`, names were drawn unblurred for a moment on every page); turning
+it off is remembered per browser in localStorage, and the server never knows its state.
+Two mistakes are possible, and neither is visible in review:
 
 - **under-blur** — a personal field rendered outside any `.sensitive-data` element;
 - **over-blur** — `.sensitive-data` around something that was never personal, which hides a
@@ -215,6 +216,7 @@ in #424).
 - `document.querySelector` for a chart container whose parent can be hidden → add tab-reveal hook
 - Inline `<script>` blocks with business logic → move to a static `.js` file
 - `onclick=`/`onchange=`/… attributes, in templates or in HTML built by JavaScript → they never run under the CSP
+- `getCSSVariable('--text-primary')` and other names outside the `--color-*` tokens → they are undefined; read the real token so charts follow the theme
 - `|safe` on text that can contain user or external data (flash messages, names, exception text) → build trusted markup with `format_html` instead; it survives the messages framework as safe
 
 ---
@@ -605,6 +607,7 @@ grow them.
 | `test_code_language_policy.py` | English identifiers and comments (P-038) |
 | `test_responsive_layout.py` | Button groups wrap; tables scroll instead of crushing (M-PAT-09) |
 | `test_practice_scoping.py` | No query helper defaults `practice` to `None`; no `if practice:` filters; a user without a practice sees no data |
+| `test_color_contrast.py` | Text tokens reach 4.5:1 on their backgrounds, and white text on fills, in both themes |
 | `test_csp_coverage.py` | Inline scripts carry the CSP nonce, no inline `on*=` handlers, flash messages escaped |
 | `test_currency_formatting.py` | Money goes through `format_currency_de` / `|currency`, never a hand-rolled `:,.2f` |
 | `test_release_guardrails.py` | No model change without its migration; the three version strings agree |
