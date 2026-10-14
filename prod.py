@@ -318,7 +318,7 @@ def cmd_setup(args):
 
     print()
     print("  ⚠  Keep your .env safe — especially FERNET_KEY.")
-    print("     FERNET_KEY encrypts clinical notes (Art. 9 GDPR data).")
+    print("     FERNET_KEY encrypts clinical and client notes (Art. 9 GDPR data).")
     print("     Losing it means losing access to that encrypted content.")
     print()
     print("  .env controls much more than these three keys (email, calendar,")

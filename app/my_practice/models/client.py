@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
+from ..fields import EncryptedTextField
 from .base import PracticeScopedQuerySet, TimestampedModel
 
 
@@ -115,7 +116,9 @@ class Client(TimestampedModel):
         verbose_name=_("Cost carrier"),
         help_text=_("Cost carrier / health insurance (e.g. 'self-pay', 'Allianz PKV')"),
     )
-    notes = models.TextField(blank=True, verbose_name=_("Notes"))
+    # Encrypted: free-text notes about a client routinely carry health
+    # information (Art. 9 GDPR), the same as the clinical notes.
+    notes = EncryptedTextField(blank=True, verbose_name=_("Notes"))
 
     # Onboarding workflow
     intake_sent_date = models.DateField(

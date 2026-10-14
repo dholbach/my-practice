@@ -305,6 +305,7 @@ jobs:
           SECURE_SSL_REDIRECT: "true"
         run: |
           DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')" \
+          FERNET_KEY="$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" \
             python manage.py check --deploy --fail-level WARNING
 
       # Plain `node <file>` runners, the same set ./dev.py test-js executes.

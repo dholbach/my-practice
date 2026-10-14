@@ -54,7 +54,7 @@ echo "FERNET_KEY=$(docker run --rm ghcr.io/dholbach/my-practice:latest \
   python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" >> .env
 ```
 
-> `FERNET_KEY` encrypts clinical notes at rest (Art. 9 GDPR data). Keep a copy somewhere safe — losing it means losing access to that encrypted content.
+> `FERNET_KEY` encrypts clinical records, client and inquiry notes at rest (Art. 9 GDPR data). Keep a copy somewhere safe — losing it means losing access to that encrypted content.
 
 #### 2 — Pull and start
 

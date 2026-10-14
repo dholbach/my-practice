@@ -9,23 +9,52 @@ should resolve before storing real client data.
 
 ## What the App Encrypts
 
-Clinical note fields use **Fernet symmetric encryption** (from the `cryptography` package).
+Free-text fields that hold health information, plus the credentials that open the
+practice calendar, use **Fernet symmetric encryption** (from the `cryptography` package).
 The following fields are encrypted at rest in the database:
 
 | Model | Encrypted fields |
 |---|---|
-| `ClientProfile` | `intake_notes`, `case_notes` |
-| `SessionLog` | `content`, `interventions`, `therapist_reflection` |
-| `SupervisionItem` | `content` |
+| `ClientProfile` | `intake_notes`, `case_notes`, `arbeitsdiagnose` |
+| `SessionLog` | `content`, `interventions`, `therapist_reflection`, `next_session_ideas` |
+| `SupervisionItem` | `content`, `resolution_notes` |
 | `ClientNote` | `content` |
+| `Client` | `notes` |
+| `ClientInquiry` | `notes`, `initial_contact_notes` |
+| `GoogleCalendarToken` | `token`, `refresh_token`, `client_secret` |
+
+`my_practice/tests/test_encryption.py` fails if any of these stops being encrypted.
+Encrypted fields cannot be searched, so the client list search covers name, code and
+email but not notes.
+
+Uploaded client documents (intake forms, questionnaires, contracts) are files under
+`media/`, **not** encrypted by the app — they rely on full-disk encryption and
+encrypted backups (below).
 
 Session metadata (`session_date`, `session_type`, `mood_tags`) is intentionally
 **not encrypted** — it is needed for scheduling, triage, and filtering without
 decrypting the full note.
 
 The encryption key is `FERNET_KEY` in your `.env`. **Losing this key means losing
-access to all clinical notes permanently.** Back it up in a separate location from
-the database.
+access to all encrypted content permanently.** Back it up in a separate location from
+the database. `./dev.py manage encryption check` (or `docker compose exec django
+python manage.py encryption check` in production) confirms the configured key opens
+every stored value — run it after restoring a backup onto a new machine.
+
+### Rotating the key
+
+If the key may have leaked, or as routine hygiene:
+
+1. Generate a new key and put it **in front of** the old one:
+   `FERNET_KEY=<new>,<old>` — the first key encrypts, every listed key decrypts.
+2. Restart, then run `manage.py encryption rotate` — re-encrypts every value under
+   the new key (one transaction; it refuses and changes nothing if any value is
+   unreadable).
+3. Run `manage.py encryption check` with only the new key set, then drop the old one.
+4. Old database backups still need the old key — keep it with them until they expire.
+
+A value that no configured key can open stops the page with an `EncryptionKeyError`
+naming the field — the app never shows or re-saves undecryptable data.
 
 ---
 
@@ -79,14 +108,11 @@ Resolve these before going live with real client data:
 2. **Right to erasure policy** — document how you handle a deletion request that
    conflicts with the 10-year retention obligation.
 
-3. **FERNET_KEY rotation** — what happens if the key is compromised? There is no
-   built-in re-encryption command. Plan a key rotation procedure before you need it.
-
-4. **Audit trail** — there is no log of who accessed which clinical record and when.
+3. **Audit trail** — there is no log of who accessed which clinical record and when.
    For a single-user system this is low priority; it becomes important if multi-user
    access is added (see [EMERGENCY_ACCESS_PLANNING.md](EMERGENCY_ACCESS_PLANNING.md)).
 
-5. **Full-text search** — encrypted fields cannot be searched with `ILIKE`. If you
+4. **Full-text search** — encrypted fields cannot be searched with `ILIKE`. If you
    need to search across session notes (e.g. "find all mentions of X"), that requires
    either decrypting at query time (slow) or maintaining a separate unencrypted index
    (privacy tradeoff). Currently not implemented.
