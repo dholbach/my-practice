@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="chart-legend mt-2">
             <div class="legend-item">
                 <div class="legend-line-swatch"></div>
-                <span>{% blocktrans with months=revenue_trends|length max=max_revenue|floatformat:0 %}Monthly revenue · {{ months }} months · Max: {{ max }}€{% endblocktrans %}</span>
+                <span>{% blocktrans with months=revenue_trends|length max=max_revenue|currency_rounded %}Monthly revenue · {{ months }} months · Max: {{ max }}{% endblocktrans %}</span>
             </div>
         </div>
     </div>

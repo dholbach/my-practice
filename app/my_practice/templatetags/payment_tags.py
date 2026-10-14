@@ -3,6 +3,7 @@ Custom template tags and filters for the payments app.
 """
 
 import html as _html
+from decimal import InvalidOperation
 
 from django import template
 from django.utils.safestring import mark_safe
@@ -26,7 +27,7 @@ def currency(value, symbol="€"):
 
     try:
         return format_currency_de(value, symbol)
-    except ValueError, TypeError:
+    except InvalidOperation, ValueError, TypeError:
         return value
 
 
@@ -41,15 +42,8 @@ def currency_rounded(value, symbol="€"):
         return "–"
 
     try:
-        value = float(value)
-        # Round to nearest integer
-        rounded = round(value)
-        # Format with thousands separator
-        formatted = f"{rounded:,}"
-        # Convert to German format: replace , with .
-        formatted = formatted.replace(",", ".")
-        return f"{formatted}\u00a0{symbol}"
-    except ValueError, TypeError:
+        return format_currency_de(value, symbol, whole=True)
+    except InvalidOperation, ValueError, TypeError:
         return value
 
 

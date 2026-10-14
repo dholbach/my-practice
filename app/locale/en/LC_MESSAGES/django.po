@@ -4628,7 +4628,7 @@ msgstr ""
 
 #: templates/includes/capacity_monitoring_widget_content.html:60
 #, python-format
-msgid "Revenue this month: %(current)s € / %(target)s €"
+msgid "Revenue this month: %(current)s / %(target)s"
 msgstr ""
 
 #: templates/includes/client_card.html:11
@@ -5160,7 +5160,7 @@ msgstr ""
 
 #: templates/my_practice/analytics.html:223
 #, python-format
-msgid "Monthly revenue · %(months)s months · Max: %(max)s€"
+msgid "Monthly revenue · %(months)s months · Max: %(max)s"
 msgstr ""
 
 #: templates/my_practice/analytics.html:260
