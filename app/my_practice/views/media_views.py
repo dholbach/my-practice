@@ -20,6 +20,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
+from django.core.files.storage import Storage
 from django.db import models
 from django.http import FileResponse, Http404, HttpRequest
 from django.utils._os import safe_join
@@ -39,13 +40,20 @@ MEDIA_FILE_OWNERS: dict[tuple[type[models.Model], str], str] = {
 }
 
 
-def owning_practice_ids(name: str) -> set[int]:
-    """IDs of every practice with a row that references the media file ``name``."""
+def media_owners(name: str) -> tuple[set[int], Storage | None]:
+    """Owning practice IDs of ``name``, and the storage of a field that references it."""
     ids: set[int] = set()
+    storage = None
     for (model, field), owner_lookup in MEDIA_FILE_OWNERS.items():
         rows = model._default_manager.filter(**{field: name}).values_list(owner_lookup, flat=True)
-        ids.update(practice_id for practice_id in rows if practice_id is not None)
-    return ids
+        found = [practice_id for practice_id in rows if practice_id is not None]
+        if found:
+            ids.update(found)
+            # The field's storage decides how the bytes on disk are read —
+            # client documents are encrypted, so a plain open() would serve
+            # ciphertext.
+            storage = storage or model._meta.get_field(field).storage
+    return ids, storage
 
 
 @require_safe
@@ -54,8 +62,8 @@ def serve_media(request: HttpRequest, path: str) -> FileResponse:
 
     Login is enforced by LoginRequiredMiddleware before this runs.
     """
-    owners = owning_practice_ids(path)
-    if not owners or not request.user.practices.filter(pk__in=owners).exists():  # type: ignore[union-attr]
+    owners, storage = media_owners(path)
+    if not owners or storage is None or not request.user.practices.filter(pk__in=owners).exists():  # type: ignore[union-attr]
         raise Http404
 
     try:
@@ -67,7 +75,7 @@ def serve_media(request: HttpRequest, path: str) -> FileResponse:
 
     content_type, _encoding = mimetypes.guess_type(full_path.name)
     response = FileResponse(
-        full_path.open("rb"),
+        storage.open(path, "rb"),
         content_type=content_type or "application/octet-stream",
         filename=full_path.name,
     )
