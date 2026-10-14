@@ -15,7 +15,7 @@
     <div class="year-selector no-print">
         <form method="get">
             <label for="year">{% trans "Year:" %}</label>
-            <select name="year" id="year" x-data x-on:change="$el.form.submit()">
+            <select name="year" id="year" data-submit-on-change>
                 {% for y in available_years %}
                 <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
@@ -49,7 +49,7 @@
 
     <!-- Print button -->
     <div class="no-print audit-print-btn-wrap">
-        <button x-data x-on:click="window.print()" class="btn-print">🖨 {% trans "Print / save as PDF" %}</button>
+        <button data-print class="btn-print">🖨 {% trans "Print / save as PDF" %}</button>
     </div>
 
     <!-- Day table -->

@@ -9206,6 +9206,10 @@ msgid ""
 "runs daily — see the backup guide."
 msgstr ""
 
+#: templates/my_practice/tax_quarter_overview.html
+msgid "e.g. 320.00 or -150.00"
+msgstr ""
+
 #~ msgid "Error sending the email: %(error)s"
 #~ msgstr "Error sending the email: %(error)s"
 

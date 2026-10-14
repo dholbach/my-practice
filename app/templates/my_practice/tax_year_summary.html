@@ -23,7 +23,7 @@
     <div class="year-selector">
         <form method="get">
             <label for="year">{% trans "Year:" %}</label>
-            <select name="year" id="year" x-data x-on:change="$el.form.submit()">
+            <select name="year" id="year" data-submit-on-change>
                 {% for y in available_years %}
                     <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}

@@ -488,7 +488,7 @@
             <span class="cn-note-date">{{ note.note_date|date:"d.m.Y" }}</span>
             <button type="button" class="btn btn-secondary btn-sm" x-on:click="editing = !editing">✏️</button>
             <form method="post" action="{% url 'client_note_delete' client.pk note.pk %}" class="form-inline"
-                  x-on:submit="confirm('{{ confirm_del_note }}') || $event.preventDefault()">
+                  data-confirm="{{ confirm_del_note }}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
             </form>

@@ -12,7 +12,7 @@
 
 <div class="bg-surface border border-border rounded-lg p-6 mb-8 flex gap-4 items-center">
     <label for="year-select" class="font-semibold">{% trans "Select year:" %}</label>
-    <select id="year-select" class="form-control w-auto" x-data x-on:change="window.location.href = '{% url 'revenue_report' %}?year=' + $el.value">
+    <select id="year-select" class="form-control w-auto" data-navigate="{% url 'revenue_report' %}?year=">
         {% for y in available_years %}
         <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
