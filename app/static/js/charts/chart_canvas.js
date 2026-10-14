@@ -28,7 +28,7 @@ function setupCanvas(canvas, padding = { top: 30, right: 20, bottom: 60, left: 7
  * Draw grid lines on chart
  */
 function drawGrid(ctx, padding, chartWidth, chartHeight, divisions = 4) {
-    const borderColor = getCSSVariable('--border-color', '#e2e8f0');
+    const borderColor = getCSSVariable('--color-border', '#e2e8f0');
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = 1;
     ctx.setLineDash([5, 5]);
@@ -48,7 +48,7 @@ function drawGrid(ctx, padding, chartWidth, chartHeight, divisions = 4) {
  * Draw chart axes
  */
 function drawAxes(ctx, padding, chartWidth, chartHeight) {
-    const textSecondary = getCSSVariable('--text-secondary');
+    const textSecondary = getCSSVariable('--color-text-secondary');
     ctx.strokeStyle = textSecondary;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -62,7 +62,7 @@ function drawAxes(ctx, padding, chartWidth, chartHeight) {
  * Draw Y-axis labels
  */
 function drawYAxisLabels(ctx, padding, chartHeight, maxValue, suffix = '€', divisions = 4) {
-    const textSecondary = getCSSVariable('--text-secondary', '#718096');
+    const textSecondary = getCSSVariable('--color-text-secondary', '#718096');
     ctx.fillStyle = textSecondary;
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'right';

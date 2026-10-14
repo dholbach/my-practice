@@ -43,7 +43,7 @@
         {% if open_supervision_count %}<span class="cn-badge cn-badge-warn" title="{% trans 'Open supervision topics' %}">🔍 {{ open_supervision_count }}</span>{% endif %}
     </button>
     <button class="page-tab-btn" data-tab="abrechnung">💶 {% trans "Billing" %}
-        {% if stats.open_amount %}<span class="cn-badge cn-badge-warn">{{ stats.open_amount|floatformat:0 }} €</span>{% endif %}
+        {% if stats.open_amount %}<span class="cn-badge cn-badge-warn">{{ stats.open_amount|currency_rounded }}</span>{% endif %}
     </button>
     <div class="cd-header-actions">
         <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">{% trans "← List" %}</a>
@@ -231,7 +231,7 @@
             </div>
             <div>
                 <div class="contact-label">{% trans "Hourly rate" %}</div>
-                <div class="stat-value-bold">{{ client.hourly_rate_60|floatformat:0 }}&nbsp;€</div>
+                <div class="stat-value-bold">{{ client.hourly_rate_60|currency_rounded }}</div>
             </div>
             <div>
                 <div class="contact-label">{% trans "Total revenue" %}</div>
@@ -769,7 +769,7 @@ initChart('sessionTimeline', function(canvas) {
             ctx.fillRect(x, y, barWidth, barHeight);
             const labelInterval = hours.length > 12 ? 3 : 2;
             if (index % labelInterval === 0 || hours.length <= 6) {
-                ctx.fillStyle = getCSSVariable('--text-primary');
+                ctx.fillStyle = getCSSVariable('--color-text-primary');
                 ctx.font = 'bold 10px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(months[index], x + barWidth / 2, height - 8);

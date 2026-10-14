@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load payment_tags %}
 <div class="capacity-monitoring-widget">
 
     {% if show_warning %}
@@ -24,7 +25,7 @@
             {% if target_revenue %}
             <div class="capacity-month__stat">
                 <span class="stat-label">{% trans "Revenue" %}</span>
-                <span class="stat-value">{{ m.revenue|floatformat:0 }} €</span>
+                <span class="stat-value">{{ m.revenue|currency_rounded }}</span>
                 {% if forloop.last and revenue_pct is not None %}
                 <span class="stat-pct {% if warn_revenue %}stat-pct--warn{% endif %}">{{ revenue_pct }} %</span>
                 {% endif %}
@@ -40,7 +41,7 @@
         <span class="capacity-target">{% trans "Target hrs:" %} <strong>{{ target_hours }}</strong></span>
         {% endif %}
         {% if target_revenue %}
-        <span class="capacity-target">{% trans "Target revenue:" %} <strong>{{ target_revenue|floatformat:0 }} €</strong></span>
+        <span class="capacity-target">{% trans "Target revenue:" %} <strong>{{ target_revenue|currency_rounded }}</strong></span>
         {% endif %}
     </div>
 

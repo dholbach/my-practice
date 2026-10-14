@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load i18n %}
+{% load payment_tags %}
 {% load l10n %}
 
 {% block title %}{% trans "Bank import — manual assignment" %}{% endblock %}
@@ -111,8 +112,8 @@
             <div class="trans-row">
                 <div class="trans-row__meta">
                     <span class="text-muted text-sm">{{ trans.transaction_date|date:"d.m.Y" }}</span>
-                    <span class="sensitive-data text-primary fw-500">{{ trans.payer_name }}</span>
-                    <span class="text-success font-semibold">{{ trans.amount|floatformat:2 }}&nbsp;€</span>
+                    <span class="sensitive-data text-link fw-500">{{ trans.payer_name }}</span>
+                    <span class="text-success font-semibold">{{ trans.amount|currency }}</span>
                 </div>
                 <div class="trans-row__actions">
                     <span class="text-muted text-sm">→</span>
@@ -162,7 +163,7 @@
     {% if transactions %}
     <div class="card rounded-lg">
         <div class="flex-between mb-3">
-            <h2 class="mb-0 text-primary">{% trans "Open transactions" %} ({{ page_obj.paginator.count }})</h2>
+            <h2 class="mb-0 text-link">{% trans "Open transactions" %} ({{ page_obj.paginator.count }})</h2>
             <div class="d-flex gap-sm">
                 {% if expense_count %}
                 <form method="post" class="form-inline">
@@ -189,13 +190,13 @@
             <div class="trans-card__info-grid">
                 <div>
                     <div class="field-label">{% trans "Date" %}</div>
-                    <div class="text-primary font-semibold">{{ trans.transaction_date|date:"d.m.Y" }}</div>
+                    <div class="text-link font-semibold">{{ trans.transaction_date|date:"d.m.Y" }}</div>
                 </div>
                 <div>
                     <div class="field-label">{% trans "Amount" %}</div>
                     <div class="text-xl font-bold {% if trans.amount < 0 %}text-danger{% else %}text-success{% endif %}">
                         {% if trans.amount < 0 %}🔻{% endif %}
-                        {{ trans.amount|floatformat:2 }}&nbsp;€
+                        {{ trans.amount|currency }}
                     </div>
                     {% if trans.amount < 0 %}
                     <div class="text-xs text-danger mt-1">{% trans "Expense" %}</div>
@@ -207,7 +208,7 @@
 
             <div class="mb-2">
                 <div class="field-label">{% trans "Name" %}</div>
-                <div class="text-primary">
+                <div class="text-link">
                     <span class="sensitive-data">{{ trans.payer_name }}</span>
                 </div>
             </div>
@@ -266,7 +267,7 @@
                         <div class="text-success text-sm">
                             {% trans "Invoice" %} <strong>{{ trans.matching_unpaid_invoice.invoice_number }}</strong>
                             → <strong>{{ trans.matching_unpaid_invoice.client.client_code }}</strong>
-                            ({{ trans.matching_unpaid_invoice.calculate_total|floatformat:2 }}&nbsp;€)
+                            ({{ trans.matching_unpaid_invoice.calculate_total|currency }})
                         </div>
                     </div>
                     <div class="d-flex gap-sm">
@@ -298,7 +299,7 @@
                 {% else %}
                     <!-- Manual Assignment -->
                     <div class="form-field-flex">
-                        <label class="d-block font-semibold mb-1 text-primary">
+                        <label class="d-block font-semibold mb-1 text-link">
                             {% trans "Assign invoice manually" %}
                         </label>
                         {{ form.invoice }}

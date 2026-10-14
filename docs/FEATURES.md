@@ -131,7 +131,7 @@ chronological record; this document only tracks current state.
 - ✅ Status breakdown (Draft/Sent/Paid/Cancelled) — all-time overview
 - ✅ Recent invoices overview
 - ✅ Multi-practice overview cards — shown only when the user has access to more than one practice
-- ✅ Dark mode + Privacy mode
+- ✅ Dark mode + Privacy mode — privacy blur is on by default and applied before the page is drawn; dark mode follows the system setting until toggled
 - ✅ A user with no `Practice` yet is redirected straight to practice setup instead of landing on an all-zeros dashboard
 - ℹ️ The dashboard is a pure overview now — the old "Needs Action" queue and separate daily-agenda pane were retired in P-050 phase 4; that working surface is the [Focus Queue](#focus-queue-p-050) (`/focus/`), and revenue trends live on the Analytics page
 
