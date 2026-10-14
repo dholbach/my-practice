@@ -77,7 +77,7 @@ class ClientDetailContextBuilder:
 
         return {
             "stats": {
-                "total_revenue": float(revenue_stats["total"]),
+                "total_revenue": revenue_stats["total"],
                 "paid_count": revenue_stats["count"],
                 "total_hours": total_hours,
                 "session_count": session_count,

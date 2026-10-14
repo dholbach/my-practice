@@ -57,7 +57,7 @@
     {% endif %}
     {% if target_revenue and revenue_pct is not None %}
     <div class="capacity-progress">
-        <div class="progress-label">{% blocktrans with current=current_revenue|floatformat:0 target=target_revenue|floatformat:0 %}Revenue this month: {{ current }} € / {{ target }} €{% endblocktrans %}</div>
+        <div class="progress-label">{% blocktrans with current=current_revenue|currency_rounded target=target_revenue|currency_rounded %}Revenue this month: {{ current }} / {{ target }}{% endblocktrans %}</div>
         <div class="progress-bar-track">
             <div class="progress-bar-fill {% if warn_revenue %}progress-bar-fill--warn{% endif %}"
                  style="width: {% if revenue_pct > 100 %}100{% else %}{{ revenue_pct }}{% endif %}%"></div>
