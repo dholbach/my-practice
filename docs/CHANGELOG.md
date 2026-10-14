@@ -2,6 +2,11 @@
 
 Major features and milestones in chronological order.
 
+## 2026-10-14 — v0.8.1 patch release
+
+- **Fix — v0.8.0 could not start in production** (#523): the vendored `chart.umd.min.js` (#519) ended in a `sourceMappingURL` comment pointing to a `.map` file that was never vendored. WhiteNoise's manifest storage follows that reference during `collectstatic` and aborts, so the container exited right after `migrate` and kept restarting. The comment is gone. A new guardrail runs `collectstatic` through the production storage, since the suite and the dev stack both use plain storage and could not see it. **If you updated to v0.8.0**, the migrations already ran, so update to v0.8.1 with `./prod.py update` as usual.
+- **Fix — healthchecks and the release smoke test hit a redirect** (#523): since #504, `/admin/login/` redirects to `/accounts/login/`. The compose healthchecks passed on the 302, but `./dev.py smoke` looked for a CSRF token in the redirect body and would have failed on any image. All of them now check `/accounts/login/`.
+
 ## 2026-10-14 — v0.8.0 minor release
 
 A security and data-safety pass from an outside takeover review, plus the charts, htmx and money-rounding work that came out of it.

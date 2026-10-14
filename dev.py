@@ -1236,7 +1236,7 @@ def cmd_smoke(args):
             "django",
             "curl",
             "-sf",
-            "http://localhost:8000/admin/login/",
+            "http://localhost:8000/accounts/login/",
             capture=True,
         )
         if result.returncode != 0 or "csrfmiddlewaretoken" not in result.stdout:

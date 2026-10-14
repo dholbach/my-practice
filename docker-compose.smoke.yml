@@ -36,7 +36,7 @@ services:
       - FERNET_KEY=${FERNET_KEY}
       - UPDATE_CHECK_DISABLED=true
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8000/admin/login/"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/accounts/login/"]
       interval: 5s
       timeout: 5s
       retries: 24

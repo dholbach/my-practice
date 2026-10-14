@@ -73,7 +73,7 @@ services:
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/documents:/my-practice-data/documents
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/questionnaires:/my-practice-data/questionnaires
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8000/admin/login/"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/accounts/login/"]
       interval: 5s
       timeout: 5s
       retries: 24
