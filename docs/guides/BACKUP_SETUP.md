@@ -1,5 +1,12 @@
 # Backup Setup
 
+> **Back up `FERNET_KEY` separately.** Clinical records, client/inquiry notes and
+> client documents are stored encrypted in both the database dump and the media
+> archive. A restored backup is unreadable without the key it was written with — keep
+> it in a password manager, not on the same card. After a restore, `manage.py
+> encryption check` confirms the key opens everything. See
+> [CLINICAL_DATA_SECURITY.md](CLINICAL_DATA_SECURITY.md).
+
 ## MicroSD Offsite Backup
 
 ### Hardware

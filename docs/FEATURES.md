@@ -307,6 +307,7 @@ chronological record; this document only tracks current state.
 - ✅ Sign-in brute-force limit — 5 failed attempts for a username lock it for 15 minutes (correct password included)
 - ✅ Idle sign-out — sessions end after 8 hours without activity (`DJANGO_SESSION_IDLE_HOURS`) instead of a fixed two weeks
 - ✅ Practice isolation enforced on all endpoints including `session_toggle` and email views
+- ✅ Uploaded client documents are encrypted at rest (Fernet, same key); existing files are encrypted in place on upgrade, `compress_media` skips them
 - ✅ Field encryption beyond clinical records — client and inquiry notes and the Google Calendar credentials are stored as Fernet ciphertext; `FERNET_KEY` takes comma-separated keys for rotation (`manage.py encryption rotate` / `check`), and an unreadable value names its field instead of a bare `InvalidToken`
 - ✅ Pre-commit PII guard — staged content checked against a local denylist before every commit
 - ✅ Responsible-disclosure policy (`SECURITY.md`)

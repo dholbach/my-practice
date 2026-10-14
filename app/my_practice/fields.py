@@ -57,10 +57,15 @@ def encrypt_value(value: str) -> str:
 
 def decrypt_value(value: str, label: str = "value") -> str:
     """Decrypt ciphertext, naming `label` in the error if no key opens it."""
+    return decrypt_bytes(value.encode(), label).decode()
+
+
+def decrypt_bytes(data: bytes, label: str = "value") -> bytes:
+    """Decrypt a Fernet token, naming `label` in the error if no key opens it."""
     from cryptography.fernet import InvalidToken
 
     try:
-        return get_fernet().decrypt(value.encode()).decode()
+        return get_fernet().decrypt(data)
     except InvalidToken:
         # Without this, the page dies on a bare InvalidToken that says nothing
         # about the cause: almost always a FERNET_KEY that differs from the
