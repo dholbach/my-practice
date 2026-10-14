@@ -58,6 +58,7 @@ is loaded automatically.
    DJANGO_ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
    SECURE_SSL_REDIRECT=true  # only if this instance is reachable over HTTPS
    POSTGRES_PASSWORD=<secure-random-password>
+   REQUIRE_TWO_FACTOR=true   # if the instance is reachable from the internet
    ```
 
 3. **Run security check**:
@@ -92,6 +93,19 @@ Left unset (the default), the app assumes plain HTTP and none of the above apply
   - Error: German error text on violation (UI language is German)
 
 ### Additional Security Measures
+
+#### Sign-in
+- 5 failed password attempts for a username (per address) lock it for 15 minutes;
+  sessions end after `DJANGO_SESSION_IDLE_HOURS` (8) without activity
+- **Two-factor sign-in** (TOTP authenticator app): each user can turn it on under
+  practice menu → *Two-factor sign-in*; `REQUIRE_TWO_FACTOR=true` makes it mandatory.
+  After the password, the session is not signed in until a valid 6-digit code (or a
+  single-use recovery code) is entered; code attempts are limited the same way, a
+  code cannot be used twice, and the secret is stored Fernet-encrypted
+- `/admin/login/` redirects to the same sign-in, so the admin is not a way around
+  the attempt limit or the second factor
+- Lost phone *and* recovery codes: `./prod.py manage two_factor_reset <username>`
+  (needs shell access to the server)
 
 #### PII Commit Guard (pre-commit)
 - `scripts/check_pii.py` runs in the pre-commit hook and blocks commits whose

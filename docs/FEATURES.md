@@ -305,6 +305,7 @@ chronological record; this document only tracks current state.
 - ✅ UniqueConstraints on critical fields
 - ✅ Global login enforcement — all views require authentication via `LoginRequiredMiddleware`
 - ✅ Sign-in brute-force limit — 5 failed attempts for a username lock it for 15 minutes (correct password included)
+- ✅ Two-factor sign-in with any authenticator app (TOTP), 10 single-use recovery codes, optional `REQUIRE_TWO_FACTOR`; `/admin/login/` goes through the same throttled, two-factor sign-in
 - ✅ Idle sign-out — sessions end after 8 hours without activity (`DJANGO_SESSION_IDLE_HOURS`) instead of a fixed two weeks
 - ✅ Practice isolation enforced on all endpoints including `session_toggle` and email views
 - ✅ Uploaded client documents are encrypted at rest (Fernet, same key); existing files are encrypted in place on upgrade, `compress_media` skips them

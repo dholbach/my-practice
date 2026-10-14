@@ -77,3 +77,36 @@ class PracticeScopeMiddleware:
             return any_practice
 
         return None
+
+
+class TwoFactorRequiredMiddleware:
+    """
+    With REQUIRE_TWO_FACTOR on, send a signed-in user who has no confirmed
+    authenticator to the setup page until they add one.
+
+    Opt-in because an instance on a home network behind its own login may not
+    want it; a hosted instance reachable from the internet should turn it on.
+    """
+
+    # The pages the setup itself needs, plus signing out and switching language.
+    ALLOWED_URL_NAMES = {"two_factor_settings", "logout", "set_language", "login", "login_verify"}
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        return self.get_response(request)
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        from django.conf import settings
+        from django.shortcuts import redirect
+
+        if not settings.REQUIRE_TWO_FACTOR or not request.user.is_authenticated:
+            return None
+        if request.resolver_match and request.resolver_match.url_name in self.ALLOWED_URL_NAMES:
+            return None
+        from my_practice.models import TwoFactorDevice
+
+        if TwoFactorDevice.objects.filter(user=request.user, confirmed_at__isnull=False).exists():
+            return None
+        return redirect("two_factor_settings")

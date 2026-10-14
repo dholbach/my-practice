@@ -9037,6 +9037,158 @@ msgstr ""
 msgid "Too many failed sign-in attempts. Please wait 15 minutes and try again."
 msgstr ""
 
+#: my_practice/models/two_factor.py
+msgid "Secret"
+msgstr ""
+
+#: my_practice/models/two_factor.py
+msgid "Confirmed at"
+msgstr ""
+
+#: my_practice/models/two_factor.py
+msgid "Two-factor device"
+msgstr ""
+
+#: my_practice/models/two_factor.py
+msgid "Two-factor devices"
+msgstr ""
+
+#: my_practice/models/two_factor.py
+msgid "Code hash"
+msgstr ""
+
+#: my_practice/models/two_factor.py
+msgid "Used at"
+msgstr ""
+
+#: my_practice/models/two_factor.py
+msgid "Recovery code"
+msgstr ""
+
+#: my_practice/models/two_factor.py
+msgid "Recovery codes"
+msgstr ""
+
+#: my_practice/views/auth_views.py
+msgid "Two-factor sign-in is now on."
+msgstr ""
+
+#: my_practice/views/auth_views.py
+msgid "Two-factor sign-in is now off."
+msgstr ""
+
+#: templates/base.html
+msgid "Two-factor sign-in"
+msgstr ""
+
+#: templates/registration/login_verify.html
+msgid "Second step"
+msgstr ""
+
+#: templates/registration/login_verify.html
+msgid "Too many wrong codes. Please wait 15 minutes, then sign in again."
+msgstr ""
+
+#: templates/registration/login_verify.html
+msgid "Back to sign in"
+msgstr ""
+
+#: templates/registration/login_verify.html
+msgid "That code is not valid. Check that the time on your phone is correct, or use a recovery code."
+msgstr ""
+
+#: templates/registration/login_verify.html
+msgid "Code from your authenticator app"
+msgstr ""
+
+#: templates/registration/login_verify.html
+msgid "Lost your phone? Enter one of your recovery codes instead."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "A code from your phone in addition to your password"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Save these recovery codes now — they are shown only once."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Each one signs you in once if you lose your phone. Keep them in your password manager or on paper, not on the same phone."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "I have saved them"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+#, python-format
+msgid "Two-factor sign-in is on (since %(date)s)."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+#, python-format
+msgid "%(left)s recovery code left."
+msgid_plural "%(left)s recovery codes left."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/registration/two_factor_settings.html
+msgid "New recovery codes"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "That code is not valid."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Replace recovery codes"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Turn off"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Password or code incorrect."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Code from your authenticator app or a recovery code"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Turn off two-factor sign-in"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "This installation requires two-factor sign-in. Set it up to continue."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Install an authenticator app on your phone, e.g. Aegis, 2FAS, Google Authenticator or the one built into your password manager."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Scan this code with the app:"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Can't scan? Enter this key by hand"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "That code is not valid. Check that the time on your phone is correct."
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Enter the 6-digit code the app shows"
+msgstr ""
+
+#: templates/registration/two_factor_settings.html
+msgid "Turn on two-factor sign-in"
+msgstr ""
+
 #~ msgid "Error sending the email: %(error)s"
 #~ msgstr "Error sending the email: %(error)s"
 
