@@ -207,7 +207,7 @@ in #424).
 
 - Chart drawing always registers itself in `chartRegistry` for redraw on tab reveal (M-PAT-03)
 - Charts in hidden tabs: call redraw after `classList.add('active')` with 50ms delay
-- HTMX requests: check `HX-Request` header and return a partial render, not a full page
+- Small in-place actions (complete a task, advance an invoice status) use `data-post` from `static/js/partial_post.js`; the view checks `is_partial_request(request)` (`X-Partial: 1`) and returns the fragment instead of a redirect. No htmx — it was removed for being a 50 KB library used for exactly this
 - Inline `<script>` blocks carry `nonce="{{ csp_nonce }}"`; handlers are wired with `addEventListener` or Alpine `x-on:`. The CSP's `script-src` has no `'unsafe-inline'`, so anything else is skipped by the browser — silently, and only in a browser (`test_csp_coverage.py`)
 - No `'unsafe-eval'` either: Alpine is its CSP build, whose expression interpreter refuses globals and cannot parse functions. Confirmations, print, select-navigation and copy buttons go through the `data-*` attributes of `static/js/ui_actions.js`; anything stateful is an `Alpine.data()` component referenced by name (`x-data="taxSettlement"`). `test_csp_coverage.py` scans every Alpine attribute for globals, arrow functions and `x-data="factory()"`
 

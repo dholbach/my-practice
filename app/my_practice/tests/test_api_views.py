@@ -520,11 +520,11 @@ class UpdateInvoiceStatusTest(TestCase):
         self.invoice.refresh_from_db()
         self.assertIsNone(self.invoice.paid_date)
 
-    def test_htmx_request_returns_badge_html(self):
+    def test_partial_request_returns_badge_html(self):
         response = self.client_http.post(
             reverse("update_invoice_status", kwargs={"pk": self.invoice.pk}),
             {"status": Invoice.Status.SENT},
-            HTTP_HX_REQUEST="true",
+            HTTP_X_PARTIAL="1",
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/html; charset=utf-8")

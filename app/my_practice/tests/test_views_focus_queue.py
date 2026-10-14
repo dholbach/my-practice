@@ -215,21 +215,21 @@ class FocusQueueCompleteTest(TestCase):
         self.task.refresh_from_db()
         self.assertTrue(self.task.is_completed)
 
-    def test_htmx_returns_row_partial(self):
+    def test_partial_returns_row_partial(self):
         response = self.tc.post(
-            reverse("focus_queue_complete", args=[self.task.pk]), HTTP_HX_REQUEST="true"
+            reverse("focus_queue_complete", args=[self.task.pk]), HTTP_X_PARTIAL="1"
         )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "includes/focus_queue_row.html")
 
-    def test_htmx_completed_row_stays_visible_and_checked(self):
+    def test_partial_completed_row_stays_visible_and_checked(self):
         """
         The completed row swaps in place (not the whole queue) so an
         accidental click can be undone immediately — see docstring on
         focus_queue_toggle_complete.
         """
         response = self.tc.post(
-            reverse("focus_queue_complete", args=[self.task.pk]), HTTP_HX_REQUEST="true"
+            reverse("focus_queue_complete", args=[self.task.pk]), HTTP_X_PARTIAL="1"
         )
         self.assertEqual(response.context["task"], self.task)
         self.assertTrue(response.context["task"].is_completed)
@@ -246,10 +246,10 @@ class FocusQueueCompleteTest(TestCase):
         self.task.refresh_from_db()
         self.assertFalse(self.task.is_completed)
 
-    def test_htmx_partial_carries_type_filter_from_query_string(self):
+    def test_partial_partial_carries_type_filter_from_query_string(self):
         response = self.tc.post(
             reverse("focus_queue_complete", args=[self.task.pk]) + "?type=invoice_unpaid",
-            HTTP_HX_REQUEST="true",
+            HTTP_X_PARTIAL="1",
         )
         self.assertIn(b"type=invoice_unpaid", response.content)
 
@@ -317,9 +317,9 @@ class FocusQueueSetDueTodayTest(TestCase):
         titles = [t.title for t in response.context["tasks"]]
         self.assertEqual(titles, ["Bump to today", "Urgent"])
 
-    def test_htmx_returns_content_partial(self):
+    def test_partial_returns_content_partial(self):
         response = self.tc.post(
-            reverse("focus_queue_due_today", args=[self.task.pk]), HTTP_HX_REQUEST="true"
+            reverse("focus_queue_due_today", args=[self.task.pk]), HTTP_X_PARTIAL="1"
         )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "includes/focus_queue_content.html")

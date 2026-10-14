@@ -1695,13 +1695,13 @@
   .empty-hint { color: var(--color-text-secondary); font-style: italic; }
 
   /* ── Invoice list — HTMX status badge + filter panel ── */
-  .status-badge.htmx-badge {
+  .status-badge.status-badge--action {
     border: none;
     cursor: pointer;
     font-family: inherit;
   }
-  .status-badge.htmx-badge:hover { opacity: 0.8; }
-  .htmx-request .status-badge.htmx-badge { opacity: 0.5; cursor: wait; }
+  .status-badge.status-badge--action:hover { opacity: 0.8; }
+  .status-badge.status-badge--action.is-pending { opacity: 0.5; cursor: wait; }
   .filter-panel {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
