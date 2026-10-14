@@ -18,7 +18,7 @@ from my_practice.views import (
 
 
 class FaviconRedirectView(RedirectView):
-    """/favicon.ico → the static SVG icon.
+    """/favicon.ico → the 32px PNG icon (what a client asking for .ico can show).
 
     Resolved per request: the manifest storage used in production cannot look
     the file up at import time, before collectstatic has run.
@@ -27,7 +27,7 @@ class FaviconRedirectView(RedirectView):
     permanent = True
 
     def get_redirect_url(self, *args, **kwargs):
-        return static("img/favicon.svg")
+        return static("img/favicon-32.png")
 
 
 urlpatterns = [
