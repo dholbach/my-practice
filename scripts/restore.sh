@@ -1,126 +1,29 @@
 #!/bin/bash
 #
-# Restore script for My Practice
-# Restores PostgreSQL database and media files from backup
+# Restore a backup made by scripts/backup.sh (or `prod.py backup`):
 #
-
-# pipefail: without it a failing `docker compose exec ... psql` hides behind
-# gunzip's exit status and the restore reports success.
+#   scripts/restore.sh <db_backup_file> [media_backup_file]
+#
+# Overwrites the current database (and media, if given). Encrypted .gpg
+# archives are decrypted with BACKUP_PASSPHRASE_FILE, or gpg asks for the
+# passphrase. The implementation is `prod.py restore`; see backup.sh for why
+# this wrapper exists.
+#
 set -euo pipefail
 
-# Resolve paths relative to this script so the script works regardless of cwd
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(dirname "$SCRIPT_DIR")"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Colors for output
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Load environment variables from repo root .env
-# (strip full-line comments, inline trailing comments, and blank lines first —
-# an inline "KEY=value  # comment" line otherwise makes xargs hand a bare "#"
-# to export, which bash rejects as an invalid identifier)
-if [ -f "${REPO_DIR}/.env" ]; then
-    # Word splitting here is the point: each KEY=value pair becomes its own export argument.
-    # shellcheck disable=SC2046
-    export $(grep -v '^\s*#' "${REPO_DIR}/.env" | sed -E 's/[[:space:]]+#.*$//' | grep -v '^\s*$' | xargs)
+if [ -z "${COMPOSE_FILE:-}" ] && [ -f "${REPO_DIR}/.env" ]; then
+    COMPOSE_FILE=$(grep -E '^[[:space:]]*COMPOSE_FILE=' "${REPO_DIR}/.env" | tail -n 1 \
+        | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//') || true
 fi
 
-# External data directory (must match MY_PRACTICE_DATA_DIR in .env / backup.sh)
-MY_PRACTICE_DATA_DIR="${MY_PRACTICE_DATA_DIR:-$(dirname "$REPO_DIR")/my-practice-data}"
-BACKUP_DIR="${MY_PRACTICE_DATA_DIR}/backups"
+# Arguments are paths relative to where the caller stands; resolve them
+# before changing directory.
+ARGS=()
+for arg in "$@"; do
+    if [ -e "$arg" ]; then ARGS+=("$(cd "$(dirname "$arg")" && pwd)/$(basename "$arg")"); else ARGS+=("$arg"); fi
+done
 
-# Use docker directly; fall back to flatpak-spawn only inside a Flatpak sandbox
-# (see backup.sh).
-if command -v docker >/dev/null 2>&1; then
-    DOCKER=(docker)
-elif [ -f /.flatpak-info ] && command -v flatpak-spawn >/dev/null 2>&1; then
-    DOCKER=(flatpak-spawn --host docker)
-else
-    echo -e "${RED}❌ docker not found on PATH${NC}"
-    exit 1
-fi
-
-# Check if backup file is provided
-if [ $# -lt 1 ]; then
-    echo -e "${RED}Usage: $0 <db_backup_file> [media_backup_file]${NC}"
-    echo ""
-    echo "Example:"
-    echo "  $0 ${BACKUP_DIR}/db_backup_20250115_120000.sql.gz"
-    echo "  $0 ${BACKUP_DIR}/db_backup_20250115_120000.sql.gz ${BACKUP_DIR}/media_backup_20250115_120000.tar.gz"
-    echo ""
-    echo "Available backups (${BACKUP_DIR}):"
-    ls -lh "${BACKUP_DIR}"/db_backup* "${BACKUP_DIR}"/media_backup* 2>/dev/null || echo "  No backups found"
-    exit 1
-fi
-
-DB_BACKUP_FILE="$1"
-MEDIA_BACKUP_FILE="${2:-}"
-
-# Check if database backup file exists
-if [ ! -f "${DB_BACKUP_FILE}" ]; then
-    echo -e "${RED}❌ Database backup file not found: ${DB_BACKUP_FILE}${NC}"
-    exit 1
-fi
-
-# Set defaults if not in .env
-POSTGRES_DB=${POSTGRES_DB:-my_practice}
-POSTGRES_USER=${POSTGRES_USER:-my_practice}
-
-# docker compose must be called from the repo directory
 cd "$REPO_DIR"
-
-echo -e "${YELLOW}⚠️  WARNING: This will OVERWRITE the current database!${NC}"
-echo -e "${YELLOW}   Database: ${POSTGRES_DB}${NC}"
-echo -e "${YELLOW}   Backup file: ${DB_BACKUP_FILE}${NC}"
-if [ -n "${MEDIA_BACKUP_FILE}" ]; then
-    echo -e "${YELLOW}   Media file: ${MEDIA_BACKUP_FILE}${NC}"
-fi
-echo ""
-read -r -p "Are you sure you want to continue? (yes/no): " CONFIRM
-
-if [ "${CONFIRM}" != "yes" ]; then
-    echo -e "${BLUE}Restore cancelled.${NC}"
-    exit 0
-fi
-
-echo -e "${BLUE}🔄 Starting restore at $(date)${NC}"
-
-# Restore PostgreSQL database
-echo -e "${BLUE}🗄️  Restoring PostgreSQL database...${NC}"
-
-# ON_ERROR_STOP: psql otherwise logs a failed statement and carries on, exiting
-# 0 over a half-restored database.
-if gunzip -c "${DB_BACKUP_FILE}" | "${DOCKER[@]}" compose exec -T postgres psql \
-    -U "${POSTGRES_USER}" \
-    -d "${POSTGRES_DB}" \
-    --quiet \
-    -v ON_ERROR_STOP=1; then
-    echo -e "${GREEN}✅ Database restore complete${NC}"
-else
-    echo -e "${RED}❌ Database restore failed${NC}"
-    exit 1
-fi
-
-# Restore media files if provided
-if [ -n "${MEDIA_BACKUP_FILE}" ] && [ -f "${MEDIA_BACKUP_FILE}" ]; then
-    echo -e "${BLUE}📁 Restoring media files...${NC}"
-
-    # Extract media files into Django container
-    if "${DOCKER[@]}" compose exec -T django sh -c "rm -rf /app/media/* && tar xzf - -C /app" \
-        < "${MEDIA_BACKUP_FILE}"; then
-        echo -e "${GREEN}✅ Media restore complete${NC}"
-    else
-        echo -e "${RED}❌ Media restore failed${NC}"
-        exit 1
-    fi
-else
-    echo -e "${BLUE}ℹ️  No media backup to restore${NC}"
-fi
-
-echo -e "${GREEN}✨ Restore completed successfully at $(date)${NC}"
-echo -e "${BLUE}💡 You may need to restart the Django container:${NC}"
-echo -e "   docker compose restart django"
+exec python3 "${REPO_DIR}/prod.py" restore --compose-file "${COMPOSE_FILE:-docker-compose.yml}" "${ARGS[@]}"

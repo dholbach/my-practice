@@ -4,6 +4,9 @@
 Requirements: Python 3, Docker with the Compose plugin.
 """
 
+import glob
+import gzip
+import hashlib
 import json
 import os
 import re
@@ -11,6 +14,8 @@ import secrets
 import shutil
 import subprocess
 import sys
+import tarfile
+import tempfile
 import time
 import urllib.request
 
@@ -608,6 +613,363 @@ def cmd_shell(_args):
     return manage("shell")
 
 
+# ── backup / restore ─────────────────────────────────────────────────────────
+#
+# The one implementation of backups: scripts/backup.sh and scripts/restore.sh
+# (used by the systemd timer in a git checkout) call these, and a self-hoster
+# who only has prod.py gets the same thing as `./prod.py backup`.
+#
+# Every archive is written to a temporary file, verified, optionally
+# encrypted, and only then renamed into place — so a failed run never leaves a
+# file that looks like a backup, and never reaches the retention cleanup (which
+# would otherwise rotate real backups out in favour of broken ones).
+
+BACKUP_RETENTION_DAYS = 30
+DUMP_TRAILER = b"PostgreSQL database dump complete"
+BACKUP_GLOBS = (
+    "db_backup_*.sql.gz",
+    "db_backup_*.sql.gz.gpg",
+    "media_backup_*.tar.gz",
+    "media_backup_*.tar.gz.gpg",
+    "media_backup_*.empty",
+)
+
+
+class BackupError(Exception):
+    """A backup or restore step failed; the message names the step."""
+
+
+def _setting(name, default=""):
+    """A value from the environment, else .env (inline comments stripped)."""
+    if os.environ.get(name):
+        return os.environ[name]
+    value = _read_env().get(name, "")
+    return re.sub(r"\s+#.*$", "", value).strip() or default
+
+
+def _docker():
+    # Fall back to flatpak-spawn only inside a Flatpak sandbox (e.g. an
+    # editor's terminal), where docker is not on PATH.
+    if shutil.which("docker"):
+        return ["docker"]
+    if os.path.exists("/.flatpak-info") and shutil.which("flatpak-spawn"):
+        return ["flatpak-spawn", "--host", "docker"]
+    raise BackupError("docker not found on PATH")
+
+
+def _backup_dir():
+    base = os.path.dirname(os.path.abspath(__file__))
+    data_dir = _setting(
+        "MY_PRACTICE_DATA_DIR", os.path.join(os.path.dirname(base), "my-practice-data")
+    )
+    # A relative value resolves next to the compose file, as Compose does.
+    return os.path.join(base, data_dir, "backups")
+
+
+def _compose_cmd(args):
+    """`docker compose -f <file>`, honouring --compose-file (used by scripts/backup.sh)."""
+    files = [COMPOSE_FILE]
+    if "--compose-file" in args:
+        # Colon-separated, like Compose's own COMPOSE_FILE.
+        files = [os.path.abspath(f) for f in args[args.index("--compose-file") + 1].split(":")]
+    return [*_docker(), "compose", *(arg for f in files for arg in ("-f", f))]
+
+
+def _passphrase_file():
+    """BACKUP_PASSPHRASE_FILE, checked, or None when archives stay unencrypted."""
+    path = _setting("BACKUP_PASSPHRASE_FILE")
+    if not path:
+        return None
+    if not os.path.isfile(path):
+        raise BackupError(f"BACKUP_PASSPHRASE_FILE does not exist: {path}")
+    if not shutil.which("gpg"):
+        raise BackupError("BACKUP_PASSPHRASE_FILE is set but gpg is not installed")
+    return path
+
+
+def _gpg(passphrase_file, *args):
+    return [
+        "gpg",
+        "--batch",
+        "--yes",
+        "--quiet",
+        "--pinentry-mode",
+        "loopback",
+        "--passphrase-file",
+        passphrase_file,
+        *args,
+    ]
+
+
+def _stream_to_file(cmd, path, compress=False):
+    """Run cmd, writing its stdout to path (gzip-compressed if asked)."""
+    with open(path, "wb") as raw:
+        sink = gzip.GzipFile(fileobj=raw, mode="wb") if compress else raw
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        for chunk in iter(lambda: proc.stdout.read(1 << 20), b""):
+            sink.write(chunk)
+        proc.stdout.close()
+        if compress:
+            sink.close()
+        return proc.wait()
+
+
+def _verify_dump(path):
+    """pg_dump writes its trailer only after the whole dump succeeded."""
+    tail = b""
+    try:
+        with gzip.open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                tail = (tail + chunk)[-4096:]
+    except (OSError, EOFError) as exc:
+        raise BackupError(f"Database backup is not a valid gzip archive ({exc})") from None
+    if DUMP_TRAILER not in tail:
+        raise BackupError("Database backup is incomplete (pg_dump trailer missing)")
+
+
+def _verify_media(path, expected):
+    try:
+        with tarfile.open(path, "r:gz") as tar:
+            count = sum(1 for member in tar if not member.isdir())
+    except (OSError, EOFError, tarfile.TarError) as exc:
+        raise BackupError(f"Media backup is not a readable tar.gz archive ({exc})") from None
+    if count != expected:
+        raise BackupError(f"Media backup holds {count} files, expected {expected}")
+
+
+def _sha256(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _encrypt(path, passphrase_file):
+    """Encrypt a verified archive with gpg; prove it decrypts back; return the new path."""
+    encrypted = path + ".gpg"
+    result = subprocess.run(
+        _gpg(passphrase_file, "--symmetric", "--cipher-algo", "AES256", "-o", encrypted, path)
+    )
+    if result.returncode != 0:
+        raise BackupError("gpg encryption failed")
+    roundtrip = path + ".check"
+    try:
+        result = subprocess.run(_gpg(passphrase_file, "--decrypt", "-o", roundtrip, encrypted))
+        if result.returncode != 0 or _sha256(roundtrip) != _sha256(path):
+            raise BackupError("Encrypted backup does not decrypt back to the original")
+    finally:
+        if os.path.exists(roundtrip):
+            os.unlink(roundtrip)
+    os.unlink(path)
+    return encrypted
+
+
+def _prune(backup_dir):
+    cutoff = time.time() - BACKUP_RETENTION_DAYS * 86400
+    for pattern in BACKUP_GLOBS:
+        for path in glob.glob(os.path.join(backup_dir, pattern)):
+            if os.path.getmtime(path) < cutoff:
+                os.unlink(path)
+
+
+def run_backup(compose_cmd, backup_dir, passphrase_file=None):
+    """Dump the database and archive media into backup_dir. Returns the final paths."""
+    os.makedirs(backup_dir, exist_ok=True)
+    stamp = time.strftime("%Y%m%d_%H%M%S")
+    user = _setting("POSTGRES_USER", "my_practice")
+    db = _setting("POSTGRES_DB", "my_practice")
+    temps, finals = [], []
+
+    def temp(prefix):
+        # Same directory as the final file, so the rename is atomic; mkstemp
+        # creates it 0600, which the final archive keeps.
+        fd, path = tempfile.mkstemp(dir=backup_dir, prefix=f".{prefix}_{stamp}.")
+        os.close(fd)
+        temps.append(path)
+        return path
+
+    def publish(tmp, name):
+        if passphrase_file:
+            tmp = _encrypt(tmp, passphrase_file)
+            temps.append(tmp)
+            name += ".gpg"
+        final = os.path.join(backup_dir, name)
+        os.replace(tmp, final)
+        finals.append(final)
+
+    try:
+        db_tmp = temp("db_backup")
+        dump = [
+            *compose_cmd,
+            "exec",
+            "-T",
+            "postgres",
+            "pg_dump",
+            "-U",
+            user,
+            "-d",
+            db,
+            "--no-owner",
+            "--clean",
+            "--if-exists",
+        ]
+        if _stream_to_file(dump, db_tmp, compress=True) != 0:
+            raise BackupError(
+                "Database backup failed (pg_dump or docker compose exec exited non-zero)"
+            )
+        _verify_dump(db_tmp)
+        publish(db_tmp, f"db_backup_{stamp}.sql.gz")
+
+        # A failure here (django container down) aborts rather than passing for "no media".
+        listing = subprocess.run(
+            [*compose_cmd, "exec", "-T", "django", "find", "/app/media", "-type", "f"],
+            capture_output=True,
+        )
+        if listing.returncode != 0:
+            raise BackupError("Could not list media files in the django container")
+        media_count = len(listing.stdout.splitlines())
+        if media_count:
+            media_tmp = temp("media_backup")
+            tar = [*compose_cmd, "exec", "-T", "django", "tar", "czf", "-", "-C", "/app", "media"]
+            if _stream_to_file(tar, media_tmp) != 0:
+                raise BackupError("Media backup failed")
+            _verify_media(media_tmp, media_count)
+            publish(media_tmp, f"media_backup_{stamp}.tar.gz")
+        else:
+            marker = os.path.join(backup_dir, f"media_backup_{stamp}.empty")
+            with open(marker, "w") as f:
+                f.write(f"No media files at {time.ctime()}\n")
+            finals.append(marker)
+    finally:
+        for path in temps:
+            if os.path.exists(path):
+                os.unlink(path)
+
+    # Only reached when every archive above was verified.
+    _prune(backup_dir)
+    return finals
+
+
+def cmd_backup(args):
+    """Back up the database and media to MY_PRACTICE_DATA_DIR/backups (verified, rotated)."""
+    try:
+        backup_dir = _backup_dir()
+        print(f"📦 Backing up to {backup_dir}")
+        finals = run_backup(_compose_cmd(args), backup_dir, _passphrase_file())
+    except BackupError as exc:
+        print(f"❌ {exc}", file=sys.stderr)
+        return subprocess.CompletedProcess(args=[], returncode=1)
+    for path in finals:
+        size = os.path.getsize(path)
+        human = f"{size / 1048576:.1f} MB" if size >= 1048576 else f"{size / 1024:.1f} KB"
+        print(f"✅ {os.path.basename(path)} ({human})")
+    if not _setting("BACKUP_PASSPHRASE_FILE"):
+        print(
+            "ℹ️  Archives are not encrypted — set BACKUP_PASSPHRASE_FILE in .env to encrypt them with gpg."
+        )
+    print(f"✨ Backup complete; archives older than {BACKUP_RETENTION_DAYS} days pruned.")
+    return subprocess.CompletedProcess(args=[], returncode=0)
+
+
+def _decrypted(path, passphrase_file, workdir):
+    """Path to a plain copy of an archive (decrypting .gpg ones into workdir)."""
+    if not path.endswith(".gpg"):
+        return path
+    if not shutil.which("gpg"):
+        raise BackupError("gpg is needed to restore an encrypted backup")
+    plain = os.path.join(workdir, os.path.basename(path)[: -len(".gpg")])
+    # Without a passphrase file gpg asks for the passphrase interactively.
+    cmd = (
+        _gpg(passphrase_file, "--decrypt", "-o", plain, path)
+        if passphrase_file
+        else ["gpg", "--decrypt", "-o", plain, path]
+    )
+    if subprocess.run(cmd).returncode != 0:
+        raise BackupError(f"Could not decrypt {path}")
+    return plain
+
+
+def cmd_restore(args):
+    """Restore a database backup (and optionally a media backup) — overwrites current data."""
+    files = [
+        a
+        for i, a in enumerate(args)
+        if not a.startswith("--") and (i == 0 or args[i - 1] != "--compose-file")
+    ]
+    if not files:
+        print("Usage: ./prod.py restore <db_backup_file> [media_backup_file]")
+        print(f"Backups live in {_backup_dir()}")
+        return subprocess.CompletedProcess(args=[], returncode=1)
+    db_file, media_file = files[0], (files[1] if len(files) > 1 else None)
+    for path in filter(None, (db_file, media_file)):
+        if not os.path.isfile(path):
+            print(f"❌ Backup file not found: {path}", file=sys.stderr)
+            return subprocess.CompletedProcess(args=[], returncode=1)
+
+    print("⚠️  This OVERWRITES the current database" + (" and media" if media_file else "") + ".")
+    if "--yes" not in args and input("Type 'yes' to continue: ").strip() != "yes":
+        print("Restore cancelled.")
+        return subprocess.CompletedProcess(args=[], returncode=0)
+
+    try:
+        compose_cmd = _compose_cmd(args)
+        passphrase_file = _passphrase_file()
+        with tempfile.TemporaryDirectory() as workdir:
+            plain_db = _decrypted(db_file, passphrase_file, workdir)
+            _verify_dump(plain_db)
+            # ON_ERROR_STOP: psql otherwise logs a failed statement and exits 0
+            # over a half-restored database.
+            psql = subprocess.Popen(
+                [
+                    *compose_cmd,
+                    "exec",
+                    "-T",
+                    "postgres",
+                    "psql",
+                    "-U",
+                    _setting("POSTGRES_USER", "my_practice"),
+                    "-d",
+                    _setting("POSTGRES_DB", "my_practice"),
+                    "--quiet",
+                    "-v",
+                    "ON_ERROR_STOP=1",
+                ],
+                stdin=subprocess.PIPE,
+            )
+            with gzip.open(plain_db, "rb") as dump:
+                for chunk in iter(lambda: dump.read(1 << 20), b""):
+                    psql.stdin.write(chunk)
+            psql.stdin.close()
+            if psql.wait() != 0:
+                raise BackupError("Database restore failed")
+            print("✅ Database restored")
+
+            if media_file:
+                plain_media = _decrypted(media_file, passphrase_file, workdir)
+                with open(plain_media, "rb") as archive:
+                    result = subprocess.run(
+                        [
+                            *compose_cmd,
+                            "exec",
+                            "-T",
+                            "django",
+                            "sh",
+                            "-c",
+                            "rm -rf /app/media/* && tar xzf - -C /app",
+                        ],
+                        stdin=archive,
+                    )
+                if result.returncode != 0:
+                    raise BackupError("Media restore failed")
+                print("✅ Media restored")
+    except BackupError as exc:
+        print(f"❌ {exc}", file=sys.stderr)
+        return subprocess.CompletedProcess(args=[], returncode=1)
+    print("✨ Restore complete. Check the key: ./prod.py manage encryption check")
+    return subprocess.CompletedProcess(args=[], returncode=0)
+
+
 # ── dispatch ─────────────────────────────────────────────────────────────────
 
 COMMANDS = {
@@ -620,6 +982,8 @@ COMMANDS = {
     "status": (cmd_status, "Show container status"),
     "manage": (cmd_manage, "Run a Django management command"),
     "shell": (cmd_shell, "Open an interactive Django shell"),
+    "backup": (cmd_backup, "Back up database + media (verified, 30-day rotation)"),
+    "restore": (cmd_restore, "Restore a backup (overwrites current data)"),
 }
 
 
@@ -640,6 +1004,8 @@ def print_help():
     print("  ./prod.py manage setup_practice         # practice setup wizard")
     print("  ./prod.py manage migrate                # apply database migrations")
     print("  ./prod.py shell                         # Django shell")
+    print("  ./prod.py backup                        # back up now (schedule it daily)")
+    print("  ./prod.py restore <db.sql.gz> [media]   # restore from a backup")
 
 
 def main():

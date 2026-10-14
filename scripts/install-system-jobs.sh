@@ -16,7 +16,7 @@ echo ""
 echo "This will install:"
 echo "  - Backup timer (daily, randomized execution window)"
 echo "  - Auto-start service (starts app during boot when network/docker are ready)"
-echo "  - Calendar fetch timer (every 4h)"
+echo "  - Scheduled jobs timer (hourly: calendar sync, tag update, Focus Queue sync)"
 echo ""
 
 # Check if running as root or with sudo
@@ -28,12 +28,13 @@ fi
 
 # Substitute placeholders and copy service/timer files
 echo "📋 Installing service files to /etc/systemd/system/..."
+# Listed from the files that exist: this loop used to name two unit pairs that
+# had been merged into my-practice-scheduled-jobs, and under `set -e` the
+# first missing file aborted the script before the backup timer was enabled.
 for f in scripts/my-practice-backup.service scripts/my-practice-backup.timer \
           scripts/my-practice-app.service \
-          scripts/my-practice-fetch-calendar-events.service \
-          scripts/my-practice-fetch-calendar-events.timer \
-          scripts/my-practice-update-client-tags.service \
-          scripts/my-practice-update-client-tags.timer; do
+          scripts/my-practice-scheduled-jobs.service \
+          scripts/my-practice-scheduled-jobs.timer; do
     sed \
         -e "s|/path/to/my-practice|${INSTALL_DIR}|g" \
         -e "s|YOUR_USERNAME|${INSTALL_USER}|g" \
@@ -49,10 +50,10 @@ echo "⏰ Enabling and starting backup timer..."
 systemctl enable my-practice-backup.timer
 systemctl start my-practice-backup.timer
 
-# Enable and start calendar fetch timer
-echo "📅 Enabling and starting calendar fetch timer..."
-systemctl enable my-practice-fetch-calendar-events.timer
-systemctl start my-practice-fetch-calendar-events.timer
+# Enable and start the scheduled jobs timer
+echo "📅 Enabling and starting scheduled jobs timer..."
+systemctl enable my-practice-scheduled-jobs.timer
+systemctl start my-practice-scheduled-jobs.timer
 
 # Enable app auto-start service
 echo "🚀 Enabling app auto-start service..."

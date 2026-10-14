@@ -232,6 +232,12 @@ MY_PRACTICE_DATA_DIR = Path(
 # which bind-mounts the host-side MY_PRACTICE_DATA_DIR/backups here).
 BACKUP_DIR = "/app/backups"
 
+# The dashboard warns when the newest backup in BACKUP_DIR is older than this
+# many hours (daily timer with a 12h random delay, plus slack). 0 turns the
+# check off — the default under DEBUG, where BACKUP_DIR is not mounted, and
+# the setting for an installation that backs up some other way.
+BACKUP_MAX_AGE_HOURS = int(os.getenv("BACKUP_MAX_AGE_HOURS", "0" if DEBUG else "48"))
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

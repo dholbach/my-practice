@@ -330,6 +330,8 @@ chronological record; this document only tracks current state.
 - ✅ PostgreSQL database
 - ✅ Automated backups (systemd timer)
 - ✅ Backup/Restore scripts
+- ✅ `./prod.py backup` / `restore` for installations without a git checkout — the one implementation `scripts/backup.sh` wraps; verified archives, optional gpg encryption (`BACKUP_PASSPHRASE_FILE`)
+- ✅ Dashboard warns when the newest backup is older than 48 hours (`BACKUP_MAX_AGE_HOURS`) — catches a backup timer that failed, stopped or was never installed
 - ✅ Development scripts
 - ✅ Management commands
 - ✅ Release smoke test (`./dev.py smoke [vX.Y.Z]`) — boots a released GHCR image with a throwaway DB in an isolated compose project, verifies version + login page, tears down without a trace

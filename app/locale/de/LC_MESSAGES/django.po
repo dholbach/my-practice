@@ -9190,6 +9190,25 @@ msgstr "Geben Sie den 6-stelligen Code aus der App ein"
 msgid "Turn on two-factor sign-in"
 msgstr "Zwei-Faktor-Anmeldung einschalten"
 
+#: templates/my_practice/dashboard.html
+#, python-format
+msgid "The last backup is from %(date)s (%(days)s day ago)."
+msgid_plural "The last backup is from %(date)s (%(days)s days ago)."
+msgstr[0] "Die letzte Sicherung ist vom %(date)s (vor %(days)s Tag)."
+msgstr[1] "Die letzte Sicherung ist vom %(date)s (vor %(days)s Tagen)."
+
+#: templates/my_practice/dashboard.html
+msgid "No backup has been made yet."
+msgstr "Es wurde noch keine Sicherung erstellt."
+
+#: templates/my_practice/dashboard.html
+msgid ""
+"Run ./prod.py backup (scripts/backup.sh in a git checkout) and make sure it "
+"runs daily — see the backup guide."
+msgstr ""
+"Führen Sie ./prod.py backup aus (scripts/backup.sh in einem Git-Checkout) "
+"und stellen Sie sicher, dass es täglich läuft — siehe Backup-Anleitung."
+
 #~ msgid "Uploaded documents"
 #~ msgstr "Hochgeladene Dokumente"
 
