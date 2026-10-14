@@ -9,6 +9,7 @@ from decimal import Decimal
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy, ngettext, ngettext_lazy
 from django.views.generic import FormView
@@ -481,9 +482,10 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         invoice_list = list(invoices)
         first_invoice = invoice_list[0] if invoice_list else None
 
+        # Stored notes are written in the signed-in user's language, like any message.
         if len(invoice_list) > 1:
             invoice_numbers = ", ".join(inv.invoice_number for inv in invoice_list)
-            bulk_note = f"Sammelzahlung für: {invoice_numbers}"
+            bulk_note = _("Combined payment for: %(numbers)s") % {"numbers": invoice_numbers}
             notes = f"{bulk_note}\n{notes}" if notes else bulk_note
 
         transaction.matched_invoice = first_invoice
@@ -529,14 +531,18 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             return
 
         if context == "confirm":
-            notes = f"Auto-erstellt beim Bestätigen am {transaction.transaction_date}"
+            notes = _("Created automatically on confirming the payment of %(date)s") % {
+                "date": date_format(transaction.transaction_date, "SHORT_DATE_FORMAT")
+            }
             messages.info(
                 request,
                 _("📌 Alias '%(name)s' for %(code)s saved.")
                 % {"name": transaction.payer_name, "code": invoice.client.client_code},
             )
         else:
-            notes = f"Erstellt beim Bank Import am {transaction.transaction_date}"
+            notes = _("Created during the bank import of %(date)s") % {
+                "date": date_format(transaction.transaction_date, "SHORT_DATE_FORMAT")
+            }
             messages.success(
                 request,
                 _("Alias '%(name)s' for %(code)s saved.")

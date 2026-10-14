@@ -206,7 +206,7 @@ in #424).
 ### Canonical patterns
 
 - Charts go through `MPChart` in `static/js/charts.js` (Chart.js) inside a fixed-height `.chart-wrapper--*` (M-PAT-03)
-- HTMX requests: check `HX-Request` header and return a partial render, not a full page
+- Small in-place actions (complete a task, advance an invoice status) use `data-post` from `static/js/partial_post.js`; the view checks `is_partial_request(request)` (`X-Partial: 1`) and returns the fragment instead of a redirect. No htmx — it was removed for being a 50 KB library used for exactly this
 - Inline `<script>` blocks carry `nonce="{{ csp_nonce }}"`; handlers are wired with `addEventListener` or Alpine `x-on:`. The CSP's `script-src` has no `'unsafe-inline'`, so anything else is skipped by the browser — silently, and only in a browser (`test_csp_coverage.py`)
 - No `'unsafe-eval'` either: Alpine is its CSP build, whose expression interpreter refuses globals and cannot parse functions. Confirmations, print, select-navigation and copy buttons go through the `data-*` attributes of `static/js/ui_actions.js`; anything stateful is an `Alpine.data()` component referenced by name (`x-data="taxSettlement"`). `test_csp_coverage.py` scans every Alpine attribute for globals, arrow functions and `x-data="factory()"`
 
@@ -253,10 +253,9 @@ planning stay separate.
 | User-facing feature docs | `docs/guides/` — how-tos (`EMAIL_IMPLEMENTATION.md`, `CLIENT_TAGGING.md`, `BACKUP_SETUP.md`), setup and configuration |
 | Architecture reference | `docs/architecture/` — `CODE_STRUCTURE.md` (modules, patterns), `PERFORMANCE.md` (query optimisation, indexes, N+1); keep current |
 | Operational / security | `docs/operations/` |
-| Completed project archives | `docs/projects/done/` with date prefix |
+| Completed projects | Deleted once done — CHANGELOG.md and git history keep the record. `docs/projects/done/` holds only the few that code or other docs still link to |
 | One-off notes & observations | `docs/notes/` — type-checking quirks, contrast issues, status snapshots; no strict format, date-prefix filenames |
 | Why something is built the way it is | `docs/decisions/` — ADRs; its README says when one is warranted |
-| Generated codebase metrics | `docs/development/` — **never edit by hand**; `scripts/codebase_metrics.py` writes every file in it (LOC by category, file-length distribution and longest files, commit-type mix, release cadence) |
 | Historical / superseded docs | `docs/archive/` (`bugfixes/`, `completed/`) with a `YYYY-MM-DD_` or `YYYY-MM_` prefix |
 
 Finer points that decide which of these a file belongs in:
@@ -268,9 +267,10 @@ Finer points that decide which of these a file belongs in:
   `DPIA.md`) — not user-facing guides, not architecture reference.
 - **`docs/architecture/`** is active reference, not an archive:
   `CODE_STRUCTURE.md` and `PERFORMANCE.md` are expected to be current.
-- **`docs/development/`** is read, not written: a scheduled workflow pushes a
-  refresh branch on the 1st of each month. Read it when deciding whether the
-  project needs features or maintenance next.
+- **Codebase metrics** (LOC by category, longest files, commit mix, release
+  cadence) are generated on demand, not committed: `python3
+  scripts/codebase_metrics.py` writes them to the git-ignored
+  `docs/development/`.
 
 ### Code-Level Documentation (Docstrings)
 **Use for**: Function/class behavior, parameters, return values
@@ -683,7 +683,7 @@ The scan checklist below is the manual half.
 **Automated** (`./dev.py review --full`):
 - Everything in the monthly run, plus:
 - Complexity hotspots: functions over 50 lines or cyclomatic complexity > 10 (radon)
-- Long files: every app/test/template/JS file of 500+ lines (`scripts/codebase_metrics.py --largest`; the trend lives in `docs/development/`)
+- Long files: every app/test/template/JS file of 500+ lines (`scripts/codebase_metrics.py --largest`; run the script without arguments for the month-by-month trend)
 - Dead CSS selectors: `npx purgecss --css app/static/css/tailwind.out.css --content "app/templates/**/*.html" "app/static/js/**/*.js" --output /tmp/purged/` then diff vs `/tmp/purged/tailwind.out.css`. Watch for false positives from dynamically-built class names (e.g. `class="billing-row--{{ row.status }}"` — those classes are real even if purgecss can't see them).
 
 **Manual**:

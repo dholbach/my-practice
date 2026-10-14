@@ -4628,8 +4628,8 @@ msgstr "Stunden diesen Monat: %(current)s / %(target)s"
 
 #: templates/includes/capacity_monitoring_widget_content.html:60
 #, python-format
-msgid "Revenue this month: %(current)s € / %(target)s €"
-msgstr "Umsatz diesen Monat: %(current)s € / %(target)s €"
+msgid "Revenue this month: %(current)s / %(target)s"
+msgstr "Umsatz diesen Monat: %(current)s / %(target)s"
 
 #: templates/includes/client_card.html:11
 #: templates/my_practice/client_detail.html:450
@@ -5160,8 +5160,8 @@ msgstr "Entwicklung der monatlichen Umsätze · Wachstum visualisiert"
 
 #: templates/my_practice/analytics.html:223
 #, python-format
-msgid "Monthly revenue · %(months)s months · Max: %(max)s€"
-msgstr "Monatlicher Umsatz · %(months)s Monate · Max: %(max)s€"
+msgid "Monthly revenue · %(months)s months · Max: %(max)s"
+msgstr "Monatlicher Umsatz · %(months)s Monate · Max: %(max)s"
 
 #: templates/my_practice/analytics.html:260
 msgid "Peak Months"
@@ -9223,6 +9223,29 @@ msgstr "Zwei-Faktor-Anmeldung einschalten"
 #: templates/base.html:104
 msgid "Sign out"
 msgstr "Abmelden"
+
+#: my_practice/utils/bank_import.py:483
+msgid "Erroneous booking / correction from private account"
+msgstr "Fehlbuchung / Korrektur vom privaten Konto"
+
+#: my_practice/utils/bank_import.py:501
+msgid "Own payment (capital contribution), ignored automatically"
+msgstr "Eigene Zahlung (Einlage), automatisch ignoriert"
+
+#: my_practice/views/bank_import_views.py:488
+#, python-format
+msgid "Combined payment for: %(numbers)s"
+msgstr "Sammelzahlung für: %(numbers)s"
+
+#: my_practice/views/bank_import_views.py:534
+#, python-format
+msgid "Created automatically on confirming the payment of %(date)s"
+msgstr "Automatisch angelegt beim Bestätigen der Zahlung vom %(date)s"
+
+#: my_practice/views/bank_import_views.py:544
+#, python-format
+msgid "Created during the bank import of %(date)s"
+msgstr "Angelegt beim Bankimport vom %(date)s"
 
 #: templates/my_practice/analytics.html:220
 msgid "Trend"

@@ -170,7 +170,7 @@ class TodoToggleCompleteTest(TestCase):
             practice=self.practice, title="Toggle Me", priority="medium"
         )
 
-    def test_non_htmx_redirects(self):
+    def test_non_partial_redirects(self):
         response = self.tc.get(reverse("todo_toggle", args=[self.todo.pk]))
         self.assertEqual(response.status_code, 302)
         self.todo.refresh_from_db()
@@ -190,10 +190,10 @@ class TodoToggleCompleteTest(TestCase):
         )
         self.assertEqual(response["Location"], reverse("dashboard"))
 
-    def test_htmx_post_returns_content(self):
+    def test_partial_post_returns_content(self):
         response = self.tc.post(
             reverse("todo_toggle", args=[self.todo.pk]),
-            HTTP_HX_REQUEST="true",
+            HTTP_X_PARTIAL="1",
         )
-        # HTMX response: either partial HTML or redirect
+        # Partial response: either partial HTML or redirect
         self.assertIn(response.status_code, [200, 302])

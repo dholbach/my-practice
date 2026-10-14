@@ -29,6 +29,7 @@ from . import (
     format_month_key,
     format_month_label,
 )
+from .formatting import round_money
 
 
 def _resolve_month_range(
@@ -406,7 +407,8 @@ class SessionAnalyzer:
             # Revenue: sum item totals for paid invoices only (exclude cancellations)
             items_in_month = month_items[month_key]
             revenue = sum(
-                float(item.total) for item in items_in_month if item.invoice.status == "paid"
+                (item.total for item in items_in_month if item.invoice.status == "paid"),
+                Decimal("0"),
             )
             result.append(
                 {
@@ -414,7 +416,7 @@ class SessionAnalyzer:
                     "month_date": month_date,
                     "year": int(year),
                     "session_hours": round(hours, 1),
-                    "revenue": round(revenue),
+                    "revenue": int(round_money(revenue, Decimal(1))),
                 }
             )
 
@@ -540,7 +542,7 @@ class ClientAnalyzer:
             result.append(
                 {
                     "client": client,
-                    "total_revenue": float(client.total_revenue),
+                    "total_revenue": client.total_revenue,
                     "invoice_count": client.invoice_count,
                     "session_hours": round(session_hours, 1),
                 }
@@ -684,12 +686,12 @@ class ProfitCalculator:
                 )
 
         profit_data = []
-        cumulative_profit: float = 0.0
+        cumulative_profit = Decimal("0")
 
         for item in yearly_financials:
             revenue, expenses = item["revenue"], item["expenses"]
             profit = revenue - expenses
-            cumulative_profit += float(profit)
+            cumulative_profit += profit
 
             profit_data.append(
                 {
@@ -697,7 +699,7 @@ class ProfitCalculator:
                     "revenue": float(revenue),
                     "expenses": float(expenses),
                     "profit": float(profit),
-                    "cumulative_profit": round(cumulative_profit, 2),
+                    "cumulative_profit": float(cumulative_profit),
                     "withdrawals": float(item["withdrawals"]),
                 }
             )

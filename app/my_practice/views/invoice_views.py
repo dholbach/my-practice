@@ -3,6 +3,7 @@ Invoice-related views (CRUD operations).
 """
 
 import logging
+from decimal import Decimal
 from typing import Any
 
 from django.contrib import messages
@@ -156,7 +157,7 @@ class InvoiceListView(PracticeScopedListView):
 
         return {
             "client_count": agg["client_count"] or 0,
-            "amount": float(agg["amount"] or 0),
+            "amount": agg["amount"] or Decimal("0"),
         }
 
 

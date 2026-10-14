@@ -21,14 +21,12 @@ the output is idempotent and self-healing: a rewritten history, a corrected
 commit message or a new category definition all just show up on the next run.
 There is no state to drift.
 
-Outputs:
-    docs/development/metrics.json   raw series, diffable, the source of truth
+Outputs (git-ignored; generated on demand, not committed):
+    docs/development/metrics.json   raw series
     docs/development/README.md      rendered tables + charts
 
 Usage:
     scripts/codebase_metrics.py           # regenerate both files
-    scripts/codebase_metrics.py --check   # exit 1 if regeneration would change
-                                          # them (for CI / pre-release checks)
     scripts/codebase_metrics.py --stdout  # print the README instead of writing
     scripts/codebase_metrics.py --largest # print only the longest files at HEAD
                                           # (used by `./dev.py review --full`)
@@ -645,7 +643,6 @@ def build(data: dict) -> dict[str, str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="exit 1 if output is stale")
     parser.add_argument("--stdout", action="store_true", help="print README instead of writing")
     parser.add_argument(
         "--largest", action="store_true", help="print the longest files at HEAD and exit"
@@ -668,19 +665,6 @@ def main() -> int:
 
     if args.stdout:
         print(files["README.md"])
-        return 0
-
-    if args.check:
-        stale = [
-            name
-            for name, want in files.items()
-            if not (OUT_DIR / name).is_file() or (OUT_DIR / name).read_text("utf-8") != want
-        ]
-        if stale:
-            print("Stale metrics output: " + ", ".join(sorted(stale)), file=sys.stderr)
-            print("Run scripts/codebase_metrics.py to refresh.", file=sys.stderr)
-            return 1
-        print("Metrics output is current.")
         return 0
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)

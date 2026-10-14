@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% trans "Therapy Practice" %}{% endblock %}</title>
     {% load static %}
+    <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+    <link rel="icon" href="{% static 'img/favicon-32.png' %}" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
     <link rel="stylesheet" href="{% static 'css/tailwind.out.css' %}">
     <!-- For page-specific scripts that an inline script further down the page calls
          synchronously (e.g. Chart.js, which an MPChart.init(...) call needs loaded) —
@@ -35,12 +38,9 @@
             }
         })();
     </script>
-    {# htmx evaluates hx-on / js: values / trigger filters with eval; none are used, and script-src has no 'unsafe-eval'. #}
-    <meta name="htmx-config" content='{"allowEval": false}'>
-    <script src="{% static 'js/htmx.min.js' %}" defer></script>
     <script src="{% static 'js/alpine-csp.min.js' %}" defer></script>
 </head>
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+<body data-csrf-token="{{ csrf_token }}"
     data-kbd-help="{% trans 'Help' %}"
     data-kbd-command-palette="{% trans 'Open command palette' %}"
     data-kbd-new-client="{% trans 'New client' %}"
@@ -272,6 +272,7 @@
 
     <!-- data-confirm / data-print / data-navigate / data-copy behaviours -->
     <script src="{% static 'js/ui_actions.js' %}"></script>
+    <script src="{% static 'js/partial_post.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

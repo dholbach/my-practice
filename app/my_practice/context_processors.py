@@ -1,10 +1,12 @@
 import json
 import logging
 import re
+import threading
 import urllib.request
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db import connections
 
 from .version import VERSION
 
@@ -12,11 +14,10 @@ logger = logging.getLogger(__name__)
 
 _RELEASES_API = "https://api.github.com/repos/dholbach/my-practice/releases/latest"
 _CACHE_KEY = "github_latest_release"
+_LOCK_KEY = "github_latest_release_refreshing"
 _CACHE_TIMEOUT = 86400  # 24 hours
-# Failures are cached too, for much less time. Without this, an unreachable
-# GitHub means every single authenticated page render pays the full timeout
-# below again — the check runs in a context processor, so it sits in the
-# critical path of every response.
+# Failures are cached too, for much less time, so an unreachable GitHub is
+# retried every 15 minutes rather than on every page.
 _FAILURE_TIMEOUT = 900  # 15 minutes
 _REQUEST_TIMEOUT = 3
 
@@ -33,15 +34,40 @@ def _parse_version(tag):
     return tuple(int(part) for part in match.groups())
 
 
+def refresh_latest_release():
+    """Look up the newest GitHub release tag and cache it ("" on failure)."""
+    try:
+        with urllib.request.urlopen(_RELEASES_API, timeout=_REQUEST_TIMEOUT) as resp:
+            latest = json.loads(resp.read()).get("tag_name", "")
+        cache.set(_CACHE_KEY, latest, _CACHE_TIMEOUT)
+    except (OSError, ValueError) as exc:
+        # OSError covers URLError/HTTPError/timeouts; ValueError a malformed body.
+        logger.debug("Update check against %s failed: %s", _RELEASES_API, exc)
+        cache.set(_CACHE_KEY, "", _FAILURE_TIMEOUT)
+    finally:
+        cache.delete(_LOCK_KEY)
+
+
+def _refresh_in_background():
+    def run():
+        try:
+            refresh_latest_release()
+        finally:
+            # The database cache opened a connection in this thread.
+            connections.close_all()
+
+    threading.Thread(target=run, name="update-check", daemon=True).start()
+
+
 def update_check(request):
     """Inject update_available + latest_version when a newer release exists on GitHub.
 
     Skipped in DEBUG mode — dev users track git and don't need the nudge.
 
-    The looked-up tag is cached for a day; a failed lookup is cached as an empty
-    string for 15 minutes, which reads as "nothing to report" below and stops the
-    next request from retrying the blocking call. Note the default cache backend
-    is per-process LocMemCache, so each worker warms its own copy.
+    A page render never waits for GitHub. On a cache miss the lookup starts in a
+    background thread (one at a time, via a cache lock) and this render reports
+    nothing; the next one reads the cached tag. The tag is cached for a day, a
+    failed lookup as "" for 15 minutes.
     """
     if getattr(settings, "UPDATE_CHECK_DISABLED", False):
         return {}
@@ -52,16 +78,10 @@ def update_check(request):
 
     latest = cache.get(_CACHE_KEY)
     if latest is None:
-        try:
-            with urllib.request.urlopen(_RELEASES_API, timeout=_REQUEST_TIMEOUT) as resp:
-                latest = json.loads(resp.read()).get("tag_name", "")
-        except (OSError, ValueError) as exc:
-            # OSError covers URLError/HTTPError/timeouts; ValueError covers a
-            # malformed JSON body.
-            logger.debug("Update check against %s failed: %s", _RELEASES_API, exc)
-            cache.set(_CACHE_KEY, "", _FAILURE_TIMEOUT)
-            return {}
-        cache.set(_CACHE_KEY, latest, _CACHE_TIMEOUT)
+        # The lock outlives a hung lookup by a little, then lets the next page retry.
+        if cache.add(_LOCK_KEY, True, _REQUEST_TIMEOUT * 10):
+            _refresh_in_background()
+        return {}
 
     # Compare numerically, not by inequality: between a version bump landing on
     # main and that tag actually being released, the newest *published* release

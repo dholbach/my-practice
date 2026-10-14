@@ -131,6 +131,18 @@ class AlpineCspBuildTests(SimpleTestCase):
         self.assertEqual(offenders, [])
 
 
+class NoHtmxTests(SimpleTestCase):
+    def test_no_template_relies_on_htmx_attributes(self):
+        # htmx was removed for static/js/partial_post.js (data-post); an hx-*
+        # attribute left behind would do nothing, silently.
+        offenders = [
+            f"{name}: {match.group(0)}"
+            for name, source in _templates()
+            for match in re.finditer(r"\shx-[a-z-]+=", source)
+        ]
+        self.assertEqual(offenders, [])
+
+
 class NonceRenderedTests(BaseTestCase):
     def test_page_nonce_matches_the_policy_header(self):
         self.client.login(username="testuser", password="testpass123")

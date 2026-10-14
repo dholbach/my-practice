@@ -95,3 +95,45 @@ class VersionConsistencyTests(SimpleTestCase):
             "VERSION must look like a release tag (vX.Y.Z) — it is compared "
             "directly against tag_name from the GitHub releases API.",
         )
+
+
+# getenv("X") / environ.get("X") / environ["X"] in app code.
+ENV_READ = re.compile(r"""(?:getenv|environ\.get|environ\[)\(?\s*["']([A-Z][A-Z0-9_]+)["']""")
+# Read by the app but set by the dev/test harness, not by an operator.
+NOT_OPERATOR_SETTINGS = {"MY_PRACTICE_REPO_ROOT"}
+
+
+def _env_vars_read_by_app() -> set[str]:
+    app = REPO_ROOT / "app"
+    names = set()
+    for path in [*(app / "config").glob("*.py"), *(app / "my_practice").rglob("*.py")]:
+        if "tests" in path.parts:
+            continue
+        names.update(ENV_READ.findall(path.read_text()))
+    return names - NOT_OPERATOR_SETTINGS
+
+
+def _compose_django_environment(name: str) -> set[str]:
+    source = (REPO_ROOT / name).read_text()
+    # The django service: from its key to the next two-space-indented key.
+    block = re.search(r"^  django:\n(.*?)(?=^  \S|\Z)", source, re.M | re.S).group(1)
+    return set(re.findall(r"^\s+- ([A-Z][A-Z0-9_]+)=", block, re.M))
+
+
+class EnvironmentSettingsTests(SimpleTestCase):
+    """Every setting the app reads from the environment is documented and reaches it.
+
+    A variable missing from .env.example is undocumented (prod.py setup points
+    self-hosters there); one missing from docker-compose.prod.yml's environment
+    list never reaches the container, so setting it in .env silently does nothing.
+    UPDATE_CHECK_DISABLED shipped that way.
+    """
+
+    def test_documented_in_env_example(self):
+        example = (REPO_ROOT / ".env.example").read_text()
+        documented = set(re.findall(r"^#?\s*([A-Z][A-Z0-9_]+)=", example, re.M))
+        self.assertEqual(sorted(_env_vars_read_by_app() - documented), [])
+
+    def test_passed_to_the_production_container(self):
+        passed = _compose_django_environment("docker-compose.prod.yml")
+        self.assertEqual(sorted(_env_vars_read_by_app() - passed), [])

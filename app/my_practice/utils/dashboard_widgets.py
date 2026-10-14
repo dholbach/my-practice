@@ -4,6 +4,7 @@ Additional widgets: Session Import, Invoice Actions, Checklist
 """
 
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.db.models import Max, QuerySet
 from django.urls import reverse
@@ -317,7 +318,7 @@ class CapacityMonitoringWidgetBuilder:
             year, month, use_paid_date=True, practice=self.practice
         )["total"]
 
-        return {"hours": round(hours, 1), "revenue": float(revenue)}
+        return {"hours": round(hours, 1), "revenue": revenue}
 
     def build_context(self) -> dict:
         """Build template context for the capacity monitoring widget."""
@@ -357,17 +358,13 @@ class CapacityMonitoringWidgetBuilder:
             if self.practice.monthly_target_hours
             else None
         )
-        target_revenue = (
-            float(self.practice.monthly_target_revenue)
-            if self.practice.monthly_target_revenue
-            else None
-        )
+        target_revenue = self.practice.monthly_target_revenue or None
 
         hours_pct = round(current["hours"] / target_hours * 100) if target_hours else None
         revenue_pct = round(current["revenue"] / target_revenue * 100) if target_revenue else None
 
         warn_hours = bool(target_hours and current["hours"] < target_hours * 0.8)
-        warn_revenue = bool(target_revenue and current["revenue"] < target_revenue * 0.8)
+        warn_revenue = bool(target_revenue and current["revenue"] < target_revenue * Decimal("0.8"))
 
         return {
             "show_widget": True,

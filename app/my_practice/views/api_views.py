@@ -26,7 +26,7 @@ from ..utils.contract_form import add_contract_form_fields
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks, get_arbeitsdiagnose
 from ..utils.practice_helpers import require_practice
 from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
-from ..utils.view_helpers import safe_next
+from ..utils.view_helpers import is_partial_request, safe_next
 
 
 def next_invoice_number(request: HttpRequest) -> JsonResponse:
@@ -437,8 +437,8 @@ def update_invoice_status(request, pk):
 
     invoice.save()
 
-    # HTMX request: return just the badge HTML for #invoice-status-{pk}
-    if request.headers.get("HX-Request"):
+    # Partial request: return just the badge HTML for #invoice-status-{pk}
+    if is_partial_request(request):
         badge_html = render_to_string(
             "includes/invoice_status_badge.html",
             {"invoice": invoice},
