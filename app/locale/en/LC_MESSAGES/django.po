@@ -9218,6 +9218,10 @@ msgstr ""
 msgid "Turn on two-factor sign-in"
 msgstr ""
 
+#: templates/base.html:104
+msgid "Sign out"
+msgstr ""
+
 #~ msgid "Error sending the email: %(error)s"
 #~ msgstr "Error sending the email: %(error)s"
 

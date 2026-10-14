@@ -9220,6 +9220,10 @@ msgstr "Geben Sie den 6-stelligen Code aus der App ein"
 msgid "Turn on two-factor sign-in"
 msgstr "Zwei-Faktor-Anmeldung einschalten"
 
+#: templates/base.html:104
+msgid "Sign out"
+msgstr "Abmelden"
+
 #~ msgid "Cancellation Rate (last 24 months)"
 #~ msgstr "Ausfallquote (letzte 24 Monate)"
 

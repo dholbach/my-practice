@@ -1,4 +1,4 @@
-"""Tests for the brute-force limit on sign-in and the idle session timeout."""
+"""Tests for the brute-force limit on sign-in, sign-out, and the idle session timeout."""
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..views.auth_views import LOGIN_FAILURE_LIMIT
+from .test_helpers import create_test_practice, link_user_to_practice
 
 
 class LoginThrottleTests(TestCase):
@@ -74,3 +75,25 @@ class SessionIdleTimeoutTests(TestCase):
 
         cookie = response.cookies[settings.SESSION_COOKIE_NAME]
         self.assertEqual(int(cookie["max-age"]), 8 * 3600)
+
+
+class SignOutTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="therapist", password="testpass123")
+        self.client.login(username="therapist", password="testpass123")
+
+    def test_every_page_offers_sign_out_and_it_signs_out(self):
+        link_user_to_practice(self.user, create_test_practice())
+        response = self.client.get(reverse("dashboard"))
+        self.assertContains(response, f'action="{reverse("logout")}" method="post"')
+
+        response = self.client.post(reverse("logout"))
+
+        self.assertRedirects(response, reverse("login"), fetch_redirect_response=False)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_user_without_a_practice_can_still_sign_out(self):
+        # Such a user is sent to practice creation; it must not be a dead end.
+        response = self.client.get(reverse("dashboard"), follow=True)
+        self.assertEqual(response.redirect_chain[-1][0], reverse("practice_create"))
+        self.assertContains(response, f'action="{reverse("logout")}" method="post"')
