@@ -242,6 +242,33 @@ def cmd_restart(args):
         return subprocess.run(cmd)
 
 
+DROP_TEST_DB_CLONES = """
+import os, re
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+django.setup()
+from django.db import connection
+base = connection.creation._get_test_db_name()
+with connection.cursor() as cursor:
+    cursor.execute("SELECT datname FROM pg_database WHERE datname LIKE %s", [base + "_%"])
+    for (name,) in cursor.fetchall():
+        if re.fullmatch(re.escape(base) + r"_\\d+", name):
+            cursor.execute("DROP DATABASE " + connection.ops.quote_name(name))
+"""
+
+
+def drop_parallel_test_db_clones():
+    """Drop the per-worker test databases left behind by a previous parallel run.
+
+    With --keepdb, Django migrates the main test database but reuses any
+    existing worker clone (test_<name>_1, _2, ...) untouched, so after a new
+    migration every worker runs against the old schema and fails with
+    "relation ... does not exist". Re-cloning from the migrated template is
+    a cheap CREATE DATABASE ... TEMPLATE per worker.
+    """
+    run_docker_command(["python", "-c", DROP_TEST_DB_CLONES])
+
+
 def run_django_tests(test_args):
     """Run `manage.py test`, re-running serially if a parallel run fails.
 
@@ -251,8 +278,12 @@ def run_django_tests(test_args):
     hidden. The serial re-run costs nothing on a green build and produces a
     complete report when it matters. Mirrors the fallback in ci.yml.
     """
+    parallel = any(a.startswith("--parallel") for a in test_args)
+    if parallel and "--keepdb" in test_args:
+        drop_parallel_test_db_clones()
+
     result = run_docker_command(test_args)
-    if result.returncode == 0 or not any(a.startswith("--parallel") for a in test_args):
+    if result.returncode == 0 or not parallel:
         return result
 
     # Django accepts `--parallel`, `--parallel N` and `--parallel=N`.

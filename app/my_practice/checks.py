@@ -28,7 +28,7 @@ def _key_errors() -> list[Error]:
 
 
 @register()
-def fernet_key_check(app_configs, **kwargs):
+def fernet_key_check(**kwargs):
     """A malformed key fails every encrypted read; a missing one every write."""
     if not configured_keys():
         # Client and inquiry notes, clinical records and the calendar
@@ -46,7 +46,7 @@ def fernet_key_check(app_configs, **kwargs):
 
 
 @register(Tags.security, deploy=True)
-def fernet_key_deploy_check(app_configs, **kwargs):
+def fernet_key_deploy_check(**kwargs):
     """In production a missing key is an error, not a warning."""
     if configured_keys():
         return []
