@@ -26,10 +26,11 @@ chmod +x prod.py
 1. Check Docker is available
 2. Pull the image
 3. Generate the three required secrets and save them to `.env`
-4. Start the stack and wait for it to be healthy
-5. Walk you through `createsuperuser` and `setup_practice`
+4. Ask how you will open the app — only on this machine, through an HTTPS reverse proxy, or from other devices on the network — and write the matching `.env` values ([Network exposure](../operations/SECURITY.md#network-exposure))
+5. Start the stack and wait for it to be healthy
+6. Walk you through `createsuperuser` and `setup_practice`
 
-Open **http://localhost:8000** when it finishes.
+Open the address `setup` prints when it finishes (**http://localhost:8000** for "only on this machine").
 
 > **`.env` does much more than three keys** — email, Google Calendar, backup location, HTTPS, and more are all configured there. Review the full reference once you're up and running:
 > [`/.env.example`](https://github.com/dholbach/my-practice/blob/main/.env.example)
