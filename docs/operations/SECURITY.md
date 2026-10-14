@@ -21,6 +21,7 @@ is loaded automatically.
 - `DJANGO_DEBUG`: `True` for development, `False` for production
 - `DJANGO_ALLOWED_HOSTS`: Comma-separated list of allowed hosts (e.g. `example.com,www.example.com`)
 - `SECURE_SSL_REDIRECT`: `true` if this instance is reachable over HTTPS (public deployment, or behind a TLS-terminating reverse proxy) — enables HTTPS redirect, secure cookies, and HSTS. Leave `false` (default) for a plain-HTTP LAN deployment. Only takes effect when `DJANGO_DEBUG=False`.
+- `MY_PRACTICE_BIND_ADDRESS`: the host address `docker-compose.prod.yml` publishes port 8000 on — `127.0.0.1` (default) or `0.0.0.0`. See [Network exposure](#network-exposure).
 
 #### Database
 - `POSTGRES_DB`: Database name (default: `my_practice`)
@@ -136,6 +137,38 @@ Left unset (the default), the app assumes plain HTTP and none of the above apply
 - Email backend logs to console (DEBUG level)
 - Configurable in `settings.py` → `LOGGING`
 
+## Network Exposure
+
+`docker-compose.prod.yml` publishes port 8000 on `MY_PRACTICE_BIND_ADDRESS`,
+`127.0.0.1` unless `.env` says otherwise. `./prod.py setup` asks which of these
+three setups you want and writes the values:
+
+| Setup | `MY_PRACTICE_BIND_ADDRESS` | `SECURE_SSL_REDIRECT` | `DJANGO_ALLOWED_HOSTS` |
+| --- | --- | --- | --- |
+| Only this machine | `127.0.0.1` | `false` | `localhost,127.0.0.1` |
+| HTTPS reverse proxy on this machine | `127.0.0.1` | `true` | the proxy's domain, plus `localhost,127.0.0.1` |
+| Other devices on the network, plain HTTP | `0.0.0.0` | `false` | this machine's IP or hostname, plus `localhost,127.0.0.1` |
+
+**The plain-HTTP network setup sends passwords, session cookies and client data
+unencrypted** — anyone on the same network (a shared office, a café's Wi-Fi) can
+read them. Use it only on a home network you trust; anywhere else, put a TLS
+proxy in front, for example Caddy with its internal CA (`tls internal`) on the
+same machine, and switch to the reverse-proxy row.
+
+Docker's port publishing bypasses host firewalls such as ufw, so `0.0.0.0` is
+reachable even when the firewall says otherwise. With `SECURE_SSL_REDIRECT=true`
+Django trusts the `X-Forwarded-Proto` header; if port 8000 is also open on the
+network, a client can skip the proxy and set that header itself. `./prod.py
+start`/`update` warn about that combination. (A proxy on a *different* machine
+needs a non-loopback address; restrict port 8000 to that machine in that case,
+e.g. by binding to an interface only it can reach.)
+
+**Upgrading from before v0.8.0**, when the port was published on every
+interface: `./prod.py start` and `./prod.py update` add
+`MY_PRACTICE_BIND_ADDRESS=0.0.0.0` to an `.env` that lacks it, so nothing that
+worked stops working. Change it to `127.0.0.1` if only this machine or a proxy on
+it needs the app.
+
 ## HTTPS Setup
 
 ### Local Development
@@ -156,7 +189,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
 
     location / {
-        proxy_pass http://localhost:8000;
+        proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -173,7 +206,8 @@ In `.env`, set `SECURE_SSL_REDIRECT=true` and add the proxy's domain to
 `DJANGO_ALLOWED_HOSTS`. With `SECURE_SSL_REDIRECT=true` Django trusts the
 `X-Forwarded-Proto` header to tell HTTPS from HTTP, so the proxy must always set
 it (as `proxy_set_header ... $scheme` above does, overwriting anything the client
-sent), and port 8000 should not be reachable except through the proxy.
+sent), and port 8000 must not be reachable except through the proxy — keep
+`MY_PRACTICE_BIND_ADDRESS=127.0.0.1` (see [Network exposure](#network-exposure)).
 
 **Do not add a `location /media/` alias.** Uploaded files — signed treatment
 contracts, intake forms, doctors' letters, receipts — are Art. 9 health data

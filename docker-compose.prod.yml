@@ -20,7 +20,9 @@ services:
     container_name: my-practice-django
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      # Loopback unless .env says otherwise (MY_PRACTICE_BIND_ADDRESS) — see
+      # "Network exposure" in docs/operations/SECURITY.md.
+      - "${MY_PRACTICE_BIND_ADDRESS:-127.0.0.1}:8000:8000"
     environment:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_DEBUG=False
