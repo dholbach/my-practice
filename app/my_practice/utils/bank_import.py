@@ -480,14 +480,14 @@ class BankStatementImporter:
             if correction_keyword_hit:
                 withdrawal_category = "correction"
                 confidence = "auto-correction"
-                notes = "Fehlbuchung / Korrektur vom privaten Konto"
+                notes = _("Erroneous booking / correction from private account")
             else:
                 withdrawal_category = "contribution"
                 confidence = "auto-contribution"
-                notes = "Kapitaleinlage vom privaten Konto"
+                notes = _("Capital contribution from private account")
             # Only create for positive (incoming) amounts
             if parsed["amount"] > 0:
-                withdrawal, _ = CompanyWithdrawal.objects.get_or_create(
+                withdrawal, _created = CompanyWithdrawal.objects.get_or_create(
                     practice=self.practice,
                     date=parsed["transaction_date"],
                     amount=parsed["amount"],
@@ -498,7 +498,7 @@ class BankStatementImporter:
             self.results["needs_review"] += 1
         elif is_self_payment:
             confidence = "ignored"
-            notes = "Eigene Zahlung (Einlage) - automatisch ignoriert"
+            notes = _("Own payment (capital contribution), ignored automatically")
             self.results["ignored"] += 1
         elif invoice_number:
             match_result = self.find_matching_invoice(
