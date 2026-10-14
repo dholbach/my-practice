@@ -13,6 +13,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from ..fields import EncryptedTextField
+from ..storage import client_document_storage
 from .base import PracticeScopedQuerySet, TimestampedModel
 
 
@@ -274,8 +275,11 @@ class ClientDocument(TimestampedModel):
         default=DocumentType.OTHER,
         verbose_name=_("Document type"),
     )
+    # Encrypted at rest, like the clinical notes: these are intake forms,
+    # questionnaires and doctors' letters (Art. 9 GDPR).
     file = models.FileField(
         upload_to=client_document_upload_path,
+        storage=client_document_storage,
         verbose_name=_("File"),
         help_text=_("PDF, JPG, PNG or DOCX"),
     )

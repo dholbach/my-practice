@@ -27,9 +27,15 @@ The following fields are encrypted at rest in the database:
 Encrypted fields cannot be searched, so the client list search covers name, code and
 email but not notes.
 
-Uploaded client documents (intake forms, questionnaires, contracts) are files under
-`media/`, **not** encrypted by the app — they rely on full-disk encryption and
-encrypted backups (below).
+Uploaded **client documents** (intake forms, questionnaires, contracts, doctors'
+letters) are encrypted too: each file under `media/clients/` is stored as a single
+Fernet token under the same `FERNET_KEY` (`my_practice/storage.py`), and is decrypted
+only when an authorised user opens it. Documents uploaded before this existed are
+encrypted in place by migration `0006` on the next start. Expense receipts and the
+practice logo/signature are not health data and stay plain files.
+
+Database dumps and the media archive in a backup therefore hold ciphertext for all of
+the above — and **restoring them needs the `FERNET_KEY`** they were written with.
 
 Session metadata (`session_date`, `session_type`, `mood_tags`) is intentionally
 **not encrypted** — it is needed for scheduling, triage, and filtering without

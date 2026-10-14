@@ -36,8 +36,8 @@ def fernet_key_check(app_configs, **kwargs):
         # of them fails.
         return [
             Warning(
-                "FERNET_KEY is not set; saving notes, clinical records or calendar "
-                "credentials will fail.",
+                "FERNET_KEY is not set; saving notes, clinical records, client documents or "
+                "calendar credentials will fail.",
                 hint=MISSING_KEY_HINT,
                 id="my_practice.W001",
             )
