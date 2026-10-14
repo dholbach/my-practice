@@ -72,6 +72,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "config.middleware.PracticeScopeMiddleware",  # Set current practice in request
+    "config.middleware.TwoFactorRequiredMiddleware",  # Only with REQUIRE_TWO_FACTOR
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -203,6 +204,11 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 SESSION_COOKIE_AGE = int(os.getenv("DJANGO_SESSION_IDLE_HOURS", "8")) * 3600
 SESSION_SAVE_EVERY_REQUEST = True
 
+# Require every user to set up an authenticator app (second sign-in factor)
+# before using the app. Off by default; a hosted instance reachable from the
+# internet should turn it on. See views/auth_views.py.
+REQUIRE_TWO_FACTOR = os.getenv("REQUIRE_TWO_FACTOR", "false").lower() == "true"
+
 # Tests don't need PBKDF2's deliberately slow iteration count — MD5 is
 # insecure but fine for throwaway test users, and cuts time on every test
 # that calls create_user()/set_password().
@@ -225,6 +231,12 @@ MY_PRACTICE_DATA_DIR = Path(
 # Backup files directory — fixed container-internal mount point (see docker-compose*.yml,
 # which bind-mounts the host-side MY_PRACTICE_DATA_DIR/backups here).
 BACKUP_DIR = "/app/backups"
+
+# The dashboard warns when the newest backup in BACKUP_DIR is older than this
+# many hours (daily timer with a 12h random delay, plus slack). 0 turns the
+# check off — the default under DEBUG, where BACKUP_DIR is not mounted, and
+# the setting for an installation that backs up some other way.
+BACKUP_MAX_AGE_HOURS = int(os.getenv("BACKUP_MAX_AGE_HOURS", "0" if DEBUG else "48"))
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -315,17 +327,18 @@ GOOGLE_CALENDAR_CLIENT_SECRET = os.environ.get("GOOGLE_CALENDAR_CLIENT_SECRET", 
 # script-src: no 'unsafe-inline'. Inline <script> blocks carry
 # nonce="{{ csp_nonce }}" (from the csp context processor above) and there are
 # no inline on*= handlers — both enforced by tests/test_csp_coverage.py — so an
-# injected <script> or onerror= attribute does not run. 'unsafe-eval' stays
-# because Alpine.js evaluates x-* expressions with new Function(); dropping it
-# needs Alpine's CSP build and rewriting those expressions. It also means
-# injected markup carrying Alpine attributes (x-init="…") would still execute,
-# so template autoescaping remains the primary XSS defence; CSP is the backstop.
+# injected <script> or onerror= attribute does not run. No 'unsafe-eval'
+# either: Alpine is its CSP build (static/js/alpine-csp.min.js), which
+# interprets x-* expressions itself and refuses globals, so injected markup
+# carrying Alpine attributes can at most touch the data of the component it
+# lands in. Template autoescaping remains the primary XSS defence; CSP is the
+# backstop.
 # style-src keeps 'unsafe-inline' for style="" attributes and the inline styles
 # Alpine/htmx set at runtime; styles cannot execute code.
 # All scripts are vendored locally (no CDN), so 'self' covers every src=.
 SECURE_CSP = {
     "default-src": [CSP.SELF],
-    "script-src": [CSP.SELF, CSP.NONCE, CSP.UNSAFE_EVAL],
+    "script-src": [CSP.SELF, CSP.NONCE],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],
     "img-src": [CSP.SELF, "data:"],  # data: for base64 logos/signatures
     "connect-src": [CSP.SELF],  # AJAX/fetch calls

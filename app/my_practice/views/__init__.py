@@ -21,7 +21,7 @@ from .api_views import (
 )
 
 # Auth views
-from .auth_views import ThrottledLoginView
+from .auth_views import ThrottledLoginView, TwoFactorSettingsView, TwoFactorVerifyView
 
 # Bank import views
 from .bank_import_views import (
@@ -254,6 +254,8 @@ __all__ = [
     "focus_queue_set_due_today",
     # Auth views
     "ThrottledLoginView",
+    "TwoFactorSettingsView",
+    "TwoFactorVerifyView",
     # Media views
     "serve_media",
     # API views

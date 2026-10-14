@@ -214,7 +214,7 @@
 
     {% if not invoice.is_protected %}
     {% trans "Do you really want to delete this invoice? This action cannot be undone." as confirm_delete %}
-    <a href="{% url 'invoice_delete' invoice.pk %}" class="btn btn-danger" x-data x-on:click="confirm('{{ confirm_delete }}') || $event.preventDefault()">🗑️ {% trans "Delete" %}</a>
+    <a href="{% url 'invoice_delete' invoice.pk %}" class="btn btn-danger" data-confirm="{{ confirm_delete }}">🗑️ {% trans "Delete" %}</a>
     {% endif %}
 </div>
 

@@ -35,8 +35,10 @@
             }
         })();
     </script>
+    {# htmx evaluates hx-on / js: values / trigger filters with eval; none are used, and script-src has no 'unsafe-eval'. #}
+    <meta name="htmx-config" content='{"allowEval": false}'>
     <script src="{% static 'js/htmx.min.js' %}" defer></script>
-    <script src="{% static 'js/alpine.min.js' %}" defer></script>
+    <script src="{% static 'js/alpine-csp.min.js' %}" defer></script>
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
     data-kbd-help="{% trans 'Help' %}"
@@ -94,6 +96,7 @@
                             </a>
                             {% endfor %}
                             <a href="{% url 'practice_management' %}" class="nav-manage-link">⚙️ {% trans "Manage practices" %}</a>
+                            <a href="{% url 'two_factor_settings' %}" class="nav-manage-link">🔐 {% trans "Two-factor sign-in" %}</a>
                         </div>
                     </div>
                     {% endif %}
@@ -261,6 +264,9 @@
 
     <!-- Draft autosave + unsaved-changes guard, opt-in via data-draft-guard -->
     <script src="{% static 'js/form_draft_guard.js' %}"></script>
+
+    <!-- data-confirm / data-print / data-navigate / data-copy behaviours -->
+    <script src="{% static 'js/ui_actions.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

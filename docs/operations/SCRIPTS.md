@@ -18,41 +18,44 @@ This ensures a `rm -rf` or `git clean` of the repo never destroys data.
 ## 📦 Creating a Backup
 
 ```bash
-./scripts/backup.sh
+./scripts/backup.sh     # in a git checkout (also: ./dev.py backup)
+./prod.py backup        # on a prod.py-only installation
 ```
 
-The script creates (CWD-independent — uses `$SCRIPT_DIR` for path resolution):
+Both run the same code: `scripts/backup.sh` is a thin wrapper around
+`prod.py backup` that points it at the compose file of this checkout. It creates:
 - **PostgreSQL dump** (gzip-compressed): `$MY_PRACTICE_DATA_DIR/backups/db_backup_YYYYMMDD_HHMMSS.sql.gz`
-- **Media files** (logo/signature): `$MY_PRACTICE_DATA_DIR/backups/media_backup_YYYYMMDD_HHMMSS.tar.gz`
+- **Media files** (client documents, receipts, logo/signature): `$MY_PRACTICE_DATA_DIR/backups/media_backup_YYYYMMDD_HHMMSS.tar.gz`
+- With `BACKUP_PASSPHRASE_FILE` set in `.env`, each archive is encrypted with gpg
+  (AES-256) as `….gz.gpg`, after a decrypt round-trip proves it matches the verified original.
+  Archives are created mode 0600 either way.
 
 ### Features:
 - ✅ Timestamped backups (sortable)
 - ✅ Compressed (saves storage)
 - ✅ Verified before it counts: the dump must end with pg_dump's "dump complete" trailer and the media archive must list every file, otherwise the script exits non-zero and leaves no file behind
 - ✅ Automatic cleanup (keeps last 30 days) — runs only after a verified backup, so repeated failures never rotate out the last good one
-- ✅ Coloured output with size information
+- ✅ The dashboard warns when the newest backup is older than `BACKUP_MAX_AGE_HOURS` (48 by
+  default, production only) — that catches a timer that failed, stopped, or was never installed
 
-Runs `docker compose` from the repo root, which honours `COMPOSE_FILE` from `.env` — set
-`COMPOSE_FILE=docker-compose.prod.yml` in a checkout that runs the production stack.
-`flatpak-spawn --host` is used only when `docker` is not on `PATH` inside a Flatpak sandbox.
+`scripts/backup.sh` uses the compose file a plain `docker compose` would here: `COMPOSE_FILE`
+from `.env` (set `COMPOSE_FILE=docker-compose.prod.yml` in a checkout that runs the
+production stack), else `docker-compose.yml`. `flatpak-spawn --host` is used only when
+`docker` is not on `PATH` inside a Flatpak sandbox.
 
 ### Example Output:
 ```
-📦 Starting backup at Sun Dec 15 10:30:00 CET 2025
-   Data directory: /path/to/your/my-practice-data
-🗄️  Backing up PostgreSQL database...
-✅ Database backup complete: /path/to/your/my-practice-data/backups/db_backup_20251215_103000.sql.gz (245K)
-📁 Backing up media files...
-✅ Media backup complete: /path/to/your/my-practice-data/backups/media_backup_20251215_103000.tar.gz (87K)
-🧹 Cleaning up old backups (keeping last 30 days)...
-✨ Backup completed successfully
+📦 Backing up to /path/to/your/my-practice-data/backups
+✅ db_backup_20251215_103000.sql.gz (245 KB)
+✅ media_backup_20251215_103000.tar.gz (87 KB)
+✨ Backup complete; archives older than 30 days pruned.
 ```
 
 ## 🔄 Restoring from Backup
 
 ```bash
-# restore.sh shows available backups automatically when called without arguments:
-./scripts/restore.sh
+# Without arguments it prints usage and where the backups are:
+./scripts/restore.sh            # or: ./prod.py restore
 
 # With a specific file:
 ./scripts/restore.sh $MY_PRACTICE_DATA_DIR/backups/db_backup_20251215_103000.sql.gz

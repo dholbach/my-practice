@@ -38,7 +38,7 @@
             <form method="post" class="form-inline">
                 {% csrf_token %}
                 <button type="submit" name="action" value="bulk_ignore_paid" class="btn btn-sm btn-secondary d-inline-flex items-center gap-sm"
-                        x-data x-on:click="confirm('{% blocktrans count count=paid_invoice_count %}Ignore {{ count }} transaction that matches an already-paid invoice?{% plural %}Ignore {{ count }} transactions that match already-paid invoices?{% endblocktrans %}') || $event.preventDefault()">
+                        data-confirm="{% blocktrans count count=paid_invoice_count %}Ignore {{ count }} transaction that matches an already-paid invoice?{% plural %}Ignore {{ count }} transactions that match already-paid invoices?{% endblocktrans %}">
                     💡 {% blocktrans count count=paid_invoice_count %}Ignore {{ count }} already paid{% plural %}Ignore {{ count }} already paid{% endblocktrans %}
                 </button>
             </form>
@@ -169,7 +169,7 @@
                 <form method="post" class="form-inline">
                     {% csrf_token %}
                     <button type="submit" name="action" value="ignore_all_expenses" class="btn btn-secondary text-sm"
-                            x-data x-on:click="confirm('{% blocktrans with count=expense_count %}Mark {{ count }} expenses (negative amounts) as ignored?{% endblocktrans %}') || $event.preventDefault()">
+                            data-confirm="{% blocktrans with count=expense_count %}Mark {{ count }} expenses (negative amounts) as ignored?{% endblocktrans %}">
                         🗑️ {% blocktrans with count=expense_count %}Ignore {{ count }} expenses{% endblocktrans %}
                     </button>
                 </form>
@@ -177,7 +177,7 @@
                 <form method="post" class="form-inline">
                     {% csrf_token %}
                     <button type="submit" name="action" value="ignore_all_unmatched" class="btn btn-secondary text-sm"
-                            x-data x-on:click="confirm('{% blocktrans with count=page_obj.paginator.count %}Ignore all {{ count }} open transactions?{% endblocktrans %}') || $event.preventDefault()">
+                            data-confirm="{% blocktrans with count=page_obj.paginator.count %}Ignore all {{ count }} open transactions?{% endblocktrans %}">
                         ➖ {% trans "Ignore all" %}
                     </button>
                 </form>

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Two-factor sign-in" %}{% endblock %}
+{% block page_icon %}🔐{% endblock %}
+{% block page_title %}{% trans "Two-factor sign-in" %}{% endblock %}
+{% block page_subtitle %}{% trans "A code from your phone in addition to your password" %}{% endblock %}
+
+{% block content %}
+<div class="form-container max-w-[560px] mx-auto">
+
+{% if recovery_codes %}
+    <div class="callout callout-warning">
+        <strong>{% trans "Save these recovery codes now — they are shown only once." %}</strong>
+        {% trans "Each one signs you in once if you lose your phone. Keep them in your password manager or on paper, not on the same phone." %}
+    </div>
+    <ul class="recovery-codes">
+        {% for code in recovery_codes %}<li><code>{{ code }}</code></li>{% endfor %}
+    </ul>
+    <a href="{% url 'two_factor_settings' %}" class="btn btn-primary">{% trans "I have saved them" %}</a>
+
+{% elif device.is_confirmed %}
+    <div class="callout callout-success">
+        {% blocktrans with date=device.confirmed_at|date:"d.m.Y" %}Two-factor sign-in is on (since {{ date }}).{% endblocktrans %}
+        {% blocktrans count left=recovery_left %}{{ left }} recovery code left.{% plural %}{{ left }} recovery codes left.{% endblocktrans %}
+    </div>
+
+    <section class="two-factor-section">
+    <h3>{% trans "New recovery codes" %}</h3>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="regenerate">
+        {% if code_error %}<div class="alert alert-error">{% trans "That code is not valid." %}</div>{% endif %}
+        <div class="form-group">
+            <label for="id_regen_code">{% trans "Code from your authenticator app" %}</label>
+            <input type="text" name="code" id="id_regen_code" class="form-control" required
+                   autocomplete="one-time-code" inputmode="numeric" maxlength="6">
+        </div>
+        <button type="submit" class="btn btn-secondary">{% trans "Replace recovery codes" %}</button>
+    </form>
+    </section>
+
+    <section class="two-factor-section">
+    <h3>{% trans "Turn off" %}</h3>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="disable">
+        {% if disable_error %}<div class="alert alert-error">{% trans "Password or code incorrect." %}</div>{% endif %}
+        <div class="form-group">
+            <label for="id_disable_password">{% trans "Password" %}</label>
+            <input type="password" name="password" id="id_disable_password" class="form-control" required
+                   autocomplete="current-password">
+        </div>
+        <div class="form-group">
+            <label for="id_disable_code">{% trans "Code from your authenticator app or a recovery code" %}</label>
+            <input type="text" name="code" id="id_disable_code" class="form-control" required
+                   autocomplete="one-time-code" maxlength="11">
+        </div>
+        <button type="submit" class="btn btn-danger">{% trans "Turn off two-factor sign-in" %}</button>
+    </form>
+    </section>
+
+{% else %}
+    {% if require_two_factor %}
+    <div class="callout callout-warning">{% trans "This installation requires two-factor sign-in. Set it up to continue." %}</div>
+    {% endif %}
+    <ol class="two-factor-steps">
+        <li>{% trans "Install an authenticator app on your phone, e.g. Aegis, 2FAS, Google Authenticator or the one built into your password manager." %}</li>
+        <li>{% trans "Scan this code with the app:" %}
+            <div class="totp-qr">{{ qr_svg|safe }}</div>
+            <details>
+                <summary>{% trans "Can't scan? Enter this key by hand" %}</summary>
+                <p><code class="totp-secret">{{ secret_groups|join:" " }}</code></p>
+            </details>
+        </li>
+        <li>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="confirm">
+                {% if code_error %}<div class="alert alert-error">{% trans "That code is not valid. Check that the time on your phone is correct." %}</div>{% endif %}
+                <div class="form-group">
+                    <label for="id_confirm_code">{% trans "Enter the 6-digit code the app shows" %}</label>
+                    <input type="text" name="code" id="id_confirm_code" class="form-control" required
+                           autocomplete="one-time-code" inputmode="numeric" maxlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary">{% trans "Turn on two-factor sign-in" %}</button>
+            </form>
+        </li>
+    </ol>
+{% endif %}
+
+</div>
+{% endblock %}

@@ -1350,7 +1350,14 @@ def cmd_psql(args):
     return run_docker_command(["psql", "-U", "my_practice", "-d", "my_practice"], interactive=True)
 
 
+def cmd_backup(args):
+    """Back up database + media via scripts/backup.sh (the implementation is prod.py's)."""
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts", "backup.sh")
+    return subprocess.run(["bash", script, *args])
+
+
 COMMANDS = {
+    "backup": cmd_backup,
     "build": cmd_build,
     "start": cmd_start,
     "stop": cmd_stop,
@@ -1401,6 +1408,7 @@ def print_help():
     print("  exec <cmd> [args]    - Execute arbitrary command in container")
     print("  sql <query|file>     - Execute SQL query or file")
     print("  psql                 - Open interactive PostgreSQL shell")
+    print("  backup               - Back up database + media (verified, 30-day rotation)")
     print("  logs [args]          - Show container logs (default: all services, last 100 lines)")
     print("  ps                   - Show container status")
     print("  migrate [args]       - Run migrations")

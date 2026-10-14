@@ -206,6 +206,15 @@
   .callout-success { background: var(--color-success-bg); border-left-color: var(--color-success); color: var(--color-text-primary); }
   .callout-primary { background: var(--color-bg-muted);   border-left-color: var(--color-primary); color: var(--color-text-primary); }
 
+  /* Two-factor sign-in setup */
+  .two-factor-steps { padding-left: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
+  .totp-qr { margin: 0.75rem 0; }
+  .totp-qr svg { display: block; border-radius: 8px; }
+  .totp-secret { font-size: 1.05rem; letter-spacing: 0.05em; word-break: break-all; }
+  .recovery-codes { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .two-factor-section + .two-factor-section { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); }
+  .recovery-codes code { display: block; padding: 0.5rem 0.75rem; background: var(--color-bg-muted); color: var(--color-text-primary); border-radius: 6px; font-size: 1rem; text-align: center; }
+
   .status-active   { color: var(--color-success); }
   .status-inactive { color: var(--color-text-muted); }
   .italic { font-style: italic; }
@@ -2126,6 +2135,13 @@
   .btn.btn-secondary { background: var(--color-btn-secondary); }
 
   .btn.btn-secondary:hover { background: var(--color-btn-secondary-hover); }
+
+  /* Same reason: .btn above comes later than .btn-danger and wins on equal
+     specificity, so every "btn btn-danger" (delete, GDPR erasure, …) rendered
+     in the primary colour instead of red. */
+  .btn.btn-danger { background: #dc2626; }
+
+  .btn.btn-danger:hover { background: #b91c1c; }
 
   .messages { margin-bottom: 1rem; }
 

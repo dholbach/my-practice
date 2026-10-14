@@ -19,6 +19,7 @@ import pypdf
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
+from ...storage import FERNET_PREFIX
 from ...utils.file_processing import (
     _IMAGE_EXTENSIONS,
     _PDF_EXTENSIONS,
@@ -29,6 +30,13 @@ from ...utils.file_processing import (
 )
 
 _PROCESSABLE = _IMAGE_EXTENSIONS | _PDF_EXTENSIONS
+
+
+def _is_encrypted(path: Path) -> bool:
+    """Client documents are stored encrypted (see storage.py) and were compressed
+    on upload; Pillow and Ghostscript would only fail on — or mangle — ciphertext."""
+    with path.open("rb") as handle:
+        return handle.read(len(FERNET_PREFIX)) == FERNET_PREFIX
 
 
 def _rotate_pdf_pages(path: Path, degrees: int) -> bool:
@@ -117,7 +125,7 @@ class Command(BaseCommand):
             if not filepath.is_file():
                 continue
             ext = filepath.suffix.lower()
-            if ext not in _PROCESSABLE:
+            if ext not in _PROCESSABLE or _is_encrypted(filepath):
                 continue
 
             total_files += 1
@@ -221,6 +229,8 @@ class Command(BaseCommand):
         candidates = [root] if root.is_file() else sorted(root.rglob("*"))
         for filepath in candidates:
             if not filepath.is_file() or filepath.suffix.lower() not in _PDF_EXTENSIONS:
+                continue
+            if _is_encrypted(filepath):
                 continue
             rel = filepath.relative_to(media_root)
             if dry_run:

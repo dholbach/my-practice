@@ -149,7 +149,7 @@
 
     <div class="inline-block ml-4">
         <label for="year-filter" class="text-muted me-1">{% trans "Year:" %}</label>
-        <select id="year-filter" x-data x-on:change="window.location.href = '{% url 'invoice_list' %}{% if current_status != 'all' %}?status={{ current_status }}&year={% else %}?year={% endif %}' + $el.value" class="p-2 border border-border rounded">
+        <select id="year-filter" data-navigate="{% url 'invoice_list' %}{% if current_status != 'all' %}?status={{ current_status }}&year={% else %}?year={% endif %}" class="p-2 border border-border rounded">
             <option value="">{% trans "All years" %}</option>
             {% for year in available_years %}
             <option value="{{ year }}" {% if current_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
