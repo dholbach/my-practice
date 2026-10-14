@@ -9033,6 +9033,10 @@ msgstr ""
 msgid "Issued invoices are kept unchanged. To fix a mistake, cancel the invoice and correct a copy."
 msgstr ""
 
+#: templates/registration/login.html:13
+msgid "Too many failed sign-in attempts. Please wait 15 minutes and try again."
+msgstr ""
+
 #~ msgid "Error sending the email: %(error)s"
 #~ msgstr "Error sending the email: %(error)s"
 

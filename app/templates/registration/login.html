@@ -9,7 +9,9 @@
 <div class="form-container max-w-[400px] my-16 mx-auto">
     <form method="post">
         {% csrf_token %}
-        {% if form.errors %}
+        {% if login_locked %}
+        <div class="alert alert-error">{% trans "Too many failed sign-in attempts. Please wait 15 minutes and try again." %}</div>
+        {% elif form.errors %}
         <div class="alert alert-error">{% trans "Username or password incorrect." %}</div>
         {% endif %}
         <div class="form-group">

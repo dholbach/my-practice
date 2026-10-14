@@ -20,6 +20,9 @@ from .api_views import (
     update_invoice_status,
 )
 
+# Auth views
+from .auth_views import ThrottledLoginView
+
 # Bank import views
 from .bank_import_views import (
     BankExpenseReviewView,
@@ -249,6 +252,8 @@ __all__ = [
     "focus_queue_toggle_complete",
     "focus_queue_snooze",
     "focus_queue_set_due_today",
+    # Auth views
+    "ThrottledLoginView",
     # Media views
     "serve_media",
     # API views

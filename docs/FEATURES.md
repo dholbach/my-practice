@@ -304,6 +304,8 @@ chronological record; this document only tracks current state.
 - ✅ Admin authentication
 - ✅ UniqueConstraints on critical fields
 - ✅ Global login enforcement — all views require authentication via `LoginRequiredMiddleware`
+- ✅ Sign-in brute-force limit — 5 failed attempts for a username lock it for 15 minutes (correct password included)
+- ✅ Idle sign-out — sessions end after 8 hours without activity (`DJANGO_SESSION_IDLE_HOURS`) instead of a fixed two weeks
 - ✅ Practice isolation enforced on all endpoints including `session_toggle` and email views
 - ✅ Pre-commit PII guard — staged content checked against a local denylist before every commit
 - ✅ Responsible-disclosure policy (`SECURITY.md`)

@@ -9034,6 +9034,10 @@ msgstr "Stornieren & korrigieren"
 msgid "Issued invoices are kept unchanged. To fix a mistake, cancel the invoice and correct a copy."
 msgstr "Ausgestellte Rechnungen bleiben unverändert. Um einen Fehler zu beheben, stornieren Sie die Rechnung und korrigieren Sie eine Kopie."
 
+#: templates/registration/login.html:13
+msgid "Too many failed sign-in attempts. Please wait 15 minutes and try again."
+msgstr "Zu viele fehlgeschlagene Anmeldeversuche. Bitte warten Sie 15 Minuten und versuchen Sie es dann erneut."
+
 #~ msgid "Uploaded documents"
 #~ msgstr "Hochgeladene Dokumente"
 
