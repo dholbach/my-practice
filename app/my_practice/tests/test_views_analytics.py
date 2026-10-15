@@ -5,6 +5,7 @@ Tests for analytics views.
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from ..models import (
+    CapacityPeriod,
     Client,
     CompanyExpense,
     CompanyWithdrawal,
@@ -311,6 +313,43 @@ class AnalyticsFilterTest(TestCase):
         """Test analytics without any filters (all data)."""
         response = self.client_instance.get(reverse("analytics"))
         self.assertEqual(response.status_code, 200)
+
+
+class CapacityTargetSubtitleTest(TestCase):
+    """The utilisation chart's subtitle describes the practice's own capacity periods."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(name="Test Practice", slug="capacity-subtitle")
+        user = User.objects.create_user(username="capacityuser", password="testpass123")
+        UserPractice.objects.create(user=user, practice=self.practice, is_owner=True)
+        self.http = TestClient()
+        self.http.login(username="capacityuser", password="testpass123")
+
+    def _capacity_tab(self, language: str) -> str:
+        self.http.cookies[settings.LANGUAGE_COOKIE_NAME] = language
+        return self.http.get(reverse("analytics") + "?tab=capacity").content.decode()
+
+    def test_lists_each_period_in_both_languages(self):
+        CapacityPeriod.objects.create(
+            practice=self.practice, start_date=date(2025, 1, 1), hours_per_week=10
+        )
+        CapacityPeriod.objects.create(
+            practice=self.practice, start_date=date(2025, 9, 1), hours_per_week=18
+        )
+        en = self._capacity_tab("en")
+        self.assertIn("10 h/week from Jan 2025", en)
+        self.assertIn("18 h/week from Sep 2025", en)
+        de = self._capacity_tab("de")
+        self.assertIn("10 h/Woche ab Jan 2025", de)
+        self.assertIn("18 h/Woche ab Sep 2025", de)
+        # The subtitle used to be one practice's history, hardcoded for everyone.
+        self.assertNotIn("Jul 2023", en)
+
+    def test_without_periods_links_to_practice_settings(self):
+        en = self._capacity_tab("en")
+        self.assertIn("No weekly target set yet.", en)
+        self.assertIn(reverse("practice_edit", args=[self.practice.slug]), en)
+        self.assertIn("Noch keine Wochenzielstunden festgelegt.", self._capacity_tab("de"))
 
 
 class PracticeAnalysisRedirectTest(TestCase):

@@ -5396,10 +5396,23 @@ msgstr "Krank"
 msgid "Capacity Utilisation Over Time"
 msgstr "Kapazitätsauslastung über Zeit"
 
-#: templates/my_practice/analytics.html:691
+#: templates/my_practice/analytics.html:641
 #, python-format
-msgid "Monthly utilisation in %% (10h/week until Jul 2023, then 20h/week)"
-msgstr "Monatliche Auslastung in %% (10h/Woche bis Jul 2023, danach 20h/Woche)"
+msgid "Monthly utilisation in %% of your weekly target:"
+msgstr "Monatliche Auslastung in %% Ihrer Wochenzielstunden:"
+
+#: templates/my_practice/analytics.html:642
+#, python-format
+msgid "%(hours)s h/week from %(start)s"
+msgstr "%(hours)s h/Woche ab %(start)s"
+
+#: templates/my_practice/analytics.html:644
+msgid "No weekly target set yet."
+msgstr "Noch keine Wochenzielstunden festgelegt."
+
+#: templates/my_practice/analytics.html:645
+msgid "Set target hours in the practice settings"
+msgstr "Zielstunden in den Praxiseinstellungen festlegen"
 
 #: templates/my_practice/analytics.html:733
 msgid "Utilisation"

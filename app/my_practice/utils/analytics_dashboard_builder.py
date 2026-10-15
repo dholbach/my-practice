@@ -10,7 +10,7 @@ from dateutil.relativedelta import relativedelta
 from django.db.models import Min
 from django.utils import timezone
 
-from ..models import CompanyExpense, CompanyWithdrawal, Invoice, TimeOff
+from ..models import CapacityPeriod, CompanyExpense, CompanyWithdrawal, Invoice, TimeOff
 from ..models.base import scope_to_practice
 from ..utils.capacity_helpers import get_capacity_trends
 from ..utils.date_helpers import DateRangeHelper
@@ -329,6 +329,9 @@ class AnalyticsDashboardBuilder:
                 start_date=self.start_date,
                 end_date=self.end_date,
                 practice=self.practice,
+            ),
+            "capacity_periods": list(
+                scope_to_practice(CapacityPeriod.objects.order_by("start_date"), self.practice)
             ),
         }
 

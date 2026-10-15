@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from ...models import (
+    CapacityPeriod,
     Client,
     ClientInquiry,
     ClientNote,
@@ -41,6 +42,7 @@ from ...models import (
 )
 from ...models.clinical import ClientProfile, SessionLog
 from ...models.gebueh import Leistungserfassung
+from ...utils.date_helpers import DateRangeHelper
 from ...utils.invoice_helpers import get_next_invoice_number
 from ._seed_data import (
     CHARACTERS,
@@ -153,15 +155,16 @@ class Command(BaseCommand):
 
         practice = self._get_or_create_practice()
         self._assign_superusers(practice)
-        service_60, service_90 = self._get_or_create_service_types()
+        service_60, service_90, cancel_fee = self._get_or_create_service_types()
         tags = self._create_tags()
         clients, char_map = self._create_clients(practice, tags, rng)
         sessions_by_client = self._create_sessions(clients, char_map, rng)
+        self._create_capacity_periods(practice, sessions_by_client)
         self._create_notes(clients, char_map, sessions_by_client, rng)
         self._create_session_logs(clients, char_map, sessions_by_client, rng)
         self._create_profiles(clients, char_map, rng)
         self._create_gebueh_leistungen(clients, char_map, sessions_by_client)
-        self._create_invoices(practice, sessions_by_client, service_60, service_90, rng)
+        self._create_invoices(practice, sessions_by_client, service_60, service_90, cancel_fee, rng)
         self._create_pending_events(practice, clients, char_map, service_60, rng)
         self._create_inquiries(practice, rng)
         self._create_todos(practice)
@@ -218,7 +221,7 @@ class Command(BaseCommand):
         if assigned:
             self.stdout.write(f"  ✓ Assigned {assigned} superuser(s) to demo practice")
 
-    def _get_or_create_service_types(self) -> tuple[ServiceType, ServiceType]:
+    def _get_or_create_service_types(self) -> tuple[ServiceType, ServiceType, ServiceType]:
         service_60, _ = ServiceType.objects.get_or_create(
             code="therapy_60",
             defaults={
@@ -239,7 +242,19 @@ class Command(BaseCommand):
                 "practice": None,
             },
         )
-        return service_60, service_90
+        # The "cancel" in the code is what marks a billed session as cancelled
+        # (signals._resync_session).
+        cancel_fee, _ = ServiceType.objects.get_or_create(
+            code="cancel_fee",
+            defaults={
+                "name": "Late cancellation fee",
+                "name_de": "Ausfallhonorar",
+                "name_en": "Late cancellation fee",
+                "default_duration": 60,
+                "practice": None,
+            },
+        )
+        return service_60, service_90, cancel_fee
 
     def _create_tags(self) -> dict[str, ClientTag]:
         tag_specs = [
@@ -395,6 +410,30 @@ class Command(BaseCommand):
         self.stdout.write(f"  ✓ Created {total} sessions across {len(clients)} clients")
         return sessions_by_client
 
+    def _create_capacity_periods(
+        self, practice: Practice, sessions_by_client: dict[int, list[Session]]
+    ) -> None:
+        """
+        Give the practice a weekly target so the Capacity tab has something to
+        measure against: a part-time start, raised as the caseload grew.
+        """
+        first = min(
+            (s.session_date for sessions in sessions_by_client.values() for s in sessions),
+            default=None,
+        )
+        if first is None:
+            return
+        today = timezone.localdate()
+        raised = DateRangeHelper.add_months(today.replace(day=1), -13)
+        CapacityPeriod.objects.get_or_create(
+            practice=practice, start_date=first.replace(day=1), defaults={"hours_per_week": 10}
+        )
+        if raised > first:
+            CapacityPeriod.objects.get_or_create(
+                practice=practice, start_date=raised, defaults={"hours_per_week": 18}
+            )
+        self.stdout.write("  ✓ Created capacity periods (10 h/week, later 18 h/week)")
+
     def _create_notes(
         self,
         clients: list[Client],
@@ -540,7 +579,10 @@ class Command(BaseCommand):
             if mode is None:
                 continue
 
-            sessions = sorted(sessions_by_client.get(client.pk, []), key=lambda s: s.session_date)
+            sessions = sorted(
+                (s for s in sessions_by_client.get(client.pk, []) if not s.cancelled),
+                key=lambda s: s.session_date,
+            )
             # Early in the probationary phase only the first few sessions are billed.
             if mode == "probatorik":
                 sessions = sessions[:3]
@@ -581,6 +623,7 @@ class Command(BaseCommand):
         sessions_by_client: dict[int, list[Session]],
         service_60: ServiceType,
         service_90: ServiceType,
+        cancel_fee: ServiceType,
         rng: random.Random,
     ) -> None:
         today = timezone.localdate()
@@ -589,9 +632,13 @@ class Command(BaseCommand):
         for client_pk, sessions in sessions_by_client.items():
             client = Client.objects.get(pk=client_pk)
 
-            # Group sessions by (year, month)
+            # Group billable sessions by (year, month). Billing a cancelled
+            # session as therapy would clear its cancelled flag, so about half
+            # carry a late-cancellation fee and the rest are not billed at all.
             by_month: dict[tuple[int, int], list[Session]] = {}
             for s in sessions:
+                if s.cancelled and rng.random() < 0.5:
+                    continue
                 key = (s.session_date.year, s.session_date.month)
                 by_month.setdefault(key, []).append(s)
 
@@ -615,7 +662,10 @@ class Command(BaseCommand):
                 invoice.save(skip_validation=True)
 
                 for session in month_sessions:
-                    service = service_90 if session.duration == 90 else service_60
+                    if session.cancelled:
+                        service = cancel_fee
+                    else:
+                        service = service_90 if session.duration == 90 else service_60
                     rate = (
                         client.hourly_rate_90 if session.duration == 90 else client.hourly_rate_60
                     )

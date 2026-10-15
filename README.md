@@ -77,7 +77,7 @@ A Verzeichnis von Verarbeitungstätigkeiten as required under GDPR Art. 30 — t
 ### Invoice detail with GebüH breakdown
 ![Invoice detail](docs/screenshots/invoice-detail.png)
 
-### Analytics — client activity heatmap
+### Analytics — capacity and utilisation
 ![Analytics](docs/screenshots/analytics.png)
 
 ### Inquiries

@@ -638,7 +638,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="analytics-card mb-4 mt-4">
         <h3>📈 {% trans "Capacity Utilisation Over Time" %}</h3>
         <p class="chart-subtitle">
-            {% trans "Monthly utilisation in % (10h/week until Jul 2023, then 20h/week)" %}
+            {% if capacity_periods %}
+                {% trans "Monthly utilisation in % of your weekly target:" %}
+                {% for period in capacity_periods %}{% blocktrans with hours=period.hours_per_week start=period.start_date|date:"M Y" %}{{ hours }} h/week from {{ start }}{% endblocktrans %}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% else %}
+                {% trans "No weekly target set yet." %}
+                {% if request.current_practice %}<a href="{% url 'practice_edit' request.current_practice.slug %}">{% trans "Set target hours in the practice settings" %}</a>{% endif %}
+            {% endif %}
         </p>
 
         <div class="chart-wrapper chart-wrapper--lg">

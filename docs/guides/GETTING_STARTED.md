@@ -162,17 +162,18 @@ Sample output:
   ✓ Assigned 1 superuser(s) to demo practice
   ✓ Created 45 clients
   ✓ Created 922 sessions across 45 clients
+  ✓ Created capacity periods (10 h/week, later 18 h/week)
   ✓ Created 108 clinical notes
   ✓ Created 627 session logs
   ✓ Created 45 client profiles
-  ✓ Created 76 GebüH service entries
-  ✓ Created 426 invoices
+  ✓ Created 70 GebüH service entries
+  ✓ Created 419 invoices
   ✓ Created 6 pending calendar events
   ✓ Created 8 inquiries
   ✓ Created 6 todos
   ✓ Created 95 expenses (0 already existed)
   ✓ Created 8 time-off entries
-✅ Seeded: 45 clients, 922 sessions, 426 invoices, 6 pending events, 8 inquiries, 6 todos, expenses
+✅ Seeded: 45 clients, 922 sessions, 419 invoices, 6 pending events, 8 inquiries, 6 todos, expenses
 ```
 
 ---

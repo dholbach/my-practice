@@ -31,7 +31,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-10-15 — Screenshot refresh (#148)**: README screenshots retaken on `seed_sample_data` in the English UI, mixing light and dark theme — dashboard, Focus Queue, GebüH invoice breakdown, client heatmap, inquiries, both diagnosis callouts (standard + escalated), batch invoicing. GETTING_STARTED.md seed output updated, plus a note to run `sync_focus_queue_tasks` once so a fresh demo shows system tasks.
+- **2026-10-15 — Screenshot refresh (#148)**: README screenshots retaken on `seed_sample_data` in the English UI, mixing light and dark theme — dashboard, Focus Queue, GebüH invoice breakdown, client heatmap, inquiries, both diagnosis callouts (standard + escalated), batch invoicing; the analytics shot is the Capacity tab. `seed_sample_data` now seeds capacity periods and keeps its cancellations (billing them as therapy had cleared the flag), so that tab is populated; its utilisation subtitle lists the practice's own targets instead of a hardcoded history. Inquiry row actions fixed (compact `.btn`s; `.btn.btn-success` scoped like `.btn-danger`).
 - **2026-10-14 — v0.8.1 patch release**: v0.8.0's container could not start — `collectstatic` aborted on a source-map reference in the vendored Chart.js; removed, with a guardrail that runs `collectstatic` through the production storage. Healthchecks and `./dev.py smoke` now check `/accounts/login/` instead of the `/admin/login/` redirect.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
