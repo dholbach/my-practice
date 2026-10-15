@@ -11,7 +11,7 @@ from io import StringIO
 from django.core.management import call_command
 from django.test import TestCase
 
-from ..models import Client, Invoice, Practice, PracticeTodo, Session
+from ..models import CapacityPeriod, Client, Invoice, Practice, PracticeTodo, Session
 from ..models.gebueh import Leistungserfassung
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks
 
@@ -58,6 +58,12 @@ class SeedSampleDataCommandTests(TestCase):
         for invoice in with_breakdown:
             for block in build_gebueh_blocks(invoice):
                 self.assertLessEqual(block["gebueh_sum"], block["vereinbarter_betrag"])
+
+        # Capacity tab: utilisation needs a weekly target, and the cancellation
+        # chart needs cancelled sessions. Billing one as therapy would clear its
+        # flag (signals._resync_session), which once left the seed with none.
+        self.assertTrue(CapacityPeriod.objects.filter(practice=practice).exists())
+        self.assertTrue(Session.objects.filter(client__practice=practice, cancelled=True).exists())
 
         # A materialized focus-queue todo, as the sync writes them on a real
         # installation: its title is generated, so a title-matched clear misses

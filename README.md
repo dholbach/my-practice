@@ -66,18 +66,31 @@ A Verzeichnis von Verarbeitungstätigkeiten as required under GDPR Art. 30 — t
 ## Screenshots
 
 > Screenshots taken with `./dev.py manage seed_sample_data` — all names are fictional.
+> Shown in both the light and the dark theme.
 
 ### Dashboard
 ![Dashboard](docs/screenshots/dashboard.png)
 
-### Invoice detail
+### Focus Queue
+![Focus Queue](docs/screenshots/focus-queue.png)
+
+### Invoice detail with GebüH breakdown
 ![Invoice detail](docs/screenshots/invoice-detail.png)
 
-### Analytics
+### Analytics — capacity and utilisation
 ![Analytics](docs/screenshots/analytics.png)
 
+### Inquiries
+![Inquiries](docs/screenshots/inquiries.png)
+
 ### Client detail
+While the working diagnosis is still open, the profile reminds you that invoices show "Probationary phase":
+
 ![Client detail](docs/screenshots/client-detail.png)
+
+Once the probationary phase looks complete, the reminder escalates:
+
+![Client detail, escalated diagnosis reminder](docs/screenshots/client-detail-escalated.png)
 
 ### Batch invoicing
 ![Batch invoicing](docs/screenshots/batch-invoicing.png)

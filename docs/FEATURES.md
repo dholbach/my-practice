@@ -146,6 +146,7 @@ chronological record; this document only tracks current state.
 - ✅ Busiest months analysis
 - ✅ Year-over-year comparison
 - ✅ Interactive charts (Chart.js) with hover tooltips, following the light/dark theme and the UI language for number formatting
+- ✅ Utilisation chart subtitle names the practice's own weekly targets (capacity periods from the practice settings), with a link there when none is set
 - ✅ Cancellation rate trend — monthly Ausfallquote (%) over last 24 months (Kapazität tab); cancellations inside your own time off don't count, and the chart starts at the first calendar-linked session
 - ✅ Days-to-payment trend — avg days invoice→payment over last 24 months (Umsatz tab)
 
