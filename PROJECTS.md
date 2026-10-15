@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-10-15 — Screenshot refresh (#148)**: README screenshots retaken on `seed_sample_data` in the English UI, mixing light and dark theme — dashboard, Focus Queue, GebüH invoice breakdown, client heatmap, inquiries, both diagnosis callouts (standard + escalated), batch invoicing. GETTING_STARTED.md seed output updated, plus a note to run `sync_focus_queue_tasks` once so a fresh demo shows system tasks.
 - **2026-10-14 — v0.8.1 patch release**: v0.8.0's container could not start — `collectstatic` aborted on a source-map reference in the vendored Chart.js; removed, with a guardrail that runs `collectstatic` through the production storage. Healthchecks and `./dev.py smoke` now check `/accounts/login/` instead of the `/admin/login/` redirect.
-- **2026-10-14 — v0.8.0 minor release (takeover review)**: uploaded documents served only to the owning practice (#490); client/inquiry notes, calendar credentials and client documents encrypted at rest with key rotation (#500, #501); two-factor sign-in and the `/admin/login/` bypass closed (#504); sign-in limit and 8-hour idle timeout (#496); escaped flash messages and a CSP without `unsafe-inline`/`unsafe-eval` (#492, #505); practice scoping fails closed (#495); issued invoices locked, "Cancel & correct" (#491); verified, optionally encrypted backups with a dashboard warning (#489, #503); sign-out button (#507); one documented systemd install (#508); production port bound to loopback by default (#521); charts on Chart.js (#519); htmx replaced by `partial_post.js` (#516); money rounded half up as `Decimal` (#515). Full list: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

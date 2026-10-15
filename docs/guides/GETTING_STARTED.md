@@ -161,12 +161,18 @@ Sample output:
   ✓ Created practice: Anna Schmidt
   ✓ Assigned 1 superuser(s) to demo practice
   ✓ Created 45 clients
-  ✓ Created 902 sessions
-  ✓ Created 338 invoices
+  ✓ Created 922 sessions across 45 clients
+  ✓ Created 108 clinical notes
+  ✓ Created 627 session logs
+  ✓ Created 45 client profiles
+  ✓ Created 76 GebüH service entries
+  ✓ Created 426 invoices
+  ✓ Created 6 pending calendar events
   ✓ Created 8 inquiries
   ✓ Created 6 todos
-  ✓ Created 93 expenses (0 already existed)
-✅ Seeded: 45 clients, 902 sessions, 338 invoices, 8 inquiries, 6 todos, expenses
+  ✓ Created 95 expenses (0 already existed)
+  ✓ Created 8 time-off entries
+✅ Seeded: 45 clients, 922 sessions, 426 invoices, 6 pending events, 8 inquiries, 6 todos, expenses
 ```
 
 ---
@@ -202,6 +208,14 @@ signals the app raises for itself — a session without a log, an invoice that w
 never sent or never paid, a pending backup checklist, an open supervision topic —
 as real rows you can tick off. Filter by type along the top, and snooze anything
 that isn't for today (`+1d` / `+3d` / `+1w`).
+
+The system rows are created by the hourly `run_scheduled_jobs` timer in production.
+A freshly seeded dev instance only has the six manual demo tasks until you run the
+sync once yourself:
+
+```bash
+./dev.py manage sync_focus_queue_tasks
+```
 
 ### Client list (`/clients/`)
 
