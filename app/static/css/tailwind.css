@@ -826,7 +826,7 @@
   .inquiry-contact { font-size: 0.85rem; }
   .contact-link { display: block; color: var(--color-text-muted); }
   .inquiry-actions { white-space: nowrap; }
-  .inquiry-actions .btn-sm { margin-right: 0.25rem; }
+  .inquiry-actions .btn { padding: 0.25rem 0.75rem; font-size: 0.8125rem; margin-right: 0.25rem; }
   .source-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; border: 1px solid transparent; }
   .source-google_ads      { background: var(--color-badge-amber-bg);   color: var(--color-badge-amber-text);   border-color: var(--color-badge-amber-border); }
   .source-google_organic  { background: var(--color-badge-blue-bg);    color: var(--color-badge-blue-text);    border-color: var(--color-badge-blue-border); }
@@ -2143,6 +2143,10 @@
   .btn.btn-danger { background: #dc2626; }
 
   .btn.btn-danger:hover { background: #b91c1c; }
+
+  .btn.btn-success { background: #2f855a; }
+
+  .btn.btn-success:hover { background: #276749; }
 
   .messages { margin-bottom: 1rem; }
 

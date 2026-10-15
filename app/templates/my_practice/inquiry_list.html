@@ -203,11 +203,11 @@
                         {% if inquiry.phone %}<span class="contact-link">☎ <span class="sensitive-data">{{ inquiry.phone }}</span></span>{% endif %}
                     </td>
                     <td class="inquiry-actions">
-                        <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-sm">{% trans "Edit" %}</a>
+                        <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn btn-secondary">{% trans "Edit" %}</a>
                         {% if inquiry.status != 'converted' and not inquiry.converted_client %}
-                        <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn-sm btn-success">{% trans "Admit" %}</a>
+                        <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn btn-success">{% trans "Admit" %}</a>
                         {% endif %}
-                        <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn-sm btn-danger">{% trans "Delete" %}</a>
+                        <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn btn-danger">{% trans "Delete" %}</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -251,11 +251,11 @@
                             {% if inquiry.phone %}<span class="contact-link">☎ <span class="sensitive-data">{{ inquiry.phone }}</span></span>{% endif %}
                         </td>
                         <td class="inquiry-actions">
-                            <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn-sm">{% trans "Edit" %}</a>
+                            <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn btn-secondary">{% trans "Edit" %}</a>
                             {% if inquiry.status != 'converted' and not inquiry.converted_client %}
-                            <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn-sm btn-success">{% trans "Admit" %}</a>
+                            <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn btn-success">{% trans "Admit" %}</a>
                             {% endif %}
-                            <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn-sm btn-danger">{% trans "Delete" %}</a>
+                            <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn btn-danger">{% trans "Delete" %}</a>
                         </td>
                     </tr>
                     {% endfor %}
