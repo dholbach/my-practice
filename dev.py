@@ -321,6 +321,12 @@ def cmd_test(args):
         args = [a for a in args if a != "--js-only"]
         return cmd_test_js(args)
 
+    # The .mo files are gitignored build output, and ./app is bind-mounted over
+    # the image's freshly compiled copy, so after a pull that adds msgids the
+    # tests would otherwise run against a stale catalog and fail on German
+    # assertions. Up-to-date catalogs are skipped, so this costs well under a second.
+    run_docker_command(["python", "manage.py", "compilemessages", "-v", "0"])
+
     # Check for --smart flag: pytest + testmon (only run tests affected by changes)
     if "--smart" in args:
         args = [a for a in args if a != "--smart"]
@@ -640,6 +646,16 @@ def cmd_makemigrations(args):
     return run_docker_command(["python", "manage.py", "makemigrations"] + args)
 
 
+def _container_running():
+    """Whether the Django container is up (`docker exec` would fail otherwise)."""
+    cmd = []
+    if needs_flatpak():
+        cmd.extend(["flatpak-spawn", "--host"])
+    cmd.extend(["docker", "inspect", "--format", "{{.State.Running}}", CONTAINER_NAME])
+    out = subprocess.run(cmd, capture_output=True, text=True)
+    return out.returncode == 0 and out.stdout.strip() == "true"
+
+
 def cmd_i18n(args):
     """Extract and compile translation strings.
 
@@ -647,7 +663,16 @@ def cmd_i18n(args):
       ./dev.py i18n                # extract + compile (default)
       ./dev.py i18n makemessages   # extract only
       ./dev.py i18n compilemessages  # compile only
+
+    --if-running skips quietly when the container is down, for the post-merge
+    and post-checkout hooks: a `git pull` shouldn't fail because Docker isn't up,
+    and the container compiles the catalogs itself on start.
     """
+    if "--if-running" in args:
+        args = [a for a in args if a != "--if-running"]
+        if not _container_running():
+            print("ℹ️  Django container not running — catalogs compile on next start.")
+            return subprocess.CompletedProcess(args=[], returncode=0)
     sub = args[0] if args else None
     if sub in (None, "makemessages"):
         result = run_docker_command(
@@ -1464,7 +1489,7 @@ def print_help():
     )
     print("  smoke --keep         - Leave the smoke stack running for manual inspection")
     print("  smoke --down         - Tear down a smoke stack left running by --keep")
-    print("  install-hooks        - Configure git to use .githooks/ (run once after clone)")
+    print("  install-hooks        - Install the pre-commit hooks (run once after clone)")
     print("\nExamples:")
     print("  ./dev.py start                                # Start all containers")
     print("  ./dev.py start --build                        # Rebuild and start")

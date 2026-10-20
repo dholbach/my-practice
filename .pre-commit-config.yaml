@@ -113,5 +113,17 @@ repos:
         pass_filenames: false
         files: ^(dev|prod)\.py$
 
+      # The .mo catalogs are gitignored build output, so a pull or branch switch
+      # that brings new msgids leaves the running app and the tests on a stale
+      # catalog (English text under the German locale) until someone recompiles.
+      - id: compile-translations
+        name: recompile translation catalogs
+        entry: ./dev.py i18n compilemessages --if-running
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [post-merge, post-checkout]
+
+default_install_hook_types: [pre-commit, post-merge, post-checkout]
 default_stages: [pre-commit]
 fail_fast: false
