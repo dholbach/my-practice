@@ -40,8 +40,7 @@ Both run the same code: `scripts/backup.sh` is a thin wrapper around
 
 `scripts/backup.sh` uses the compose file a plain `docker compose` would here: `COMPOSE_FILE`
 from `.env` (set `COMPOSE_FILE=docker-compose.prod.yml` in a checkout that runs the
-production stack), else `docker-compose.yml`. `flatpak-spawn --host` is used only when
-`docker` is not on `PATH` inside a Flatpak sandbox.
+production stack), else `docker-compose.yml`.
 
 ### Example Output:
 ```
