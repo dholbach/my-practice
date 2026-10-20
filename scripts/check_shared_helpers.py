@@ -5,13 +5,12 @@ prod.py ships to self-hosters as a single stdlib-only file — `curl -O prod.py`
 into an otherwise empty directory, where `setup` then fetches the compose file
 — so it cannot import a shared module, and the only sharing direction that
 would work (dev.py importing prod.py) means moving workstation concerns into
-the file that has to stay minimal. The overlap does not justify that: of 67
-top-level functions across the two scripts, exactly one is duplicated.
+the file that has to stay minimal. The overlap does not justify that: only the
+metered-connection pair is duplicated.
 
 So the copies stay, and this keeps them honest. It is not a general
-"these files look alike" check — every other similarity between them is either
-a deliberate difference (see the note on `_is_metered_connection` in both) or
-two different programs that happen to spell a command the same way.
+"these files look alike" check — every other similarity between them is two
+different programs that happen to spell a command the same way.
 """
 
 import ast
@@ -23,7 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # Functions that must stay byte-identical in both files. Add one only when the
 # copies genuinely have to agree — a difference should be a bug, not a decision.
-DUPLICATED = ("_confirm_metered_download",)
+DUPLICATED = ("_is_metered_connection", "_confirm_metered_download")
 
 FILES = ("dev.py", "prod.py")
 

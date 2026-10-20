@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
 Development helper script for the my-practice Django project.
-Automatically detects if running in VS Code on Silverblue and prepends flatpak-spawn.
 """
 
 import glob
+import inspect
 import os
 import re
 import shutil
 import subprocess
 import sys
+import time
 
 CONTAINER_NAME = "my-practice-django"
+COMPOSE = ["docker", "compose"]
 
 # Python that lives outside ./app and so is invisible to the container's
 # `ruff format .` (docker-compose mounts only ./app at /app). These are piped
@@ -45,54 +47,14 @@ def _root_ruff_target_version():
     return None
 
 
-def is_vscode():
-    """Check if running in VS Code terminal"""
-    return os.environ.get("TERM_PROGRAM") == "vscode"
+def run_docker_command(args, interactive=False, **run_kwargs):
+    """Run a command in the Django container.
 
-
-def has_flatpak_spawn():
-    """Check if flatpak-spawn is available"""
-    try:
-        subprocess.run(
-            ["flatpak-spawn", "--help"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=True,
-        )
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
-
-
-def needs_flatpak():
-    """Determine if we need to use flatpak-spawn"""
-    return is_vscode() and has_flatpak_spawn()
-
-
-def run_host_command(args):
-    """Run a command on the host (outside Docker), respecting flatpak sandbox."""
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-    cmd.extend(args)
-    return subprocess.run(cmd)
-
-
-def run_docker_command(args, interactive=False):
-    """Run a docker command, optionally through flatpak-spawn"""
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-
-    cmd.extend(["docker", "exec"])
-
-    if interactive:
-        cmd.append("-it")
-
-    cmd.append(CONTAINER_NAME)
-    cmd.extend(args)
-
-    return subprocess.run(cmd)
+    run_kwargs go to subprocess.run; passing `input` keeps the container's stdin
+    open (-i) so it can be piped in.
+    """
+    flags = ["-it"] if interactive else ["-i"] if "input" in run_kwargs else []
+    return subprocess.run(["docker", "exec", *flags, CONTAINER_NAME, *args], **run_kwargs)
 
 
 def _root_python_files():
@@ -110,15 +72,11 @@ def _run_ruff_stdin(ruff_args, source):
     app/pyproject.toml for these files. That is right for everything except
     target-version — see ROOT_PYTHON_GLOBS — which is overridden inline.
     """
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-    cmd.extend(["docker", "exec", "-i", CONTAINER_NAME, "python", "-m", "ruff"])
-    cmd.extend(ruff_args)
+    cmd = ["python", "-m", "ruff", *ruff_args]
     target_version = _root_ruff_target_version()
     if target_version:
         cmd.extend(["--config", f"target-version='{target_version}'"])
-    return subprocess.run(cmd, input=source, capture_output=True, text=True)
+    return run_docker_command(cmd, input=source, capture_output=True, text=True)
 
 
 def _ruff_root_python(write=False, verbose=False):
@@ -157,25 +115,10 @@ def _ruff_root_python(write=False, verbose=False):
     return 0
 
 
-def compose_base_cmd():
-    """Return compose command, preferring `docker compose` over `docker-compose`."""
-    if shutil.which("docker"):
-        return ["docker", "compose"]
-    return ["docker-compose"]
-
-
-def _default_route_device():
-    """Return the network interface used for the default route, or None."""
-    try:
-        cmd = ["flatpak-spawn", "--host"] if needs_flatpak() else []
-        cmd += ["ip", "route", "show", "default"]
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
-        parts = out.stdout.split()
-        return parts[parts.index("dev") + 1] if "dev" in parts else None
-    except Exception:
-        return None
-
-
+# This and _confirm_metered_download are duplicated verbatim in prod.py. prod.py
+# ships to self-hosters as a single stdlib-only file, so it cannot import a
+# shared module, and the copies must stay identical —
+# scripts/check_shared_helpers.py fails if they drift.
 def _is_metered_connection():
     """Best-effort NetworkManager check for a metered connection (e.g. mobile hotspot).
 
@@ -183,28 +126,31 @@ def _is_metered_connection():
     determined (no NetworkManager, no default route, non-Linux host, ...).
     Callers should treat None as "unknown" and not block on it.
     """
-    # Deliberately not identical to prod.py's copy: only dev.py routes through
-    # flatpak-spawn, because it can run from a VS Code Flatpak terminal whose
-    # sandbox cannot reach the host's ip/nmcli. prod.py runs on a server host
-    # and must stay minimal — don't "sync" this one.
     if not shutil.which("nmcli"):
         return None
-    device = _default_route_device()
-    if not device:
-        return None
     try:
-        cmd = ["flatpak-spawn", "--host"] if needs_flatpak() else []
-        cmd += ["nmcli", "-t", "-f", "GENERAL.METERED", "device", "show", device]
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
+        route = subprocess.run(
+            ["ip", "route", "show", "default"],
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        parts = route.stdout.split()
+        device = parts[parts.index("dev") + 1] if "dev" in parts else None
+        if not device:
+            return None
+        out = subprocess.run(
+            ["nmcli", "-t", "-f", "GENERAL.METERED", "device", "show", device],
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
         value = out.stdout.strip().split(":", 1)[-1]
         return value.startswith("yes")
     except Exception:
         return None
 
 
-# Duplicated verbatim in prod.py. prod.py ships to self-hosters as a single
-# stdlib-only file, so it cannot import a shared module, and the two copies must
-# stay identical — scripts/check_shared_helpers.py fails if they drift.
 def _confirm_metered_download(action):
     """Ask before a data-heavy operation if the active connection looks metered.
 
@@ -235,10 +181,7 @@ def cmd_restart(args):
         return cmd_start(extra_args)
     else:
         print(f"Restarting {CONTAINER_NAME}...")
-        cmd = []
-        if needs_flatpak():
-            cmd.extend(["flatpak-spawn", "--host"])
-        cmd.extend(["docker", "restart", CONTAINER_NAME])
+        cmd = ["docker", "restart", CONTAINER_NAME]
         return subprocess.run(cmd)
 
 
@@ -391,12 +334,7 @@ def cmd_test(args):
     print("Test Summary:")
     print("=" * 50)
     for test_type, code in results:
-        if code is None:
-            status = "⊘ SKIPPED"
-        elif code == 0:
-            status = "✓ PASSED"
-        else:
-            status = "✗ FAILED"
+        status = "✓ PASSED" if code == 0 else "✗ FAILED"
         print(f"{test_type:12} {status}")
     print("=" * 50)
 
@@ -455,17 +393,7 @@ def cmd_manage(args):
             if not host_path.startswith("/app"):
                 filename = os.path.basename(host_path)
                 container_tmp_path = f"/tmp/{filename}"
-                cp_cmd = []
-                if needs_flatpak():
-                    cp_cmd.extend(["flatpak-spawn", "--host"])
-                cp_cmd.extend(
-                    [
-                        "docker",
-                        "cp",
-                        host_path,
-                        f"{CONTAINER_NAME}:{container_tmp_path}",
-                    ]
-                )
+                cp_cmd = ["docker", "cp", host_path, f"{CONTAINER_NAME}:{container_tmp_path}"]
                 print(f"Copying {host_path} → container:{container_tmp_path}")
                 result = subprocess.run(cp_cmd)
                 if result.returncode != 0:
@@ -478,11 +406,9 @@ def cmd_manage(args):
 
     # Clean up the temporary file from the container.
     if container_tmp_path:
-        rm_cmd = []
-        if needs_flatpak():
-            rm_cmd.extend(["flatpak-spawn", "--host"])
-        rm_cmd.extend(["docker", "exec", CONTAINER_NAME, "rm", "-f", container_tmp_path])
-        subprocess.run(rm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        run_docker_command(
+            ["rm", "-f", container_tmp_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
 
     return result
 
@@ -506,16 +432,8 @@ def cmd_shell(args):
             )
             return subprocess.CompletedProcess(args=[], returncode=1)
 
-        # Join all remaining args as the command
         command = " ".join(args[1:])
-
-        # Execute command via stdin
-        cmd = []
-        if needs_flatpak():
-            cmd.extend(["flatpak-spawn", "--host"])
-        cmd.extend(["docker", "exec", "-i", CONTAINER_NAME, "python", "manage.py", "shell"])
-
-        return subprocess.run(cmd, input=command.encode(), capture_output=False)
+        return run_docker_command(["python", "manage.py", "shell"], input=command.encode())
     else:
         # Interactive shell
         return run_docker_command(["python", "manage.py", "shell"], interactive=True)
@@ -540,37 +458,18 @@ def cmd_build(args):
         print("Aborted.")
         return subprocess.CompletedProcess(args=[], returncode=1)
     print("Building Docker image(s)...")
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-    cmd.extend(compose_base_cmd())
-    cmd.append("build")
-    if args:
-        cmd.extend(args)
-    return subprocess.run(cmd)
+    return subprocess.run([*COMPOSE, "build", *args])
 
 
 def cmd_start(args):
     """Start all containers with compose."""
     print("Starting containers with compose...")
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-    cmd.extend(compose_base_cmd())
-    cmd.extend(["up", "-d"])
-    if args:
-        cmd.extend(args)
-    result = subprocess.run(cmd)
+    result = subprocess.run([*COMPOSE, "up", "-d", *args])
     if result.returncode != 0:
         return result
     # Wait for Django to finish migrating and start serving requests.
     print("Waiting for Django to be ready...", end="", flush=True)
-    wait_cmd = []
-    if needs_flatpak():
-        wait_cmd.extend(["flatpak-spawn", "--host"])
-    wait_cmd.extend(["docker", "inspect", "--format", "{{.State.Health.Status}}", CONTAINER_NAME])
-    import time
-
+    wait_cmd = ["docker", "inspect", "--format", "{{.State.Health.Status}}", CONTAINER_NAME]
     for _ in range(60):
         out = subprocess.run(wait_cmd, capture_output=True, text=True)
         status = out.stdout.strip()
@@ -590,50 +489,20 @@ def cmd_start(args):
 def cmd_stop(args):
     """Stop all containers with compose."""
     print("Stopping containers with compose...")
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-    cmd.extend(compose_base_cmd())
-    cmd.extend(["down"])
-    if args:
-        cmd.extend(args)
-    return subprocess.run(cmd)
+    return subprocess.run([*COMPOSE, "down", *args])
 
 
 def cmd_logs(args):
-    """Show container logs"""
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-
-    # If no args or only flags, use compose logs for all services
-    if not args or (args and args[0].startswith("-")):
-        cmd.extend(compose_base_cmd())
-        cmd.extend(["logs"])
-        if "-f" not in args and "--follow" not in args:
-            cmd.extend(["--tail", "100"])
-        if args:
-            cmd.extend(args)
-    else:
-        # Specific container requested, use docker logs
-        cmd.extend(["docker", "logs"])
-        if "-f" not in args and "--follow" not in args:
-            cmd.extend(["--tail", "100"])
-        cmd.extend(args)
-
-    return subprocess.run(cmd)
+    """Show container logs: all services, or the container named first."""
+    all_services = not args or args[0].startswith("-")
+    prefix = [*COMPOSE, "logs"] if all_services else ["docker", "logs"]
+    tail = [] if "-f" in args or "--follow" in args else ["--tail", "100"]
+    return subprocess.run([*prefix, *tail, *args])
 
 
 def cmd_ps(args):
     """Show container status"""
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-    cmd.extend(compose_base_cmd())
-    cmd.extend(["ps"])
-    if args:
-        cmd.extend(args)
-    return subprocess.run(cmd)
+    return subprocess.run([*COMPOSE, "ps", *args])
 
 
 def cmd_migrate(args):
@@ -648,10 +517,7 @@ def cmd_makemigrations(args):
 
 def _container_running():
     """Whether the Django container is up (`docker exec` would fail otherwise)."""
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-    cmd.extend(["docker", "inspect", "--format", "{{.State.Running}}", CONTAINER_NAME])
+    cmd = ["docker", "inspect", "--format", "{{.State.Running}}", CONTAINER_NAME]
     out = subprocess.run(cmd, capture_output=True, text=True)
     return out.returncode == 0 and out.stdout.strip() == "true"
 
@@ -674,6 +540,9 @@ def cmd_i18n(args):
             print("ℹ️  Django container not running — catalogs compile on next start.")
             return subprocess.CompletedProcess(args=[], returncode=0)
     sub = args[0] if args else None
+    if sub not in (None, "makemessages", "compilemessages"):
+        print(f"Error: unknown i18n step '{sub}' (expected makemessages or compilemessages)")
+        return subprocess.CompletedProcess(args=[], returncode=1)
     if sub in (None, "makemessages"):
         result = run_docker_command(
             ["python", "manage.py", "makemessages", "-l", "de", "-l", "en", "--no-wrap"]
@@ -683,13 +552,6 @@ def cmd_i18n(args):
     if sub in (None, "compilemessages"):
         result = run_docker_command(["python", "manage.py", "compilemessages"])
     return result
-
-
-def cmd_runserver(args):
-    """Start development server (if not already running)"""
-    print("Note: Django server should already be running in the container")
-    print("Use 'dev.py logs -f' to view server output")
-    return subprocess.CompletedProcess(args=[], returncode=0)
 
 
 def cmd_quality(args):
@@ -759,9 +621,8 @@ def cmd_quality(args):
                 print("   Run with --verbose to see details")
         print()
 
-        # Plain subprocess, not run_host_command: this only reads two files in
-        # the workspace, so it needs neither the container (which mounts just
-        # ./app) nor flatpak-spawn (whose host has no sys.executable of ours).
+        # Runs on the host Python, not in the container: that mounts just ./app,
+        # and this reads dev.py and prod.py from the repo root.
         print("2️⃣ ½ Duplicated helpers (dev.py ↔ prod.py)")
         print("-" * 30)
         dup_result = subprocess.run([sys.executable, "scripts/check_shared_helpers.py"])
@@ -843,7 +704,6 @@ def cmd_quality(args):
 def _print_outdated_dev_packages():
     """Print outdated host packages that appear in requirements-dev.txt."""
     import json
-    import re
 
     dev_req = os.path.join(os.path.dirname(__file__), "app", "requirements-dev.txt")
     try:
@@ -861,10 +721,7 @@ def _print_outdated_dev_packages():
         print("  (requirements-dev.txt not found)")
         return
 
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-    cmd.extend(["pip3", "list", "--outdated", "--format", "json"])
+    cmd = ["pip3", "list", "--outdated", "--format", "json"]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0 or not result.stdout.strip():
         print("  (could not run pip3 on host)")
@@ -901,13 +758,7 @@ def cmd_review(args):
         -h, --help  Show this help message
     """
     if "-h" in args or "--help" in args:
-        print("Usage: ./dev.py review [--full] [--verbose] [--no-tests]")
-        print()
-        print("Options:")
-        print("  --full      Quarterly mode: adds radon complexity + long-file listing")
-        print("  --verbose   Show full tool output instead of summaries")
-        print("  --no-tests  Skip the test-coverage step (faster, no DB required)")
-        print("  -h, --help  Show this help message")
+        print(inspect.getdoc(cmd_review))
         return subprocess.CompletedProcess(args=[], returncode=0)
 
     full = "--full" in args
@@ -1132,7 +983,7 @@ def cmd_calendar_auth(_args):
     url = "http://localhost:8000/calendar/authorize/"
     print(f"Opening {url} in your browser...")
     print("Complete the Google sign-in to refresh the calendar token.")
-    result = run_host_command(["xdg-open", url])
+    result = subprocess.run(["xdg-open", url])
     if result.returncode != 0:
         print(f"xdg-open failed. Open this URL manually in your browser:\n  {url}")
     return result
@@ -1161,7 +1012,6 @@ def cmd_smoke(args):
         --yes       Skip the metered-connection confirmation prompt
     """
     import base64
-    import re
     import secrets as pysecrets
     import tempfile
 
@@ -1192,12 +1042,7 @@ def cmd_smoke(args):
     compose_file = os.path.join(repo_dir, "docker-compose.smoke.yml")
 
     def compose(*extra, capture=False):
-        cmd = []
-        if needs_flatpak():
-            cmd.extend(["flatpak-spawn", "--host"])
-        cmd.extend(compose_base_cmd())
-        cmd.extend(["-p", project, "-f", compose_file, "--env-file", env_file])
-        cmd.extend(extra)
+        cmd = [*COMPOSE, "-p", project, "-f", compose_file, "--env-file", env_file, *extra]
         return subprocess.run(cmd, capture_output=capture, text=capture)
 
     def fail(result, message):
@@ -1339,15 +1184,7 @@ def cmd_run(args):
     with open(script_path, "r") as f:
         script_content = f.read()
 
-    # Execute via Django shell with script content
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-
-    cmd.extend(["docker", "exec", "-i", CONTAINER_NAME, "python", "manage.py", "shell"])
-
-    result = subprocess.run(cmd, input=script_content.encode(), capture_output=False)
-    return result
+    return run_docker_command(["python", "manage.py", "shell"], input=script_content.encode())
 
 
 def cmd_exec(args):
@@ -1376,28 +1213,7 @@ def cmd_sql(args):
         with open(query, "r") as f:
             query = f.read()
 
-    # Execute SQL via psql
-    cmd = []
-    if needs_flatpak():
-        cmd.extend(["flatpak-spawn", "--host"])
-
-    cmd.extend(
-        [
-            "docker",
-            "exec",
-            "-i",
-            CONTAINER_NAME,
-            "psql",
-            "-U",
-            "my_practice",
-            "-d",
-            "my_practice",
-            "-c",
-            query,
-        ]
-    )
-
-    return subprocess.run(cmd)
+    return run_docker_command(["psql", "-U", "my_practice", "-d", "my_practice", "-c", query])
 
 
 def cmd_psql(args):
@@ -1429,7 +1245,6 @@ COMMANDS = {
     "migrate": cmd_migrate,
     "makemigrations": cmd_makemigrations,
     "i18n": cmd_i18n,
-    "runserver": cmd_runserver,
     "quality": cmd_quality,
     "lint": cmd_lint,
     "review": cmd_review,
@@ -1470,7 +1285,6 @@ def print_help():
     print("  migrate [args]       - Run migrations")
     print("  makemigrations [args]- Create new migrations")
     print("  i18n [sub]           - Extract/compile translations (makemessages + compilemessages)")
-    print("  runserver            - Info about development server")
     print("  lint                 - Fast lint check: ruff format + ruff check (no tests, ~seconds)")
     print("  lint --verbose       - Lint with full output")
     print("  quality              - Full pre-release check: lint + full test suite (~minutes)")
@@ -1480,7 +1294,7 @@ def print_help():
     print("  review               - Monthly codebase health check (dead code, CVEs, coverage)")
     print("  review --full        - Quarterly review (adds complexity analysis)")
     print("  review --verbose     - Show full tool output during review")
-    print("  format               - Auto-format code with ruff format + ruff check --fix")
+    print("  format               - Auto-format code with ruff format")
     print(
         "  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)"
     )
@@ -1514,7 +1328,6 @@ def print_help():
     print("  ./dev.py exec ls -la /app                     # Execute command in container")
     print('  ./dev.py sql "SELECT COUNT(*) FROM ..."       # Execute SQL query')
     print("  ./dev.py psql                                 # Open PostgreSQL shell")
-    print("\nNote: Automatically uses flatpak-spawn when running in VS Code")
 
 
 def main():
