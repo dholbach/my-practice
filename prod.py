@@ -766,12 +766,6 @@ def _setting(name, default=""):
     return re.sub(r"\s+#.*$", "", value).strip() or default
 
 
-def _docker():
-    if shutil.which("docker"):
-        return ["docker"]
-    raise BackupError("docker not found on PATH")
-
-
 def _backup_dir():
     base = os.path.dirname(os.path.abspath(__file__))
     data_dir = _setting(
@@ -787,7 +781,7 @@ def _compose_cmd(args):
     if "--compose-file" in args:
         # Colon-separated, like Compose's own COMPOSE_FILE.
         files = [os.path.abspath(f) for f in args[args.index("--compose-file") + 1].split(":")]
-    return [*_docker(), "compose", *(arg for f in files for arg in ("-f", f))]
+    return ["docker", "compose", *(arg for f in files for arg in ("-f", f))]
 
 
 def _passphrase_file():

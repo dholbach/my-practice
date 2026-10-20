@@ -4,13 +4,16 @@ Development helper script for the my-practice Django project.
 """
 
 import glob
+import inspect
 import os
 import re
 import shutil
 import subprocess
 import sys
+import time
 
 CONTAINER_NAME = "my-practice-django"
+COMPOSE = ["docker", "compose"]
 
 # Python that lives outside ./app and so is invisible to the container's
 # `ruff format .` (docker-compose mounts only ./app at /app). These are piped
@@ -44,17 +47,14 @@ def _root_ruff_target_version():
     return None
 
 
-def run_docker_command(args, interactive=False):
-    """Run a docker exec command against the Django container."""
-    cmd = ["docker", "exec"]
+def run_docker_command(args, interactive=False, **run_kwargs):
+    """Run a command in the Django container.
 
-    if interactive:
-        cmd.append("-it")
-
-    cmd.append(CONTAINER_NAME)
-    cmd.extend(args)
-
-    return subprocess.run(cmd)
+    run_kwargs go to subprocess.run; passing `input` keeps the container's stdin
+    open (-i) so it can be piped in.
+    """
+    flags = ["-it"] if interactive else ["-i"] if "input" in run_kwargs else []
+    return subprocess.run(["docker", "exec", *flags, CONTAINER_NAME, *args], **run_kwargs)
 
 
 def _root_python_files():
@@ -72,12 +72,11 @@ def _run_ruff_stdin(ruff_args, source):
     app/pyproject.toml for these files. That is right for everything except
     target-version — see ROOT_PYTHON_GLOBS — which is overridden inline.
     """
-    cmd = ["docker", "exec", "-i", CONTAINER_NAME, "python", "-m", "ruff"]
-    cmd.extend(ruff_args)
+    cmd = ["python", "-m", "ruff", *ruff_args]
     target_version = _root_ruff_target_version()
     if target_version:
         cmd.extend(["--config", f"target-version='{target_version}'"])
-    return subprocess.run(cmd, input=source, capture_output=True, text=True)
+    return run_docker_command(cmd, input=source, capture_output=True, text=True)
 
 
 def _ruff_root_python(write=False, verbose=False):
@@ -114,13 +113,6 @@ def _ruff_root_python(write=False, verbose=False):
             print(f"   {problem}" if verbose else f"   {problem.splitlines()[0]}")
         return 1
     return 0
-
-
-def compose_base_cmd():
-    """Return compose command, preferring `docker compose` over `docker-compose`."""
-    if shutil.which("docker"):
-        return ["docker", "compose"]
-    return ["docker-compose"]
 
 
 # This and _confirm_metered_download are duplicated verbatim in prod.py. prod.py
@@ -342,12 +334,7 @@ def cmd_test(args):
     print("Test Summary:")
     print("=" * 50)
     for test_type, code in results:
-        if code is None:
-            status = "⊘ SKIPPED"
-        elif code == 0:
-            status = "✓ PASSED"
-        else:
-            status = "✗ FAILED"
+        status = "✓ PASSED" if code == 0 else "✗ FAILED"
         print(f"{test_type:12} {status}")
     print("=" * 50)
 
@@ -419,8 +406,9 @@ def cmd_manage(args):
 
     # Clean up the temporary file from the container.
     if container_tmp_path:
-        rm_cmd = ["docker", "exec", CONTAINER_NAME, "rm", "-f", container_tmp_path]
-        subprocess.run(rm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        run_docker_command(
+            ["rm", "-f", container_tmp_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
 
     return result
 
@@ -444,13 +432,8 @@ def cmd_shell(args):
             )
             return subprocess.CompletedProcess(args=[], returncode=1)
 
-        # Join all remaining args as the command
         command = " ".join(args[1:])
-
-        # Execute command via stdin
-        cmd = ["docker", "exec", "-i", CONTAINER_NAME, "python", "manage.py", "shell"]
-
-        return subprocess.run(cmd, input=command.encode(), capture_output=False)
+        return run_docker_command(["python", "manage.py", "shell"], input=command.encode())
     else:
         # Interactive shell
         return run_docker_command(["python", "manage.py", "shell"], interactive=True)
@@ -475,28 +458,18 @@ def cmd_build(args):
         print("Aborted.")
         return subprocess.CompletedProcess(args=[], returncode=1)
     print("Building Docker image(s)...")
-    cmd = compose_base_cmd()
-    cmd.append("build")
-    if args:
-        cmd.extend(args)
-    return subprocess.run(cmd)
+    return subprocess.run([*COMPOSE, "build", *args])
 
 
 def cmd_start(args):
     """Start all containers with compose."""
     print("Starting containers with compose...")
-    cmd = compose_base_cmd()
-    cmd.extend(["up", "-d"])
-    if args:
-        cmd.extend(args)
-    result = subprocess.run(cmd)
+    result = subprocess.run([*COMPOSE, "up", "-d", *args])
     if result.returncode != 0:
         return result
     # Wait for Django to finish migrating and start serving requests.
     print("Waiting for Django to be ready...", end="", flush=True)
     wait_cmd = ["docker", "inspect", "--format", "{{.State.Health.Status}}", CONTAINER_NAME]
-    import time
-
     for _ in range(60):
         out = subprocess.run(wait_cmd, capture_output=True, text=True)
         status = out.stdout.strip()
@@ -516,42 +489,20 @@ def cmd_start(args):
 def cmd_stop(args):
     """Stop all containers with compose."""
     print("Stopping containers with compose...")
-    cmd = compose_base_cmd()
-    cmd.extend(["down"])
-    if args:
-        cmd.extend(args)
-    return subprocess.run(cmd)
+    return subprocess.run([*COMPOSE, "down", *args])
 
 
 def cmd_logs(args):
-    """Show container logs"""
-    cmd = []
-
-    # If no args or only flags, use compose logs for all services
-    if not args or (args and args[0].startswith("-")):
-        cmd.extend(compose_base_cmd())
-        cmd.extend(["logs"])
-        if "-f" not in args and "--follow" not in args:
-            cmd.extend(["--tail", "100"])
-        if args:
-            cmd.extend(args)
-    else:
-        # Specific container requested, use docker logs
-        cmd.extend(["docker", "logs"])
-        if "-f" not in args and "--follow" not in args:
-            cmd.extend(["--tail", "100"])
-        cmd.extend(args)
-
-    return subprocess.run(cmd)
+    """Show container logs: all services, or the container named first."""
+    all_services = not args or args[0].startswith("-")
+    prefix = [*COMPOSE, "logs"] if all_services else ["docker", "logs"]
+    tail = [] if "-f" in args or "--follow" in args else ["--tail", "100"]
+    return subprocess.run([*prefix, *tail, *args])
 
 
 def cmd_ps(args):
     """Show container status"""
-    cmd = compose_base_cmd()
-    cmd.extend(["ps"])
-    if args:
-        cmd.extend(args)
-    return subprocess.run(cmd)
+    return subprocess.run([*COMPOSE, "ps", *args])
 
 
 def cmd_migrate(args):
@@ -589,6 +540,9 @@ def cmd_i18n(args):
             print("ℹ️  Django container not running — catalogs compile on next start.")
             return subprocess.CompletedProcess(args=[], returncode=0)
     sub = args[0] if args else None
+    if sub not in (None, "makemessages", "compilemessages"):
+        print(f"Error: unknown i18n step '{sub}' (expected makemessages or compilemessages)")
+        return subprocess.CompletedProcess(args=[], returncode=1)
     if sub in (None, "makemessages"):
         result = run_docker_command(
             ["python", "manage.py", "makemessages", "-l", "de", "-l", "en", "--no-wrap"]
@@ -598,13 +552,6 @@ def cmd_i18n(args):
     if sub in (None, "compilemessages"):
         result = run_docker_command(["python", "manage.py", "compilemessages"])
     return result
-
-
-def cmd_runserver(args):
-    """Start development server (if not already running)"""
-    print("Note: Django server should already be running in the container")
-    print("Use 'dev.py logs -f' to view server output")
-    return subprocess.CompletedProcess(args=[], returncode=0)
 
 
 def cmd_quality(args):
@@ -757,7 +704,6 @@ def cmd_quality(args):
 def _print_outdated_dev_packages():
     """Print outdated host packages that appear in requirements-dev.txt."""
     import json
-    import re
 
     dev_req = os.path.join(os.path.dirname(__file__), "app", "requirements-dev.txt")
     try:
@@ -812,13 +758,7 @@ def cmd_review(args):
         -h, --help  Show this help message
     """
     if "-h" in args or "--help" in args:
-        print("Usage: ./dev.py review [--full] [--verbose] [--no-tests]")
-        print()
-        print("Options:")
-        print("  --full      Quarterly mode: adds radon complexity + long-file listing")
-        print("  --verbose   Show full tool output instead of summaries")
-        print("  --no-tests  Skip the test-coverage step (faster, no DB required)")
-        print("  -h, --help  Show this help message")
+        print(inspect.getdoc(cmd_review))
         return subprocess.CompletedProcess(args=[], returncode=0)
 
     full = "--full" in args
@@ -1072,7 +1012,6 @@ def cmd_smoke(args):
         --yes       Skip the metered-connection confirmation prompt
     """
     import base64
-    import re
     import secrets as pysecrets
     import tempfile
 
@@ -1103,9 +1042,7 @@ def cmd_smoke(args):
     compose_file = os.path.join(repo_dir, "docker-compose.smoke.yml")
 
     def compose(*extra, capture=False):
-        cmd = compose_base_cmd()
-        cmd.extend(["-p", project, "-f", compose_file, "--env-file", env_file])
-        cmd.extend(extra)
+        cmd = [*COMPOSE, "-p", project, "-f", compose_file, "--env-file", env_file, *extra]
         return subprocess.run(cmd, capture_output=capture, text=capture)
 
     def fail(result, message):
@@ -1247,11 +1184,7 @@ def cmd_run(args):
     with open(script_path, "r") as f:
         script_content = f.read()
 
-    # Execute via Django shell with script content
-    cmd = ["docker", "exec", "-i", CONTAINER_NAME, "python", "manage.py", "shell"]
-
-    result = subprocess.run(cmd, input=script_content.encode(), capture_output=False)
-    return result
+    return run_docker_command(["python", "manage.py", "shell"], input=script_content.encode())
 
 
 def cmd_exec(args):
@@ -1280,11 +1213,7 @@ def cmd_sql(args):
         with open(query, "r") as f:
             query = f.read()
 
-    # Execute SQL via psql
-    cmd = ["docker", "exec", "-i", CONTAINER_NAME, "psql", "-U", "my_practice", "-d", "my_practice"]
-    cmd.extend(["-c", query])
-
-    return subprocess.run(cmd)
+    return run_docker_command(["psql", "-U", "my_practice", "-d", "my_practice", "-c", query])
 
 
 def cmd_psql(args):
@@ -1316,7 +1245,6 @@ COMMANDS = {
     "migrate": cmd_migrate,
     "makemigrations": cmd_makemigrations,
     "i18n": cmd_i18n,
-    "runserver": cmd_runserver,
     "quality": cmd_quality,
     "lint": cmd_lint,
     "review": cmd_review,
@@ -1357,7 +1285,6 @@ def print_help():
     print("  migrate [args]       - Run migrations")
     print("  makemigrations [args]- Create new migrations")
     print("  i18n [sub]           - Extract/compile translations (makemessages + compilemessages)")
-    print("  runserver            - Info about development server")
     print("  lint                 - Fast lint check: ruff format + ruff check (no tests, ~seconds)")
     print("  lint --verbose       - Lint with full output")
     print("  quality              - Full pre-release check: lint + full test suite (~minutes)")
@@ -1367,7 +1294,7 @@ def print_help():
     print("  review               - Monthly codebase health check (dead code, CVEs, coverage)")
     print("  review --full        - Quarterly review (adds complexity analysis)")
     print("  review --verbose     - Show full tool output during review")
-    print("  format               - Auto-format code with ruff format + ruff check --fix")
+    print("  format               - Auto-format code with ruff format")
     print(
         "  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)"
     )
