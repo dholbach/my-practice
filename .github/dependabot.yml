@@ -31,15 +31,14 @@ updates:
     # until 2026-09, where there is no requirements file, so Dependabot found no
     # Python dependencies at all and every pin was bumped by hand.
     #
-    # TEMPORARY: "/" is listed only so Dependabot's graph job submits an empty
-    # snapshot under the `dependabot-pip` correlator. The June 2026 jobs against
-    # "/" left a stale snapshot of the since-deleted root requirements-dev.txt
-    # (WeasyPrint 69.0, Django 6.0.6, ...) that keeps raising false alerts, and
-    # only Dependabot may overwrite it — the submission API reserves the
-    # `dependabot` detector name. Revert to `directory: "/app"` once the
-    # dependency graph no longer lists a root requirements-dev.txt.
+    # The June 2026 jobs against "/" left a stale dependency-graph snapshot of
+    # the since-deleted root requirements-dev.txt that can raise false alerts
+    # (dismiss them as inaccurate). Listing "/" again to make Dependabot
+    # overwrite it was tried in 2026-10 and didn't clear it: the "/" job
+    # resolves app/requirements*.txt too, so it only opened a duplicate PR for
+    # every major bump.
     - package-ecosystem: "pip"
-      directories: ["/app", "/"]
+      directory: "/app"
       schedule:
         interval: "weekly"
       cooldown:
