@@ -10,12 +10,12 @@ nh3==0.3.7
 gunicorn==26.2.0
 python-dotenv==1.2.4
 weasyprint==70.0
-pydyf==0.12.1
+pydyf==0.13.0
 pillow==12.3.0
 whitenoise==6.12.0
 python-dateutil==2.9.0.post0
 pdfplumber==0.11.10
-pypdf==6.20.1
+pypdf==6.21.0
 urllib3==2.8.0
 sqlparse==0.6.0  # transitive via Django (>=0.5.0); pinned to close PYSEC-2026-3696..3699
 
