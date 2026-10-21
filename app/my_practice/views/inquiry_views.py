@@ -25,7 +25,13 @@ from django.utils.translation import gettext_lazy
 from django.views import View
 
 from ..inquiry_forms import InquiryConvertForm, InquiryForm, MarketingPeriodForm
-from ..models import Client, ClientInquiry, InquiryStatus, MarketingPeriod
+from ..models import (
+    CLOSED_INQUIRY_STATUSES,
+    Client,
+    ClientInquiry,
+    InquiryStatus,
+    MarketingPeriod,
+)
 from ..utils import DateRangeHelper
 from ..utils.inquiry_email_templates import STAGE_EMAIL_TEMPLATES
 from ..utils.practice_days import berlin_public_holidays
@@ -122,28 +128,24 @@ def _monthly_chart(base_qs, practice, today: date) -> dict:
 def _open_inquiry_ageing(base_qs, today: date) -> list[dict]:
     """Open inquiries, longest-waiting first, with the days since their latest step.
 
-    The latest step is the newest milestone date that is set (received,
-    responded, intro meeting, decision). A milestone in the future — an intro
-    meeting already booked — counts as zero days: nothing is overdue yet.
+    The latest step is ClientInquiry.last_step(). A milestone in the future —
+    an intro meeting already booked — counts as zero days: nothing is overdue yet.
     """
-    steps = [
-        ("inquiry_date", _("Received")),
-        ("contacted_date", _("Responded")),
-        ("intro_date", _("Intro meeting")),
-        ("decision_date", _("Decision")),
-    ]
+    step_labels = {
+        "inquiry_date": _("Received"),
+        "contacted_date": _("Responded"),
+        "intro_date": _("Intro meeting"),
+        "decision_date": _("Decision"),
+    }
     rows = []
     for inquiry in base_qs.open():
-        step_date, step_label = max(
-            ((getattr(inquiry, field), label) for field, label in steps if getattr(inquiry, field)),
-            key=lambda pair: pair[0],
-        )
+        step_date, step_field = inquiry.last_step()
         days = max((today - step_date).days, 0)
         rows.append(
             {
                 "inquiry": inquiry,
                 "days": days,
-                "step": step_label,
+                "step": step_labels[step_field],
                 "step_date": step_date,
                 "stale": days > _STALE_DAYS,
             }
@@ -176,8 +178,7 @@ def _build_inquiry_analytics(request) -> dict:
     funnel_stages = [(s, label, status_counts.get(s, 0)) for s, label in open_pipeline]
 
     closed_count = sum(
-        status_counts.get(s, 0)
-        for s in (InquiryStatus.DECLINED, InquiryStatus.UNREACHABLE, InquiryStatus.NOT_SUITABLE)
+        status_counts.get(s, 0) for s in CLOSED_INQUIRY_STATUSES - {InquiryStatus.CONVERTED}
     )
 
     # --- Time-in-stage averages (working days, Mon–Fri excl. Berlin public holidays) ---
@@ -285,6 +286,7 @@ class InquiryListView(PracticeScopedListView):
             When(status=InquiryStatus.DECLINED, then=Value(5)),
             When(status=InquiryStatus.UNREACHABLE, then=Value(5)),
             When(status=InquiryStatus.NOT_SUITABLE, then=Value(5)),
+            When(status=InquiryStatus.LAPSED, then=Value(5)),
             default=Value(6),
             output_field=IntegerField(),
         )

@@ -63,7 +63,7 @@
                         {% endfor %}
                     </div>
                     {% if analytics.closed_count %}
-                    <div class="funnel-closed">{% blocktrans with n=analytics.closed_count %}{{ n }} closed (Declined / No match / Unreachable){% endblocktrans %}</div>
+                    <div class="funnel-closed">{% blocktrans with n=analytics.closed_count %}{{ n }} closed (Declined / No match / Unreachable / Lapsed){% endblocktrans %}</div>
                     {% endif %}
                 </div>
 
@@ -211,7 +211,7 @@
                 <tr class="inquiry-row {% if inquiry.is_closed %}inquiry-closed{% endif %}">
                     <td class="inquiry-date">{{ inquiry.inquiry_date|date:"d.m.Y" }}</td>
                     <td class="inquiry-name">
-                        <a href="{% url 'inquiry_edit' inquiry.pk %}">{{ inquiry.full_name|privacy_name }}</a>
+                        <a href="{% url 'inquiry_edit' inquiry.pk %}">{% if inquiry.anonymised_at %}<em>{% trans "Anonymised" %}</em>{% else %}{{ inquiry.full_name|privacy_name }}{% endif %}</a>
                         {% if inquiry.converted_client %}
                         <a href="{% url 'client_detail' inquiry.converted_client.pk %}" class="converted-badge" title="{% trans "View client" %}">→ {{ inquiry.converted_client.client_code }}</a>
                         {% endif %}
@@ -259,7 +259,7 @@
                     <tr class="inquiry-row inquiry-stale {% if inquiry.is_closed %}inquiry-closed{% endif %}">
                         <td class="inquiry-date">{{ inquiry.inquiry_date|date:"d.m.Y" }}</td>
                         <td class="inquiry-name">
-                            <a href="{% url 'inquiry_edit' inquiry.pk %}">{{ inquiry.full_name|privacy_name }}</a>
+                            <a href="{% url 'inquiry_edit' inquiry.pk %}">{% if inquiry.anonymised_at %}<em>{% trans "Anonymised" %}</em>{% else %}{{ inquiry.full_name|privacy_name }}{% endif %}</a>
                             {% if inquiry.converted_client %}
                             <a href="{% url 'client_detail' inquiry.converted_client.pk %}" class="converted-badge" title="{% trans "View client" %}">→ {{ inquiry.converted_client.client_code }}</a>
                             {% endif %}

@@ -173,7 +173,8 @@ chronological record; this document only tracks current state.
 
 ### Client Inquiries & Lead Tracking
 
-- ✅ Inquiry pipeline with 9 statuses (Neu → Kontaktiert → Vorgespräch → Warteliste → Aufnahme → Aufgenommen / Abgelehnt / Nicht erreichbar / Kein Match)
+- ✅ Inquiry pipeline with 10 statuses (Neu → Kontaktiert → Vorgespräch → Warteliste → Aufnahme → Aufgenommen / Abgelehnt / Nicht erreichbar / Kein Match / Versandet)
+- ✅ `manage.py tidy_inquiries` — closes inquiries with no step for 60 days as *Lapsed* (outcome unknown, no guessed status) and anonymises closed non-client inquiries 180 days after the last contact (name, contact details and notes wiped; statistics kept). Dry run unless `--apply`
 - ✅ Source tracking (Empfehlung, Psychotherapie-Informationsdienst, Website, etc.)
 - ✅ Contact details (email, phone) per inquiry
 - ✅ One-click conversion to Client record

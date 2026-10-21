@@ -1,5 +1,6 @@
 """Client inquiry / lead tracking model."""
 
+from datetime import date
 from enum import StrEnum
 
 from django.db import models
@@ -47,6 +48,7 @@ class InquiryStatus(StrEnum):
     DECLINED = "declined"
     UNREACHABLE = "unreachable"
     NOT_SUITABLE = "not_suitable"
+    LAPSED = "lapsed"
 
 
 INQUIRY_STATUS_CHOICES = [
@@ -59,7 +61,27 @@ INQUIRY_STATUS_CHOICES = [
     (InquiryStatus.DECLINED, _("Declined")),
     (InquiryStatus.UNREACHABLE, _("Unreachable")),
     (InquiryStatus.NOT_SUITABLE, _("Not a match")),
+    (InquiryStatus.LAPSED, _("Lapsed")),
 ]
+
+CLOSED_INQUIRY_STATUSES = frozenset(
+    {
+        InquiryStatus.CONVERTED,
+        InquiryStatus.DECLINED,
+        InquiryStatus.UNREACHABLE,
+        InquiryStatus.NOT_SUITABLE,
+        InquiryStatus.LAPSED,
+    }
+)
+
+# An open inquiry with no new step for this long is closed as LAPSED: the
+# outcome is unknown, so it gets its own status rather than a guessed one.
+INQUIRY_LAPSE_DAYS = 60
+
+# Closed inquiries that never became clients keep their personal data this long
+# after the last contact, then are anonymised (GDPR Art. 5(1)(e)). There is no
+# duty to retain a mere contact request; the statistical fields are kept.
+INQUIRY_RETENTION_DAYS = 180
 
 
 class ClientInquiryQuerySet(PracticeScopedQuerySet):
@@ -67,13 +89,7 @@ class ClientInquiryQuerySet(PracticeScopedQuerySet):
 
     def open(self) -> "ClientInquiryQuerySet":
         """Return inquiries that are still in-progress (not closed)."""
-        closed = {
-            InquiryStatus.CONVERTED,
-            InquiryStatus.DECLINED,
-            InquiryStatus.UNREACHABLE,
-            InquiryStatus.NOT_SUITABLE,
-        }
-        return self.exclude(status__in=closed)
+        return self.exclude(status__in=CLOSED_INQUIRY_STATUSES)
 
 
 INQUIRY_LANGUAGE_CHOICES = [
@@ -156,6 +172,13 @@ class ClientInquiry(TimestampedModel):
         help_text=_("Date of onboarding as a client"),
     )
 
+    anonymised_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        editable=False,
+        verbose_name=_("Anonymised on"),
+    )
+
     converted_client = models.OneToOneField(
         "Client",
         on_delete=models.SET_NULL,
@@ -180,12 +203,38 @@ class ClientInquiry(TimestampedModel):
 
     def is_closed(self) -> bool:
         """Return True if inquiry is in a terminal state."""
-        return self.status in {
-            InquiryStatus.CONVERTED,
-            InquiryStatus.DECLINED,
-            InquiryStatus.UNREACHABLE,
-            InquiryStatus.NOT_SUITABLE,
-        }
+        return self.status in CLOSED_INQUIRY_STATUSES
+
+    def last_step(self) -> tuple[date, str]:
+        """Newest milestone reached, as (date, field name).
+
+        A milestone may lie in the future (an intro meeting already booked).
+        """
+        fields = ("inquiry_date", "contacted_date", "intro_date", "decision_date")
+        return max(
+            ((getattr(self, field), field) for field in fields if getattr(self, field)),
+            key=lambda pair: pair[0],
+        )
+
+    def anonymise(self) -> None:
+        """Wipe everything that identifies the person; keep the statistical fields."""
+        self.full_name = ""
+        self.email = ""
+        self.phone = ""
+        self.notes = ""
+        self.initial_contact_notes = ""
+        self.anonymised_at = timezone.now()
+        self.save(
+            update_fields=[
+                "full_name",
+                "email",
+                "phone",
+                "notes",
+                "initial_contact_notes",
+                "anonymised_at",
+                "updated_at",
+            ]
+        )
 
 
 class MarketingPeriod(TimestampedModel):

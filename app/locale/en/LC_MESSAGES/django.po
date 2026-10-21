@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 08:43+0200\n"
+"POT-Creation-Date: 2026-10-21 08:57+0200\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -41,7 +41,7 @@ msgstr ""
 #: my_practice/admin/bank_statement.py:75 my_practice/admin/client.py:110
 #: my_practice/admin/timeoff.py:42 my_practice/admin/todo.py:49
 #: my_practice/models/calendar.py:140 my_practice/models/clinical.py:318
-#: my_practice/models/inquiry.py:111 my_practice/models/invoice.py:154
+#: my_practice/models/inquiry.py:127 my_practice/models/invoice.py:154
 #: templates/includes/calendar_preflight_widget.html:28
 #: templates/my_practice/analytics.html:347
 #: templates/my_practice/bank_import.html:88
@@ -242,7 +242,7 @@ msgstr ""
 #: my_practice/forms.py:134 my_practice/forms.py:222
 #: my_practice/import_forms.py:67 my_practice/models/bank_statement.py:128
 #: my_practice/models/client.py:122 my_practice/models/client_alias.py:41
-#: my_practice/models/financial.py:63 my_practice/models/inquiry.py:126
+#: my_practice/models/financial.py:63 my_practice/models/inquiry.py:142
 #: my_practice/models/invoice.py:190 my_practice/models/operational.py:56
 #: my_practice/models/timeoff.py:55 templates/my_practice/checklist.html:119
 #: templates/my_practice/time_off_confirm_delete.html:28
@@ -362,7 +362,7 @@ msgstr ""
 #: my_practice/admin/financial.py:120 my_practice/forms.py:170
 #: my_practice/forms.py:198 my_practice/import_forms.py:117
 #: my_practice/models/client.py:289 my_practice/models/financial.py:150
-#: my_practice/models/gebueh.py:29 my_practice/models/inquiry.py:218
+#: my_practice/models/gebueh.py:29 my_practice/models/inquiry.py:267
 #: my_practice/models/invoice.py:397 my_practice/models/tag.py:84
 #: templates/my_practice/expense_confirm_delete.html:15
 #: templates/my_practice/expense_list.html:80
@@ -693,7 +693,7 @@ msgid "Client code"
 msgstr ""
 
 #: my_practice/forms.py:122 my_practice/models/client.py:111
-#: my_practice/models/inquiry.py:100 my_practice/models/practice.py:82
+#: my_practice/models/inquiry.py:116 my_practice/models/practice.py:82
 #: templates/my_practice/client_detail.html:207
 #: templates/my_practice/client_list_cards.html:110
 #: templates/my_practice/inquiry_convert_confirm.html:21
@@ -703,7 +703,7 @@ msgid "Email"
 msgstr ""
 
 #: my_practice/forms.py:123 my_practice/models/client.py:112
-#: my_practice/models/financial.py:116 my_practice/models/inquiry.py:101
+#: my_practice/models/financial.py:116 my_practice/models/inquiry.py:117
 #: my_practice/models/practice.py:99
 #: templates/my_practice/bank_expense_review.html:34
 #: templates/my_practice/client_detail.html:211
@@ -926,24 +926,24 @@ msgstr ""
 msgid "Optional: description for the grouped expense"
 msgstr ""
 
-#: my_practice/inquiry_forms.py:17 my_practice/models/inquiry.py:115
+#: my_practice/inquiry_forms.py:17 my_practice/models/inquiry.py:131
 #: templates/my_practice/inquiry_confirm_delete.html:14
 msgid "Date received"
 msgstr "Date received"
 
-#: my_practice/inquiry_forms.py:20 my_practice/models/inquiry.py:137
+#: my_practice/inquiry_forms.py:20 my_practice/models/inquiry.py:153
 msgid "Responded on"
 msgstr ""
 
-#: my_practice/inquiry_forms.py:21 my_practice/models/inquiry.py:143
+#: my_practice/inquiry_forms.py:21 my_practice/models/inquiry.py:159
 msgid "Intro meeting on"
 msgstr ""
 
-#: my_practice/inquiry_forms.py:22 my_practice/models/inquiry.py:149
+#: my_practice/inquiry_forms.py:22 my_practice/models/inquiry.py:165
 msgid "Decision on"
 msgstr ""
 
-#: my_practice/inquiry_forms.py:23 my_practice/models/inquiry.py:155
+#: my_practice/inquiry_forms.py:23 my_practice/models/inquiry.py:171
 msgid "Onboarded on"
 msgstr ""
 
@@ -964,13 +964,13 @@ msgstr ""
 msgid "Code \"%(code)s\" is already taken."
 msgstr ""
 
-#: my_practice/inquiry_forms.py:104 my_practice/models/inquiry.py:209
+#: my_practice/inquiry_forms.py:104 my_practice/models/inquiry.py:258
 #: templates/my_practice/analytics.html:49
 #: templates/my_practice/marketing_period_confirm_delete.html:14
 msgid "From"
 msgstr ""
 
-#: my_practice/inquiry_forms.py:105 my_practice/models/inquiry.py:213
+#: my_practice/inquiry_forms.py:105 my_practice/models/inquiry.py:262
 #: templates/my_practice/analytics.html:55
 #: templates/my_practice/marketing_period_confirm_delete.html:18
 msgid "To"
@@ -1058,8 +1058,8 @@ msgstr ""
 #: my_practice/models/calendar.py:109 my_practice/models/client.py:93
 #: my_practice/models/expense_category_rule.py:26
 #: my_practice/models/financial.py:52 my_practice/models/financial.py:140
-#: my_practice/models/financial.py:235 my_practice/models/inquiry.py:97
-#: my_practice/models/inquiry.py:207 my_practice/models/invoice.py:127
+#: my_practice/models/financial.py:235 my_practice/models/inquiry.py:113
+#: my_practice/models/inquiry.py:256 my_practice/models/invoice.py:127
 #: my_practice/models/practice.py:372 my_practice/models/practice.py:408
 #: my_practice/models/service.py:17 my_practice/models/todo.py:106
 #: templates/base.html:89 templates/my_practice/tax_workday_audit.html:74
@@ -1305,15 +1305,15 @@ msgstr ""
 msgid "Client does not belong to the selected practice"
 msgstr ""
 
-#: my_practice/models/client.py:82 my_practice/models/inquiry.py:80
-#: my_practice/views/inquiry_views.py:235
+#: my_practice/models/client.py:82 my_practice/models/inquiry.py:96
+#: my_practice/views/inquiry_views.py:237
 #: templates/my_practice/send_cancellation_email.html:7
 #: templates/my_practice/time_off_notice_form.html:54
 msgid "German"
 msgstr ""
 
-#: my_practice/models/client.py:83 my_practice/models/inquiry.py:81
-#: my_practice/views/inquiry_views.py:235
+#: my_practice/models/client.py:83 my_practice/models/inquiry.py:97
+#: my_practice/views/inquiry_views.py:237
 #: templates/my_practice/send_cancellation_email.html:7
 #: templates/my_practice/time_off_notice_form.html:73
 msgid "English"
@@ -1440,13 +1440,13 @@ msgstr ""
 msgid "Treatment contract"
 msgstr ""
 
-#: my_practice/models/client.py:262 my_practice/models/inquiry.py:30
+#: my_practice/models/client.py:262 my_practice/models/inquiry.py:31
 msgid "Referral"
 msgstr ""
 
 #: my_practice/models/client.py:263 my_practice/models/financial.py:31
-#: my_practice/models/financial.py:132 my_practice/models/inquiry.py:34
-#: my_practice/models/todo.py:91 my_practice/views/inquiry_views.py:328
+#: my_practice/models/financial.py:132 my_practice/models/inquiry.py:35
+#: my_practice/models/todo.py:91 my_practice/views/inquiry_views.py:331
 #: templates/my_practice/bank_expense_review.html:50
 msgid "Other"
 msgstr ""
@@ -2024,60 +2024,64 @@ msgstr ""
 msgid "Service entries"
 msgstr ""
 
-#: my_practice/models/inquiry.py:28
+#: my_practice/models/inquiry.py:29
 msgid "Google (organic)"
 msgstr ""
 
-#: my_practice/models/inquiry.py:31
+#: my_practice/models/inquiry.py:32
 msgid "Therapist directory"
 msgstr ""
 
-#: my_practice/models/inquiry.py:33
+#: my_practice/models/inquiry.py:34
 msgid "Network / colleagues"
 msgstr ""
 
-#: my_practice/models/inquiry.py:53 my_practice/views/inquiry_views.py:168
-#: my_practice/views/inquiry_views.py:312
+#: my_practice/models/inquiry.py:55 my_practice/views/inquiry_views.py:171
+#: my_practice/views/inquiry_views.py:315
 msgid "New"
 msgstr ""
 
-#: my_practice/models/inquiry.py:54 my_practice/views/inquiry_views.py:169
-#: my_practice/views/inquiry_views.py:313
+#: my_practice/models/inquiry.py:56 my_practice/views/inquiry_views.py:172
+#: my_practice/views/inquiry_views.py:316
 msgid "Contacted"
 msgstr ""
 
-#: my_practice/models/inquiry.py:55 my_practice/views/inquiry_views.py:131
-#: my_practice/views/inquiry_views.py:170
-#: my_practice/views/inquiry_views.py:314
+#: my_practice/models/inquiry.py:57 my_practice/views/inquiry_views.py:137
+#: my_practice/views/inquiry_views.py:173
+#: my_practice/views/inquiry_views.py:317
 msgid "Intro meeting"
 msgstr ""
 
-#: my_practice/models/inquiry.py:56 my_practice/views/inquiry_views.py:171
+#: my_practice/models/inquiry.py:58 my_practice/views/inquiry_views.py:174
 msgid "Waitlist"
 msgstr ""
 
-#: my_practice/models/inquiry.py:57
+#: my_practice/models/inquiry.py:59
 msgid "Intake in progress"
 msgstr ""
 
-#: my_practice/models/inquiry.py:58 my_practice/views/inquiry_views.py:173
-#: my_practice/views/inquiry_views.py:316
+#: my_practice/models/inquiry.py:60 my_practice/views/inquiry_views.py:176
+#: my_practice/views/inquiry_views.py:319
 msgid "Onboarded"
 msgstr ""
 
-#: my_practice/models/inquiry.py:59
+#: my_practice/models/inquiry.py:61
 msgid "Declined"
 msgstr ""
 
-#: my_practice/models/inquiry.py:60
+#: my_practice/models/inquiry.py:62
 msgid "Unreachable"
 msgstr ""
 
-#: my_practice/models/inquiry.py:61
+#: my_practice/models/inquiry.py:63
 msgid "Not a match"
 msgstr ""
 
-#: my_practice/models/inquiry.py:99 my_practice/models/tag.py:57
+#: my_practice/models/inquiry.py:64
+msgid "Lapsed"
+msgstr ""
+
+#: my_practice/models/inquiry.py:115 my_practice/models/tag.py:57
 #: templates/my_practice/analytics.html:346
 #: templates/my_practice/bank_import.html:85
 #: templates/my_practice/bank_review.html:210
@@ -2092,7 +2096,7 @@ msgstr ""
 msgid "Name"
 msgstr "Name"
 
-#: my_practice/models/inquiry.py:105
+#: my_practice/models/inquiry.py:121
 #: templates/my_practice/inquiry_confirm_delete.html:18
 #: templates/my_practice/inquiry_convert_confirm.html:29
 #: templates/my_practice/inquiry_list.html:203
@@ -2100,7 +2104,7 @@ msgstr "Name"
 msgid "Source"
 msgstr "Source"
 
-#: my_practice/models/inquiry.py:121
+#: my_practice/models/inquiry.py:137
 #: templates/my_practice/client_detail.html:225
 #: templates/my_practice/inquiry_list.html:107
 #: templates/my_practice/inquiry_list.html:204
@@ -2109,44 +2113,48 @@ msgstr "Source"
 msgid "Language"
 msgstr ""
 
-#: my_practice/models/inquiry.py:122
+#: my_practice/models/inquiry.py:138
 msgid "Preferred language of the person inquiring"
 msgstr ""
 
-#: my_practice/models/inquiry.py:129
+#: my_practice/models/inquiry.py:145
 msgid "Initial contact notes"
 msgstr ""
 
-#: my_practice/models/inquiry.py:130
+#: my_practice/models/inquiry.py:146
 msgid "Notes from the initial conversation (concerns, expectations, impressions)"
 msgstr ""
 
-#: my_practice/models/inquiry.py:138
+#: my_practice/models/inquiry.py:154
 msgid "Date of your first response / contact"
 msgstr ""
 
-#: my_practice/models/inquiry.py:144
+#: my_practice/models/inquiry.py:160
 msgid "Date of the intro meeting"
 msgstr ""
 
-#: my_practice/models/inquiry.py:150
+#: my_practice/models/inquiry.py:166
 msgid "Date of the client decision (intake or decline / not a match)"
 msgstr ""
 
-#: my_practice/models/inquiry.py:156
+#: my_practice/models/inquiry.py:172
 msgid "Date of onboarding as a client"
 msgstr ""
 
-#: my_practice/models/inquiry.py:165
+#: my_practice/models/inquiry.py:179
+msgid "Anonymised on"
+msgstr ""
+
+#: my_practice/models/inquiry.py:188
 msgid "Client (after onboarding)"
 msgstr ""
 
-#: my_practice/models/inquiry.py:172
+#: my_practice/models/inquiry.py:195
 #: templates/my_practice/inquiry_convert_confirm.html:15
 msgid "Inquiry"
 msgstr ""
 
-#: my_practice/models/inquiry.py:173 templates/includes/command_palette.html:41
+#: my_practice/models/inquiry.py:196 templates/includes/command_palette.html:41
 #: templates/my_practice/inquiry_list.html:6
 #: templates/my_practice/inquiry_list.html:14
 #: templates/my_practice/inquiry_list.html:20
@@ -2154,23 +2162,23 @@ msgstr ""
 msgid "Inquiries"
 msgstr ""
 
-#: my_practice/models/inquiry.py:214
+#: my_practice/models/inquiry.py:263
 msgid "Leave empty if still active"
 msgstr ""
 
-#: my_practice/models/inquiry.py:219
+#: my_practice/models/inquiry.py:268
 msgid "e.g. \"Google Ads €5/day\" or \"It's Complicated Premium\""
 msgstr ""
 
-#: my_practice/models/inquiry.py:224
+#: my_practice/models/inquiry.py:273
 msgid "Marketing period"
 msgstr ""
 
-#: my_practice/models/inquiry.py:225
+#: my_practice/models/inquiry.py:274
 msgid "Marketing periods"
 msgstr ""
 
-#: my_practice/models/inquiry.py:228
+#: my_practice/models/inquiry.py:277
 #: templates/my_practice/marketing_period_confirm_delete.html:19
 msgid "ongoing"
 msgstr ""
@@ -3308,7 +3316,7 @@ msgid "since %(start)s"
 msgstr ""
 
 #: my_practice/utils/client_detail_builder.py:232
-#: my_practice/views/inquiry_views.py:172
+#: my_practice/views/inquiry_views.py:175
 #: templates/my_practice/client_detail.html:257
 msgid "Intake"
 msgstr ""
@@ -4078,70 +4086,70 @@ msgstr ""
 msgid "Link with transaction from %(date)s removed."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:129
+#: my_practice/views/inquiry_views.py:135
 msgid "Received"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:130
+#: my_practice/views/inquiry_views.py:136
 msgid "Responded"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:132
+#: my_practice/views/inquiry_views.py:138
 msgid "Decision"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:213
+#: my_practice/views/inquiry_views.py:215
 msgid "Received → response"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:214
+#: my_practice/views/inquiry_views.py:216
 msgid "Response → intro meeting"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:215
+#: my_practice/views/inquiry_views.py:217
 msgid "Intro meeting → decision"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:216
+#: my_practice/views/inquiry_views.py:218
 msgid "Decision → onboarded"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:315
+#: my_practice/views/inquiry_views.py:318
 msgid "Waitlist / intake"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:317
+#: my_practice/views/inquiry_views.py:320
 msgid "Closed"
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:347
+#: my_practice/views/inquiry_views.py:350
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} recorded."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:357
+#: my_practice/views/inquiry_views.py:360
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} saved."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:390
+#: my_practice/views/inquiry_views.py:393
 #, python-brace-format
 msgid "Inquiry from {obj.full_name} deleted."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:400
+#: my_practice/views/inquiry_views.py:403
 msgid "Marketing period recorded."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:410
+#: my_practice/views/inquiry_views.py:413
 msgid "Marketing period saved."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:420
+#: my_practice/views/inquiry_views.py:423
 msgid "Marketing period deleted."
 msgstr ""
 
-#: my_practice/views/inquiry_views.py:480
+#: my_practice/views/inquiry_views.py:483
 #, python-format
 msgid "Client %(name)s (%(code)s) created successfully."
 msgstr ""
@@ -7521,7 +7529,7 @@ msgstr ""
 
 #: templates/my_practice/inquiry_list.html:66
 #, python-format
-msgid "%(n)s closed (Declined / No match / Unreachable)"
+msgid "%(n)s closed (Declined / No match / Unreachable / Lapsed)"
 msgstr ""
 
 #: templates/my_practice/inquiry_list.html:72
@@ -7571,6 +7579,11 @@ msgstr ""
 #: templates/my_practice/inquiry_list.html:182
 #, python-format
 msgid "Show closed (%(n)s)"
+msgstr ""
+
+#: templates/my_practice/inquiry_list.html:214
+#: templates/my_practice/inquiry_list.html:262
+msgid "Anonymised"
 msgstr ""
 
 #: templates/my_practice/inquiry_list.html:216
