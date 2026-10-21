@@ -180,6 +180,8 @@ chronological record; this document only tracks current state.
 - ✅ Open pipeline as default view — closed inquiries hidden with toggle showing count
 - ✅ Milestone dates auto-filled on status transitions (contacted, intro, intake, converted)
 - ✅ Analytics panel (einklappbar): conversion funnel, avg wait time per stage (working days, Berlin holidays), source breakdown, monthly trend (last 12 months)
+  - ✅ Monthly inquiries as a chart with marketing periods drawn as lanes above the bars (day-accurate start/end)
+  - ✅ Open inquiries ranked by days since their last step, stale (>30 days) highlighted — each row links to the inquiry
 - ✅ Active marketing period display on inquiry list
 - ✅ `initial_contact_notes` field — free-text notes for first contact
 - ✅ Aufklappbarer Erstgespräch-Leitfaden im Anfragen-Formular (P-037 Ph-2)
