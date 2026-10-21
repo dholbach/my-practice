@@ -846,6 +846,7 @@
   .status-declined      { background: var(--color-badge-red-bg);     color: var(--color-badge-red-text);     border: 1px solid var(--color-badge-red-border); }
   .status-unreachable   { background: var(--color-badge-muted-bg);   color: var(--color-badge-muted-text);   border: 1px solid var(--color-badge-muted-border); }
   .status-not_suitable  { background: var(--color-badge-amber-bg);   color: var(--color-badge-amber-text);   border: 1px solid var(--color-badge-amber-border); }
+  .status-lapsed        { background: var(--color-badge-muted-bg);   color: var(--color-badge-muted-text);   border: 1px dashed var(--color-badge-muted-border); }
   .lang-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: 1px solid transparent; font-variant-numeric: tabular-nums; letter-spacing: 0.03em; }
   .lang-de { background: var(--color-badge-blue-bg);   color: var(--color-badge-blue-text);   border-color: var(--color-badge-blue-border); }
   .lang-en { background: var(--color-badge-indigo-bg); color: var(--color-badge-indigo-text); border-color: var(--color-badge-indigo-border); }

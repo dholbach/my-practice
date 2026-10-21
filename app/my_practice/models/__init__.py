@@ -13,7 +13,10 @@ from .expense_category_rule import ExpenseCategoryRule
 from .financial import CompanyExpense, CompanyWithdrawal, ExpenseReceipt, TaxYearNote
 from .gebueh import GebuhZiffer, Leistungserfassung
 from .inquiry import (
+    CLOSED_INQUIRY_STATUSES,
     INQUIRY_LANGUAGE_CHOICES,
+    INQUIRY_LAPSE_DAYS,
+    INQUIRY_RETENTION_DAYS,
     ClientInquiry,
     InquirySource,
     InquiryStatus,
@@ -44,7 +47,10 @@ __all__ = [
     "UserPractice",
     "Client",
     "ClientDocument",
+    "CLOSED_INQUIRY_STATUSES",
     "ClientInquiry",
+    "INQUIRY_LAPSE_DAYS",
+    "INQUIRY_RETENTION_DAYS",
     "INQUIRY_LANGUAGE_CHOICES",
     "InquirySource",
     "InquiryStatus",
