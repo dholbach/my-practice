@@ -11,6 +11,11 @@
  *
  * Labels in "MM/YY" form ("01/25") get a month axis: every January is marked
  * with its year and a dashed separator, other months thin out to quarters.
+ *
+ * A bar chart's `lanes` ([{label, from, to}], positions in bar slots — slot i
+ * spans i - 0.5 … i + 0.5) are drawn as labelled strips above the bars, one
+ * row each so overlapping periods stay readable, with a dashed line wherever
+ * a lane starts or ends inside the axis.
  */
 (function (root) {
     "use strict";
@@ -100,6 +105,55 @@
     Chart.defaults.maintainAspectRatio = false;
     Chart.defaults.animation = false;
     Chart.defaults.plugins.tooltip.padding = 10;
+
+    const LANE_HEIGHT = 18;
+    const LANE_COLOURS = ["chart3", "chart2", "chart5", "chart6"];
+
+    // Labelled strips above the plot area, e.g. marketing periods on a month axis.
+    const lanes = {
+        id: "lanes",
+        beforeDatasetsDraw: function (chart, _args, opts) {
+            if (!opts.items || !opts.items.length) return;
+            const x = chart.scales.x;
+            const area = chart.chartArea;
+            const n = chart.data.labels.length;
+            const step = n > 1 ? x.getPixelForValue(1) - x.getPixelForValue(0) : area.right - area.left;
+            const px = function (slot) {
+                return x.getPixelForValue(0) + slot * step;
+            };
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.font = "11px " + Chart.defaults.font.family;
+            ctx.textBaseline = "middle";
+            opts.items.forEach(function (lane, row) {
+                const token = LANE_COLOURS[row % LANE_COLOURS.length];
+                const left = px(lane.from);
+                const right = px(lane.to);
+                const top = area.top - (opts.items.length - row) * LANE_HEIGHT - 4;
+                ctx.fillStyle = fade(token, 0.3)();
+                ctx.fillRect(left, top, right - left, LANE_HEIGHT - 3);
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(left, top, right - left, LANE_HEIGHT - 3);
+                ctx.clip();
+                ctx.fillStyle = theme.text;
+                ctx.fillText(lane.label, left + 4, top + (LANE_HEIGHT - 3) / 2);
+                ctx.restore();
+
+                ctx.strokeStyle = colour(token)();
+                ctx.setLineDash([3, 3]);
+                [lane.from, lane.to].forEach(function (slot) {
+                    if (slot <= -0.5 || slot >= n - 0.5) return;
+                    ctx.beginPath();
+                    ctx.moveTo(px(slot), top + LANE_HEIGHT - 3);
+                    ctx.lineTo(px(slot), area.bottom);
+                    ctx.stroke();
+                });
+                ctx.setLineDash([]);
+            });
+            ctx.restore();
+        },
+    };
 
     // Dashed line before each January on a month axis.
     const yearSeparators = {
@@ -270,7 +324,7 @@
         });
     }
 
-    /** Bar chart; several series give grouped bars with a legend. */
+    /** Bar chart; several series give grouped bars with a legend. lanes: see the header. */
     function bar(canvas, opts) {
         const datasets = opts.series.map(function (s) {
             return {
@@ -281,13 +335,16 @@
                 maxBarThickness: 80,
             };
         });
+        const laneItems = opts.lanes || [];
         return make(canvas, {
             type: "bar",
             data: { labels: opts.labels, datasets: datasets },
             options: {
                 interaction: { mode: "index", intersect: false },
+                layout: { padding: { top: laneItems.length ? laneItems.length * LANE_HEIGHT + 6 : 0 } },
                 scales: scales(opts),
                 plugins: {
+                    lanes: { items: laneItems },
                     legend: {
                         display: datasets.length > 1,
                         position: "top",
@@ -297,6 +354,7 @@
                     tooltip: tooltip(opts),
                 },
             },
+            plugins: [lanes],
         });
     }
 

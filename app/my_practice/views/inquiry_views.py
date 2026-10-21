@@ -1,5 +1,6 @@
 """Views for client inquiry / lead tracking (P-031)."""
 
+import calendar
 from datetime import date, timedelta
 from itertools import groupby
 from typing import cast
@@ -10,6 +11,7 @@ from django.db.models import (
     Case,
     Count,
     IntegerField,
+    Q,
     Value,
     When,
 )
@@ -62,9 +64,101 @@ def _interpolate_inquiry_template(template: dict, inquiry: ClientInquiry, practi
     return result
 
 
+# Months shown in the monthly inquiry chart, ending with the current month.
+_CHART_MONTHS = 12
+
+# An open inquiry with no new step for this long counts as stale — the same
+# threshold the grouped list below uses to fold rows away.
+_STALE_DAYS = 30
+
+
+def _month_offset(first_month: date, day: date) -> float:
+    """Position of `day` on a month axis starting at `first_month`, in bar slots.
+
+    Slot i is centred on i, so its month starts at i - 0.5; the day's fraction
+    of its month places it inside the slot.
+    """
+    months = (day.year - first_month.year) * 12 + day.month - first_month.month
+    days_in_month = calendar.monthrange(day.year, day.month)[1]
+    return months + (day.day - 1) / days_in_month - 0.5
+
+
+def _monthly_chart(base_qs, practice, today: date) -> dict:
+    """Inquiries per month for the last 12 months, plus the marketing periods as lanes.
+
+    Every month is listed, including empty ones — a gap in the bars is itself
+    the signal (e.g. volume dropping once a paid campaign ended).
+    """
+    first_month = DateRangeHelper.add_months(date(today.year, today.month, 1), 1 - _CHART_MONTHS)
+    months = [DateRangeHelper.add_months(first_month, i) for i in range(_CHART_MONTHS)]
+    counts = {
+        row["month"]: row["count"]
+        for row in base_qs.filter(inquiry_date__gte=first_month)
+        .annotate(month=TruncMonth("inquiry_date"))
+        .values("month")
+        .annotate(count=Count("id"))
+    }
+
+    axis_end = _CHART_MONTHS - 0.5
+    lanes = []
+    periods = MarketingPeriod.objects.filter(practice=practice, start_date__lte=today).filter(
+        Q(end_date__isnull=True) | Q(end_date__gte=first_month)
+    )
+    for period in periods.order_by("start_date"):
+        start = max(_month_offset(first_month, period.start_date), -0.5)
+        if period.end_date is None:
+            end = axis_end
+        else:
+            end = min(_month_offset(first_month, period.end_date + timedelta(days=1)), axis_end)
+        lanes.append({"label": period.description, "from": round(start, 3), "to": round(end, 3)})
+
+    return {
+        "labels": [m.strftime("%m/%y") for m in months],
+        "counts": [counts.get(m, 0) for m in months],
+        "lanes": lanes,
+    }
+
+
+def _open_inquiry_ageing(base_qs, today: date) -> list[dict]:
+    """Open inquiries, longest-waiting first, with the days since their latest step.
+
+    The latest step is the newest milestone date that is set (received,
+    responded, intro meeting, decision). A milestone in the future — an intro
+    meeting already booked — counts as zero days: nothing is overdue yet.
+    """
+    steps = [
+        ("inquiry_date", _("Received")),
+        ("contacted_date", _("Responded")),
+        ("intro_date", _("Intro meeting")),
+        ("decision_date", _("Decision")),
+    ]
+    rows = []
+    for inquiry in base_qs.open():
+        step_date, step_label = max(
+            ((getattr(inquiry, field), label) for field, label in steps if getattr(inquiry, field)),
+            key=lambda pair: pair[0],
+        )
+        days = max((today - step_date).days, 0)
+        rows.append(
+            {
+                "inquiry": inquiry,
+                "days": days,
+                "step": step_label,
+                "step_date": step_date,
+                "stale": days > _STALE_DAYS,
+            }
+        )
+    rows.sort(key=lambda row: row["days"], reverse=True)
+    longest = rows[0]["days"] if rows else 0
+    for row in rows:
+        row["pct"] = round(100 * row["days"] / longest) if longest else 0
+    return rows
+
+
 def _build_inquiry_analytics(request) -> dict:
     """Compute funnel counts, time-in-stage averages, source breakdown, and monthly trend."""
     base_qs = ClientInquiry.objects.for_current_practice(request)
+    today = timezone.localdate()
 
     # --- Funnel counts by status ---
     status_counts: dict[str, int] = {
@@ -150,34 +244,14 @@ def _build_inquiry_analytics(request) -> dict:
         for r in lang_rows
     ]
 
-    # --- Monthly trend (last 12 months, by inquiry_date) ---
-    range_start = DateRangeHelper.add_months(
-        date(timezone.localdate().year, timezone.localdate().month, 1), -11
-    )
-    monthly_raw = (
-        base_qs.filter(inquiry_date__gte=range_start)
-        .annotate(month=TruncMonth("inquiry_date"))
-        .values("month")
-        .annotate(count=Count("id"))
-        .order_by("month")
-    )
-    max_monthly = max((row["count"] for row in monthly_raw), default=1)
-    monthly_trend = [
-        {
-            "month": row["month"].strftime("%b %y"),
-            "count": row["count"],
-            "pct": round(100 * row["count"] / max_monthly),
-        }
-        for row in monthly_raw
-    ]
-
     return {
         "funnel_stages": funnel_stages,
         "closed_count": closed_count,
         "time_in_stage": time_in_stage,
         "source_breakdown": source_breakdown,
         "language_breakdown": language_breakdown,
-        "monthly_trend": monthly_trend,
+        "monthly_chart": _monthly_chart(base_qs, request.current_practice, today),
+        "open_ageing": _open_inquiry_ageing(base_qs, today),
         "total_inquiries": sum(status_counts.values()),
     }
 

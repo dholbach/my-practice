@@ -68,7 +68,6 @@ KNOWN_HARDCODED_HEX_PREFIXES = (
     ".timeoff-table__",
     ".progress-bar-fill",
     ".chart-bar",
-    ".monthly-bar",
     ".summary-table",
     ".summary-cards",
     ".tax-summary-container",

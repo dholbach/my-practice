@@ -5,6 +5,11 @@
 
 {% block title %}{% trans "Inquiries" %}{% endblock %}
 
+{% block extra_head_scripts %}
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/charts.js' %}"></script>
+{% endblock %}
+
 {% block page_icon %}📬{% endblock %}
 {% block page_title %}{% trans "Inquiries" %}{% endblock %}
 {% block page_subtitle %}{% trans "Prospective clients & inquiry management" %}{% endblock %}
@@ -114,18 +119,33 @@
                 </div>
                 {% endif %}
 
-                {# Monthly trend #}
-                {% if analytics.monthly_trend %}
+                {# Monthly trend, with the marketing periods as lanes above the bars #}
                 <div class="analytics-section analytics-section-wide">
                     <h4>{% trans "Inquiries per month (last 12 months)" %}</h4>
-                    <div class="monthly-bars">
-                        {% for row in analytics.monthly_trend %}
-                        <div class="monthly-bar-col">
-                            <span class="monthly-count">{{ row.count }}</span>
-                            <div class="monthly-bar-wrap">
-                                <div class="monthly-bar" style="height:{{ row.pct }}%"></div>
+                    {{ analytics.monthly_chart|json_script:"inquiry-monthly-data" }}
+                    <div class="chart-wrapper chart-wrapper--xs">
+                        <canvas id="inquiryMonthlyChart"
+                                data-series-label="{% trans "Inquiries" %}"
+                                data-month-names="{% trans "Jan" %},{% trans "Feb" %},{% trans "Mar" %},{% trans "Apr" %},{% trans "May" %},{% trans "Jun" %},{% trans "Jul" %},{% trans "Aug" %},{% trans "Sep" %},{% trans "Oct" %},{% trans "Nov" %},{% trans "Dec" %}"></canvas>
+                    </div>
+                </div>
+
+                {# Open inquiries by time since their latest step — the list to tidy up #}
+                {% if analytics.open_ageing %}
+                <div class="analytics-section analytics-section-wide">
+                    <h4>{% trans "Open inquiries: days since last step" %}</h4>
+                    <div class="ageing-list">
+                        {% for row in analytics.open_ageing %}
+                        <div class="ageing-row">
+                            <a href="{% url 'inquiry_edit' row.inquiry.pk %}" class="ageing-name">{{ row.inquiry.full_name|privacy_name }}</a>
+                            <span class="status-badge status-{{ row.inquiry.status }}">{{ row.inquiry.get_status_display }}</span>
+                            <div class="source-bar-wrap">
+                                <div class="ageing-bar {% if row.stale %}ageing-bar--stale{% endif %}" style="width:{{ row.pct }}%"></div>
                             </div>
-                            <span class="monthly-label">{{ row.month }}</span>
+                            <span class="ageing-days {% if row.stale %}text-warning{% endif %}" title="{{ row.step }}: {{ row.step_date|date:"d.m.Y" }}">
+                                {% blocktrans count days=row.days %}{{ days }} day{% plural %}{{ days }} days{% endblocktrans %}
+                                <span class="ageing-step">· {{ row.step }}</span>
+                            </span>
                         </div>
                         {% endfor %}
                     </div>
@@ -274,4 +294,18 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+MPChart.init('inquiryMonthlyChart', function(canvas) {
+    const data = JSON.parse(document.getElementById('inquiry-monthly-data').textContent);
+    MPChart.bar(canvas, {
+        labels: data.labels,
+        monthNames: canvas.dataset.monthNames.split(','),
+        lanes: data.lanes,
+        series: [{ label: canvas.dataset.seriesLabel, data: data.counts, color: 'chart1' }]
+    });
+});
+</script>
 {% endblock %}
