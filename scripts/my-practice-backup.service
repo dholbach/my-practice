@@ -1,6 +1,6 @@
 [Unit]
 Description=My Practice System Backup
-After=docker.service
+After=docker.service my-practice-app.service
 
 [Service]
 Type=oneshot

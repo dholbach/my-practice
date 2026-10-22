@@ -1,6 +1,6 @@
 [Unit]
 Description=Run hourly background jobs (calendar sync, tag update, Focus Queue sync)
-After=network.target
+After=network.target my-practice-app.service
 
 [Service]
 Type=oneshot
