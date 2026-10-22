@@ -27,14 +27,24 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # SCRIPTS.md used to install these as user units. Left in place next to the
-# system units, every backup and scheduled job would run twice.
+# system units, every backup and scheduled job would run twice. Only names this
+# repo has ever shipped are checked: a `my-practice-*` glob also matched private
+# user units that merely share the prefix, and the suggested cleanup deleted them.
 USER_UNIT_DIR="$(getent passwd "$INSTALL_USER" | cut -d: -f6)/.config/systemd/user"
-if compgen -G "${USER_UNIT_DIR}/my-practice-*" > /dev/null; then
+OLD_USER_UNITS=()
+for name in app.service backup.service backup.timer \
+            scheduled-jobs.service scheduled-jobs.timer \
+            fetch-calendar-events.service fetch-calendar-events.timer \
+            sync-focus-queue.service sync-focus-queue.timer \
+            update-client-tags.service update-client-tags.timer; do
+    [ -e "${USER_UNIT_DIR}/my-practice-${name}" ] && OLD_USER_UNITS+=("my-practice-${name}")
+done
+if [ "${#OLD_USER_UNITS[@]}" -gt 0 ]; then
     echo "⚠️  Found old user units in ${USER_UNIT_DIR}:"
-    ls -1 "${USER_UNIT_DIR}"/my-practice-* | sed 's|^|     |'
+    printf '     %s\n' "${OLD_USER_UNITS[@]}"
     echo "   Remove them as ${INSTALL_USER} (not root), or every job runs twice:"
-    echo "     systemctl --user disable --now 'my-practice-*.timer'"
-    echo "     rm -f ~/.config/systemd/user/my-practice-*.{timer,service}"
+    echo "     systemctl --user disable --now ${OLD_USER_UNITS[*]}"
+    echo "     cd ~/.config/systemd/user && rm -f ${OLD_USER_UNITS[*]}"
     echo "     systemctl --user daemon-reload"
     echo ""
 fi
@@ -69,8 +79,8 @@ systemctl enable my-practice-scheduled-jobs.timer
 systemctl start my-practice-scheduled-jobs.timer
 
 # Enable app auto-start service
-echo "🚀 Enabling app auto-start service..."
-systemctl enable my-practice-app.service
+echo "🚀 Enabling and starting app auto-start service..."
+systemctl enable --now my-practice-app.service
 
 # Show status
 echo ""

@@ -8,6 +8,3 @@ User=YOUR_USERNAME
 Group=YOUR_USERNAME
 WorkingDirectory=/path/to/my-practice
 ExecStart=/usr/bin/env python3 /path/to/my-practice/dev.py manage run_scheduled_jobs
-
-[Install]
-WantedBy=default.target
