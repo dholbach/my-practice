@@ -1,6 +1,5 @@
 [Unit]
 Description=Daily My Practice System Backup
-Requires=my-practice-backup.service
 
 [Timer]
 OnCalendar=daily

@@ -82,7 +82,8 @@ sudo bash scripts/install-system-jobs.sh
 ```
 
 It fills in the checkout path and your username (the `User=` line, so everything still runs
-as you, not as root), enables both timers and the auto-start service, and prints their status.
+as you, not as root), enables both timers, enables and starts the auto-start service (a
+no-op if the app is already running), and prints their status.
 Re-run it after moving the checkout or pulling changed unit files — it overwrites the
 installed copies.
 
@@ -105,13 +106,19 @@ user unit cannot use — copied there unedited, they fail to start.
 
 Earlier versions of this page installed the timers as user units (and before that as three
 separate timers: `update-client-tags`, `fetch-calendar-events`, `sync-focus-queue`). Remove
-them before running the installer, or every backup and job runs twice:
+them before running the installer, or every backup and job runs twice. Name the units rather
+than globbing `my-practice-*`, which would also take out any private units of your own that
+share the prefix:
 
 ```bash
-systemctl --user disable --now 'my-practice-*.timer'
-rm -f ~/.config/systemd/user/my-practice-*.{timer,service}
+systemctl --user disable --now my-practice-backup.timer my-practice-scheduled-jobs.timer my-practice-app.service
+cd ~/.config/systemd/user && rm -f my-practice-backup.{timer,service} \
+    my-practice-scheduled-jobs.{timer,service} my-practice-app.service
 systemctl --user daemon-reload
 ```
+
+Units from the older three-timer layout (`my-practice-update-client-tags.*` and friends)
+go the same way if they are still there.
 
 The installer warns if it finds any left over.
 

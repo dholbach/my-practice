@@ -1,6 +1,6 @@
 [Unit]
 Description=Run hourly background jobs (calendar sync, tag update, Focus Queue sync)
-After=network.target
+After=network.target my-practice-app.service
 
 [Service]
 Type=oneshot
@@ -8,6 +8,3 @@ User=YOUR_USERNAME
 Group=YOUR_USERNAME
 WorkingDirectory=/path/to/my-practice
 ExecStart=/usr/bin/env python3 /path/to/my-practice/dev.py manage run_scheduled_jobs
-
-[Install]
-WantedBy=default.target

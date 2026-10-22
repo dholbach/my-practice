@@ -15,7 +15,7 @@ prose — this command runs outside any request/session, so there is no
 admin UI language to render into. Translated display formatting belongs in
 the Focus Queue UI (P-050 phase 3), not in stored data here.
 
-Wired to a daily systemd timer (scripts/my-practice-sync-focus-queue.timer,
+Runs hourly as part of run_scheduled_jobs (scripts/my-practice-scheduled-jobs.timer,
 see docs/operations/SCRIPTS.md) — can still be run manually any time.
 """
 
