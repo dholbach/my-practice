@@ -3,7 +3,7 @@ Tests for invoice billing flows: create/edit form_valid+form_invalid paths,
 delete, add-sessions helpers, and the monthly billing overview.
 """
 
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from decimal import Decimal
 from unittest import mock
 
@@ -199,6 +199,33 @@ class InvoiceCreateFormValidTests(TestCase):
         invoice = Invoice.objects.get(client=self.test_client)
         self.assertEqual(invoice.items.count(), 1)
         self.assertTrue(Session.objects.filter(client=self.test_client).exists())
+
+    def test_create_with_two_sessions_same_day_links_unbilled_one(self):
+        """Two existing sessions on the item's date must not crash; the item links one."""
+        for hour in (9, 15):
+            Session.objects.create(
+                client=self.test_client, session_date=date.today(), session_time=time(hour, 0)
+            )
+        response = self.client_instance.post(reverse("invoice_create"), self._formset_data())
+        self.assertRedirects(response, reverse("invoice_list"))
+        item = Invoice.objects.get(client=self.test_client).items.get()
+        self.assertEqual(item.session.session_time, time(9, 0))
+        self.assertEqual(Session.objects.filter(client=self.test_client).count(), 2)
+
+    def test_create_skips_cancelled_twin_left_by_reschedule(self):
+        """A cancelled same-slot session (reschedule leftover) is not billed."""
+        Session.objects.create(
+            client=self.test_client,
+            session_date=date.today(),
+            session_time=time(10, 0),
+            cancelled=True,
+        )
+        live = Session.objects.create(
+            client=self.test_client, session_date=date.today(), session_time=time(10, 0)
+        )
+        self.client_instance.post(reverse("invoice_create"), self._formset_data())
+        item = Invoice.objects.get(client=self.test_client).items.get()
+        self.assertEqual(item.session, live)
 
     def test_create_invalid_formset_shows_errors_and_rerenders(self):
         # Missing rate on the one required item makes the formset invalid.
