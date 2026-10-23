@@ -128,12 +128,23 @@ class InvoiceFormsetMixin:
             if not session_date:
                 item_form.instance.session = None
                 continue
-            duration = item_form.cleaned_data.get("duration") or 60
-            session, _created = Session.objects.get_or_create(
-                client=client,
-                session_date=session_date,
-                defaults={"duration": duration},
+            current = item_form.instance.session
+            if current and current.client_id == client.pk and current.session_date == session_date:
+                continue
+            # Several sessions can share a date (calendar import keys on date + time,
+            # and a reschedule can leave a cancelled twin behind): prefer a live one not
+            # yet billed instead of get_or_create, which raises MultipleObjectsReturned.
+            same_day = Session.objects.filter(client=client, session_date=session_date).order_by(
+                "session_time", "pk"
             )
+            live = same_day.filter(cancelled=False)
+            pool = live if live.exists() else same_day
+            session = pool.filter(invoice_items__isnull=True).first() or pool.first()
+            if session is None:
+                duration = item_form.cleaned_data.get("duration") or 60
+                session = Session.objects.create(
+                    client=client, session_date=session_date, duration=duration
+                )
             item_form.instance.session = session
 
 

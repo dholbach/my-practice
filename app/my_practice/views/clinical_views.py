@@ -84,14 +84,22 @@ def session_log_create(request, pk):
             messages.error(request, _("Invalid date."))
             return redirect("client_detail", pk=pk)
 
-        # Find or create Session for this client + date
-        session, _created = Session.objects.get_or_create(
-            client=client,
-            session_date=session_date,
-            defaults={
-                "duration": int(request.POST.get("duration", 60)),
-            },
+        # A client can have several sessions on one date (calendar import keys on
+        # date + time, and a reschedule can leave a cancelled twin behind), so attach
+        # to the first live one still without a log rather than get_or_create, which
+        # raises MultipleObjectsReturned.
+        same_day = Session.objects.filter(client=client, session_date=session_date).order_by(
+            "session_time", "pk"
         )
+        live = same_day.filter(cancelled=False)
+        pool = live if live.exists() else same_day
+        session = pool.filter(log__isnull=True).first() or pool.first()
+        if session is None:
+            session = Session.objects.create(
+                client=client,
+                session_date=session_date,
+                duration=int(request.POST.get("duration", 60)),
+            )
 
         # Prevent duplicate logs
         if hasattr(session, "log"):

@@ -11,7 +11,7 @@ Covers:
     session_duration_edit
 """
 
-from datetime import date
+from datetime import date, time
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -340,6 +340,72 @@ class SessionLogCreateViewTests(ClinicalTestBase):
         )
         existing.refresh_from_db()
         self.assertTrue(hasattr(existing, "log"))
+
+    def test_post_two_sessions_same_day_attaches_to_unlogged_one(self):
+        """With two sessions on one date, the log goes to the one without a log yet."""
+        logged = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), session_time=time(9, 0)
+        )
+        SessionLog.objects.create(session=logged, content="Morning")
+        afternoon = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), session_time=time(15, 0)
+        )
+        response = self.http.post(self._url(), {"session_date": "2026-03-20", "content": "Later"})
+        self.assertEqual(response.status_code, 302)
+        afternoon.refresh_from_db()
+        self.assertEqual(afternoon.log.content, "Later")
+        self.assertEqual(Session.objects.filter(client=self.client_obj).count(), 2)
+
+    def test_post_skips_cancelled_twin_left_by_reschedule(self):
+        """A cancelled session at the same slot (reschedule leftover) is not chosen."""
+        Session.objects.create(
+            client=self.client_obj,
+            session_date=date(2026, 3, 20),
+            session_time=time(10, 0),
+            cancelled=True,
+        )
+        live = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), session_time=time(10, 0)
+        )
+        self.http.post(self._url(), {"session_date": "2026-03-20", "content": "Notes"})
+        live.refresh_from_db()
+        self.assertEqual(live.log.content, "Notes")
+
+    def test_post_logged_live_session_with_cancelled_twin_redirects_to_edit(self):
+        """Once the live session is logged, its unlogged cancelled twin is not used."""
+        Session.objects.create(
+            client=self.client_obj,
+            session_date=date(2026, 3, 20),
+            session_time=time(10, 0),
+            cancelled=True,
+        )
+        live = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), session_time=time(10, 0)
+        )
+        log = SessionLog.objects.create(session=live, content="Existing")
+        response = self.http.post(self._url(), {"session_date": "2026-03-20"})
+        self.assertRedirects(
+            response,
+            reverse("session_log_edit", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}),
+        )
+
+    def test_post_two_logged_sessions_same_day_redirects_to_edit(self):
+        """If every session that day already has a log, redirect to editing the first."""
+        first = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), session_time=time(9, 0)
+        )
+        second = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), session_time=time(15, 0)
+        )
+        first_log = SessionLog.objects.create(session=first, content="A")
+        SessionLog.objects.create(session=second, content="B")
+        response = self.http.post(self._url(), {"session_date": "2026-03-20"})
+        self.assertRedirects(
+            response,
+            reverse(
+                "session_log_edit", kwargs={"client_pk": self.client_obj.pk, "log_pk": first_log.pk}
+            ),
+        )
 
     def test_post_invalid_date_redirects(self):
         """POST with an unparseable session_date redirects with error, no Session created."""
