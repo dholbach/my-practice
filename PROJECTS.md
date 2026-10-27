@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-10-27 — v0.9.0 released**: inquiry lapse/anonymise and charts (#533, #534), same-day session crash fix (#537), systemd timer fixes (#535), Pillow 13 / python-dateutil 3.0. Highlights in [docs/CHANGELOG.md](docs/CHANGELOG.md).
 - **2026-10-21 — Inquiry charts, lapse + anonymise**: `/inquiries` gets a monthly chart with marketing periods drawn as lanes (generic `lanes` option on `MPChart.bar`) and an open-inquiry ageing list (PR #533). Follow-up adds a *Lapsed* status and `manage.py tidy_inquiries` (lapse after 60 days without a step, anonymise closed non-client inquiries 180 days after last contact); not on the scheduled-jobs timer yet — the retention period is still to be confirmed with the Verband.
-- **2026-10-15 — Screenshot refresh (#148)**: README screenshots retaken on `seed_sample_data` in the English UI, mixing light and dark theme — dashboard, Focus Queue, GebüH invoice breakdown, client heatmap, inquiries, both diagnosis callouts (standard + escalated), batch invoicing; the analytics shot is the Capacity tab. `seed_sample_data` now seeds capacity periods and keeps its cancellations (billing them as therapy had cleared the flag), so that tab is populated; its utilisation subtitle lists the practice's own targets instead of a hardcoded history. Inquiry row actions fixed (compact `.btn`s; `.btn.btn-success` scoped like `.btn-danger`).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
