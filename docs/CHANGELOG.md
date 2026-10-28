@@ -2,6 +2,17 @@
 
 Major features and milestones in chronological order.
 
+## Unreleased
+
+Security fixes from a source review of the views, settings and calendar import.
+
+**Upgrading:** one migration runs on start (`0009`, makes the pending-calendar-event key unique per practice instead of globally; existing rows already satisfy it). Restart the dev stack (`./dev.py restart`) so gunicorn rebinds to loopback.
+
+- **Security — dev stack no longer listens on the local network**: `docker-compose.yml` runs django with `network_mode: host` and bound gunicorn to `0.0.0.0:8000` with DEBUG on, so the stack holding the real data directories was reachable from other machines over plain HTTP. It binds `127.0.0.1` now, like Postgres and the prod default.
+- **Security — login lockout could be sidestepped**: the throttle key was not NFKC-normalised while Django's login form is, so fullwidth and other compatibility spellings of a username each got a fresh 5-attempt allowance.
+- **Fix — GDPR erasure left personal data behind**: the inquiry a client was converted from and their imported calendar events survived the Art. 17 deletion; they are now anonymised or deleted. GebüH service records no longer make the erasure roll back, and the notification email goes out only after the deletion has committed.
+- **Security — practice isolation (latent while single-practice)**: the scoped CRUD views fail closed for a model without the practice-scoped manager (MarketingPeriod could be edited and deleted across practices); calendar events match only the importing practice's clients; a user without a practice no longer gets another practice's Google Calendar token; pending calendar events are keyed per practice.
+
 ## 2026-10-27 — v0.9.0 minor release
 
 Inquiry outcomes you can trust, a crash fix for same-day sessions, and scheduled jobs that no longer fire before the app is up.
