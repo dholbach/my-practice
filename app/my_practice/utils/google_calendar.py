@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import cast
 
 from django.conf import settings
+from django.db.models import QuerySet
 from django.utils import timezone
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -266,7 +267,7 @@ class CalendarEventParser:
         return 0
 
     @staticmethod
-    def match_client(summary: str, clients=None) -> "Client | None":
+    def match_client(summary: str, clients) -> "Client | None":
         """
         Match client by client_code appearing as a standalone token in the summary.
 
@@ -280,15 +281,13 @@ class CalendarEventParser:
 
         Args:
             summary: Event title/summary
-            clients: List/QuerySet of clients (fetched if not provided)
+            clients: The importing practice's clients. Required: defaulting to
+                every client let one practice's calendar match (and book
+                sessions onto) another practice's clients.
 
         Returns:
             Matched Client instance or None
         """
-        if clients is None:
-            # Use optimized query - only fetch needed fields
-            clients = Client.objects.only("id", "client_code")
-
         candidates = sorted(
             (c for c in clients if c.client_code),
             key=lambda c: len(c.client_code),
@@ -331,13 +330,13 @@ class CalendarEventParser:
         return "blocked" in summary.lower()
 
     @classmethod
-    def parse_event(cls, event: dict, clients=None) -> dict:
+    def parse_event(cls, event: dict, clients) -> dict:
         """
         Parse a Google Calendar event into structured data.
 
         Args:
             event: Raw event dict from Google Calendar API
-            clients: Optional QuerySet of clients for matching
+            clients: The importing practice's clients, for matching
 
         Returns:
             Dict with parsed event data:
@@ -388,21 +387,18 @@ class CalendarEventParser:
         }
 
     @classmethod
-    def parse_events(cls, events: list, clients=None) -> list:
+    def parse_events(cls, events: list, clients) -> list:
         """
         Parse multiple Google Calendar events.
 
         Args:
             events: List of raw event dicts from Google Calendar API
-            clients: Optional QuerySet of clients (fetched once if not provided)
+            clients: The importing practice's clients, for matching
 
         Returns:
             List of parsed event dicts
         """
-        if clients is None:
-            # Use optimized query - only fetch needed fields
-            clients = Client.objects.only("id", "client_code")
-
+        clients = list(clients)  # evaluated once, not per event
         return [
             cls.parse_event(event, clients)
             for event in events
@@ -430,3 +426,8 @@ def list_calendars(service) -> list[dict]:
         }
         for entry in calendar_list.get("items", [])
     ]
+
+
+def practice_clients(practice) -> "QuerySet[Client]":
+    """The clients a practice's calendar events may be matched against."""
+    return Client.objects.for_practice(practice).only("id", "client_code")

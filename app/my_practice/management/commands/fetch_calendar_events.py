@@ -17,6 +17,7 @@ from ...models import GoogleCalendarToken, PendingCalendarEvent, Session
 from ...utils.google_calendar import (
     CalendarEventParser,
     GoogleCalendarOAuth,
+    practice_clients,
 )
 from ...utils.tag_helpers import sync_no_next_session_tag
 
@@ -126,7 +127,7 @@ class Command(BaseCommand):
             return
 
         live_ids = {e.get("id") for e in raw_events if e.get("id")}
-        parsed = CalendarEventParser.parse_events(raw_events)
+        parsed = CalendarEventParser.parse_events(raw_events, practice_clients(practice))
 
         # Clients whose Session rows changed in this run — their
         # no-next-session tag is re-synced at the end instead of waiting
