@@ -15,9 +15,14 @@ from django.urls import reverse
 from ..models import (
     Client,
     ClientDocument,
+    ClientInquiry,
     ClientTag,
+    GebuhZiffer,
+    InquiryStatus,
     Invoice,
     InvoiceItem,
+    Leistungserfassung,
+    PendingCalendarEvent,
     Practice,
     ServiceType,
     Session,
@@ -966,6 +971,64 @@ class ClientGdprDeleteTest(TestCase):
         self.assertFalse(Client.objects.filter(pk=client_pk).exists())
         page_messages = list(response.context["messages"])
         self.assertTrue(any("konnte nicht gesendet werden" in str(m) for m in page_messages))
+
+    @patch("my_practice.views.client_views.EmailMessage.send")
+    def test_delete_anonymises_source_inquiry_and_drops_calendar_events(self, mock_send):
+        inquiry = ClientInquiry.objects.create(
+            practice=self.practice,
+            full_name="Max Mustermann",
+            email="max@example.com",
+            phone="+49 123 456789",
+            source=ClientInquiry._meta.get_field("source").choices[0][0],
+            status=InquiryStatus.CONVERTED,
+            converted_client=self.eligible_client,
+        )
+        PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="evt-gdpr-1",
+            summary="TC",
+            event_date=self.old_date,
+            duration_minutes=60,
+            matched_client=self.eligible_client,
+        )
+
+        self.http.post(reverse("client_gdpr_delete", kwargs={"pk": self.eligible_client.pk}))
+
+        inquiry.refresh_from_db()
+        self.assertEqual((inquiry.full_name, inquiry.email, inquiry.phone), ("", "", ""))
+        self.assertIsNotNone(inquiry.anonymised_at)
+        self.assertFalse(PendingCalendarEvent.objects.filter(google_event_id="evt-gdpr-1").exists())
+
+    @patch("my_practice.views.client_views.EmailMessage.send")
+    def test_delete_succeeds_for_client_with_gebueh_services(self, mock_send):
+        # Leistungserfassung.session is PROTECT: it used to abort the erasure
+        # after the "your data has been deleted" email had already gone out.
+        ziffer = GebuhZiffer.objects.create(
+            nummer="T1", bezeichnung="Test", satz_min=Decimal("10"), satz_max=Decimal("50")
+        )
+        Leistungserfassung.objects.create(
+            session=self.eligible_client.sessions.get(),
+            ziffer=ziffer,
+            betrag=Decimal("50"),
+            vereinbarter_betrag=Decimal("80"),
+        )
+        client_pk = self.eligible_client.pk
+
+        response = self.http.post(reverse("client_gdpr_delete", kwargs={"pk": client_pk}))
+
+        self.assertRedirects(response, reverse("client_list"))
+        self.assertFalse(Client.objects.filter(pk=client_pk).exists())
+        mock_send.assert_called_once()
+
+    @patch("my_practice.views.client_views.EmailMessage.send")
+    def test_no_notification_when_erasure_fails(self, mock_send):
+        with (
+            patch.object(Client, "delete", side_effect=RuntimeError("db down")),
+            self.assertRaises(RuntimeError),
+        ):
+            self.http.post(reverse("client_gdpr_delete", kwargs={"pk": self.eligible_client.pk}))
+        mock_send.assert_not_called()
+        self.assertTrue(Client.objects.filter(pk=self.eligible_client.pk).exists())
 
     def test_delete_client_without_email_skips_notification(self):
         self.eligible_client.email = ""

@@ -12,7 +12,7 @@ from django.contrib import messages
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.mail import EmailMessage
 from django.db import models, transaction
-from django.db.models import Max, QuerySet
+from django.db.models import Max, Q, QuerySet
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -25,9 +25,12 @@ from ..models import (
     INVOICE_RETENTION_YEARS,
     Client,
     ClientDocument,
+    ClientInquiry,
     ClientTag,
     Invoice,
     InvoiceItem,
+    Leistungserfassung,
+    PendingCalendarEvent,
 )
 from ..utils import (
     RevenueCalculator,
@@ -432,7 +435,7 @@ def client_gdpr_delete_confirm(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 def _send_gdpr_deletion_email(request: HttpRequest, client: Client, practice) -> None:
-    """Best-effort notification email to the client before their data is erased."""
+    """Best-effort notification email to the client once their data has been erased."""
     if not (client.email and practice):
         return
     try:
@@ -476,7 +479,7 @@ def _delete_files_from_disk(paths: list[str]) -> None:
 
 @require_POST
 def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
-    """GDPR Art. 17 deletion: send notification email then erase client data."""
+    """GDPR Art. 17 deletion: erase client data, then send the notification email."""
 
     client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
     last_session = client.sessions.aggregate(last=Max("session_date"))["last"]
@@ -493,17 +496,29 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     practice = request.current_practice
     client_code = client.client_code
 
-    _send_gdpr_deletion_email(request, client, practice)
     doc_file_paths = _collect_document_file_paths(client)
 
-    # Delete in FK dependency order: invoices first, because InvoiceItem.session
-    # is PROTECT — deleting the sessions while billed items still point at them
-    # raises ProtectedError for any client who was ever invoiced.
+    # Delete in FK dependency order: invoices and GebueH service records first,
+    # because InvoiceItem.session and Leistungserfassung.session are PROTECT —
+    # deleting the sessions while either still points at them raises
+    # ProtectedError. The inquiry the client was converted from and imported
+    # calendar events only SET_NULL their link, so they would otherwise keep the
+    # client's details after the erasure the email announces.
     with transaction.atomic():
+        source_inquiry = ClientInquiry.objects.filter(converted_client=client).first()
+        if source_inquiry:
+            source_inquiry.anonymise()
+        PendingCalendarEvent.objects.filter(
+            Q(matched_client=client) | Q(session__client=client)
+        ).delete()
+        Leistungserfassung.objects.filter(session__client=client).delete()
         client.invoices.all().delete()  # cascades InvoiceItem
         client.sessions.all().delete()  # cascades SessionLog
         client.delete()  # cascades ClientDocument records, ClientProfile,
         # SupervisionItem, ClientNote, ClientAlias
+
+    # Only after the erasure has committed: the email says it has happened.
+    _send_gdpr_deletion_email(request, client, practice)
 
     # Delete document files from disk after DB records are gone
     _delete_files_from_disk(doc_file_paths)
