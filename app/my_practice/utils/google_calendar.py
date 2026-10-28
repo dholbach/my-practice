@@ -70,11 +70,11 @@ class GoogleCalendarOAuth:
         Returns:
             Created GoogleCalendarToken instance
         """
-        # Deactivate old tokens for this practice (or all if practice is None)
-        qs = GoogleCalendarToken.objects.filter(is_active=True)
-        if practice is not None:
-            qs = qs.filter(practice=practice)
-        qs.update(is_active=False)
+        # Deactivate old tokens for this practice. practice=None is the
+        # practice-less fallback token, never "every practice's tokens".
+        GoogleCalendarToken.objects.filter(is_active=True, practice=practice).update(
+            is_active=False
+        )
 
         # Convert expiry to timezone-aware datetime if present
         expires_at = None
@@ -105,16 +105,19 @@ class GoogleCalendarOAuth:
         practice-less fallback token in single-practice setups).
 
         Args:
-            practice: Optional Practice instance; when provided only that
-                      practice's token is considered.
+            practice: Practice instance, or None for the practice-less
+                      fallback token only. None used to match any practice's
+                      token, which handed a user without a practice another
+                      practice's calendar.
 
         Returns:
             The most recently created active token, or None if none exists.
         """
-        token_qs = GoogleCalendarToken.objects.filter(is_active=True)
-        if practice is not None:
-            token_qs = token_qs.filter(practice=practice)
-        return token_qs.order_by("-created_at").first()
+        return (
+            GoogleCalendarToken.objects.filter(is_active=True, practice=practice)
+            .order_by("-created_at")
+            .first()
+        )
 
     @staticmethod
     def get_service(practice=None):
@@ -123,8 +126,8 @@ class GoogleCalendarOAuth:
         Automatically refreshes expired tokens.
 
         Args:
-            practice: Optional Practice instance; when provided only that
-                      practice's token is used.
+            practice: Practice instance, or None for the practice-less
+                      fallback token.
 
         Returns:
             Google Calendar API service object or None if no valid token exists

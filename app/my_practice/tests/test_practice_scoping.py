@@ -54,8 +54,7 @@ KNOWN_OPTIONAL_PRACTICE = frozenset(
     }
 )
 
-# The calendar token lookup falls back to the practice-less token on purpose.
-KNOWN_FAIL_OPEN_FILES = frozenset({"utils/google_calendar.py"})
+KNOWN_FAIL_OPEN_FILES: frozenset[str] = frozenset()
 
 # `if practice:` guarding a filter, or `{...: practice} if practice else {}` —
 # both hand out unfiltered data when practice is None.

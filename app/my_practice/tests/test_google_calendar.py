@@ -96,11 +96,44 @@ class GoogleCalendarOAuthTest(TestCase):
         mock_creds.expiry = None
 
         # Save new token
-        GoogleCalendarOAuth.save_token(mock_creds)
+        GoogleCalendarOAuth.save_token(mock_creds, practice=self.practice)
 
         # Verify old token deactivated
         old_token.refresh_from_db()
         self.assertFalse(old_token.is_active)
+
+    def _practice_token(self):
+        return GoogleCalendarToken.objects.create(
+            token="practice-token",
+            refresh_token="practice-refresh",
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id="practice-client",
+            client_secret="practice-secret",
+            scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            is_active=True,
+            practice=self.practice,
+        )
+
+    def test_no_practice_does_not_pick_up_a_practice_token(self):
+        # A user without a practice passes None; that used to return any
+        # practice's token and so its calendar.
+        self._practice_token()
+        self.assertIsNone(GoogleCalendarOAuth.get_active_token(None))
+
+    def test_saving_a_practice_less_token_leaves_practice_tokens_active(self):
+        token = self._practice_token()
+        mock_creds = Mock(
+            token="new-token",
+            refresh_token="new-refresh",
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id="new-client",
+            client_secret="new-secret",
+            scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            expiry=None,
+        )
+        GoogleCalendarOAuth.save_token(mock_creds, practice=None)
+        token.refresh_from_db()
+        self.assertTrue(token.is_active)
 
     @patch("my_practice.utils.google_calendar.build")
     def test_get_service_with_valid_token(self, mock_build):
@@ -117,7 +150,7 @@ class GoogleCalendarOAuthTest(TestCase):
             practice=self.practice,
         )
 
-        service = GoogleCalendarOAuth.get_service()
+        service = GoogleCalendarOAuth.get_service(practice=self.practice)
 
         # Verify service built
         self.assertIsNotNone(service)
