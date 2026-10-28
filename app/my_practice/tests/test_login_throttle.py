@@ -61,6 +61,18 @@ class LoginThrottleTests(TestCase):
             self._attempt("wrong", username="Therapist")
         self.assertEqual(self._attempt("testpass123").status_code, 429)
 
+    def test_compatibility_spelling_does_not_bypass_the_limit(self):
+        # "ｔｈｅｒａｐｉｓｔ" (fullwidth) NFKC-normalizes to "therapist", which is
+        # the account Django's login form authenticates.
+        fullwidth = "".join(chr(ord(c) + 0xFEE0) for c in "therapist")
+        for _ in range(LOGIN_FAILURE_LIMIT):
+            self._attempt("wrong")
+
+        response = self._attempt("testpass123", username=fullwidth)
+
+        self.assertEqual(response.status_code, 429)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
 
 class SessionIdleTimeoutTests(TestCase):
     def test_session_expires_after_idle_hours_not_two_weeks(self):

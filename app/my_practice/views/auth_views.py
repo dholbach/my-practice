@@ -23,6 +23,7 @@ limited per user, so the six digits cannot be guessed either.
 import hashlib
 import logging
 import time
+import unicodedata
 
 from django.conf import settings
 from django.contrib import messages
@@ -57,7 +58,10 @@ PENDING_SESSION_KEY = "two_factor_pending"
 
 
 def _throttle_key(request: HttpRequest) -> str:
-    username = request.POST.get("username", "").strip().lower()
+    # NFKC first: AuthenticationForm's UsernameField normalizes that way before the
+    # account lookup, so without it a fullwidth or other compatibility spelling
+    # reaches the same account under a fresh counter.
+    username = unicodedata.normalize("NFKC", request.POST.get("username", "")).strip().lower()
     address = request.META.get("REMOTE_ADDR", "")
     # Hashed so the cache table does not hold usernames in clear.
     digest = hashlib.sha256(f"{username}|{address}".encode()).hexdigest()
