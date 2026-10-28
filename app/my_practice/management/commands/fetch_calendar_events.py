@@ -1,8 +1,8 @@
 """
 Management command to fetch Google Calendar events into the pending queue (P-013).
 
-Run every few hours via systemd timer. Idempotent: google_event_id unique constraint
-prevents duplicates. On each run, also marks previously-fetched events as 'cancelled'
+Run every few hours via systemd timer. Idempotent: the (practice, google_event_id)
+unique constraint prevents duplicates. On each run, also marks previously-fetched events as 'cancelled'
 if they no longer appear in Google Calendar — unless the same session simply moved
 to a new Google event id, which _supersede_moved_events() re-binds first.
 """
@@ -13,7 +13,7 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from ...models import GoogleCalendarToken, PendingCalendarEvent, Session
+from ...models import GoogleCalendarToken, PendingCalendarEvent, Practice, Session
 from ...utils.google_calendar import (
     CalendarEventParser,
     GoogleCalendarOAuth,
@@ -267,7 +267,7 @@ class Command(BaseCommand):
 
         Returns the number of rows re-bound.
         """
-        replacements = self._collect_replacement_candidates(parsed_events, live_ids)
+        replacements = self._collect_replacement_candidates(parsed_events, live_ids, practice)
         if not replacements:
             return 0
 
@@ -288,13 +288,15 @@ class Command(BaseCommand):
         return moved
 
     @classmethod
-    def _collect_replacement_candidates(cls, parsed_events: list, live_ids: set) -> dict:
+    def _collect_replacement_candidates(
+        cls, parsed_events: list, live_ids: set, practice: "Practice"
+    ) -> dict:
         """Group live events that have no PendingCalendarEvent row yet by
         (client_id, date) — the pool a stale row can be re-bound to."""
         known_ids = set(
-            PendingCalendarEvent.objects.filter(google_event_id__in=live_ids).values_list(
-                "google_event_id", flat=True
-            )
+            PendingCalendarEvent.objects.filter(
+                practice=practice, google_event_id__in=live_ids
+            ).values_list("google_event_id", flat=True)
         )
         candidates: dict = {}
         for event in parsed_events:
@@ -402,9 +404,9 @@ class Command(BaseCommand):
             return "created"
 
         obj, was_created = PendingCalendarEvent.objects.get_or_create(
+            practice=practice,
             google_event_id=event_id,
             defaults={
-                "practice": practice,
                 "summary": event.get("summary", ""),
                 "event_date": event_date,
                 "event_time": event_time,
@@ -455,7 +457,7 @@ class Command(BaseCommand):
         obj: "PendingCalendarEvent", event_id: str, affected_clients: set | None
     ) -> None:
         PendingCalendarEvent.objects.filter(
-            google_event_id=event_id,
+            pk=obj.pk,
             status=PendingCalendarEvent.Status.PENDING,
         ).update(status=PendingCalendarEvent.Status.CANCELLED)
         if obj.session_id:
@@ -638,5 +640,9 @@ class Command(BaseCommand):
             },
         )
         if not PendingCalendarEvent.objects.filter(session=session).exists():
-            PendingCalendarEvent.objects.filter(google_event_id=event_id).update(session=session)
+            # matched_client comes from the practice's own clients, so its
+            # practice is the one whose row this is.
+            PendingCalendarEvent.objects.filter(
+                practice_id=matched_client.practice_id, google_event_id=event_id
+            ).update(session=session)
         return matched_client

@@ -84,7 +84,7 @@ class PendingCalendarEvent(models.Model):
     command and held here until approved/imported to an invoice, skipped, or
     detected as cancelled in Google Calendar.
 
-    google_event_id is unique so repeated fetches are idempotent.
+    (practice, google_event_id) is unique so repeated fetches are idempotent.
     """
 
     class Status(StrEnum):
@@ -108,9 +108,10 @@ class PendingCalendarEvent(models.Model):
         related_name="pending_calendar_events",
         verbose_name=_("Practice"),
     )
+    # Unique per practice, not globally: a global key let one practice's sync
+    # pick up — and cancel or move — another practice's row for the same event.
     google_event_id = models.CharField(
         max_length=255,
-        unique=True,
         verbose_name=_("Google Event ID"),
     )
     summary = models.CharField(max_length=500, verbose_name=_("Summary"))
@@ -162,6 +163,11 @@ class PendingCalendarEvent(models.Model):
         indexes = [
             models.Index(fields=["practice", "status"], name="pce_practice_status_idx"),
             models.Index(fields=["matched_client", "event_date"], name="pce_client_date_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["practice", "google_event_id"], name="pce_practice_event_uniq"
+            ),
         ]
 
     def __str__(self) -> str:

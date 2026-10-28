@@ -902,3 +902,29 @@ class HandleAndFetchForPracticeTest(TestCase):
             call_command("fetch_calendar_events", "--dry-run", stdout=out)
         self.assertIn("[dry-run] Would create", out.getvalue())
         self.assertFalse(PendingCalendarEvent.objects.exists())
+
+
+class EventIdPerPracticeTest(UpsertEventTestBase):
+    """The same Google event id in two practices' calendars gives two rows."""
+
+    def setUp(self):
+        super().setUp()
+        self.other = Practice.objects.create(name="Test GmbH", slug="upsert-other", title="T")
+        self.cmd._upsert_event(self._event(), self.practice, dry_run=False)
+        self.own_row = PendingCalendarEvent.objects.get(practice=self.practice)
+        self.session = Session.objects.get(client=self.test_client)
+
+    def test_other_practice_gets_its_own_row(self):
+        result = self.cmd._upsert_event(self._event(matched_client=None), self.other, dry_run=False)
+        self.assertEqual(result, "created")
+        self.assertEqual(PendingCalendarEvent.objects.filter(google_event_id="evt-1").count(), 2)
+
+    def test_other_practices_cancellation_leaves_this_practice_alone(self):
+        self.cmd._upsert_event(self._event(matched_client=None), self.other, dry_run=False)
+        self.cmd._upsert_event(
+            self._event(matched_client=None, is_cancelled=True), self.other, dry_run=False
+        )
+        self.own_row.refresh_from_db()
+        self.session.refresh_from_db()
+        self.assertEqual(self.own_row.status, PendingCalendarEvent.Status.PENDING)
+        self.assertFalse(self.session.cancelled)
