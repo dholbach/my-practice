@@ -26,6 +26,7 @@ from ..models import (
     Client,
     CompanyExpense,
     Invoice,
+    MarketingPeriod,
     Practice,
     UserPractice,
     scope_to_practice,
@@ -33,6 +34,12 @@ from ..models import (
 from ..utils import RevenueCalculator
 from ..utils.analytics_utils import ClientAnalyzer, ExpenseAnalyzer, RevenueAnalyzer
 from ..utils.practice_analysis import PracticeAnalyzer
+from ..views.crud_mixins import (
+    PracticeScopedDeleteView,
+    PracticeScopedListView,
+    PracticeScopedUpdateView,
+)
+from .test_helpers import create_test_practice, link_user_to_practice
 
 APP_DIR = Path(settings.BASE_DIR) / "my_practice"
 
@@ -193,3 +200,53 @@ class NoPracticeSeesNothingTests(TestCase):
         self.assertEqual(
             [row["client"].client_code for row in response.context["top_clients"]], ["XX"]
         )
+
+
+def _subclasses(cls):
+    for sub in cls.__subclasses__():
+        yield sub
+        yield from _subclasses(sub)
+
+
+class ScopedViewGuardrailTests(SimpleTestCase):
+    def test_every_scoped_view_model_with_a_practice_can_be_scoped(self):
+        # The mixins used to skip scoping silently when the model's queryset had
+        # no for_current_practice, which let MarketingPeriod be edited across
+        # practices. They now raise instead; this catches it before a request does.
+        import my_practice.urls  # noqa: F401  (imports every view module)
+
+        offenders = []
+        for base in (PracticeScopedListView, PracticeScopedUpdateView, PracticeScopedDeleteView):
+            for view in _subclasses(base):
+                model = getattr(view, "model", None)
+                if model is None:
+                    continue
+                has_practice = any(f.name == "practice" for f in model._meta.get_fields())
+                if has_practice and not hasattr(
+                    model._default_manager.all(), "for_current_practice"
+                ):
+                    offenders.append(f"{view.__name__} ({model.__name__})")
+        self.assertEqual(offenders, [])
+
+
+class MarketingPeriodScopingTests(TestCase):
+    def setUp(self):
+        other = create_test_practice(name="Test GmbH", slug="test-gmbh")
+        self.period = MarketingPeriod.objects.create(
+            practice=other, start_date=date(2026, 1, 1), description="XX-1 test period"
+        )
+        user = User.objects.create_user(username="member", password="testpass123")
+        link_user_to_practice(user, create_test_practice(name="Own Practice", slug="own"))
+        self.client.login(username="member", password="testpass123")
+
+    def test_other_practices_period_cannot_be_viewed_or_edited(self):
+        url = reverse("marketing_period_edit", args=[self.period.pk])
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.client.post(url, {"description": "changed", "start_date": "2026-01-01"})
+        self.period.refresh_from_db()
+        self.assertEqual(self.period.description, "XX-1 test period")
+
+    def test_other_practices_period_cannot_be_deleted(self):
+        url = reverse("marketing_period_delete", args=[self.period.pk])
+        self.assertEqual(self.client.post(url).status_code, 404)
+        self.assertTrue(MarketingPeriod.objects.filter(pk=self.period.pk).exists())
