@@ -47,6 +47,13 @@ class ComposeBindAddressTests(SimpleTestCase):
         ports = re.findall(r'^\s+- "(.*:8000:8000)"', compose, re.M)
         self.assertEqual(ports, ["${MY_PRACTICE_BIND_ADDRESS:-127.0.0.1}:8000:8000"])
 
+    def test_dev_stack_binds_loopback(self):
+        # The dev stack runs with network_mode: host, so gunicorn's bind address
+        # is the only thing keeping it off the LAN.
+        compose = (REPO_ROOT / "docker-compose.yml").read_text()
+        self.assertIn("network_mode: host", compose)
+        self.assertEqual(re.findall(r"gunicorn --bind (\S+)", compose), ["127.0.0.1:8000"])
+
     def test_bind_address_documented_in_env_example(self):
         self.assertIn("MY_PRACTICE_BIND_ADDRESS=", (REPO_ROOT / ".env.example").read_text())
 
