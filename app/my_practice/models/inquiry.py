@@ -268,6 +268,8 @@ class MarketingPeriod(TimestampedModel):
         help_text=_('e.g. "Google Ads €5/day" or "It\'s Complicated Premium"'),
     )
 
+    objects = PracticeScopedManager()
+
     class Meta:
         ordering = ["-start_date"]
         verbose_name = _("Marketing period")

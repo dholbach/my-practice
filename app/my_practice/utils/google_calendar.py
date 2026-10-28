@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import cast
 
 from django.conf import settings
+from django.db.models import QuerySet
 from django.utils import timezone
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -70,11 +71,11 @@ class GoogleCalendarOAuth:
         Returns:
             Created GoogleCalendarToken instance
         """
-        # Deactivate old tokens for this practice (or all if practice is None)
-        qs = GoogleCalendarToken.objects.filter(is_active=True)
-        if practice is not None:
-            qs = qs.filter(practice=practice)
-        qs.update(is_active=False)
+        # Deactivate old tokens for this practice. practice=None is the
+        # practice-less fallback token, never "every practice's tokens".
+        GoogleCalendarToken.objects.filter(is_active=True, practice=practice).update(
+            is_active=False
+        )
 
         # Convert expiry to timezone-aware datetime if present
         expires_at = None
@@ -105,16 +106,19 @@ class GoogleCalendarOAuth:
         practice-less fallback token in single-practice setups).
 
         Args:
-            practice: Optional Practice instance; when provided only that
-                      practice's token is considered.
+            practice: Practice instance, or None for the practice-less
+                      fallback token only. None used to match any practice's
+                      token, which handed a user without a practice another
+                      practice's calendar.
 
         Returns:
             The most recently created active token, or None if none exists.
         """
-        token_qs = GoogleCalendarToken.objects.filter(is_active=True)
-        if practice is not None:
-            token_qs = token_qs.filter(practice=practice)
-        return token_qs.order_by("-created_at").first()
+        return (
+            GoogleCalendarToken.objects.filter(is_active=True, practice=practice)
+            .order_by("-created_at")
+            .first()
+        )
 
     @staticmethod
     def get_service(practice=None):
@@ -123,8 +127,8 @@ class GoogleCalendarOAuth:
         Automatically refreshes expired tokens.
 
         Args:
-            practice: Optional Practice instance; when provided only that
-                      practice's token is used.
+            practice: Practice instance, or None for the practice-less
+                      fallback token.
 
         Returns:
             Google Calendar API service object or None if no valid token exists
@@ -263,7 +267,7 @@ class CalendarEventParser:
         return 0
 
     @staticmethod
-    def match_client(summary: str, clients=None) -> "Client | None":
+    def match_client(summary: str, clients) -> "Client | None":
         """
         Match client by client_code appearing as a standalone token in the summary.
 
@@ -277,15 +281,13 @@ class CalendarEventParser:
 
         Args:
             summary: Event title/summary
-            clients: List/QuerySet of clients (fetched if not provided)
+            clients: The importing practice's clients. Required: defaulting to
+                every client let one practice's calendar match (and book
+                sessions onto) another practice's clients.
 
         Returns:
             Matched Client instance or None
         """
-        if clients is None:
-            # Use optimized query - only fetch needed fields
-            clients = Client.objects.only("id", "client_code")
-
         candidates = sorted(
             (c for c in clients if c.client_code),
             key=lambda c: len(c.client_code),
@@ -328,13 +330,13 @@ class CalendarEventParser:
         return "blocked" in summary.lower()
 
     @classmethod
-    def parse_event(cls, event: dict, clients=None) -> dict:
+    def parse_event(cls, event: dict, clients) -> dict:
         """
         Parse a Google Calendar event into structured data.
 
         Args:
             event: Raw event dict from Google Calendar API
-            clients: Optional QuerySet of clients for matching
+            clients: The importing practice's clients, for matching
 
         Returns:
             Dict with parsed event data:
@@ -385,21 +387,18 @@ class CalendarEventParser:
         }
 
     @classmethod
-    def parse_events(cls, events: list, clients=None) -> list:
+    def parse_events(cls, events: list, clients) -> list:
         """
         Parse multiple Google Calendar events.
 
         Args:
             events: List of raw event dicts from Google Calendar API
-            clients: Optional QuerySet of clients (fetched once if not provided)
+            clients: The importing practice's clients, for matching
 
         Returns:
             List of parsed event dicts
         """
-        if clients is None:
-            # Use optimized query - only fetch needed fields
-            clients = Client.objects.only("id", "client_code")
-
+        clients = list(clients)  # evaluated once, not per event
         return [
             cls.parse_event(event, clients)
             for event in events
@@ -427,3 +426,8 @@ def list_calendars(service) -> list[dict]:
         }
         for entry in calendar_list.get("items", [])
     ]
+
+
+def practice_clients(practice) -> "QuerySet[Client]":
+    """The clients a practice's calendar events may be matched against."""
+    return Client.objects.for_practice(practice).only("id", "client_code")

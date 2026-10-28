@@ -6,14 +6,33 @@ from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ImproperlyConfigured
+from django.db.models import QuerySet
 from django.forms import ModelForm
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from ..utils.practice_helpers import is_practice_owner
 from ..utils.view_helpers import safe_next
+
+
+def scope_to_current_practice(queryset: QuerySet, request: HttpRequest) -> QuerySet:
+    """Scope a view's queryset to the current practice, failing closed.
+
+    A model with a practice FK but a plain manager used to fall through
+    unfiltered, so its edit/delete views resolved any practice's row by pk.
+    Such a model is now a configuration error; models without a practice
+    field (shared ones like TimeOff and ClientTag) pass through unchanged.
+    """
+    if hasattr(queryset, "for_current_practice"):
+        return queryset.for_current_practice(request)
+    if any(field.name == "practice" for field in queryset.model._meta.get_fields()):
+        raise ImproperlyConfigured(
+            f"{queryset.model.__name__} has a practice field but no PracticeScopedManager"
+        )
+    return queryset
 
 
 class PracticeOwnerRequiredMixin:
@@ -164,11 +183,7 @@ class PracticeScopedListView(LoginRequiredMixin, ListView):
         """Get queryset scoped to current practice"""
         queryset = super().get_queryset()
 
-        # Apply practice scoping via manager
-        if hasattr(queryset, "for_current_practice"):
-            queryset = queryset.for_current_practice(self.request)
-
-        return queryset
+        return scope_to_current_practice(queryset, self.request)
 
 
 class PracticeScopedCreateView(LoginRequiredMixin, CreateView):
@@ -229,11 +244,7 @@ class PracticeScopedUpdateView(LoginRequiredMixin, UpdateView):
         """Get queryset scoped to current practice"""
         queryset = super().get_queryset()
 
-        # Apply practice scoping via manager
-        if hasattr(queryset, "for_current_practice"):
-            queryset = queryset.for_current_practice(self.request)
-
-        return queryset
+        return scope_to_current_practice(queryset, self.request)
 
     def form_valid(self, form: ModelForm) -> HttpResponse:
         """Save with success message"""
@@ -268,9 +279,7 @@ class PracticeScopedDeleteView(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         """Get queryset scoped to current practice"""
         queryset = super().get_queryset()
-        if hasattr(queryset, "for_current_practice"):
-            queryset = queryset.for_current_practice(self.request)
-        return queryset
+        return scope_to_current_practice(queryset, self.request)
 
     def form_valid(self, form: ModelForm) -> HttpResponse:
         """Delete with optional success message"""

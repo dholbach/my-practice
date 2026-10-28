@@ -300,7 +300,11 @@ def billing_open_overview(request):
             | set(pending_by_client)
             | set(cancelled_billed_by_client)
         )
-        clients = Client.objects.filter(pk__in=all_client_ids).order_by("client_code")
+        clients = (
+            Client.objects.for_practice(practice)
+            .filter(pk__in=all_client_ids)
+            .order_by("client_code")
+        )
         rows = _build_client_rows(
             clients,
             invoices_by_client,
@@ -384,7 +388,9 @@ def monthly_billing_overview(request, month):
         | set(pending_by_client)
         | set(cancelled_billed_by_client)
     )
-    clients = Client.objects.filter(pk__in=all_client_ids).order_by("client_code")
+    clients = (
+        Client.objects.for_practice(practice).filter(pk__in=all_client_ids).order_by("client_code")
+    )
     rows = _build_client_rows(
         clients,
         invoices_by_client,

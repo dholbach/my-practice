@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 from ..models import Client, InvoiceItem, PendingCalendarEvent, ServiceType
-from .google_calendar import CalendarEventParser
+from .google_calendar import CalendarEventParser, practice_clients
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class CalendarImportProcessor:
     def fetch_and_parse(self, service, calendar_id: str, start_date, end_date) -> list[dict]:
         """Fetch all events from a calendar (paginated) and parse them."""
         raw = self._paginate(service, calendar_id, start_date, end_date)
-        return CalendarEventParser.parse_events(raw)
+        return CalendarEventParser.parse_events(raw, practice_clients(self.practice))
 
     def _paginate(self, service, calendar_id: str, start_date, end_date) -> list:
         events = []
@@ -184,7 +184,7 @@ class CalendarImportProcessor:
                 fetched.append(event)
             except Exception:
                 logger.warning("Could not fetch calendar event %s; skipping", event_id)
-        return CalendarEventParser.parse_events(fetched)
+        return CalendarEventParser.parse_events(fetched, practice_clients(self.practice))
 
 
 def _ensure_aware(dt):

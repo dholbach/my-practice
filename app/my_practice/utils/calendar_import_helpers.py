@@ -28,8 +28,11 @@ def _resolve_client(event: dict, overrides: dict, practice) -> tuple[Client | No
                 "id": client_id,
                 "summary": event.get("summary"),
             }
-    if event.get("matched_client"):
-        return event["matched_client"], None
+    matched = event.get("matched_client")
+    # A stored match from before matching was scoped may name another
+    # practice's client; never write sessions or invoice items onto it.
+    if matched and practice is not None and matched.practice_id == practice.id:
+        return matched, None
     return None, _("No client for event: %(summary)s") % {"summary": event.get("summary")}
 
 

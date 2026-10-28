@@ -18,10 +18,12 @@ from my_practice.models import (
     ServiceType,
     Session,
 )
+from my_practice.utils.calendar_import_helpers import _resolve_client
 from my_practice.utils.google_calendar import (
     CalendarEventParser,
     GoogleCalendarOAuth,
     list_calendars,
+    practice_clients,
 )
 
 
@@ -96,11 +98,44 @@ class GoogleCalendarOAuthTest(TestCase):
         mock_creds.expiry = None
 
         # Save new token
-        GoogleCalendarOAuth.save_token(mock_creds)
+        GoogleCalendarOAuth.save_token(mock_creds, practice=self.practice)
 
         # Verify old token deactivated
         old_token.refresh_from_db()
         self.assertFalse(old_token.is_active)
+
+    def _practice_token(self):
+        return GoogleCalendarToken.objects.create(
+            token="practice-token",
+            refresh_token="practice-refresh",
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id="practice-client",
+            client_secret="practice-secret",
+            scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            is_active=True,
+            practice=self.practice,
+        )
+
+    def test_no_practice_does_not_pick_up_a_practice_token(self):
+        # A user without a practice passes None; that used to return any
+        # practice's token and so its calendar.
+        self._practice_token()
+        self.assertIsNone(GoogleCalendarOAuth.get_active_token(None))
+
+    def test_saving_a_practice_less_token_leaves_practice_tokens_active(self):
+        token = self._practice_token()
+        mock_creds = Mock(
+            token="new-token",
+            refresh_token="new-refresh",
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id="new-client",
+            client_secret="new-secret",
+            scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            expiry=None,
+        )
+        GoogleCalendarOAuth.save_token(mock_creds, practice=None)
+        token.refresh_from_db()
+        self.assertTrue(token.is_active)
 
     @patch("my_practice.utils.google_calendar.build")
     def test_get_service_with_valid_token(self, mock_build):
@@ -117,7 +152,7 @@ class GoogleCalendarOAuthTest(TestCase):
             practice=self.practice,
         )
 
-        service = GoogleCalendarOAuth.get_service()
+        service = GoogleCalendarOAuth.get_service(practice=self.practice)
 
         # Verify service built
         self.assertIsNotNone(service)
@@ -231,7 +266,7 @@ class CalendarEventParserTest(TestCase):
             practice=self.practice,
         )
 
-        result = CalendarEventParser.match_client("JD 60min session")
+        result = CalendarEventParser.match_client("JD 60min session", Client.objects.all())
         self.assertEqual(result, client)
 
     def test_match_client_case_insensitive(self):
@@ -243,7 +278,7 @@ class CalendarEventParserTest(TestCase):
             practice=self.practice,
         )
 
-        result = CalendarEventParser.match_client("js therapy session")
+        result = CalendarEventParser.match_client("js therapy session", Client.objects.all())
         self.assertEqual(result, client)
 
     def test_match_client_no_match(self):
@@ -255,7 +290,7 @@ class CalendarEventParserTest(TestCase):
             practice=self.practice,
         )
 
-        result = CalendarEventParser.match_client("Unknown client XX")
+        result = CalendarEventParser.match_client("Unknown client XX", Client.objects.all())
         self.assertIsNone(result)
 
     def test_match_client_empty_code(self):
@@ -267,7 +302,7 @@ class CalendarEventParserTest(TestCase):
             practice=self.practice,
         )
 
-        result = CalendarEventParser.match_client("AJ session")
+        result = CalendarEventParser.match_client("AJ session", Client.objects.all())
         self.assertIsNone(result)
 
     def _make_clients(self, *codes):
@@ -292,7 +327,7 @@ class CalendarEventParserTest(TestCase):
 
         for summary in ("Nat", "CAR", "LBW"):
             with self.subTest(summary=summary):
-                self.assertIsNone(CalendarEventParser.match_client(summary))
+                self.assertIsNone(CalendarEventParser.match_client(summary, Client.objects.all()))
 
     def test_match_client_ignores_code_inside_a_german_or_status_word(self):
         """Ordinary calendar words must not match a client code."""
@@ -300,27 +335,37 @@ class CalendarEventParserTest(TestCase):
 
         for summary in ("Frei", "Mail", "Blocked", "cancel"):
             with self.subTest(summary=summary):
-                self.assertIsNone(CalendarEventParser.match_client(summary))
+                self.assertIsNone(CalendarEventParser.match_client(summary, Client.objects.all()))
 
     def test_match_client_prefers_the_longest_code(self):
         """A summary equal to a longer code matches that code, not its prefix."""
         clients = self._make_clients("TO", "TOB")
 
-        self.assertEqual(CalendarEventParser.match_client("TOB"), clients["TOB"])
-        self.assertEqual(CalendarEventParser.match_client("TO"), clients["TO"])
+        self.assertEqual(
+            CalendarEventParser.match_client("TOB", Client.objects.all()), clients["TOB"]
+        )
+        self.assertEqual(
+            CalendarEventParser.match_client("TO", Client.objects.all()), clients["TO"]
+        )
 
     def test_match_client_hyphen_is_part_of_the_code(self):
         """A hyphen does not delimit a code, so MM does not match inside MM-G."""
         clients = self._make_clients("MM", "MM-G")
 
-        self.assertEqual(CalendarEventParser.match_client("MM-G 60min"), clients["MM-G"])
-        self.assertEqual(CalendarEventParser.match_client("MM 60min"), clients["MM"])
+        self.assertEqual(
+            CalendarEventParser.match_client("MM-G 60min", Client.objects.all()), clients["MM-G"]
+        )
+        self.assertEqual(
+            CalendarEventParser.match_client("MM 60min", Client.objects.all()), clients["MM"]
+        )
 
     def test_match_client_with_cancel_suffix(self):
         """A cancelled session still matches its own code, not one inside 'cancel'."""
         clients = self._make_clients("ZK", "EL")
 
-        self.assertEqual(CalendarEventParser.match_client("ZK (cancel)"), clients["ZK"])
+        self.assertEqual(
+            CalendarEventParser.match_client("ZK (cancel)", Client.objects.all()), clients["ZK"]
+        )
 
     def test_is_cancelled_with_parentheses(self):
         """Test cancelled detection with (cancel) format."""
@@ -349,7 +394,7 @@ class CalendarEventParserTest(TestCase):
             "end": {"dateTime": "2025-12-23T15:00:00Z"},
         }
 
-        result = CalendarEventParser.parse_event(event)
+        result = CalendarEventParser.parse_event(event, Client.objects.all())
 
         self.assertEqual(result["summary"], "TC 60min therapy")
         self.assertIsNotNone(result["start"])
@@ -367,7 +412,7 @@ class CalendarEventParserTest(TestCase):
             "end": {"dateTime": "2025-12-23T15:00:00Z"},
         }
 
-        result = CalendarEventParser.parse_event(event)
+        result = CalendarEventParser.parse_event(event, Client.objects.all())
         self.assertTrue(result["is_cancelled"])
         self.assertIsNone(result["matched_client"])
 
@@ -399,7 +444,7 @@ class CalendarEventParserTest(TestCase):
             },
         ]
 
-        results = CalendarEventParser.parse_events(events)
+        results = CalendarEventParser.parse_events(events, Client.objects.all())
 
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0]["matched_client"], client1)
@@ -469,7 +514,7 @@ class CalendarEventParserTest(TestCase):
             "end": {"dateTime": "2024-01-15T15:00:00+01:00"},  # 60 minutes
         }
 
-        result = CalendarEventParser.parse_event(event)
+        result = CalendarEventParser.parse_event(event, Client.objects.all())
 
         self.assertIsNotNone(result["suggested_service_type_obj"])
         self.assertEqual(result["suggested_service_type_obj"].code, "therapy_60")
@@ -483,7 +528,7 @@ class CalendarEventParserTest(TestCase):
             "end": {"dateTime": "2024-01-15T15:00:00+01:00"},  # 60 minutes
         }
 
-        result = CalendarEventParser.parse_event(event)
+        result = CalendarEventParser.parse_event(event, Client.objects.all())
 
         self.assertTrue(result["is_cancelled"])
         self.assertIsNotNone(result["suggested_service_type_obj"])
@@ -763,3 +808,31 @@ class FetchTagSyncTest(TestCase):
         self.assertIn(self.client_obj, affected)
         session.refresh_from_db()
         self.assertTrue(session.cancelled)
+
+
+class PracticeScopedMatchingTests(TestCase):
+    """A practice's calendar only ever matches that practice's clients."""
+
+    def setUp(self):
+        self.own = Practice.objects.create(name="Own Practice", slug="own-calendar", title="T")
+        other = Practice.objects.create(name="Test GmbH", slug="other-calendar", title="T")
+        self.foreign = Client.objects.create(
+            client_code="YY", full_name="Anna Schmidt", practice=other
+        )
+
+    def test_other_practices_client_code_does_not_match(self):
+        event = {
+            "id": "evt-1",
+            "summary": "YY 60min",
+            "start": {"dateTime": "2026-10-01T10:00:00+02:00"},
+            "end": {"dateTime": "2026-10-01T11:00:00+02:00"},
+        }
+        parsed = CalendarEventParser.parse_events([event], practice_clients(self.own))
+        self.assertIsNone(parsed[0]["matched_client"])
+
+    def test_stored_foreign_match_is_not_imported(self):
+        client, error = _resolve_client(
+            {"matched_client": self.foreign, "summary": "YY"}, {}, self.own
+        )
+        self.assertIsNone(client)
+        self.assertIsNotNone(error)

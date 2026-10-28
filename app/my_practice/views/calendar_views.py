@@ -317,7 +317,8 @@ def calendar_approval_queue(request: HttpRequest) -> HttpResponse:
     # This avoids N+1 queries and lets the template show useful info in the dropdown.
     client_ids = [g["client"].pk for g in grouped if g["client"] is not None]
     draft_invoices = (
-        Invoice.objects.filter(client_id__in=client_ids, status="draft")
+        Invoice.objects.for_practice(practice)
+        .filter(client_id__in=client_ids, status="draft")
         .annotate(item_count=Count("items"))
         .order_by("-invoice_date")
     )
@@ -609,6 +610,9 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("client_list")
 
     client = event.matched_client
+    # A match stored before matching was scoped may name another practice's client.
+    if client and client.practice_id != event.practice_id:
+        client = None
     redirect_target = (
         redirect("client_detail", pk=client.pk) if client else redirect("calendar_approval_queue")
     )

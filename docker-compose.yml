@@ -81,6 +81,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # gunicorn binds loopback, like postgres above: network_mode: host makes the
+    # bind address the only thing between the DEBUG stack (with the real data
+    # directories mounted) and the local network.
     # compilemessages: the .mo catalogs are gitignored, and the ./app bind mount
     # hides the copy the image compiled, so the container compiles its own on
     # start. --reload-extra-file then picks up a recompile (e.g. from the
@@ -89,7 +92,7 @@ services:
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput --ignore tailwind.css &&
              python manage.py compilemessages -v 0 &&
-             gunicorn --bind 0.0.0.0:8000 --workers 1 --timeout 300 --reload --reload-extra-file locale/de/LC_MESSAGES/django.mo --reload-extra-file locale/en/LC_MESSAGES/django.mo config.wsgi:application"
+             gunicorn --bind 127.0.0.1:8000 --workers 1 --timeout 300 --reload --reload-extra-file locale/de/LC_MESSAGES/django.mo --reload-extra-file locale/en/LC_MESSAGES/django.mo config.wsgi:application"
 
   tailwind:
     build:
