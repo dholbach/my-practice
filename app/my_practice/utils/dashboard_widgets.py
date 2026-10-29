@@ -46,7 +46,6 @@ class SessionImportWidgetBuilder:
                 - has_calendar_token: Boolean
                 - token_expired: Boolean
                 - estimated_events_count: Approximate count (last 30 days)
-                - connect_url: URL to connect calendar
                 - import_url: URL to import page
                 - is_connected: Overall connection status
         """
@@ -70,7 +69,6 @@ class SessionImportWidgetBuilder:
             "token_expired": token_expired,
             "is_connected": is_connected,
             "estimated_events_count": estimated_events_count,
-            "connect_url": reverse("calendar_authorize"),
             "import_url": reverse("calendar_import"),
         }
 

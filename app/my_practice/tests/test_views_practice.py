@@ -46,21 +46,27 @@ class PracticeSwitchTest(TestCase):
         self.tc = _setup_client(self.user, self.practice1)
 
     def test_switch_sets_practice_in_session(self):
-        self.tc.get(reverse("practice_switch", args=[self.practice2.slug]))
+        self.tc.post(reverse("practice_switch", args=[self.practice2.slug]))
         session = self.tc.session
         self.assertEqual(session.get("current_practice_slug"), self.practice2.slug)
 
-    def test_switch_redirects(self):
+    def test_get_is_refused_and_leaves_practice_unchanged(self):
+        """A cross-site GET (link or <img>) must not switch practice."""
         response = self.tc.get(reverse("practice_switch", args=[self.practice2.slug]))
+        self.assertEqual(response.status_code, 405)
+        self.assertNotEqual(self.tc.session.get("current_practice_slug"), self.practice2.slug)
+
+    def test_switch_redirects(self):
+        response = self.tc.post(reverse("practice_switch", args=[self.practice2.slug]))
         self.assertEqual(response.status_code, 302)
 
     def test_switch_unknown_slug_redirects_with_error(self):
-        response = self.tc.get(reverse("practice_switch", args=["no-such-practice"]))
+        response = self.tc.post(reverse("practice_switch", args=["no-such-practice"]))
         self.assertEqual(response.status_code, 302)
 
     def test_no_open_redirect_via_referer(self):
         """HTTP_REFERER with external host must not redirect off-site."""
-        response = self.tc.get(
+        response = self.tc.post(
             reverse("practice_switch", args=[self.practice2.slug]),
             HTTP_REFERER="https://evil.example.com/steal",
         )
@@ -75,7 +81,7 @@ class PracticeSwitchTest(TestCase):
         https://evil.example.com//evil.example.com/steal is
         //evil.example.com/steal, which browsers follow off-site.
         """
-        response = self.tc.get(
+        response = self.tc.post(
             reverse("practice_switch", args=[self.practice2.slug]),
             HTTP_REFERER="https://evil.example.com//evil.example.com/steal",
         )
@@ -98,7 +104,7 @@ class PracticeSwitchTest(TestCase):
             status=Invoice.Status.DRAFT,
             practice=self.practice1,
         )
-        response = self.tc.get(
+        response = self.tc.post(
             reverse("practice_switch", args=[self.practice2.slug]),
             HTTP_REFERER=f"http://testserver/invoices/{invoice.pk}/",
         )
@@ -120,7 +126,7 @@ class PracticeSwitchTest(TestCase):
             status=Invoice.Status.DRAFT,
             practice=self.practice1,
         )
-        response = self.tc.get(
+        response = self.tc.post(
             reverse("practice_switch", args=[self.practice2.slug]),
             HTTP_REFERER=f"http://testserver/invoices/{invoice.pk}/edit/",
         )
@@ -129,7 +135,7 @@ class PracticeSwitchTest(TestCase):
     def test_switch_from_list_page_is_unaffected(self):
         """A referer with no numeric id (e.g. the list view itself) should
         redirect back to itself unchanged."""
-        response = self.tc.get(
+        response = self.tc.post(
             reverse("practice_switch", args=[self.practice2.slug]),
             HTTP_REFERER="http://testserver/invoices/",
         )

@@ -9,7 +9,7 @@
 {% block content %}
 <div class="practice-grid">
     {% for practice in practices %}
-    <a href="{% url 'practice_switch' practice.slug %}" class="practice-card">
+    <a href="{% url 'practice_switch' practice.slug %}" data-post-link class="practice-card">
         <h3>🏥 {{ practice.name }}</h3>
         <div class="practice-title">{{ practice.title }}</div>
         {% if practice.city %}

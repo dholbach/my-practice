@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from ..forms import CapacityPeriodFormSet, PracticeEditForm
@@ -24,9 +25,13 @@ from .crud_mixins import PracticeOwnerRequiredMixin
 logger = logging.getLogger(__name__)
 
 
+@require_POST
 def practice_switch(request, slug):
     """
     Switch current practice by slug.
+
+    POST only: a cross-site GET would otherwise silently change which
+    practice the next form submission lands in.
     """
     if switch_practice(request, slug):
         practice = Practice.objects.get(slug=slug)

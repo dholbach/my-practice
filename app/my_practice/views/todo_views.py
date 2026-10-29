@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
+from django.views.decorators.http import require_POST
 
 from ..models import Client, PracticeTodo
 from ..utils import WeeklyFocusWidgetBuilder
@@ -96,13 +97,14 @@ class TodoDeleteView(PracticeScopedDeleteView):
     success_message = gettext_lazy("'{obj.title}' deleted successfully.")
 
 
+@require_POST
 def todo_toggle_complete(request: HttpRequest, pk: int) -> HttpResponse | JsonResponse:
     """
     Toggle TODO completion status.
 
-    Supports both GET (for direct links) and POST (for AJAX).
-    - GET: Toggles status and redirects back to referrer or dashboard
-    - POST: Returns JSON response with new status
+    POST only, so a cross-site link can't flip it. A partial request from the
+    WeeklyFocus widget gets the re-rendered widget back; anything else is
+    redirected to the referrer or the dashboard.
     """
     todo = get_object_or_404(PracticeTodo.objects.for_current_practice(request), pk=pk)
 
