@@ -68,8 +68,8 @@ class NextRedirectMixin:
     Adds ?next= redirect support to an Update/DeleteView.
 
     get_success_url() honors ?next= (falling back to self.success_url), and
-    the raw value is exposed to templates as context["next"] (e.g. for a
-    Cancel link). Override get_success_url() in a subclass if the fallback
+    the same-host-checked value is exposed to templates as context["next"]
+    (e.g. for a Cancel link) — empty when it points off-site. Override get_success_url() in a subclass if the fallback
     needs to be something other than self.success_url.
 
     Example:
@@ -83,7 +83,7 @@ class NextRedirectMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["next"] = self.request.GET.get("next", "")
+        context["next"] = safe_next(self.request, fallback="")
         return context
 
 

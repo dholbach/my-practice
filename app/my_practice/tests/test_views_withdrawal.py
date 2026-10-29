@@ -408,3 +408,12 @@ class WithdrawalCreateNextRedirectTest(TestCase):
             reverse("withdrawal_create"), {**self.data, "next": "//evil.example/steal"}
         )
         self.assertRedirects(response, reverse("withdrawal_list"), fetch_redirect_response=False)
+
+    def test_off_site_next_never_reaches_the_cancel_link(self):
+        """The Cancel link is rendered straight from context["next"], so an
+        unchecked value there is an open redirect one click away."""
+        response = self.client_instance.get(
+            reverse("withdrawal_create"), {"next": "https://evil.example/steal"}
+        )
+        self.assertEqual(response.context["next"], "")
+        self.assertNotContains(response, 'href="https://evil.example')

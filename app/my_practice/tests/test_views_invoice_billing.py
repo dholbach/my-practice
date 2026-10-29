@@ -429,6 +429,14 @@ class InvoiceDeleteTests(TestCase):
         )
         self.assertRedirects(response, next_url)
 
+    def test_get_drops_off_site_next_from_cancel_link(self):
+        response = self.client_instance.get(
+            reverse("invoice_delete", kwargs={"pk": self.invoice.pk}),
+            {"next": "//evil.example/steal"},
+        )
+        self.assertEqual(response.context["next"], "")
+        self.assertNotContains(response, 'href="//evil.example')
+
 
 class AddSessionsToInvoiceTests(TestCase):
     """Test add_sessions_to_invoice view."""

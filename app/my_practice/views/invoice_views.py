@@ -459,11 +459,10 @@ def invoice_delete(request, pk):
         return redirect(safe_next(request, fallback=reverse("invoice_list")))
 
     # GET request - show confirmation page
-    next_url = request.GET.get("next", "")
     return render(
         request,
         "my_practice/invoice_confirm_delete.html",
-        {"invoice": invoice, "next": next_url},
+        {"invoice": invoice, "next": safe_next(request, fallback="")},
     )
 
 
