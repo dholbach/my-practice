@@ -7,6 +7,7 @@ from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
+from ..validators import validate_upload_extension
 from .base import PracticeScopedManager, TimestampedModel
 
 
@@ -205,6 +206,7 @@ class ExpenseReceipt(models.Model):
     )
     file = models.FileField(
         upload_to=expense_attachment_upload_path,
+        validators=[validate_upload_extension],
         verbose_name=_("File"),
         help_text=_("PDF, JPG or PNG of the receipt / invoice"),
     )

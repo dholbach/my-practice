@@ -22,6 +22,8 @@ from django.core.files.base import ContentFile
 from django.utils.translation import gettext as _
 from PIL import Image, ImageOps
 
+from ..validators import IMAGE_EXTENSIONS, PDF_EXTENSIONS, UPLOAD_EXTENSIONS
+
 logger = logging.getLogger(__name__)
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB — generous for scanned documents, bounds worst case
@@ -32,11 +34,11 @@ GS_PDF_DPI = 150  # Bicubic downsampling target for color/gray/mono images
 IMAGE_SKIP_BYTES = 150_000  # skip images already under 150 KB
 PDF_SKIP_BYTES = 500_000  # skip PDFs already under 500 KB
 
-_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif"}
-_PDF_EXTENSIONS = {".pdf"}
-# Explicit allowlist — anything outside this is rejected by process_upload.
-# Active-content types (.svg, .html, .xml, .js, …) are intentionally excluded.
-_ALLOWED_EXTENSIONS = _IMAGE_EXTENSIONS | _PDF_EXTENSIONS | {".docx"}
+# Defined in validators.py so the model fields can share them without a
+# circular import through utils/__init__.py.
+_IMAGE_EXTENSIONS = IMAGE_EXTENSIONS
+_PDF_EXTENSIONS = PDF_EXTENSIONS
+_ALLOWED_EXTENSIONS = UPLOAD_EXTENSIONS
 
 
 # Why there is no code here that preserves page /Rotate through compression.
@@ -126,6 +128,7 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
         result = subprocess.run(
             [
                 "gs",
+                "-dSAFER",
                 "-sDEVICE=pdfwrite",
                 "-dCompatibilityLevel=1.4",
                 f"-dPDFSETTINGS={GS_PDF_PRESET}",
@@ -317,6 +320,7 @@ def compress_pdf_inplace(path: str) -> int:
         result = subprocess.run(
             [
                 "gs",
+                "-dSAFER",
                 "-sDEVICE=pdfwrite",
                 "-dCompatibilityLevel=1.4",
                 f"-dPDFSETTINGS={GS_PDF_PRESET}",
