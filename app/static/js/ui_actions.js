@@ -10,6 +10,9 @@
  *   <form data-confirm="Really delete?">           confirm before submitting
  *   <a|button data-confirm="Really delete?">       confirm before following / submitting
  *   <button data-print>                             window.print()
+ *   <a href="/x/" data-post-link>                   follow the link as a POST (with the
+ *                                                   CSRF token from <body data-csrf-token>),
+ *                                                   for card-shaped links to POST-only views
  *   <select data-navigate="/reports/?year=">       go to that URL + the chosen value
  *   <select data-submit-on-change>                  submit the enclosing form
  *   <button data-copy="text" data-copied-label="✓ Copied">
@@ -26,6 +29,19 @@
         if (button.dataset.copy !== undefined) return button.dataset.copy;
         const source = button.previousElementSibling;
         return source ? source.textContent : "";
+    }
+
+    function submitAsPost(url) {
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = url;
+        const token = document.createElement("input");
+        token.type = "hidden";
+        token.name = "csrfmiddlewaretoken";
+        token.value = document.body.dataset.csrfToken;
+        form.appendChild(token);
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function flashCopied(button) {
@@ -56,6 +72,12 @@
             if (guarded && !window.confirm(guarded.dataset.confirm)) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
+                return;
+            }
+            const postLink = event.target.closest("a[data-post-link]");
+            if (postLink) {
+                event.preventDefault();
+                submitAsPost(postLink.getAttribute("href"));
                 return;
             }
             if (event.target.closest("[data-print]")) {

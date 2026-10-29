@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-10-29 — Security hardening quick wins**: POST-only practice switch / task toggle / calendar connect, `?next=` checked before Cancel links, CSP `frame-ancestors 'none'`, refuse the placeholder SECRET_KEY outside DEBUG, Ghostscript `-dSAFER`, upload extension allowlist on the model fields. Details in [docs/CHANGELOG.md](docs/CHANGELOG.md) (Unreleased).
 - **2026-10-28 — Security review fixes**: source review of views, settings and calendar import; dev stack bound to loopback, login-throttle NFKC bypass closed, GDPR erasure made complete, four latent practice-isolation gaps closed. Details in [docs/CHANGELOG.md](docs/CHANGELOG.md) (Unreleased).
-- **2026-10-27 — v0.9.0 released**: inquiry lapse/anonymise and charts (#533, #534), same-day session crash fix (#537), systemd timer fixes (#535), Pillow 13 / python-dateutil 3.0. Highlights in [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 from ..fields import EncryptedTextField
 from ..storage import client_document_storage
+from ..validators import validate_upload_extension
 from .base import PracticeScopedQuerySet, TimestampedModel
 
 
@@ -280,6 +281,7 @@ class ClientDocument(TimestampedModel):
     file = models.FileField(
         upload_to=client_document_upload_path,
         storage=client_document_storage,
+        validators=[validate_upload_extension],
         verbose_name=_("File"),
         help_text=_("PDF, JPG, PNG or DOCX"),
     )

@@ -81,7 +81,7 @@
         {% if stat.is_current %}
         <div class="mp-card mp-card--active">
         {% else %}
-        <a href="{% url 'practice_switch' stat.practice.slug %}" class="mp-card">
+        <a href="{% url 'practice_switch' stat.practice.slug %}" data-post-link class="mp-card">
         {% endif %}
             <div class="mp-card-header">
                 <strong>{{ stat.practice.name }}</strong>

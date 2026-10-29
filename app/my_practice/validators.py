@@ -10,7 +10,21 @@ module triggers ``utils/__init__.py``, which imports builders that import
 import re
 
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext
+
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif"}
+PDF_EXTENSIONS = {".pdf"}
+# Explicit allowlist — anything outside this is rejected by process_upload.
+# Active-content types (.svg, .html, .xml, .js, …) are intentionally excluded.
+UPLOAD_EXTENSIONS = IMAGE_EXTENSIONS | PDF_EXTENSIONS | {".docx"}
+
+# The same allowlists on the model fields, so an upload that bypasses
+# process_upload (the admin inlines) is held to them too. For the ImageFields
+# this is narrower than Django's default, which accepts anything Pillow can
+# open — including .eps/.ps, which Pillow hands to Ghostscript.
+validate_upload_extension = FileExtensionValidator(sorted(e[1:] for e in UPLOAD_EXTENSIONS))
+validate_image_extension = FileExtensionValidator(sorted(e[1:] for e in IMAGE_EXTENSIONS))
 
 # A placeholder is exactly ``{word}``. Deliberately narrow: it is also what
 # render_email_template() substitutes, so validation and rendering agree on

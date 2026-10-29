@@ -31,9 +31,13 @@ from ..utils.google_calendar import (
 logger = logging.getLogger(__name__)
 
 
+@require_POST
 def calendar_authorize(request: HttpRequest) -> HttpResponse:
     """
     Initiate OAuth2 flow to authorize Google Calendar access.
+
+    POST only, so another site can't start a consent flow (and overwrite the
+    session's pending OAuth state) by linking here.
     """
     redirect_uri = request.build_absolute_uri(reverse("calendar_oauth2callback"))
     flow = GoogleCalendarOAuth.create_flow(redirect_uri)

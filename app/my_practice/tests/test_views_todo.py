@@ -170,21 +170,27 @@ class TodoToggleCompleteTest(TestCase):
             practice=self.practice, title="Toggle Me", priority="medium"
         )
 
-    def test_non_partial_redirects(self):
+    def test_get_is_refused_and_leaves_todo_open(self):
         response = self.tc.get(reverse("todo_toggle", args=[self.todo.pk]))
+        self.assertEqual(response.status_code, 405)
+        self.todo.refresh_from_db()
+        self.assertFalse(self.todo.is_completed)
+
+    def test_non_partial_redirects(self):
+        response = self.tc.post(reverse("todo_toggle", args=[self.todo.pk]))
         self.assertEqual(response.status_code, 302)
         self.todo.refresh_from_db()
         self.assertTrue(self.todo.is_completed)
 
-    def test_get_redirects_back_to_same_site_referer(self):
-        response = self.tc.get(
+    def test_redirects_back_to_same_site_referer(self):
+        response = self.tc.post(
             reverse("todo_toggle", args=[self.todo.pk]),
             HTTP_REFERER="http://testserver/focus/",
         )
         self.assertEqual(response["Location"], "/focus/")
 
-    def test_get_ignores_protocol_relative_referer_path(self):
-        response = self.tc.get(
+    def test_ignores_protocol_relative_referer_path(self):
+        response = self.tc.post(
             reverse("todo_toggle", args=[self.todo.pk]),
             HTTP_REFERER="https://evil.example.com//evil.example.com/steal",
         )

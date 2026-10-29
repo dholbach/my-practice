@@ -95,7 +95,7 @@ class Command(BaseCommand):
                 self.style.ERROR(
                     f"  ✗ Calendar token for practice '{practice.name}' is expired or invalid.\n"
                     "    → Re-authorise: ./dev.py calendar-auth "
-                    "(or open /calendar/authorize/ in the app).\n"
+                    "(or use 'Connect with Google' on /calendar/import/ in the app).\n"
                     "    ℹ️  Note: Google caps refresh tokens at 7 days while the OAuth consent\n"
                     "       screen's publishing status is 'Testing' — being on the Test users\n"
                     "       list does NOT bypass this. Publish the app to 'In production' in\n"

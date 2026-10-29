@@ -57,12 +57,28 @@ class FakeElement {
 
 function load({ confirmAnswer = true } = {}) {
     const listeners = {};
-    const calls = { confirm: [], print: 0, clipboard: [], href: null, submitted: 0 };
+    const calls = { confirm: [], print: 0, clipboard: [], href: null, submitted: 0, posted: [] };
     const timers = [];
+    const body = {
+        dataset: { csrfToken: "tok123" },
+        appendChild(form) {
+            form.submit = () => calls.posted.push(form);
+        },
+    };
     const context = {
         document: {
+            body,
             addEventListener(type, fn) {
                 (listeners[type] = listeners[type] || []).push(fn);
+            },
+            createElement(tagName) {
+                return {
+                    tagName: tagName.toUpperCase(),
+                    children: [],
+                    appendChild(child) {
+                        this.children.push(child);
+                    },
+                };
             },
         },
         window: {
@@ -200,6 +216,29 @@ test("data-copy-previous copies the previous sibling's text", () => {
     button.previousElementSibling = { textContent: "Email body" };
     fire("click", button);
     assertEqual(calls.clipboard[0], "Email body", "copied text");
+});
+
+test("data-post-link submits the link's href as a POST with the CSRF token", () => {
+    const { fire, calls } = load();
+    const link = new FakeElement("a", { href: "/practice/switch/other/", "data-post-link": "" });
+    link.getAttribute = (name) => link.attrs[name];
+    const inner = new FakeElement("strong", {}, link);
+    const event = fire("click", inner);
+    assertEqual(event.defaultPrevented, true, "GET navigation prevented");
+    assertEqual(calls.posted.length, 1, "forms submitted");
+    const form = calls.posted[0];
+    assertEqual(form.method, "post", "method");
+    assertEqual(form.action, "/practice/switch/other/", "action");
+    assertEqual(form.children[0].name, "csrfmiddlewaretoken", "token field");
+    assertEqual(form.children[0].value, "tok123", "token value");
+});
+
+test("a declined data-confirm on a data-post-link posts nothing", () => {
+    const { fire, calls } = load({ confirmAnswer: false });
+    const link = new FakeElement("a", { href: "/x/", "data-post-link": "", "data-confirm": "Sure?" });
+    link.getAttribute = (name) => link.attrs[name];
+    fire("click", link);
+    assertEqual(calls.posted.length, 0, "forms submitted");
 });
 
 if (failures) {

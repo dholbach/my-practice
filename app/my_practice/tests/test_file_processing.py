@@ -135,6 +135,39 @@ class ProcessUploadTest(TestCase):
         self.assertEqual(result.name, "doc.pdf")
 
 
+class ModelFieldExtensionValidatorTest(TestCase):
+    """The admin inlines save straight to the model field without going
+    through process_upload, so the field itself has to hold the allowlist."""
+
+    def _field(self, model_name, field_name):
+        from django.apps import apps
+
+        return apps.get_model("my_practice", model_name)._meta.get_field(field_name)
+
+    def test_active_content_is_rejected_on_every_upload_field(self):
+        from django.core.exceptions import ValidationError
+
+        for model_name, field_name in [
+            ("ClientDocument", "file"),
+            ("ExpenseReceipt", "file"),
+            ("Practice", "logo"),
+            ("Practice", "signature"),
+        ]:
+            for name in ["note.html", "logo.svg", "scan.eps"]:
+                with (
+                    self.subTest(field=f"{model_name}.{field_name}", name=name),
+                    self.assertRaises(ValidationError),
+                ):
+                    self._field(model_name, field_name).run_validators(
+                        SimpleUploadedFile(name, b"x")
+                    )
+
+    def test_documents_still_accept_pdf_and_docx(self):
+        for name in ["letter.pdf", "intake.docx", "scan.JPG"]:
+            with self.subTest(name=name):
+                self._field("ClientDocument", "file").run_validators(SimpleUploadedFile(name, b"x"))
+
+
 class PdfParseabilityTest(TestCase):
     def test_pdf_is_parseable_accepts_a_real_pdf(self):
         self.assertTrue(_pdf_is_parseable(make_pdf_bytes()))
@@ -232,6 +265,17 @@ class CompressPdfBytesTest(TestCase):
         ):
             result = _compress_pdf_bytes(pdf_bytes)
         self.assertEqual(result, pdf_bytes)
+
+    def test_gs_runs_in_safer_mode(self):
+        """Uploads are untrusted PostScript; -dSAFER blocks file and device
+        access from inside it. Recent gs defaults to it, but an older distro
+        package or a GS_OPTIONS override would not."""
+        from unittest.mock import MagicMock, patch
+
+        failed = MagicMock(returncode=1, stderr="")
+        with patch("my_practice.utils.file_processing.subprocess.run", return_value=failed) as run:
+            _compress_pdf_bytes(make_pdf_bytes(num_pages=1))
+        self.assertIn("-dSAFER", run.call_args.args[0])
 
     def test_gs_failure_returns_original(self):
         from unittest.mock import MagicMock, patch

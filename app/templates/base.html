@@ -89,7 +89,7 @@
                         <span>{% if CURRENT_LANGUAGE == "en" %}{{ request.current_practice.short_title_en|default:request.current_practice.short_title_de|default:practice_fallback }}{% else %}{{ request.current_practice.short_title_de|default:practice_fallback }}{% endif %} ▾</span>
                         <div class="dropdown-content">
                             {% for practice in user.practices.all %}
-                            <a href="{% url 'practice_switch' practice.slug %}"
+                            <a href="{% url 'practice_switch' practice.slug %}" data-post-link
                                {% if practice.id == request.current_practice.id %}class="current-practice"{% endif %}>
                                 {% if CURRENT_LANGUAGE == "en" %}{{ practice.short_title_en|default:practice.short_title_de|default:practice.name }}{% else %}{{ practice.short_title_de|default:practice.name }}{% endif %}
                                 {% if practice.id == request.current_practice.id %}✓{% endif %}

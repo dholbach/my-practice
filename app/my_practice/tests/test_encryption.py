@@ -188,3 +188,20 @@ class FernetKeyCheckTests(TestCase):
     @override_settings(FERNET_KEY="not-a-key")
     def test_malformed_key_is_an_error(self):
         self.assertIn("my_practice.E001", self._ids())
+
+
+class SecretKeyCheckTests(TestCase):
+    def _ids(self):
+        return {message.id for message in run_checks()}
+
+    @override_settings(DEBUG=False, RUNNING_TESTS=False, SECRET_KEY="django-insecure-dev-key")
+    def test_placeholder_key_without_debug_is_an_error(self):
+        self.assertIn("my_practice.E003", self._ids())
+
+    @override_settings(DEBUG=True, RUNNING_TESTS=False, SECRET_KEY="django-insecure-dev-key")
+    def test_placeholder_key_is_fine_in_debug(self):
+        self.assertNotIn("my_practice.E003", self._ids())
+
+    @override_settings(DEBUG=False, RUNNING_TESTS=False, SECRET_KEY="a-real-generated-key")
+    def test_real_key_passes(self):
+        self.assertNotIn("my_practice.E003", self._ids())

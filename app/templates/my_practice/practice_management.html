@@ -35,7 +35,7 @@
         </div>
         <div class="practice-actions">
             {% if practice.id != request.current_practice.id and practice.is_active %}
-            <a href="{% url 'practice_switch' practice.slug %}" class="btn btn-secondary">
+            <a href="{% url 'practice_switch' practice.slug %}" data-post-link class="btn btn-secondary">
                 {% trans "Switch" %}
             </a>
             {% endif %}

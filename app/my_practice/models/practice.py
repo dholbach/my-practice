@@ -7,7 +7,7 @@ from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-from ..validators import validate_email_template_placeholders
+from ..validators import validate_email_template_placeholders, validate_image_extension
 
 
 class Practice(models.Model):
@@ -241,9 +241,19 @@ class Practice(models.Model):
     )
 
     # Images
-    logo = models.ImageField(upload_to="practice/", blank=True, null=True, verbose_name=_("Logo"))
+    logo = models.ImageField(
+        upload_to="practice/",
+        blank=True,
+        null=True,
+        validators=[validate_image_extension],
+        verbose_name=_("Logo"),
+    )
     signature = models.ImageField(
-        upload_to="practice/", blank=True, null=True, verbose_name=_("Signature")
+        upload_to="practice/",
+        blank=True,
+        null=True,
+        validators=[validate_image_extension],
+        verbose_name=_("Signature"),
     )
 
     # Payment terms

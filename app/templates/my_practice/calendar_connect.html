@@ -32,10 +32,12 @@
             </p>
         </div>
 
-        <a href="{% url 'calendar_authorize' %}"
-           class="btn btn-primary inline-block py-[15px] px-[30px] text-base mt-5">
-            🔐 {% trans "Connect with Google" %}
-        </a>
+        <form action="{% url 'calendar_authorize' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary inline-block py-[15px] px-[30px] text-base mt-5">
+                🔐 {% trans "Connect with Google" %}
+            </button>
+        </form>
     </div>
 
     <div class="info-box max-w-[600px] mx-auto">

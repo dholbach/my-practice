@@ -77,12 +77,17 @@ class CalendarAuthorizeTest(CalendarViewsTestBase):
             "my_practice.views.calendar_views.GoogleCalendarOAuth.create_flow",
             return_value=fake_flow,
         ):
-            response = self.http.get(reverse("calendar_authorize"))
+            response = self.http.post(reverse("calendar_authorize"))
         self.assertRedirects(
             response, "https://accounts.google.com/auth", fetch_redirect_response=False
         )
         session = self.http.session
         self.assertEqual(session["oauth_state"], "state123")
+
+    def test_get_is_refused_without_touching_oauth_state(self):
+        response = self.http.get(reverse("calendar_authorize"))
+        self.assertEqual(response.status_code, 405)
+        self.assertNotIn("oauth_state", self.http.session)
 
 
 class CalendarOAuth2CallbackTest(CalendarViewsTestBase):
