@@ -344,6 +344,9 @@ SECURE_CSP = {
     "img-src": [CSP.SELF, "data:"],  # data: for base64 logos/signatures
     "connect-src": [CSP.SELF],  # AJAX/fetch calls
     "font-src": [CSP.SELF],
+    # The CSP equivalent of X_FRAME_OPTIONS = "DENY", which is only set when
+    # DEBUG is off; nothing in the app frames its own pages.
+    "frame-ancestors": [CSP.NONE],
 }
 
 # Security settings for production

@@ -155,6 +155,13 @@ class NonceRenderedTests(BaseTestCase):
         self.assertTrue(page_nonces, "base.html renders at least one inline script")
         self.assertEqual(page_nonces, {header_nonce})
 
+    def test_policy_forbids_framing(self):
+        """X_FRAME_OPTIONS is only set with DEBUG off; frame-ancestors covers
+        every configuration, including a dev server reachable on the LAN."""
+        self.client.login(username="testuser", password="testpass123")
+        header = self.client.get(reverse("dashboard")).headers["Content-Security-Policy"]
+        self.assertIn("frame-ancestors 'none'", header)
+
 
 class FlashMessageEscapingTests(TestCase):
     def _render_with(self, *texts):

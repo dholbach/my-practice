@@ -1,6 +1,7 @@
 """System checks for configuration the app cannot run correctly without."""
 
 from cryptography.fernet import Fernet
+from django.conf import settings
 from django.core.checks import Error, Tags, Warning, register
 
 from .fields import configured_keys
@@ -51,3 +52,27 @@ def fernet_key_deploy_check(**kwargs):
     if configured_keys():
         return []
     return [Error("FERNET_KEY is not set.", hint=MISSING_KEY_HINT, id="my_practice.E002")]
+
+
+@register(Tags.security)
+def secret_key_check(**kwargs):
+    """
+    Refuse the fallback SECRET_KEY outside DEBUG.
+
+    Django's own security.W009 only runs under `check --deploy` and is a
+    warning. This runs on every `migrate`, which the prod container does before
+    starting gunicorn, so a missing DJANGO_SECRET_KEY stops the start instead
+    of signing sessions and password-reset tokens with a key from the repo.
+    Skipped under tests: the runner forces DEBUG off before it runs checks.
+    """
+    if settings.DEBUG or settings.RUNNING_TESTS:
+        return []
+    if not settings.SECRET_KEY.startswith("django-insecure"):
+        return []
+    return [
+        Error(
+            "SECRET_KEY is a django-insecure placeholder while DEBUG is off.",
+            hint="Set DJANGO_SECRET_KEY in .env (./prod.py generates one).",
+            id="my_practice.E003",
+        )
+    ]
