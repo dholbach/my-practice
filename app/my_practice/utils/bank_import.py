@@ -307,11 +307,15 @@ class BankStatementImporter:
 
         if is_withdrawal:
             # Check if withdrawal already exists
+            # Only a record no transaction claims yet (one entered by hand, or
+            # left over from a cleared import); one already linked belongs to a
+            # different booking with the same date, amount and text.
             existing_withdrawal = CompanyWithdrawal.objects.filter(
                 practice=self.practice,
                 date=transaction_date,
                 amount=abs_amount,
                 description=reference,
+                bank_transactions__isnull=True,
             ).first()
 
             if existing_withdrawal:
@@ -342,6 +346,7 @@ class BankStatementImporter:
                 date=transaction_date,
                 amount=abs_amount,
                 description=reference,
+                bank_transactions__isnull=True,
             ).first()
 
             if existing_expense:
@@ -412,18 +417,35 @@ class BankStatementImporter:
             return False
         return True
 
-    def _handle_negative_row(self, parsed: dict, skip_negatives: bool) -> bool:
-        """Handle a negative-amount row. Returns True if fully processed (caller should continue)."""
-        existing = (
+    def _is_duplicate(self, parsed: dict) -> bool:
+        """
+        Whether this transaction is already stored.
+
+        Same booking date, amount and reference is not enough on its own: two
+        clients paying the same amount with the same reference on one day are
+        two payments, and the second used to be dropped without a trace. The
+        payer IBAN has to match too. An IBAN missing on either side still
+        counts as a match, so a row seen once through a source that leaves the
+        IBAN out and once through one that fills it in is not stored twice.
+        """
+        payer_iban = self._normalize_iban(parsed["payer_iban"])
+        stored_ibans = (
             BankTransaction.objects.for_practice(self.practice)
             .filter(
                 transaction_date=parsed["transaction_date"],
                 amount=parsed["amount"],
                 reference=parsed["reference"],
             )
-            .first()
+            .values_list("payer_iban", flat=True)
         )
-        if existing:
+        return any(
+            not payer_iban or not stored or self._normalize_iban(stored) == payer_iban
+            for stored in stored_ibans
+        )
+
+    def _handle_negative_row(self, parsed: dict, skip_negatives: bool) -> bool:
+        """Handle a negative-amount row. Returns True if fully processed (caller should continue)."""
+        if self._is_duplicate(parsed):
             self.results["ignored"] += 1
             return True
 
@@ -508,7 +530,7 @@ class BankStatementImporter:
                     "description": parsed["reference"],
                 }
                 linked_withdrawal = CompanyWithdrawal.objects.filter(
-                    **withdrawal_fields
+                    **withdrawal_fields, bank_transactions__isnull=True
                 ).first() or CompanyWithdrawal.objects.create(
                     **withdrawal_fields, category=withdrawal_category
                 )
@@ -628,16 +650,7 @@ class BankStatementImporter:
             return None
 
         # Duplicate check for non-negative (and unhandled negative) rows
-        existing = (
-            BankTransaction.objects.for_practice(self.practice)
-            .filter(
-                transaction_date=parsed["transaction_date"],
-                amount=parsed["amount"],
-                reference=parsed["reference"],
-            )
-            .first()
-        )
-        if existing:
+        if self._is_duplicate(parsed):
             self.results["ignored"] += 1
             return None
 
