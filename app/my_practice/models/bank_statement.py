@@ -167,7 +167,10 @@ class BankTransaction(models.Model):
     objects = PracticeScopedManager()
 
     class Meta:
-        unique_together = [["practice", "transaction_date", "amount", "reference"]]
+        # payer_iban is part of the key: two payers can send the same amount
+        # with the same reference on the same day. The importer's duplicate
+        # check additionally treats a missing IBAN as matching any.
+        unique_together = [["practice", "transaction_date", "amount", "reference", "payer_iban"]]
         ordering = ["-transaction_date"]
         verbose_name = gettext_lazy("Bank Transaction")
         verbose_name_plural = gettext_lazy("Bank Transactions")

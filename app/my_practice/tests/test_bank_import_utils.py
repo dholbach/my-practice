@@ -807,3 +807,64 @@ class PrivateContributionReuseTest(TestCase):
         )
         self.assertEqual(transaction.match_confidence, "auto-contribution")
         self.assertEqual(CompanyWithdrawal.objects.filter(practice=practice).count(), 2)
+
+
+class DuplicateDetectionTest(TestCase):
+    """Same date, amount and reference is only a duplicate when the payer matches too."""
+
+    def setUp(self):
+        self.practice = _make_practice(slug="dedupe-payer")
+        self.importer = BankStatementImporter.for_account(self.practice, PRACTICE_IBAN)
+
+    def _parsed(self, payer_iban, amount="90.00", payer_name="Max Mustermann", reference="Danke"):
+        return {
+            "transaction_date": date(2026, 1, 15),
+            "value_date": date(2026, 1, 15),
+            "payer_name": payer_name,
+            "payer_iban": payer_iban,
+            "reference": reference,
+            "amount": Decimal(amount),
+            "balance_after": Decimal("1000.00"),
+        }
+
+    def test_two_payers_with_same_reference_are_both_kept(self):
+        self.importer.ingest_transaction(
+            self._parsed("DE02120300000000202051"), skip_negatives=False
+        )
+        self.importer.ingest_transaction(
+            self._parsed("DE02500105170137075030", payer_name="Anna Schmidt"),
+            skip_negatives=False,
+        )
+        self.assertEqual(BankTransaction.objects.count(), 2)
+        self.assertEqual(self.importer.results["ignored"], 0)
+
+    def test_same_payer_differently_formatted_is_a_duplicate(self):
+        self.importer.ingest_transaction(
+            self._parsed("DE02120300000000202051"), skip_negatives=False
+        )
+        self.importer.ingest_transaction(
+            self._parsed("de02 1203 0000 0000 2020 51"), skip_negatives=False
+        )
+        self.assertEqual(BankTransaction.objects.count(), 1)
+        self.assertEqual(self.importer.results["ignored"], 1)
+
+    def test_missing_iban_on_either_side_is_a_duplicate(self):
+        # One source may leave the counterparty IBAN out; that must not double the row.
+        self.importer.ingest_transaction(self._parsed(""), skip_negatives=False)
+        self.importer.ingest_transaction(
+            self._parsed("DE02120300000000202051"), skip_negatives=False
+        )
+        self.assertEqual(BankTransaction.objects.count(), 1)
+
+    def test_two_creditors_debiting_the_same_amount_get_two_expenses(self):
+        # Reusing the first debit's expense would leave the second unbooked.
+        for iban, name in (
+            ("DE02120300000000202051", "Test GmbH"),
+            ("DE02500105170137075030", "M. Schmidt"),
+        ):
+            self.importer.ingest_transaction(
+                self._parsed(iban, amount="-40.00", payer_name=name, reference="Beitrag"),
+                skip_negatives=False,
+            )
+        self.assertEqual(BankTransaction.objects.count(), 2)
+        self.assertEqual(CompanyExpense.objects.filter(practice=self.practice).count(), 2)
