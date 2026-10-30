@@ -1021,6 +1021,36 @@ def _decrypted(path, passphrase_file, workdir):
     return plain
 
 
+# Unpack into a staging directory inside the media mount (same filesystem, and
+# the leading dot keeps it apart from the media itself), and only replace the
+# current files once tar has succeeded.
+MEDIA_RESTORE_SCRIPT = (
+    "set -e; staging=/app/media/.restore; trap 'rm -rf \"$staging\"' EXIT; "
+    'rm -rf "$staging"; mkdir "$staging"; tar xzf - -C "$staging"; '
+    "find /app/media -mindepth 1 -maxdepth 1 ! -name .restore -exec rm -rf {} +; "
+    'if [ -d "$staging/media" ]; then '
+    'find "$staging/media" -mindepth 1 -maxdepth 1 -exec mv {} /app/media/ \\; ; fi'
+)
+
+
+def _verify_media_archive(path):
+    """A media backup to restore: readable, and nothing but files under media/."""
+    try:
+        with tarfile.open(path, "r:gz") as tar:
+            for member in tar:
+                parts = member.name.split("/")
+                if (
+                    parts[0] != "media"
+                    or ".." in parts
+                    or parts[1:2] == [".restore"]  # the staging directory
+                    or member.name.startswith("/")
+                    or not (member.isfile() or member.isdir())
+                ):
+                    raise BackupError(f"Media backup has an unexpected entry: {member.name}")
+    except (OSError, EOFError, tarfile.TarError) as exc:
+        raise BackupError(f"Media backup is not a readable tar.gz archive ({exc})") from None
+
+
 def cmd_restore(args):
     """Restore a database backup (and optionally a media backup) — overwrites current data."""
     files = [
@@ -1047,10 +1077,17 @@ def cmd_restore(args):
         compose_cmd = _compose_cmd(args)
         passphrase_file = _passphrase_file()
         with tempfile.TemporaryDirectory() as workdir:
+            # Check both archives before touching anything, so a bad media file
+            # cannot leave a restored database next to the old media.
             plain_db = _decrypted(db_file, passphrase_file, workdir)
             _verify_dump(plain_db)
-            # ON_ERROR_STOP: psql otherwise logs a failed statement and exits 0
-            # over a half-restored database.
+            plain_media = _decrypted(media_file, passphrase_file, workdir) if media_file else None
+            if plain_media:
+                _verify_media_archive(plain_media)
+
+            # --single-transaction: an error rolls the whole restore back
+            # instead of leaving the --clean drops done and the data half-loaded.
+            # ON_ERROR_STOP: psql otherwise logs a failed statement and exits 0.
             psql = subprocess.Popen(
                 [
                     *compose_cmd,
@@ -1063,6 +1100,7 @@ def cmd_restore(args):
                     "-d",
                     _setting("POSTGRES_DB", "my_practice"),
                     "--quiet",
+                    "--single-transaction",
                     "-v",
                     "ON_ERROR_STOP=1",
                 ],
@@ -1071,32 +1109,30 @@ def cmd_restore(args):
             with gzip.open(plain_db, "rb") as dump:
                 for chunk in iter(lambda: dump.read(1 << 20), b""):
                     psql.stdin.write(chunk)
+            # The dump brings back the sessions that were live when it was
+            # taken; sign everyone in afresh instead of reviving them.
+            psql.stdin.write(b"\nTRUNCATE django_session;\n")
             psql.stdin.close()
             if psql.wait() != 0:
-                raise BackupError("Database restore failed")
+                raise BackupError("Database restore failed; the database is unchanged")
             print("✅ Database restored")
 
-            if media_file:
-                plain_media = _decrypted(media_file, passphrase_file, workdir)
+            if plain_media:
                 with open(plain_media, "rb") as archive:
                     result = subprocess.run(
-                        [
-                            *compose_cmd,
-                            "exec",
-                            "-T",
-                            "django",
-                            "sh",
-                            "-c",
-                            "rm -rf /app/media/* && tar xzf - -C /app",
-                        ],
+                        [*compose_cmd, "exec", "-T", "django", "sh", "-c", MEDIA_RESTORE_SCRIPT],
                         stdin=archive,
                     )
                 if result.returncode != 0:
-                    raise BackupError("Media restore failed")
+                    raise BackupError(
+                        "Media restore failed; the existing media files are unchanged"
+                    )
                 print("✅ Media restored")
     except BackupError as exc:
         print(f"❌ {exc}", file=sys.stderr)
         return subprocess.CompletedProcess(args=[], returncode=1)
+    print("ℹ️  All sessions were signed out. Data erased or anonymised since this backup")
+    print("   was taken is back: repeat those GDPR erasures and anonymisations.")
     print("✨ Restore complete. Check the key: ./prod.py manage encryption check")
     return subprocess.CompletedProcess(args=[], returncode=0)
 
@@ -1108,7 +1144,7 @@ COMMANDS = {
     "start": (cmd_start, "Start the stack"),
     "stop": (cmd_stop, "Stop the stack"),
     "restart": (cmd_restart, "Restart the Django container"),
-    "update": (cmd_update, "Pull the latest image and restart"),
+    "update": (cmd_update, "Back up, pull the latest image and restart"),
     "logs": (cmd_logs, "Follow Django logs"),
     "status": (cmd_status, "Show container status"),
     "manage": (cmd_manage, "Run a Django management command"),

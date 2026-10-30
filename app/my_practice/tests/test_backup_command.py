@@ -47,9 +47,13 @@ elif args[0] == "tar":
     sys.exit(subprocess.call(["tar", "czf", "-", *exclude, "-C", media, "media"]))
 elif args[0] == "psql":
     with open(os.environ["FAKE_PSQL_OUT"], "wb") as out:
+        out.write(" ".join(args).encode() + b"\\n")
         out.write(sys.stdin.buffer.read())
+    sys.exit(1 if mode == "psql_fails" else 0)
 elif args[0] == "sh":
-    sys.exit(subprocess.call(["tar", "xzf", "-", "-C", os.environ["FAKE_RESTORE_DIR"]]))
+    # The real script, aimed at a fake media directory.
+    script = args[2].replace("/app/media", os.path.join(os.environ["FAKE_RESTORE_DIR"], "media"))
+    sys.exit(subprocess.call(["sh", "-c", script]))
 """
 
 
@@ -60,7 +64,9 @@ def _load_prod():
     return module
 
 
-class BackupCommandTests(SimpleTestCase):
+class BackupFixture(SimpleTestCase):
+    """A temp backup directory, media tree and fake docker; no tests of its own."""
+
     def setUp(self):
         self.prod = _load_prod()
         tmp = tempfile.TemporaryDirectory()
@@ -95,9 +101,31 @@ class BackupCommandTests(SimpleTestCase):
         os.environ["FAKE_MODE"] = mode
         return self.prod.run_backup(self.compose, str(self.backup_dir), passphrase_file)
 
+    def _restore(self, *files, mode="ok"):
+        """Run `prod.py restore --yes` against the fake docker; media lands in root/restored.
+
+        Returns (returncode, stderr). The passphrase comes from the test's own
+        environment only, never from the developer's .env.
+        """
+        os.environ["FAKE_MODE"] = mode
+        os.environ["FAKE_PSQL_OUT"] = str(self.root / "restored.sql")
+        os.environ["FAKE_RESTORE_DIR"] = str(self.root / "restored")
+        (self.root / "restored" / "media").mkdir(parents=True, exist_ok=True)
+        passphrase = os.environ.get("BACKUP_PASSPHRASE_FILE")
+        with (
+            mock.patch.object(self.prod, "_compose_cmd", return_value=self.compose),
+            mock.patch.object(self.prod, "_passphrase_file", return_value=passphrase),
+            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.redirect_stderr(io.StringIO()) as err,
+        ):
+            result = self.prod.cmd_restore([*files, "--yes"])
+        return result.returncode, err.getvalue()
+
     def _listing(self):
         return sorted(p.name for p in self.backup_dir.iterdir()) if self.backup_dir.exists() else []
 
+
+class BackupCommandTests(BackupFixture):
     def test_successful_backup_writes_verified_private_archives(self):
         finals = self._backup()
 
@@ -160,22 +188,66 @@ class BackupCommandTests(SimpleTestCase):
         self.assertTrue(all(p.endswith(".gpg") for p in finals))
         self.assertFalse(Path(finals[0]).read_bytes().startswith(b"\x1f\x8b"))  # not plain gzip
 
-        os.environ["FAKE_PSQL_OUT"] = str(self.root / "restored.sql")
-        os.environ["FAKE_RESTORE_DIR"] = str(self.root / "restored")
-        (self.root / "restored").mkdir()
         os.environ["BACKUP_PASSPHRASE_FILE"] = str(passphrase)
         self.addCleanup(os.environ.pop, "BACKUP_PASSPHRASE_FILE", None)
-        original_compose_cmd = self.prod._compose_cmd
-        self.prod._compose_cmd = lambda _args: self.compose
-        try:
-            with contextlib.redirect_stdout(io.StringIO()):
-                result = self.prod.cmd_restore([*finals, "--yes"])
-        finally:
-            self.prod._compose_cmd = original_compose_cmd
-
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(self._restore(*finals), (0, ""))
         self.assertIn(b"database dump complete", (self.root / "restored.sql").read_bytes())
         self.assertEqual((self.root / "restored" / "media" / "a.pdf").read_bytes(), b"%PDF a")
+
+
+class RestoreTests(BackupFixture):
+    """Restore checks before it deletes, and fails as a whole."""
+
+    def setUp(self):
+        super().setUp()
+        self.db, self.media = self._backup()
+        self.current = self.root / "restored" / "media"
+        self.current.mkdir(parents=True)
+        (self.current / "current.pdf").write_bytes(b"%PDF current")
+
+    def _bad_archive(self, name):
+        path = self.root / "bad.tar.gz"
+        with tarfile.open(path, "w:gz") as tar:
+            info = tarfile.TarInfo(name)
+            info.size = 1
+            tar.addfile(info, io.BytesIO(b"x"))
+        return str(path)
+
+    def test_restore_is_one_transaction_and_signs_everyone_out(self):
+        self.assertEqual(self._restore(self.db, self.media), (0, ""))
+        psql = (self.root / "restored.sql").read_bytes()
+        self.assertIn(b"--single-transaction", psql.splitlines()[0])
+        self.assertTrue(psql.rstrip().endswith(b"TRUNCATE django_session;"))
+        self.assertEqual(sorted(p.name for p in self.current.iterdir()), ["a.pdf", "b.pdf"])
+
+    def test_unreadable_media_archive_aborts_before_the_database(self):
+        garbage = self.root / "garbage.tar.gz"
+        garbage.write_bytes(b"not a tarball")
+        code, err = self._restore(self.db, str(garbage))
+        self.assertEqual(code, 1)
+        self.assertIn("not a readable tar.gz", err)
+        self.assertFalse((self.root / "restored.sql").exists())
+        self.assertTrue((self.current / "current.pdf").exists())
+
+    def test_entries_outside_media_are_refused(self):
+        for name in [
+            "../escape.pdf",
+            "/etc/escape",
+            "other/x.pdf",
+            "media/../../x",
+            "media/.restore/x",
+        ]:
+            with self.subTest(name=name):
+                code, err = self._restore(self.db, self._bad_archive(name))
+                self.assertEqual(code, 1)
+                self.assertIn("unexpected entry", err)
+                self.assertFalse((self.root / "restored.sql").exists())
+
+    def test_failed_database_restore_leaves_media_alone(self):
+        code, err = self._restore(self.db, self.media, mode="psql_fails")
+        self.assertEqual(code, 1)
+        self.assertIn("the database is unchanged", err)
+        self.assertEqual([p.name for p in self.current.iterdir()], ["current.pdf"])
 
 
 class UpdateBackupTests(SimpleTestCase):

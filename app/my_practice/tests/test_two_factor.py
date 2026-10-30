@@ -7,9 +7,10 @@ from unittest import mock
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
 from django.core.cache import cache
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from ..models import RecoveryCode, TwoFactorDevice
@@ -245,3 +246,52 @@ class ResetCommandTests(TwoFactorTestBase):
         self.assertFalse(TwoFactorDevice.objects.filter(user=self.user).exists())
         self.assertEqual(self._password_step().status_code, 302)
         self.assertTrue(self._signed_in())
+
+
+class OtherSessionsTests(TwoFactorTestBase):
+    """Changing the second factor signs the user out everywhere else."""
+
+    url = reverse("two_factor_settings")
+
+    def _other_session(self):
+        other = Client()
+        other.login(username="therapist", password="testpass123")
+        return other
+
+    def _alive(self, browser):
+        return Session.objects.filter(session_key=browser.session.session_key).exists()
+
+    def test_enabling_ends_password_only_sessions(self):
+        other = self._other_session()
+        self.client.login(username="therapist", password="testpass123")
+        self.client.get(self.url)
+        device = TwoFactorDevice.objects.get(user=self.user)
+        self.client.post(self.url, {"action": "confirm", "code": self._code(device)})
+
+        self.assertFalse(self._alive(other))
+        self.assertTrue(self._alive(self.client))
+        self.assertEqual(other.get(reverse("dashboard")).status_code, 302)
+
+    def test_disabling_ends_other_sessions(self):
+        device, _codes = self._enable()
+        other = self._other_session()
+        self.client.login(username="therapist", password="testpass123")
+        self.client.post(
+            self.url, {"action": "disable", "password": "testpass123", "code": self._code(device)}
+        )
+        self.assertFalse(self._alive(other))
+        self.assertTrue(self._alive(self.client))
+
+    def test_other_users_sessions_survive(self):
+        User.objects.create_user(username="colleague", password="testpass123")
+        colleague = Client()
+        colleague.login(username="colleague", password="testpass123")
+        self._enable()
+        call_command("two_factor_reset", "therapist", stdout=StringIO())
+        self.assertTrue(self._alive(colleague))
+
+    def test_reset_ends_every_session(self):
+        self._enable()
+        other = self._other_session()
+        call_command("two_factor_reset", "therapist", stdout=StringIO())
+        self.assertFalse(self._alive(other))

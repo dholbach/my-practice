@@ -69,8 +69,11 @@ Or with media files:
 
 ### Safety Features:
 - ⚠️  Confirmation prompt (prevents accidental overwrites)
-- 📊 Shows what will be overwritten
-- ✅ Clear success/error messages
+- 🔍 Both archives are checked before anything is touched: the database dump must be complete, and the media archive must be readable and hold nothing but files under `media/`
+- 🔒 The database is restored in a single transaction, so a failed restore leaves it as it was
+- 📁 Media is unpacked into a staging directory first; the current files are only replaced once that has succeeded
+- 🚪 Every session is signed out, because the dump would otherwise bring back the sessions that were live when it was taken
+- ↩️ Anything erased or anonymised since the backup was taken is back after the restore: repeat those GDPR erasures and anonymisations
 
 ## 🤖 Automatic Timers and Auto-Start (systemd)
 
