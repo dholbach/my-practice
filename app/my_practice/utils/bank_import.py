@@ -10,7 +10,8 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.db import DatabaseError, transaction
 from django.utils.translation import gettext as _
 
 from ..models import (
@@ -43,15 +44,19 @@ class BankStatementImporter:
         results = importer.process()
     """
 
-    # Invoice number extraction patterns (priority order)
+    # Invoice number extraction patterns (priority order). The digit run is
+    # bounded so a match always fits Invoice.invoice_number and
+    # BankTransaction.extracted_invoice_number (max_length=20): the reference
+    # is written by whoever sends the transfer, and an over-long token used to
+    # reach the INSERT and abort the whole import.
     INVOICE_PATTERNS = [
         # Pattern 1: Direct codes (XX-1, YY-2, AB-3)
-        r"\b([A-Z]{2,4}-\d+)\b",
+        r"\b([A-Z]{2,4}-\d{1,15})\b",
         # Pattern 2: with a keyword prefix before the code (see the German/
         # English invoice-label variants in the regex below)
-        r"(?:Rechnung|Invoice|ReNr|Re)\s*(?:Nr\.?|No\.?)?\s*([A-Z]{2,4}-\d+)",
+        r"(?:Rechnung|Invoice|ReNr|Re)\s*(?:Nr\.?|No\.?)?\s*([A-Z]{2,4}-\d{1,15})\b",
         # Pattern 3: In context (3x Therapie CD-4)
-        r"Therapie\s+([A-Z]{2,4}-\d+)",
+        r"Therapie\s+([A-Z]{2,4}-\d{1,15})\b",
     ]
 
     # Keywords for salary / owner-pay withdrawal detection
@@ -538,10 +543,23 @@ class BankStatementImporter:
                 self.results["errors"].append(_("Failed to parse row: %(row)s") % {"row": row})
                 continue
 
-            self.ingest_transaction(parsed, skip_negatives=skip_negatives)
+            try:
+                self.ingest_transaction(parsed, skip_negatives=skip_negatives)
+            except (DatabaseError, ValidationError) as exc:
+                # ingest_transaction is its own savepoint, so only this row is
+                # rolled back; one bad row must not discard the whole statement.
+                self.results["errors"].append(
+                    _("Row from %(date)s over %(amount)s could not be imported: %(error)s")
+                    % {
+                        "date": parsed["transaction_date"].strftime("%d.%m.%Y"),
+                        "amount": parsed["amount"],
+                        "error": exc,
+                    }
+                )
 
         return self.results
 
+    @transaction.atomic
     def ingest_transaction(
         self, parsed: dict[str, Any], skip_negatives: bool = True
     ) -> "BankTransaction | None":
@@ -563,11 +581,19 @@ class BankStatementImporter:
         Returns:
             The created BankTransaction, or None if the row was ignored as a
             duplicate or handled as a negative/expense row.
+
+        Atomic: the BankTransaction and the invoice it marks paid are written
+        together or not at all. A caller outside ``process()`` has no
+        surrounding transaction, and a committed match whose invoice save then
+        failed would be skipped as a duplicate on every later import, leaving
+        the invoice unpaid for good.
         """
         self.results["total"] += 1
 
         payer_name_lower = parsed["payer_name"].lower().strip()
-        is_self_payment = payer_name_lower == self.practice.name.lower().strip()
+        practice_name_lower = self.practice.name.lower().strip()
+        # A blank practice name would otherwise equal every blank payer name.
+        is_self_payment = bool(practice_name_lower) and payer_name_lower == practice_name_lower
 
         # IBAN-based capital contribution detection takes priority over name matching.
         # Check both the payer_iban field AND the reference text (bank embeds IBANs there).

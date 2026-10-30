@@ -7,6 +7,8 @@ Handles CSV upload, automatic matching, and manual review of unmatched transacti
 from decimal import Decimal
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.db import transaction as db_transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.formats import date_format
@@ -450,13 +452,33 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             status="sent",
         )
 
-        transaction.matched_invoice = invoice
-        transaction.match_confidence = "exact"
-        transaction.save()
+        # The suggestion arrives as a hidden form field, so re-apply the
+        # importer's exact-amount rule rather than trusting it.
+        if abs(invoice.calculate_total() - transaction.amount) >= Decimal("0.01"):
+            messages.error(
+                request,
+                _("The amount does not match invoice %(number)s.")
+                % {"number": invoice.invoice_number},
+            )
+            return redirect(redirect_url)
 
-        invoice.status = "paid"
-        invoice.paid_date = transaction.transaction_date
-        invoice.save()
+        try:
+            with db_transaction.atomic():
+                invoice.status = "paid"
+                invoice.paid_date = transaction.transaction_date
+                invoice.save()
+
+                transaction.matched_invoice = invoice
+                transaction.match_confidence = "exact"
+                transaction.processed = True
+                transaction.save()
+        except ValidationError as exc:
+            messages.error(
+                request,
+                _("Invoice %(number)s could not be marked as paid: %(error)s")
+                % {"number": invoice.invoice_number, "error": " ".join(exc.messages)},
+            )
+            return redirect(redirect_url)
 
         messages.success(
             request,
@@ -488,20 +510,32 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             bulk_note = _("Combined payment for: %(numbers)s") % {"numbers": invoice_numbers}
             notes = f"{bulk_note}\n{notes}" if notes else bulk_note
 
-        transaction.matched_invoice = first_invoice
-        transaction.match_confidence = "manual"
-        transaction.processed = True
-        if notes:
-            transaction.notes = notes
-        transaction.save()
+        # All-or-nothing: a transaction recorded as matched while one of its
+        # invoices failed validation would vanish from review with the
+        # invoice still unpaid.
+        try:
+            with db_transaction.atomic():
+                for inv in invoice_list:
+                    inv.status = "paid"
+                    inv.paid_date = transaction.transaction_date
+                    inv.save()
+
+                transaction.matched_invoice = first_invoice
+                transaction.match_confidence = "manual"
+                transaction.processed = True
+                if notes:
+                    transaction.notes = notes
+                transaction.save()
+        except ValidationError as exc:
+            messages.error(
+                request,
+                _("Invoice %(number)s could not be marked as paid: %(error)s")
+                % {"number": inv.invoice_number, "error": " ".join(exc.messages)},
+            )
+            return redirect(redirect_url)
 
         if create_alias and transaction.payer_name and first_invoice:
             self._maybe_create_alias(request, transaction, first_invoice, "import")
-
-        for inv in invoice_list:
-            inv.status = "paid"
-            inv.paid_date = transaction.transaction_date
-            inv.save()
 
         if len(invoice_list) == 1 and first_invoice:
             messages.success(
@@ -623,17 +657,41 @@ class BankFinancialReviewView(PracticeScopedListView):
         return redirect(self.redirect_name)
 
     def _selected_transactions(self, request):
-        """The selected transactions scoped to the current practice, or None with an error set."""
+        """
+        The selected transactions this page lists, or None with an error set.
+
+        Limited to the page's own queryset, not just the practice: a posted id
+        for an already-matched or manually linked transaction must not be
+        regrouped, which would also delete the record it is linked to.
+        """
         transaction_ids = request.POST.getlist("transactions")
         if not transaction_ids:
             messages.error(request, _("Please select at least one transaction."))
             return None
-        return BankTransaction.objects.for_current_practice(request).filter(id__in=transaction_ids)
+        return BankTransaction.objects.for_current_practice(request).filter(
+            id__in=transaction_ids, **self.queryset_filter()
+        )
 
     def _orphan_record_ids(self, transactions) -> list[int]:
-        """Per-transaction records the importer auto-created for these transactions."""
+        """Records the selected transactions were linked to before this action."""
         link_id = f"{self.link_field}_id"
         return [getattr(trans, link_id) for trans in transactions if getattr(trans, link_id)]
+
+    def _delete_orphans(self, orphan_ids: list[int]) -> None:
+        """
+        Delete the superseded per-transaction records that nothing else uses.
+
+        Call after the selected transactions have been re-linked or unlinked.
+        The importer reuses an existing record with the same date, amount and
+        description, which may be one the owner entered by hand, so a record
+        that still has receipts or other linked transactions is kept.
+        """
+        orphans = self.record_model.objects.filter(
+            id__in=orphan_ids, bank_transactions__isnull=True
+        )
+        if self.record_model is CompanyExpense:
+            orphans = orphans.filter(receipts__isnull=True)
+        orphans.delete()
 
     def _handle_group(self, request):
         transactions = self._selected_transactions(request)
@@ -643,6 +701,9 @@ class BankFinancialReviewView(PracticeScopedListView):
             return redirect(self.redirect_name)
 
         category = request.POST.get("category", self.default_category)
+        if category not in dict(self.record_model.CATEGORY_CHOICES):
+            messages.error(request, _("Invalid category."))
+            return redirect(self.redirect_name)
         description = request.POST.get("description", "")
         total_amount = sum(abs(trans.amount) for trans in transactions)
         dates = [trans.transaction_date for trans in transactions]
@@ -659,32 +720,34 @@ class BankFinancialReviewView(PracticeScopedListView):
         # Collected before the grouped record exists so it can never be in the list.
         orphan_ids = self._orphan_record_ids(transactions)
 
-        record = self.record_model.objects.create(
-            practice=request.current_practice,
-            date=max_date,
-            amount=total_amount,
-            description=description,
-            category=category,
-            **self.record_fields(request),
-        )
+        # Evaluated now: the loop below takes every row out of the page's
+        # queryset, which would leave a lazy queryset empty.
+        transactions = list(transactions)
+        with db_transaction.atomic():
+            record = self.record_model.objects.create(
+                practice=request.current_practice,
+                date=max_date,
+                amount=total_amount,
+                description=description,
+                category=category,
+                **self.record_fields(request),
+            )
 
-        notes = f"{self.grouped_note_prefix}: {record} (ID: {record.id})"
-        for trans in transactions:
-            trans.match_confidence = "ignored"
-            setattr(trans, self.link_field, record)
-            trans.notes = notes
-            trans.processed = True
-            trans.save()
+            notes = f"{self.grouped_note_prefix}: {record} (ID: {record.id})"
+            for trans in transactions:
+                trans.match_confidence = "ignored"
+                setattr(trans, self.link_field, record)
+                trans.notes = notes
+                trans.processed = True
+                trans.save()
 
-        self.after_group(request, transactions, category)
-
-        if orphan_ids:
-            self.record_model.objects.filter(id__in=orphan_ids).delete()
+            self.after_group(request, transactions, category)
+            self._delete_orphans(orphan_ids)
 
         messages.success(
             request,
             self.group_success_message
-            % {"count": transactions.count(), "amount": f"{total_amount:.2f}"},
+            % {"count": len(transactions), "amount": f"{total_amount:.2f}"},
         )
         return redirect(self.redirect_name)
 
@@ -696,15 +759,14 @@ class BankFinancialReviewView(PracticeScopedListView):
         # Ignoring says "this was never a record": drop what the importer
         # auto-created for it, otherwise the amount stays in the books.
         orphan_ids = self._orphan_record_ids(transactions)
-        if orphan_ids:
-            self.record_model.objects.filter(id__in=orphan_ids).delete()
-
-        count = transactions.update(
-            match_confidence="ignored",
-            notes="Manuell ignoriert",
-            processed=True,
-            **{self.link_field: None},
-        )
+        with db_transaction.atomic():
+            count = transactions.update(
+                match_confidence="ignored",
+                notes="Manuell ignoriert",
+                processed=True,
+                **{self.link_field: None},
+            )
+            self._delete_orphans(orphan_ids)
 
         messages.success(
             request,
