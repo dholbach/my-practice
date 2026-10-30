@@ -166,14 +166,16 @@ class PracticeDayCalculator:
         self.year = year
 
     def _session_dates(self) -> set[date]:
-        """Return all dates in this year that have at least one session (any client)."""
+        """Return all dates in this year with at least one session of this practice's clients."""
         from ..models import Session
+        from ..models.base import scope_to_practice
 
-        return set(
-            Session.objects.filter(session_date__year=self.year).values_list(
-                "session_date", flat=True
-            )
+        sessions = scope_to_practice(
+            Session.objects.filter(session_date__year=self.year),
+            self.practice,
+            "client__practice",
         )
+        return set(sessions.values_list("session_date", flat=True))
 
     def calculate(self) -> FahrtkostenResult:
         """

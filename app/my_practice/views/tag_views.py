@@ -4,7 +4,6 @@ Tag management views for clients.
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
@@ -14,7 +13,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import ListView
 
 from ..models import Client, ClientTag
-from ..utils import sort_tags_by_category
+from ..utils import annotate_client_counts, sort_tags_by_category
 from .crud_mixins import (
     NextRedirectMixin,
     PracticeScopedCreateView,
@@ -32,7 +31,9 @@ class TagListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        return ClientTag.objects.annotate(client_count=Count("clients")).order_by("name")
+        return annotate_client_counts(
+            ClientTag.objects.all(), practice=self.request.current_practice
+        ).order_by("name")
 
 
 class TagCreateView(NextRedirectMixin, PracticeScopedCreateView):

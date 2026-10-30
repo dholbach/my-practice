@@ -35,6 +35,7 @@ from ..models import (
 from ..utils import (
     RevenueCalculator,
     annotate_activity_status,
+    annotate_client_counts,
     sort_tags_by_category,
 )
 from ..utils.email_utils import get_gdpr_deletion_email_content
@@ -185,7 +186,9 @@ class ClientListView(PracticeScopedListView):
 
         # Get all tags with client counts for filter UI
         # Sort by category priority (attention → general → exit), then alphabetically
-        all_tags = ClientTag.objects.annotate(client_count=models.Count("clients"))
+        all_tags = annotate_client_counts(
+            ClientTag.objects.all(), practice=self.request.current_practice
+        )
         context["all_tags"] = sort_tags_by_category(all_tags)
 
         return context

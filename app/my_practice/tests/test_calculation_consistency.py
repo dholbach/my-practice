@@ -145,7 +145,7 @@ class SessionCountConsistencyTests(TestCase):
 
     def test_capacity_helpers_booked_hours(self):
         """Test capacity helpers calculation."""
-        booked = _get_booked_hours(date(2025, 6, 1), date(2025, 6, 30))
+        booked = _get_booked_hours(date(2025, 6, 1), date(2025, 6, 30), practice=self.practice)
         self.assertEqual(booked, 4.0)
 
     @allow_issued_invoice_writes()
@@ -189,7 +189,7 @@ class SessionCountConsistencyTests(TestCase):
         chart_total = sum(monthly.values())
 
         # Method 3: Capacity helpers
-        capacity = _get_booked_hours(date(2025, 6, 1), date(2025, 6, 30))
+        capacity = _get_booked_hours(date(2025, 6, 1), date(2025, 6, 30), practice=self.practice)
 
         # All should be equal
         self.assertEqual(direct, 4.0)
@@ -528,7 +528,7 @@ class CancellationHandlingConsistencyTests(TestCase):
         chart_total = sum(monthly.values())
 
         # Method 3: Capacity helpers
-        capacity = _get_booked_hours(date(2025, 6, 1), date(2025, 6, 30))
+        capacity = _get_booked_hours(date(2025, 6, 1), date(2025, 6, 30), practice=self.practice)
 
         # All should exclude the cancellation
         self.assertEqual(direct, 2.0)

@@ -41,7 +41,7 @@ class PracticeAnalyzer:
         Args:
             start_date (date): Start of analysis period
             end_date (date): End of analysis period
-            practice: Practice instance to scope queries; None means all practices
+            practice: Practice to scope queries to; None gives nothing, ALL_PRACTICES every practice
         """
         self.start_date = start_date
         self.end_date = end_date
