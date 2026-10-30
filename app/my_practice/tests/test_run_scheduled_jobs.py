@@ -8,6 +8,8 @@ from django.test import SimpleTestCase
 
 from ..management.commands.run_scheduled_jobs import JOBS
 
+JOB_NAMES = [job for job, *_args in JOBS]
+
 
 class RunScheduledJobsTest(SimpleTestCase):
     def _run(self):
@@ -19,12 +21,12 @@ class RunScheduledJobsTest(SimpleTestCase):
     def test_runs_all_jobs_in_order(self, mock_call_command):
         out, _err = self._run()
         called_jobs = [call.args[0] for call in mock_call_command.call_args_list]
-        self.assertEqual(called_jobs, JOBS)
+        self.assertEqual(called_jobs, JOB_NAMES)
         self.assertIn("All scheduled jobs completed.", out)
 
     @patch("my_practice.management.commands.run_scheduled_jobs.call_command")
     def test_one_failing_job_does_not_block_the_others(self, mock_call_command):
-        def side_effect(job, **kwargs):
+        def side_effect(job, *args, **kwargs):
             if job == "update_client_tags":
                 raise RuntimeError("boom")
 
@@ -34,7 +36,7 @@ class RunScheduledJobsTest(SimpleTestCase):
             self._run()
 
         called_jobs = [call.args[0] for call in mock_call_command.call_args_list]
-        self.assertEqual(called_jobs, JOBS, "all jobs should still run despite one failing")
+        self.assertEqual(called_jobs, JOB_NAMES, "all jobs should still run despite one failing")
         self.assertIn("update_client_tags", str(ctx.exception))
 
     @patch("my_practice.management.commands.run_scheduled_jobs.call_command")
@@ -44,5 +46,12 @@ class RunScheduledJobsTest(SimpleTestCase):
         with self.assertRaises(CommandError) as ctx:
             self._run()
 
-        for job in JOBS:
+        for job in JOB_NAMES:
             self.assertIn(job, str(ctx.exception))
+
+    @patch("my_practice.management.commands.run_scheduled_jobs.call_command")
+    def test_inquiry_retention_pass_applies(self, mock_call_command):
+        # A dry run on the timer would never anonymise anything.
+        self._run()
+        tidy = [c for c in mock_call_command.call_args_list if c.args[0] == "tidy_inquiries"]
+        self.assertEqual([c.args for c in tidy], [("tidy_inquiries", "--apply")])

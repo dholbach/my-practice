@@ -90,7 +90,7 @@ installed copies.
 | Unit | Schedule | What it does |
 | --- | --- | --- |
 | `my-practice-backup.timer` | Daily, random offset within 12 h | Runs `scripts/backup.sh`: PostgreSQL dump + media archive |
-| `my-practice-scheduled-jobs.timer` | Hourly, random offset within 5 min | Runs `run_scheduled_jobs`: calendar sync, client tag recalculation, Focus Queue materialize/auto-close, in sequence |
+| `my-practice-scheduled-jobs.timer` | Hourly, random offset within 5 min | Runs `run_scheduled_jobs`: calendar sync, client tag recalculation, Focus Queue materialize/auto-close, `tidy_inquiries --apply` (lapse after 60 days, anonymise after 180), in sequence |
 | `my-practice-app.service` | At boot | `dev.py start` once network and Docker are up |
 
 Both timers use `Persistent=true`, so a run missed while the laptop was off or asleep is
