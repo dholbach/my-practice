@@ -222,23 +222,26 @@ class RevenueCalculator:
             )
 
     @staticmethod
-    def get_total_revenue(filters: dict[str, Any] | None = None) -> Decimal:
+    def get_total_revenue(
+        filters: dict[str, Any] | None = None, *, practice: PracticeScope
+    ) -> Decimal:
         """
         Get total revenue for paid invoices with optional additional filters.
 
         Args:
             filters: dict of additional filter kwargs (e.g., {'client': client})
+            practice: Practice to scope the query to (None gives nothing)
 
         Returns:
             Decimal: Total revenue amount
 
         Example:
-            >>> RevenueCalculator.get_total_revenue()
+            >>> RevenueCalculator.get_total_revenue(practice=practice)
             Decimal('12580.00')
-            >>> RevenueCalculator.get_total_revenue({'paid_date__year': 2025})
+            >>> RevenueCalculator.get_total_revenue({'paid_date__year': 2025}, practice=practice)
             Decimal('4200.00')
         """
-        qs = Invoice.objects.filter(status="paid")
+        qs = scope_to_practice(Invoice.objects.filter(status="paid"), practice)
         if filters:
             qs = qs.filter(**filters)
         result = qs.aggregate(revenue_total=Sum("total"))["revenue_total"]
@@ -246,7 +249,10 @@ class RevenueCalculator:
 
     @staticmethod
     def get_revenue_stats(
-        filters: dict[str, Any] | None = None, include_avg: bool = True
+        filters: dict[str, Any] | None = None,
+        include_avg: bool = True,
+        *,
+        practice: PracticeScope,
     ) -> dict[str, Any]:
         """
         Get comprehensive revenue statistics (total, count, optional avg).
@@ -254,6 +260,7 @@ class RevenueCalculator:
         Args:
             filters: dict of additional filter kwargs
             include_avg: whether to include average calculation
+            practice: Practice to scope the query to (None gives nothing)
 
         Returns:
             dict: {
@@ -263,10 +270,10 @@ class RevenueCalculator:
             }
 
         Example:
-            >>> RevenueCalculator.get_revenue_stats({'client': client})
+            >>> RevenueCalculator.get_revenue_stats({'client': client}, practice=practice)
             {'total': Decimal('2800.00'), 'count': 14, 'avg': Decimal('200.00')}
         """
-        qs = Invoice.objects.filter(status="paid")
+        qs = scope_to_practice(Invoice.objects.filter(status="paid"), practice)
         if filters:
             qs = qs.filter(**filters)
 
@@ -422,9 +429,9 @@ class RevenueCalculator:
             filters["invoice_date__lte"] = end_date
 
         if not include_unpaid:
-            return RevenueCalculator.get_revenue_stats(filters)
+            return RevenueCalculator.get_revenue_stats(filters, practice=client.practice)
 
-        qs = Invoice.objects.filter(**filters)
+        qs = scope_to_practice(Invoice.objects.filter(**filters), client.practice)
         stats = qs.aggregate(
             revenue_total=Sum("total"),
             invoice_count=Count("id"),
@@ -440,7 +447,7 @@ class RevenueCalculator:
 
     @staticmethod
     def get_status_breakdown(
-        filters: dict | None = None, year: int | None = None
+        filters: dict | None = None, year: int | None = None, *, practice: PracticeScope
     ) -> dict[str, dict[str, Any]]:
         """
         Get invoice counts and totals broken down by status.
@@ -452,6 +459,7 @@ class RevenueCalculator:
         Args:
             filters: dict of additional filter kwargs (applied to all statuses)
             year: int year to filter by (uses paid_date for paid invoices)
+            practice: Practice to scope the query to (None gives nothing)
 
         Returns:
             dict: {
@@ -462,7 +470,7 @@ class RevenueCalculator:
             }
 
         Example:
-            >>> RevenueCalculator.get_status_breakdown()
+            >>> RevenueCalculator.get_status_breakdown(practice=practice)
             {
                 'draft': {'count': 5, 'total': Decimal('500.00')},
                 'sent': {'count': 3, 'total': Decimal('300.00')},
@@ -471,8 +479,8 @@ class RevenueCalculator:
             }
         """
         if year:
-            return RevenueCalculator._status_breakdown_for_year(filters, year)
-        return RevenueCalculator._status_breakdown_all_time(filters)
+            return RevenueCalculator._status_breakdown_for_year(filters, year, practice=practice)
+        return RevenueCalculator._status_breakdown_all_time(filters, practice=practice)
 
     @staticmethod
     def _zero_if_none(value: Decimal | None) -> Decimal:
@@ -492,11 +500,15 @@ class RevenueCalculator:
         return {k: v for k, v in filters.items() if k != "invoice_date__year"}
 
     @staticmethod
-    def _status_breakdown_for_year(filters: dict | None, year: int) -> dict[str, dict[str, Any]]:
+    def _status_breakdown_for_year(
+        filters: dict | None, year: int, *, practice: PracticeScope
+    ) -> dict[str, dict[str, Any]]:
         """Draft/sent/cancelled are filtered by invoice_date; paid by paid_date."""
         clean_filters = RevenueCalculator._without_year_filter(filters)
 
-        qs_invoice_date = Invoice.objects.filter(invoice_date__year=year)
+        qs_invoice_date = scope_to_practice(
+            Invoice.objects.filter(invoice_date__year=year), practice
+        )
         if clean_filters:
             qs_invoice_date = qs_invoice_date.filter(**clean_filters)
         stats_by_invoice_date = qs_invoice_date.aggregate(
@@ -508,7 +520,9 @@ class RevenueCalculator:
             cancelled_total=Sum(Case(When(status="cancelled", then="total"))),
         )
 
-        qs_paid_date = Invoice.objects.filter(status="paid", paid_date__year=year)
+        qs_paid_date = scope_to_practice(
+            Invoice.objects.filter(status="paid", paid_date__year=year), practice
+        )
         if clean_filters:
             qs_paid_date = qs_paid_date.filter(**clean_filters)
         stats_by_paid_date = qs_paid_date.aggregate(
@@ -524,8 +538,10 @@ class RevenueCalculator:
         }
 
     @staticmethod
-    def _status_breakdown_all_time(filters: dict | None) -> dict[str, dict[str, Any]]:
-        qs = Invoice.objects.all()
+    def _status_breakdown_all_time(
+        filters: dict | None, *, practice: PracticeScope
+    ) -> dict[str, dict[str, Any]]:
+        qs = scope_to_practice(Invoice.objects.all(), practice)
         if filters:
             qs = qs.filter(**filters)
 

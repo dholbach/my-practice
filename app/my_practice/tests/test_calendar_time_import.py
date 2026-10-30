@@ -65,7 +65,7 @@ class CalendarTimeImportTest(TestCase):
             "end": {"dateTime": "2026-02-03T10:30:00+01:00"},
         }
 
-        parsed = CalendarEventParser.parse_event(event, [self.client_obj])
+        parsed = CalendarEventParser.parse_event(event, [self.client_obj], practice=self.practice)
 
         # Verify datetime object includes time
         self.assertIsInstance(parsed["start"], datetime)
@@ -119,7 +119,7 @@ class CalendarTimeImportTest(TestCase):
             "end": {"date": "2026-02-05"},
         }
 
-        parsed = CalendarEventParser.parse_event(event, [self.client_obj])
+        parsed = CalendarEventParser.parse_event(event, [self.client_obj], practice=self.practice)
 
         # Create mock request
         request = Mock()

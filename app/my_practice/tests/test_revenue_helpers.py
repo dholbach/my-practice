@@ -7,7 +7,13 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from my_practice.models import Client, Invoice, Practice, allow_issued_invoice_writes
+from my_practice.models import (
+    ALL_PRACTICES,
+    Client,
+    Invoice,
+    Practice,
+    allow_issued_invoice_writes,
+)
 from my_practice.utils.revenue_helpers import RevenueCalculator
 
 
@@ -86,34 +92,29 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_total_revenue_no_filters(self):
         """Test total revenue across all paid invoices."""
-        # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
-
-        result = RevenueCalculator.get_total_revenue()
+        result = RevenueCalculator.get_total_revenue(practice=ALL_PRACTICES)
         # Only paid invoices: 200 + 300 = 500
         self.assertEqual(result, Decimal("500.00"))
 
     def test_get_total_revenue_with_year_filter(self):
         """Test total revenue filtered by year."""
-        result = RevenueCalculator.get_total_revenue({"paid_date__year": 2025})
+        result = RevenueCalculator.get_total_revenue(
+            {"paid_date__year": 2025}, practice=self.practice
+        )
         # Only 2025 paid invoice: 200
         self.assertEqual(result, Decimal("200.00"))
 
     def test_get_total_revenue_with_client_filter(self):
         """Test total revenue filtered by client."""
-        result = RevenueCalculator.get_total_revenue({"client": self.client})
+        result = RevenueCalculator.get_total_revenue(
+            {"client": self.client}, practice=self.practice
+        )
         # All paid invoices for this client: 500
         self.assertEqual(result, Decimal("500.00"))
 
     def test_get_revenue_stats_basic(self):
         """Test basic revenue statistics."""
-        result = RevenueCalculator.get_revenue_stats()
+        result = RevenueCalculator.get_revenue_stats(practice=self.practice)
 
         self.assertEqual(result["total"], Decimal("500.00"))
         self.assertEqual(result["count"], 2)
@@ -121,7 +122,9 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_revenue_stats_with_filters(self):
         """Test revenue statistics with filters."""
-        result = RevenueCalculator.get_revenue_stats({"paid_date__year": 2024})
+        result = RevenueCalculator.get_revenue_stats(
+            {"paid_date__year": 2024}, practice=self.practice
+        )
 
         self.assertEqual(result["total"], Decimal("300.00"))
         self.assertEqual(result["count"], 1)
@@ -129,7 +132,7 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_revenue_stats_without_avg(self):
         """Test revenue statistics without average."""
-        result = RevenueCalculator.get_revenue_stats(include_avg=False)
+        result = RevenueCalculator.get_revenue_stats(include_avg=False, practice=self.practice)
 
         self.assertEqual(result["total"], Decimal("500.00"))
         self.assertEqual(result["count"], 2)
@@ -210,7 +213,7 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_status_breakdown(self):
         """Test status breakdown for all invoices."""
-        result = RevenueCalculator.get_status_breakdown()
+        result = RevenueCalculator.get_status_breakdown(practice=self.practice)
 
         # Paid
         self.assertEqual(result["paid"]["count"], 2)
@@ -230,7 +233,9 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_status_breakdown_with_filters(self):
         """Test status breakdown filtered by year."""
-        result = RevenueCalculator.get_status_breakdown({"invoice_date__year": 2025})
+        result = RevenueCalculator.get_status_breakdown(
+            {"invoice_date__year": 2025}, practice=self.practice
+        )
 
         # 2025 invoices only
         self.assertEqual(result["paid"]["count"], 1)  # TEST-1
@@ -241,7 +246,9 @@ class RevenueCalculatorTests(TestCase):
 
     def test_get_status_breakdown_empty(self):
         """Test status breakdown when no invoices match."""
-        result = RevenueCalculator.get_status_breakdown({"invoice_date__year": 2020})
+        result = RevenueCalculator.get_status_breakdown(
+            {"invoice_date__year": 2020}, practice=self.practice
+        )
 
         self.assertEqual(result["paid"]["count"], 0)
         self.assertEqual(result["paid"]["total"], Decimal("0"))
@@ -264,7 +271,7 @@ class RevenueCalculatorTests(TestCase):
         )
 
         # Using year=2030 should find invoices PAID in 2030
-        result = RevenueCalculator.get_status_breakdown(year=2030)
+        result = RevenueCalculator.get_status_breakdown(year=2030, practice=self.practice)
 
         # Should find the cross-year paid invoice (by paid_date)
         self.assertEqual(result["paid"]["count"], 1)
@@ -276,7 +283,7 @@ class RevenueCalculatorTests(TestCase):
         self.assertEqual(result["cancelled"]["count"], 0)
 
         # Using year=2025 should NOT include that invoice in paid
-        result_2025 = RevenueCalculator.get_status_breakdown(year=2025)
+        result_2025 = RevenueCalculator.get_status_breakdown(year=2025, practice=self.practice)
 
         # Paid invoices where paid_date is in 2025 (TEST-1 only)
         self.assertEqual(result_2025["paid"]["count"], 1)
@@ -357,10 +364,10 @@ class RevenueCalculatorTests(TestCase):
         # Delete all invoices
         Invoice.objects.all().delete()
 
-        total = RevenueCalculator.get_total_revenue()
+        total = RevenueCalculator.get_total_revenue(practice=self.practice)
         self.assertEqual(total, Decimal("0"))
 
-        stats = RevenueCalculator.get_revenue_stats()
+        stats = RevenueCalculator.get_revenue_stats(practice=self.practice)
         self.assertEqual(stats["total"], Decimal("0"))
         self.assertEqual(stats["count"], 0)
         self.assertEqual(stats["avg"], Decimal("0"))
@@ -393,7 +400,7 @@ class RevenueCalculatorTests(TestCase):
         self.assertEqual(result2["total"], Decimal("500.00"))
 
         # Total revenue should be sum of both
-        total = RevenueCalculator.get_total_revenue()
+        total = RevenueCalculator.get_total_revenue(practice=self.practice)
         self.assertEqual(total, Decimal("1000.00"))
 
 

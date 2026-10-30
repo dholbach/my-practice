@@ -8,13 +8,14 @@ from datetime import datetime
 from typing import cast
 
 from django.conf import settings
-from django.db.models import QuerySet
+from django.db.models import F, Q, QuerySet
 from django.utils import timezone
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-from ..models import Client, GoogleCalendarToken, ServiceType
+from ..models import ALL_PRACTICES, Client, GoogleCalendarToken, ServiceType
+from ..models.base import PracticeScope
 
 logger = logging.getLogger(__name__)
 
@@ -193,23 +194,37 @@ class GoogleCalendarOAuth:
         return build("calendar", "v3", credentials=credentials)
 
 
+def _service_types(practice: PracticeScope):
+    """
+    The service types a practice's events may be matched to: its own plus the
+    global ones (practice=NULL), its own first so a practice can override a
+    global type. None gives only the globals; ALL_PRACTICES gives every row.
+    """
+    qs = ServiceType.objects.all()
+    if practice is not ALL_PRACTICES:
+        global_types = Q(practice__isnull=True)
+        qs = qs.filter(global_types | Q(practice=practice) if practice else global_types)
+    return qs.order_by(F("practice").asc(nulls_last=True), "code")
+
+
 class CalendarEventParser:
     """Parse Google Calendar events into structured data."""
 
     @staticmethod
-    def map_duration_to_service_type(duration_minutes: int) -> tuple:
+    def map_duration_to_service_type(duration_minutes: int, *, practice: PracticeScope) -> tuple:
         """
         Map event duration to ServiceType object and description.
 
         Args:
             duration_minutes: Event duration in minutes
+            practice: The importing practice; only its own and global types match
 
         Returns:
             Tuple of (ServiceType object, suggested_description) or (None, None)
         """
         for (min_dur, max_dur), service_code in DURATION_TO_SERVICE_CODE.items():
             if min_dur <= duration_minutes <= max_dur:
-                service_type = ServiceType.objects.filter(code=service_code).first()
+                service_type = _service_types(practice).filter(code=service_code).first()
                 if service_type:
                     return (service_type, service_type.name_de or service_type.name)
                 # A code with no ServiceType row degrades silently: the event just
@@ -330,7 +345,7 @@ class CalendarEventParser:
         return "blocked" in summary.lower()
 
     @classmethod
-    def parse_event(cls, event: dict, clients) -> dict:
+    def parse_event(cls, event: dict, clients, *, practice: PracticeScope) -> dict:
         """
         Parse a Google Calendar event into structured data.
 
@@ -364,11 +379,13 @@ class CalendarEventParser:
         is_cancelled = cls.is_cancelled(summary)
 
         # Map duration to service type
-        service_type_obj, description = cls.map_duration_to_service_type(duration_minutes)
+        service_type_obj, description = cls.map_duration_to_service_type(
+            duration_minutes, practice=practice
+        )
 
         # Override for cancellations - try to find "cancel" service type
         if is_cancelled:
-            cancel_service = ServiceType.objects.filter(code__icontains="cancel").first()
+            cancel_service = _service_types(practice).filter(code__icontains="cancel").first()
             if cancel_service:
                 service_type_obj = cancel_service
                 description = "Ausgefallener Termin"
@@ -387,20 +404,21 @@ class CalendarEventParser:
         }
 
     @classmethod
-    def parse_events(cls, events: list, clients) -> list:
+    def parse_events(cls, events: list, clients, *, practice: PracticeScope) -> list:
         """
         Parse multiple Google Calendar events.
 
         Args:
             events: List of raw event dicts from Google Calendar API
             clients: The importing practice's clients, for matching
+            practice: The importing practice, for service-type suggestions
 
         Returns:
             List of parsed event dicts
         """
         clients = list(clients)  # evaluated once, not per event
         return [
-            cls.parse_event(event, clients)
+            cls.parse_event(event, clients, practice=practice)
             for event in events
             if not cls.is_blocked(event.get("summary", ""))
         ]
