@@ -361,3 +361,56 @@ class ExpenseMergeViewTest(TestCase):
         source = self._expense("50.00")
         self._merge(target, source)
         self.assertFalse(CompanyExpense.objects.filter(pk=source.pk).exists())
+
+
+class ExpenseTransactionLinkTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="linkuser", password="pass")
+        self.practice = Practice.objects.create(
+            name="Link Practice",
+            slug="link-practice",
+            email="link@example.com",
+            iban="DE89370400440532013000",
+        )
+        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.http = TestClient()
+        self.http.login(username="linkuser", password="pass")
+        self.expense = CompanyExpense.objects.create(
+            practice=self.practice,
+            description="Software",
+            amount=Decimal("0.00"),
+            category="software",
+            date=date(2026, 1, 1),
+        )
+
+    def _transaction(self, amount, **kwargs):
+        return BankTransaction.objects.create(
+            practice=self.practice,
+            transaction_date=date(2026, 1, 1),
+            value_date=date(2026, 1, 1),
+            amount=Decimal(amount),
+            balance_after=Decimal("1000.00"),
+            payer_name="Test",
+            reference="ref",
+            **kwargs,
+        )
+
+    def test_link_rejects_incoming_transaction(self):
+        incoming = self._transaction("90.00")
+        response = self.http.post(
+            reverse("expense_link_transaction", args=[self.expense.pk]),
+            {"transaction_id": incoming.pk},
+        )
+        self.assertEqual(response.status_code, 404)
+        incoming.refresh_from_db()
+        self.assertIsNone(incoming.linked_expense)
+
+    def test_unlink_returns_transaction_to_review(self):
+        outgoing = self._transaction(
+            "-30.00", linked_expense=self.expense, match_confidence="manual", processed=True
+        )
+        self.http.post(reverse("expense_unlink_transaction", args=[self.expense.pk, outgoing.pk]))
+        outgoing.refresh_from_db()
+        self.assertIsNone(outgoing.linked_expense)
+        self.assertEqual(outgoing.match_confidence, "unmatched")
+        self.assertFalse(outgoing.processed)

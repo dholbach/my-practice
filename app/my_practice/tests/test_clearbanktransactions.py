@@ -189,19 +189,34 @@ class ClearWithFinancialsTest(TestCase):
         self.assertEqual(BankTransaction.objects.count(), 0)
         self.assertFalse(CompanyWithdrawal.objects.filter(id=wd.id).exists())
 
-    def test_imported_on_with_financials_uses_created_at(self):
+    def test_imported_on_with_financials_deletes_linked_expense(self):
         expense = CompanyExpense.objects.create(
             practice=self.practice,
             date=date(2026, 1, 15),
             amount=Decimal("120.00"),
-            description="Same-day import expense",
+            description="Auto expense",
+            category="other",
+        )
+        _make_transaction(self.practice, reference="Some import", linked_expense=expense)
+
+        _run("--imported-on", date.today().isoformat(), "--with-financials")
+
+        self.assertEqual(BankTransaction.objects.count(), 0)
+        self.assertFalse(CompanyExpense.objects.filter(id=expense.id).exists())
+
+    def test_imported_on_with_financials_keeps_unlinked_same_day_expense(self):
+        # Entered by hand on the import day, never linked to a transaction:
+        # selecting by created_at date used to delete it with the batch.
+        manual = CompanyExpense.objects.create(
+            practice=self.practice,
+            date=date(2026, 1, 15),
+            amount=Decimal("120.00"),
+            description="Entered by hand",
             category="other",
         )
         _make_transaction(self.practice, reference="Some import")
-        today_str = date.today().isoformat()
 
-        _run("--imported-on", today_str, "--with-financials")
+        _run("--imported-on", date.today().isoformat(), "--with-financials")
 
         self.assertEqual(BankTransaction.objects.count(), 0)
-        # Expense was created today → should be deleted too
-        self.assertFalse(CompanyExpense.objects.filter(id=expense.id).exists())
+        self.assertTrue(CompanyExpense.objects.filter(id=manual.id).exists())

@@ -116,6 +116,11 @@ class ParseGermanDecimalTest(TestCase):
     def test_negative_thousands_separator(self):
         self.assertEqual(self.importer.parse_german_decimal("-2.500,00"), Decimal("-2500.00"))
 
+    def test_non_finite_raises(self):
+        for value in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(value=value), self.assertRaises(InvalidOperation):
+                self.importer.parse_german_decimal(value)
+
     def test_invalid_raises(self):
         with self.assertRaises(InvalidOperation):
             self.importer.parse_german_decimal("nicht-eine-zahl")
@@ -379,6 +384,10 @@ class BuildCounterpartyKeyTest(TestCase):
     def test_falls_back_to_normalized_name(self):
         key = build_counterparty_key("", "  Max Mustermann  ")
         self.assertEqual(key, "name:max mustermann")
+
+    def test_name_key_fits_match_key_column(self):
+        key = build_counterparty_key("", "x" * 200)
+        self.assertEqual(len(key), 200)
 
     def test_blank_inputs_return_none(self):
         self.assertIsNone(build_counterparty_key("", ""))
@@ -751,3 +760,50 @@ class SelfPaymentTest(TestCase):
             skip_negatives=False,
         )
         self.assertEqual(transaction.match_confidence, "unmatched")
+
+
+class CsvParsingTest(TestCase):
+    def test_line_separator_inside_quoted_reference_stays_one_row(self):
+        practice = _make_practice(slug="csv-u2028")
+        header = (
+            "IBAN Auftragskonto;Buchungstag;Valutadatum;"
+            "Name Zahlungsbeteiligter;IBAN Zahlungsbeteiligter;"
+            "Betrag;Saldo nach Buchung;Verwendungszweck"
+        )
+        row = f'{PRACTICE_IBAN};15.01.2026;15.01.2026;Max Mustermann;;90,00;1000,00;"Teil 1\u2028Teil 2"'
+        content = f"{header}\n{row}\n".encode()
+        importer = BankStatementImporter(
+            SimpleUploadedFile("test.csv", content, content_type="text/csv"), practice
+        )
+        results = importer.process(skip_negatives=False)
+
+        self.assertEqual(results["errors"], [])
+        self.assertEqual(BankTransaction.objects.get().reference, "Teil 1\u2028Teil 2")
+
+
+class PrivateContributionReuseTest(TestCase):
+    def test_duplicate_hand_entered_withdrawals_do_not_abort_the_row(self):
+        practice = _make_practice(slug="contrib-dup", private_bank_account=PRIVATE_IBAN)
+        for _ in range(2):
+            CompanyWithdrawal.objects.create(
+                practice=practice,
+                date=date(2026, 1, 15),
+                amount=Decimal("500.00"),
+                description="Einlage",
+                category="contribution",
+            )
+        importer = BankStatementImporter.for_account(practice, PRACTICE_IBAN)
+        transaction = importer.ingest_transaction(
+            {
+                "transaction_date": date(2026, 1, 15),
+                "value_date": date(2026, 1, 15),
+                "payer_name": "Max Mustermann",
+                "payer_iban": PRIVATE_IBAN,
+                "reference": "Einlage",
+                "amount": Decimal("500.00"),
+                "balance_after": Decimal("1500.00"),
+            },
+            skip_negatives=False,
+        )
+        self.assertEqual(transaction.match_confidence, "auto-contribution")
+        self.assertEqual(CompanyWithdrawal.objects.filter(practice=practice).count(), 2)

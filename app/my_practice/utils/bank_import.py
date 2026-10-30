@@ -5,6 +5,7 @@ Handles CSV parsing, invoice number extraction, and automatic payment matching.
 """
 
 import csv
+import io
 import re
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -150,7 +151,12 @@ class BankStatementImporter:
         """
         # German format uses "." as thousands separator and "," as decimal separator.
         normalized = value.replace(".", "").replace(",", ".")
-        return Decimal(normalized)
+        amount = Decimal(normalized)
+        # Decimal() also accepts "NaN" and "Infinity"; a NaN amount would make
+        # the later "amount < 0" comparison raise mid-import.
+        if not amount.is_finite():
+            raise InvalidOperation(f"Not a finite amount: {value!r}")
+        return amount
 
     def parse_german_date(self, value: str) -> "date":
         """
@@ -492,14 +498,20 @@ class BankStatementImporter:
                 notes = _("Capital contribution from private account")
             # Only create for positive (incoming) amounts
             if parsed["amount"] > 0:
-                withdrawal, _created = CompanyWithdrawal.objects.get_or_create(
-                    practice=self.practice,
-                    date=parsed["transaction_date"],
-                    amount=parsed["amount"],
-                    description=parsed["reference"],
-                    defaults={"category": withdrawal_category},
+                # filter().first() rather than get_or_create(): the model has no
+                # uniqueness here, and two identical hand-entered withdrawals
+                # would make get_or_create raise on every import of this row.
+                withdrawal_fields = {
+                    "practice": self.practice,
+                    "date": parsed["transaction_date"],
+                    "amount": parsed["amount"],
+                    "description": parsed["reference"],
+                }
+                linked_withdrawal = CompanyWithdrawal.objects.filter(
+                    **withdrawal_fields
+                ).first() or CompanyWithdrawal.objects.create(
+                    **withdrawal_fields, category=withdrawal_category
                 )
-                linked_withdrawal = withdrawal
             self.results["needs_review"] += 1
         elif is_self_payment:
             confidence = "ignored"
@@ -531,7 +543,12 @@ class BankStatementImporter:
             Dictionary with processing results
         """
         content = self.csv_file.read().decode("utf-8")
-        rows = list(csv.DictReader(content.splitlines(), delimiter=self.practice.csv_delimiter))
+        # newline="" leaves line endings to the csv module, which honours
+        # quoting. str.splitlines() would also split on \x0b, \x1c-\x1e,
+        # \x85 and \u2028 inside a quoted reference.
+        rows = list(
+            csv.DictReader(io.StringIO(content, newline=""), delimiter=self.practice.csv_delimiter)
+        )
 
         if not self._validate_csv_account(rows):
             return self.results
@@ -667,5 +684,7 @@ def build_counterparty_key(payer_iban: str, payer_name: str) -> str | None:
     normalized_iban = BankStatementImporter._normalize_iban(payer_iban) if payer_iban else ""
     if normalized_iban:
         return f"iban:{normalized_iban}"
-    normalized_name = payer_name.strip().lower()
+    # Capped to fit ExpenseCategoryRule.match_key (max_length=200); payer_name
+    # allows 200 characters on its own, so the prefixed key could overflow.
+    normalized_name = payer_name.strip().lower()[: 200 - len("name:")]
     return f"name:{normalized_name}" if normalized_name else None
