@@ -236,8 +236,12 @@ def expense_link_transaction(request: HttpRequest, pk: int) -> HttpResponse:
     """Link a bank transaction to this expense and sync the expense amount."""
     expense = get_object_or_403(CompanyExpense, request, pk=pk)
     transaction_id = request.POST.get("transaction_id")
+    # Same rows the expense form offers: outgoing and not paying an invoice.
     transaction = get_object_or_404(
-        BankTransaction.objects.for_current_practice(request), pk=transaction_id
+        BankTransaction.objects.for_current_practice(request),
+        pk=transaction_id,
+        amount__lt=0,
+        matched_invoice__isnull=True,
     )
     # Clean up any auto-created stub that this transaction was previously linked to.
     if transaction.linked_expense_id and transaction.linked_expense_id != expense.pk:
@@ -343,6 +347,10 @@ def expense_unlink_transaction(request: HttpRequest, pk: int, transaction_pk: in
         linked_expense=expense,
     )
     transaction.linked_expense = None
+    # Back into the expense review queue; left as MANUAL it matched no review
+    # filter and dropped out of sight.
+    transaction.match_confidence = BankTransaction.Confidence.UNMATCHED
+    transaction.processed = False
     transaction.save()
 
     _sync_expense_amount(expense)

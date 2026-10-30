@@ -42,8 +42,7 @@ class Command(BaseCommand):
             action="store_true",
             help=(
                 "Also delete CompanyExpense and CompanyWithdrawal records linked to the selected "
-                "transactions (via linked_expense/linked_withdrawal FK, or created on the same "
-                "import date when using --imported-on/--today)"
+                "transactions (via linked_expense/linked_withdrawal)"
             ),
         )
         parser.add_argument(
@@ -147,11 +146,9 @@ class Command(BaseCommand):
         if not options.get("with_financials"):
             return None, None
 
-        since_str = options.get("since")
-        imported_on_str = options.get("imported_on")
-        use_today = options.get("today")
-
-        if since_str:
+        if options.get("since") or options.get("today") or options.get("imported_on"):
+            # Only records the selected transactions link to. Selecting by
+            # created_at date also swept up expenses entered by hand that day.
             # Evaluate IDs eagerly before transactions are deleted — a lazy subquery
             # would return nothing after the transactions queryset is deleted.
             expense_ids = list(
@@ -167,14 +164,6 @@ class Command(BaseCommand):
             return (
                 CompanyExpense.objects.filter(id__in=expense_ids),
                 CompanyWithdrawal.objects.filter(id__in=withdrawal_ids),
-            )
-
-        if use_today or imported_on_str:
-            # Fall back to created_at date for --imported-on (covers pre-FK records)
-            import_date = timezone.localdate() if use_today else date.fromisoformat(imported_on_str)
-            return (
-                CompanyExpense.objects.filter(created_at__date=import_date),
-                CompanyWithdrawal.objects.filter(created_at__date=import_date),
             )
 
         # --all and default (unprocessed) modes don't support --with-financials by date
