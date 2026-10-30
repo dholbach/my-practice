@@ -40,6 +40,7 @@ from django.views import View
 
 from ..models import TwoFactorDevice
 from ..utils.two_factor import (
+    end_other_sessions,
     generate_secret,
     new_recovery_codes,
     provisioning_uri,
@@ -189,6 +190,8 @@ class TwoFactorSettingsView(View):
             device.confirmed_at = timezone.now()
             device.save(update_fields=["confirmed_at", "updated_at"])
             codes = new_recovery_codes(device)
+            # Other sessions only ever passed the password.
+            end_other_sessions(request.user, request.session.session_key)
             messages.success(request, _("Two-factor sign-in is now on."))
             return render(
                 request, self.template_name, self._context(request, device, recovery_codes=codes)
@@ -211,6 +214,7 @@ class TwoFactorSettingsView(View):
                     request, self.template_name, self._context(request, device, disable_error=True)
                 )
             device.delete()
+            end_other_sessions(request.user, request.session.session_key)
             messages.success(request, _("Two-factor sign-in is now off."))
             return redirect("two_factor_settings")
 

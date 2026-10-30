@@ -17,6 +17,8 @@ import time
 from urllib.parse import quote, urlencode
 
 import segno
+from django.contrib.auth import SESSION_KEY
+from django.contrib.sessions.models import Session as LoginSession
 from django.db import transaction
 from django.utils import timezone
 
@@ -131,3 +133,23 @@ def use_recovery_code(device: TwoFactorDevice, code: str) -> bool:
 def verify_second_factor(device: TwoFactorDevice, code: str) -> bool:
     """An authenticator code, or failing that a recovery code."""
     return verify_totp(device, code) or use_recovery_code(device, code)
+
+
+def end_other_sessions(user, keep_session_key: str | None = None) -> int:
+    """Delete every live session of user except keep_session_key; return how many.
+
+    A change to the second factor has to reach sessions that already exist:
+    one signed in before 2FA was on never passed it, and one left behind after
+    a reset may be the reason for the reset. Django only drops sessions on
+    its own when the password hash changes. Session data is signed, not
+    indexed by user, so this decodes each live row; with one practitioner per
+    installation that is a handful.
+    """
+    stale = [
+        session.session_key
+        for session in LoginSession.objects.filter(expire_date__gt=timezone.now())
+        if session.session_key != keep_session_key
+        and session.get_decoded().get(SESSION_KEY) == str(user.pk)
+    ]
+    LoginSession.objects.filter(session_key__in=stale).delete()
+    return len(stale)
