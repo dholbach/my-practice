@@ -309,7 +309,7 @@ chronological record; this document only tracks current state.
 - ✅ UniqueConstraints on critical fields
 - ✅ Global login enforcement — all views require authentication via `LoginRequiredMiddleware`
 - ✅ Sign-in brute-force limit — 5 failed attempts for a username lock it for 15 minutes (correct password included)
-- ✅ Two-factor sign-in with any authenticator app (TOTP), 10 single-use recovery codes, optional `REQUIRE_TWO_FACTOR`; `/admin/login/` goes through the same throttled, two-factor sign-in
+- ✅ Two-factor sign-in with any authenticator app (TOTP), 10 single-use recovery codes, optional `REQUIRE_TWO_FACTOR`; `/admin/login/` goes through the same throttled, two-factor sign-in; turning it on or off, or `two_factor_reset`, signs you out of every other session
 - ✅ Idle sign-out — sessions end after 8 hours without activity (`DJANGO_SESSION_IDLE_HOURS`) instead of a fixed two weeks
 - ✅ Sign out from the account menu (practice dropdown), next to Two-factor sign-in
 - ✅ Practice isolation enforced on all endpoints including `session_toggle` and email views, and failing closed — a user without a practice sees no practice's data (`scope_to_practice`)
@@ -336,7 +336,8 @@ chronological record; this document only tracks current state.
 - ✅ PostgreSQL database
 - ✅ Automated backups and hourly scheduled jobs (systemd timers, installed with `sudo bash scripts/install-system-jobs.sh`)
 - ✅ Backup/Restore scripts
-- ✅ `./prod.py backup` / `restore` for installations without a git checkout — the one implementation `scripts/backup.sh` wraps; verified archives, optional gpg encryption (`BACKUP_PASSPHRASE_FILE`)
+- ✅ `./prod.py backup` / `restore` for installations without a git checkout — the one implementation `scripts/backup.sh` wraps; verified archives, optional gpg encryption (`BACKUP_PASSPHRASE_FILE`); restore checks both archives first, runs in one transaction and swaps media only after unpacking succeeded
+- ✅ `./prod.py update` backs up before the new version migrates (`--skip-backup` to opt out)
 - ✅ Dashboard warns when the newest backup is older than 48 hours (`BACKUP_MAX_AGE_HOURS`) — catches a backup timer that failed, stopped or was never installed
 - ✅ Development scripts
 - ✅ Management commands
