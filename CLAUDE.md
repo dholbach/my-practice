@@ -194,7 +194,7 @@ Available base classes: `PracticeScopedListView`, `PracticeScopedCreateView`, `P
 # Revenue calculations
 from my_practice.utils import RevenueCalculator
 revenue = RevenueCalculator.get_year_revenue(2026, practice=request.current_practice)["total"]
-breakdown = RevenueCalculator.get_status_breakdown(year=2026)
+breakdown = RevenueCalculator.get_status_breakdown(year=2026, practice=request.current_practice)
 
 # Date ranges
 from my_practice.utils import DateRangeHelper

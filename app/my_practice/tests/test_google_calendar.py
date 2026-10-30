@@ -394,7 +394,9 @@ class CalendarEventParserTest(TestCase):
             "end": {"dateTime": "2025-12-23T15:00:00Z"},
         }
 
-        result = CalendarEventParser.parse_event(event, Client.objects.all())
+        result = CalendarEventParser.parse_event(
+            event, Client.objects.all(), practice=self.practice
+        )
 
         self.assertEqual(result["summary"], "TC 60min therapy")
         self.assertIsNotNone(result["start"])
@@ -412,7 +414,9 @@ class CalendarEventParserTest(TestCase):
             "end": {"dateTime": "2025-12-23T15:00:00Z"},
         }
 
-        result = CalendarEventParser.parse_event(event, Client.objects.all())
+        result = CalendarEventParser.parse_event(
+            event, Client.objects.all(), practice=self.practice
+        )
         self.assertTrue(result["is_cancelled"])
         self.assertIsNone(result["matched_client"])
 
@@ -444,7 +448,9 @@ class CalendarEventParserTest(TestCase):
             },
         ]
 
-        results = CalendarEventParser.parse_events(events, Client.objects.all())
+        results = CalendarEventParser.parse_events(
+            events, Client.objects.all(), practice=self.practice
+        )
 
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0]["matched_client"], client1)
@@ -454,14 +460,18 @@ class CalendarEventParserTest(TestCase):
 
     def test_map_duration_to_service_type_checkin(self):
         """Test mapping 15-minute events to Check-in."""
-        service_type, description = CalendarEventParser.map_duration_to_service_type(15)
+        service_type, description = CalendarEventParser.map_duration_to_service_type(
+            15, practice=self.practice
+        )
         self.assertIsNotNone(service_type)
         self.assertEqual(service_type.code, "checkin_15")
         self.assertEqual(description, "Check-in Termin")
 
     def test_map_duration_to_service_type_free_consultation(self):
         """Test mapping 20-minute events to the free initial-consultation service type."""
-        service_type, description = CalendarEventParser.map_duration_to_service_type(20)
+        service_type, description = CalendarEventParser.map_duration_to_service_type(
+            20, practice=self.practice
+        )
         self.assertIsNotNone(service_type)
         self.assertEqual(service_type.code, "initial_consultation")
         self.assertEqual(description, "Vorgespräch")
@@ -480,7 +490,9 @@ class CalendarEventParserTest(TestCase):
             ),
             self.assertLogs("my_practice.utils.google_calendar", level="WARNING") as logs,
         ):
-            service_type, description = CalendarEventParser.map_duration_to_service_type(20)
+            service_type, description = CalendarEventParser.map_duration_to_service_type(
+                20, practice=self.practice
+            )
 
         self.assertIsNone(service_type)
         self.assertIsNone(description)
@@ -488,21 +500,27 @@ class CalendarEventParserTest(TestCase):
 
     def test_map_duration_to_service_type_standard_session(self):
         """Test mapping 60-minute events to Sitzung."""
-        service_type, description = CalendarEventParser.map_duration_to_service_type(60)
+        service_type, description = CalendarEventParser.map_duration_to_service_type(
+            60, practice=self.practice
+        )
         self.assertIsNotNone(service_type)
         self.assertEqual(service_type.code, "therapy_60")
         self.assertEqual(description, "Standardsitzung")
 
     def test_map_duration_to_service_type_extended_session(self):
         """Test mapping 90-minute events to Sitzung."""
-        service_type, description = CalendarEventParser.map_duration_to_service_type(90)
+        service_type, description = CalendarEventParser.map_duration_to_service_type(
+            90, practice=self.practice
+        )
         self.assertIsNotNone(service_type)
         self.assertEqual(service_type.code, "therapy_90")
         self.assertEqual(description, "Verlängerte Sitzung")
 
     def test_map_duration_to_service_type_no_match(self):
         """Test duration that doesn't match any mapping."""
-        service_type, description = CalendarEventParser.map_duration_to_service_type(45)
+        service_type, description = CalendarEventParser.map_duration_to_service_type(
+            45, practice=self.practice
+        )
         self.assertIsNone(service_type)
         self.assertIsNone(description)
 
@@ -514,7 +532,9 @@ class CalendarEventParserTest(TestCase):
             "end": {"dateTime": "2024-01-15T15:00:00+01:00"},  # 60 minutes
         }
 
-        result = CalendarEventParser.parse_event(event, Client.objects.all())
+        result = CalendarEventParser.parse_event(
+            event, Client.objects.all(), practice=self.practice
+        )
 
         self.assertIsNotNone(result["suggested_service_type_obj"])
         self.assertEqual(result["suggested_service_type_obj"].code, "therapy_60")
@@ -528,7 +548,9 @@ class CalendarEventParserTest(TestCase):
             "end": {"dateTime": "2024-01-15T15:00:00+01:00"},  # 60 minutes
         }
 
-        result = CalendarEventParser.parse_event(event, Client.objects.all())
+        result = CalendarEventParser.parse_event(
+            event, Client.objects.all(), practice=self.practice
+        )
 
         self.assertTrue(result["is_cancelled"])
         self.assertIsNotNone(result["suggested_service_type_obj"])
@@ -827,7 +849,9 @@ class PracticeScopedMatchingTests(TestCase):
             "start": {"dateTime": "2026-10-01T10:00:00+02:00"},
             "end": {"dateTime": "2026-10-01T11:00:00+02:00"},
         }
-        parsed = CalendarEventParser.parse_events([event], practice_clients(self.own))
+        parsed = CalendarEventParser.parse_events(
+            [event], practice_clients(self.own), practice=self.own
+        )
         self.assertIsNone(parsed[0]["matched_client"])
 
     def test_stored_foreign_match_is_not_imported(self):
@@ -836,3 +860,28 @@ class PracticeScopedMatchingTests(TestCase):
         )
         self.assertIsNone(client)
         self.assertIsNotNone(error)
+
+
+class ServiceTypeSuggestionScopeTest(TestCase):
+    """Event suggestions only use the importing practice's own or global service types."""
+
+    def setUp(self):
+        self.own = Practice.objects.create(name="A", slug="st-own", title="T")
+        self.other = Practice.objects.create(name="B", slug="st-other", title="T")
+        self.event = {
+            "id": "evt-1",
+            "summary": "XX (cancel)",
+            "start": {"dateTime": "2026-02-03T09:00:00+01:00"},
+            "end": {"dateTime": "2026-02-03T10:00:00+01:00"},
+        }
+
+    def test_other_practices_cancel_type_is_not_suggested(self):
+        ServiceType.objects.create(code="a_late_cancel", name="Late cancel B", practice=self.other)
+        result = CalendarEventParser.parse_event(self.event, [], practice=self.own)
+        self.assertIsNone(result["suggested_service_type_obj"])
+
+    def test_own_cancel_type_wins_over_global(self):
+        ServiceType.objects.create(code="a_cancel", name="Global cancel")
+        own = ServiceType.objects.create(code="z_cancel", name="Own cancel", practice=self.own)
+        result = CalendarEventParser.parse_event(self.event, [], practice=self.own)
+        self.assertEqual(result["suggested_service_type_obj"], own)

@@ -95,7 +95,7 @@ class InvoiceListView(PracticeScopedListView):
         # Get status breakdown with year-aware filtering AND practice filter
         # (paid invoices filtered by paid_date, others by invoice_date)
         status_stats = RevenueCalculator.get_status_breakdown(
-            year=year_filter, filters={"practice": self.request.current_practice}
+            year=year_filter, practice=self.request.current_practice
         )
 
         # Calculate total across all statuses

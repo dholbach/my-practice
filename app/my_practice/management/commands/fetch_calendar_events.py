@@ -127,7 +127,9 @@ class Command(BaseCommand):
             return
 
         live_ids = {e.get("id") for e in raw_events if e.get("id")}
-        parsed = CalendarEventParser.parse_events(raw_events, practice_clients(practice))
+        parsed = CalendarEventParser.parse_events(
+            raw_events, practice_clients(practice), practice=practice
+        )
 
         # Clients whose Session rows changed in this run — their
         # no-next-session tag is re-synced at the end instead of waiting

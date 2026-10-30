@@ -279,8 +279,8 @@ class RevenueConsistencyTests(TestCase):
         # Expected totals: C1=180, C2=100, Total=280
 
     def test_revenue_calculator_total_revenue(self):
-        """Test RevenueCalculator.get_total_revenue()."""
-        total = RevenueCalculator.get_total_revenue()
+        """Test RevenueCalculator.get_total_revenue(practice=self.practice)."""
+        total = RevenueCalculator.get_total_revenue(practice=self.practice)
         self.assertEqual(total, Decimal("280.00"))
 
     def test_revenue_calculator_client_revenue(self):
@@ -314,7 +314,7 @@ class RevenueConsistencyTests(TestCase):
     def test_all_revenue_methods_agree(self):
         """Test that all revenue methods produce consistent results."""
         # Method 1: Total revenue
-        total_revenue = RevenueCalculator.get_total_revenue()
+        total_revenue = RevenueCalculator.get_total_revenue(practice=self.practice)
 
         # Method 2: Sum of individual clients
         c1_revenue = RevenueCalculator.get_client_revenue(self.client1)["total"]

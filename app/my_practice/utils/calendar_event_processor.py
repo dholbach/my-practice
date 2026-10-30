@@ -41,7 +41,9 @@ class CalendarImportProcessor:
     def fetch_and_parse(self, service, calendar_id: str, start_date, end_date) -> list[dict]:
         """Fetch all events from a calendar (paginated) and parse them."""
         raw = self._paginate(service, calendar_id, start_date, end_date)
-        return CalendarEventParser.parse_events(raw, practice_clients(self.practice))
+        return CalendarEventParser.parse_events(
+            raw, practice_clients(self.practice), practice=self.practice
+        )
 
     def _paginate(self, service, calendar_id: str, start_date, end_date) -> list:
         events = []
@@ -184,7 +186,9 @@ class CalendarImportProcessor:
                 fetched.append(event)
             except Exception:
                 logger.warning("Could not fetch calendar event %s; skipping", event_id)
-        return CalendarEventParser.parse_events(fetched, practice_clients(self.practice))
+        return CalendarEventParser.parse_events(
+            fetched, practice_clients(self.practice), practice=self.practice
+        )
 
 
 def _ensure_aware(dt):

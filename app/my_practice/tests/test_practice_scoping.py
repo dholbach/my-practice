@@ -148,14 +148,6 @@ KNOWN_UNBOUND_QUERIES = {
     # Invoice numbers are unique across the instance, so numbering has to see
     # every practice's invoices.
     "utils/invoice_helpers.py:get_next_invoice_number",
-    # Scoped by the caller's filters dict ({"practice": ...}); these should take
-    # a required practice keyword like get_year_revenue does.
-    "utils/revenue_helpers.py:get_total_revenue",
-    "utils/revenue_helpers.py:get_revenue_stats",
-    "utils/revenue_helpers.py:_status_breakdown_for_year",
-    "utils/revenue_helpers.py:_status_breakdown_all_time",
-    # Filtered by a client the caller already scoped, via the filters dict.
-    "utils/revenue_helpers.py:get_client_revenue",
     # Cancellation-fee session ids, used only to exclude rows from the
     # practice's own sessions.
     "utils/tag_helpers.py:get_sessions_missing_log",
