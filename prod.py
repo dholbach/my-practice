@@ -862,14 +862,18 @@ def _encrypt(path, passphrase_file):
     )
     if result.returncode != 0:
         raise BackupError("gpg encryption failed")
-    roundtrip = path + ".check"
-    try:
-        result = subprocess.run(_gpg(passphrase_file, "--decrypt", "-o", roundtrip, encrypted))
-        if result.returncode != 0 or _sha256(roundtrip) != _sha256(path):
-            raise BackupError("Encrypted backup does not decrypt back to the original")
-    finally:
-        if os.path.exists(roundtrip):
-            os.unlink(roundtrip)
+    # Hash the decrypted stream instead of writing it to a file: gpg would
+    # create that file itself, with whatever mode the umask gives it, and a
+    # killed run would leave a plaintext copy next to the encrypted backup.
+    proc = subprocess.Popen(
+        _gpg(passphrase_file, "--decrypt", "-o", "-", encrypted), stdout=subprocess.PIPE
+    )
+    digest = hashlib.sha256()
+    for chunk in iter(lambda: proc.stdout.read(1 << 20), b""):
+        digest.update(chunk)
+    proc.stdout.close()
+    if proc.wait() != 0 or digest.hexdigest() != _sha256(path):
+        raise BackupError("Encrypted backup does not decrypt back to the original")
     os.unlink(path)
     return encrypted
 
@@ -884,7 +888,10 @@ def _prune(backup_dir):
 
 def run_backup(compose_cmd, backup_dir, passphrase_file=None):
     """Dump the database and archive media into backup_dir. Returns the final paths."""
-    os.makedirs(backup_dir, exist_ok=True)
+    # Owner-only: an unencrypted archive is protected by nothing but this
+    # directory, and makedirs alone would take the umask's (usually 0755).
+    os.makedirs(backup_dir, mode=0o700, exist_ok=True)
+    os.chmod(backup_dir, 0o700)
     stamp = time.strftime("%Y%m%d_%H%M%S")
     user = _setting("POSTGRES_USER", "my_practice")
     db = _setting("POSTGRES_DB", "my_practice")

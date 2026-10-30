@@ -6,12 +6,13 @@ clients across ~2 years) but it's the only thing that catches "the seed
 script no longer runs" before a new contributor's first ./dev.py start.
 """
 
+from datetime import date
 from io import StringIO
 
 from django.core.management import call_command
 from django.test import TestCase
 
-from ..models import CapacityPeriod, Client, Invoice, Practice, PracticeTodo, Session
+from ..models import CapacityPeriod, Client, Invoice, Practice, PracticeTodo, Session, TimeOff
 from ..models.gebueh import Leistungserfassung
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks
 
@@ -83,3 +84,28 @@ class SeedSampleDataCommandTests(TestCase):
         self.assertEqual(Client.objects.filter(practice__slug="demo").count(), 0)
         self.assertEqual(Leistungserfassung.objects.count(), 0)
         self.assertEqual(PracticeTodo.objects.count(), 0)
+        self.assertEqual(TimeOff.objects.count(), 0)
+
+
+class SeedClearLeavesRealDataTests(TestCase):
+    def test_clear_keeps_real_rows_that_share_a_seed_title(self):
+        # Ordinary titles a real practice may use too; --clear used to delete
+        # them in every practice by title alone.
+        practice = Practice.objects.create(name="Praxis", slug="real-practice", title="T")
+        todo = PracticeTodo.objects.create(
+            practice=practice,
+            title="Review the privacy policy",
+            category="admin",
+            priority="medium",
+        )
+        holiday = TimeOff.objects.create(
+            title="Summer holiday",
+            type=TimeOff.Type.VACATION,
+            start_date=date(2024, 8, 5),
+            end_date=date(2024, 8, 16),
+        )
+
+        call_command("seed_sample_data", "--clear", "--yes", stdout=StringIO())
+
+        self.assertTrue(PracticeTodo.objects.filter(pk=todo.pk).exists())
+        self.assertTrue(TimeOff.objects.filter(pk=holiday.pk).exists())

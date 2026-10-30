@@ -86,7 +86,7 @@ class Command(BaseCommand):
         self.stdout.write(f"📊 Found {withdrawal_groups} duplicate withdrawal groups")
         self.stdout.write("")
 
-        expense_to_process: list[QuerySet] = []
+        expense_to_process: list[tuple[type[Model], list[int]]] = []
         total_expense_to_delete = 0
         if expense_groups > 0:
             assert expense_duplicates is not None
@@ -94,7 +94,7 @@ class Command(BaseCommand):
                 CompanyExpense, expense_duplicates, "🧾", "Expenses"
             )
 
-        withdrawal_to_process: list[QuerySet] = []
+        withdrawal_to_process: list[tuple[type[Model], list[int]]] = []
         total_withdrawal_to_delete = 0
         if withdrawal_groups > 0:
             assert withdrawal_duplicates is not None
@@ -153,55 +153,75 @@ class Command(BaseCommand):
 
     def _display_duplicates(
         self, model: type[Model], duplicate_groups: QuerySet, emoji: str, label: str
-    ) -> tuple[list[QuerySet], int]:
-        """Print each duplicate group and return (querysets to process, total records to delete)."""
+    ) -> tuple[list[tuple[type[Model], list[int]]], int]:
+        """
+        Print each duplicate group and return (ids to delete per group, total to delete).
+
+        A record linked to a bank transaction, or with receipts, is a booking in
+        its own right: the bank import keeps one record per transaction, so two
+        payers with the same date, amount and text give two such records. Those
+        are always kept, and deleting one would also null its bank link and
+        cascade its receipts. Only unlinked, receipt-less copies are deleted;
+        when the whole group is unlinked, the lowest id stays.
+        """
         self.stdout.write(self.style.WARNING(f"{emoji} Duplicate {label}:"))
 
-        to_process: list[QuerySet] = []
+        to_process: list[tuple[type[Model], list[int]]] = []
         total_to_delete = 0
+        has_receipts = hasattr(model, "receipts")
 
         for dup in duplicate_groups:
-            records = model.objects.filter(
-                practice_id=dup["practice_id"],
-                date=dup["date"],
-                amount=dup["amount"],
-                description=dup["description"],
-            ).order_by("id")
-
-            count = records.count()
-            first_record = records.first()
-            if first_record is None:
+            annotations = {"linked": Count("bank_transactions", distinct=True)}
+            if has_receipts:
+                annotations["receipt_count"] = Count("receipts", distinct=True)
+            records = list(
+                model.objects.filter(
+                    practice_id=dup["practice_id"],
+                    date=dup["date"],
+                    amount=dup["amount"],
+                    description=dup["description"],
+                )
+                .annotate(**annotations)
+                .order_by("id")
+            )
+            if not records:
                 continue
 
-            # Show all categories involved
-            categories = list(records.values_list("category", flat=True).distinct())
-            category_display = ", ".join(categories) if len(categories) > 1 else categories[0]
+            protected = [r for r in records if r.linked or getattr(r, "receipt_count", 0)]
+            keep = {r.id for r in protected} or {records[0].id}
+            delete_ids = [r.id for r in records if r.id not in keep]
 
+            categories = sorted({r.category for r in records})
             self.stdout.write(
-                f"  {dup['date']} | {dup['amount']}€ | {category_display} | Count: {count}"
+                f"  {dup['date']} | {dup['amount']}€ | {', '.join(categories)} | Count: {len(records)}"
             )
             desc_short = dup["description"][:60]
             self.stdout.write(f"    Description: {desc_short}...")
 
-            # Show all IDs and their categories
-            id_details = [f"ID {r.id} ({r.category})" for r in records]
+            id_details = []
+            for r in records:
+                detail = f"ID {r.id} ({r.category}"
+                if r.linked:
+                    detail += f", {r.linked} bank transaction(s)"
+                if getattr(r, "receipt_count", 0):
+                    detail += f", {r.receipt_count} receipt(s)"
+                id_details.append(detail + ")")
             self.stdout.write(f"    Records: {', '.join(id_details)}")
-            self.stdout.write(f"      → Would keep ID {first_record.id}, delete {count - 1}")
+            kept = ", ".join(str(i) for i in sorted(keep))
+            self.stdout.write(f"      → Would keep ID {kept}, delete {len(delete_ids)}")
 
-            to_process.append(records)
-            total_to_delete += count - 1
+            if delete_ids:
+                to_process.append((model, delete_ids))
+                total_to_delete += len(delete_ids)
 
         self.stdout.write("")
         return to_process, total_to_delete
 
     @staticmethod
-    def _delete_duplicates(records_list: list[QuerySet]) -> int:
-        """Keep the first (lowest-id) record in each group, delete the rest."""
+    def _delete_duplicates(groups: list[tuple[type[Model], list[int]]]) -> int:
+        """Delete the ids chosen in _display_duplicates; returns the number of records deleted."""
         total_deleted = 0
-        for records in records_list:
-            first_record = records.first()
-            if first_record is None:
-                continue
-            deleted = records.exclude(id=first_record.id).delete()[0]
-            total_deleted += deleted
+        for model, ids in groups:
+            # Count only the duplicates themselves, not cascaded rows.
+            total_deleted += model.objects.filter(id__in=ids).delete()[1].get(model._meta.label, 0)
         return total_deleted

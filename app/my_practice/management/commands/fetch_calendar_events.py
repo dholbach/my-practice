@@ -614,6 +614,18 @@ class Command(BaseCommand):
             )
 
     @staticmethod
+    def _organised_on_this_calendar(event) -> bool:
+        """
+        Whether the calendar owner organised the event, per Google's organizer.self.
+
+        "self" is true when the organiser is the calendar this copy of the event
+        appears on, which also holds for events created on a secondary calendar.
+        An event without organiser data (Google always sends it) counts as own.
+        """
+        organizer = (event.get("original") or {}).get("organizer")
+        return organizer is None or organizer.get("self") is True
+
+    @staticmethod
     def _resolve_event_status(event) -> str:
         if event.get("is_cancelled"):
             return PendingCalendarEvent.Status.CANCELLED
@@ -626,6 +638,12 @@ class Command(BaseCommand):
         """Create a Session for a matched event; return its client (or None)."""
         matched_client = event.get("matched_client")
         if not matched_client:
+            return None
+        if not self._organised_on_this_calendar(event):
+            # An invitation someone else sent: anyone can put one on the
+            # calendar and title it with a client code, so it waits as a
+            # pending event for the owner to approve instead of booking a
+            # session for that client on its own.
             return None
         if status not in (
             PendingCalendarEvent.Status.PENDING,
