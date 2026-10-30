@@ -23,6 +23,7 @@ from ..models import (
     CompanyExpense,
     CompanyWithdrawal,
     ExpenseCategoryRule,
+    ExpenseReceipt,
     Invoice,
     InvoiceItem,
     Practice,
@@ -349,6 +350,41 @@ class BankReviewSingleActionsTest(BankReviewViewBase):
         self.assertEqual(invoice.status, "paid")
         self.assertEqual(invoice.paid_date, date(2026, 1, 15))
 
+    def test_auto_match_rejects_amount_mismatch(self):
+        # suggested_invoice_id is a hidden field; the server re-checks the amount.
+        invoice = self._make_invoice(
+            number="AX-1", status="sent", total=Decimal("90.00"), payer="Amount Check"
+        )
+        trans = self._make_unmatched(ref="AX-1", amount="10,00")
+        self.http.post(
+            reverse("bank_review"),
+            {
+                "action": "auto_match",
+                "transaction_id": trans.id,
+                "suggested_invoice_id": invoice.id,
+            },
+        )
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.status, "sent")
+        trans.refresh_from_db()
+        self.assertIsNone(trans.matched_invoice)
+
+    def test_auto_match_marks_transaction_processed(self):
+        invoice = self._make_invoice(
+            number="AP-1", status="sent", total=Decimal("90.00"), payer="Processed Check"
+        )
+        trans = self._make_unmatched(ref="AP-1", amount="90,00")
+        self.http.post(
+            reverse("bank_review"),
+            {
+                "action": "auto_match",
+                "transaction_id": trans.id,
+                "suggested_invoice_id": invoice.id,
+            },
+        )
+        trans.refresh_from_db()
+        self.assertTrue(trans.processed)
+
     def test_auto_match_requires_sent_invoice(self):
         invoice = self._make_invoice(
             number="PA-1", status="paid", total=Decimal("90.00"), payer="Paid Already"
@@ -496,6 +532,67 @@ class BankExpenseReviewViewTest(BankImportViewBase):
         self.assertFalse(CompanyExpense.objects.filter(id=expense.id).exists())
         trans.refresh_from_db()
         self.assertEqual(trans.match_confidence, "ignored")
+        self.assertIsNone(trans.linked_expense)
+
+    def test_group_rejects_unknown_category(self):
+        trans = self._make_expense_transaction()
+        self.http.post(
+            reverse("bank_expense_review"),
+            {"action": "group", "transactions": [trans.id], "category": "not-a-category"},
+        )
+        self.assertFalse(CompanyExpense.objects.filter(practice=self.practice).exists())
+        self.assertFalse(ExpenseCategoryRule.objects.filter(practice=self.practice).exists())
+        trans.refresh_from_db()
+        self.assertFalse(trans.processed)
+
+    def test_group_ignores_transactions_the_page_does_not_list(self):
+        # A matched transaction is not on this page; a posted id for it must
+        # not regroup it (which would also delete the record it is linked to).
+        manual = CompanyExpense.objects.create(
+            practice=self.practice,
+            date=date(2026, 1, 15),
+            amount=Decimal("120.00"),
+            description="Miete",
+            category="miete",
+        )
+        trans = self._make_expense_transaction()
+        trans.match_confidence = "manual"
+        trans.processed = True
+        trans.linked_expense = manual
+        trans.save()
+
+        self.http.post(
+            reverse("bank_expense_review"),
+            {"action": "group", "transactions": [trans.id], "category": "miete"},
+        )
+        self.assertTrue(CompanyExpense.objects.filter(id=manual.id).exists())
+        trans.refresh_from_db()
+        self.assertEqual(trans.linked_expense, manual)
+
+    def test_ignore_keeps_linked_expense_with_receipts(self):
+        # The importer reuses an existing expense with the same date, amount and
+        # description, which may be one entered by hand with its receipts.
+        expense = CompanyExpense.objects.create(
+            practice=self.practice,
+            date=date(2026, 1, 15),
+            amount=Decimal("120.00"),
+            description="Miete",
+            category="miete",
+        )
+        ExpenseReceipt.objects.create(
+            expense=expense, file=SimpleUploadedFile("beleg.pdf", b"%PDF-1.4")
+        )
+        trans = self._make_expense_transaction()
+        trans.match_confidence = "auto-expense"
+        trans.linked_expense = expense
+        trans.save()
+
+        self.http.post(
+            reverse("bank_expense_review"),
+            {"action": "ignore", "transactions": [trans.id]},
+        )
+        self.assertTrue(CompanyExpense.objects.filter(id=expense.id).exists())
+        trans.refresh_from_db()
         self.assertIsNone(trans.linked_expense)
 
     def test_group_learns_category_rule_by_name(self):

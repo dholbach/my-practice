@@ -8,6 +8,7 @@ withdrawal/expense auto-detection, duplicate prevention, and end-to-end CSV proc
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
@@ -174,6 +175,23 @@ class ExtractInvoiceNumberTest(TestCase):
     def test_no_match_single_letter(self):
         # Single letter codes must not be extracted (min 2 letters)
         self.assertIsNone(self.importer.extract_invoice_number("A-1"))
+
+    def test_longest_code_that_fits_the_column(self):
+        # 4 letters + dash + 15 digits = 20 chars, the extracted_invoice_number limit
+        self.assertEqual(
+            self.importer.extract_invoice_number("ABCD-" + "1" * 15), "ABCD-" + "1" * 15
+        )
+
+    def test_over_long_digit_run_not_extracted(self):
+        # The reference is written by the sender; a longer token used to reach
+        # the INSERT into a varchar(20) and abort the whole import.
+        for reference in (
+            "AB-" + "9" * 30,
+            "Rechnung Nr. AB-" + "9" * 30,
+            "Therapie AB-" + "9" * 30,
+        ):
+            with self.subTest(reference=reference):
+                self.assertIsNone(self.importer.extract_invoice_number(reference))
 
 
 # ── find_matching_invoice ─────────────────────────────────────────────────────
@@ -638,3 +656,98 @@ class IngestTransactionTest(TestCase):
         ):
             self.assertEqual(getattr(via_csv, field), getattr(via_api, field), f"{field} differs")
         self.assertEqual(via_csv.matched_invoice_id, via_api.matched_invoice_id)
+
+
+class IngestFailureIsolationTest(TestCase):
+    """A row whose invoice cannot be marked paid leaves no half-written state behind."""
+
+    def setUp(self):
+        self.practice = _make_practice(slug="ingest-failure")
+        self.client_obj = Client.objects.create(
+            practice=self.practice, full_name="Maria Musterfrau", client_code="MF"
+        )
+        self.paid_ok = Invoice.objects.create(
+            practice=self.practice,
+            client=self.client_obj,
+            invoice_number="MF-1",
+            status="sent",
+            invoice_date=date(2026, 1, 1),
+        )
+        _make_invoice_item(self.paid_ok, self.practice, self.client_obj)
+        # Dated after the payment below, so Invoice.clean() rejects paid_date.
+        self.future_dated = Invoice.objects.create(
+            practice=self.practice,
+            client=self.client_obj,
+            invoice_number="MF-2",
+            status="sent",
+            invoice_date=date(2026, 2, 1),
+        )
+        _make_invoice_item(self.future_dated, self.practice, self.client_obj)
+
+    def _parsed(self, reference):
+        return {
+            "transaction_date": date(2026, 1, 15),
+            "value_date": date(2026, 1, 15),
+            "payer_name": "Maria Musterfrau",
+            "payer_iban": "",
+            "reference": reference,
+            "amount": Decimal("90.00"),
+            "balance_after": Decimal("1000.00"),
+        }
+
+    def test_failed_invoice_save_rolls_back_the_transaction_row(self):
+        importer = BankStatementImporter.for_account(self.practice, PRACTICE_IBAN)
+        with self.assertRaises(ValidationError):
+            importer.ingest_transaction(self._parsed("MF-2"), skip_negatives=False)
+
+        # Nothing committed, so the next import retries instead of skipping
+        # the row as a duplicate with the invoice still unpaid.
+        self.assertFalse(BankTransaction.objects.exists())
+        self.future_dated.refresh_from_db()
+        self.assertEqual(self.future_dated.status, "sent")
+
+    def test_csv_import_skips_only_the_failing_row(self):
+        importer = _make_importer(
+            self.practice,
+            [
+                {
+                    "date": "15.01.2026",
+                    "payer": "Maria Musterfrau",
+                    "amount": "90,00",
+                    "ref": "MF-1",
+                },
+                {
+                    "date": "15.01.2026",
+                    "payer": "Maria Musterfrau",
+                    "amount": "90,00",
+                    "ref": "MF-2",
+                },
+            ],
+        )
+        results = importer.process(skip_negatives=False)
+
+        self.assertEqual(len(results["errors"]), 1)
+        self.assertEqual(BankTransaction.objects.count(), 1)
+        self.paid_ok.refresh_from_db()
+        self.assertEqual(self.paid_ok.status, "paid")
+        self.future_dated.refresh_from_db()
+        self.assertEqual(self.future_dated.status, "sent")
+
+
+class SelfPaymentTest(TestCase):
+    def test_blank_practice_name_does_not_ignore_blank_payer(self):
+        practice = _make_practice(slug="blank-name", name="")
+        importer = BankStatementImporter.for_account(practice, PRACTICE_IBAN)
+        transaction = importer.ingest_transaction(
+            {
+                "transaction_date": date(2026, 1, 15),
+                "value_date": date(2026, 1, 15),
+                "payer_name": "",
+                "payer_iban": "",
+                "reference": "Zahlung",
+                "amount": Decimal("90.00"),
+                "balance_after": Decimal("1000.00"),
+            },
+            skip_negatives=False,
+        )
+        self.assertEqual(transaction.match_confidence, "unmatched")
