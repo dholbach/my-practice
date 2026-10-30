@@ -1,5 +1,5 @@
 [Unit]
-Description=Run hourly background jobs (calendar sync, tag update, Focus Queue sync)
+Description=Run hourly background jobs (calendar sync, tag update, Focus Queue sync, inquiry retention)
 After=network.target my-practice-app.service
 
 [Service]

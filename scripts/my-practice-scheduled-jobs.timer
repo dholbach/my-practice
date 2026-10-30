@@ -1,5 +1,5 @@
 [Unit]
-Description=Hourly background jobs timer (calendar sync, tag update, Focus Queue sync)
+Description=Hourly background jobs timer (calendar sync, tag update, Focus Queue sync, inquiry retention)
 
 [Timer]
 OnCalendar=hourly

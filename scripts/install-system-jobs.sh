@@ -16,7 +16,7 @@ echo ""
 echo "This will install:"
 echo "  - Backup timer (daily, randomized execution window)"
 echo "  - Auto-start service (starts app during boot when network/docker are ready)"
-echo "  - Scheduled jobs timer (hourly: calendar sync, tag update, Focus Queue sync)"
+echo "  - Scheduled jobs timer (hourly: calendar sync, tag update, Focus Queue sync, inquiry retention)"
 echo ""
 
 # Check if running as root or with sudo
