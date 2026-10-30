@@ -33,8 +33,8 @@ def _get_capacity_periods(*, practice: PracticeScope) -> list[tuple[date, int]]:
     """
     Return capacity periods as a list of (start_date, hours_per_week) tuples, ascending.
 
-    Queries CapacityPeriod for the given practice. When practice is None, returns
-    periods across all practices (used by standalone scripts without a request context).
+    Queries CapacityPeriod for the given practice; None gives no periods and
+    ALL_PRACTICES gives every practice's (see scope_to_practice).
     """
     qs = CapacityPeriod.objects.order_by("start_date")
     qs = scope_to_practice(qs, practice)
@@ -136,7 +136,7 @@ def calculate_period_capacity(
     )
 
     # Calculate booked hours (uses same horizon)
-    booked_hours = _get_booked_hours(start_date, end_date)
+    booked_hours = _get_booked_hours(start_date, end_date, practice=practice)
 
     return {
         "working_days_total": working_days,
@@ -226,9 +226,9 @@ def _calculate_weighted_capacity(
     return (available_working_days / 5) * weighted_hours_per_week
 
 
-def _get_booked_hours(start_date: date, end_date: date) -> float:
+def _get_booked_hours(start_date: date, end_date: date, *, practice: PracticeScope) -> float:
     """
-    Get total booked therapist hours from Sessions for a period.
+    Get total booked therapist hours from the practice's Sessions for a period.
 
     For periods that extend into the future, only counts sessions up to 2 weeks
     from today (since most clients book sessions short-term).
@@ -244,11 +244,16 @@ def _get_booked_hours(start_date: date, end_date: date) -> float:
     else:
         effective_end_date = end_date
 
-    result = Session.objects.filter(
-        session_date__gte=start_date,
-        session_date__lte=effective_end_date,
-        cancelled=False,
-    ).aggregate(
+    sessions = scope_to_practice(
+        Session.objects.filter(
+            session_date__gte=start_date,
+            session_date__lte=effective_end_date,
+            cancelled=False,
+        ),
+        practice,
+        "client__practice",
+    )
+    result = sessions.aggregate(
         total_minutes=Sum(Cast("duration", FloatField()) / Cast("group_size", FloatField()))
     )
     return (result["total_minutes"] or 0) / 60

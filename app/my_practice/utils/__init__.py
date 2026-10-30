@@ -56,6 +56,7 @@ from .tag_helpers import (
     RECENT_ACTIVITY_WINDOW_DAYS,
     SESSION_LOG_MIN_DURATION,
     SESSION_LOG_WINDOW_DAYS,
+    annotate_client_counts,
     sort_tags_by_category,
     sync_no_next_session_tag,
 )
@@ -84,6 +85,7 @@ __all__ = [
     "calculate_client_session_stats",
     "group_clients_by_activity",
     "group_clients_by_year",
+    "annotate_client_counts",
     "sort_tags_by_category",
     "sync_no_next_session_tag",
     "RECENT_ACTIVITY_WINDOW_DAYS",

@@ -54,13 +54,14 @@ class PracticeDayCalculatorTestCase(TestCase):
     """Test PracticeDayCalculator with a mock Practice object."""
 
     def _make_practice(self, distance_km=None, weekdays=None):
-        """Create a simple mock practice without DB access."""
-
-        class MockPractice:
-            commute_distance_km = distance_km
-            practice_weekdays = weekdays if weekdays is not None else []
-
-        return MockPractice()
+        """Create a practice with no sessions; the calculator scopes its session query to it."""
+        return Practice.objects.create(
+            name="Test Praxis",
+            slug=f"days-{Practice.objects.count()}",
+            title="T",
+            commute_distance_km=distance_km,
+            practice_weekdays=weekdays if weekdays is not None else [],
+        )
 
     def test_not_configured_returns_zeros(self):
         practice = self._make_practice(distance_km=None, weekdays=[])

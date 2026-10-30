@@ -2,10 +2,10 @@
 
 from typing import TYPE_CHECKING
 
-from django.db.models import QuerySet
+from django.db.models import Count, IntegerField, Q, QuerySet, Value
 from django.utils import timezone
 
-from ..models.base import PracticeScope, scope_to_practice
+from ..models.base import ALL_PRACTICES, PracticeScope, scope_to_practice
 
 if TYPE_CHECKING:
     from ..models import Client, ClientTag
@@ -125,6 +125,24 @@ def sync_no_next_session_tag(client: "Client") -> bool | None:
         client.tags.add(tag)
         return True
     return None
+
+
+def annotate_client_counts(tags: QuerySet, *, practice: PracticeScope) -> QuerySet:
+    """
+    Annotate each tag with ``client_count``: how many of the practice's clients carry it.
+
+    The tag vocabulary is shared across practices but the tagged clients are
+    not, so a plain Count("clients") would count every practice's clients.
+    None counts nothing and ALL_PRACTICES counts every client, as in
+    scope_to_practice().
+    """
+    if practice is ALL_PRACTICES:
+        count = Count("clients")
+    elif practice is None:
+        count = Value(0, output_field=IntegerField())
+    else:
+        count = Count("clients", filter=Q(clients__practice=practice))
+    return tags.annotate(client_count=count)
 
 
 def sort_tags_by_category(
