@@ -19,7 +19,7 @@ import tempfile
 import time
 import urllib.request
 
-VERSION = "v0.9.0"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
+VERSION = "v0.10.0"  # updated each release — keeps prod.py and docker-compose.prod.yml in sync
 
 COMPOSE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docker-compose.prod.yml")
 COMPOSE = ["docker", "compose", "-f", COMPOSE_FILE]

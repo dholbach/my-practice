@@ -2,11 +2,11 @@
 
 Major features and milestones in chronological order.
 
-## Unreleased
+## 2026-10-30 — v0.10.0 minor release
 
-Security fixes from a source review of the views, settings and calendar import.
+A security release from four source reviews (views and settings, bank import, practice scoping, admin and operator tooling), plus safer backups, restores and updates, and the inquiry retention pass on schedule.
 
-**Upgrading:** two migrations run on start (`0009`, makes the pending-calendar-event key unique per practice instead of globally; existing rows already satisfy it — `0010`, adds the extension allowlist to the upload fields; validation only, nothing rewritten — `0011`, adds the payer IBAN to the bank-transaction unique key; widening only, existing rows already satisfy it). Restart the dev stack (`./dev.py restart`) so gunicorn rebinds to loopback. The app now refuses to start (`migrate` fails with `my_practice.E003`) when DEBUG is off and `DJANGO_SECRET_KEY` is unset — `./prod.py` has always generated one, so only a hand-built `.env` is affected.
+**Upgrading:** download the new `prod.py` and `docker-compose.prod.yml` (`./prod.py update` prints the commands), then run `./prod.py update`. From this release on, it takes a backup before restarting. The compose file now mounts the backup directory read-only, and `manage.py prune_old_backups` is gone (`./prod.py backup` prunes after every verified run). The hourly scheduled jobs now anonymise inquiries past their retention period, so preview what the first run will do with `./prod.py manage tidy_inquiries` first. Three migrations run on start (`0009`, makes the pending-calendar-event key unique per practice instead of globally; existing rows already satisfy it — `0010`, adds the extension allowlist to the upload fields; validation only, nothing rewritten — `0011`, adds the payer IBAN to the bank-transaction unique key; widening only, existing rows already satisfy it). Restart the dev stack (`./dev.py restart`) so gunicorn rebinds to loopback. The app now refuses to start (`migrate` fails with `my_practice.E003`) when DEBUG is off and `DJANGO_SECRET_KEY` is unset — `./prod.py` has always generated one, so only a hand-built `.env` is affected.
 
 - **Security — dev stack no longer listens on the local network**: `docker-compose.yml` runs django with `network_mode: host` and bound gunicorn to `0.0.0.0:8000` with DEBUG on, so the stack holding the real data directories was reachable from other machines over plain HTTP. It binds `127.0.0.1` now, like Postgres and the prod default.
 - **Security — login lockout could be sidestepped**: the throttle key was not NFKC-normalised while Django's login form is, so fullwidth and other compatibility spellings of a username each got a fresh 5-attempt allowance.
