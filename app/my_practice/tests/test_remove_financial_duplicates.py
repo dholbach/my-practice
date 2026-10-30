@@ -6,10 +6,11 @@ from datetime import date
 from decimal import Decimal
 from io import StringIO
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase
 
-from ..models import CompanyExpense, CompanyWithdrawal, Practice
+from ..models import BankTransaction, CompanyExpense, CompanyWithdrawal, ExpenseReceipt, Practice
 
 
 class RemoveFinancialDuplicatesTest(TestCase):
@@ -127,3 +128,53 @@ class RemoveFinancialDuplicatesTest(TestCase):
 
         self.assertEqual(CompanyExpense.objects.count(), 2)
         self.assertEqual(CompanyWithdrawal.objects.count(), 1)
+
+
+class RemoveFinancialDuplicatesKeepsBookingsTest(RemoveFinancialDuplicatesTest):
+    """A record linked to a bank transaction or carrying receipts is a booking, not a copy."""
+
+    def _link(self, expense, payer_iban):
+        return BankTransaction.objects.create(
+            practice=self.practice,
+            transaction_date=expense.date,
+            value_date=expense.date,
+            payer_name="Test GmbH",
+            payer_iban=payer_iban,
+            reference=expense.description,
+            amount=-expense.amount,
+            balance_after=Decimal("1000.00"),
+            match_confidence="auto-expense",
+            linked_expense=expense,
+        )
+
+    def test_two_bank_linked_expenses_are_both_kept(self):
+        # Two creditors, same date/amount/text: the bank import keeps both.
+        first, second = self._make_expense(), self._make_expense()
+        self._link(first, "DE02120300000000202051")
+        self._link(second, "DE02500105170137075030")
+
+        self._run("--yes")
+
+        self.assertEqual(CompanyExpense.objects.filter(id__in=[first.id, second.id]).count(), 2)
+
+    def test_unlinked_copy_of_a_linked_expense_is_deleted_not_the_linked_one(self):
+        copy, linked = self._make_expense(), self._make_expense()
+        transaction = self._link(linked, "DE02120300000000202051")
+
+        self._run("--yes")
+
+        self.assertFalse(CompanyExpense.objects.filter(id=copy.id).exists())
+        transaction.refresh_from_db()
+        self.assertEqual(transaction.linked_expense_id, linked.id)
+
+    def test_expense_with_receipts_is_kept(self):
+        plain, with_receipt = self._make_expense(), self._make_expense()
+        ExpenseReceipt.objects.create(
+            expense=with_receipt, file=SimpleUploadedFile("beleg.pdf", b"%PDF-1.4")
+        )
+
+        output = self._run("--yes")
+
+        self.assertFalse(CompanyExpense.objects.filter(id=plain.id).exists())
+        self.assertTrue(ExpenseReceipt.objects.filter(expense=with_receipt).exists())
+        self.assertIn("1 receipt(s)", output)

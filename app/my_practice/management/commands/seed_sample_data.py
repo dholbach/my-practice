@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -101,16 +102,40 @@ SEED_INQUIRY_NAMES: frozenset[str] = frozenset(i[0] for i in INQUIRIES)
 SEED_TAG_NAMES: frozenset[str] = frozenset(
     ["Individual therapy", "Long-term client", "Short-term intervention", "Group therapy"]
 )
-SEED_TIMEOFF_TITLES: frozenset[str] = frozenset(
-    [
-        "Easter break",
+# Realistic vacation + training blocks for a solo practice over 2025–2026.
+# --clear deletes exactly these rows: TimeOff is shared across practices and
+# carries no practice, so matching on the title alone would also delete a real
+# "Summer holiday".
+SEED_TIMEOFF_ENTRIES: tuple[tuple[date, date, str, str], ...] = (
+    # 2025
+    (date(2025, 4, 14), date(2025, 4, 18), TimeOff.Type.VACATION, "Easter break"),
+    (
+        date(2025, 5, 29),
+        date(2025, 5, 30),
+        TimeOff.Type.TRAINING,
         "Trauma therapy training",
-        "Summer holiday",
-        "Autumn break",
-        "Christmas holiday",
+    ),
+    (date(2025, 8, 4), date(2025, 8, 15), TimeOff.Type.VACATION, "Summer holiday"),
+    (date(2025, 10, 27), date(2025, 10, 31), TimeOff.Type.VACATION, "Autumn break"),
+    (date(2025, 12, 22), date(2026, 1, 2), TimeOff.Type.VACATION, "Christmas holiday"),
+    # 2026
+    (date(2026, 3, 30), date(2026, 4, 3), TimeOff.Type.VACATION, "Easter break"),
+    (
+        date(2026, 6, 19),
+        date(2026, 6, 19),
+        TimeOff.Type.TRAINING,
         "Supervision intensive day",
-    ]
+    ),
+    (date(2026, 7, 27), date(2026, 8, 7), TimeOff.Type.VACATION, "Summer holiday"),
 )
+
+
+def _seeded_timeoff_filter() -> Q:
+    """Match exactly the time-off rows the seeder creates, never one with only the same title."""
+    match = Q(pk__in=[])
+    for start, end, kind, title in SEED_TIMEOFF_ENTRIES:
+        match |= Q(start_date=start, end_date=end, type=kind, title=title)
+    return match
 
 
 class Command(BaseCommand):
@@ -849,30 +874,8 @@ class Command(BaseCommand):
     def _create_time_off(self) -> None:
         # Realistic vacation + training blocks for a solo practice over 2025–2026.
         # Dates are fixed so re-runs stay idempotent via get_or_create on (start_date, end_date, type).
-        entries = [
-            # 2025
-            (date(2025, 4, 14), date(2025, 4, 18), TimeOff.Type.VACATION, "Easter break"),
-            (
-                date(2025, 5, 29),
-                date(2025, 5, 30),
-                TimeOff.Type.TRAINING,
-                "Trauma therapy training",
-            ),
-            (date(2025, 8, 4), date(2025, 8, 15), TimeOff.Type.VACATION, "Summer holiday"),
-            (date(2025, 10, 27), date(2025, 10, 31), TimeOff.Type.VACATION, "Autumn break"),
-            (date(2025, 12, 22), date(2026, 1, 2), TimeOff.Type.VACATION, "Christmas holiday"),
-            # 2026
-            (date(2026, 3, 30), date(2026, 4, 3), TimeOff.Type.VACATION, "Easter break"),
-            (
-                date(2026, 6, 19),
-                date(2026, 6, 19),
-                TimeOff.Type.TRAINING,
-                "Supervision intensive day",
-            ),
-            (date(2026, 7, 27), date(2026, 8, 7), TimeOff.Type.VACATION, "Summer holiday"),
-        ]
         created = 0
-        for start, end, kind, title in entries:
+        for start, end, kind, title in SEED_TIMEOFF_ENTRIES:
             _, made = TimeOff.objects.get_or_create(
                 start_date=start,
                 end_date=end,
@@ -889,12 +892,18 @@ class Command(BaseCommand):
     def _clear(self, skip_confirm: bool) -> None:
         seeded = Client.objects.filter(full_name__in=SEED_NAMES)
         demo_practice = Practice.objects.filter(slug=DEMO_SLUG).first()
-        has_todos = PracticeTodo.objects.filter(title__in=SEED_TODO_TITLES).exists()
+        # Seeded todos live in the demo practice only; the titles are ordinary
+        # phrases a real practice may use too.
+        seeded_todos = PracticeTodo.objects.filter(
+            practice=demo_practice, title__in=SEED_TODO_TITLES
+        )
+        has_todos = demo_practice is not None and seeded_todos.exists()
         has_expenses = (
             demo_practice and CompanyExpense.objects.filter(practice=demo_practice).exists()
         )
         has_inquiries = ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).exists()
-        has_timeoff = TimeOff.objects.filter(title__in=SEED_TIMEOFF_TITLES).exists()
+        seeded_timeoff = TimeOff.objects.filter(_seeded_timeoff_filter())
+        has_timeoff = seeded_timeoff.exists()
 
         if (
             not seeded.exists()
@@ -918,7 +927,9 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR("❌ Aborted"))
                 return
             answer = input(
-                f"⚠️  Delete all seeded demo data ({count} clients, todos, expenses, inquiries)? (yes/no): "
+                f"⚠️  Delete all seeded demo data ({count} clients and the demo practice's "
+                f"todos, expenses and inquiries, plus {seeded_timeoff.count()} seeded "
+                "time-off entries)? Other practices are not touched. (yes/no): "
             )
             if answer.lower() != "yes":
                 raise CommandError("Aborted.")
@@ -937,8 +948,9 @@ class Command(BaseCommand):
             ).delete()
             seeded.delete()
             ClientInquiry.objects.filter(full_name__in=SEED_INQUIRY_NAMES).delete()
-            PracticeTodo.objects.filter(title__in=SEED_TODO_TITLES).delete()
-            TimeOff.objects.filter(title__in=SEED_TIMEOFF_TITLES).delete()
+            if demo_practice:
+                seeded_todos.delete()
+            seeded_timeoff.delete()
             if demo_practice:
                 self._clear_demo_practice(demo_practice)
 

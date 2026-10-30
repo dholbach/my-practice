@@ -112,6 +112,23 @@ class UpsertEventCreateTest(UpsertEventTestBase):
         self.assertEqual(pce.status, PendingCalendarEvent.Status.SKIPPED)
         self.assertIsNotNone(pce.session)
 
+    def test_invitation_from_someone_else_creates_no_session(self):
+        # Anyone can invite the owner and title the event with a client code.
+        invitation = {"organizer": {"email": "stranger@example.com"}}
+        result = self.cmd._upsert_event(
+            self._event(original=invitation), self.practice, dry_run=False
+        )
+        self.assertEqual(result, "created")
+        pce = PendingCalendarEvent.objects.get(google_event_id="evt-1")
+        self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
+        self.assertIsNone(pce.session)
+        self.assertFalse(Session.objects.filter(client=self.test_client).exists())
+
+    def test_event_the_owner_organised_creates_session(self):
+        own = {"organizer": {"email": "owner@practice.example", "self": True}}
+        self.cmd._upsert_event(self._event(original=own), self.practice, dry_run=False)
+        self.assertIsNotNone(PendingCalendarEvent.objects.get(google_event_id="evt-1").session)
+
     def test_unmatched_client_creates_no_session(self):
         result = self.cmd._upsert_event(
             self._event(matched_client=None), self.practice, dry_run=False

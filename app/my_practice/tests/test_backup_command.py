@@ -109,6 +109,13 @@ class BackupCommandTests(SimpleTestCase):
         self.assertEqual(stat.S_IMODE(os.stat(finals[0]).st_mode), 0o600)
         self.assertEqual(self._listing(), sorted(names))  # no temp files left
 
+    def test_backup_directory_is_owner_only(self):
+        # A plaintext archive is protected only by its directory.
+        self.backup_dir.mkdir(mode=0o755)
+        os.chmod(self.backup_dir, 0o755)
+        self._backup()
+        self.assertEqual(stat.S_IMODE(os.stat(self.backup_dir).st_mode), 0o700)
+
     def test_failures_leave_nothing_that_looks_like_a_backup(self):
         for mode, message in [
             ("dump_fails", "pg_dump"),
