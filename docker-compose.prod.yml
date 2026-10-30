@@ -52,7 +52,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/backups:/app/backups
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/backups:/app/backups:ro
       - static_data:/app/staticfiles
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/media:/app/media
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/documents:/my-practice-data/documents

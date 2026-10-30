@@ -67,7 +67,7 @@ services:
       - .:/repo:ro
       # Backups and media live OUTSIDE the repo at $MY_PRACTICE_DATA_DIR (set in .env).
       # Default: ../my-practice-data (sibling directory next to the repo clone).
-      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/backups:/app/backups
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/backups:/app/backups:ro
       - static_data:/app/staticfiles
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/media:/app/media
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/documents:/my-practice-data/documents

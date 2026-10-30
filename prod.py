@@ -679,7 +679,7 @@ def cmd_restart(_args):
 
 
 def cmd_update(args):
-    """Pull the latest image and restart. Pass --yes to skip the metered-connection prompt."""
+    """Back up, pull the latest image and restart. --yes skips the metered-connection prompt."""
     _require_secrets()
     _require_no_foreign_containers()
     if "--yes" not in args and not _confirm_metered_download("Pulling the latest image"):
@@ -703,6 +703,21 @@ def cmd_update(args):
     result = compose("pull")
     if result.returncode != 0:
         return result
+    # The new container migrates on start and there is no downgrade path, so
+    # the last pre-migration state has to exist before `up` — taken from the
+    # still-running old containers (pull alone does not restart them).
+    if "--skip-backup" not in args:
+        print("📦 Backing up before the update (pass --skip-backup to skip)")
+        try:
+            run_backup(_compose_cmd(args), _backup_dir(), _passphrase_file())
+        except BackupError as exc:
+            print(f"❌ {exc}", file=sys.stderr)
+            print(
+                "   Update aborted before anything was restarted. Start the stack"
+                " (./prod.py start) and retry, or pass --skip-backup.",
+                file=sys.stderr,
+            )
+            return subprocess.CompletedProcess(args=[], returncode=1)
     _ensure_bind_address()
     _warn_if_proxy_bypassable()
     return compose("up", "-d", "--remove-orphans")
@@ -1112,7 +1127,7 @@ def print_help():
     print()
     print("Examples:")
     print("  ./prod.py setup                         # first-time setup (recommended)")
-    print("  ./prod.py update                        # pull latest image + restart")
+    print("  ./prod.py update                        # back up, pull latest image + restart")
     print("  ./prod.py logs                          # follow Django logs")
     print("  ./prod.py logs --tail 50                # last 50 lines")
     print("  ./prod.py status                        # container health")

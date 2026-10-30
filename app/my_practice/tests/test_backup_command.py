@@ -11,12 +11,14 @@ import io
 import os
 import shutil
 import stat
+import subprocess
 import sys
 import tarfile
 import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
@@ -174,6 +176,59 @@ class BackupCommandTests(SimpleTestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn(b"database dump complete", (self.root / "restored.sql").read_bytes())
         self.assertEqual((self.root / "restored" / "media" / "a.pdf").read_bytes(), b"%PDF a")
+
+
+class UpdateBackupTests(SimpleTestCase):
+    """`prod.py update` migrates on restart with no way back, so it backs up first."""
+
+    def setUp(self):
+        self.prod = _load_prod()
+        self.calls = []
+        for patcher in [
+            mock.patch.object(self.prod, "_require_secrets"),
+            mock.patch.object(self.prod, "_require_no_foreign_containers"),
+            mock.patch.object(self.prod, "_ensure_bind_address"),
+            mock.patch.object(self.prod, "_warn_if_proxy_bypassable"),
+            mock.patch.object(self.prod, "_passphrase_file", return_value=None),
+            mock.patch.object(self.prod, "compose", side_effect=self._compose),
+            mock.patch("urllib.request.urlopen", side_effect=OSError("offline")),
+        ]:
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def _compose(self, *args):
+        self.calls.append(args[0])
+        return subprocess.CompletedProcess(args=[], returncode=0)
+
+    def _update(self, *args, backup_error=None):
+        def backup(*_args):
+            self.calls.append("backup")
+            if backup_error:
+                raise self.prod.BackupError(backup_error)
+
+        with (
+            mock.patch.object(self.prod, "run_backup", side_effect=backup),
+            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.redirect_stderr(io.StringIO()) as err,
+        ):
+            result = self.prod.cmd_update(["--yes", *args])
+        return result, err.getvalue()
+
+    def test_backs_up_after_pull_and_before_restart(self):
+        result, _ = self._update()
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(self.calls, ["pull", "backup", "up"])
+
+    def test_failed_backup_aborts_before_restart(self):
+        result, err = self._update(backup_error="Database backup failed")
+        self.assertEqual(result.returncode, 1)
+        self.assertNotIn("up", self.calls)
+        self.assertIn("--skip-backup", err)
+
+    def test_skip_backup(self):
+        result, _ = self._update("--skip-backup")
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(self.calls, ["pull", "up"])
 
 
 class DashboardBackupWarningTests(BaseTestCase):
