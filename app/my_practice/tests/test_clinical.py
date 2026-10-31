@@ -438,6 +438,53 @@ class SessionLogCreateViewTests(ClinicalTestBase):
         response = self.http.get(self._url(), {"session_date": "2026-03-20"})
         self.assertEqual(response.context["prefill_duration"], 90)
 
+    def test_post_rejects_unusable_duration_without_creating_anything(self):
+        """A non-numeric or overflowing duration is refused instead of raising a 500."""
+        for duration in ("abc", "0", "99999999999"):
+            with self.subTest(duration=duration):
+                response = self.http.post(
+                    self._url(),
+                    {
+                        "session_date": "2026-03-21",
+                        "session_type": "standard",
+                        "duration": duration,
+                    },
+                )
+                self.assertRedirects(
+                    response, reverse("client_detail", kwargs={"pk": self.client_obj.pk})
+                )
+                self.assertFalse(Session.objects.filter(client=self.client_obj).exists())
+
+    def test_post_accepts_a_full_day_session(self):
+        self.http.post(
+            self._url(),
+            {"session_date": "2026-03-21", "session_type": "standard", "duration": "480"},
+        )
+        self.assertEqual(Session.objects.get(client=self.client_obj).duration, 480)
+
+    def test_post_rejects_unknown_session_type(self):
+        self.http.post(
+            self._url(), {"session_date": "2026-03-21", "session_type": "x" * 100, "content": "x"}
+        )
+        self.assertFalse(SessionLog.objects.filter(session__client=self.client_obj).exists())
+
+    def test_post_drops_unknown_mood_tags(self):
+        self.http.post(
+            self._url(),
+            {
+                "session_date": "2026-03-21",
+                "session_type": "standard",
+                "mood_tags": ["gute_ressourcen", "<script>"],
+            },
+        )
+        log = SessionLog.objects.get(session__client=self.client_obj)
+        self.assertEqual(log.mood_tags, ["gute_ressourcen"])
+
+    def test_get_ignores_invalid_prefill_date(self):
+        response = self.http.get(self._url() + "?session_date=not-a-date")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["prefill_date"], "")
+
 
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)
 class SupervisionViewTests(ClinicalTestBase):
@@ -624,6 +671,17 @@ class SessionDurationEditViewTests(ClinicalTestBase):
         session.refresh_from_db()
         self.assertEqual(session.duration, 60)
 
+    def test_rejects_duration_over_one_day(self):
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 15), duration=60
+        )
+        url = reverse(
+            "session_duration_edit", kwargs={"pk": self.client_obj.pk, "session_pk": session.pk}
+        )
+        self.http.post(url, {"duration": "99999999999"})
+        session.refresh_from_db()
+        self.assertEqual(session.duration, 60)
+
     def test_blocked_when_already_billed(self):
         """
         A session with an existing InvoiceItem cannot have its duration edited.
@@ -742,6 +800,40 @@ class SessionLogEditViewTests(ClinicalTestBase):
         self.http.post(self._url(), {"content": "x", "duration": "not-a-number"})
         self.session.refresh_from_db()
         self.assertEqual(self.session.duration, 60)
+
+    def test_post_keeps_duration_of_billed_session_but_saves_log(self):
+        """Billed figures depend on session.duration, so the log edit must not change it."""
+        from ..models import Invoice, InvoiceItem, ServiceType
+
+        service = ServiceType.objects.create(
+            code="individual", name_en="Individual Session", name_de="Einzelsitzung"
+        )
+        invoice = Invoice.objects.create(
+            client=self.client_obj,
+            invoice_number="TEST-2",
+            invoice_date=date(2026, 3, 20),
+            practice=self.practice,
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=service,
+            session=self.session,
+            rate=Decimal("90.00"),
+            quantity=Decimal("1.00"),
+        )
+        self.http.post(self._url(), {"content": "Edited", "duration": "90"})
+        self.session.refresh_from_db()
+        self.log.refresh_from_db()
+        self.assertEqual(self.session.duration, 60)
+        self.assertEqual(self.log.content, "Edited")
+
+    def test_post_keeps_session_type_when_unknown(self):
+        self.log.session_type = SessionLog.SessionType.ERSTGESPRAECH
+        self.log.save()
+        self.http.post(self._url(), {"content": "x", "session_type": "bogus"})
+        self.log.refresh_from_db()
+        self.assertEqual(self.log.session_type, SessionLog.SessionType.ERSTGESPRAECH)
+        self.assertEqual(self.log.content, "x")
 
     def test_post_adds_supervision_item_when_question_given(self):
         self.http.post(self._url(), {"content": "x", "supervision_question": "Wie weiter?"})

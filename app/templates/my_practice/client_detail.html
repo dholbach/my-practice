@@ -468,7 +468,7 @@
             {% if not session.invoice_items.all %}
             <form method="post" action="{% url 'session_duration_edit' client.pk session.pk %}" class="form-inline cn-duration-edit-form">
                 {% csrf_token %}
-                <input type="number" name="duration" value="{{ session.duration }}" min="1" max="300" class="form-control cn-duration-input" title="{% trans 'Duration in minutes' %}">
+                <input type="number" name="duration" value="{{ session.duration }}" min="1" max="1440" class="form-control cn-duration-input" title="{% trans 'Duration in minutes' %}">
                 <button type="submit" class="btn btn-secondary btn-sm">{% trans "Save min." %}</button>
             </form>
             {% url 'session_delete' client.pk session.pk as session_delete_url %}

@@ -35,10 +35,36 @@ from ..models.clinical import (
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
 from ..utils.view_helpers import safe_next
 
+# A whole day: room for intensive or workshop days, while keeping out typos and values
+# that would overflow the integer column. The duration inputs use the same max.
+MAX_SESSION_MINUTES = 24 * 60
+
 
 def _get_scoped_client(request, pk):
     """Get a practice-scoped client or 404."""
     return get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+
+
+def _parse_duration(raw: str | None) -> int | None:
+    """Return the duration in minutes, or None unless it is 1 to MAX_SESSION_MINUTES."""
+    try:
+        minutes = int((raw or "").strip())
+    except ValueError:
+        return None
+    return minutes if 0 < minutes <= MAX_SESSION_MINUTES else None
+
+
+def _session_log_choices(request, default_type: str) -> tuple[str | None, list[str]]:
+    """Return the posted session type (None if not a known one) and the known mood tags.
+
+    The form only offers the choices, but the view saves without a ModelForm, so an
+    unknown session type would be stored as-is, or abort with a DataError when too long.
+    """
+    session_type = request.POST.get("session_type", default_type)
+    if session_type not in SessionLog.SessionType.values:
+        session_type = None
+    mood_tags = [tag for tag in request.POST.getlist("mood_tags") if tag in MoodTag.values]
+    return session_type, mood_tags
 
 
 # ─── ClientProfile ─────────────────────────────────────────────────────────────
@@ -84,6 +110,15 @@ def session_log_create(request, pk):
             messages.error(request, _("Invalid date."))
             return redirect("client_detail", pk=pk)
 
+        duration = _parse_duration(request.POST.get("duration", "60"))
+        session_type, mood_tags = _session_log_choices(request, SessionLog.SessionType.STANDARD)
+        if duration is None:
+            messages.error(request, _("Invalid duration."))
+            return redirect("client_detail", pk=pk)
+        if session_type is None:
+            messages.error(request, _("Invalid session type."))
+            return redirect("client_detail", pk=pk)
+
         # A client can have several sessions on one date (calendar import keys on
         # date + time, and a reschedule can leave a cancelled twin behind), so attach
         # to the first live one still without a log rather than get_or_create, which
@@ -98,7 +133,7 @@ def session_log_create(request, pk):
             session = Session.objects.create(
                 client=client,
                 session_date=session_date,
-                duration=int(request.POST.get("duration", 60)),
+                duration=duration,
             )
 
         # Prevent duplicate logs
@@ -106,10 +141,9 @@ def session_log_create(request, pk):
             messages.warning(request, _("A log already exists for this session."))
             return redirect("session_log_edit", client_pk=pk, log_pk=session.log.pk)
 
-        mood_tags = request.POST.getlist("mood_tags")
         SessionLog.objects.create(
             session=session,
-            session_type=request.POST.get("session_type", SessionLog.SessionType.STANDARD),
+            session_type=session_type,
             mood_tags=mood_tags,
             summary=request.POST.get("summary", ""),
             content=request.POST.get("content", ""),
@@ -131,6 +165,10 @@ def session_log_create(request, pk):
     # GET — render form
     prefill_date = request.GET.get("session_date", "")
     prefill_duration = 60
+    try:
+        date.fromisoformat(prefill_date)
+    except ValueError:
+        prefill_date = ""
 
     # If pre-filling from a calendar event, inherit its duration
     if prefill_date:
@@ -162,8 +200,10 @@ def session_log_edit(request, client_pk, log_pk):
     log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
 
     if request.method == "POST":
-        log.session_type = request.POST.get("session_type", log.session_type)
-        log.mood_tags = request.POST.getlist("mood_tags")
+        # Bad metadata never costs the narrative text: the log is saved, the field kept.
+        session_type, mood_tags = _session_log_choices(request, log.session_type)
+        log.session_type = session_type or log.session_type
+        log.mood_tags = mood_tags
         log.summary = request.POST.get("summary", log.summary)
         log.content = request.POST.get("content", log.content)
         log.interventions = request.POST.get("interventions", log.interventions)
@@ -177,16 +217,24 @@ def session_log_edit(request, client_pk, log_pk):
         if supervision_question:
             SupervisionItem.objects.create(client=client, content=supervision_question)
 
-        # Update session duration if provided
         duration_str = request.POST.get("duration", "").strip()
-        if duration_str:
-            try:
-                new_duration = int(duration_str)
-                if new_duration > 0:
-                    log.session.duration = new_duration
-                    log.session.save(update_fields=["duration"])
-            except ValueError:
-                pass
+        new_duration = _parse_duration(duration_str) if duration_str else None
+        if duration_str and new_duration is None:
+            messages.warning(request, _("Invalid duration."))
+        elif new_duration is not None and new_duration != log.session.duration:
+            # session.duration feeds the session count and the GebüH fee of the invoice it is
+            # billed on, so it is frozen once billed, as in session_duration_edit.
+            if log.session.invoice_items.exists():
+                messages.warning(
+                    request,
+                    _(
+                        "The duration was not changed: this session has already been billed. "
+                        "Remove the invoice item first."
+                    ),
+                )
+            else:
+                log.session.duration = new_duration
+                log.session.save(update_fields=["duration"])
 
         messages.success(request, _("Session log updated."))
         return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
@@ -430,19 +478,16 @@ def session_duration_edit(request, pk, session_pk):
             % {"date": session.session_date.strftime("%d.%m.%Y")},
         )
         return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
-    try:
-        new_duration = int(request.POST.get("duration", 0))
-        if new_duration > 0:
-            session.duration = new_duration
-            session.save(update_fields=["duration"])
-            messages.success(
-                request,
-                _("Session duration updated to %(min)s min.") % {"min": new_duration},
-            )
-        else:
-            messages.error(request, _("Invalid duration."))
-    except ValueError, TypeError:
+    new_duration = _parse_duration(request.POST.get("duration"))
+    if new_duration is None:
         messages.error(request, _("Invalid duration."))
+    else:
+        session.duration = new_duration
+        session.save(update_fields=["duration"])
+        messages.success(
+            request,
+            _("Session duration updated to %(min)s min.") % {"min": new_duration},
+        )
     return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
 

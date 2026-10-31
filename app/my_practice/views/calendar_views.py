@@ -374,9 +374,14 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
 
         from ..utils.calendar_import_helpers import create_invoice_items_from_events
 
-        # Convert PendingCalendarEvent objects to the format expected by the importer
-        parsed_events = [
-            {
+        overrides = {"invoice_id": invoice_id} if invoice_id else {}
+        created = skipped = 0
+        errors: list[str] = []
+        imported_ids: list[int] = []
+        # One call per event, so only the events that really produced an invoice item are
+        # marked imported. The rest stay pending, to be fixed or skipped from the queue.
+        for ev in events:
+            parsed_event = {
                 "id": ev.google_event_id,
                 "summary": ev.summary,
                 "start": (
@@ -386,26 +391,27 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
                 "matched_client": ev.matched_client,
                 "suggested_service_type_obj": ev.suggested_service_type,
             }
-            for ev in events
-        ]
+            ev_created, ev_skipped, ev_errors = create_invoice_items_from_events(
+                approved_events=[parsed_event],
+                user_overrides={ev.google_event_id: overrides},
+                request=request,
+            )
+            created += ev_created
+            skipped += ev_skipped
+            errors.extend(ev_errors)
+            if ev_created:
+                imported_ids.append(ev.pk)
 
-        user_overrides = {}
-        if invoice_id:
-            # All events go onto the same invoice
-            for ev in events:
-                user_overrides[ev.google_event_id] = {"invoice_id": invoice_id}
-
-        created, skipped, errors = create_invoice_items_from_events(
-            approved_events=parsed_events,
-            user_overrides=user_overrides,
-            request=request,
-        )
-
-        # Mark imported events
-        events.update(status=PendingCalendarEvent.Status.IMPORTED)
+        events.filter(pk__in=imported_ids).update(status=PendingCalendarEvent.Status.IMPORTED)
 
         return JsonResponse(
-            {"success": True, "created": created, "skipped": skipped, "errors": errors}
+            {
+                "success": True,
+                "created": created,
+                "skipped": skipped,
+                "errors": errors,
+                "imported_ids": imported_ids,
+            }
         )
 
     except json.JSONDecodeError:

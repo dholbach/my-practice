@@ -38,7 +38,7 @@
         <div>
             <label class="cn-label" for="id_duration">{% trans "Duration (minutes)" %}</label>
             <input type="number" id="id_duration" name="duration"
-                   class="form-control max-w-[120px]" value="{% if is_edit %}{{ log.session.duration }}{% else %}{{ prefill_duration }}{% endif %}" min="1">
+                   class="form-control max-w-[120px]" value="{% if is_edit %}{{ log.session.duration }}{% else %}{{ prefill_duration }}{% endif %}" min="1" max="1440">
         </div>
         <div>
             <label class="cn-label" for="id_session_type">{% trans "Session type" %}</label>
