@@ -12,6 +12,7 @@ Usage:
 """
 
 import random
+import sys
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -150,7 +151,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--yes",
             action="store_true",
-            help="Skip confirmation prompt",
+            help="Skip the confirmation prompts (clearing, or seeding beside real practices)",
         )
         parser.add_argument(
             "--seed",
@@ -174,6 +175,9 @@ class Command(BaseCommand):
         # Idempotency check: fictional names like "Frodo Baggins" won't appear in a real practice
         if Client.objects.filter(full_name__in=SEED_NAMES).exists():
             self.stdout.write("ℹ️  Demo data already exists. Use --clear to reset.")
+            return
+
+        if not self._confirm_real_installation(options["yes"]):
             return
 
         self.stdout.write("🌱 Seeding demo data...")
@@ -888,6 +892,30 @@ class Command(BaseCommand):
 
     # ── Clear ─────────────────────────────────────────────────────────────────
 
+    def _confirm_real_installation(self, skip_confirm: bool) -> bool:
+        """Ask before seeding an installation that already has practices of its own.
+
+        The seed is not confined to the demo practice: it links every superuser
+        to it and adds shared time-off, tags and service types, which a real
+        practice's capacity figures and pickers then include.
+        """
+        real = Practice.objects.exclude(slug=DEMO_SLUG).count()
+        if not real or skip_confirm:
+            return True
+        warning = (
+            f"⚠️  This installation already has {real} practice(s) of its own. Seeding adds "
+            "a demo practice to every superuser's practice switcher, plus shared time-off "
+            "entries, tags and service types that your practices will see too."
+        )
+        if not sys.stdin.isatty():
+            self.stdout.write(self.style.WARNING(warning))
+            self.stdout.write(self.style.ERROR("❌ Aborted. Use --yes to seed anyway."))
+            return False
+        answer = input(f"{warning} Seed anyway? (yes/no): ")
+        if answer.lower() != "yes":
+            raise CommandError("Aborted.")
+        return True
+
     @allow_issued_invoice_writes()
     def _clear(self, skip_confirm: bool) -> None:
         seeded = Client.objects.filter(full_name__in=SEED_NAMES)
@@ -918,8 +946,6 @@ class Command(BaseCommand):
 
         count = seeded.count()
         if not skip_confirm:
-            import sys
-
             if not sys.stdin.isatty():
                 self.stdout.write(
                     self.style.WARNING("⚠️  No interactive terminal. Use --yes to confirm.")

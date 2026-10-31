@@ -16,9 +16,12 @@ from django.db.models import Count  # noqa: E402
 
 from my_practice.models import BankTransaction  # noqa: E402
 
-# Find duplicates based on unique constraint
+# Grouped like the unique constraint, payer IBAN included: the same date, amount
+# and reference from two different payers are two genuine transactions.
 duplicates = (
-    BankTransaction.objects.values("practice_id", "transaction_date", "amount", "reference")
+    BankTransaction.objects.values(
+        "practice_id", "transaction_date", "amount", "reference", "payer_iban"
+    )
     .annotate(count=Count("id"))
     .filter(count__gt=1)
     .order_by("-count")
@@ -27,9 +30,11 @@ duplicates = (
 if duplicates:
     print(f"Found {duplicates.count()} duplicate groups:")
     for dup in duplicates:
+        # Only the tail: enough to tell payers apart, not a full account number.
+        payer = f"…{dup['payer_iban'][-4:]}" if dup["payer_iban"] else "–"
         print(
             f"\n  Practice: {dup['practice_id']}, Date: {dup['transaction_date']}, "
-            f"Amount: {dup['amount']}, Count: {dup['count']}"
+            f"Amount: {dup['amount']}, Payer IBAN: {payer}, Count: {dup['count']}"
         )
         print(f"  Reference: {dup['reference'][:80]}...")
 
@@ -39,6 +44,7 @@ if duplicates:
             transaction_date=dup["transaction_date"],
             amount=dup["amount"],
             reference=dup["reference"],
+            payer_iban=dup["payer_iban"],
         )
         for rec in records:
             print(f"    ID: {rec.id}, Match: {rec.match_confidence}, Processed: {rec.processed}")
