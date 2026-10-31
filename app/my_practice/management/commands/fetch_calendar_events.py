@@ -10,7 +10,7 @@ to a new Google event id, which _supersede_moved_events() re-binds first.
 import logging
 from datetime import timedelta
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from ...models import GoogleCalendarToken, PendingCalendarEvent, Practice, Session
@@ -75,6 +75,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("No active calendar tokens found."))
             return
 
+        failed = []
         for token in token_qs:
             practice = token.practice
             if not practice:
@@ -86,7 +87,19 @@ class Command(BaseCommand):
                 )
                 continue
             self.stdout.write(f"\n📅 Practice: {practice.name}")
-            self._fetch_for_practice(practice, token.calendar_id, dry_run, forced_days, future_days)
+            # One practice's failure (bad data, a database error) must not
+            # skip the practices after it; the run still fails at the end.
+            try:
+                self._fetch_for_practice(
+                    practice, token.calendar_id, dry_run, forced_days, future_days
+                )
+            except Exception as e:
+                logger.exception("Calendar fetch failed for practice %s", practice.pk)
+                self.stdout.write(self.style.ERROR(f"  ✗ Failed: {e}"))
+                failed.append(practice.name)
+
+        if failed:
+            raise CommandError(f"Calendar fetch failed for: {', '.join(failed)}")
 
     def _fetch_for_practice(self, practice, calendar_id, dry_run, forced_days, future_days=1):
         service = GoogleCalendarOAuth.get_service(practice=practice)
