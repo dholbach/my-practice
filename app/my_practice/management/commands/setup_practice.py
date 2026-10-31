@@ -29,6 +29,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options) -> None:
         no_input = options["no_input"]
+        if no_input and Practice.objects.exists():
+            # The defaults are placeholders (a sample name, its slug, no bank
+            # details); on an installation already in use they would add a
+            # stray practice to every superuser's switcher.
+            raise CommandError(
+                "--no-input only sets up an empty installation; this one already "
+                "has a practice. Run without --no-input, or use the Django admin."
+            )
 
         self.stdout.write("\n" + self.style.SUCCESS("my-practice setup") + "\n")
         self.stdout.write(

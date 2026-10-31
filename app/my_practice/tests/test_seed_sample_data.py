@@ -12,6 +12,7 @@ from io import StringIO
 from django.core.management import call_command
 from django.test import TestCase
 
+from ..management.commands.seed_sample_data import DEMO_SLUG
 from ..models import CapacityPeriod, Client, Invoice, Practice, PracticeTodo, Session, TimeOff
 from ..models.gebueh import Leistungserfassung
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks
@@ -109,3 +110,12 @@ class SeedClearLeavesRealDataTests(TestCase):
 
         self.assertTrue(PracticeTodo.objects.filter(pk=todo.pk).exists())
         self.assertTrue(TimeOff.objects.filter(pk=holiday.pk).exists())
+
+
+class SeedBesideRealPracticeTests(TestCase):
+    def test_refuses_without_yes_when_a_real_practice_exists(self):
+        Practice.objects.create(name="Max Mustermann", slug="max-mustermann", title="Real")
+        out = StringIO()
+        call_command("seed_sample_data", stdout=out)
+        self.assertIn("Use --yes to seed anyway", out.getvalue())
+        self.assertFalse(Practice.objects.filter(slug=DEMO_SLUG).exists())

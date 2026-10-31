@@ -26,6 +26,17 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Both values go through sed's replacement and into unit files unquoted, where
+# whitespace splits ExecStart's arguments and `%` starts a systemd specifier.
+# Escaping for all three is more fragile than refusing anything unusual.
+for value in "$INSTALL_DIR" "$INSTALL_USER"; do
+    if [[ ! "$value" =~ ^[A-Za-z0-9._/+-]+$ ]]; then
+        echo "❌ Unsupported character in '${value}'."
+        echo "   The install path and user name may only contain letters, digits and . _ / + -"
+        exit 1
+    fi
+done
+
 # SCRIPTS.md used to install these as user units. Left in place next to the
 # system units, every backup and scheduled job would run twice. Only names this
 # repo has ever shipped are checked: a `my-practice-*` glob also matched private
