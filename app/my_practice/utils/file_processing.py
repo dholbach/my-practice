@@ -12,10 +12,13 @@ import contextlib
 import io
 import logging
 import os
+import shutil
 import subprocess
 import tempfile
 import warnings
+from collections.abc import Callable
 from pathlib import Path
+from typing import IO
 
 import pypdf
 from django.core.files.base import ContentFile
@@ -117,12 +120,12 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
     Page rotation needs no help from us — see the page-rotation note at the
     top of this module before adding any.
     """
-    with (
-        tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f_in,
-        tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f_out,
-    ):
-        f_in.write(data)
-        tmp_in, tmp_out = f_in.name, f_out.name
+    # A private (0700) directory rather than files side by side in the shared
+    # temp dir: the input is an uploaded document, and gs opens the output by name.
+    workdir = tempfile.TemporaryDirectory(prefix="pdf-")
+    tmp_in = os.path.join(workdir.name, "in.pdf")
+    tmp_out = os.path.join(workdir.name, "out.pdf")
+    Path(tmp_in).write_bytes(data)
 
     try:
         result = subprocess.run(
@@ -164,9 +167,7 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
         logger.exception("PDF compression failed for upload")
         return data
     finally:
-        for p in (tmp_in, tmp_out):
-            with contextlib.suppress(OSError):
-                os.unlink(p)
+        workdir.cleanup()
 
 
 def _process_image_upload(upload, name: str) -> ContentFile:
@@ -250,6 +251,27 @@ def process_upload(upload) -> ContentFile:
 # ---------------------------------------------------------------------------
 
 
+def replace_file_atomically(path: str | Path, write: Callable[[IO[bytes]], None]) -> None:
+    """Write a file's new content beside it, then rename it over the original.
+
+    A crash, a full disk or an encoder error part-way through leaves the
+    original intact instead of a truncated file, and the replacement keeps the
+    original's permission bits (a temp file starts out 0600, which a web
+    server running as another user could no longer read).
+    """
+    path = Path(path)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            write(handle)
+        shutil.copymode(path, tmp)
+        os.replace(tmp, path)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+        raise
+
+
 def compress_image_inplace(path: str, force: bool = False) -> int:
     """
     Compress an image file in-place.
@@ -288,9 +310,11 @@ def compress_image_inplace(path: str, force: bool = False) -> int:
     if ext in (".jpg", ".jpeg"):
         if img.mode != "RGB":
             img = img.convert("RGB")
-        img.save(path, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+        replace_file_atomically(
+            path, lambda f: img.save(f, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+        )
     elif ext == ".png":
-        img.save(path, format="PNG", optimize=True)
+        replace_file_atomically(path, lambda f: img.save(f, format="PNG", optimize=True))
     else:
         # Unknown format — skip rather than risk corruption
         return 0
@@ -350,6 +374,8 @@ def compress_pdf_inplace(path: str) -> int:
         compressed_size = os.path.getsize(tmp_path)
         saved = original_size - compressed_size
         if saved > 0:
+            # The temp file was created 0600; keep the original's mode.
+            shutil.copymode(path, tmp_path)
             os.replace(tmp_path, path)
             tmp_path = None  # replaced — don't delete
         return max(saved, 0)

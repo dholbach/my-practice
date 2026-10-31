@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 from unittest import skipIf
+from unittest.mock import patch
 
 import pypdf
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -26,6 +27,7 @@ from ..utils.file_processing import (
     compress_image_upload,
     compress_pdf_inplace,
     process_upload,
+    replace_file_atomically,
 )
 from .test_helpers import make_pdf_bytes, make_visual_pdf_bytes
 
@@ -414,3 +416,62 @@ class CompressPdfInplaceTest(TestCase):
             self.assertEqual(saved, 0)
         finally:
             os.unlink(path)
+
+
+class ReplaceFileAtomicallyTest(TestCase):
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.dir)
+        self.path = Path(self.dir) / "scan.jpg"
+        self.path.write_bytes(b"original")
+        self.path.chmod(0o644)
+
+    def test_replaces_content_and_keeps_mode(self):
+        replace_file_atomically(self.path, lambda f: f.write(b"new"))
+        self.assertEqual(self.path.read_bytes(), b"new")
+        self.assertEqual(self.path.stat().st_mode & 0o777, 0o644)
+        self.assertEqual(os.listdir(self.dir), ["scan.jpg"])
+
+    def test_failed_write_leaves_original_and_no_temp_file(self):
+        def write(handle):
+            handle.write(b"half")
+            raise OSError("disk full")
+
+        with self.assertRaises(OSError):
+            replace_file_atomically(self.path, write)
+        self.assertEqual(self.path.read_bytes(), b"original")
+        self.assertEqual(os.listdir(self.dir), ["scan.jpg"])
+
+    def test_image_inplace_keeps_mode(self):
+        Image.new("RGB", (4000, 100), (10, 20, 30)).save(self.path, format="JPEG", quality=95)
+        self.path.chmod(0o644)
+        self.assertGreater(compress_image_inplace(str(self.path)), 0)
+        self.assertEqual(self.path.stat().st_mode & 0o777, 0o644)
+
+    def test_pdf_inplace_keeps_mode(self):
+        pdf = Path(self.dir) / "scan.pdf"
+        pdf.write_bytes(make_pdf_bytes() + b"0" * (PDF_SKIP_BYTES + 1000))
+        pdf.chmod(0o644)
+
+        def fake_gs(args, **kwargs):
+            out = next(a for a in args if a.startswith("-sOutputFile="))
+            Path(out.removeprefix("-sOutputFile=")).write_bytes(make_pdf_bytes())
+            return subprocess.CompletedProcess(args, 0, "", "")
+
+        with patch("my_practice.utils.file_processing.subprocess.run", side_effect=fake_gs):
+            self.assertGreater(compress_pdf_inplace(str(pdf)), 0)
+        self.assertEqual(pdf.stat().st_mode & 0o777, 0o644)
+
+    def test_upload_compression_uses_a_private_directory(self):
+        seen = {}
+
+        def fake_gs(args, **kwargs):
+            out = Path(next(a for a in args if a.startswith("-sOutputFile=")).split("=", 1)[1])
+            seen["dir_mode"] = out.parent.stat().st_mode & 0o777
+            seen["dir"] = out.parent
+            return subprocess.CompletedProcess(args, 1, "", "failed")
+
+        with patch("my_practice.utils.file_processing.subprocess.run", side_effect=fake_gs):
+            _compress_pdf_bytes(make_pdf_bytes())
+        self.assertEqual(seen["dir_mode"], 0o700)
+        self.assertFalse(seen["dir"].exists())

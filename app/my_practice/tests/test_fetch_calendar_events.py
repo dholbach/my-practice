@@ -9,6 +9,7 @@ from io import StringIO
 from unittest.mock import MagicMock, patch
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -767,6 +768,30 @@ class HandleAndFetchForPracticeTest(TestCase):
         out = StringIO()
         call_command("fetch_calendar_events", stdout=out)
         self.assertIn("no associated practice", out.getvalue())
+
+    def test_failing_practice_does_not_skip_the_next(self):
+        other_practice = Practice.objects.create(
+            name="Other", slug="handle-test-other", title="Other", email="other@practice.com"
+        )
+        for practice in (self.practice, other_practice):
+            GoogleCalendarToken.objects.create(
+                practice=practice,
+                token="tok",
+                refresh_token="refresh",
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id="test-client",
+                client_secret="test-secret",
+                scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+                is_active=True,
+            )
+        with (
+            patch.object(
+                Command, "_fetch_for_practice", side_effect=[RuntimeError("boom"), None]
+            ) as fetch,
+            self.assertRaisesMessage(CommandError, "Calendar fetch failed for"),
+        ):
+            call_command("fetch_calendar_events", stdout=StringIO())
+        self.assertEqual(fetch.call_count, 2)
 
     def test_practice_id_filters_tokens(self):
         other_practice = Practice.objects.create(

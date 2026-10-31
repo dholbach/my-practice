@@ -27,6 +27,7 @@ from ...utils.file_processing import (
     PDF_SKIP_BYTES,
     compress_image_inplace,
     compress_pdf_inplace,
+    replace_file_atomically,
 )
 
 _PROCESSABLE = _IMAGE_EXTENSIONS | _PDF_EXTENSIONS
@@ -42,7 +43,7 @@ def _is_encrypted(path: Path) -> bool:
 def _rotate_pdf_pages(path: Path, degrees: int) -> bool:
     """
     Set /Rotate on every page of the PDF to the given degrees.
-    Writes the file in-place. Returns True if the file was modified.
+    Replaces the file atomically. Returns True if the file was modified.
     """
     data = path.read_bytes()
     reader = pypdf.PdfReader(io.BytesIO(data))
@@ -54,7 +55,7 @@ def _rotate_pdf_pages(path: Path, degrees: int) -> bool:
     writer.write(buf)
     result = buf.getvalue()
     if result != data:
-        path.write_bytes(result)
+        replace_file_atomically(path, lambda f: f.write(result))
         return True
     return False
 
