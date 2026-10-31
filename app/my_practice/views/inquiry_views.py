@@ -7,6 +7,7 @@ from typing import cast
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import (
     Case,
     Count,
@@ -361,9 +362,7 @@ class InquiryUpdateView(PracticeScopedUpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["show_convert_button"] = (
-            self.object.status != InquiryStatus.CONVERTED and self.object.converted_client is None
-        )
+        context["show_convert_button"] = self.object.can_convert()
         context["current_status"] = self.object.status
         context["booking_url_missing"] = not bool(self.request.current_practice.booking_url)
         context["all_email_templates"] = [
@@ -440,8 +439,18 @@ class InquiryConvertView(LoginRequiredMixin, View):
             ),
         )
 
+    def _refuse(self, request: HttpRequest, inquiry: ClientInquiry) -> HttpResponse:
+        """Redirect away from an inquiry that can no longer be converted."""
+        if inquiry.converted_client_id:
+            messages.info(request, _("This inquiry has already been added as a client."))
+            return redirect(reverse("client_detail", kwargs={"pk": inquiry.converted_client_id}))
+        messages.error(request, _("This inquiry can no longer be added as a client."))
+        return redirect(reverse("inquiry_list"))
+
     def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         inquiry = self._get_inquiry(request, pk)
+        if not inquiry.can_convert():
+            return self._refuse(request, inquiry)
         form = InquiryConvertForm()
         return render(
             request,
@@ -450,16 +459,40 @@ class InquiryConvertView(LoginRequiredMixin, View):
         )
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
-        inquiry = self._get_inquiry(request, pk)
         form = InquiryConvertForm(request.POST)
-
-        if not form.is_valid():
-            return render(
-                request,
-                "my_practice/inquiry_convert_confirm.html",
-                {"inquiry": inquiry, "form": form},
+        with transaction.atomic():
+            # The row lock serialises a double submit, so the second one sees the first's
+            # client and is refused instead of creating a duplicate.
+            inquiry = cast(
+                ClientInquiry,
+                get_object_or_404(
+                    ClientInquiry.objects.for_current_practice(request).select_for_update(),
+                    pk=pk,
+                ),
             )
+            if not inquiry.can_convert():
+                return self._refuse(request, inquiry)
 
+            if not form.is_valid():
+                return render(
+                    request,
+                    "my_practice/inquiry_convert_confirm.html",
+                    {"inquiry": inquiry, "form": form},
+                )
+
+            client = self._create_client(request, inquiry, form)
+
+        messages.success(
+            request,
+            _("Client %(name)s (%(code)s) created successfully.")
+            % {"name": client.full_name, "code": client.client_code},
+        )
+        return redirect(reverse("client_detail", kwargs={"pk": client.pk}))
+
+    def _create_client(
+        self, request: HttpRequest, inquiry: ClientInquiry, form: InquiryConvertForm
+    ) -> Client:
+        """Create the Client from the inquiry and mark the inquiry converted."""
         client = Client.objects.create(
             practice=request.current_practice,
             full_name=inquiry.full_name,
@@ -477,10 +510,4 @@ class InquiryConvertView(LoginRequiredMixin, View):
         if not inquiry.converted_date:
             inquiry.converted_date = timezone.localdate()
         inquiry.save(update_fields=["converted_client", "status", "converted_date", "updated_at"])
-
-        messages.success(
-            request,
-            _("Client %(name)s (%(code)s) created successfully.")
-            % {"name": client.full_name, "code": client.client_code},
-        )
-        return redirect(reverse("client_detail", kwargs={"pk": client.pk}))
+        return client

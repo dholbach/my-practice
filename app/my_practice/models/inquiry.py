@@ -209,6 +209,17 @@ class ClientInquiry(TimestampedModel):
         """Return True if inquiry is in a terminal state."""
         return self.status in CLOSED_INQUIRY_STATUSES
 
+    def can_convert(self) -> bool:
+        """Return True if the inquiry can still become a Client.
+
+        A converted one already has its client; an anonymised one has no name left to copy.
+        """
+        return (
+            self.status != InquiryStatus.CONVERTED
+            and self.converted_client_id is None
+            and self.anonymised_at is None
+        )
+
     def last_step(self) -> tuple[date, str]:
         """Newest milestone reached, as (date, field name).
 
