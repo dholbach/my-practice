@@ -9,6 +9,10 @@ line items are frozen, and it can only be deleted after the § 147 AO
 retention period (see LOCKED_INVOICE_FIELDS in models/invoice.py). Signals
 rather than model methods, so queryset deletes and the admin are covered too.
 
+Also anonymises the inquiry a client was converted from when the client is
+deleted, by whatever path: the link is SET_NULL, and an unlinked converted
+inquiry would otherwise keep the person's details until the retention pass.
+
 Also cleans up Practice.logo/signature files on the filesystem — ImageField
 doesn't do this on its own, so without these signals every re-upload in
 Practice settings leaves the previous file behind forever.
@@ -18,7 +22,7 @@ from django.db.models.signals import post_delete, post_save, pre_delete, pre_sav
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
-from .models import Invoice, InvoiceItem, InvoiceLockedError, Practice
+from .models import Client, ClientInquiry, Invoice, InvoiceItem, InvoiceLockedError, Practice
 from .models.invoice import LOCKED_INVOICE_FIELDS, issued_invoice_writes_allowed
 
 
@@ -229,3 +233,16 @@ def delete_practice_images_on_delete(
         file_field = getattr(instance, field_name)
         if file_field:
             file_field.delete(save=False)
+
+
+@receiver(pre_delete, sender=Client)
+def anonymise_source_inquiry_on_client_delete(
+    sender,
+    instance,
+    **kwargs,  # noqa: ARG001, vulture
+):  # pylint: disable=unused-argument
+    """Anonymise the inquiry the client came from before its link is cleared."""
+    for inquiry in ClientInquiry.objects.filter(
+        converted_client=instance, anonymised_at__isnull=True
+    ):
+        inquiry.anonymise()

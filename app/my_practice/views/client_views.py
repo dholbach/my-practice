@@ -25,7 +25,6 @@ from ..models import (
     INVOICE_RETENTION_YEARS,
     Client,
     ClientDocument,
-    ClientInquiry,
     ClientTag,
     Invoice,
     InvoiceItem,
@@ -504,13 +503,11 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     # Delete in FK dependency order: invoices and GebueH service records first,
     # because InvoiceItem.session and Leistungserfassung.session are PROTECT —
     # deleting the sessions while either still points at them raises
-    # ProtectedError. The inquiry the client was converted from and imported
-    # calendar events only SET_NULL their link, so they would otherwise keep the
-    # client's details after the erasure the email announces.
+    # ProtectedError. Imported calendar events only SET_NULL their link, so they
+    # would otherwise keep the client's details after the erasure the email
+    # announces. The inquiry the client was converted from is anonymised by the
+    # Client pre_delete signal.
     with transaction.atomic():
-        source_inquiry = ClientInquiry.objects.filter(converted_client=client).first()
-        if source_inquiry:
-            source_inquiry.anonymise()
         PendingCalendarEvent.objects.filter(
             Q(matched_client=client) | Q(session__client=client)
         ).delete()

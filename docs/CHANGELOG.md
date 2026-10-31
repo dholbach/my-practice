@@ -6,6 +6,10 @@ Major features and milestones in chronological order.
 
 - **Fix — key rotation could undo an edit made while it ran** (#559): `encryption rotate` read every encrypted column, then wrote the re-encrypted values back by id, so a note saved in between was replaced with its older content. Each update now only applies while the column still holds the ciphertext that was read; a value saved meanwhile is left as saved (it is already under the new key) and counted in the output. A client document deleted during the run is skipped instead of stopping the file pass with an error.
 - **Fix — admin bulk actions left a stale payment date**: *Mark as sent* and *Mark as cancelled* in the invoice admin changed only the status, so a paid invoice moved back to sent or cancelled kept its `paid_date`. They now clear it, as the status buttons on the invoice pages already did. (#557)
+- **Fix — personal data could come back into an anonymised inquiry, or outlive a deleted client in one** (#558):
+  - Once an inquiry is anonymised, its name, contact details and notes are read-only on the inquiry page and in the admin. Before, a name could be typed back into a record that still read as anonymised.
+  - Deleting a client by any path, not just the GDPR erasure, now anonymises the inquiry they were converted from. Before, the link was cleared and the inquiry kept the details.
+  - The retention pass no longer skips *Onboarded* inquiries with no client linked, whether they were marked onboarded by hand or left behind by a client deleted earlier. **Upgrading:** the next hourly run anonymises those older than 180 days; `./prod.py manage tidy_inquiries` shows which ones first.
 
 ## 2026-10-30 — v0.10.0 minor release
 

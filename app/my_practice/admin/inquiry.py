@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy
 
-from ..models import ClientInquiry, MarketingPeriod
+from ..models import INQUIRY_PERSONAL_FIELDS, ClientInquiry, MarketingPeriod
 
 
 @admin.register(ClientInquiry)
@@ -14,6 +14,13 @@ class ClientInquiryAdmin(admin.ModelAdmin):
     ordering = ["-inquiry_date"]
     raw_id_fields = ["converted_client"]
     date_hierarchy = "inquiry_date"
+
+    def get_readonly_fields(self, request, obj=None):
+        """Keep an anonymised inquiry's personal fields empty."""
+        readonly = list(super().get_readonly_fields(request, obj))
+        if obj is not None and obj.anonymised_at:
+            readonly += [*INQUIRY_PERSONAL_FIELDS, "anonymised_at"]
+        return readonly
 
 
 @admin.register(MarketingPeriod)
