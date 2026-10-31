@@ -7,11 +7,14 @@ Two passes, both across every practice:
    INQUIRY_LAPSE_DAYS old gets status LAPSED. Its decision date stays empty:
    nothing was decided, and a made-up date would skew the time-in-stage
    averages on the inquiry page.
-2. Anonymise — a closed inquiry that never became a client, whose last contact
-   is more than INQUIRY_RETENTION_DAYS ago, has its name, contact details and
+2. Anonymise — a closed inquiry not linked to a client, whose last contact is
+   more than INQUIRY_RETENTION_DAYS ago, has its name, contact details and
    notes wiped. Date, source, status, language and milestones stay, so the
-   inquiry statistics keep working. Onboarded inquiries are left alone: the
-   person's data now lives in the Client record under its own retention rules.
+   inquiry statistics keep working. Inquiries linked to a client are left
+   alone: the person's data lives in the Client record under its own retention
+   rules. A "converted" inquiry without one — marked converted by hand, or
+   left behind by a client deleted before the client-delete signal existed —
+   follows the normal retention period.
 
 Dry run by default; --apply makes the changes. Anonymising cannot be undone.
 Output names inquiries by id only — never by name.
@@ -65,7 +68,7 @@ class Command(BaseCommand):
         to_anonymise = []
         candidates = ClientInquiry.objects.filter(
             anonymised_at__isnull=True, converted_client__isnull=True
-        ).exclude(status=InquiryStatus.CONVERTED)
+        )
         for inquiry in candidates:
             if inquiry.status not in CLOSED_INQUIRY_STATUSES and inquiry.pk not in lapsing_ids:
                 continue

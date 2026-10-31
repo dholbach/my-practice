@@ -8,7 +8,13 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .forms import DateFormField, StyledFormMixin
-from .models import Client, ClientInquiry, InquiryStatus, MarketingPeriod
+from .models import (
+    INQUIRY_PERSONAL_FIELDS,
+    Client,
+    ClientInquiry,
+    InquiryStatus,
+    MarketingPeriod,
+)
 
 
 class InquiryForm(StyledFormMixin, forms.ModelForm):
@@ -43,6 +49,14 @@ class InquiryForm(StyledFormMixin, forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 4}),
             "initial_contact_notes": forms.Textarea(attrs={"rows": 5}),
         }
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        # Disabled fields keep their stored (empty) value whatever is posted.
+        if self.instance.anonymised_at:
+            for name in INQUIRY_PERSONAL_FIELDS:
+                self.fields[name].disabled = True
+                self.fields[name].required = False
 
     def save(self, commit: bool = True) -> Any:
         """Auto-fill milestone dates when status reaches the corresponding stage."""

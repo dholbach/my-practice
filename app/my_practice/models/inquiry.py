@@ -64,6 +64,10 @@ INQUIRY_STATUS_CHOICES = [
     (InquiryStatus.LAPSED, _("Lapsed")),
 ]
 
+# What anonymise() wipes. Once it has, the edit form and the admin show these
+# read-only, so a name can't be typed back into a record that reads as erased.
+INQUIRY_PERSONAL_FIELDS = ("full_name", "email", "phone", "notes", "initial_contact_notes")
+
 CLOSED_INQUIRY_STATUSES = frozenset(
     {
         InquiryStatus.CONVERTED,
@@ -218,23 +222,10 @@ class ClientInquiry(TimestampedModel):
 
     def anonymise(self) -> None:
         """Wipe everything that identifies the person; keep the statistical fields."""
-        self.full_name = ""
-        self.email = ""
-        self.phone = ""
-        self.notes = ""
-        self.initial_contact_notes = ""
+        for field in INQUIRY_PERSONAL_FIELDS:
+            setattr(self, field, "")
         self.anonymised_at = timezone.now()
-        self.save(
-            update_fields=[
-                "full_name",
-                "email",
-                "phone",
-                "notes",
-                "initial_contact_notes",
-                "anonymised_at",
-                "updated_at",
-            ]
-        )
+        self.save(update_fields=[*INQUIRY_PERSONAL_FIELDS, "anonymised_at", "updated_at"])
 
 
 class MarketingPeriod(TimestampedModel):
