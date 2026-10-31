@@ -2,6 +2,7 @@
 
 import importlib
 from io import StringIO
+from unittest.mock import patch
 
 from cryptography.fernet import Fernet
 from django.conf import settings
@@ -11,7 +12,7 @@ from django.core.management.base import CommandError
 from django.db import connection
 from django.test import TestCase, override_settings
 
-from ..fields import EncryptionKeyError, encrypted_fields
+from ..fields import EncryptionKeyError, encrypted_fields, get_fernet
 from ..models import Client, ClientInquiry, GoogleCalendarToken, Practice
 
 # The fields that must never be stored in clear. A field leaving this set is a
@@ -145,6 +146,27 @@ class KeyRotationTests(EncryptionTestBase):
         ):
             call_command("encryption", "rotate", stdout=StringIO())
         self.assertEqual(_raw(Client, self.client_obj.pk, "notes"), before)
+
+    def test_rotate_keeps_a_value_saved_while_it_runs(self):
+        real = get_fernet()
+        client_pk = self.client_obj.pk
+
+        class EditDuringRotate:
+            """Saves the client between rotate's SELECT and its UPDATE."""
+
+            def rotate(self, token):
+                Client.objects.filter(pk=client_pk).update(notes="Edited during rotation")
+                return real.rotate(token)
+
+        out = StringIO()
+        with patch(
+            "my_practice.management.commands.encryption.get_fernet",
+            return_value=EditDuringRotate(),
+        ):
+            call_command("encryption", "rotate", stdout=out)
+        self.client_obj.refresh_from_db()
+        self.assertEqual(self.client_obj.notes, "Edited during rotation")
+        self.assertIn("1 changed meanwhile", out.getvalue())
 
 
 class MigrationTests(EncryptionTestBase):
