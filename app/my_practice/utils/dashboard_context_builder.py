@@ -6,6 +6,7 @@ from datetime import date
 
 from django.db.models import Sum
 from django.template.loader import render_to_string
+from django.utils.html import format_html
 from django.utils.safestring import SafeString, mark_safe
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
@@ -127,13 +128,17 @@ class DashboardContextAssembler:
         due_today_count = wf_ctx["due_today_count"]
         wf_session_count = wf_ctx["session_count"]
         wf_badge_parts = [
-            f'<span class="stat-badge">'
-            f"{ngettext('%(count)s session', '%(count)s sessions', wf_session_count) % {'count': wf_session_count}}"
-            f"</span>"
+            format_html(
+                '<span class="stat-badge">{}</span>',
+                ngettext("%(count)s session", "%(count)s sessions", wf_session_count)
+                % {"count": wf_session_count},
+            )
         ]
         if due_today_count:
             wf_badge_parts.append(
-                f'<span class="stat-badge">{due_today_count} {_("Due today")}</span>'
+                format_html(
+                    '<span class="stat-badge">{} {}</span>', due_today_count, _("Due today")
+                )
             )
 
         def _html(template: str, ctx: dict) -> SafeString:
@@ -144,12 +149,13 @@ class DashboardContextAssembler:
                 "includes/capacity_monitoring_widget_content.html", cap_ctx
             ),
             "capacity_badge": (
-                mark_safe(f'<span class="stat-badge warning">⚠️ {_("Capacity")}</span>')
+                format_html('<span class="stat-badge warning">⚠️ {}</span>', _("Capacity"))
                 if cap_ctx.get("show_warning")
                 else ""
             ),
             "capacity_show_widget": cap_ctx.get("show_widget", False),
             "weekly_focus_widget_html": _html("includes/weekly_focus_widget_content.html", wf_ctx),
+            # Each part went through format_html, so joining them stays safe.
             "weekly_focus_badge": mark_safe(" ".join(wf_badge_parts)),
         }
 

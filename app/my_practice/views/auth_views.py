@@ -31,6 +31,7 @@ from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_not_required
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
+from django.db import transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -69,15 +70,30 @@ def _throttle_key(request: HttpRequest) -> str:
     return f"login-failures:{digest}"
 
 
+def _lock_account(request: HttpRequest) -> None:
+    """Row-lock the account the sign-in attempt names, until the transaction ends.
+
+    The counters are a cache get followed by a set, which no cache backend here
+    makes atomic, so concurrent requests could each read the count below the
+    limit and each get a guess. Holding the account's row lock across the
+    check, the attempt and the update serialises one account's attempts. An
+    unknown username takes no lock; there is nothing behind it to guess.
+    """
+    username = unicodedata.normalize("NFKC", request.POST.get("username", "")).strip()
+    list(get_user_model().objects.select_for_update().filter(username__iexact=username))
+
+
 class ThrottledLoginView(LoginView):
     """LoginView that locks a username/address pair after repeated failures."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        if cache.get(_throttle_key(request), 0) >= LOGIN_FAILURE_LIMIT:
-            logger.warning("Sign-in refused: too many failed attempts (locked out)")
-            context = self.get_context_data(form=self.get_form(), login_locked=True)
-            return self.render_to_response(context, status=429)
-        return super().post(request, *args, **kwargs)
+        with transaction.atomic():
+            _lock_account(request)
+            if cache.get(_throttle_key(request), 0) >= LOGIN_FAILURE_LIMIT:
+                logger.warning("Sign-in refused: too many failed attempts (locked out)")
+                context = self.get_context_data(form=self.get_form(), login_locked=True)
+                return self.render_to_response(context, status=429)
+            return super().post(request, *args, **kwargs)
 
     def form_invalid(self, form):
         key = _throttle_key(self.request)
@@ -129,27 +145,31 @@ class TwoFactorVerifyView(View):
         if pending is None:
             return redirect("login")
         user = get_user_model().objects.get(pk=pending["user_id"])
-        device = TwoFactorDevice.objects.get(user=user)
         key = _code_throttle_key(user.pk)
+        # The device row lock serialises this user's code attempts, for the same
+        # reason as _lock_account on the password step.
+        with transaction.atomic():
+            device = TwoFactorDevice.objects.select_for_update().get(user=user)
+            if cache.get(key, 0) >= LOGIN_FAILURE_LIMIT:
+                # Back to the password step: a locked-out attempt should not keep
+                # a half-signed-in session around.
+                request.session.pop(PENDING_SESSION_KEY, None)
+                logger.warning("Second-factor step refused: too many failed codes (locked out)")
+                return render(request, self.template_name, {"locked": True}, status=429)
 
-        if cache.get(key, 0) >= LOGIN_FAILURE_LIMIT:
-            # Back to the password step: a locked-out attempt should not keep
-            # a half-signed-in session around.
-            request.session.pop(PENDING_SESSION_KEY, None)
-            logger.warning("Second-factor step refused: too many failed codes (locked out)")
-            return render(request, self.template_name, {"locked": True}, status=429)
+            if verify_second_factor(device, request.POST.get("code", "")):
+                cache.delete(key)
+                request.session.pop(PENDING_SESSION_KEY, None)
+                login(request, user, backend=pending["backend"])
+                return redirect(pending["next"])
 
-        if verify_second_factor(device, request.POST.get("code", "")):
-            cache.delete(key)
-            request.session.pop(PENDING_SESSION_KEY, None)
-            login(request, user, backend=pending["backend"])
-            return redirect(pending["next"])
-
-        failures = cache.get(key, 0) + 1
-        cache.set(key, failures, LOGIN_LOCKOUT_SECONDS)
-        if failures >= LOGIN_FAILURE_LIMIT:
-            logger.warning("Second-factor step locked for %s minutes", LOGIN_LOCKOUT_SECONDS // 60)
-        return render(request, self.template_name, {"invalid": True})
+            failures = cache.get(key, 0) + 1
+            cache.set(key, failures, LOGIN_LOCKOUT_SECONDS)
+            if failures >= LOGIN_FAILURE_LIMIT:
+                logger.warning(
+                    "Second-factor step locked for %s minutes", LOGIN_LOCKOUT_SECONDS // 60
+                )
+            return render(request, self.template_name, {"invalid": True})
 
 
 class TwoFactorSettingsView(View):

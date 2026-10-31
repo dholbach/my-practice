@@ -1,7 +1,7 @@
 """Admin configuration for Client."""
 
 from django.contrib import admin
-from django.utils.html import mark_safe
+from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
@@ -110,16 +110,16 @@ class ClientAdmin(admin.ModelAdmin):
     @admin.display(description=gettext_lazy("Status"))
     def active_status(self, obj):
         if obj.active:
-            return mark_safe(
-                f'<span style="color: green; font-weight: bold;">✓ {_("Active")}</span>'
+            return format_html(
+                '<span style="color: green; font-weight: bold;">✓ {}</span>', _("Active")
             )
-        return mark_safe(f'<span style="color: red;">✗ {_("Inactive")}</span>')
+        return format_html('<span style="color: red;">✗ {}</span>', _("Inactive"))
 
     @admin.display(description=gettext_lazy("Format"), ordering="is_online_client")
     def online_badge(self, obj):
         if obj.is_online_client:
-            return mark_safe(f'<span style="color: #667eea;">💻 {_("Online")}</span>')
-        return mark_safe(f'<span style="color: #48bb78;">🏢 {_("On-site")}</span>')
+            return format_html('<span style="color: #667eea;">💻 {}</span>', _("Online"))
+        return format_html('<span style="color: #48bb78;">🏢 {}</span>', _("On-site"))
 
     @admin.display(description=gettext_lazy("Tags"))
     def tag_list(self, obj):

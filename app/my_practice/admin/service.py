@@ -1,7 +1,7 @@
 """Admin configuration for ServiceType."""
 
 from django.contrib import admin
-from django.utils.html import mark_safe
+from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
@@ -26,6 +26,6 @@ class ServiceTypeAdmin(admin.ModelAdmin):
     def practice_scope(self, obj):
         if obj.practice:
             return obj.practice.name
-        return mark_safe(
-            f'<span style="color: #667eea; font-weight: bold;">🌍 {_("GLOBAL")}</span>'
+        return format_html(
+            '<span style="color: #667eea; font-weight: bold;">🌍 {}</span>', _("GLOBAL")
         )
