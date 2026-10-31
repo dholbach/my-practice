@@ -409,6 +409,33 @@ class CalendarQueueImportTest(CalendarViewsTestBase):
         event.refresh_from_db()
         self.assertEqual(event.status, PendingCalendarEvent.Status.IMPORTED)
 
+    def test_failed_events_stay_pending(self):
+        """Only events that produced an invoice item are marked imported."""
+        good = self._make_event()
+        unmatched = PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="evt-2",
+            summary="Termin ohne Zuordnung",
+            event_date=date(2026, 3, 6),
+            event_time="10:00:00",
+            duration_minutes=60,
+            matched_client=None,
+            status=PendingCalendarEvent.Status.PENDING,
+        )
+        response = self.http.post(
+            reverse("calendar_queue_import"),
+            data=json.dumps({"event_ids": [good.pk, unmatched.pk]}),
+            content_type="application/json",
+        )
+        body = response.json()
+        self.assertEqual(body["created"], 1)
+        self.assertEqual(body["imported_ids"], [good.pk])
+        self.assertEqual(len(body["errors"]), 1)
+        good.refresh_from_db()
+        unmatched.refresh_from_db()
+        self.assertEqual(good.status, PendingCalendarEvent.Status.IMPORTED)
+        self.assertEqual(unmatched.status, PendingCalendarEvent.Status.PENDING)
+
     def test_imports_onto_specific_invoice_when_given(self):
         event = self._make_event()
         invoice = Invoice.objects.create(

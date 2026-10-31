@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 17:52+0100\n"
+"POT-Creation-Date: 2026-10-31 18:01+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -3219,12 +3219,12 @@ msgid "Error creating %(summary)s: %(error)s"
 msgstr "Fehler beim Erstellen von %(summary)s: %(error)s"
 
 #: my_practice/utils/calendar_import_helpers.py:279
-#: my_practice/views/calendar_views.py:516
+#: my_practice/views/calendar_views.py:524
 msgid "No matching service type found."
 msgstr "Kein passender Leistungstyp gefunden."
 
 #: my_practice/utils/calendar_import_helpers.py:283
-#: my_practice/views/calendar_views.py:523
+#: my_practice/views/calendar_views.py:531
 #, python-format
 msgid "No hourly rate set for %(code)s."
 msgstr "Kein Stundensatz für %(code)s hinterlegt."
@@ -3782,12 +3782,12 @@ msgid "Error loading events: %(error)s"
 msgstr "Fehler beim Laden der Events: %(error)s"
 
 #: my_practice/views/calendar_views.py:242
-#: my_practice/views/calendar_views.py:412
+#: my_practice/views/calendar_views.py:420
 msgid "Invalid JSON"
 msgstr "Ungültiges JSON"
 
 #: my_practice/views/calendar_views.py:249
-#: my_practice/views/calendar_views.py:418
+#: my_practice/views/calendar_views.py:426
 msgid "Import failed due to an unexpected error. Details are in the server log."
 msgstr "Import wegen eines unerwarteten Fehlers fehlgeschlagen. Details stehen im Server-Log."
 
@@ -3795,35 +3795,35 @@ msgstr "Import wegen eines unerwarteten Fehlers fehlgeschlagen. Details stehen i
 msgid "No events selected."
 msgstr "Keine Termine ausgewählt."
 
-#: my_practice/views/calendar_views.py:470
-#: my_practice/views/calendar_views.py:613
+#: my_practice/views/calendar_views.py:478
+#: my_practice/views/calendar_views.py:621
 msgid "Event not found."
 msgstr "Termin nicht gefunden."
 
-#: my_practice/views/calendar_views.py:487
+#: my_practice/views/calendar_views.py:495
 #, python-format
 msgid "Event on %(date)s skipped."
 msgstr "Termin am %(date)s übersprungen."
 
-#: my_practice/views/calendar_views.py:628
+#: my_practice/views/calendar_views.py:636
 msgid "Unknown action."
 msgstr "Unbekannte Aktion."
 
-#: my_practice/views/calendar_views.py:632
+#: my_practice/views/calendar_views.py:640
 msgid "No client assigned to this event."
 msgstr "Kein Klient für diesen Termin zugeordnet."
 
-#: my_practice/views/calendar_views.py:643
+#: my_practice/views/calendar_views.py:651
 #, python-format
 msgid "Session on %(date)s is already billed."
 msgstr "Sitzung am %(date)s ist bereits abgerechnet."
 
-#: my_practice/views/calendar_views.py:653
+#: my_practice/views/calendar_views.py:661
 #, python-format
 msgid "Event on %(date)s added to invoice %(number)s."
 msgstr "Termin am %(date)s zu Rechnung %(number)s hinzugefügt."
 
-#: my_practice/views/calendar_views.py:657
+#: my_practice/views/calendar_views.py:665
 #, python-format
 msgid "Import error: %(error)s"
 msgstr "Fehler beim Import: %(error)s"
@@ -3861,123 +3861,132 @@ msgstr "Voraussetzungen für die DSGVO-Löschung nicht erfüllt."
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr "Klient:in %(code)s wurde gemäß DSGVO Art. 17 gelöscht."
 
-#: my_practice/views/clinical_views.py:58
+#: my_practice/views/clinical_views.py:85
 msgid "Client profile saved."
 msgstr "Klientenprofil gespeichert."
 
-#: my_practice/views/clinical_views.py:78
+#: my_practice/views/clinical_views.py:105
 msgid "Session date is required."
 msgstr "Sitzungsdatum ist erforderlich."
 
-#: my_practice/views/clinical_views.py:84
-#: my_practice/views/clinical_views.py:347
-#: my_practice/views/clinical_views.py:372
+#: my_practice/views/clinical_views.py:111
+#: my_practice/views/clinical_views.py:396
+#: my_practice/views/clinical_views.py:421
 msgid "Invalid date."
 msgstr "Ungültiges Datum."
 
-#: my_practice/views/clinical_views.py:106
+#: my_practice/views/clinical_views.py:117
+#: my_practice/views/clinical_views.py:224
+#: my_practice/views/clinical_views.py:484
+msgid "Invalid duration."
+msgstr "Ungültige Dauer."
+
+#: my_practice/views/clinical_views.py:120
+msgid "Invalid session type."
+msgstr "Ungültiger Sitzungstyp."
+
+#: my_practice/views/clinical_views.py:142
 msgid "A log already exists for this session."
 msgstr "Für diese Sitzung existiert bereits ein Protokoll."
 
-#: my_practice/views/clinical_views.py:127
+#: my_practice/views/clinical_views.py:162
 #, python-format
 msgid "Session log for %(date)s saved."
 msgstr "Sitzungsprotokoll für %(date)s gespeichert."
 
-#: my_practice/views/clinical_views.py:191
+#: my_practice/views/clinical_views.py:232
+msgid "The duration was not changed: this session has already been billed. Remove the invoice item first."
+msgstr "Die Dauer wurde nicht geändert: Die Sitzung ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
+
+#: my_practice/views/clinical_views.py:240
 msgid "Session log updated."
 msgstr "Sitzungsprotokoll aktualisiert."
 
-#: my_practice/views/clinical_views.py:213
-#: my_practice/views/clinical_views.py:365
+#: my_practice/views/clinical_views.py:262
+#: my_practice/views/clinical_views.py:414
 msgid "Content must not be empty."
 msgstr "Inhalt darf nicht leer sein."
 
-#: my_practice/views/clinical_views.py:217
+#: my_practice/views/clinical_views.py:266
 msgid "Supervision topic added."
 msgstr "Supervisionsthema hinzugefügt."
 
-#: my_practice/views/clinical_views.py:232
+#: my_practice/views/clinical_views.py:281
 msgid "Supervision topic deleted."
 msgstr "Supervisionsthema gelöscht."
 
-#: my_practice/views/clinical_views.py:287
+#: my_practice/views/clinical_views.py:336
 msgid "Supervision topic marked discussed."
 msgstr "Supervisionsthema als besprochen markiert."
 
-#: my_practice/views/clinical_views.py:341
+#: my_practice/views/clinical_views.py:390
 msgid "Date and content are required."
 msgstr "Datum und Inhalt sind erforderlich."
 
-#: my_practice/views/clinical_views.py:351
+#: my_practice/views/clinical_views.py:400
 msgid "Note saved."
 msgstr "Notiz gespeichert."
 
-#: my_practice/views/clinical_views.py:377
+#: my_practice/views/clinical_views.py:426
 msgid "Note updated."
 msgstr "Notiz aktualisiert."
 
-#: my_practice/views/clinical_views.py:392
+#: my_practice/views/clinical_views.py:441
 msgid "Note deleted."
 msgstr "Notiz gelöscht."
 
-#: my_practice/views/clinical_views.py:407
+#: my_practice/views/clinical_views.py:456
 msgid "Session log deleted."
 msgstr "Sitzungsprotokoll gelöscht."
 
-#: my_practice/views/clinical_views.py:427
+#: my_practice/views/clinical_views.py:476
 #, python-format
 msgid "Session of %(date)s cannot be edited: it has already been billed. Remove the invoice item first."
 msgstr "Sitzung vom %(date)s kann nicht bearbeitet werden: sie ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
 
-#: my_practice/views/clinical_views.py:440
+#: my_practice/views/clinical_views.py:490
 #, python-format
 msgid "Session duration updated to %(min)s min."
 msgstr "Sitzungsdauer auf %(min)s Min. aktualisiert."
 
-#: my_practice/views/clinical_views.py:443
-#: my_practice/views/clinical_views.py:445
-msgid "Invalid duration."
-msgstr "Ungültige Dauer."
-
-#: my_practice/views/clinical_views.py:463
+#: my_practice/views/clinical_views.py:509
 #, python-format
 msgid "Session of %(date)s cannot be deleted: it has already been billed. Remove the invoice item first."
 msgstr "Sitzung vom %(date)s kann nicht gelöscht werden: sie ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
 
-#: my_practice/views/clinical_views.py:471
+#: my_practice/views/clinical_views.py:517
 #, python-format
 msgid "Session of %(date)s deleted."
 msgstr "Sitzung vom %(date)s gelöscht."
 
-#: my_practice/views/clinical_views.py:482
+#: my_practice/views/clinical_views.py:528
 msgid "Marked as no-show / cancellation."
 msgstr "Als Ausfall / Absage markiert."
 
-#: my_practice/views/clinical_views.py:594
+#: my_practice/views/clinical_views.py:640
 msgid "GebüH billing is not enabled for this client."
 msgstr "GebüH-Abrechnung ist für diesen Klienten nicht aktiviert."
 
-#: my_practice/views/clinical_views.py:607
+#: my_practice/views/clinical_views.py:653
 msgid "Invalid input."
 msgstr "Ungültige Eingabe."
 
-#: my_practice/views/clinical_views.py:617
+#: my_practice/views/clinical_views.py:663
 #, python-format
 msgid "GebüH entries for %(date)s cleared."
 msgstr "GebüH-Einträge für %(date)s gelöscht."
 
-#: my_practice/views/clinical_views.py:631
+#: my_practice/views/clinical_views.py:677
 #, python-format
 msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
 msgstr "Achtung: Ziffer %(nr)s ist nur als Alleinleistung erstattungsfähig und sollte nicht mit anderen Ziffern kombiniert werden."
 
-#: my_practice/views/clinical_views.py:656
+#: my_practice/views/clinical_views.py:702
 #, python-format
 msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
 msgstr "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von %(days)s Tagen abgerechnet (Maximum: %(max)s×)."
 
-#: my_practice/views/clinical_views.py:687
+#: my_practice/views/clinical_views.py:733
 #, python-format
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
@@ -6089,8 +6098,9 @@ msgid "Create new invoice"
 msgstr "Neue Rechnung erstellen"
 
 #: templates/my_practice/calendar_approval_queue.html:77
-#: templates/my_practice/calendar_approval_queue.html:269
 #: templates/my_practice/calendar_approval_queue.html:274
+#: templates/my_practice/calendar_approval_queue.html:279
+#: templates/my_practice/calendar_approval_queue.html:284
 msgid "Import"
 msgstr "Importieren"
 
@@ -6157,16 +6167,16 @@ msgstr "Importiere…"
 msgid "skipped"
 msgstr "übersprungen"
 
-#: templates/my_practice/calendar_approval_queue.html:267
+#: templates/my_practice/calendar_approval_queue.html:277
 #: templates/my_practice/calendar_import.html:375
 msgid "Error"
 msgstr "Fehler"
 
-#: templates/my_practice/calendar_approval_queue.html:267
+#: templates/my_practice/calendar_approval_queue.html:277
 msgid "Unknown error"
 msgstr "Unbekannter Fehler"
 
-#: templates/my_practice/calendar_approval_queue.html:272
+#: templates/my_practice/calendar_approval_queue.html:282
 msgid "Network error while importing."
 msgstr "Netzwerkfehler beim Importieren."
 
@@ -9539,9 +9549,6 @@ msgstr "Zwei-Faktor-Anmeldung einschalten"
 #, python-format
 #~ msgid "last %(date)s"
 #~ msgstr "zuletzt am %(date)s"
-
-#~ msgid "no session yet"
-#~ msgstr "noch keine Sitzung"
 
 #~ msgctxt "action category"
 #~ msgid "Invoice"

@@ -242,8 +242,8 @@ document.querySelectorAll('.import-group-btn').forEach(btn => {
             });
             const data = await res.json();
             if (data.success) {
-                // Remove imported rows
-                eventIds.forEach(id => {
+                // Remove only the rows that were imported; failed ones stay for a retry or skip
+                data.imported_ids.forEach(id => {
                     const row = document.querySelector(`tr[data-event-id="${id}"]`);
                     if (row) row.remove();
                 });
@@ -261,8 +261,18 @@ document.querySelectorAll('.import-group-btn').forEach(btn => {
                 toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:1000;min-width:260px;';
                 toast.innerHTML = `<strong>✅ ${data.created} ${importedLabel}</strong>` +
                     (data.skipped ? `<br><small>${data.skipped} {% trans "skipped" %}</small>` : '');
+                // Error texts quote the event summary, which comes from the calendar: textContent only
+                data.errors.forEach(message => {
+                    const line = document.createElement('small');
+                    line.textContent = message;
+                    toast.append(document.createElement('br'), line);
+                });
                 document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 4000);
+                setTimeout(() => toast.remove(), data.errors.length ? 10000 : 4000);
+                if (data.errors.length) {
+                    btn.disabled = false;
+                    btn.textContent = '📥 {% trans "Import" %}';
+                }
             } else {
                 alert('{% trans "Error" %}: ' + (data.error || '{% trans "Unknown error" %}'));
                 btn.disabled = false;
