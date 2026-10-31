@@ -293,6 +293,47 @@ class InquiryConvertViewTestCase(TestCase):
             Client.objects.filter(client_code="DUP-1", full_name="Max Mustermann").exists()
         )
 
+    def test_convert_replay_does_not_create_second_client(self):
+        """A second submit (double click, back button) must not duplicate the client."""
+        inquiry = _make_inquiry(self.practice)
+        url = reverse("inquiry_convert", kwargs={"pk": inquiry.pk})
+        data = {"first_seen_date": "", "default_hourly_rate": "90.00"}
+        self.http.post(url, {**data, "client_code": "RP-1"})
+        first = Client.objects.get(client_code="RP-1")
+
+        resp = self.http.post(url, {**data, "client_code": "RP-2"})
+
+        self.assertRedirects(resp, reverse("client_detail", kwargs={"pk": first.pk}))
+        self.assertFalse(Client.objects.filter(client_code="RP-2").exists())
+        inquiry.refresh_from_db()
+        self.assertEqual(inquiry.converted_client, first)
+
+    def test_convert_get_on_converted_inquiry_redirects(self):
+        inquiry = _make_inquiry(self.practice)
+        self.http.post(
+            reverse("inquiry_convert", kwargs={"pk": inquiry.pk}),
+            {"client_code": "RP-3", "first_seen_date": "", "default_hourly_rate": "90.00"},
+        )
+        client = Client.objects.get(client_code="RP-3")
+
+        resp = self.http.get(reverse("inquiry_convert", kwargs={"pk": inquiry.pk}))
+
+        self.assertRedirects(resp, reverse("client_detail", kwargs={"pk": client.pk}))
+
+    def test_convert_refuses_anonymised_inquiry(self):
+        """An anonymised inquiry has no name left; converting it would create a blank client."""
+        inquiry = _make_inquiry(self.practice, status=InquiryStatus.DECLINED)
+        inquiry.anonymise()
+        url = reverse("inquiry_convert", kwargs={"pk": inquiry.pk})
+
+        self.assertRedirects(self.http.get(url), reverse("inquiry_list"))
+        resp = self.http.post(
+            url, {"client_code": "AN-1", "first_seen_date": "", "default_hourly_rate": "90.00"}
+        )
+
+        self.assertRedirects(resp, reverse("inquiry_list"))
+        self.assertFalse(Client.objects.filter(client_code="AN-1").exists())
+
     def test_convert_scoped_to_practice(self):
         """Cannot convert another practice's inquiry."""
         _, other_practice = _make_user_and_practice(username="other3")

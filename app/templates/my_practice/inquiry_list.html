@@ -224,7 +224,7 @@
                     </td>
                     <td class="inquiry-actions">
                         <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn btn-secondary">{% trans "Edit" %}</a>
-                        {% if inquiry.status != 'converted' and not inquiry.converted_client %}
+                        {% if inquiry.can_convert %}
                         <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn btn-success">{% trans "Admit" %}</a>
                         {% endif %}
                         <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn btn-danger">{% trans "Delete" %}</a>
@@ -272,7 +272,7 @@
                         </td>
                         <td class="inquiry-actions">
                             <a href="{% url 'inquiry_edit' inquiry.pk %}" class="btn btn-secondary">{% trans "Edit" %}</a>
-                            {% if inquiry.status != 'converted' and not inquiry.converted_client %}
+                            {% if inquiry.can_convert %}
                             <a href="{% url 'inquiry_convert' inquiry.pk %}" class="btn btn-success">{% trans "Admit" %}</a>
                             {% endif %}
                             <a href="{% url 'inquiry_delete' inquiry.pk %}" class="btn btn-danger">{% trans "Delete" %}</a>
