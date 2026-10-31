@@ -5,6 +5,7 @@ Major features and milestones in chronological order.
 ## Unreleased
 
 - **Fix — key rotation could undo an edit made while it ran** (#559): `encryption rotate` read every encrypted column, then wrote the re-encrypted values back by id, so a note saved in between was replaced with its older content. Each update now only applies while the column still holds the ciphertext that was read; a value saved meanwhile is left as saved (it is already under the new key) and counted in the output. A client document deleted during the run is skipped instead of stopping the file pass with an error.
+- **Fix — admin bulk actions left a stale payment date**: *Mark as sent* and *Mark as cancelled* in the invoice admin changed only the status, so a paid invoice moved back to sent or cancelled kept its `paid_date`. They now clear it, as the status buttons on the invoice pages already did. (#557)
 
 ## 2026-10-30 — v0.10.0 minor release
 
