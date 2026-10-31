@@ -30,11 +30,11 @@ duplicates = (
 if duplicates:
     print(f"Found {duplicates.count()} duplicate groups:")
     for dup in duplicates:
-        # Only the tail: enough to tell payers apart, not a full account number.
-        payer = f"…{dup['payer_iban'][-4:]}" if dup["payer_iban"] else "–"
+        # The payer IBAN is grouped on but not printed: the IDs below identify
+        # the rows, and an account number does not belong in terminal output.
         print(
             f"\n  Practice: {dup['practice_id']}, Date: {dup['transaction_date']}, "
-            f"Amount: {dup['amount']}, Payer IBAN: {payer}, Count: {dup['count']}"
+            f"Amount: {dup['amount']}, Count: {dup['count']}"
         )
         print(f"  Reference: {dup['reference'][:80]}...")
 
