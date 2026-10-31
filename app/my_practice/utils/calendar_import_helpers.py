@@ -61,7 +61,7 @@ def _resolve_service_type(
 
 
 def _resolve_invoice(
-    client: Client, event_date: datetime, overrides: dict
+    client: Client, event_date: datetime, overrides: dict, new_invoices: dict[int, Invoice]
 ) -> tuple[Invoice | None, str | None]:
     """Return (invoice, None) or (None, error_message).
 
@@ -69,10 +69,15 @@ def _resolve_invoice(
     calendar approval queue's dropdown) instead of always falling back to the
     client's current draft invoice. Scoped to the resolved client so a
     user-supplied id can't reference another client's/practice's invoice.
+
+    "new" means one new invoice for the batch, not one per event: the invoice
+    created for a client is kept in new_invoices and reused for the rest.
     """
     invoice_id = overrides.get("invoice_id")
     if invoice_id == "new":
-        return create_draft_invoice(client, event_date), None
+        if client.pk not in new_invoices:
+            new_invoices[client.pk] = create_draft_invoice(client, event_date)
+        return new_invoices[client.pk], None
     if invoice_id:
         try:
             return Invoice.objects.get(pk=invoice_id, client=client), None
@@ -104,7 +109,11 @@ def _resolve_rate(client: Client, service_type: ServiceType) -> tuple[Decimal | 
 
 
 def create_invoice_items_from_events(
-    approved_events: list[dict], user_overrides: dict[str, dict], request
+    approved_events: list[dict],
+    user_overrides: dict[str, dict],
+    request,
+    *,
+    new_invoices: dict[int, Invoice] | None = None,
 ) -> tuple[int, int, list[str]]:
     """
     Create InvoiceItems from approved calendar events.
@@ -123,6 +132,9 @@ def create_invoice_items_from_events(
             When invoice_id is omitted, the client's current draft invoice is
             used (or a new one is created).
         request: HttpRequest with current_practice
+        new_invoices: Invoices already created for an invoice_id of "new", by
+            client pk. Pass the same dict when one batch is imported over
+            several calls, so the batch still gets a single new invoice.
 
     Returns:
         Tuple of (created_count, skipped_count, errors)
@@ -130,6 +142,8 @@ def create_invoice_items_from_events(
     created = 0
     skipped = 0
     errors = []
+    if new_invoices is None:
+        new_invoices = {}
 
     for event in approved_events:
         event_id = event.get("id") or ""
@@ -156,7 +170,14 @@ def create_invoice_items_from_events(
             errors.append(_("No date for event: %(summary)s") % {"summary": event.get("summary")})
             continue
 
-        invoice, err = _resolve_invoice(client, event_date, overrides)
+        # Before the invoice: a missing rate must not leave an empty new draft behind.
+        rate, err = _resolve_rate(client, service_type)
+        if err:
+            errors.append(err)
+            skipped += 1
+            continue
+
+        invoice, err = _resolve_invoice(client, event_date, overrides, new_invoices)
         if err:
             errors.append(err)
             skipped += 1
@@ -171,12 +192,6 @@ def create_invoice_items_from_events(
                 _("Duplicate: %(summary)s on %(date)s")
                 % {"summary": event.get("summary"), "date": event_date.date()}
             )
-            skipped += 1
-            continue
-
-        rate, err = _resolve_rate(client, service_type)
-        if err:
-            errors.append(err)
             skipped += 1
             continue
 

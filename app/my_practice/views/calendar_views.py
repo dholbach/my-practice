@@ -378,6 +378,7 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
         created = skipped = 0
         errors: list[str] = []
         imported_ids: list[int] = []
+        new_invoices: dict[int, Invoice] = {}
         # One call per event, so only the events that really produced an invoice item are
         # marked imported. The rest stay pending, to be fixed or skipped from the queue.
         for ev in events:
@@ -395,6 +396,7 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
                 approved_events=[parsed_event],
                 user_overrides={ev.google_event_id: overrides},
                 request=request,
+                new_invoices=new_invoices,
             )
             created += ev_created
             skipped += ev_skipped

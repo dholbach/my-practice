@@ -454,6 +454,30 @@ class CalendarQueueImportTest(CalendarViewsTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(invoice.items.count(), 1)
 
+    def test_new_invoice_is_created_once_per_batch(self):
+        """ "Create new invoice" puts the whole batch on one invoice, not one per event."""
+        first = self._make_event()
+        second = PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="evt-2",
+            summary="Termin",
+            event_date=date(2026, 3, 12),
+            event_time="10:00:00",
+            duration_minutes=60,
+            matched_client=self.test_client,
+            suggested_service_type=self.service_type,
+            status=PendingCalendarEvent.Status.PENDING,
+        )
+        response = self.http.post(
+            reverse("calendar_queue_import"),
+            data=json.dumps({"event_ids": [first.pk, second.pk], "invoice_id": "new"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.json()["created"], 2)
+        invoices = Invoice.objects.filter(client=self.test_client)
+        self.assertEqual(invoices.count(), 1)
+        self.assertEqual(invoices.get().items.count(), 2)
+
 
 class CalendarQueueSkipDuplicatesTest(CalendarViewsTestBase):
     def test_skips_duplicate_pending_events(self):
