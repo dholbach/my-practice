@@ -3,9 +3,13 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
+from ..models import TwoFactorDevice
+from ..utils.two_factor import generate_secret
 from ..views.auth_views import LOGIN_FAILURE_LIMIT
 from .test_helpers import create_test_practice, link_user_to_practice
 
@@ -72,6 +76,43 @@ class LoginThrottleTests(TestCase):
 
         self.assertEqual(response.status_code, 429)
         self.assertNotIn("_auth_user_id", self.client.session)
+
+
+class ConcurrentAttemptTests(TestCase):
+    """Each attempt row-locks the account it targets before reading the count.
+
+    The counter is a cache get followed by a set, so without a lock serialising
+    one account's attempts, requests arriving together each read a count below
+    the limit and each get a guess.
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+        self.user = User.objects.create_user(username="therapist", password="testpass123")
+
+    def _locked_tables(self, queries):
+        return [q["sql"] for q in queries if "FOR UPDATE" in q["sql"]]
+
+    def test_password_step_locks_the_account(self):
+        with CaptureQueriesContext(connection) as queries:
+            self.client.post(reverse("login"), {"username": "Therapist", "password": "wrong"})
+        self.assertTrue(
+            any('"auth_user"' in sql for sql in self._locked_tables(queries)),
+            queries.captured_queries,
+        )
+
+    def test_code_step_locks_the_device(self):
+        TwoFactorDevice.objects.create(
+            user=self.user, secret=generate_secret(), confirmed_at="2026-01-01T00:00:00Z"
+        )
+        self.client.post(reverse("login"), {"username": "therapist", "password": "testpass123"})
+        with CaptureQueriesContext(connection) as queries:
+            self.client.post(reverse("login_verify"), {"code": "000000"})
+        self.assertTrue(
+            any("twofactordevice" in sql for sql in self._locked_tables(queries)),
+            queries.captured_queries,
+        )
 
 
 class SessionIdleTimeoutTests(TestCase):

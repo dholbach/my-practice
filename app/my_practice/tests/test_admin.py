@@ -2,6 +2,7 @@
 
 from datetime import date
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
@@ -535,3 +536,24 @@ class InvoiceAdminStatusActionTests(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.status, "cancelled")
         self.assertIsNone(self.invoice.paid_date)
+
+
+class AdminBadgeEscapingTests(TestCase):
+    """Translated text in admin badges is escaped, so a .po entry cannot inject markup."""
+
+    def test_translation_with_markup_is_escaped(self):
+        client_admin = ClientAdmin(Client, AdminSite())
+        service_admin = ServiceTypeAdmin(ServiceType, AdminSite())
+        injected = "<script>x</script>"
+        with (
+            patch("my_practice.admin.client._", return_value=injected),
+            patch("my_practice.admin.service._", return_value=injected),
+        ):
+            badges = [
+                client_admin.active_status(Client(active=True)),
+                client_admin.online_badge(Client(is_online_client=False)),
+                service_admin.practice_scope(ServiceType(practice=None)),
+            ]
+        for badge in badges:
+            self.assertNotIn("<script>", badge)
+            self.assertIn("&lt;script&gt;", badge)
