@@ -127,9 +127,11 @@ class InvoiceAdmin(admin.ModelAdmin):
     # Django 5.1: Organize actions in groups
     actions = ["mark_as_sent", "mark_as_paid", "mark_as_cancelled"]
 
+    # An invoice that leaves "paid" loses its paid_date, as in the status API;
+    # otherwise the list and detail pages keep showing a payment that isn't one.
     @admin.action(description=gettext_lazy("Mark as sent"))
     def mark_as_sent(self, request, queryset):
-        updated = queryset.update(status="sent")
+        updated = queryset.update(status="sent", paid_date=None)
         self.message_user(
             request,
             ngettext(
@@ -159,7 +161,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 
     @admin.action(description=gettext_lazy("Mark as cancelled"))
     def mark_as_cancelled(self, request, queryset):
-        updated = queryset.update(status="cancelled")
+        updated = queryset.update(status="cancelled", paid_date=None)
         self.message_user(
             request,
             ngettext(

@@ -496,3 +496,42 @@ class InvoiceItemAdminFormTests(TestCase):
             }
         )
         self.assertTrue(form.is_valid(), form.errors)
+
+
+class InvoiceAdminStatusActionTests(TestCase):
+    """The bulk status actions keep paid_date consistent with the status."""
+
+    def setUp(self):
+        self.practice = Practice.objects.create(
+            name="Test Practice",
+            slug="admin-status",
+            title="Test Practitioner",
+            email="test@practice.com",
+            city="Berlin",
+        )
+        self.client_obj = Client.objects.create(
+            client_code="XX-1", full_name="Max Mustermann", practice=self.practice
+        )
+        self.invoice = Invoice.objects.create(
+            client=self.client_obj,
+            invoice_number="XX-1-1",
+            invoice_date=date(2026, 1, 5),
+            status="paid",
+            paid_date=date(2026, 1, 20),
+            practice=self.practice,
+        )
+        self.admin = InvoiceAdmin(Invoice, AdminSite())
+        self.request = RequestFactory().post("/")
+        self.admin.message_user = lambda *args, **kwargs: None
+
+    def test_mark_as_sent_clears_paid_date(self):
+        self.admin.mark_as_sent(self.request, Invoice.objects.filter(pk=self.invoice.pk))
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.status, "sent")
+        self.assertIsNone(self.invoice.paid_date)
+
+    def test_mark_as_cancelled_clears_paid_date(self):
+        self.admin.mark_as_cancelled(self.request, Invoice.objects.filter(pk=self.invoice.pk))
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.status, "cancelled")
+        self.assertIsNone(self.invoice.paid_date)
