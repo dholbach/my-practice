@@ -9,6 +9,11 @@ Rotation: put a new key in front of the old one in FERNET_KEY
 drop the old key. Rows are updated with raw SQL so `updated_at` and save
 signals are not touched — the content does not change, only its ciphertext.
 
+The app can keep running. Each UPDATE only applies while the column still holds
+the ciphertext that was read, so a value saved in the meantime is left alone
+rather than overwritten with the older content — after the restart it is
+already under the first key. A file deleted in the meantime is skipped.
+
 Files in encrypted storage (client documents) are rotated too; `rotate` also
 encrypts any still in plain text (migration 0006 already does that on
 upgrade). Every file is verified before anything is written, and each is
@@ -96,20 +101,29 @@ class Command(BaseCommand):
         total = 0
         for label, table, pk_column, column, rows in self._columns():
             try:
-                updates = [(fernet.rotate(value.encode()).decode(), pk) for pk, value in rows]
+                updates = [
+                    (fernet.rotate(value.encode()).decode(), pk, value) for pk, value in rows
+                ]
             except InvalidToken as exc:
                 logger.error("Encryption rotate failed on %s", label)
                 raise CommandError(
                     f"{label}: a value cannot be opened with any configured key — run "
                     "`encryption check`. Nothing was changed."
                 ) from exc
+            rotated = 0
             with connection.cursor() as cursor:
-                cursor.executemany(
-                    f"UPDATE {qn(table)} SET {qn(column)} = %s WHERE {qn(pk_column)} = %s", updates
-                )
-            total += len(updates)
+                for update in updates:
+                    cursor.execute(
+                        f"UPDATE {qn(table)} SET {qn(column)} = %s "
+                        f"WHERE {qn(pk_column)} = %s AND {qn(column)} = %s",
+                        update,
+                    )
+                    rotated += cursor.rowcount
+            total += rotated
             if updates:
-                self.stdout.write(f"{label}: {len(updates)} re-encrypted")
+                changed = len(updates) - rotated
+                note = f" ({changed} changed meanwhile, left as saved)" if changed else ""
+                self.stdout.write(f"{label}: {rotated} re-encrypted{note}")
         self.stdout.write(self.style.SUCCESS(f"Re-encrypted {total} values under the first key."))
 
     def _files(self):
@@ -161,17 +175,23 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"All {count} encrypted files readable."))
 
     def _rotate_files(self, fernet, files):
-        rotated = encrypted = 0
+        rotated = encrypted = gone = 0
         for storage, name in files:
-            data = storage.read_raw(name)
-            if is_encrypted(data):
-                storage.write_raw(name, fernet.rotate(data))
-                rotated += 1
-            else:
-                storage.write_raw(name, fernet.encrypt(data))
-                encrypted += 1
+            # Uploads never reuse a name, so the only concurrent change to a
+            # file is its deletion (a document removed, a GDPR erasure).
+            try:
+                data = storage.read_raw(name)
+                if is_encrypted(data):
+                    storage.write_raw(name, fernet.rotate(data))
+                    rotated += 1
+                else:
+                    storage.write_raw(name, fernet.encrypt(data))
+                    encrypted += 1
+            except FileNotFoundError:
+                gone += 1
+        note = f", {gone} deleted meanwhile" if gone else ""
         self.stdout.write(
             self.style.SUCCESS(
-                f"Files: {rotated} re-encrypted, {encrypted} encrypted for the first time."
+                f"Files: {rotated} re-encrypted, {encrypted} encrypted for the first time{note}."
             )
         )

@@ -55,7 +55,8 @@ If the key may have leaked, or as routine hygiene:
    `FERNET_KEY=<new>,<old>` — the first key encrypts, every listed key decrypts.
 2. Restart, then run `manage.py encryption rotate` — re-encrypts every value under
    the new key (one transaction; it refuses and changes nothing if any value is
-   unreadable).
+   unreadable). The app can stay up: a value saved while it runs is kept, not
+   overwritten with the older content, and a document deleted meanwhile is skipped.
 3. Run `manage.py encryption check` with only the new key set, then drop the old one.
 4. Old database backups still need the old key — keep it with them until they expire.
 

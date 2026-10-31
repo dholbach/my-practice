@@ -6,6 +6,7 @@ import tempfile
 from datetime import date
 from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 from cryptography.fernet import Fernet
 from django.apps import apps
@@ -156,6 +157,19 @@ class DocumentMigrationAndRotationTests(DocumentEncryptionTestBase):
             call_command("encryption", "rotate", stdout=StringIO())
         self.assertEqual(self._on_disk(doc.file.name), before)
         self.assertEqual(self._on_disk(legacy.file.name), LEGACY_BYTES)
+
+    def test_rotate_skips_a_file_deleted_while_it_runs(self):
+        doc = self._upload()
+        path = self.media_root / doc.file.name
+        out = StringIO()
+        # The files are listed and checked first; delete one before they are rewritten.
+        with patch(
+            "my_practice.management.commands.encryption.Command._rotate",
+            side_effect=lambda *args: path.unlink(),
+        ):
+            call_command("encryption", "rotate", stdout=out)
+        self.assertFalse(path.exists())
+        self.assertIn("1 deleted meanwhile", out.getvalue())
 
     def test_compress_media_skips_encrypted_documents(self):
         doc = self._upload()
