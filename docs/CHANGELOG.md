@@ -2,8 +2,16 @@
 
 Major features and milestones in chronological order.
 
-## Unreleased
+## 2026-11-03 — v0.10.1 patch release
 
+Fixes only: sign-in attempt limits that hold under concurrent requests, key rotation that no longer undoes a concurrent edit, inquiries that stay anonymised, and calendar-import and session-log corrections.
+
+**Upgrading:** `./prod.py update`. No migrations, and `prod.py` and `docker-compose.prod.yml` are unchanged apart from the version. The hourly retention pass now also anonymises *Onboarded* inquiries with no linked client once they are older than 180 days; preview the first run with `./prod.py manage tidy_inquiries`.
+
+- **Fix — "Create new invoice" in the calendar approval queue made one invoice per event**: the queue imports one event per call and each call resolved "new" afresh, so a batch of five sessions became five draft invoices. The invoice created for a client is now kept for the whole batch. The rate check runs before the invoice is resolved, so a client without an hourly rate no longer leaves an empty draft behind.
+- **Fix — rejected calendar events vanished from the approval queue**: every selected event was marked imported, including those that produced no invoice item (no client, duplicate, no rate). Only the events that were actually imported are marked and removed from the queue now; the others stay and the errors are listed.
+- **Fix — session log input validation**: a non-numeric or overflowing duration was a 500. Durations are parsed by one helper (1 to 1440 minutes) in all three session views, an unknown session type is rejected, unknown mood tags are dropped and an invalid `?session_date=` prefill is ignored. Editing the log of an already-billed session no longer changes its duration (the invoice's session count and GebüH fee derive from it); the log text is still saved, with a warning.
+- **Fix — an inquiry could be converted twice**: a double submit or a back-button replay created a second client and re-pointed the inquiry at it, and an anonymised inquiry could become a client with a blank name. Conversion is refused for an inquiry that is already converted, linked to a client or anonymised, checked under a row lock on submit.
 - **Hardening — operator commands guard real installations**:
   - `seed_sample_data` asks before seeding an installation that already has practices of its own, since the seed links every superuser to the demo practice and adds shared time-off, tags and service types. Without a terminal it refuses unless given `--yes`.
   - `setup_practice --no-input` (meant for tests) refuses once any practice exists, instead of adding a placeholder practice.
