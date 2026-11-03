@@ -518,7 +518,12 @@ def cmd_makemigrations(args):
 def _container_running():
     """Whether the Django container is up (`docker exec` would fail otherwise)."""
     cmd = ["docker", "inspect", "--format", "{{.State.Running}}", CONTAINER_NAME]
-    out = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True)
+    except FileNotFoundError:
+        # No docker CLI on PATH (e.g. a host shell outside the dev environment):
+        # there's no container to compile in either, so skip like a stopped one.
+        return False
     return out.returncode == 0 and out.stdout.strip() == "true"
 
 
