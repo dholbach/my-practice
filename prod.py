@@ -1106,13 +1106,23 @@ def cmd_restore(args):
                 ],
                 stdin=subprocess.PIPE,
             )
-            with gzip.open(plain_db, "rb") as dump:
-                for chunk in iter(lambda: dump.read(1 << 20), b""):
-                    psql.stdin.write(chunk)
-            # The dump brings back the sessions that were live when it was
-            # taken; sign everyone in afresh instead of reviving them.
-            psql.stdin.write(b"\nTRUNCATE django_session;\n")
-            psql.stdin.close()
+            try:
+                # pg_dump --clean only drops objects the *dumped* database had.
+                # A target migrated past the backup keeps extra foreign keys
+                # that block dropping primary keys, so start from an empty schema.
+                psql.stdin.write(b"DROP SCHEMA public CASCADE;\nCREATE SCHEMA public;\n")
+                with gzip.open(plain_db, "rb") as dump:
+                    for chunk in iter(lambda: dump.read(1 << 20), b""):
+                        psql.stdin.write(chunk)
+                # The dump brings back the sessions that were live when it was
+                # taken; sign everyone in afresh instead of reviving them.
+                # The dump empties search_path, so the table must be schema-qualified.
+                psql.stdin.write(b"\nTRUNCATE public.django_session;\n")
+                psql.stdin.close()
+            except BrokenPipeError:
+                # psql already exited on an error; its message is on stderr
+                # and the exit status below reports the failure.
+                pass
             if psql.wait() != 0:
                 raise BackupError("Database restore failed; the database is unchanged")
             print("✅ Database restored")

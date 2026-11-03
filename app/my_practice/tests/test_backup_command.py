@@ -217,7 +217,7 @@ class RestoreTests(BackupFixture):
         self.assertEqual(self._restore(self.db, self.media), (0, ""))
         psql = (self.root / "restored.sql").read_bytes()
         self.assertIn(b"--single-transaction", psql.splitlines()[0])
-        self.assertTrue(psql.rstrip().endswith(b"TRUNCATE django_session;"))
+        self.assertTrue(psql.rstrip().endswith(b"TRUNCATE public.django_session;"))
         self.assertEqual(sorted(p.name for p in self.current.iterdir()), ["a.pdf", "b.pdf"])
 
     def test_unreadable_media_archive_aborts_before_the_database(self):
