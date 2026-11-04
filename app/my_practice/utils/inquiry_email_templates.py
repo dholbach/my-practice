@@ -2,7 +2,7 @@
 
 "label" is UI chrome (the template picker), translated via gettext_lazy; subject/body/
 subject_en/body_en are authored bilingual email content per client-language, not
-Django-i18n UI text — same exemption as utils/email_utils.py (see CLAUDE.md i18n rules).
+Django-i18n UI text — same exemption as utils/email_utils.py (see CODEBASE_STANDARDS.md § Internationalisation).
 """
 
 from typing import Any

@@ -21,6 +21,14 @@ and provides the anti-patterns checklist used during periodic reviews
 | Working days with holidays | `DateRangeHelper.count_working_days(start, end, holidays)` — never `round(days*5/7)` |
 | Session counting | `count_sessions(items)` — never inline `(duration/60)*quantity` |
 
+`TimeOff`, `ClientTag`, the operational checklists and `GebuhZiffer` are deliberately
+shared across practices (the practitioner's absences, a tag vocabulary, instance
+operations, a fee schedule). A count or sum over them that reaches practice data
+(e.g. `Count("clients")` on a tag) still needs the practice filter — see
+`annotate_client_counts`. `test_practice_scoping.py` also flags any `Model.objects`
+query on a practice-owned model in `utils/`/`views/`/`templatetags/` that nothing
+binds to a practice; `KNOWN_UNBOUND_QUERIES` holds the deliberate exceptions.
+
 ### Anti-patterns to flag
 
 - `Invoice.objects.filter(invoice_date__year=year, status='paid')` inline in a view → use `RevenueCalculator`
@@ -84,8 +92,10 @@ and provides the anti-patterns checklist used during periodic reviews
 
 ### Canonical patterns
 
-- CSS lives in `static/css/<page-name>.css`, loaded via `{% block extra_css %}`
-- No bare `<style>` blocks in templates (except PDF templates — they require inline)
+- All CSS lives in `static/css/tailwind.css` (compiled to the git-ignored `tailwind.out.css`), new component classes under `@layer components` (M-PAT-04). No new `.css` files, no `<style>` blocks, and no page-specific CSS block in `base.html` — there deliberately isn't one. PDF templates are exempt; they require inline styles
+- `base.html` has two script blocks, neither for CSS: `extra_head_scripts` (in `<head>`, for scripts an inline script further down calls synchronously, e.g. chart libs) and `extra_js` (end of `<body>`, everything else)
+- Brand-coloured text uses `text-link`, not `text-primary`: the latter is Tailwind's utility for the `--color-primary` *fill* token, which is not a text colour in dark mode. `test_color_contrast.py` requires 4.5:1 for every text/background pair and for white text on button/tag fills in both themes
+- Money goes through `|currency` / `|currency_rounded`, never `floatformat` + `€` (`test_currency_formatting.py`); German format with a non-breaking space ("2680 €")
 - Form widgets styled via `StyledFormMixin` — no manual `attrs={"class": "form-control"}`
 - Date inputs use `DateFormField` — not manual `type="date"` attrs
 - Reusable snippets live in `templates/includes/`
@@ -229,7 +239,7 @@ in #424).
 | Variable / function / class names | EN |
 | Comments and docstrings | EN |
 | Template filenames, URL slugs | EN |
-| UI labels, buttons, messages, `verbose_name` | DE (until P-039 i18n) |
+| UI labels, buttons, messages, `verbose_name`, `help_text` | EN msgid, DE msgstr — see § Internationalisation |
 
 ### Anti-patterns to flag
 
@@ -237,6 +247,85 @@ in #424).
 - German docstrings in files you are touching → translate in the same commit
 - Mixed-language file (some EN, some DE comments) → finish the migration
 - `# TODO` comments in German → translate
+
+---
+
+## Internationalisation (P-039)
+
+The UI is bilingual (German default, `LANGUAGE_CODE = "de-de"`). Every user-facing
+string in a template or Python file is wrapped with an **English msgid**; German
+lives only in `locale/de/LC_MESSAGES/django.po` as `msgstr`. New files ship fully
+wrapped in their first commit; when editing an existing file, wrap any string you
+touch. This applies to form `label=`/`Meta.labels`/`help_text`, `success_message`
+and anything else passed to `gettext`/`gettext_lazy`.
+
+### Lazy vs. eager
+
+| Evaluated… | Use | Examples |
+| --- | --- | --- |
+| once, at import / class definition | `gettext_lazy` | `fieldsets`, `@admin.display`/`@admin.action` descriptions, model `Meta`/`verbose_name`/`help_text`, form field `label=`, `success_message` |
+| per request / per call | `gettext as _` | view function bodies, `messages.*()`, `JsonResponse` values, form error strings |
+
+Getting this backwards is invisible to review: an eager `gettext` in a class body
+freezes whatever locale was active at process startup, permanently. Only a
+bilingual smoke test catches it — render or instantiate under both
+`translation.override("de")` and `("en")` and assert the outputs differ.
+
+### Exemptions
+
+Not Django-i18n UI text, so not wrapped:
+
+- PDF templates (`invoice_pdf_*.html`, `treatment_contract_pdf.html`,
+  `intake_form_pdf.html`, `questionnaire_pdf.html`) — they pick a language per document.
+- Dual-language email content builders (`utils/email_utils.py`,
+  `utils/inquiry_email_templates.py` subject/body pairs) and
+  `includes/email_card.html`, whose `Betreff`/`Subject`, `Kopieren`/`Copy` labels
+  identify the language of the content beside them, not the UI language.
+- Clinical scaffolding baked into form `initial=` (`INTAKE_NOTES_TEMPLATE`,
+  `CASE_NOTES_TEMPLATE`, `SESSION_LOG_TEMPLATE` in `models/clinical.py`) — authored
+  Somatic-Experiencing terminology with no English counterpart.
+- `ClientTag` and other free-text data — seeded tag names are data, like a client name.
+
+### Per-document language is a different mechanism
+
+`ServiceType.name_de`/`name_en`, `Practice.invoice_email_subject_de`/`_en` and the PDF
+templates follow the *client's or document's* language. That is correct and must not
+be "fixed" to `{% trans %}`. But an admin-facing page (the therapist's own UI) follows
+`{% get_current_language as CURRENT_LANGUAGE %}`, not a hardcoded `_de` field —
+`calendar_import.html` / `calendar_approval_queue.html` always showed `.name_de`
+regardless of the UI language until close-out.
+
+### Strings needed in JavaScript
+
+They go through the template, never as literals in a `.js` file — only then does the
+guardrail see them. Put them in `data-*` attributes wrapped in `{% trans %}` and read
+them via `dataset`: `keyboard-nav.js` reads `document.body.dataset` (the `data-kbd-*`
+in `base.html`), `bank_review.js` reads `data-tally-*` off its own `<script>` tag.
+Look the element up lazily inside the callback — a script in `extra_js` runs before
+`DOMContentLoaded`, so `document.currentScript` is already null when handlers fire.
+
+### Workflow
+
+1. **Reuse msgids** — grep `django.po` for the exact English phrase first. The sweep
+   converged on a shared vocabulary (Status, Category, Amount, Client, Notes, Jan–Dec…).
+2. Run `./dev.py i18n` (extract + compile).
+3. **Check the `django.po` diff** for `#, fuzzy` entries (makemessages guessed from a
+   similar msgid — often wrong; fix and un-fuzzy) and for new msgids with an empty
+   `msgstr ""` (genuinely novel strings get no guess and no warning). Both need a real
+   German translation before committing.
+4. `en.po` msgstrs stay empty on purpose — gettext falls back to the English msgid.
+
+Don't leave a dead context variable as a way around wrapping a string — delete it.
+
+### What the guardrail does not see
+
+`test_i18n_coverage.py` fails on a non-exempt template missing `{% load i18n %}`,
+raw German in a template, or a fuzzy `.po` entry. `KNOWN_UNWRAPPED_TEMPLATES` is
+permanently empty. It does **not** catch a Python view feeding a wrapped template an
+unwrapped string, an empty-but-non-fuzzy `msgstr`, or a translated string hardcoded
+in JavaScript (`bank_review.js` built its tally label from four German literals). All
+three have shown up repeatedly; when in doubt, render the page under both locales and
+diff.
 
 ---
 
@@ -271,6 +360,12 @@ Finer points that decide which of these a file belongs in:
   cadence) are generated on demand, not committed: `python3
   scripts/codebase_metrics.py` writes them to the git-ignored
   `docs/development/`.
+
+Principles: one source of truth per topic (PROJECTS.md is the index, P-XXX docs
+hold details); update docs with the code change — outdated docs are worse than none;
+link between docs with relative links. A new project takes the **lowest unused
+P-number** (there are gaps — see PROJECTS.md § Project Numbering), never the number
+of the GitHub issue it came from.
 
 ### Code-Level Documentation (Docstrings)
 **Use for**: Function/class behavior, parameters, return values
@@ -313,9 +408,9 @@ Each numbered pattern exists because the bug it prevents is invisible in
 review. CLAUDE.md states each rule in one line; this is the worked example,
 the failure it came from, and the exact contract.
 
-M-PAT-04 (no inline style blocks, no new `.css` files) stays in CLAUDE.md
-§ CSS Architecture — it is a prohibition, not a pattern with an example.
-M-PAT-07 and M-PAT-08 have their own contracts under § Templates & CSS above.
+M-PAT-04 (all CSS in `tailwind.css`) is a prohibition rather than a pattern
+with an example; it is stated under § Templates & CSS above, next to the
+M-PAT-07 and M-PAT-08 contracts.
 M-PAT-09 has its own section below.
 
 ### Narrow-window layout (M-PAT-09)
@@ -617,6 +712,10 @@ makes `./prod.py update` behave surprisingly.
   `config/settings.py` — every security header, cookie and HSTS setting — is
   otherwise never evaluated by anything.
 - `shellcheck -S warning scripts/*.sh`.
+- `mypy --follow-imports=silent` over the strict modules (§ Type checking).
+- `scripts/check_requirements_sync.py` and `scripts/check_shared_helpers.py`
+  (§ Files that duplicate content on purpose) also run in pre-commit and
+  `./dev.py quality`.
 
 ---
 

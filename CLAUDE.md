@@ -2,427 +2,111 @@
 
 Therapy practice payment/invoicing system built with Django, PostgreSQL, running in Docker.
 
+**Detailed contracts live in [docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md)** —
+worked examples, the failure behind each rule, every guardrail test and what it can't see.
+This file is the summary; read the relevant standards section before touching that area.
+
 ## 🔒 Privacy & Data Protection (CRITICAL)
 
-**Ground Rules - NEVER violate these:**
-1. **No Real Names**: Use dummy names in all docs, code, examples, commit messages
-   - ✅ Good: "Max Mustermann", "Anna Schmidt", "Maria Musterfrau"
-   - ❌ Bad: Any real client or practitioner names
-2. **No Contact Info**: Never include real emails, phone numbers, addresses
-   - ✅ Good: "mail@example.com", "contact@practice.example", "+49 123 456789"
-   - ❌ Bad: Real email addresses or phone numbers
-3. **Anonymized Examples**: Use fictional data in documentation and tests
-   - Client codes: XX-1, YY-2, AB-3
-   - Invoice numbers: INV-001, INV-002
-   - Bank names: "M. Schmidt", "Test GmbH"
-4. **Review Before Commit**: Check for leaked PII in:
-   - Commit messages
-   - Documentation files
-   - Code comments
-   - Test fixtures
-   - Migration defaults (use placeholders)
+**Never violate these** — in docs, code, examples, commit messages, comments, test fixtures and migration defaults:
+1. **No real names**: dummy names only ("Max Mustermann", "Anna Schmidt", "Maria Musterfrau").
+2. **No real contact info**: "mail@example.com", "contact@practice.example", "+49 123 456789".
+3. **Fictional examples**: client codes XX-1, YY-2, AB-3; invoices INV-001; bank names "M. Schmidt", "Test GmbH".
+4. **Review for leaked PII before every commit.**
 
-**Client Privacy Mode** (active by default):
-- Templates use `client.client_code` instead of full names
-- Admin interface respects privacy settings
-- Exports use codes unless explicitly needed
+**Privacy mode (M-PAT-08)** — `html.privacy-mode` is a client-side toggle, on by default, so a missing blur
+looks normal whenever it's off. Use `<span class="sensitive-data">` for a name beside its client code,
+`|privacy_name` where there's no code to fall back on (inquiries, pickers whose rows must be told apart),
+and nothing for codes, invoice numbers, form inputs or `<option>` text (selects show the code only).
+`test_privacy_coverage.py` ratchets both under- and over-blur; shrink `KNOWN_UNPROTECTED`, never grow it.
 
-**Guardrail test** (M-PAT-08): `my_practice/tests/test_privacy_coverage.py` ratchets both
-directions of the `.sensitive-data` contract — a personal field rendered *outside* a blur
-(under-blur), and a blur wrapped around something that was never personal (over-blur,
-which hides a form label or the client code that is itself the privacy-safe form). Neither
-is visible in review: `html.privacy-mode` is a client-side toggle (on by default, applied
-in `<head>` before the first paint; switching it off is remembered per browser in
-localStorage), and an under-blur looks normal whenever it is off. That is why
-this bug class was fixed one site at a time three times (#321, #424, #426) before being
-automated. Use `<span class="sensitive-data">` for a name shown beside its client code,
-`|privacy_name` (initials stay legible) where there is no code to fall back on — inquiries,
-and any picker whose rows must be told apart — and nothing at all for codes, invoice
-numbers, form inputs or `<option>` text (a CSS blur can't reach text painted by the OS
-select widget, so selects show the code only). `KNOWN_UNPROTECTED` holds the deliberate
-exceptions, each with a reason; shrink it, never grow it to make a new render pass. Full
-contract: [docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) (M-PAT-08).
+## i18n (P-039) — every user-facing string is wrapped
 
-## Current Focus (Q2 2026)
-- Django i18n bilingual UI (P-039): DONE — full sweep complete (issue #69 closed). Every template, Python view/form/util, model, `admin.py`, and the small JS surface is wrapped. See [docs/projects/done/P-039_DJANGO_I18N.md](docs/projects/done/P-039_DJANGO_I18N.md) for the sweep retrospective.
+- **English msgids** everywhere: `{% trans "Switch" %}`, `_("…")`. German lives only in `locale/de/LC_MESSAGES/django.po`. Never write literal German or literal English UI text.
+- New files ship fully wrapped; when editing a file, wrap any string you touch. Templates `{% load i18n %}`.
+- **`gettext_lazy`** for anything evaluated at import/class-definition time (`verbose_name`, `help_text`, form `label=`, `fieldsets`, admin descriptions, `success_message`); **eager `gettext as _`** only per-request (view bodies, `messages.*()`, `JsonResponse`, form errors). Backwards = locale frozen at startup, invisible in review.
+- Strings needed in JS go through the template via `data-*` attributes, never as `.js` literals.
+- Reuse existing msgids (grep `django.po`) before minting new ones.
+- After changing strings: `./dev.py i18n`, then check the `django.po` diff for `#, fuzzy` entries and empty `msgstr ""` — both need a real German translation before committing.
+- Exemptions (PDF templates, bilingual email content builders, clinical scaffolding templates, free-text data like `ClientTag`), the per-document `_de`/`_en` language mechanism, and the guardrail's blind spots: [CODEBASE_STANDARDS.md § Internationalisation](docs/guides/CODEBASE_STANDARDS.md#internationalisation-p-039). `KNOWN_UNWRAPPED_TEMPLATES` in `test_i18n_coverage.py` stays empty.
 
-### i18n Conventions (P-039, now the permanent standing rule)
-- **Every template and Python file with user-facing strings must be wrapped, always** — new files ship fully wrapped in their first commit; when editing an existing file, wrap any user-facing string in it you touch. Do not write literal German (or any non-English) text as a msgid anywhere.
-- **English as msgids**: `{% trans "Switch" %}` not `{% trans "Wechseln" %}`. This applies to Python `_("...")` calls too — including form field `label=`/`Meta.labels`/`help_text`, `success_message`, and any other string passed to `gettext`/`gettext_lazy`. German text lives in `locale/de/django.po` as `msgstr`, never as the msgid itself.
-- **Templates**: load `{% load i18n %}` and wrap with `{% trans %}`/`{% blocktrans %}`. PDF templates (`invoice_pdf_*.html`, `treatment_contract_pdf.html`, `intake_form_pdf.html`, `questionnaire_pdf.html`) are exempt — they handle language per-document, not via Django i18n. Dual-language email *content* builders (`utils/email_utils.py` functions returning literal German/English subject+body pairs, e.g. for `EmailMessage`) are also exempt — that's authored bilingual content, not Django-i18n-translatable UI text. `includes/email_card.html` (the template that renders that content) is exempt for the same reason: its labels (`Betreff`/`Subject`, `Kopieren`/`Copy`) identify the language of the content beside them, not the app's UI language. Clinical scaffolding content baked into form `initial=` (`INTAKE_NOTES_TEMPLATE`/`CASE_NOTES_TEMPLATE`/`SESSION_LOG_TEMPLATE` in `models/clinical.py`) is exempt too — authored Somatic-Experiencing terminology with no English counterpart, not app UI chrome.
-- **Python — class-body/module-level vs. function-scope**: use `gettext_lazy` for anything evaluated once at import/class-definition time (`fieldsets`, `@admin.display`/`@admin.action` descriptions, model `Meta`/`verbose_name`/`help_text`, form field `label=` declarations, `success_message`). Use eager `gettext as _` only for strings evaluated per-request/per-call (view function bodies, `messages.*()` calls, `JsonResponse` values, form error strings). Getting this backwards is invisible to code review — an eager `gettext` used for a class-body attribute freezes whatever locale was active at process startup *permanently*, no matter what the user later switches to. Only a bilingual smoke test (render/instantiate under both `translation.override("de")` and `("en")`, assert the outputs differ) catches it.
-- **Per-document/per-client-language content is a different mechanism, not a bug**: fields like `ServiceType.name_de`/`name_en`, `Practice.invoice_email_subject_de`/`_en`, and PDF templates pick a language based on the *client's or document's* language, not the admin's UI language toggle — that's correct and shouldn't be "fixed" to use `{% trans %}`. But if a page is admin-facing (the therapist's own UI, not client-facing content), it must follow `{% get_current_language as CURRENT_LANGUAGE %}` and the admin's UI language, not silently default to one `_de`/`_en` field — conflating the two was a real bug found during close-out (`calendar_import.html`/`calendar_approval_queue.html` always showed `.name_de` regardless of admin UI language).
-- **`ClientTag`/other free-text data fields are not UI chrome**: seeded/system-generated tag names and descriptions are data, like a client name, not translatable UI strings — don't wrap them.
-- **Reuse existing msgids** before writing new ones — grep `locale/de/LC_MESSAGES/django.po` for the exact English word/phrase first. This sweep converged on a shared vocabulary (Status, Category, Amount, Client, Notes, month abbreviations Jan–Dec, etc.) — new code should draw from it rather than mint near-duplicates.
-- **Guardrail test**: `my_practice/tests/test_i18n_coverage.py` is a ratchet — it fails if a non-exempt template is missing `{% load i18n %}`, if a template leaks raw German text, or if either `.po` catalog has a `#, fuzzy` entry. `KNOWN_UNWRAPPED_TEMPLATES` is permanently empty now — it must stay that way; never add an entry to defer wrapping a new template. Note the guardrail only scans template source and `.po` fuzzy state — it does **not** catch a Python view feeding an already-wrapped template an unwrapped string (no diacritics needed to hide from the scan), a `.po` entry with an empty-but-non-fuzzy `msgstr`, nor a translated string hardcoded in **JavaScript** (`bank_review.js` built its tally label from four German literals for exactly this reason). All three bug classes have shown up repeatedly; when in doubt, render the page under both locales and diff.
-- **Strings needed in JS go through the template**, never as literals in the `.js` file — that's the only way the guardrail sees them. Put them in `data-*` attributes wrapped in `{% trans %}` and read them back via `dataset`: `keyboard-nav.js` reads `document.body.dataset` (populated by `data-kbd-*` in `base.html`), `bank_review.js` reads `data-tally-*` off its own `<script>` tag. Look the element up lazily inside the callback — a script in `extra_js` runs before `DOMContentLoaded`, so `document.currentScript` is already null by the time handlers fire.
-- Don't leave dead context variables (e.g. a template context key no template references) as a shortcut to avoid wrapping a string — delete unused code per the no-dead-code rule instead.
-- After changing templates or Python user-facing strings, run `./dev.py i18n` (extracts + compiles). **Check the diff of `locale/de/LC_MESSAGES/django.po` for `#, fuzzy` entries and for new msgids with an empty `msgstr ""`** — `makemessages` guesses a translation from a similarly-worded existing msgid when a string is new (frequently wrong — fix and un-fuzzy it), and leaves genuinely novel strings with no guess at all (empty, no warning). Both need a real German translation before committing. `en.po` msgstrs are deliberately left empty across the board — gettext falls back to the (English) msgid, which is already correct, so there's nothing to fill in there.
+## Development
 
-See [PROJECTS.md](PROJECTS.md) for numbered projects with status tracking (TODO/WIP/DONE).
-
-## Development Commands (use `./dev.py` for everything)
+Use `./dev.py` for everything:
 ```bash
-./dev.py start              # Start containers
-./dev.py test               # Run Django + JS tests
-./dev.py test my_practice.tests.test_calculations  # Specific test
-./dev.py test --smart        # Only tests affected by recent changes (pytest + testmon)
-./dev.py test --fast         # Full suite, parallel workers + failfast
-./dev.py shell              # Django shell (interactive)
-./dev.py manage <cmd>       # Django management commands
-./dev.py run <script.py>    # Run script with Django environment
-./dev.py logs -f            # Follow container logs
-./dev.py restart --force    # Full restart (reloads .env)
-./dev.py lint               # Run ruff format + ruff lint only (fast, no tests)
-./dev.py quality            # Run lint + Tailwind CSS build + full test suite (pre-release)
-./dev.py i18n               # Extract + compile translation strings
-./dev.py install-hooks      # Install the pre-commit hooks (once per clone)
-./dev.py smoke [vX.Y.Z]     # Boot a released GHCR image with throwaway DB, verify, tear down
+./dev.py start | restart --force | logs -f   # containers (--force reloads .env)
+./dev.py test [my_practice.tests.test_x]     # Django + JS tests, optionally one module
+./dev.py test --smart                        # only tests affected by changes (testmon)
+./dev.py test --fast                         # full suite, parallel + failfast
+./dev.py shell | manage <cmd> | run <script.py>
+./dev.py lint                                # ruff format + lint
+./dev.py quality                             # lint + Tailwind build + full suite
+./dev.py i18n                                # extract + compile translations
+./dev.py install-hooks                       # pre-commit hooks, once per clone
+./dev.py smoke [vX.Y.Z]                      # boot a released image against a throwaway DB
 ```
 
-### Git workflow
-**`main` is branch-protected — all changes require a PR**, even trivial ones like generated files or docs. Always work on a feature branch and open a PR via `gh pr create`.
+**Testing scope**: run the test file(s) for what you touched while developing; widen to cover shared models/utils before committing (`--smart` when unsure); full suite once at the end of a session or before a release.
 
-Install the hooks once per clone: `pip install pre-commit && ./dev.py install-hooks`. `.pre-commit-config.yaml` is the **only** hook mechanism — never add a second one via `core.hooksPath`, which overrides `.git/hooks/` wholesale and silently disables everything in it (that is how the gitleaks scan sat dead for months). CI runs the same config, so skipping the install only moves the feedback to the PR.
+**Git**: `main` is branch-protected — every change, even docs, goes through a feature branch and `gh pr create`. `.pre-commit-config.yaml` is the only hook mechanism — never add `core.hooksPath`. CI additionally runs gitleaks over full history, `check --deploy`, mypy on the strict modules and the requirements-sync check ([§ Repository Tooling](docs/guides/CODEBASE_STANDARDS.md#repository-tooling--guardrails)).
 
-### Guardrails that run in CI but not in `./dev.py test`
-- `gitleaks detect` over the full git history (the pre-commit hook only scans the index, so it is skipped in CI — see CODEBASE_STANDARDS.md for why).
-- `manage.py check --deploy` against the hardened config. The suite runs with `DJANGO_DEBUG=True`, so the whole `if not DEBUG:` block in `config/settings.py` is otherwise never evaluated.
-- `mypy --follow-imports=silent` over the modules `mypy.ini` declares strict. Widen that path list and the `mypy.ini` overrides together.
-- `scripts/check_requirements_sync.py` — `requirements.txt` and `requirements-dev.txt` duplicate every runtime pin on purpose (Dependabot does not resolve `-r` includes) and had already drifted once.
+**Releases**: [docs/operations/RELEASE.md](docs/operations/RELEASE.md). The three version strings (`version.py`, `prod.py`, `docker-compose.prod.yml`) must match, and the GitHub release needs real highlights — `./prod.py update` reads them.
 
-Full contract: [docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Repository Tooling & Guardrails.
+## Architecture & patterns
 
-### Release process
-Full checklist: [docs/operations/RELEASE.md](docs/operations/RELEASE.md). Summary:
+Models, views and utils are domain-split modules under `app/my_practice/{models,views,utils}/`; templates under `app/templates/` with reusable pieces in `includes/`. **Check `utils/` before writing new logic** — module map in [docs/architecture/CODE_STRUCTURE.md](docs/architecture/CODE_STRUCTURE.md), canonical-pattern tables in CODEBASE_STANDARDS.md.
 
-1. **Open a version-bump PR** — bump all three version strings (they must match) plus the docs pass, same as any other change (branch-protected `main`):
-   - `app/my_practice/version.py` — `VERSION = "vX.Y.Z"`
-   - `prod.py` — `VERSION = "vX.Y.Z"`
-   - `docker-compose.prod.yml` — `image: ghcr.io/dholbach/my-practice:vX.Y.Z`
-   - Docs pass: `docs/CHANGELOG.md`, `docs/FEATURES.md`, `PROJECTS.md`
-2. **Merge PR**, then tag and create a GitHub release with real highlights (not just a pointer to CHANGELOG.md — required for `./prod.py update`):
-   ```bash
-   git tag vX.Y.Z && git push origin vX.Y.Z
-   gh release create vX.Y.Z --title "vX.Y.Z" --notes "<highlights pulled from docs/CHANGELOG.md>"
-   ```
+| Need | Use |
+| --- | --- |
+| Revenue / date-filtered invoice figures | `RevenueCalculator` (never hand-built `invoice_date__year`/`status` filters) |
+| Invoice search/filter | `InvoiceFilterHelper(qs).apply_filters(...)` |
+| Complex view context | `FinancialListContextBuilder`, `AnalyticsDashboardBuilder`, other builders in `utils/` |
+| Session counts | `count_sessions(items)` |
+| Dates / working days | `DateRangeHelper`; `count_working_days` with `berlin_public_holidays` |
+| CRUD views | `PracticeScoped{List,Create,Update,Delete}View`, `NextRedirectMixin`, `InvoiceFormsetMixin` (`views/crud_mixins.py`) |
+| Forms | `StyledFormMixin` (no manual widget classes), `DateFormField` |
+| New models | `TimestampedModel` base |
 
-### Testing Strategy
+**Practice scoping fails closed.** Query helpers take `practice` as a required keyword and filter with `scope_to_practice(qs, practice[, "client__practice"])`: `None` gives nothing, `ALL_PRACTICES` gives everything. Never `if practice: qs = qs.filter(...)`. Some models are deliberately shared — see CODEBASE_STANDARDS.md § Queries. `test_practice_scoping.py` guards it; shrink `KNOWN_UNBOUND_QUERIES`, never grow it.
 
-Match test scope to change scope — don't run the full suite for every edit:
+### Numbered patterns (M-PAT-01 … M-PAT-09)
 
-- **During development**: run only the test file(s) for code you touched
-  ```bash
-  ./dev.py test my_practice.tests.test_inquiry
-  ./dev.py test my_practice.tests.test_invoice my_practice.tests.test_calculations
-  ```
-- **Before committing**: broaden slightly to cover shared code touched (models, utils)
-- **Full suite** (`./dev.py test --fast`, or plain `./dev.py test` if you want full non-parallel `-v 2` output): once per session when work is done, or before a release
-
-If you touch a shared utility or model used across many views, run a wider set. If you touch one view/form, run its test file.
-
-`--smart` (pytest-testmon) is a good middle ground when you're not sure what your change touched — it maps changed files/lines to the tests that cover them, so it's cheaper than a scoped guess and much cheaper than the full suite. First run on a fresh checkout builds the mapping (runs everything once); subsequent runs are fast. Rebuild the mapping (`./dev.py test --smart` again) after a rebase or pulling unrelated changes, since testmon's map can go stale.
-
-## Architecture
-
-### Modular Structure
-- **Models** (`app/my_practice/models/`): Domain-focused modules (client, invoice, practice, financial, etc.)
-- **Views** (`app/my_practice/views/`): Feature-specific view modules + CRUD mixins
-- **Utils** (`app/my_practice/utils/`): Reusable business logic - **USE THESE FIRST!**
-- **Templates** (`app/templates/`): Base template + `includes/` for reusable components
-
-### Essential Patterns (Use These!)
-
-#### Builder Classes for Complex Context
-When views need complex context preparation, use builder classes:
-```python
-# Financial lists (expenses, withdrawals)
-from my_practice.utils import FinancialListContextBuilder
-builder = FinancialListContextBuilder(queryset, year_filter=year)
-context, items = builder.build_context(include_categories=True, include_tax_deductible=True)
-
-# Analytics dashboard
-from my_practice.utils import AnalyticsDashboardBuilder
-builder = AnalyticsDashboardBuilder(start_date, end_date)
-context = builder.build_context()
-
-```
-
-#### Filter Helpers for QuerySets
-Encapsulate complex filtering logic:
-```python
-from my_practice.utils import InvoiceFilterHelper
-helper = InvoiceFilterHelper(Invoice.objects.all())
-filtered = helper.apply_filters(
-    search_query=request.GET.get('search'),
-    year_filter=year,
-    status_filter=status
-)
-```
-
-#### Session Counting - Always use centralized function
-```python
-from my_practice.utils import count_sessions
-sessions = count_sessions(invoice.items.all())  # Formula: (duration / 60.0) * quantity
-```
-
-#### CRUD Views - Use mixins from `views/crud_mixins.py`
-```python
-# Simple form-based CRUD
-class ExpenseCreateView(PracticeScopedCreateView):
-    model = CompanyExpense
-    form_class = CompanyExpenseForm
-    template_name = "my_practice/expense_form.html"
-    success_url = reverse_lazy("expense_list")
-    success_message = gettext_lazy("Expense from {obj.date:%d.%m.%Y} created successfully.")
-
-# ?next= redirect support (success_url honors ?next=, exposes context["next"])
-class ExpenseDeleteView(NextRedirectMixin, PracticeScopedDeleteView):
-    model = CompanyExpense
-    success_url = reverse_lazy("expense_list")
-
-# Invoice formsets
-class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return self.get_formset_context(context, formset_key="items")
-```
-Available base classes: `PracticeScopedListView`, `PracticeScopedCreateView`, `PracticeScopedUpdateView`, `PracticeScopedDeleteView`, `NextRedirectMixin`, `InvoiceFormsetMixin`.
-
-#### Centralized Queries and Calculations
-```python
-# Revenue calculations
-from my_practice.utils import RevenueCalculator
-revenue = RevenueCalculator.get_year_revenue(2026, practice=request.current_practice)["total"]
-breakdown = RevenueCalculator.get_status_breakdown(year=2026, practice=request.current_practice)
-
-# Date ranges
-from my_practice.utils import DateRangeHelper
-helper = DateRangeHelper(start_date, end_date)
-months = helper.get_month_list()
-```
-
-#### Practice scoping fails closed
-Query helpers take `practice` as a **required keyword** (`*, practice: PracticeScope`) and filter with `scope_to_practice(qs, practice[, "client__practice"])`: a practice gives its rows, `None` (a user without a practice) gives **nothing**, and `ALL_PRACTICES` — only where every practice is genuinely wanted — gives everything. Never `if practice: qs = qs.filter(practice=practice)`: that showed a practice-less user every practice's figures. `TimeOff`, `ClientTag`, the operational checklists and `GebuhZiffer` are deliberately shared (the practitioner's absences, a tag vocabulary, instance operations, a fee schedule) — but a count or sum over them that reaches practice data (e.g. `Count("clients")` on a tag) still needs the practice filter; see `annotate_client_counts`. **Guardrail test**: `my_practice/tests/test_practice_scoping.py`, which also flags any `Model.objects` query on a practice-owned model in `utils/`/`views/`/`templatetags/` that nothing binds to a practice (`KNOWN_UNBOUND_QUERIES` holds the deliberate exceptions — shrink it, never grow it).
-
-#### Numbered patterns (M-PAT-01 … M-PAT-09)
-
-Each exists because the bug it prevents is invisible in code review. The rule is
-here; the worked example and the failure it came from are in
-[CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Patterns Reference.
+Each exists because the bug it prevents is invisible in review. Worked examples: [CODEBASE_STANDARDS.md § Patterns Reference](docs/guides/CODEBASE_STANDARDS.md#patterns-reference-m-pat-01--m-pat-09).
 
 | | Rule |
 | --- | --- |
 | **M-PAT-01** Error handling | Form views: `messages.error()` + `form_invalid()`. API views: `JsonResponse` with a status code. Management commands: log, then raise `CommandError`. |
-| **M-PAT-02** Date filters | Always go through `RevenueCalculator`; never hand-build `invoice_date__year` / `status` filters. |
-| **M-PAT-03** Charts | Chart.js through `MPChart` (`static/js/charts.js`), in a fixed-height `.chart-wrapper--*`. It follows the theme tokens and resizes itself when a hidden tab is shown. |
-| **M-PAT-04** CSS | No inline `<style>`, no new `.css` files — everything in `tailwind.css`. Full rule in § CSS Architecture below. |
-| **M-PAT-05** Working days | `DateRangeHelper.count_working_days` with Berlin holidays; never `round(days * 5/7)`. See § Working-Day Calculations below. |
-| **M-PAT-06** Form draft guard | Opt long-text forms in with `data-draft-guard` plus the three `data-draft-*` labels; reuse those msgids verbatim rather than minting new ones. |
-| **M-PAT-07** CSS tokens | Use real `--color-*` tokens (grep the `@theme` block); never invent a name, never hardcode hex on a semantic class. |
-| **M-PAT-08** Privacy mode | `.sensitive-data` for a name beside its code, `\|privacy_name` where there is no code, nothing for codes / inputs / `<option>` text. |
-| **M-PAT-09** Narrow windows | Minimum supported viewport is 768px (a half-screen laptop, not a phone). Flex button groups declare `flex-wrap: wrap`; every `<table>` sits directly in `.table-container`; 6+ columns also needs `table-container--wide`. |
+| **M-PAT-02** Date filters | Always go through `RevenueCalculator`. |
+| **M-PAT-03** Charts | Chart.js through `MPChart` (`static/js/charts.js`), in a fixed-height `.chart-wrapper--*`. |
+| **M-PAT-04** CSS | Everything in `app/static/css/tailwind.css` (`@layer components`). No `<style>` blocks, no new `.css` files, no page CSS block. PDF templates exempt. |
+| **M-PAT-05** Working days | `DateRangeHelper.count_working_days` with Berlin holidays (set built once per call); never `round(days * 5/7)`. |
+| **M-PAT-06** Form draft guard | Long-text forms opt in with `data-draft-guard` plus the three `data-draft-*` labels, reusing those msgids verbatim. |
+| **M-PAT-07** CSS tokens | Real `--color-*` tokens only (grep the `@theme` block); never invent a name, never hardcode hex on a semantic class. `text-link` for brand-coloured text, not `text-primary`. |
+| **M-PAT-08** Privacy mode | `.sensitive-data` beside a code, `\|privacy_name` without one, nothing for codes / inputs / `<option>`. |
+| **M-PAT-09** Narrow windows | Minimum viewport 768px. Flex button groups `flex-wrap: wrap`; every `<table>` directly in `.table-container`; 6+ columns add `table-container--wide`. |
 
-## Code Style & Patterns
+**Frontend gotchas the test client can't see**:
+- **CSP**: inline `<script>` needs `nonce="{{ csp_nonce }}"`; no `onclick=`-style attributes (use `addEventListener` / Alpine `x-on:`). Alpine is the CSP build — no globals (`window`, `confirm`, `setTimeout`…), no arrow functions. Use the `data-confirm`/`data-print`/`data-navigate`/`data-submit-on-change`/`data-copy`/`data-post-link` helpers in `static/js/ui_actions.js`, or an `Alpine.data()` component.
+- **Money** in templates: `|currency` / `|currency_rounded`, never `floatformat` + `€`.
+- Every guardrail test above is a ratchet: shrink its allowlist, never grow it to make new code pass.
 
-### Import Organization
-Use relative imports for app-internal code:
-```python
-# Good
-from ..models import Client, Invoice
-from ..utils import count_sessions, RevenueCalculator
-from .crud_mixins import PracticeScopedCreateView
+## Code style
 
-# Avoid
-from my_practice.models import Client
-```
+- **English** for all identifiers, comments, docstrings, filenames, URL slugs and docs (P-038). When touching a file with German comments/identifiers, translate them in the same commit.
+- Relative imports for app code (`from ..models import Client`).
+- Python 3.13 type hints: `str | None`, `list[str]`, `dict[str, int]`.
+- `select_related` for FK access, `prefetch_related` for reverse relations, `.only()` when building maps.
+- Docstrings on public functions/classes; comments explain *why*. No dead or commented-out code.
+- Formatting: ruff (`./dev.py lint`).
+- New feature placement: model → `models/<domain>.py`, view → `views/<feature>_views.py`, util → `utils/<purpose>.py` (update each package's `__init__.py`), tests → `tests/test_<module>.py` (Django `TestCase`).
 
-### Error Handling Patterns
-- **Form Views**: Use `messages.error()` + `form_invalid()` pattern
-- **API Views**: Return `JsonResponse` with appropriate status codes
-- **Management Commands**: Raise exceptions with logging
+## Documentation
 
-### Query Optimization
-- Always use `.select_related()` for ForeignKey access: `Invoice.objects.select_related('client')`
-- Use `.prefetch_related()` for reverse relations: `Client.objects.prefetch_related('invoices')`
-- Use `.only()` when building maps: `Client.objects.only('id', 'client_code', 'full_name')`
+Where each kind of doc belongs: [CODEBASE_STANDARDS.md § Documentation](docs/guides/CODEBASE_STANDARDS.md#documentation). Decisions that would otherwise survive only as a code comment become an ADR in [docs/decisions/](docs/decisions/). Projects are tracked in [PROJECTS.md](PROJECTS.md) as P-XXX — a new one takes the lowest unused number.
 
-## Language Policy (P-038)
+**Gardening pass at the end of each session**, before committing:
+- PROJECTS.md: add a "Recent Activity" entry and keep at most two; remove finished items from the Backlog.
+- docs/FEATURES.md: one line per user-facing addition.
+- Completed project: mark it done in PROJECTS.md, then delete its doc (or move it to `done/` only if code or another doc links to it for its reasoning).
 
-| Layer | Language | Notes |
-|-------|----------|-------|
-| Code — variable/function/class names | **EN** | Always |
-| Code — comments and docstrings | **EN** | Always; migrate German ones as you touch them |
-| Filenames (templates, CSS, JS, scripts) | **EN** | Always; rename German ones as you touch them |
-| URL slugs | **EN** | Always; 4 German slugs remain (tracked in P-038) |
-| Docs (.md files, guides, architecture) | **EN** | Always; migrate German docs as you touch them |
-| UI/app text (labels, buttons, messages, verbose_names) | **EN msgid, DE msgstr** | Wrapped via Django i18n (P-039, done) — see i18n Conventions above |
-| model `verbose_name` / `help_text` | **EN msgid, DE msgstr** | Wrapped via Django i18n (P-039, done) |
-
-**Practical rule for day-to-day work:** new code is always English. When editing a file that has German comments or German-named identifiers, translate them in the same commit — don't leave a file half-migrated. New user-facing strings are always wrapped with an English msgid (see i18n Conventions above), never written as literal German or literal English directly in a template/view.
-
-## Conventions
-- **UI Language**: bilingual (German/English) via Django i18n — see i18n Conventions and Language Policy above. German is the default/primary language (`LANGUAGE_CODE = "de-de"`)
-- **Currency Format**: German standard with non-breaking space ("2680 €")
-- **Code Style**: Black formatting, isort for imports
-- **Tests**: Place in `tests/test_<module>.py`, use Django TestCase
-- **Client Privacy**: Always use client codes in templates, respect privacy mode
-- **Type Hints**: Use Python 3.13 union syntax: `str | None`, `dict[str, int]`, `list[str]` (not `Optional`, `Dict`, `List`)
-- **No dead code**: Never leave commented-out code blocks; delete unused code
-
-## CSS Architecture (M-PAT-04)
-
-**Rule: No inline `<style>` blocks in templates and no new `.css` files — all CSS belongs in `tailwind.css`.**
-
-### Structure
-- `app/static/css/tailwind.css` — single source file; compiled to `tailwind.out.css` by `@tailwindcss/cli`
-- `app/static/css/tailwind.out.css` — compiled output, loaded by `base.html` (gitignored; rebuilt by `npm run build:css`)
-- PDF templates (`invoice_pdf_*.html`) are exempt — they require inline styles for PDF rendering
-
-### Adding new styles
-Put new component classes in `tailwind.css` under `@layer components`:
-```css
-/* in tailwind.css */
-@layer components {
-  .my-component { background: var(--color-surface); color: var(--color-text-primary); }
-}
-```
-
-Use `--color-*` tokens for all colours — they automatically adapt to dark mode via `[data-theme="dark"]` overrides. Never use hardcoded hex values.
-
-**Guardrail test**: `my_practice/tests/test_css_tokens.py` is a ratchet over two failure modes that are invisible in review and in light mode:
-- `var(--x)` where `--x` is never defined. With no fallback the whole declaration is *dropped* (invalid at computed-value time) and the property reverts to inherited/initial — a background or hover highlight just never renders. With a hardcoded fallback the fallback wins permanently.
-- New hardcoded hex on a semantic component class. A literal hex doesn't flip with the theme while a tokenised text colour does, so a light background ends up carrying the dark theme's near-white text — contrast ≈1.0, invisible rather than merely low. `.cn-triage-attention`, `.onboarding-step.step-done` and the login page's `.alert-error` all shipped that way.
-
-`KNOWN_HARDCODED_HEX_PREFIXES` allowlists what is deliberately theme-independent (brand gradients, fixed swatch palettes, coloured buttons with white text) — shrink it, never grow it to make a new colour pass. Use the real token names; grep the `@theme` block at the bottom of `tailwind.css` rather than inventing one (`--card-bg`, `--text-primary`, `--color-text` and `--color-surface-alt` have all been invented and silently did nothing). Full contract: [docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) (M-PAT-07).
-
-Do **not** create a new `.css` file. Do **not** add a block for page-specific CSS `<link>`/`<style>` tags — there deliberately isn't one; all CSS goes in `tailwind.css`.
-
-Never add bare `<style>` blocks:
-```html
-{# BAD — do not do this #}
-<style>
-    .my-class { ... }
-</style>
-```
-
-`base.html` has two blocks for page-specific `<script>` tags, neither for CSS: `extra_head_scripts` (in `<head>`, for scripts an inline script further down the page calls synchronously — e.g. chart libs) and `extra_js` (near the end of `<body>`, for everything else). Pick whichever matches your load-order need; don't repurpose either for CSS.
-
-**Contrast guardrail**: `my_practice/tests/test_color_contrast.py` resolves both themes' tokens and requires 4.5:1 (WCAG AA) for every text-on-background pair and for white text on button/tag fills. Use `text-link` for brand-coloured text — `text-primary` is Tailwind's utility for the `--color-primary` *fill* token (it silently overrode a same-named alias), and `--color-primary` is a fill colour, not a text colour in dark mode. Money in templates goes through `|currency` / `|currency_rounded`, never `floatformat` + `€` (`test_currency_formatting.py`).
-
-Inline `<script>` blocks need `nonce="{{ csp_nonce }}"`, and event handlers are wired with `addEventListener` or Alpine `x-on:` — never an `onclick=`-style attribute. `script-src` has no `'unsafe-inline'` and no `'unsafe-eval'`, so the browser silently skips either one (nothing fails in the test client). Alpine is the **CSP build** (`alpine-csp.min.js`): expressions may use the component's own data, operators and method calls, but no globals (`window`, `confirm`, `navigator`, `setTimeout`…) and no arrow functions — a refused global throws when the handler runs, which for `confirm(…) || $event.preventDefault()` meant the delete went through unconfirmed. Use `data-confirm`, `data-print`, `data-navigate`, `data-submit-on-change`, `data-copy` and `data-post-link` (a link to a POST-only view; `static/js/ui_actions.js`), or register a component with `Alpine.data()` and reference it as `x-data="name"`. **Guardrail test**: `my_practice/tests/test_csp_coverage.py`, whose allowlists are empty.
-
-### Forms
-- Use `StyledFormMixin` for all ModelForms — no manual `attrs={"class": "form-control"}` on field widgets
-- Use `DateFormField` for all date inputs — handles `date` input type automatically
-
-### Delete Views
-- Use `PracticeScopedDeleteView` for all delete views — no wrapper functions or custom `get_object()`
-
-### Models
-- Use `TimestampedModel` as base class for all new models needing `created_at`/`updated_at`
-
-## Key Models
-- `Client` - Therapy clients with individual hourly rates
-- `Invoice` / `InvoiceItem` - Invoices with line items (duration, quantity, rate) - **primary data source**
-- `Practice` - Practice settings (logo, signature, bank details, email templates)
-- `CompanyWithdrawal` / `CompanyExpense` - Financial tracking
-
-## Database
-PostgreSQL with performance indexes — defined inline via each model's `Meta.indexes` (e.g. `Invoice`, `Session`, `PracticeTodo`, `SupervisionItem`, `ClientInquiry`) rather than concentrated in specific migration files. Use `select_related`/`prefetch_related` for related data.
-
-## File Organization
-When adding new features:
-1. **Check `utils/` first** - Many helpers already exist!
-2. Model → `models/<domain>.py` + update `models/__init__.py`
-3. View → `views/<feature>_views.py` + update `views/__init__.py`
-4. Utility functions → `utils/<purpose>.py` + update `utils/__init__.py`
-5. Tests → `tests/test_<module>.py`
-
-## Documentation Guidelines
-
-Where each kind of document belongs, plus the docstring and inline-comment
-rules: [CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Documentation.
-Decisions that would otherwise only survive as a code comment go in
-[docs/decisions/](docs/decisions/) as an ADR — its README says when one is warranted.
-
-### Documentation Principles
-1. **One source of truth per topic** - PROJECTS.md is the index, P-XXX docs have details
-2. **Status-based organization** - Use todo/wip/done directories for lifecycle tracking
-3. **Numbered projects** - P-XXX format for easy cross-referencing; a new project takes the **lowest unused number** (there are gaps — see [PROJECTS.md § Project Numbering](PROJECTS.md#-project-numbering)), never the number of the GitHub issue it came from
-4. **Docstrings are mandatory** for public functions/classes
-5. **Code is the primary documentation** - write self-documenting code
-6. **Comments explain WHY, not WHAT** - code shows what, comments explain reasoning
-7. **Update docs with code changes** - outdated docs are worse than no docs
-8. **Link between docs** - use relative links to connect related documentation
-9. **Archive with dates** - Historical docs get YYYY-MM-DD_ prefixes
-
-## Narrow-Window Layout (M-PAT-09)
-
-The UI must work down to a **768px viewport** — a small laptop, or a window dragged to
-half the desktop while the news plays beside it. Phones are explicitly out of scope.
-Nothing here renders differently until the window is narrow, so every instance ships
-unseen; four were live at once when this was automated.
-
-- **Flex button groups declare `flex-wrap: wrap`.** A group with `display: flex` and no
-  wrap sizes to max-content and paints its buttons outside the parent. Wrapping is never
-  worse than overflowing and changes nothing at full width.
-- **Every `<table>` sits directly inside `<div class="table-container">`**, and a table
-  of **6+ columns** also needs `table-container--wide`. The wrapper alone is a no-op:
-  `.table-container table` is `width: 100%`, so without the modifier's `min-width` the
-  table just crushes its columns while the markup looks correct.
-
-**Guardrail test**: `my_practice/tests/test_responsive_layout.py` ratchets all three,
-plus any fixed px floor wider than the 736px content box. Its allowlists are empty —
-keep them that way. Full contract:
-[docs/guides/CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) (M-PAT-09);
-rationale: [ADR-0006](docs/decisions/ADR-0006-minimum-supported-window-width.md).
-
-## Working-Day Calculations (M-PAT-05)
-
-**Always use `DateRangeHelper.count_working_days` with Berlin public holidays. Never the `round(days * 5/7)` approximation** — it diverges badly over Easter and Christmas, producing materially wrong utilisation figures.
-
-- `count_working_days(start, end)` is inclusive at both ends, Mon–Fri, no holidays.
-- Pass a holiday set to exclude them; build it **once per function call**, not inside a loop.
-- For "days elapsed before a milestone" (half-open `[start, end)`), pass `end - timedelta(days=1)` so a same-day event counts as 0.
-- `berlin_public_holidays(year)` lives in `utils/practice_days.py` and is **not** re-exported from `utils/__init__.py` — import it directly.
-
-Worked example: [CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Patterns Reference.
-
-## Available Utility Classes (Use Before Creating New Code!)
-- `AnalyticsDashboardBuilder` - Dashboard context preparation
-- `FinancialListContextBuilder` - Financial list views
-- `InvoiceFilterHelper` - Invoice queryset filtering
-- `RevenueCalculator` - All revenue calculations
-- `DateRangeHelper` - Date range utilities
-
-See [docs/architecture/CODE_STRUCTURE.md](docs/architecture/CODE_STRUCTURE.md) for complete reference.
-
-## Documentation Gardening
-
-At the end of each coding session, do a quick gardening pass before committing.
-
-### Done-Item Graduation Workflow
-1. **User-facing features** → add a one-line entry to `docs/FEATURES.md` under the relevant section
-2. **Technical changes** → already captured by CHANGELOG.md commit entries; no extra action needed
-3. **Project completion** → add a brief "Recent Activity" entry to PROJECTS.md and mark the row in the PROJECTS.md "Abgeschlossen" table. Then delete the project doc from `wip/` or `todo/` — CHANGELOG.md and git history keep the record. Move it to `done/` instead only when code or another doc links to it for its reasoning (which may be the cue for an ADR in `docs/decisions/`)
-
-### Keeping PROJECTS.md Clean
-- Keep at most **2 "Recent Activity" entries** (the last two sessions only)
-- Older entries belong in CHANGELOG.md — delete them from PROJECTS.md after adding a new one
-- The Backlog section should contain only open/upcoming work; remove items once done
-
-### Gardening Checklist (end of each session)
-- [ ] PROJECTS.md: add new "Recent Activity" entry, drop oldest if >2 exist
-- [ ] docs/FEATURES.md: add user-facing highlights
-- [ ] Completed projects: doc deleted, or moved to `done/` if something links to it
-
-## Periodic Review
-
-`./dev.py review` monthly, `./dev.py review --full` quarterly. It runs the
-automated checks (dead code, CVEs, outdated packages, coverage; plus complexity
-and long files in `--full`) and prints the manual checklist to work through, so
-there is nothing to remember here.
-
-Cadence, what each mode covers and the full scan checklist:
-[CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) § Periodic Review Cadence.
+Periodic review: `./dev.py review` monthly, `--full` quarterly; it prints its own checklist.

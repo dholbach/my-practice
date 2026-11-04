@@ -43,7 +43,7 @@ them over the whole tree any time with `pre-commit run --all-files`.
 
 ## Code conventions
 
-- **Language**: code and comments in English. UI text is bilingual via Django i18n (P-039) — every user-facing string must be wrapped with an English msgid (`{% trans %}` / `gettext`/`gettext_lazy`), never written as literal German or English directly in a template or view. German translations go in `locale/de/LC_MESSAGES/django.po`. See the "i18n Conventions" section in [CLAUDE.md](CLAUDE.md) for the full rules (including the class-body-vs-function-scope `gettext_lazy` vs `gettext` distinction) and run `./dev.py i18n` after touching any user-facing string.
+- **Language**: code and comments in English. UI text is bilingual via Django i18n (P-039) — every user-facing string must be wrapped with an English msgid (`{% trans %}` / `gettext`/`gettext_lazy`), never written as literal German or English directly in a template or view. German translations go in `locale/de/LC_MESSAGES/django.po`. See [CODEBASE_STANDARDS.md § Internationalisation](docs/guides/CODEBASE_STANDARDS.md#internationalisation-p-039) for the full rules (including the class-body-vs-function-scope `gettext_lazy` vs `gettext` distinction) and run `./dev.py i18n` after touching any user-facing string.
 - **Style**: `./dev.py quality` runs ruff format + ruff lint + the file-sync checks + tests — must pass before a PR
 - **Patterns**: check [docs/architecture/CODE_STRUCTURE.md](docs/architecture/CODE_STRUCTURE.md) before adding new views or utils; there are builder classes and helpers for most common tasks
 - **Tests**: add a test for new behaviour; run the relevant test file during development, full suite before opening a PR

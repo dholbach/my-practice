@@ -141,7 +141,7 @@ Session notes and sensitive client data use a custom [`EncryptedTextField`](app/
 Performance indexes on the invoice/client foreign keys (migrations 0013, 0014), and psycopg3's async driver for Django's async views. The load of a single-practitioner practice doesn't require it, but it keeps the deployment realistic and the door open for async features.
 
 **Pattern layer**
-Views stay thin by delegating to builder classes (`AnalyticsDashboardBuilder`, `FinancialListContextBuilder`) and filter helpers (`InvoiceFilterHelper`). Models, views, and utils are split into domain-focused modules under `app/my_practice/{models,views,utils}/`. The full pattern catalogue — including the builder API, CRUD mixins, and query helpers — is in [`CLAUDE.md`](CLAUDE.md). It was written as AI-assistant instructions but reads as a practical architecture reference for anyone contributing to the codebase.
+Views stay thin by delegating to builder classes (`AnalyticsDashboardBuilder`, `FinancialListContextBuilder`) and filter helpers (`InvoiceFilterHelper`). Models, views, and utils are split into domain-focused modules under `app/my_practice/{models,views,utils}/`. The full pattern catalogue — builder API, CRUD mixins, query helpers, and the contracts behind each guardrail test — is in [`CODEBASE_STANDARDS.md`](docs/guides/CODEBASE_STANDARDS.md); [`CLAUDE.md`](CLAUDE.md) is its one-page summary for AI assistants.
 
 ---
 
@@ -235,7 +235,8 @@ Reference: `./dev.py --help` or [docs/operations/SCRIPTS.md](docs/operations/SCR
 | [docs/operations/SECURITY.md](docs/operations/SECURITY.md) | Security model and deployment notes |
 | [DPIA-template.md](docs/operations/DPIA-template.md) | Data protection impact assessment template |
 | [CODE_STRUCTURE.md](docs/architecture/CODE_STRUCTURE.md) | Codebase patterns |
-| [CLAUDE.md](CLAUDE.md) | Builder classes, view mixins, query helpers — AI instructions that double as an architecture reference |
+| [CODEBASE_STANDARDS.md](docs/guides/CODEBASE_STANDARDS.md) | Canonical patterns, numbered rules (M-PAT-01…09), guardrail contracts |
+| [CLAUDE.md](CLAUDE.md) | One-page summary of the above, written as AI-assistant instructions |
 | [PROJECTS.md](PROJECTS.md) | Roadmap and backlog |
 
 ---

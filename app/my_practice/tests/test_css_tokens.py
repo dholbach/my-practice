@@ -176,6 +176,6 @@ class CssHardcodedColourTests(SimpleTestCase):
             offenders,
             [],
             "Hardcoded hex outside the token blocks. These do not adapt to dark "
-            "mode — use a --color-* token (see CLAUDE.md, CSS Architecture):\n  "
+            "mode — use a --color-* token (see CODEBASE_STANDARDS.md, M-PAT-07):\n  "
             + "\n  ".join(offenders),
         )
