@@ -235,4 +235,4 @@ For questions about code structure or extensions:
 1. Identify the relevant module from the directory tree above
 2. Check docstrings in the module
 3. For performance patterns: see [PERFORMANCE.md](PERFORMANCE.md)
-4. For available utility classes: see [CLAUDE.md](../../CLAUDE.md) "Available Utility Classes" section
+4. For canonical patterns and which helper to use: see [CODEBASE_STANDARDS.md](../guides/CODEBASE_STANDARDS.md)

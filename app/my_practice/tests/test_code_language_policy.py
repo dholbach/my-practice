@@ -16,8 +16,8 @@ to already be clean, so the list can't go stale in the other direction.
 Deliberately narrow scope: this only inspects identifiers (function/class/
 variable names) and comments, never string literal *values* — German data
 content (email subjects, clinical scaffolding text, tag descriptions) is a
-separate, legitimate concern (see CLAUDE.md's i18n/language-policy
-exemptions) and is out of scope here by construction.
+separate, legitimate concern (see the i18n exemptions in
+CODEBASE_STANDARDS.md § Internationalisation) and is out of scope here by construction.
 """
 
 import ast

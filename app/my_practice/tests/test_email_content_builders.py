@@ -3,7 +3,7 @@ Tests for the email content builders in utils/email_utils.py.
 
 These build the subject and body text that actually reaches a client. They sit
 in a double blind spot: the i18n coverage guardrail deliberately exempts them
-(they are authored bilingual content, not Django-i18n UI chrome — see CLAUDE.md),
+(they are authored bilingual content, not Django-i18n UI chrome — see CODEBASE_STANDARDS.md § Internationalisation),
 and test_email_views.py mocks the send, so it asserts that an email went out but
 never what it said.
 

@@ -22,8 +22,8 @@ in on the English side. Final catalog: 1,846 msgids, 0 fuzzy in either file.
 A regression guardrail (`my_practice/tests/test_i18n_coverage.py`, added in
 Phase 0) keeps this from rotting: it fails on any non-exempt template missing
 `{% load i18n %}`, any leaked raw German text, or any `#, fuzzy` `.po` entry.
-The permanent conventions this project established live in the root
-`CLAUDE.md` under "i18n Conventions" — that section, not this doc, is the
+The permanent conventions this project established live in
+[CODEBASE_STANDARDS.md § Internationalisation](../../guides/CODEBASE_STANDARDS.md#internationalisation-p-039) — that section, not this doc, is the
 source of truth for how to write new i18n-correct code going forward.
 
 ## How it was done: opportunistic wrapping, then a dedicated sweep
