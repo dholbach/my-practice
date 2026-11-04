@@ -1,5 +1,9 @@
 # Secrets
 .env
+.env.*
+!.env.example
+# Editor swap files of .env hold the same secrets.
+*.sw?
 
 # Editor/agent local state (.claude/settings.json IS tracked; the local one is not)
 .claude/settings.local.json
