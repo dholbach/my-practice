@@ -37,6 +37,14 @@
     <span class="billing-summary__chip chip-ok">✅ {% blocktrans with count=summary.ok %}{{ count }} paid{% endblocktrans %}</span>
     {% endif %}
     <span class="billing-summary__total text-muted">{% blocktrans count count=summary.total %}{{ count }} client{% plural %}{{ count }} clients{% endblocktrans %}</span>
+    <span title="{% trans "Invoiced items plus unbilled sessions estimated from each client’s standard hourly rate, for work done this month, before tax. Pending calendar appointments are not included." %}">
+        <span class="fw-700">{% trans "Billable" %}: {% if unbilled_estimate %}~{% endif %}{{ billable_amount|currency }}</span>
+        {% if unbilled_estimate and invoiced_amount %}
+        <span class="text-muted">({% blocktrans with amount=invoiced_amount|currency %}{{ amount }} invoiced{% endblocktrans %}, {% blocktrans with amount=unbilled_estimate|currency %}~{{ amount }} not yet invoiced{% endblocktrans %})</span>
+        {% elif unbilled_estimate %}
+        <span class="text-muted">({% trans "not yet invoiced" %})</span>
+        {% endif %}
+    </span>
 </div>
 {% endif %}
 

@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-05 — Billable amount on the monthly billing page**: the summary bar shows what a month's work is worth, invoiced items plus estimated unbilled sessions, by session month. `/billing/open/` shares the same estimate helper.
 - **2026-11-03 — v0.10.1 patch release**: concurrency-safe sign-in limits and key rotation, inquiries stay anonymised and can't be converted twice, calendar approval queue makes one invoice per batch, session log input validated (#560–#568). Details in [docs/CHANGELOG.md](docs/CHANGELOG.md).
-- **2026-10-30 — v0.10.0 security release**: four source reviews (views/settings, bank import, practice scoping, admin + operator tooling) and their fixes (#545–#555); backups mounted read-only, `update` backs up first, all-or-nothing restore, 2FA changes end other sessions, `tidy_inquiries` on the hourly timer. Details in [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

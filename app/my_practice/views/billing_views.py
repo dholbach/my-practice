@@ -8,12 +8,12 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q, Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, Session
+from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, Session, scope_to_practice
 from ..utils.billing_helpers import (
     build_service_type_map,
     resolve_session_rate,
@@ -96,6 +96,43 @@ def _build_billing_summary(rows: list[dict]) -> dict:
         "sent": sum(1 for r in rows if r["status"] == "sent"),
         "ok": sum(1 for r in rows if r["status"] == "ok"),
     }
+
+
+def _estimate_unbilled_fees(rows: list[dict], practice) -> Decimal:
+    """Price the rows' unbilled sessions the way invoice creation would."""
+    service_type_map = build_service_type_map(practice)
+    fallback_service_type = next(iter(service_type_map.values()), None)
+
+    fees = Decimal("0")
+    for row in rows:
+        for session in row["unbilled_sessions"]:
+            service_type = service_type_map.get(session.duration, fallback_service_type)
+            if service_type is not None:
+                fees += resolve_session_rate(row["client"], service_type)
+    return fees
+
+
+def _invoiced_amount_for_month(*, practice, year: int, month_num: int) -> Decimal:
+    """Sum net line items on non-cancelled invoices for work done in the month.
+
+    Session items count towards their session's month, so an invoice spanning two
+    months splits correctly. Free-form items have no session, so their invoice's
+    month stands in.
+    """
+    items = scope_to_practice(InvoiceItem.objects.all(), practice, "invoice__practice")
+    amount = (
+        items.filter(
+            Q(session__session_date__year=year, session__session_date__month=month_num)
+            | Q(
+                session__isnull=True,
+                invoice__invoice_date__year=year,
+                invoice__invoice_date__month=month_num,
+            )
+        )
+        .exclude(invoice__status=Invoice.Status.CANCELLED)
+        .aggregate(amount=Sum("total"))["amount"]
+    )
+    return amount or Decimal("0")
 
 
 def _gather_billing_data(practice, year, month_num):
@@ -329,18 +366,9 @@ def billing_open_overview(request):
 
     total_unresolved = sum(len(m["rows"]) for m in months)
 
-    service_type_map = build_service_type_map(practice)
-    fallback_service_type = next(iter(service_type_map.values()), None)
-
-    total_unbilled_sessions = 0
-    total_unbilled_fees = Decimal("0")
-    for m in months:
-        for row in m["rows"]:
-            total_unbilled_sessions += row["unbilled_count"]
-            for session in row["unbilled_sessions"]:
-                service_type = service_type_map.get(session.duration, fallback_service_type)
-                if service_type is not None:
-                    total_unbilled_fees += resolve_session_rate(row["client"], service_type)
+    open_rows = [row for m in months for row in m["rows"]]
+    total_unbilled_sessions = sum(row["unbilled_count"] for row in open_rows)
+    total_unbilled_fees = _estimate_unbilled_fees(open_rows, practice)
 
     return render(
         request,
@@ -411,6 +439,9 @@ def monthly_billing_overview(request, month):
         else None
     )
 
+    invoiced_amount = _invoiced_amount_for_month(practice=practice, year=year, month_num=month_num)
+    unbilled_estimate = _estimate_unbilled_fees(rows, practice)
+
     return render(
         request,
         "my_practice/monthly_billing_overview.html",
@@ -421,5 +452,8 @@ def monthly_billing_overview(request, month):
             "next_month_str": next_month_str,
             "rows": rows,
             "summary": _build_billing_summary(rows),
+            "invoiced_amount": invoiced_amount,
+            "unbilled_estimate": unbilled_estimate,
+            "billable_amount": invoiced_amount + unbilled_estimate,
         },
     )
