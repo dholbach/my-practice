@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 18:01+0100\n"
+"POT-Creation-Date: 2026-11-05 13:50+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -53,7 +53,7 @@ msgstr "Zuordnung"
 #: templates/my_practice/invoice_confirm_delete.html:24
 #: templates/my_practice/invoice_detail.html:33
 #: templates/my_practice/invoice_list.html:169
-#: templates/my_practice/monthly_billing_overview.html:53
+#: templates/my_practice/monthly_billing_overview.html:61
 #: templates/my_practice/revenue_report.html:54
 #: templates/my_practice/send_payment_reminder.html:22
 #: templates/my_practice/tax_quarter_overview.html:82
@@ -96,7 +96,7 @@ msgstr "Zuordnung"
 #: templates/my_practice/billing_open_overview.html:64
 #: templates/my_practice/invoice_detail.html:6
 #: templates/my_practice/invoice_detail.html:8
-#: templates/my_practice/monthly_billing_overview.html:52
+#: templates/my_practice/monthly_billing_overview.html:60
 #: templates/my_practice/send_invoice_email.html:8
 #: templates/my_practice/tax_year_summary.html:201
 msgid "Invoice"
@@ -114,7 +114,7 @@ msgstr "Rechnung"
 #: templates/my_practice/client_detail.html:7
 #: templates/my_practice/invoice_confirm_delete.html:16
 #: templates/my_practice/invoice_list.html:167
-#: templates/my_practice/monthly_billing_overview.html:48
+#: templates/my_practice/monthly_billing_overview.html:56
 #: templates/my_practice/revenue_report.html:50
 #: templates/my_practice/tax_year_summary.html:131
 msgid "Client"
@@ -1199,7 +1199,7 @@ msgstr "Liste der gewährten Berechtigungen"
 
 #: my_practice/models/calendar.py:44
 #: templates/my_practice/billing_open_overview.html:61
-#: templates/my_practice/monthly_billing_overview.html:49
+#: templates/my_practice/monthly_billing_overview.html:57
 msgid "Calendar"
 msgstr "Kalender"
 
@@ -2183,21 +2183,21 @@ msgstr "Marketing-Zeiträume"
 msgid "ongoing"
 msgstr "laufend"
 
-#: my_practice/models/invoice.py:115 my_practice/views/billing_views.py:219
+#: my_practice/models/invoice.py:115 my_practice/views/billing_views.py:256
 #: templates/my_practice/dashboard.html:111
 #: templates/my_practice/invoice_detail.html:40
 #: templates/my_practice/invoice_list.html:26
 msgid "Draft"
 msgstr "Entwurf"
 
-#: my_practice/models/invoice.py:116 my_practice/views/billing_views.py:221
+#: my_practice/models/invoice.py:116 my_practice/views/billing_views.py:258
 #: templates/my_practice/dashboard.html:116
 #: templates/my_practice/invoice_detail.html:41
 #: templates/my_practice/invoice_list.html:31
 msgid "Sent"
 msgstr "Versendet"
 
-#: my_practice/models/invoice.py:117 my_practice/views/billing_views.py:223
+#: my_practice/models/invoice.py:117 my_practice/views/billing_views.py:260
 #: templates/my_practice/dashboard.html:121
 #: templates/my_practice/invoice_detail.html:42
 #: templates/my_practice/invoice_list.html:36
@@ -2860,6 +2860,7 @@ msgid "Number of participants (>1 for group sessions); affects therapist-hours c
 msgstr "Anzahl Teilnehmer (>1 für Gruppensitzungen); beeinflusst Therapeutenstunden-Berechnung"
 
 #: my_practice/models/session.py:50
+#: templates/my_practice/monthly_billing_overview.html:41
 msgid "Billable"
 msgstr "Abrechenbar"
 
@@ -2879,7 +2880,7 @@ msgstr "Google Calendar Event-ID, falls importiert"
 #: templates/includes/heatmap.html:13
 #: templates/my_practice/billing_open_overview.html:62
 #: templates/my_practice/client_detail.html:638
-#: templates/my_practice/monthly_billing_overview.html:50
+#: templates/my_practice/monthly_billing_overview.html:58
 #: templates/my_practice/tax_workday_audit.html:63
 msgid "Sessions"
 msgstr "Sitzungen"
@@ -3193,52 +3194,52 @@ msgstr "Leistungstyp-ID %(id)s nicht gefunden"
 msgid "No default service type found for event: %(summary)s"
 msgstr "Kein Standard-Leistungstyp für Termin gefunden: %(summary)s"
 
-#: my_practice/utils/calendar_import_helpers.py:80
+#: my_practice/utils/calendar_import_helpers.py:85
 #, python-format
 msgid "Invoice ID %(id)s not found for client %(code)s"
 msgstr "Rechnungs-ID %(id)s für Klient:in %(code)s nicht gefunden"
 
-#: my_practice/utils/calendar_import_helpers.py:97
+#: my_practice/utils/calendar_import_helpers.py:102
 #, python-format
 msgid "Client %(code)s has no hourly rate — set it in client settings"
 msgstr "Klient %(code)s hat keinen Stundensatz — bitte in den Klienten-Einstellungen setzen"
 
-#: my_practice/utils/calendar_import_helpers.py:156
+#: my_practice/utils/calendar_import_helpers.py:170
 #, python-format
 msgid "No date for event: %(summary)s"
 msgstr "Kein Datum für Termin: %(summary)s"
 
-#: my_practice/utils/calendar_import_helpers.py:171
+#: my_practice/utils/calendar_import_helpers.py:192
 #, python-format
 msgid "Duplicate: %(summary)s on %(date)s"
 msgstr "Duplikat: %(summary)s am %(date)s"
 
-#: my_practice/utils/calendar_import_helpers.py:210
+#: my_practice/utils/calendar_import_helpers.py:225
 #, python-format
 msgid "Error creating %(summary)s: %(error)s"
 msgstr "Fehler beim Erstellen von %(summary)s: %(error)s"
 
-#: my_practice/utils/calendar_import_helpers.py:279
+#: my_practice/utils/calendar_import_helpers.py:294
 #: my_practice/views/calendar_views.py:524
 msgid "No matching service type found."
 msgstr "Kein passender Leistungstyp gefunden."
 
-#: my_practice/utils/calendar_import_helpers.py:283
+#: my_practice/utils/calendar_import_helpers.py:298
 #: my_practice/views/calendar_views.py:531
 #, python-format
 msgid "No hourly rate set for %(code)s."
 msgstr "Kein Stundensatz für %(code)s hinterlegt."
 
-#: my_practice/utils/calendar_import_helpers.py:287
+#: my_practice/utils/calendar_import_helpers.py:302
 msgid "Session is already billed."
 msgstr "Sitzung ist bereits abgerechnet."
 
-#: my_practice/utils/calendar_import_helpers.py:306
+#: my_practice/utils/calendar_import_helpers.py:321
 #, python-format
 msgid "Error: %(error)s"
 msgstr "Fehler: %(error)s"
 
-#: my_practice/utils/calendar_import_helpers.py:308
+#: my_practice/utils/calendar_import_helpers.py:323
 #, python-format
 msgid "Session on %(date)s was billed."
 msgstr "Sitzung am %(date)s wurde abgerechnet."
@@ -3709,25 +3710,25 @@ msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amo
 msgstr[0] "%(count)s Transaktion erfolgreich zu Entnahme zusammengefasst: %(amount)s €"
 msgstr[1] "%(count)s Transaktionen erfolgreich zu Entnahme zusammengefasst: %(amount)s €"
 
-#: my_practice/views/billing_views.py:209
+#: my_practice/views/billing_views.py:246
 msgid "Cancelled session billed"
 msgstr "Stornierte Sitzung abgerechnet"
 
-#: my_practice/views/billing_views.py:211
+#: my_practice/views/billing_views.py:248
 msgid "Appointments pending"
 msgstr "Termine ausstehend"
 
-#: my_practice/views/billing_views.py:213
+#: my_practice/views/billing_views.py:250
 msgid "Not billed"
 msgstr "Nicht abgerechnet"
 
-#: my_practice/views/billing_views.py:215
-#: my_practice/views/billing_views.py:224
+#: my_practice/views/billing_views.py:252
+#: my_practice/views/billing_views.py:261
 msgid "OK"
 msgstr "OK"
 
-#: my_practice/views/billing_views.py:239
-#: my_practice/views/billing_views.py:372
+#: my_practice/views/billing_views.py:276
+#: my_practice/views/billing_views.py:400
 #: my_practice/views/calendar_views.py:272
 #: my_practice/views/invoice_views.py:568
 msgid "No active practice found."
@@ -3861,132 +3862,132 @@ msgstr "Voraussetzungen für die DSGVO-Löschung nicht erfüllt."
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr "Klient:in %(code)s wurde gemäß DSGVO Art. 17 gelöscht."
 
-#: my_practice/views/clinical_views.py:85
+#: my_practice/views/clinical_views.py:84
 msgid "Client profile saved."
 msgstr "Klientenprofil gespeichert."
 
-#: my_practice/views/clinical_views.py:105
+#: my_practice/views/clinical_views.py:104
 msgid "Session date is required."
 msgstr "Sitzungsdatum ist erforderlich."
 
-#: my_practice/views/clinical_views.py:111
-#: my_practice/views/clinical_views.py:396
-#: my_practice/views/clinical_views.py:421
+#: my_practice/views/clinical_views.py:110
+#: my_practice/views/clinical_views.py:395
+#: my_practice/views/clinical_views.py:420
 msgid "Invalid date."
 msgstr "Ungültiges Datum."
 
-#: my_practice/views/clinical_views.py:117
-#: my_practice/views/clinical_views.py:224
-#: my_practice/views/clinical_views.py:484
+#: my_practice/views/clinical_views.py:116
+#: my_practice/views/clinical_views.py:223
+#: my_practice/views/clinical_views.py:483
 msgid "Invalid duration."
 msgstr "Ungültige Dauer."
 
-#: my_practice/views/clinical_views.py:120
+#: my_practice/views/clinical_views.py:119
 msgid "Invalid session type."
 msgstr "Ungültiger Sitzungstyp."
 
-#: my_practice/views/clinical_views.py:142
+#: my_practice/views/clinical_views.py:141
 msgid "A log already exists for this session."
 msgstr "Für diese Sitzung existiert bereits ein Protokoll."
 
-#: my_practice/views/clinical_views.py:162
+#: my_practice/views/clinical_views.py:161
 #, python-format
 msgid "Session log for %(date)s saved."
 msgstr "Sitzungsprotokoll für %(date)s gespeichert."
 
-#: my_practice/views/clinical_views.py:232
+#: my_practice/views/clinical_views.py:231
 msgid "The duration was not changed: this session has already been billed. Remove the invoice item first."
 msgstr "Die Dauer wurde nicht geändert: Die Sitzung ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
 
-#: my_practice/views/clinical_views.py:240
+#: my_practice/views/clinical_views.py:239
 msgid "Session log updated."
 msgstr "Sitzungsprotokoll aktualisiert."
 
-#: my_practice/views/clinical_views.py:262
-#: my_practice/views/clinical_views.py:414
+#: my_practice/views/clinical_views.py:261
+#: my_practice/views/clinical_views.py:413
 msgid "Content must not be empty."
 msgstr "Inhalt darf nicht leer sein."
 
-#: my_practice/views/clinical_views.py:266
+#: my_practice/views/clinical_views.py:265
 msgid "Supervision topic added."
 msgstr "Supervisionsthema hinzugefügt."
 
-#: my_practice/views/clinical_views.py:281
+#: my_practice/views/clinical_views.py:280
 msgid "Supervision topic deleted."
 msgstr "Supervisionsthema gelöscht."
 
-#: my_practice/views/clinical_views.py:336
+#: my_practice/views/clinical_views.py:335
 msgid "Supervision topic marked discussed."
 msgstr "Supervisionsthema als besprochen markiert."
 
-#: my_practice/views/clinical_views.py:390
+#: my_practice/views/clinical_views.py:389
 msgid "Date and content are required."
 msgstr "Datum und Inhalt sind erforderlich."
 
-#: my_practice/views/clinical_views.py:400
+#: my_practice/views/clinical_views.py:399
 msgid "Note saved."
 msgstr "Notiz gespeichert."
 
-#: my_practice/views/clinical_views.py:426
+#: my_practice/views/clinical_views.py:425
 msgid "Note updated."
 msgstr "Notiz aktualisiert."
 
-#: my_practice/views/clinical_views.py:441
+#: my_practice/views/clinical_views.py:440
 msgid "Note deleted."
 msgstr "Notiz gelöscht."
 
-#: my_practice/views/clinical_views.py:456
+#: my_practice/views/clinical_views.py:455
 msgid "Session log deleted."
 msgstr "Sitzungsprotokoll gelöscht."
 
-#: my_practice/views/clinical_views.py:476
+#: my_practice/views/clinical_views.py:475
 #, python-format
 msgid "Session of %(date)s cannot be edited: it has already been billed. Remove the invoice item first."
 msgstr "Sitzung vom %(date)s kann nicht bearbeitet werden: sie ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
 
-#: my_practice/views/clinical_views.py:490
+#: my_practice/views/clinical_views.py:489
 #, python-format
 msgid "Session duration updated to %(min)s min."
 msgstr "Sitzungsdauer auf %(min)s Min. aktualisiert."
 
-#: my_practice/views/clinical_views.py:509
+#: my_practice/views/clinical_views.py:508
 #, python-format
 msgid "Session of %(date)s cannot be deleted: it has already been billed. Remove the invoice item first."
 msgstr "Sitzung vom %(date)s kann nicht gelöscht werden: sie ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
 
-#: my_practice/views/clinical_views.py:517
+#: my_practice/views/clinical_views.py:516
 #, python-format
 msgid "Session of %(date)s deleted."
 msgstr "Sitzung vom %(date)s gelöscht."
 
-#: my_practice/views/clinical_views.py:528
+#: my_practice/views/clinical_views.py:527
 msgid "Marked as no-show / cancellation."
 msgstr "Als Ausfall / Absage markiert."
 
-#: my_practice/views/clinical_views.py:640
+#: my_practice/views/clinical_views.py:639
 msgid "GebüH billing is not enabled for this client."
 msgstr "GebüH-Abrechnung ist für diesen Klienten nicht aktiviert."
 
-#: my_practice/views/clinical_views.py:653
+#: my_practice/views/clinical_views.py:652
 msgid "Invalid input."
 msgstr "Ungültige Eingabe."
 
-#: my_practice/views/clinical_views.py:663
+#: my_practice/views/clinical_views.py:662
 #, python-format
 msgid "GebüH entries for %(date)s cleared."
 msgstr "GebüH-Einträge für %(date)s gelöscht."
 
-#: my_practice/views/clinical_views.py:677
+#: my_practice/views/clinical_views.py:676
 #, python-format
 msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
 msgstr "Achtung: Ziffer %(nr)s ist nur als Alleinleistung erstattungsfähig und sollte nicht mit anderen Ziffern kombiniert werden."
 
-#: my_practice/views/clinical_views.py:702
+#: my_practice/views/clinical_views.py:701
 #, python-format
 msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
 msgstr "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von %(days)s Tagen abgerechnet (Maximum: %(max)s×)."
 
-#: my_practice/views/clinical_views.py:733
+#: my_practice/views/clinical_views.py:732
 #, python-format
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
@@ -4558,7 +4559,7 @@ msgstr "Klient:in bearbeiten"
 #: templates/base.html:50 templates/my_practice/billing_open_overview.html:143
 #: templates/my_practice/invoice_edit.html:6
 #: templates/my_practice/invoice_edit.html:8
-#: templates/my_practice/monthly_billing_overview.html:131
+#: templates/my_practice/monthly_billing_overview.html:139
 msgid "Edit invoice"
 msgstr "Rechnung bearbeiten"
 
@@ -4883,7 +4884,7 @@ msgstr "E-Mail-Textbausteine"
 #: templates/my_practice/inquiry_list.html:206
 #: templates/my_practice/inquiry_list.html:254
 #: templates/my_practice/invoice_list.html:171
-#: templates/my_practice/monthly_billing_overview.html:54
+#: templates/my_practice/monthly_billing_overview.html:62
 #: templates/my_practice/tag_list.html:29
 #: templates/my_practice/time_off_list.html:37
 #: templates/my_practice/time_off_list.html:84
@@ -5961,40 +5962,40 @@ msgid "%(count)s sent"
 msgstr "%(count)s versendet"
 
 #: templates/my_practice/billing_open_overview.html:63
-#: templates/my_practice/monthly_billing_overview.html:51
+#: templates/my_practice/monthly_billing_overview.html:59
 msgid "Billed"
 msgstr "Abgerechnet"
 
 #: templates/my_practice/billing_open_overview.html:79
-#: templates/my_practice/monthly_billing_overview.html:67
+#: templates/my_practice/monthly_billing_overview.html:75
 #, python-format
 msgid "%(count)s pending appointments"
 msgstr "%(count)s ausstehende Termine"
 
 #: templates/my_practice/billing_open_overview.html:104
-#: templates/my_practice/monthly_billing_overview.html:92
+#: templates/my_practice/monthly_billing_overview.html:100
 #, python-format
 msgid "%(count)s cancelled session(s) on invoice"
 msgstr "%(count)s abgesagte Sitzung(en) in Rechnung"
 
 #: templates/my_practice/billing_open_overview.html:118
-#: templates/my_practice/monthly_billing_overview.html:106
+#: templates/my_practice/monthly_billing_overview.html:114
 #, python-format
 msgid "%(count)s invoices"
 msgstr "%(count)s Rechnungen"
 
 #: templates/my_practice/billing_open_overview.html:130
-#: templates/my_practice/monthly_billing_overview.html:118
+#: templates/my_practice/monthly_billing_overview.html:126
 msgid "Open client"
 msgstr "Klient öffnen"
 
 #: templates/my_practice/billing_open_overview.html:132
-#: templates/my_practice/monthly_billing_overview.html:120
+#: templates/my_practice/monthly_billing_overview.html:128
 msgid "Open invoice"
 msgstr "Rechnung öffnen"
 
 #: templates/my_practice/billing_open_overview.html:140
-#: templates/my_practice/monthly_billing_overview.html:128
+#: templates/my_practice/monthly_billing_overview.html:136
 #, python-format
 msgid "Add %(count)s session to %(number)s"
 msgid_plural "Add %(count)s sessions to %(number)s"
@@ -6002,7 +6003,7 @@ msgstr[0] "%(count)s Sitzung zu %(number)s hinzufügen"
 msgstr[1] "%(count)s Sitzungen zu %(number)s hinzufügen"
 
 #: templates/my_practice/billing_open_overview.html:154
-#: templates/my_practice/monthly_billing_overview.html:142
+#: templates/my_practice/monthly_billing_overview.html:150
 #, python-format
 msgid "Create draft with %(count)s session"
 msgid_plural "Create draft with %(count)s sessions"
@@ -6010,7 +6011,7 @@ msgstr[0] "Entwurf mit %(count)s Sitzung erstellen"
 msgstr[1] "Entwurf mit %(count)s Sitzungen erstellen"
 
 #: templates/my_practice/billing_open_overview.html:157
-#: templates/my_practice/monthly_billing_overview.html:145
+#: templates/my_practice/monthly_billing_overview.html:153
 msgid "Create draft"
 msgstr "Entwurf erstellen"
 
@@ -6024,7 +6025,7 @@ msgid "Write off invoice %(number)s?"
 msgstr "Rechnung %(number)s abschreiben?"
 
 #: templates/my_practice/billing_open_overview.html:171
-#: templates/my_practice/monthly_billing_overview.html:149
+#: templates/my_practice/monthly_billing_overview.html:157
 msgid "Check calendar"
 msgstr "Kalender prüfen"
 
@@ -7984,12 +7985,30 @@ msgstr "Alle offen"
 msgid "%(count)s paid"
 msgstr "%(count)s bezahlt"
 
-#: templates/my_practice/monthly_billing_overview.html:160
+#: templates/my_practice/monthly_billing_overview.html:40
+msgid "Invoiced items plus unbilled sessions estimated from each client’s standard hourly rate, for work done this month, before tax. Pending calendar appointments are not included."
+msgstr "Rechnungspositionen plus nicht abgerechnete Sitzungen, geschätzt anhand des Standard-Stundensatzes der jeweiligen Klient:in, für in diesem Monat geleistete Arbeit, ohne Steuern. Noch offene Kalendertermine sind nicht enthalten."
+
+#: templates/my_practice/monthly_billing_overview.html:43
+#, python-format
+msgid "%(amount)s invoiced"
+msgstr "%(amount)s in Rechnung gestellt"
+
+#: templates/my_practice/monthly_billing_overview.html:43
+#, python-format
+msgid "~%(amount)s not yet invoiced"
+msgstr "~%(amount)s noch nicht in Rechnung gestellt"
+
+#: templates/my_practice/monthly_billing_overview.html:45
+msgid "not yet invoiced"
+msgstr "noch nicht in Rechnung gestellt"
+
+#: templates/my_practice/monthly_billing_overview.html:168
 #, python-format
 msgid "No activity for %(month)s."
 msgstr "Keine Aktivität für %(month)s."
 
-#: templates/my_practice/monthly_billing_overview.html:161
+#: templates/my_practice/monthly_billing_overview.html:169
 msgid "Sessions, calendar events, and invoices will appear here once available for this month."
 msgstr "Sitzungen, Kalendertermine und Rechnungen erscheinen hier, sobald sie für diesen Monat vorliegen."
 

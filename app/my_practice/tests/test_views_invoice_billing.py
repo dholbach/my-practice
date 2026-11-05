@@ -22,6 +22,7 @@ from ..models import (
     ServiceType,
     Session,
     UserPractice,
+    allow_issued_invoice_writes,
 )
 from ..views.billing_views import (
     _build_billing_summary,
@@ -663,6 +664,129 @@ class MonthlyBillingOverviewTests(TestCase):
         rows = response.context["rows"]
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["pending_count"], 1)
+
+    def _get_month(self, day):
+        return self.client_instance.get(
+            reverse("monthly_billing_overview", kwargs={"month": f"{day.year}-{day.month:02d}"})
+        )
+
+    @allow_issued_invoice_writes()
+    def _bill_session(self, session, *, invoice_date, status=Invoice.Status.SENT, total="90.00"):
+        invoice = Invoice.objects.create(
+            client=self.test_client,
+            practice=self.practice,
+            invoice_number=f"INV-{session.pk}",
+            invoice_date=invoice_date,
+            status=status,
+        )
+        return InvoiceItem.objects.create(
+            invoice=invoice,
+            session=session,
+            service_type=self.service_type_60,
+            rate=Decimal(total),
+            total=Decimal(total),
+        )
+
+    def test_billable_amount_combines_invoiced_and_unbilled_sessions(self):
+        day = date(2026, 10, 15)
+        billed = Session.objects.create(client=self.test_client, session_date=day, duration=60)
+        self._bill_session(billed, invoice_date=day, total="100.00")
+        Session.objects.create(client=self.test_client, session_date=day, duration=30)
+
+        response = self._get_month(day)
+
+        self.assertEqual(response.context["invoiced_amount"], Decimal("100.00"))
+        self.assertEqual(response.context["unbilled_estimate"], Decimal("45.00"))
+        self.assertEqual(response.context["billable_amount"], Decimal("145.00"))
+        self.assertContains(response, "~145,00")
+
+    def test_billable_amount_is_exact_when_everything_is_invoiced(self):
+        day = date(2026, 10, 15)
+        session = Session.objects.create(client=self.test_client, session_date=day, duration=60)
+        self._bill_session(session, invoice_date=day)
+
+        response = self._get_month(day)
+
+        self.assertEqual(response.context["billable_amount"], Decimal("90.00"))
+        self.assertNotContains(response, "~90,00")
+
+    def test_billable_amount_follows_session_month_not_invoice_month(self):
+        # A November invoice for an October session is October's work.
+        october = date(2026, 10, 30)
+        session = Session.objects.create(client=self.test_client, session_date=october, duration=60)
+        self._bill_session(session, invoice_date=date(2026, 11, 2))
+
+        self.assertEqual(self._get_month(october).context["invoiced_amount"], Decimal("90.00"))
+        self.assertEqual(
+            self._get_month(date(2026, 11, 2)).context["invoiced_amount"], Decimal("0")
+        )
+
+    def test_billable_amount_excludes_cancelled_invoices(self):
+        day = date(2026, 10, 15)
+        session = Session.objects.create(client=self.test_client, session_date=day, duration=60)
+        self._bill_session(session, invoice_date=day, status=Invoice.Status.CANCELLED)
+
+        response = self._get_month(day)
+
+        # The session is unbilled again, so only the estimate remains.
+        self.assertEqual(response.context["invoiced_amount"], Decimal("0"))
+        self.assertEqual(response.context["billable_amount"], Decimal("90.00"))
+
+    @allow_issued_invoice_writes()
+    def test_billable_amount_counts_free_form_items_by_invoice_month(self):
+        day = date(2026, 10, 15)
+        self.practice.allows_free_form_items = True
+        self.practice.save(update_fields=["allows_free_form_items"])
+        invoice = Invoice.objects.create(
+            client=self.test_client,
+            practice=self.practice,
+            invoice_number="INV-001",
+            invoice_date=day,
+            status=Invoice.Status.SENT,
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=self.service_type_60,
+            description="Day rate",
+            rate=Decimal("500.00"),
+            total=Decimal("500.00"),
+        )
+
+        self.assertEqual(self._get_month(day).context["billable_amount"], Decimal("500.00"))
+
+    @allow_issued_invoice_writes()
+    def test_billable_amount_ignores_other_practices(self):
+        day = date(2026, 10, 15)
+        other_practice = Practice.objects.create(
+            name="Other Practice",
+            slug="other-billing",
+            title="Other Practitioner",
+            email="other@practice.example",
+            city="Berlin",
+        )
+        other_client = Client.objects.create(
+            client_code="YY-2",
+            full_name="Anna Schmidt",
+            hourly_rate_60=Decimal("90.00"),
+            practice=other_practice,
+        )
+        session = Session.objects.create(client=other_client, session_date=day, duration=60)
+        invoice = Invoice.objects.create(
+            client=other_client,
+            practice=other_practice,
+            invoice_number="INV-002",
+            invoice_date=day,
+            status=Invoice.Status.SENT,
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            session=session,
+            service_type=self.service_type_60,
+            rate=Decimal("90.00"),
+            total=Decimal("90.00"),
+        )
+
+        self.assertEqual(self._get_month(day).context["billable_amount"], Decimal("0"))
 
     def test_billing_open_overview_aggregates_open_months(self):
         today = date.today()
