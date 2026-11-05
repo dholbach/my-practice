@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-05 — Dev containers no longer run as root**: `django` and `tailwind` run unprivileged with no capabilities; a one-shot service fixes file ownership on start. Dependabot auto-merge now checks who opened the PR.
 - **2026-11-05 — Billable amount on the monthly billing page**: the summary bar shows what a month's work is worth, invoiced items plus estimated unbilled sessions, by session month. `/billing/open/` shares the same estimate helper.
-- **2026-11-03 — v0.10.1 patch release**: concurrency-safe sign-in limits and key rotation, inquiries stay anonymised and can't be converted twice, calendar approval queue makes one invoice per batch, session log input validated (#560–#568). Details in [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
