@@ -137,6 +137,19 @@ Left unset (the default), the app assumes plain HTTP and none of the above apply
 - Email backend logs to console (DEBUG level)
 - Configurable in `settings.py` → `LOGGING`
 
+## Dev Container Privileges
+
+`docker-compose.yml` runs `django` and `tailwind` as `MY_PRACTICE_UID:MY_PRACTICE_GID`
+(default 1000:1000), with every capability dropped and `no-new-privileges` set. Before
+they start, the one-shot `fix-ownership` service hands them anything under `./app`, the
+media directory and their volumes that belongs to another user. It runs as root with
+only the capabilities it needs and no network.
+
+This limits a compromised upload parser; it doesn't contain it. The container can still
+write everything its UID owns on those mounts, including `./app`, which gunicorn reloads
+from, and it can read `FERNET_KEY`. `network_mode: host` stays because Proton Bridge
+listens on the host's loopback, so the host's loopback services remain reachable too.
+
 ## Network Exposure
 
 `docker-compose.prod.yml` publishes port 8000 on `MY_PRACTICE_BIND_ADDRESS`,

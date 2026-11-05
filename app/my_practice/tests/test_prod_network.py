@@ -54,6 +54,20 @@ class ComposeBindAddressTests(SimpleTestCase):
         self.assertIn("network_mode: host", compose)
         self.assertEqual(re.findall(r"gunicorn --bind (\S+)", compose), ["127.0.0.1:8000"])
 
+    def test_dev_stack_services_run_unprivileged(self):
+        # The django service parses uploads next to real data; root there means
+        # root over the bind mounts.
+        compose = (REPO_ROOT / "docker-compose.yml").read_text()
+        self.assertIn('user: "${MY_PRACTICE_UID:-1000}:${MY_PRACTICE_GID:-1000}"', compose)
+        for service in ("django", "tailwind"):
+            self.assertRegex(compose, rf"(?m)^  {service}:\n    <<: \*unprivileged$")
+
+    def test_ownership_fix_has_no_network(self):
+        compose = (REPO_ROOT / "docker-compose.yml").read_text()
+        service = re.search(r"(?ms)^  fix-ownership:\n(.*?)^  django:", compose).group(1)
+        self.assertIn("network_mode: none", service)
+        self.assertIn("cap_drop:\n      - ALL", service)
+
     def test_bind_address_documented_in_env_example(self):
         self.assertIn("MY_PRACTICE_BIND_ADDRESS=", (REPO_ROOT / ".env.example").read_text())
 

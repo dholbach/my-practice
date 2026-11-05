@@ -1,3 +1,15 @@
+# The dev stack holds real data on some installs, and the django container parses
+# uploaded files with Ghostscript and Pillow. Without root or capabilities, a
+# compromised parser cannot take ownership of files or use root's reach over the
+# bind mounts. Still within its reach: everything this UID owns on those mounts,
+# including ./app, and the host's loopback services (network_mode: host).
+x-unprivileged: &unprivileged
+  user: "${MY_PRACTICE_UID:-1000}:${MY_PRACTICE_GID:-1000}"
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -19,7 +31,36 @@ services:
       timeout: 5s
       retries: 5
 
+  # One-shot, before the unprivileged services start: hands them the files that
+  # earlier root containers left behind, and the volumes an image seeds as root.
+  # Only this service keeps a capability to change ownership. It has no network.
+  fix-ownership:
+    image: my-practice-django
+    pull_policy: never
+    restart: "no"
+    network_mode: none
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./app:/app
+      - node_modules_django:/app/node_modules
+      - static_data:/app/staticfiles
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/media:/app/media
+    command:
+      - sh
+      - -c
+      - >-
+        find /app ! -user ${MY_PRACTICE_UID:-1000} -exec chown -h ${MY_PRACTICE_UID:-1000} {} + &&
+        find /app ! -group ${MY_PRACTICE_GID:-1000} -exec chgrp -h ${MY_PRACTICE_GID:-1000} {} +
+
   django:
+    <<: *unprivileged
+    image: my-practice-django
     build:
       context: ./app
       target: development
@@ -27,6 +68,9 @@ services:
     restart: unless-stopped
     network_mode: host
     environment:
+      # This UID has no passwd entry, so nothing else gives it a writable home
+      # (fontconfig and npm write their caches there).
+      - HOME=/tmp
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-dev-key}
       - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
       - DJANGO_LANGUAGE_CODE=${DJANGO_LANGUAGE_CODE:-de-de}
@@ -79,6 +123,8 @@ services:
       retries: 24
       start_period: 10s
     depends_on:
+      fix-ownership:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     # gunicorn binds loopback, like postgres above: network_mode: host makes the
@@ -95,11 +141,17 @@ services:
              gunicorn --bind 127.0.0.1:8000 --workers 1 --timeout 300 --reload --reload-extra-file locale/de/LC_MESSAGES/django.mo --reload-extra-file locale/en/LC_MESSAGES/django.mo config.wsgi:application"
 
   tailwind:
+    <<: *unprivileged
     build:
       context: ./app
       target: development
     container_name: my-practice-tailwind
     restart: unless-stopped
+    environment:
+      - HOME=/tmp
+    depends_on:
+      fix-ownership:
+        condition: service_completed_successfully
     volumes:
       - ./app:/app
       - node_modules_tailwind:/app/node_modules

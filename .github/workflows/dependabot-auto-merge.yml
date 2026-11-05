@@ -28,9 +28,12 @@ jobs:
   auto-merge:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Belt and braces: the event is also only reachable from this repo's own
-    # Dependabot, but check the actor explicitly rather than relying on that.
-    if: github.actor == 'dependabot[bot]'
+    # pull_request_target also fires for pull requests from forks. Check who
+    # opened the PR and where its branch lives, not github.actor: that is whoever
+    # triggered this run, which Dependabot can be on a PR it did not open.
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Fetch Dependabot metadata
