@@ -1302,9 +1302,7 @@ def print_help():
     print("  review --full        - Quarterly review (adds complexity analysis)")
     print("  review --verbose     - Show full tool output during review")
     print("  format               - Auto-format code with ruff format")
-    print(
-        "  calendar-auth        - Open Google Calendar auth URL in browser (re-authorize expired token)"
-    )
+    print("  calendar-auth        - Open the calendar import page to re-authorize an expired token")
     print(
         "  smoke [vX.Y.Z]       - Boot a released GHCR image with a throwaway DB and verify it serves"
     )
