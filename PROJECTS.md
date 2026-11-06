@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-06 — `./dev.py calendar-auth` works again**: it opened `/calendar/authorize/` with a GET and got a 405 once that route became POST-only. It now opens `/calendar/import/`, which shows the "Connect with Google" form when there's no usable token.
 - **2026-11-05 — Dev containers no longer run as root**: `django` and `tailwind` run unprivileged with no capabilities; a one-shot service fixes file ownership on start. Dependabot auto-merge now checks who opened the PR.
-- **2026-11-05 — Billable amount on the monthly billing page**: the summary bar shows what a month's work is worth, invoiced items plus estimated unbilled sessions, by session month. `/billing/open/` shares the same estimate helper.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

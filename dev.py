@@ -979,15 +979,17 @@ def cmd_lint(args):
 
 
 def cmd_calendar_auth(_args):
-    """Open the Google Calendar authorization URL in the default browser.
+    """Open the page that re-authorizes Google Calendar in the default browser.
 
     Use this when the calendar token has expired (invalid_grant error).
-    The browser handles the full OAuth2/PKCE flow and saves the new token.
+    Opens the import page because /calendar/authorize/ only accepts POST: without
+    a usable token, the import page shows the form that starts the OAuth2/PKCE flow.
     The app must be running (./dev.py start) before calling this.
     """
-    url = "http://localhost:8000/calendar/authorize/"
+    url = "http://localhost:8000/calendar/import/"
     print(f"Opening {url} in your browser...")
-    print("Complete the Google sign-in to refresh the calendar token.")
+    print("Click 'Connect with Google' and complete the sign-in to refresh the token.")
+    print("If the page lists calendars or events instead, the token still works.")
     result = subprocess.run(["xdg-open", url])
     if result.returncode != 0:
         print(f"xdg-open failed. Open this URL manually in your browser:\n  {url}")
