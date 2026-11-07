@@ -1,5 +1,7 @@
 """Tests for the brute-force limit on sign-in, sign-out, and the idle session timeout."""
 
+from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -7,8 +9,10 @@ from django.db import connection
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from django.utils import timezone
 
-from ..models import TwoFactorDevice
+from ..models import LoginThrottle, TwoFactorDevice
+from ..utils.login_throttle import failure_count, record_failure
 from ..utils.two_factor import generate_secret
 from ..views.auth_views import LOGIN_FAILURE_LIMIT
 from .test_helpers import create_test_practice, link_user_to_practice
@@ -16,8 +20,6 @@ from .test_helpers import create_test_practice, link_user_to_practice
 
 class LoginThrottleTests(TestCase):
     def setUp(self):
-        cache.clear()
-        self.addCleanup(cache.clear)
         User.objects.create_user(username="therapist", password="testpass123")
         self.url = reverse("login")
 
@@ -78,17 +80,71 @@ class LoginThrottleTests(TestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
 
 
+class ThrottleStorageTests(TestCase):
+    """Counters live in their own table, so nothing that empties the cache unlocks."""
+
+    def setUp(self):
+        User.objects.create_user(username="therapist", password="testpass123")
+        self.url = reverse("login")
+
+    def _attempt(self, password, username="therapist"):
+        return self.client.post(self.url, {"username": username, "password": password})
+
+    def test_lockout_survives_the_cache_being_emptied(self):
+        # The database cache culls a third of its rows at 300 entries; a flood
+        # of junk usernames used to evict the target's counter that way.
+        for _ in range(LOGIN_FAILURE_LIMIT):
+            self._attempt("wrong")
+        cache.clear()
+
+        self.assertEqual(self._attempt("testpass123").status_code, 429)
+
+    def test_lockout_ends_with_its_window(self):
+        for _ in range(LOGIN_FAILURE_LIMIT):
+            self._attempt("wrong")
+        LoginThrottle.objects.update(expires_at=timezone.now() - timedelta(seconds=1))
+
+        self.assertEqual(self._attempt("testpass123").status_code, 302)
+
+    def test_failure_after_the_window_starts_a_new_count(self):
+        record_failure("k" * 64, 60)
+        record_failure("k" * 64, 60)
+        LoginThrottle.objects.update(expires_at=timezone.now() - timedelta(seconds=1))
+
+        self.assertEqual(record_failure("k" * 64, 60), 1)
+
+    def test_expired_rows_are_purged_on_the_next_failure(self):
+        record_failure("a" * 64, 60)
+        LoginThrottle.objects.update(expires_at=timezone.now() - timedelta(seconds=1))
+
+        record_failure("b" * 64, 60)
+
+        self.assertEqual(list(LoginThrottle.objects.values_list("key", flat=True)), ["b" * 64])
+        self.assertEqual(failure_count("a" * 64), 0)
+
+    def test_unknown_username_locks_like_a_real_one(self):
+        # Same responses either way, so the lockout does not reveal which
+        # usernames exist.
+        for _ in range(LOGIN_FAILURE_LIMIT):
+            self.assertEqual(self._attempt("wrong", username="nobody").status_code, 200)
+        self.assertEqual(self._attempt("wrong", username="nobody").status_code, 429)
+
+    def test_table_holds_no_usernames(self):
+        self._attempt("wrong")
+        key = LoginThrottle.objects.get().key
+        self.assertNotIn("therapist", key)
+        self.assertEqual(len(key), 64)
+
+
 class ConcurrentAttemptTests(TestCase):
     """Each attempt row-locks the account it targets before reading the count.
 
-    The counter is a cache get followed by a set, so without a lock serialising
-    one account's attempts, requests arriving together each read a count below
+    Reading the counter and checking the password are separate steps, so
+    without a lock serialising one account's attempts, requests arriving together each read a count below
     the limit and each get a guess.
     """
 
     def setUp(self):
-        cache.clear()
-        self.addCleanup(cache.clear)
         self.user = User.objects.create_user(username="therapist", password="testpass123")
 
     def _locked_tables(self, queries):

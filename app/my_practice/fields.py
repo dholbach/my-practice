@@ -6,7 +6,9 @@ Keys are read from settings.FERNET_KEY (set via the FERNET_KEY env var).
 
 Encrypted fields store Fernet ciphertext in the database — a plain SQL query
 on an encrypted column returns `gAAAAA...` gibberish, never plaintext. That
-also covers database dumps, so a leaked backup without the .env reveals nothing.
+also covers database dumps: a leaked backup without the .env does not reveal
+these fields. Everything else in it (names, dates, invoices, the plaintext
+columns listed in docs/guides/CLINICAL_DATA_SECURITY.md) stays readable.
 
 Key rotation: FERNET_KEY may hold several comma-separated keys. The first one
 encrypts; every one of them decrypts. To rotate, put a new key in front, run

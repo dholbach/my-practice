@@ -60,3 +60,25 @@ class RecoveryCode(models.Model):
 
     def __str__(self) -> str:
         return f"{self.device.user} ({'used' if self.used_at else 'unused'})"
+
+
+class LoginThrottle(TimestampedModel):
+    """Failed sign-in attempts for one throttle key, until ``expires_at``.
+
+    A table of its own rather than the cache: the database cache culls a third
+    of its entries once it holds 300, so a flood of junk usernames used to
+    evict the counter of the account being guessed. Rows here only go once
+    they have expired.
+    """
+
+    # sha256 hex of the username/address pair or user id; never the username.
+    key = models.CharField(max_length=64, unique=True, verbose_name=_("Key"))
+    failures = models.PositiveIntegerField(default=0, verbose_name=_("Failures"))
+    expires_at = models.DateTimeField(db_index=True, verbose_name=_("Expires at"))
+
+    class Meta:
+        verbose_name = _("Sign-in throttle")
+        verbose_name_plural = _("Sign-in throttles")
+
+    def __str__(self) -> str:
+        return f"{self.key[:12]}… ({self.failures})"

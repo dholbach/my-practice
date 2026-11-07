@@ -67,6 +67,12 @@ def _session_log_choices(request, default_type: str) -> tuple[str | None, list[s
     return session_type, mood_tags
 
 
+def _summary(request, default: str) -> str:
+    """The posted one-liner, cut to its field length (the encrypted column has no limit)."""
+    max_length = SessionLog._meta.get_field("summary").max_length
+    return request.POST.get("summary", default)[:max_length]
+
+
 # ─── ClientProfile ─────────────────────────────────────────────────────────────
 
 
@@ -145,7 +151,7 @@ def session_log_create(request, pk):
             session=session,
             session_type=session_type,
             mood_tags=mood_tags,
-            summary=request.POST.get("summary", ""),
+            summary=_summary(request, ""),
             content=request.POST.get("content", ""),
             interventions=request.POST.get("interventions", ""),
             therapist_reflection=request.POST.get("therapist_reflection", ""),
@@ -204,7 +210,7 @@ def session_log_edit(request, client_pk, log_pk):
         session_type, mood_tags = _session_log_choices(request, log.session_type)
         log.session_type = session_type or log.session_type
         log.mood_tags = mood_tags
-        log.summary = request.POST.get("summary", log.summary)
+        log.summary = _summary(request, log.summary)
         log.content = request.POST.get("content", log.content)
         log.interventions = request.POST.get("interventions", log.interventions)
         log.therapist_reflection = request.POST.get(

@@ -38,9 +38,10 @@ from .session import Session
 from .tag import ClientTag
 from .timeoff import TimeOff
 from .todo import PracticeTodo
-from .two_factor import RecoveryCode, TwoFactorDevice
+from .two_factor import LoginThrottle, RecoveryCode, TwoFactorDevice
 
 __all__ = [
+    "LoginThrottle",
     "RecoveryCode",
     "TwoFactorDevice",
     "CapacityPeriod",

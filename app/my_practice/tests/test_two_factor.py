@@ -8,7 +8,6 @@ from unittest import mock
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
-from django.core.cache import cache
 from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -45,8 +44,6 @@ class TotpAlgorithmTests(TestCase):
 
 class TwoFactorTestBase(TestCase):
     def setUp(self):
-        cache.clear()
-        self.addCleanup(cache.clear)
         self.user = User.objects.create_user(username="therapist", password="testpass123")
         link_user_to_practice(self.user, create_test_practice())
         # Assertions below read English UI text; the default language is German.

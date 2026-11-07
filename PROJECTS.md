@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-07 — Security audit run 5 fixes (sign-in, erasure, encryption)**: sign-in lockout counters live in their own table, so a flood of junk logins can no longer evict them from the cache; GDPR erasure also removes unmatched calendar events naming the client and says that bank transactions are kept as bookkeeping records; `SessionLog.summary` and `ClientDocument.description` are encrypted (migration 0014), and the security guide lists the remaining plaintext columns.
 - **2026-11-07 — Security audit run 5 fixes (calendar, uploads, billing)**: calendar invitations can no longer take over a moved session, an over-long event title no longer stops the sync, image uploads and the practice logo/signature only decode the allow-listed formats (no Ghostscript), and the approval queue skips sessions already billed on another invoice.
-- **2026-11-06 — `./dev.py calendar-auth` works again**: it opened `/calendar/authorize/` with a GET and got a 405 once that route became POST-only. It now opens `/calendar/import/`, which shows the "Connect with Google" form when there's no usable token.
 
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)

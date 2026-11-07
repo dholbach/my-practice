@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-from ..fields import EncryptedTextField
+from ..fields import EncryptedCharField, EncryptedTextField
 from ..storage import client_document_storage
 from ..validators import validate_upload_extension
 from .base import PracticeScopedQuerySet, TimestampedModel
@@ -285,7 +285,9 @@ class ClientDocument(TimestampedModel):
         verbose_name=_("File"),
         help_text=_("PDF, JPG, PNG or DOCX"),
     )
-    description = models.CharField(
+    # Encrypted like the file itself: the description of an intake form or a
+    # doctor's letter tends to say what it is about.
+    description = EncryptedCharField(
         max_length=200,
         blank=True,
         verbose_name=_("Description"),

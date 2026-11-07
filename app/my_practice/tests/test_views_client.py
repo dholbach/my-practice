@@ -13,7 +13,9 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import (
+    BankTransaction,
     Client,
+    ClientAlias,
     ClientDocument,
     ClientInquiry,
     ClientTag,
@@ -998,6 +1000,56 @@ class ClientGdprDeleteTest(TestCase):
         self.assertEqual((inquiry.full_name, inquiry.email, inquiry.phone), ("", "", ""))
         self.assertIsNotNone(inquiry.anonymised_at)
         self.assertFalse(PendingCalendarEvent.objects.filter(google_event_id="evt-gdpr-1").exists())
+
+    def _event(self, event_id, summary):
+        return PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id=event_id,
+            summary=summary,
+            event_date=self.old_date,
+            duration_minutes=60,
+        )
+
+    @patch("my_practice.views.client_views.EmailMessage.send")
+    def test_delete_drops_unmatched_events_naming_the_client(self, mock_send):
+        # The sync matches by code only, so these have no link to the client.
+        ClientAlias.objects.create(client=self.eligible_client, alias_name="Hans Mustermann")
+        self._event("by-name", "max mustermann Sitzung")
+        self._event("by-code", "TC (online)")
+        self._event("by-alias", "Hans Mustermann")
+        self._event("unrelated", "Anna Schmidt")
+        self._event("code-inside-word", "TCX")
+
+        self.http.post(reverse("client_gdpr_delete", kwargs={"pk": self.eligible_client.pk}))
+
+        self.assertEqual(
+            sorted(PendingCalendarEvent.objects.values_list("google_event_id", flat=True)),
+            ["code-inside-word", "unrelated"],
+        )
+
+    @patch("my_practice.views.client_views.EmailMessage.send")
+    def test_delete_keeps_bank_transactions_and_says_so(self, mock_send):
+        BankTransaction.objects.create(
+            practice=self.practice,
+            transaction_date=self.old_date,
+            value_date=self.old_date,
+            payer_name="Max Mustermann",
+            payer_iban="DE00123456789",
+            reference="INV-001",
+            amount=Decimal("80.00"),
+            balance_after=Decimal("900.00"),
+            account_iban="",
+        )
+        confirm = self.http.get(
+            reverse("client_gdpr_delete_confirm", kwargs={"pk": self.eligible_client.pk})
+        )
+        self.assertContains(confirm, "Bankbuchungen")
+
+        with patch("my_practice.views.client_views.EmailMessage") as message:
+            self.http.post(reverse("client_gdpr_delete", kwargs={"pk": self.eligible_client.pk}))
+
+        self.assertTrue(BankTransaction.objects.filter(payer_name="Max Mustermann").exists())
+        self.assertIn("Kontoauszügen", message.call_args.kwargs["body"])
 
     @patch("my_practice.views.client_views.EmailMessage.send")
     def test_delete_succeeds_for_client_with_gebueh_services(self, mock_send):

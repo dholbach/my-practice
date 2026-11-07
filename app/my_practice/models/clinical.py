@@ -237,13 +237,15 @@ class SessionLog(TimestampedModel):
         # NOT encrypted — enables emergency triage summary without Fernet key
     )
 
-    summary = models.CharField(
+    # Encrypted: a one-liner about a session easily names a diagnosis or an
+    # event. max_length is enforced by the views; the column is text, since the
+    # ciphertext is longer than the plaintext.
+    summary = EncryptedCharField(
         max_length=120,
         blank=True,
         default="",
         verbose_name=_("Short summary"),
-        help_text=_("One-liner for the overview (unencrypted, max. 120 characters)"),
-        # NOT encrypted — shown in the client overview cockpit without Fernet key
+        help_text=_("One-liner for the overview (encrypted, max. 120 characters)"),
     )
 
     content = EncryptedTextField(
