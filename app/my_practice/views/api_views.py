@@ -3,6 +3,7 @@ API views for the payments application.
 """
 
 import base64
+import logging
 import os
 import zipfile
 from io import BytesIO
@@ -27,6 +28,9 @@ from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks,
 from ..utils.practice_helpers import require_practice
 from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
 from ..utils.view_helpers import is_partial_request, safe_next
+from ..validators import PIL_IMAGE_FORMATS
+
+logger = logging.getLogger(__name__)
 
 
 def next_invoice_number(request: HttpRequest) -> JsonResponse:
@@ -82,7 +86,13 @@ def _prepare_practice_images(
         field = getattr(practice, attr, None)
         if not (field and os.path.exists(field.path)):
             continue
-        img: Image.Image = Image.open(field.path)
+        try:
+            img: Image.Image = Image.open(field.path, formats=PIL_IMAGE_FORMATS)
+        except OSError:
+            # Stored before uploads were held to PIL_IMAGE_FORMATS; the PDF
+            # goes out without it rather than failing.
+            logger.warning("Practice %s %s is not a supported image", practice.pk, attr)
+            continue
         if img.mode in ("RGBA", "LA", "P"):
             # Composite onto paper background so transparent areas render
             # correctly in the PDF (plain convert("RGB") fills with black).

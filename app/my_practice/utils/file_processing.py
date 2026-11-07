@@ -25,7 +25,7 @@ from django.core.files.base import ContentFile
 from django.utils.translation import gettext as _
 from PIL import Image, ImageOps
 
-from ..validators import IMAGE_EXTENSIONS, PDF_EXTENSIONS, UPLOAD_EXTENSIONS
+from ..validators import IMAGE_EXTENSIONS, PDF_EXTENSIONS, PIL_IMAGE_FORMATS, UPLOAD_EXTENSIONS
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def compress_image_upload(upload) -> ContentFile:
     Compress an in-memory image upload: resize + convert to JPEG.
     Returns a ContentFile with a .jpg filename.
     """
-    img = Image.open(upload)
+    img = Image.open(upload, formats=PIL_IMAGE_FORMATS)
     img = ImageOps.exif_transpose(img)  # honour scanner EXIF orientation before stripping EXIF
     if img.mode != "RGB":
         img = img.convert("RGB")
@@ -283,7 +283,7 @@ def compress_image_inplace(path: str, force: bool = False) -> int:
     original_size = os.path.getsize(path)
     ext = Path(path).suffix.lower()
 
-    img = Image.open(path)
+    img = Image.open(path, formats=PIL_IMAGE_FORMATS)
     # Check the raw orientation tag rather than comparing objects around
     # exif_transpose(): Pillow always returns a new copy from that call (even
     # for images with no orientation tag at all), so an identity check would

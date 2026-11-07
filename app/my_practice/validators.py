@@ -12,8 +12,14 @@ import re
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext
+from PIL import Image
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif"}
+# The Pillow decoders for those extensions. Pillow picks a decoder from the
+# file's content, not its name, so every Image.open() on an uploaded file
+# passes formats=PIL_IMAGE_FORMATS: a PostScript file named photo.jpg would
+# otherwise go to the EPS plugin, which runs Ghostscript on it.
+PIL_IMAGE_FORMATS = ("JPEG", "PNG", "GIF", "WEBP", "BMP", "TIFF")
 PDF_EXTENSIONS = {".pdf"}
 # Explicit allowlist — anything outside this is rejected by process_upload.
 # Active-content types (.svg, .html, .xml, .js, …) are intentionally excluded.
@@ -25,6 +31,27 @@ UPLOAD_EXTENSIONS = IMAGE_EXTENSIONS | PDF_EXTENSIONS | {".docx"}
 # open — including .eps/.ps, which Pillow hands to Ghostscript.
 validate_upload_extension = FileExtensionValidator(sorted(e[1:] for e in UPLOAD_EXTENSIONS))
 validate_image_extension = FileExtensionValidator(sorted(e[1:] for e in IMAGE_EXTENSIONS))
+
+
+def validate_image_content(value) -> None:
+    """Reject an image whose content isn't one of PIL_IMAGE_FORMATS.
+
+    Django's ImageField opens the file with every Pillow format, so an EPS
+    file renamed to .jpg passes both its check and the extension check.
+    """
+    try:
+        value.seek(0)
+        with Image.open(value, formats=PIL_IMAGE_FORMATS):
+            pass
+    except OSError, ValueError:
+        raise ValidationError(
+            gettext("Image file '%(name)s' could not be processed."),
+            code="invalid_image",
+            params={"name": getattr(value, "name", "")},
+        ) from None
+    finally:
+        value.seek(0)
+
 
 # A placeholder is exactly ``{word}``. Deliberately narrow: it is also what
 # render_email_template() substitutes, so validation and rendering agree on

@@ -105,6 +105,28 @@ def _resolve_rate(client: Client, service_type: ServiceType) -> tuple[Decimal | 
     return rate, None
 
 
+def _session_billed(client: Client, session_date, session_time, *, lock: bool = False) -> bool:
+    """Whether the client's session in this slot already has an item on a
+    non-cancelled invoice, however it was billed (session log, quick action,
+    an earlier import). A pending event doesn't learn about those, so a stale
+    queue page can still submit it. lock=True holds the Session row until the
+    transaction ends, so two imports of the same slot can't both pass."""
+    sessions = Session.objects.filter(
+        client=client, session_date=session_date, session_time=session_time
+    )
+    if lock:
+        sessions = sessions.select_for_update()
+    return (
+        InvoiceItem.objects.filter(session__in=sessions)
+        .exclude(invoice__status=Invoice.Status.CANCELLED)
+        .exists()
+    )
+
+
+class _AlreadyBilled(Exception):
+    """The slot was billed between the first check and the locked one."""
+
+
 # ── Public API ────────────────────────────────────────────────────────────────
 
 
@@ -177,6 +199,17 @@ def create_invoice_items_from_events(
             skipped += 1
             continue
 
+        session_time = event_date.time() if isinstance(event_date, datetime) else None
+        duplicate_error = _("Duplicate: %(summary)s on %(date)s") % {
+            "summary": event.get("summary"),
+            "date": event_date.date(),
+        }
+        # Also before the invoice, for the same reason.
+        if _session_billed(client, event_date.date(), session_time):
+            errors.append(duplicate_error)
+            skipped += 1
+            continue
+
         invoice, err = _resolve_invoice(client, event_date, overrides, new_invoices)
         if err:
             errors.append(err)
@@ -188,10 +221,7 @@ def create_invoice_items_from_events(
             session__session_date=event_date.date(),
             service_type=service_type,
         ).exists():
-            errors.append(
-                _("Duplicate: %(summary)s on %(date)s")
-                % {"summary": event.get("summary"), "date": event_date.date()}
-            )
+            errors.append(duplicate_error)
             skipped += 1
             continue
 
@@ -201,7 +231,6 @@ def create_invoice_items_from_events(
                     client.first_seen_date = event_date.date()
                     client.save(update_fields=["first_seen_date"])
 
-                session_time = event_date.time() if isinstance(event_date, datetime) else None
                 session, _created = Session.objects.get_or_create(
                     client=client,
                     session_date=event_date.date(),
@@ -211,6 +240,8 @@ def create_invoice_items_from_events(
                         "calendar_event_id": event_id or "",
                     },
                 )
+                if _session_billed(client, event_date.date(), session_time, lock=True):
+                    raise _AlreadyBilled
                 InvoiceItem.objects.create(
                     invoice=invoice,
                     service_type=service_type,
@@ -220,6 +251,9 @@ def create_invoice_items_from_events(
                 )
                 sync_no_next_session_tag(client)
                 created += 1
+        except _AlreadyBilled:
+            errors.append(duplicate_error)
+            skipped += 1
         except Exception as e:
             errors.append(
                 _("Error creating %(summary)s: %(error)s")

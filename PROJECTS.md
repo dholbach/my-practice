@@ -31,8 +31,9 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-07 — Security audit run 5 fixes (calendar, uploads, billing)**: calendar invitations can no longer take over a moved session, an over-long event title no longer stops the sync, image uploads and the practice logo/signature only decode the allow-listed formats (no Ghostscript), and the approval queue skips sessions already billed on another invoice.
 - **2026-11-06 — `./dev.py calendar-auth` works again**: it opened `/calendar/authorize/` with a GET and got a 405 once that route became POST-only. It now opens `/calendar/import/`, which shows the "Connect with Google" form when there's no usable token.
-- **2026-11-05 — Dev containers no longer run as root**: `django` and `tailwind` run unprivileged with no capabilities; a one-shot service fixes file ownership on start. Dependabot auto-merge now checks who opened the PR.
+
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

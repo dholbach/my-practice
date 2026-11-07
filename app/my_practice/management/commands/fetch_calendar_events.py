@@ -11,6 +11,7 @@ import logging
 from datetime import timedelta
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from django.utils import timezone
 
 from ...models import GoogleCalendarToken, PendingCalendarEvent, Practice, Session
@@ -25,6 +26,13 @@ logger = logging.getLogger(__name__)
 
 OVERLAP_HOURS = 2  # Re-fetch this many hours of overlap to catch late additions
 FIRST_RUN_DAYS = 30  # How far back to go on the very first run per practice
+
+
+def _stored_summary(event) -> str:
+    """The event title cut to the column's length. Titles come from whoever
+    created the event, invitations included, and Google doesn't cap them at 500."""
+    max_length = PendingCalendarEvent._meta.get_field("summary").max_length
+    return (event.get("summary") or "")[:max_length]
 
 
 def _format_time(value) -> str:
@@ -162,13 +170,24 @@ class Command(BaseCommand):
 
         if not dry_run:
             self._sync_no_next_session_tags(affected_clients)
+        if counts["failed"]:
+            # The other events are stored; failing the run keeps it visible.
+            raise RuntimeError(f"{counts['failed']} calendar event(s) could not be stored")
 
     def _upsert_all_events(
         self, parsed_events: list, practice, dry_run: bool, affected_clients: set
     ) -> dict[str, int]:
-        counts = {"created": 0, "skipped": 0, "rescheduled": 0, "reinstated": 0}
+        counts = {"created": 0, "skipped": 0, "rescheduled": 0, "reinstated": 0, "failed": 0}
         for event in parsed_events:
-            result = self._upsert_event(event, practice, dry_run, affected_clients)
+            # One event that can't be stored must not keep the rest of the
+            # window out of the approval queue.
+            try:
+                with transaction.atomic():
+                    result = self._upsert_event(event, practice, dry_run, affected_clients)
+            except Exception:
+                logger.exception("Could not store calendar event %s", event.get("id"))
+                counts["failed"] += 1
+                continue
             if result in counts:
                 counts[result] += 1
         return counts
@@ -195,6 +214,8 @@ class Command(BaseCommand):
             parts.append(f"{counts['rescheduled']} rescheduled")
         if counts["reinstated"]:
             parts.append(f"{counts['reinstated']} reinstated")
+        if counts["failed"]:
+            parts.append(f"{counts['failed']} failed (see log)")
         self.stdout.write(self.style.SUCCESS(f"  ✅ {action}: {', '.join(parts)}"))
 
     def _sync_no_next_session_tags(self, clients: set) -> None:
@@ -307,7 +328,10 @@ class Command(BaseCommand):
         cls, parsed_events: list, live_ids: set, practice: "Practice"
     ) -> dict:
         """Group live events that have no PendingCalendarEvent row yet by
-        (client_id, date) — the pool a stale row can be re-bound to."""
+        (client_id, date) — the pool a stale row can be re-bound to.
+
+        Only events the owner organised qualify: an invitation titled with a
+        client code must not take over that client's Session."""
         known_ids = set(
             PendingCalendarEvent.objects.filter(
                 practice=practice, google_event_id__in=live_ids
@@ -319,6 +343,8 @@ class Command(BaseCommand):
             if not event.get("id") or not event.get("start") or not client:
                 continue
             if event["id"] in known_ids:
+                continue
+            if not cls._organised_on_this_calendar(event):
                 continue
             if cls._resolve_event_status(event) != PendingCalendarEvent.Status.PENDING:
                 continue
@@ -334,7 +360,7 @@ class Command(BaseCommand):
         new_duration = candidate.get("duration_minutes") or db_event.duration_minutes
         PendingCalendarEvent.objects.filter(pk=db_event.pk).update(
             google_event_id=candidate["id"],
-            summary=candidate.get("summary", ""),
+            summary=_stored_summary(candidate),
             event_time=event_time,
             duration_minutes=new_duration,
             missing_since=None,
@@ -422,7 +448,7 @@ class Command(BaseCommand):
             practice=practice,
             google_event_id=event_id,
             defaults={
-                "summary": event.get("summary", ""),
+                "summary": _stored_summary(event),
                 "event_date": event_date,
                 "event_time": event_time,
                 "duration_minutes": event.get("duration_minutes", 0),

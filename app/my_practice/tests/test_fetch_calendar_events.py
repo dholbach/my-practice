@@ -713,6 +713,19 @@ class SupersedeMovedEventsTest(TestCase):
         pce.refresh_from_db()
         self.assertEqual(pce.google_event_id, "old-series_20260101T120000Z")
 
+    def test_invitation_from_someone_else_does_not_supersede(self):
+        """An invitation titled with a client code must not take over the
+        client's Session when the owner's own event has gone missing."""
+        pce = self._stale_row()
+        invitation = {"organizer": {"email": "stranger@example.com"}}
+
+        moved = self._supersede([self._live_event(original=invitation)])
+
+        self.assertEqual(moved, 0)
+        pce.refresh_from_db()
+        self.assertEqual(pce.google_event_id, "old-series_20260101T120000Z")
+        self.assertEqual(Session.objects.get(pk=pce.session_id).session_time, time(14, 0))
+
     def test_past_event_is_left_alone(self):
         past = self._stale_row(event_date=date.today() - timedelta(days=3))
 
@@ -944,6 +957,64 @@ class HandleAndFetchForPracticeTest(TestCase):
             call_command("fetch_calendar_events", "--dry-run", stdout=out)
         self.assertIn("[dry-run] Would create", out.getvalue())
         self.assertFalse(PendingCalendarEvent.objects.exists())
+
+
+class OverlongEventTitleTest(UpsertEventTestBase):
+    """Anyone who can put an event on the calendar picks its title, and one
+    title over the column's 500 characters used to abort the whole sync."""
+
+    def _raw(self, event_id, summary):
+        start = timezone.now() + timedelta(hours=1)
+        return {
+            "id": event_id,
+            "summary": summary,
+            "start": {"dateTime": start.isoformat()},
+            "end": {"dateTime": (start + timedelta(hours=1)).isoformat()},
+            "organizer": {"email": "stranger@example.com"},
+        }
+
+    def test_long_title_is_stored_truncated(self):
+        self.cmd._upsert_event(self._event(summary="A" * 600), self.practice, dry_run=False)
+        self.assertEqual(
+            len(PendingCalendarEvent.objects.get(google_event_id="evt-1").summary), 500
+        )
+
+    def test_events_after_a_long_title_are_still_synced(self):
+        raw = [self._raw("e1", "ok"), self._raw("e2", "A" * 600), self._raw("e3", "later")]
+        with (
+            patch(
+                "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
+                return_value=MagicMock(),
+            ),
+            patch.object(Command, "_fetch_raw_events", return_value=raw),
+        ):
+            self.cmd._fetch_for_practice(self.practice, "cal-1", False, 30, 1)
+
+        self.assertEqual(
+            set(PendingCalendarEvent.objects.values_list("google_event_id", flat=True)),
+            {"e1", "e2", "e3"},
+        )
+
+    def test_one_failing_event_does_not_stop_the_rest(self):
+        events = [self._event(id="e1"), self._event(id="e2"), self._event(id="e3")]
+        real_upsert = Command._upsert_event
+
+        def upsert(cmd, event, *args, **kwargs):
+            if event["id"] == "e2":
+                raise RuntimeError("boom")
+            return real_upsert(cmd, event, *args, **kwargs)
+
+        with (
+            patch.object(Command, "_upsert_event", upsert),
+            self.assertLogs("my_practice.management.commands.fetch_calendar_events", "ERROR"),
+        ):
+            counts = self.cmd._upsert_all_events(events, self.practice, False, set())
+
+        self.assertEqual((counts["created"], counts["failed"]), (2, 1))
+        self.assertEqual(
+            set(PendingCalendarEvent.objects.values_list("google_event_id", flat=True)),
+            {"e1", "e3"},
+        )
 
 
 class EventIdPerPracticeTest(UpsertEventTestBase):

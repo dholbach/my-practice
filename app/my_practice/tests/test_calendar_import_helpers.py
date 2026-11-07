@@ -264,6 +264,81 @@ class CreateInvoiceItemsFromEventsTest(TestCase):
         self.assertEqual(session.session_date, datetime(2026, 4, 14).date())
 
 
+class CreateInvoiceItemsAlreadyBilledTest(TestCase):
+    """A pending event doesn't learn that its session was billed another way,
+    so a stale queue page could submit it again onto a new draft."""
+
+    def setUp(self):
+        self.practice = _make_practice("already-billed")
+        self.client_obj = _make_client(self.practice)
+        self.therapy_60 = _make_service_type("therapy_60", 60)
+        self.request = _make_request(self.practice)
+        self.slot = datetime(2026, 4, 14, 14, 0)
+        self.session = Session.objects.create(
+            client=self.client_obj,
+            session_date=self.slot.date(),
+            session_time=self.slot.time(),
+            duration=60,
+        )
+
+    def _bill_elsewhere(self, status=Invoice.Status.SENT):
+        invoice = Invoice.objects.create(
+            client=self.client_obj,
+            practice=self.practice,
+            invoice_number="INV-001",
+            invoice_date=date_cls(2026, 4, 30),
+            status=Invoice.Status.DRAFT,
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=self.therapy_60,
+            quantity=1,
+            rate=Decimal("90"),
+            session=self.session,
+        )
+        Invoice.objects.filter(pk=invoice.pk).update(status=status)
+        return invoice
+
+    def _import(self, invoice_id="new"):
+        event = {
+            "id": "evt1",
+            "summary": "TC Session",
+            "start": self.slot,
+            "matched_client": self.client_obj,
+            "suggested_service_type_obj": self.therapy_60,
+        }
+        return create_invoice_items_from_events(
+            approved_events=[event],
+            user_overrides={"evt1": {"invoice_id": invoice_id}},
+            request=self.request,
+        )
+
+    def test_session_billed_on_another_invoice_is_skipped(self):
+        self._bill_elsewhere()
+
+        created, skipped, errors = self._import()
+
+        self.assertEqual((created, skipped), (0, 1))
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(self.session.invoice_items.count(), 1)
+        # Skipped before the invoice is resolved, so no empty draft is left
+        self.assertEqual(Invoice.objects.filter(client=self.client_obj).count(), 1)
+
+    def test_billed_on_a_cancelled_invoice_can_be_billed_again(self):
+        self._bill_elsewhere(status=Invoice.Status.CANCELLED)
+
+        created, _skipped, errors = self._import()
+
+        self.assertEqual(created, 1)
+        self.assertEqual(errors, [])
+
+    def test_unbilled_session_is_billed(self):
+        created, _skipped, _errors = self._import()
+
+        self.assertEqual(created, 1)
+        self.assertEqual(self.session.invoice_items.count(), 1)
+
+
 class BillSessionTest(TestCase):
     """Tests for bill_session."""
 
