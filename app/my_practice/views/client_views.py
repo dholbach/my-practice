@@ -39,6 +39,7 @@ from ..utils import (
 )
 from ..utils.email_utils import get_gdpr_deletion_email_content
 from ..utils.file_processing import process_upload
+from ..utils.google_calendar import CalendarEventParser
 from ..utils.view_helpers import get_object_or_403
 from .crud_mixins import NextRedirectMixin, PracticeScopedListView, PracticeScopedUpdateView
 
@@ -479,6 +480,26 @@ def _delete_files_from_disk(paths: list[str]) -> None:
             logger.warning("Could not delete media file after GDPR erasure: %s", path)
 
 
+def _unmatched_events_naming(client: Client) -> list[int]:
+    """Ids of the practice's unmatched calendar events that name the client.
+
+    Events the sync never matched (it only matches by code, and an inactive
+    client's later events may still name them) have no link to follow, so their
+    titles are searched for the client's code, full name and payment aliases.
+    """
+    names = [client.full_name, *client.payment_aliases.values_list("alias_name", flat=True)]
+    names = [name.casefold() for name in names if name.strip()]
+    events = PendingCalendarEvent.objects.filter(
+        practice=client.practice, matched_client__isnull=True
+    ).only("id", "summary")
+    return [
+        event.id
+        for event in events
+        if CalendarEventParser.match_client(event.summary, [client])
+        or any(name in event.summary.casefold() for name in names)
+    ]
+
+
 @require_POST
 def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     """GDPR Art. 17 deletion: erase client data, then send the notification email."""
@@ -506,10 +527,14 @@ def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     # ProtectedError. Imported calendar events only SET_NULL their link, so they
     # would otherwise keep the client's details after the erasure the email
     # announces. The inquiry the client was converted from is anonymised by the
-    # Client pre_delete signal.
+    # Client pre_delete signal. Bank transactions are kept on purpose: they are
+    # the practice's bookkeeping records, and the confirm page and the email
+    # both say so.
     with transaction.atomic():
         PendingCalendarEvent.objects.filter(
-            Q(matched_client=client) | Q(session__client=client)
+            Q(matched_client=client)
+            | Q(session__client=client)
+            | Q(pk__in=_unmatched_events_naming(client))
         ).delete()
         Leistungserfassung.objects.filter(session__client=client).delete()
         client.invoices.all().delete()  # cascades InvoiceItem

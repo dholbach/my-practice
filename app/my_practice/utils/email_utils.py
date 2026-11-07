@@ -291,7 +291,9 @@ def get_gdpr_deletion_email_content(client: "Client", practice: "Practice") -> t
             f"{salutation},\n\n"
             "pursuant to Art. 17 GDPR (right to erasure) I would like to inform you that "
             "your personal data held by my practice has been deleted following the expiry "
-            "of the statutory 10-year retention period.\n\n"
+            "of the statutory 10-year retention period. Bookkeeping records I am "
+            "required to keep, such as the entries of your payments in my bank "
+            "statements, remain until their own retention period ends.\n\n"
             "I hope you are well."
         )
     else:
@@ -300,7 +302,10 @@ def get_gdpr_deletion_email_content(client: "Client", practice: "Practice") -> t
             f"{salutation},\n\n"
             "gemäß Art. 17 DSGVO (Recht auf Löschung) möchte ich Sie darüber informieren, "
             "dass Ihre bei mir gespeicherten personenbezogenen Daten nach Ablauf der "
-            "gesetzlichen Aufbewahrungsfrist von 10 Jahren gelöscht wurden.\n\n"
+            "gesetzlichen Aufbewahrungsfrist von 10 Jahren gelöscht wurden. "
+            "Buchhaltungsunterlagen, die ich aufbewahren muss, etwa die Einträge Ihrer "
+            "Zahlungen in meinen Kontoauszügen, bleiben bis zum Ende ihrer eigenen "
+            "Aufbewahrungsfrist erhalten.\n\n"
             "Ich hoffe, es geht Ihnen gut."
         )
 

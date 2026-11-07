@@ -16,10 +16,11 @@ The following fields are encrypted at rest in the database:
 | Model | Encrypted fields |
 |---|---|
 | `ClientProfile` | `intake_notes`, `case_notes`, `arbeitsdiagnose` |
-| `SessionLog` | `content`, `interventions`, `therapist_reflection`, `next_session_ideas` |
+| `SessionLog` | `summary`, `content`, `interventions`, `therapist_reflection`, `next_session_ideas` |
 | `SupervisionItem` | `content`, `resolution_notes` |
 | `ClientNote` | `content` |
 | `Client` | `notes` |
+| `ClientDocument` | `description` |
 | `ClientInquiry` | `notes`, `initial_contact_notes` |
 | `GoogleCalendarToken` | `token`, `refresh_token`, `client_secret` |
 
@@ -40,6 +41,22 @@ the above — and **restoring them needs the `FERNET_KEY`** they were written wi
 Session metadata (`session_date`, `session_type`, `mood_tags`) is intentionally
 **not encrypted** — it is needed for scheduling, triage, and filtering without
 decrypting the full note.
+
+Encryption covers the fields above, not the whole database. A dump read without the
+key still shows client names, codes and contact details, session dates, invoices, bank
+transactions, and these free-text columns, which are meant for bookkeeping and
+scheduling rather than clinical content. Keep health details out of them:
+
+| Model | Plaintext free-text fields |
+|---|---|
+| `Invoice` | `notes` |
+| `BankTransaction` | `payer_name`, `reference`, `notes` |
+| `PendingCalendarEvent` | `summary` (the calendar event title, as imported) |
+| `TimeOff` | `notes` |
+| `Client` | `cost_carrier` |
+| `ClientTag` | `description` |
+
+Calendar event titles also sit in `django_session` while an import is in progress.
 
 The encryption key is `FERNET_KEY` in your `.env`. **Losing this key means losing
 access to all encrypted content permanently.** Back it up in a separate location from

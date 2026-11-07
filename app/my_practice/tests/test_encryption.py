@@ -13,7 +13,7 @@ from django.db import connection
 from django.test import TestCase, override_settings
 
 from ..fields import EncryptionKeyError, encrypted_fields, get_fernet
-from ..models import Client, ClientInquiry, GoogleCalendarToken, Practice
+from ..models import Client, ClientInquiry, GoogleCalendarToken, Practice, Session, SessionLog
 
 # The fields that must never be stored in clear. A field leaving this set is a
 # privacy regression a reviewer cannot see: the page still renders the same.
@@ -28,6 +28,8 @@ REQUIRED_ENCRYPTED = {
     ("SessionLog", "interventions"),
     ("SessionLog", "therapist_reflection"),
     ("SessionLog", "next_session_ideas"),
+    ("SessionLog", "summary"),
+    ("ClientDocument", "description"),
     ("SupervisionItem", "content"),
     ("SupervisionItem", "resolution_notes"),
     ("ClientNote", "content"),
@@ -192,6 +194,29 @@ class MigrationTests(EncryptionTestBase):
         self.assertTrue(_raw(Client, plain.pk, "notes").startswith("gAAAAA"))
         # A row that was already ciphertext is left as it was, not double-encrypted.
         self.assertEqual(_raw(Client, self.client_obj.pk, "notes"), already_encrypted)
+
+    def test_session_summaries_written_in_clear_are_encrypted(self):
+        migration = importlib.import_module(
+            "my_practice.migrations.0014_encrypt_summary_and_document_description"
+        )
+        session = Session.objects.create(
+            client=self.client_obj, session_date="2026-01-05", duration=60
+        )
+        log = SessionLog.objects.create(session=session)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"UPDATE {SessionLog._meta.db_table} SET summary = %s WHERE id = %s",  # noqa: S608
+                ["Written before encryption", log.pk],
+            )
+
+        from django.apps import apps
+
+        with connection.schema_editor() as editor:
+            migration.encrypt_existing(apps, editor)
+
+        log.refresh_from_db()
+        self.assertEqual(log.summary, "Written before encryption")
+        self.assertTrue(_raw(SessionLog, log.pk, "summary").startswith("gAAAAA"))
 
 
 class FernetKeyCheckTests(TestCase):

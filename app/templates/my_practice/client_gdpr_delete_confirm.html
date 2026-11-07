@@ -10,7 +10,7 @@
 
   <div class="alert alert-warning">
     <strong>{% trans "This action is irreversible." %}</strong>
-    {% trans "All data for this client will be permanently deleted." %}
+    {% trans "The client's data will be permanently deleted, except for the bookkeeping records listed below." %}
   </div>
 
   <h3>{% trans "What will be deleted" %}</h3>
@@ -20,7 +20,11 @@
     <li>{% blocktrans count counter=document_count %}{{ counter }} document (file on disk){% plural %}{{ counter }} documents (files on disk){% endblocktrans %}</li>
     <li>{% trans "Clinical notes, session logs, supervision" %}</li>
     <li>{% trans "All session data" %}</li>
+    <li>{% trans "Calendar events that name this client" %}</li>
   </ul>
+
+  <h3>{% trans "What is kept" %}</h3>
+  <p>{% trans "Bank transactions with this client's payments stay in the bank import, including payer name, IBAN and payment reference. They are bookkeeping records of the practice, and the deletion notice tells the client so." %}</p>
 
   <h3>{% trans "Before deletion" %}</h3>
   <form method="post" action="{% url 'client_gdpr_delete' client.pk %}">
