@@ -52,6 +52,47 @@ class CompressImageUploadTest(TestCase):
         self.assertLessEqual(max(img.size), 2400)
 
 
+# A harmless PostScript image. Pillow's EPS plugin hands this to Ghostscript.
+EPS_BYTES = (
+    b"%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 20 20\n"
+    b"1 0 0 setrgbcolor 0 0 20 20 rectfill\nshowpage\n"
+)
+
+
+class ImageFormatAllowListTest(TestCase):
+    """Pillow chooses a decoder from the content, so a renamed EPS file must
+    be refused before it reaches Ghostscript."""
+
+    def test_eps_named_jpg_upload_is_rejected_without_ghostscript(self):
+        upload = SimpleUploadedFile("photo.jpg", EPS_BYTES, content_type="image/jpeg")
+        with (
+            patch("PIL.EpsImagePlugin.Ghostscript", side_effect=OSError) as gs,
+            self.assertRaises(ValueError),
+        ):
+            process_upload(upload)
+        gs.assert_not_called()
+
+    def test_eps_named_jpg_on_disk_is_not_decoded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "logo.jpg")
+            Path(path).write_bytes(EPS_BYTES)
+            with (
+                patch("PIL.EpsImagePlugin.Ghostscript", side_effect=OSError) as gs,
+                self.assertRaises(OSError),
+            ):
+                compress_image_inplace(path, force=True)
+            gs.assert_not_called()
+
+    def test_validator_rejects_eps_and_accepts_jpeg(self):
+        from django.core.exceptions import ValidationError
+
+        from ..validators import validate_image_content
+
+        with self.assertRaises(ValidationError):
+            validate_image_content(SimpleUploadedFile("logo.jpg", EPS_BYTES))
+        validate_image_content(SimpleUploadedFile("logo.jpg", _make_jpeg_bytes()))
+
+
 class ProcessUploadTest(TestCase):
     def test_rejects_disallowed_extension(self):
         upload = SimpleUploadedFile("evil.svg", b"<svg></svg>", content_type="image/svg+xml")
