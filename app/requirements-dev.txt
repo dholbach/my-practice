@@ -6,11 +6,11 @@
 # scripts/check_requirements_sync.py enforces the duplication: every pin in
 # requirements.txt must appear here at the same version. Extra entries here
 # (the tooling below) are expected and never reach the production image.
-Django==6.1.2
-psycopg[binary]==3.3.6
+Django==6.1.3
+psycopg[binary]==3.3.8
 cryptography==50.0.2
 segno==1.6.6
-markdown==3.11.2
+markdown==3.11.3
 nh3==0.3.7
 gunicorn==26.2.0
 python-dotenv==1.2.4
@@ -22,16 +22,16 @@ python-dateutil==4.0.0
 pdfplumber==0.11.10
 pypdf==6.21.4
 urllib3==2.8.0
-sqlparse==0.6.0  # transitive via Django (>=0.5.0); pinned to close PYSEC-2026-3696..3699
+sqlparse==0.6.1  # transitive via Django (>=0.5.0); pinned to close PYSEC-2026-3696..3699
 
 # Google Calendar API
-google-auth==2.62.0
+google-auth==2.62.1
 google-auth-oauthlib==1.5.0
 google-auth-httplib2==0.4.4
 google-api-python-client==2.201.0
 
 # Dev-only tools
-ruff==0.17.3
+ruff==0.17.4
 pre-commit==4.7.0
 vulture==2.16
 radon==6.0.1
