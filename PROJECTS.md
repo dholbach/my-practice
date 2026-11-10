@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-07 — Security audit run 5 fixes (sign-in, erasure, encryption)**: sign-in lockout counters live in their own table, so a flood of junk logins can no longer evict them from the cache; GDPR erasure also removes unmatched calendar events naming the client and says that bank transactions are kept as bookkeeping records; `SessionLog.summary` and `ClientDocument.description` are encrypted (migration 0014), and the security guide lists the remaining plaintext columns.
-- **2026-11-07 — Security audit run 5 fixes (calendar, uploads, billing)**: calendar invitations can no longer take over a moved session, an over-long event title no longer stops the sync, image uploads and the practice logo/signature only decode the allow-listed formats (no Ghostscript), and the approval queue skips sessions already billed on another invoice.
+- **2026-11-10 — v0.11.0 released**: security audit run 5 fixes (sign-in lockout table, calendar invitations, Ghostscript-free image decoding, erasure of calendar events, double-billing guard, more columns encrypted), the billable amount on the monthly billing page, restores into a newer database, and unprivileged dev containers. Details in [docs/CHANGELOG.md](docs/CHANGELOG.md).
+- **2026-11-07 — Security audit run 5 fixes**: sign-in lockout counters in their own table, GDPR erasure also removes calendar events naming the client, `SessionLog.summary` and `ClientDocument.description` encrypted (migration 0014); calendar invitations can no longer take over a moved session, image uploads only decode allow-listed formats, and the approval queue skips sessions already billed.
 
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
