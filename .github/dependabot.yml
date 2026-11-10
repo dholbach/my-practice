@@ -45,6 +45,15 @@ updates:
         default-days: 3
       open-pull-requests-limit: 5
       groups:
+        # typeshed stubs version as <upstream>.<date>, e.g. 2.9.0.20261029 →
+        # 2.9.0.20261104. A change in only the fourth segment counts as none of
+        # patch/minor/major, so the groups below never matched it and each stub
+        # arrived as its own PR every week. Listed first because a dependency
+        # joins the first group it matches. No update-types, so a stub's major
+        # bump lands here too; fetch-metadata still reports it as major, so it
+        # is never auto-merged.
+        python-stubs:
+          patterns: ["types-*"]
         python-patch:
           patterns: ["*"]
           update-types: ["patch"]
