@@ -15,6 +15,15 @@
     {% endif %}
     {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
+    <div class="form-group">
+        {{ form.active.label_tag }}
+        {{ form.active }}
+        {{ form.active.errors }}
+        <div class="helptext">
+            {% trans "Inactive clients do not appear in the default views." %}
+        </div>
+    </div>
+
     <div class="form-row">
         <div class="form-group">
             {{ form.client_code.label_tag }}
@@ -42,15 +51,6 @@
         </div>
     </div>
     {% endif %}
-
-    <div class="form-group">
-        {{ form.active.label_tag }}
-        {{ form.active }}
-        {{ form.active.errors }}
-        <div class="helptext">
-            {% trans "Inactive clients do not appear in the default views." %}
-        </div>
-    </div>
 
     {% if form.is_online_client %}
     <div class="form-group">
