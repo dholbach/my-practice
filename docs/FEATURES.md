@@ -34,6 +34,7 @@ chronological record; this document only tracks current state.
 - ✅ Chronological unified log view (sessions + notes, newest first, collapse >10)
 - ✅ Unbilled session delete (blocked if already invoiced)
 - ✅ GebüH-recorded indicator on session rows — the GebüH button shows a visual marker once a code has been entered for that session
+- ✅ Session log form names the client (privacy-blurred) beside the code; session rows with a log offer the bill / non-billable actions while still unbilled
 
 ### Client Detail Cockpit (P-094)
 - ✅ Tabbed layout: Overview / Protokoll / Abrechnung — replaces sidebar layout; the former Dokumente tab now sits on the Overview tab beside the intake and questionnaire sections it belongs with

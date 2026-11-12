@@ -457,6 +457,7 @@
             {% if client.needs_gebueh_invoice %}
             {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}
+            {% include 'includes/session_invoice_actions.html' with client=client session=session lbl_to_invoice=lbl_to_invoice lbl_non_billable=lbl_non_billable lbl_billable=lbl_billable %}
             {% include 'includes/session_noshow_action.html' with client=client log=log lbl_noshow=lbl_noshow %}
             {% include 'includes/session_log_delete_button.html' with client=client log=log confirm_delete_log=confirm_delete_log %}
             {% else %}

@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-12 — Session pages name the client**: the session log form shows the client's name (privacy-blurred) beside the code, and session rows that have a log get the bill / non-billable actions too — an intro call with a log could otherwise never be marked non-billable.
 - **2026-11-10 — v0.11.0 released**: security audit run 5 fixes (sign-in lockout table, calendar invitations, Ghostscript-free image decoding, erasure of calendar events, double-billing guard, more columns encrypted), the billable amount on the monthly billing page, restores into a newer database, and unprivileged dev containers. Details in [docs/CHANGELOG.md](docs/CHANGELOG.md).
-- **2026-11-07 — Security audit run 5 fixes**: sign-in lockout counters in their own table, GDPR erasure also removes calendar events naming the client, `SessionLog.summary` and `ClientDocument.description` encrypted (migration 0014); calendar invitations can no longer take over a moved session, image uploads only decode allow-listed formats, and the approval queue skips sessions already billed.
 
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
@@ -45,6 +45,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 - **P-010 Emergency Access Plan**: earlier crisis-field implementation was rolled back (too partial, was blocking other work) — redo needed → [docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md](docs/projects/todo/P-010_EMERGENCY_ACCESS_PLAN.md)
 - **P-011 operational remainder**: install the backup timer on the production host (`sudo bash scripts/install-system-jobs.sh`, #508) and rotate secrets (`FERNET_KEY` via `manage.py encryption rotate`, #500) — the tooling exists now; see `memory/PERSONAL_TODO.md`
+- **Session dates on issued invoices**: a session's date can't be edited anywhere but Django admin (the log form shows it read-only), and the invoice-locked error then points to cancel-and-reissue even for a plain date typo. A session already on an issued invoice should also be locked, since the PDF is rebuilt from it each time.
 
 ### Concept / Mid-term
 

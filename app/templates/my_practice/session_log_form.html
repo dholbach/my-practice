@@ -4,7 +4,7 @@
 
 {% block title %}{% trans "Session log" %} – {{ client.client_code }}{% endblock %}
 {% block page_title %}📝 {% trans "Session log" %}{% endblock %}
-{% block page_subtitle %}{{ client.client_code }}{% endblock %}
+{% block page_subtitle %}<span class="sensitive-data">{{ client.full_name }}</span> ({{ client.client_code }}){% endblock %}
 
 
 {% block content %}
