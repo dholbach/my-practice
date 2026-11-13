@@ -109,6 +109,19 @@ services:
       # pins the inode, and `sed -i` or an editor save replaces the file, so
       # the container kept seeing the pre-bump version until recreated.
       - .:/repo:ro
+      # ...minus what those tests never read: the root mount would otherwise
+      # hand anything running in the container the gitignored local files —
+      # personal notes, the filled-in DPIA, git history including unpushed
+      # work. Masked as whole directories where possible, so a new gitignored
+      # file inside one is covered without touching this list. A mask's target
+      # must exist on the host or the container refuses to start; ./dev.py
+      # start creates missing ones from this list. test_repo_mount_masks fails
+      # if a secret-shaped file under /repo is still readable.
+      - /dev/null:/repo/.env:ro
+      - {type: tmpfs, target: /repo/.git, read_only: true}
+      - {type: tmpfs, target: /repo/.claude, read_only: true}
+      - {type: tmpfs, target: /repo/docs, read_only: true}
+      - {type: tmpfs, target: /repo/memory, read_only: true}
       # Backups and media live OUTSIDE the repo at $MY_PRACTICE_DATA_DIR (set in .env).
       # Default: ../my-practice-data (sibling directory next to the repo clone).
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/backups:/app/backups:ro
