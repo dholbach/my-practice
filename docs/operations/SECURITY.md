@@ -139,16 +139,25 @@ Left unset (the default), the app assumes plain HTTP and none of the above apply
 
 ## Dev Container Privileges
 
-`docker-compose.yml` runs `django` and `tailwind` as `MY_PRACTICE_UID:MY_PRACTICE_GID`
-(default 1000:1000), with every capability dropped and `no-new-privileges` set. Before
-they start, the one-shot `fix-ownership` service hands them anything under `./app`, the
-media directory and their volumes that belongs to another user. It runs as root with
-only the capabilities it needs and no network.
+`docker-compose.yml` runs `django`, `tools`, `tailwind` and the one-shot
+`compile-messages` as `MY_PRACTICE_UID:MY_PRACTICE_GID` (default 1000:1000), with every
+capability dropped and `no-new-privileges` set. Before they start, the one-shot
+`fix-ownership` service hands them anything under `./app`, the media directory and their
+volumes that belongs to another user. It runs as root with only the capabilities it needs
+and no network. `postgres` keeps only the five capabilities its entrypoint needs to hand
+the data directory to the postgres user and drop to it.
 
-This limits a compromised upload parser; it doesn't contain it. The container can still
-write everything its UID owns on those mounts, including `./app`, which gunicorn reloads
-from, and it can read `FERNET_KEY`. `network_mode: host` stays because Proton Bridge
-listens on the host's loopback, so the host's loopback services remain reachable too.
+`django` is the only container that serves requests and parses uploads, so it mounts
+`./app` read-only: code running there can't edit the source gunicorn reloads from or slip
+a change into a commit. Everything that writes to `./app` (`./dev.py test`, `lint`,
+`makemigrations`, `i18n`, `shell`) runs in `tools`, which serves nothing. `tailwind` and
+`compile-messages` have no network. The repo root is mounted read-only at `/repo` for the
+release guardrails, with `.env`, `.git`, `docs/`, `memory/` and `.claude/` masked.
+
+This limits a compromised upload parser; it doesn't contain it. `django` can still write
+the data directories (media, documents, questionnaires) and it can read `FERNET_KEY`.
+`network_mode: host` stays because Proton Bridge listens on the host's loopback, so the
+host's loopback services remain reachable too.
 
 ## Network Exposure
 
