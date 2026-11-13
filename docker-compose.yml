@@ -1,8 +1,9 @@
 # The dev stack holds real data on some installs, and the django container parses
 # uploaded files with Ghostscript and Pillow. Without root or capabilities, a
 # compromised parser cannot take ownership of files or use root's reach over the
-# bind mounts. Still within its reach: everything this UID owns on those mounts,
-# including ./app, and the host's loopback services (network_mode: host).
+# bind mounts, and ./app is mounted read-only there. Still within its reach:
+# everything this UID owns on the data mounts (media, documents, questionnaires)
+# and the host's loopback services (network_mode: host).
 x-unprivileged: &unprivileged
   user: "${MY_PRACTICE_UID:-1000}:${MY_PRACTICE_GID:-1000}"
   cap_drop:
@@ -15,6 +16,18 @@ services:
     image: postgres:17-alpine
     container_name: my-practice-db
     restart: unless-stopped
+    # The entrypoint starts as root to hand $PGDATA to the postgres user, then
+    # drops to it with su-exec; these are the capabilities that takes.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-my_practice}
       - POSTGRES_USER=${POSTGRES_USER:-my_practice}
@@ -58,6 +71,28 @@ services:
         find /app ! -user ${MY_PRACTICE_UID:-1000} -exec chown -h ${MY_PRACTICE_UID:-1000} {} + &&
         find /app ! -group ${MY_PRACTICE_GID:-1000} -exec chgrp -h ${MY_PRACTICE_GID:-1000} {} +
 
+  # One-shot: the .mo catalogs are gitignored build output and the ./app bind
+  # mount hides the copy the image compiled, so they're compiled here, where
+  # ./app is writable, before django (which only reads it) starts.
+  compile-messages:
+    <<: *unprivileged
+    image: my-practice-django
+    pull_policy: never
+    restart: "no"
+    network_mode: none
+    environment:
+      - HOME=/tmp
+    volumes:
+      - ./app:/app
+    depends_on:
+      fix-ownership:
+        condition: service_completed_successfully
+    command: python manage.py compilemessages -v 0
+
+  # The web server. It parses uploaded files, so ./app is read-only here: code
+  # running in it can't edit the source that gunicorn --reload then runs, or
+  # that ends up in a commit. Everything that writes to ./app (tests, lint,
+  # makemigrations, i18n) runs in the tools container below.
   django:
     <<: *unprivileged
     image: my-practice-django
@@ -93,10 +128,10 @@ services:
       - FERNET_KEY=${FERNET_KEY:-}
       - MY_PRACTICE_DATA_DIR=/my-practice-data
       - MY_PRACTICE_REPO_ROOT=/repo
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
-      - ./app:/app
+      # Mount targets inside a read-only bind (staticfiles, media, ... below)
+      # must exist on the host; ./dev.py start creates missing ones.
+      - ./app:/app:ro
       # Named volume so the image's `npm install` (app/Dockerfile's development
       # stage) isn't shadowed by the ./app:/app bind mount above — the host
       # checkout has no node_modules/ of its own (see app/.dockerignore).
@@ -129,35 +164,54 @@ services:
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/media:/app/media
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/documents:/my-practice-data/documents
       - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/questionnaires:/my-practice-data/questionnaires
+    # Polled every second while starting (./dev.py start waits on it), then
+    # once a minute instead of rendering the login page every 5s all day.
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/accounts/login/"]
-      interval: 5s
+      start_period: 120s
+      start_interval: 1s
+      interval: 60s
       timeout: 5s
-      retries: 24
-      start_period: 10s
+      retries: 3
     depends_on:
-      fix-ownership:
+      compile-messages:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
     # gunicorn binds loopback, like postgres above: network_mode: host makes the
     # bind address the only thing between the DEBUG stack (with the real data
     # directories mounted) and the local network.
-    # compilemessages: the .mo catalogs are gitignored, and the ./app bind mount
-    # hides the copy the image compiled, so the container compiles its own on
-    # start. --reload-extra-file then picks up a recompile (e.g. from the
+    # --reload-extra-file picks up a recompile of the catalogs (e.g. from the
     # post-merge hook) without a restart; gunicorn's --reload only watches .py.
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput --ignore tailwind.css &&
-             python manage.py compilemessages -v 0 &&
              gunicorn --bind 127.0.0.1:8000 --workers 1 --timeout 300 --reload --reload-extra-file locale/de/LC_MESSAGES/django.mo --reload-extra-file locale/en/LC_MESSAGES/django.mo config.wsgi:application"
 
+  # Where ./dev.py runs everything that writes to ./app: tests, lint,
+  # makemigrations, i18n, shell. The django service with ./app writable and
+  # an idle command; it serves nothing and parses no uploads.
+  tools:
+    extends: django
+    container_name: my-practice-tools
+    # django builds the image; one builder per tag.
+    build: !reset null
+    pull_policy: never
+    # sleep ignores SIGTERM as PID 1; without init, `compose down` waits 10s.
+    init: true
+    volumes:
+      - ./app:/app
+    healthcheck:
+      disable: true
+    command: sleep infinity
+
+  # Same image as django, so the two can't drift apart. No network: the
+  # Tailwind CLI only reads and writes ./app.
   tailwind:
     <<: *unprivileged
-    build:
-      context: ./app
-      target: development
+    image: my-practice-django
+    pull_policy: never
+    network_mode: none
     container_name: my-practice-tailwind
     restart: unless-stopped
     environment:

@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-13 — Dev web container can't edit the source**: `django` mounts `./app` read-only and `./dev.py` runs tests, lint, migrations and i18n in a new `tools` container; `compile-messages` builds the catalogs before startup. Postgres drops to five capabilities, tailwind loses its network and its duplicate image, the healthcheck idles at once a minute.
 - **2026-11-13 — Dev container hides local files**: the read-only repo mount in the django container masks `.env`, `.git`, `docs/`, `memory/` and `.claude/`; `./dev.py start` creates missing mask targets and `test_repo_mount_masks` catches a dropped mask or a stray `.env.bak` (audit run 5 finding).
-- **2026-11-12 — Session pages name the client**: the session log form shows the client's name (privacy-blurred) beside the code, and session rows that have a log get the bill / non-billable actions too — an intro call with a log could otherwise never be marked non-billable.
 
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)

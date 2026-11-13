@@ -14,6 +14,8 @@ import sys
 import time
 
 CONTAINER_NAME = "my-practice-django"
+# Commands run here, not in the web container: only this one can write to ./app.
+TOOLS_CONTAINER = "my-practice-tools"
 COMPOSE = ["docker", "compose"]
 
 # Python that lives outside ./app and so is invisible to the container's
@@ -49,13 +51,13 @@ def _root_ruff_target_version():
 
 
 def run_docker_command(args, interactive=False, **run_kwargs):
-    """Run a command in the Django container.
+    """Run a command in the tools container (the one that can write to ./app).
 
     run_kwargs go to subprocess.run; passing `input` keeps the container's stdin
     open (-i) so it can be piped in.
     """
     flags = ["-it"] if interactive else ["-i"] if "input" in run_kwargs else []
-    return subprocess.run(["docker", "exec", *flags, CONTAINER_NAME, *args], **run_kwargs)
+    return subprocess.run(["docker", "exec", *flags, TOOLS_CONTAINER, *args], **run_kwargs)
 
 
 def _root_python_files():
@@ -394,7 +396,7 @@ def cmd_manage(args):
             if not host_path.startswith("/app"):
                 filename = os.path.basename(host_path)
                 container_tmp_path = f"/tmp/{filename}"
-                cp_cmd = ["docker", "cp", host_path, f"{CONTAINER_NAME}:{container_tmp_path}"]
+                cp_cmd = ["docker", "cp", host_path, f"{TOOLS_CONTAINER}:{container_tmp_path}"]
                 print(f"Copying {host_path} → container:{container_tmp_path}")
                 result = subprocess.run(cp_cmd)
                 if result.returncode != 0:
@@ -462,13 +464,13 @@ def cmd_build(args):
     return subprocess.run([*COMPOSE, "build", *args])
 
 
-def _ensure_repo_mask_targets():
-    """Create the host paths docker-compose.yml masks under /repo.
+def _ensure_mount_targets():
+    """Create the host paths that compose mounts inside a read-only bind mount.
 
-    Docker can't create a mountpoint inside the read-only /repo bind mount, so a
-    masked path that is missing on the host (memory/ in a fresh clone) stops the
-    django container from starting. Read from `compose config` so the mask list
-    lives only in docker-compose.yml.
+    Docker can't create a mountpoint inside a read-only bind (/repo, and django's
+    /app), so a target missing on the host stops the container from starting:
+    memory/ in a fresh clone, or app/backups before anything wrote there. Read
+    from `compose config` so the mount lists live only in docker-compose.yml.
     """
     result = subprocess.run(
         [*COMPOSE, "config", "--format", "json"], capture_output=True, text=True
@@ -476,23 +478,31 @@ def _ensure_repo_mask_targets():
     if result.returncode != 0:
         return  # `compose up` reports the same error itself
     repo_dir = os.path.dirname(os.path.abspath(__file__))
-    for volume in json.loads(result.stdout)["services"]["django"].get("volumes", []):
-        relative = os.path.relpath(volume["target"], "/repo")
-        if volume["target"] == "/repo" or relative.startswith(".."):
-            continue
-        path = os.path.join(repo_dir, relative)
-        if os.path.lexists(path):
-            continue
-        if volume["type"] == "tmpfs":
-            os.makedirs(path)
-        else:
-            open(path, "a").close()
-        print(f"Created {relative} (masked in the container, see docker-compose.yml)")
+    for service in json.loads(result.stdout)["services"].values():
+        volumes = service.get("volumes", [])
+        readonly_binds = [v for v in volumes if v["type"] == "bind" and v.get("read_only")]
+        for volume in volumes:
+            parents = [b for b in readonly_binds if volume["target"].startswith(b["target"] + "/")]
+            if not parents:
+                continue
+            parent = max(parents, key=lambda b: len(b["target"]))
+            path = os.path.join(
+                parent["source"], os.path.relpath(volume["target"], parent["target"])
+            )
+            if os.path.lexists(path) or not path.startswith(repo_dir + os.sep):
+                continue
+            if volume["type"] == "bind" and not os.path.isdir(volume["source"]):
+                open(path, "a").close()
+            else:
+                os.makedirs(path)
+            print(
+                f"Created {os.path.relpath(path, repo_dir)} (a mount target, see docker-compose.yml)"
+            )
 
 
 def cmd_start(args):
     """Start all containers with compose."""
-    _ensure_repo_mask_targets()
+    _ensure_mount_targets()
     print("Starting containers with compose...")
     result = subprocess.run([*COMPOSE, "up", "-d", *args])
     if result.returncode != 0:
@@ -546,8 +556,8 @@ def cmd_makemigrations(args):
 
 
 def _container_running():
-    """Whether the Django container is up (`docker exec` would fail otherwise)."""
-    cmd = ["docker", "inspect", "--format", "{{.State.Running}}", CONTAINER_NAME]
+    """Whether the tools container is up (`docker exec` would fail otherwise)."""
+    cmd = ["docker", "inspect", "--format", "{{.State.Running}}", TOOLS_CONTAINER]
     try:
         out = subprocess.run(cmd, capture_output=True, text=True)
     except FileNotFoundError:
@@ -572,7 +582,7 @@ def cmd_i18n(args):
     if "--if-running" in args:
         args = [a for a in args if a != "--if-running"]
         if not _container_running():
-            print("ℹ️  Django container not running — catalogs compile on next start.")
+            print("ℹ️  Tools container not running — catalogs compile on next start.")
             return subprocess.CompletedProcess(args=[], returncode=0)
     sub = args[0] if args else None
     if sub not in (None, "makemessages", "compilemessages"):
@@ -600,8 +610,8 @@ def cmd_quality(args):
 
     Note: vulture and mypy are skipped by default due to many false positives.
           Run them manually if needed:
-            docker exec my-practice-django python -m vulture my_practice
-            docker exec my-practice-django python -m mypy my_practice
+            docker exec my-practice-tools python -m vulture my_practice
+            docker exec my-practice-tools python -m mypy my_practice
     """
     results = []
     verbose = "--verbose" in args
