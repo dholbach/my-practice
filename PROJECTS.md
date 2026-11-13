@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-13 — Dev container hides local files**: the read-only repo mount in the django container masks `.env`, `.git`, `docs/`, `memory/` and `.claude/`; `./dev.py start` creates missing mask targets and `test_repo_mount_masks` catches a dropped mask or a stray `.env.bak` (audit run 5 finding).
 - **2026-11-12 — Session pages name the client**: the session log form shows the client's name (privacy-blurred) beside the code, and session rows that have a log get the bill / non-billable actions too — an intro call with a log could otherwise never be marked non-billable.
-- **2026-11-10 — v0.11.0 released**: security audit run 5 fixes (sign-in lockout table, calendar invitations, Ghostscript-free image decoding, erasure of calendar events, double-billing guard, more columns encrypted), the billable amount on the monthly billing page, restores into a newer database, and unprivileged dev containers. Details in [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)

@@ -5,6 +5,7 @@ Development helper script for the my-practice Django project.
 
 import glob
 import inspect
+import json
 import os
 import re
 import shutil
@@ -461,8 +462,37 @@ def cmd_build(args):
     return subprocess.run([*COMPOSE, "build", *args])
 
 
+def _ensure_repo_mask_targets():
+    """Create the host paths docker-compose.yml masks under /repo.
+
+    Docker can't create a mountpoint inside the read-only /repo bind mount, so a
+    masked path that is missing on the host (memory/ in a fresh clone) stops the
+    django container from starting. Read from `compose config` so the mask list
+    lives only in docker-compose.yml.
+    """
+    result = subprocess.run(
+        [*COMPOSE, "config", "--format", "json"], capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        return  # `compose up` reports the same error itself
+    repo_dir = os.path.dirname(os.path.abspath(__file__))
+    for volume in json.loads(result.stdout)["services"]["django"].get("volumes", []):
+        relative = os.path.relpath(volume["target"], "/repo")
+        if volume["target"] == "/repo" or relative.startswith(".."):
+            continue
+        path = os.path.join(repo_dir, relative)
+        if os.path.lexists(path):
+            continue
+        if volume["type"] == "tmpfs":
+            os.makedirs(path)
+        else:
+            open(path, "a").close()
+        print(f"Created {relative} (masked in the container, see docker-compose.yml)")
+
+
 def cmd_start(args):
     """Start all containers with compose."""
+    _ensure_repo_mask_targets()
     print("Starting containers with compose...")
     result = subprocess.run([*COMPOSE, "up", "-d", *args])
     if result.returncode != 0:

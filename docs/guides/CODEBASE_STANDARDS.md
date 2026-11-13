@@ -696,6 +696,7 @@ grow them.
 | `test_csp_coverage.py` | Inline scripts carry the CSP nonce, no inline `on*=` handlers, flash messages escaped |
 | `test_currency_formatting.py` | Money goes through `format_currency_de` / `|currency`, never a hand-rolled `:,.2f` |
 | `test_release_guardrails.py` | No model change without its migration; the three version strings agree |
+| `test_repo_mount_masks.py` | The dev container's `/repo` mount hides `.env`, `.git` and personal notes; no secret-shaped file is readable through it (dev container only) |
 
 `test_release_guardrails.py` covers the two failure modes that only surface
 after the fact: the suite builds its schema from the models, so a missing
