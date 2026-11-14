@@ -345,6 +345,7 @@ def cmd_setup(args):
 
     # 5. Start the stack
     step("Starting the stack")
+    _ensure_data_dirs()
     result = compose("up", "-d", "--remove-orphans")
     if result.returncode != 0:
         abort("docker compose up failed.\n  Check the logs for details:\n    ./prod.py logs")
@@ -662,6 +663,7 @@ def cmd_start(_args):
     _require_no_foreign_containers()
     _ensure_bind_address()
     _warn_if_proxy_bypassable()
+    _ensure_data_dirs()
     return compose("up", "-d", "--remove-orphans")
 
 
@@ -720,6 +722,7 @@ def cmd_update(args):
             return subprocess.CompletedProcess(args=[], returncode=1)
     _ensure_bind_address()
     _warn_if_proxy_bypassable()
+    _ensure_data_dirs()
     return compose("up", "-d", "--remove-orphans")
 
 
@@ -781,13 +784,32 @@ def _setting(name, default=""):
     return re.sub(r"\s+#.*$", "", value).strip() or default
 
 
-def _backup_dir():
+# The host directories docker-compose.prod.yml bind-mounts under MY_PRACTICE_DATA_DIR.
+DATA_SUBDIRS = ("backups", "media", "documents", "questionnaires")
+
+
+def _data_dir():
     base = os.path.dirname(os.path.abspath(__file__))
     data_dir = _setting(
         "MY_PRACTICE_DATA_DIR", os.path.join(os.path.dirname(base), "my-practice-data")
     )
     # A relative value resolves next to the compose file, as Compose does.
-    return os.path.join(base, data_dir, "backups")
+    return os.path.join(base, data_dir)
+
+
+def _ensure_data_dirs():
+    """Create the bind-mounted data directories as the current user.
+
+    Left to Docker, a missing bind-mount source is created owned by root, and
+    `./prod.py backup` (which runs as the invoking user) then fails on chmod.
+    """
+    root = _data_dir()
+    for name in DATA_SUBDIRS:
+        os.makedirs(os.path.join(root, name), exist_ok=True)
+
+
+def _backup_dir():
+    return os.path.join(_data_dir(), "backups")
 
 
 def _compose_cmd(args):
