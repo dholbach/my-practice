@@ -2,6 +2,20 @@
 
 Major features and milestones in chronological order.
 
+## 2026-11-14 — v0.12.0 minor release
+
+Dev containers that can't edit the source or read local secrets, a `prod.py` that creates its data directories as the right user, and two small interface changes.
+
+**Upgrading:** download the new `prod.py` (`./prod.py update` prints the command), then run `./prod.py update`. No migrations; `docker-compose.prod.yml` is unchanged apart from the version. On the dev stack, run `./dev.py restart --force` to pick up the new compose file (a new `tools` container runs tests and tooling).
+
+- **Feature — client named on the session log page**: the subtitle shows the name next to the client code (blurred in privacy mode); the tab title stays code-only.
+- **Feature — bill actions on logged sessions**: compact session rows on the client page that have a session log now offer "bill" and "mark non-billable", as rows without a log already did.
+- **Feature — active toggle at the top of the client edit form**: changing a client's status no longer means scrolling past salutation and billing options.
+- **Fix — `prod.py` data directories**: `setup`, `start` and `update` create `backups`, `media`, `documents` and `questionnaires` under the data directory as the invoking user. On rootful Docker the daemon used to create them as root, and the first `./prod.py backup` crashed with a `PermissionError`.
+- **Hardening — dev web container is read-only**: `django` mounts `./app` read-only, and `./dev.py` runs tests, lint, migrations and i18n in a new `tools` container. Translation catalogs are compiled before startup. Postgres drops to five capabilities, tailwind loses its network and its duplicate image.
+- **Hardening — dev container hides local files**: the repo mount in the django container masks `.env`, `.git`, `.claude`, `docs` and `memory`, and a test catches a dropped mask or a stray `.env.bak`.
+- **CI**: the gitleaks download is verified against a pinned sha256 before it runs.
+
 ## 2026-11-10 — v0.11.0 minor release
 
 A security release from the fifth source review (sign-in, calendar sync, uploads, erasure, encryption), the billable amount on the monthly billing page, a restore that works into a database migrated past the backup, and dev containers that no longer run as root.
