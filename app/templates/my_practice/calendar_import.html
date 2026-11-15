@@ -188,198 +188,24 @@
     {% endif %}
 </div>
 
-<script nonce="{{ csp_nonce }}">
-// Track selected events
-let selectedEvents = new Set();
-let duplicatesHidden = false;
-
-// Toggle duplicate rows visibility
-function toggleDuplicates() {
-    duplicatesHidden = !duplicatesHidden;
-    const duplicateRows = document.querySelectorAll('.event-duplicate');
-    const toggleBtn = document.getElementById('toggleDuplicates');
-    const toggleBtnTop = document.getElementById('toggleDuplicatesTop');
-
-    duplicateRows.forEach(row => {
-        row.style.display = duplicatesHidden ? 'none' : '';
-    });
-
-    const newText = duplicatesHidden ? '🔄 {% trans "Show duplicates" %}' : '🚫 {% trans "Hide duplicates" %}';
-    if (toggleBtn) toggleBtn.textContent = newText;
-    if (toggleBtnTop) toggleBtnTop.textContent = newText;
-}
-
-// Auto-select ready events on page load
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.event-row[data-is-ready="true"]').forEach(row => {
-        const checkbox = row.querySelector('.event-checkbox');
-        if (checkbox && !checkbox.disabled) {
-            checkbox.checked = true;
-            selectedEvents.add(row.dataset.eventId);
-            row.classList.add('selected');
-        }
-    });
-    updateBulkActions();
-
-    // Wire import buttons
-    const importTopBtn = document.getElementById('js-import-top');
-    const importBottomBtn = document.getElementById('js-import-bottom');
-    if (importTopBtn) importTopBtn.addEventListener('click', function() { importSelected(this); });
-    if (importBottomBtn) importBottomBtn.addEventListener('click', function() { importSelected(this); });
-
-    // Wire duplicate toggle buttons
-    const toggleTop = document.getElementById('toggleDuplicatesTop');
-    const toggleBottom = document.getElementById('toggleDuplicates');
-    if (toggleTop) toggleTop.addEventListener('click', toggleDuplicates);
-    if (toggleBottom) toggleBottom.addEventListener('click', toggleDuplicates);
-
-    // Wire clear selection button
-    const clearBtn = document.getElementById('js-clear-selection');
-    if (clearBtn) clearBtn.addEventListener('click', clearSelection);
-
-    // Wire select-all checkbox
-    const selectAll = document.getElementById('selectAll');
-    if (selectAll) selectAll.addEventListener('change', function() { toggleSelectAll(this); });
-
-    // Wire per-row checkboxes
-    document.querySelectorAll('.event-checkbox').forEach(cb => {
-        cb.addEventListener('change', updateBulkActions);
-    });
-
-    // Wire skip buttons
-    document.querySelectorAll('button[data-event-id]').forEach(btn => {
-        btn.addEventListener('click', function() { skipEvent(this.dataset.eventId); });
-    });
-});
-
-function toggleSelectAll(checkbox) {
-    const checkboxes = document.querySelectorAll('.event-checkbox:not([disabled])');
-    checkboxes.forEach(cb => {
-        cb.checked = checkbox.checked;
-        const eventId = cb.closest('.event-row').dataset.eventId;
-        if (checkbox.checked) {
-            selectedEvents.add(eventId);
-            cb.closest('.event-row').classList.add('selected');
-        } else {
-            selectedEvents.delete(eventId);
-            cb.closest('.event-row').classList.remove('selected');
-        }
-    });
-    updateBulkActions();
-}
-
-function updateBulkActions() {
-    const checkboxes = document.querySelectorAll('.event-checkbox:checked');
-    selectedEvents.clear();
-    checkboxes.forEach(cb => {
-        const eventId = cb.closest('.event-row').dataset.eventId;
-        selectedEvents.add(eventId);
-        cb.closest('.event-row').classList.add('selected');
-    });
-
-    // Update unselected rows
-    document.querySelectorAll('.event-checkbox:not(:checked)').forEach(cb => {
-        cb.closest('.event-row').classList.remove('selected');
-    });
-
-    const bulkActions = document.getElementById('bulkActions');
-    const count = selectedEvents.size;
-
-    if (count > 0) {
-        bulkActions.classList.add('visible');
-        document.getElementById('selectedCount').textContent = `${count} {% trans "selected" %}`;
-    } else {
-        bulkActions.classList.remove('visible');
-    }
-}
-
-function skipEvent(eventId) {
-    const row = document.getElementById(`event-${eventId}`);
-    row.classList.add('skipped');
-    const checkbox = row.querySelector('.event-checkbox');
-    checkbox.checked = false;
-    checkbox.disabled = true;
-    selectedEvents.delete(eventId);
-    updateBulkActions();
-}
-
-function clearSelection() {
-    document.querySelectorAll('.event-checkbox').forEach(cb => cb.checked = false);
-    document.getElementById('selectAll').checked = false;
-    selectedEvents.clear();
-    updateBulkActions();
-}
-
-async function importSelected(btnElement) {
-    if (selectedEvents.size === 0) {
-        alert('{% trans "Please select at least one event." %}');
-        return;
-    }
-
-    btnElement.disabled = true;
-    btnElement.textContent = '⏳ {% trans "Importing…" %}';
-
-    // Collect event data
-    const eventsData = Array.from(selectedEvents).map(eventId => {
-        const row = document.getElementById(`event-${eventId}`);
-        const clientId = row.querySelector('.client-select').value;
-        const serviceTypeId = row.querySelector('.service-select').value;
-
-        if (!clientId || !serviceTypeId) {
-            return null;
-        }
-
-        return {
-            id: eventId,
-            action: 'import',
-            client_id: parseInt(clientId),
-            service_type_id: parseInt(serviceTypeId)
-        };
-    }).filter(e => e !== null);
-
-    if (eventsData.length === 0) {
-        alert('{% trans "Please select a client and service type for all events." %}');
-        btnElement.disabled = false;
-        btnElement.textContent = '✅ {% trans "Import selected" %}';
-        return;
-    }
-
-    try {
-        const response = await fetch("{% url 'calendar_import_events' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ events: eventsData })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            let message = `✅ {% trans "Success!" %}\n\n${result.created} {% trans "events imported" %}\n${result.skipped} {% trans "skipped" %}`;
-            if (result.errors && result.errors.length > 0) {
-                message += `\n\n❌ ${result.errors.length} {% trans "errors" %}:\n\n`;
-                result.errors.forEach((err, idx) => {
-                    message += `${idx + 1}. ${err}\n`;
-                });
-            }
-            alert(message);
-
-            // Only reload if something was created
-            if (result.created > 0) {
-                window.location.reload();
-            }
-        } else {
-            alert(`❌ {% trans "Error" %}: ${result.error}`);
-        }
-    } catch (error) {
-        alert(`❌ {% trans "Error during import" %}: ${error.message}`);
-    } finally {
-        btnElement.disabled = false;
-        btnElement.textContent = '✅ {% trans "Import selected" %}';
-    }
-}
-</script>
+{% comment %}
+The strings and the URL live here rather than in the .js: the i18n coverage guardrail
+only scans templates, so a translated string hardcoded in JS goes unnoticed.
+{% endcomment %}
+<script src="{% static 'js/calendar_import.js' %}"
+        id="calendar-import-js"
+        data-import-url="{% url 'calendar_import_events' %}"
+        data-show-duplicates="{% trans "Show duplicates" %}"
+        data-hide-duplicates="{% trans "Hide duplicates" %}"
+        data-selected="{% trans "selected" %}"
+        data-select-one="{% trans "Please select at least one event." %}"
+        data-select-client-and-service="{% trans "Please select a client and service type for all events." %}"
+        data-importing="{% trans "Importing…" %}"
+        data-success="{% trans "Success!" %}"
+        data-events-imported="{% trans "events imported" %}"
+        data-skipped="{% trans "skipped" %}"
+        data-errors="{% trans "errors" %}"
+        data-error="{% trans "Error" %}"
+        data-import-error="{% trans "Error during import" %}"></script>
 
 {% endblock %}
