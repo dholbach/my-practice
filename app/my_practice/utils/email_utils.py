@@ -433,8 +433,8 @@ def get_payment_reminder_email_content(
                 lines.append(f"  BIC: {practice.bic}")
         lines.append("")
         lines.append("All the best,")
-        lines.append("-- ")
-        lines.append(practice.email_signature)
+        if practice.email_signature:
+            lines += ["-- ", practice.email_signature]
         subject = f"Payment Reminder – {count} outstanding {invoice_word}"
     else:
         # German (default)
@@ -460,8 +460,8 @@ def get_payment_reminder_email_content(
                 lines.append(f"  BIC: {practice.bic}")
         lines.append("")
         lines.append("Liebe Grüße,")
-        lines.append("-- ")
-        lines.append(practice.email_signature)
+        if practice.email_signature:
+            lines += ["-- ", practice.email_signature]
         subject = f"Zahlungserinnerung – {count} offene {invoice_word_plural}"
 
     return subject, "\n".join(lines)

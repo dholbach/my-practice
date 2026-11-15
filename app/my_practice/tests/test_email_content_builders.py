@@ -527,6 +527,13 @@ class PaymentReminderContentTest(EmailContentBuilderTestBase):
         self.assertNotIn("Test Bank", body)
         self.assertNotIn("BIC:", body)
 
+    def test_no_dangling_delimiter_when_signature_empty(self):
+        self.practice.email_signature = ""
+        for client in (self.client_de, self.client_en):
+            with self.subTest(language=client.language):
+                _, body = get_payment_reminder_email_content(client, self.practice, self.invoices)
+                self.assertNotIn("-- ", body)
+
     def test_custom_salutation_replaces_the_greeting(self):
         self.client_de.salutation = "Hallo Max"
         _, body = get_payment_reminder_email_content(self.client_de, self.practice, self.invoices)
