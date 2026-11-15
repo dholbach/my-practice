@@ -17,16 +17,8 @@ from django.utils import timezone
 from ..models import CapacityPeriod, Session
 from ..models.base import PracticeScope, scope_to_practice
 from .date_helpers import DateRangeHelper
-from .practice_days import berlin_public_holidays
+from .practice_days import berlin_public_holidays_between
 from .timeoff_helpers import calculate_timeoff_for_period
-
-
-def _build_holiday_set(start_year: int, end_year: int) -> set[date]:
-    """Build the set of Berlin public holidays covering all years in [start_year, end_year]."""
-    holidays: set[date] = set()
-    for yr in range(start_year, end_year + 1):
-        holidays |= berlin_public_holidays(yr)
-    return holidays
 
 
 def _get_capacity_periods(*, practice: PracticeScope) -> list[tuple[date, int]]:
@@ -109,7 +101,7 @@ def calculate_period_capacity(
         effective_end_date = end_date
 
     # Build holiday set once for the effective date range
-    _holidays = _build_holiday_set(start_date.year, effective_end_date.year)
+    _holidays = berlin_public_holidays_between(start_date.year, effective_end_date.year)
 
     # Working days in effective period, excluding public holidays
     working_days = DateRangeHelper.count_working_days(start_date, effective_end_date, _holidays)
@@ -331,7 +323,7 @@ def get_capacity_trends(
     )
 
     # Pre-build holiday set covering all years in the range (used in the loop below)
-    _holidays = _build_holiday_set(start_date.year, end_date.year)
+    _holidays = berlin_public_holidays_between(start_date.year, end_date.year)
 
     # Query 3: capacity periods, fetched once and reused for every month below
     _periods = _get_capacity_periods(practice=practice)

@@ -1,6 +1,5 @@
 """Time off tracking model for holidays and vacation"""
 
-from datetime import date
 from enum import StrEnum
 
 from django.core.exceptions import ValidationError
@@ -75,11 +74,9 @@ class TimeOff(TimestampedModel):
         if not (self.start_date and self.end_date):
             return 0
         from ..utils.date_helpers import DateRangeHelper
-        from ..utils.practice_days import berlin_public_holidays
+        from ..utils.practice_days import berlin_public_holidays_between
 
-        holidays: set[date] = set()
-        for yr in range(self.start_date.year, self.end_date.year + 1):
-            holidays |= berlin_public_holidays(yr)
+        holidays = berlin_public_holidays_between(self.start_date.year, self.end_date.year)
         return DateRangeHelper.count_working_days(self.start_date, self.end_date, holidays)
 
     @property

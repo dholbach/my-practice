@@ -116,7 +116,7 @@ app/my_practice/
 │   ├── invoice_helpers.py          # get_next_invoice_number()
 │   ├── pdf_generation.py           # Invoice/contract/intake/questionnaire PDFs as bytes (WeasyPrint)
 │   ├── practice_analysis.py        # PracticeAnalyzer
-│   ├── practice_days.py            # berlin_public_holidays(), PracticeDayCalculator,
+│   ├── practice_days.py            # berlin_public_holidays[_between](), PracticeDayCalculator,
 │   │                               #   WorkdayAuditCalculator
 │   ├── practice_helpers.py         # Practice-scoped query helpers
 │   ├── questionnaire_content.py    # Loader for clinical questionnaire content (P-118/119/120)

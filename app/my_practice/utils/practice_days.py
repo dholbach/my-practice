@@ -91,6 +91,14 @@ def berlin_public_holidays(year: int) -> set[date]:
     return holidays
 
 
+def berlin_public_holidays_between(start_year: int, end_year: int) -> set[date]:
+    """Return the Berlin public holidays for every year in [start_year, end_year]."""
+    holidays: set[date] = set()
+    for year in range(start_year, end_year + 1):
+        holidays |= berlin_public_holidays(year)
+    return holidays
+
+
 def _timeoff_dates_for_year(year: int) -> set[date]:
     """Return all dates within TimeOff entries that fall inside the given year."""
     from ..models import TimeOff
