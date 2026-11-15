@@ -5,7 +5,7 @@ Tests for Google Calendar utilities.
 from datetime import date, datetime, timedelta
 from datetime import timezone as dt_timezone
 from io import StringIO
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
 from django.utils import timezone
@@ -22,6 +22,7 @@ from my_practice.utils.calendar_import_helpers import _resolve_client
 from my_practice.utils.google_calendar import (
     CalendarEventParser,
     GoogleCalendarOAuth,
+    fetch_all_events,
     list_calendars,
     practice_clients,
 )
@@ -595,6 +596,35 @@ class ListCalendarsTest(TestCase):
 
         result = list_calendars(mock_service)
         self.assertEqual(result, [{"id": "cal1", "name": "cal1", "primary": False}])
+
+
+class FetchAllEventsTest(TestCase):
+    """Test the paginated events.list loop shared by the import view and the fetch command."""
+
+    def setUp(self):
+        self.start = timezone.now()
+        self.end = self.start + timedelta(days=1)
+        self.service = MagicMock()
+        self.execute = self.service.events.return_value.list.return_value.execute
+
+    def test_follows_next_page_token(self):
+        self.execute.side_effect = [
+            {"items": [{"id": "e1"}], "nextPageToken": "tok"},
+            {"items": [{"id": "e2"}]},
+        ]
+
+        events = fetch_all_events(self.service, "cal-1", self.start, self.end)
+
+        self.assertEqual([e["id"] for e in events], ["e1", "e2"])
+        self.assertEqual(self.service.events.return_value.list.call_count, 2)
+
+    def test_stops_without_next_page_token(self):
+        self.execute.return_value = {"items": [{"id": "e1"}]}
+
+        events = fetch_all_events(self.service, "cal-1", self.start, self.end)
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(self.service.events.return_value.list.call_count, 1)
 
 
 class UpsertEventReinstatementTest(TestCase):

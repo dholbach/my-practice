@@ -446,6 +446,40 @@ def list_calendars(service) -> list[dict]:
     ]
 
 
+def fetch_all_events(service, calendar_id: str, start, end) -> list[dict]:
+    """
+    Fetch every event between two datetimes, following the API's page tokens.
+
+    Args:
+        service: Google Calendar API service object
+        calendar_id: Calendar to read
+        start, end: Window bounds (datetimes)
+
+    Returns:
+        Raw event dicts, recurring events expanded and ordered by start time.
+    """
+    events: list[dict] = []
+    page_token = None
+    while True:
+        result = (
+            service.events()
+            .list(
+                calendarId=calendar_id,
+                timeMin=start.isoformat(),
+                timeMax=end.isoformat(),
+                singleEvents=True,
+                orderBy="startTime",
+                maxResults=250,
+                pageToken=page_token,
+            )
+            .execute()
+        )
+        events.extend(result.get("items", []))
+        page_token = result.get("nextPageToken")
+        if not page_token:
+            return events
+
+
 def practice_clients(practice) -> "QuerySet[Client]":
     """The clients a practice's calendar events may be matched against."""
     return Client.objects.for_practice(practice).only("id", "client_code")

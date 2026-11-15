@@ -172,7 +172,7 @@ class CalendarImportViewTest(CalendarViewsTestBase):
         # calendar_id is set — proceeds to the real event-fetch/pagination path.
         # An unconfigured MagicMock's .get("nextPageToken") is always truthy,
         # so without this the pagination loop in
-        # CalendarImportProcessor._paginate never terminates.
+        # fetch_all_events never terminates.
         service.events.return_value.list.return_value.execute.return_value = {"items": []}
         with patch(
             "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
