@@ -55,10 +55,10 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: ^(app/payments_app/migrations/)
+        exclude: ^(app/my_practice/migrations/)
       - id: end-of-file-fixer
         # Logo SVGs carry a C2PA provenance manifest; keep their bytes as delivered.
-        exclude: ^(app/payments_app/migrations/|docs/brand/logo/|app/static/img/favicon\.svg$)
+        exclude: ^(app/my_practice/migrations/|docs/brand/logo/|app/static/img/favicon\.svg$)
       - id: check-yaml
         exclude: ^(docker-compose\.yml)
       - id: check-json

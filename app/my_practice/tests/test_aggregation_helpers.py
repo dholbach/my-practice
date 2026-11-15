@@ -11,8 +11,6 @@ from my_practice.models import CompanyExpense, CompanyWithdrawal, Practice
 from my_practice.utils.aggregation_helpers import (
     get_category_breakdown,
     get_grand_total,
-    get_monthly_breakdown,
-    get_year_over_year_comparison,
     get_yearly_totals,
 )
 
@@ -133,15 +131,6 @@ class AggregationHelpersTestCase(TestCase):
         # Should not have category_name when choices not provided
         self.assertNotIn("category_name", categories_list[0])
 
-    def test_get_monthly_breakdown(self):
-        """Test monthly breakdown for a specific year."""
-        monthly = get_monthly_breakdown(CompanyWithdrawal.objects.all(), 2025)
-
-        self.assertEqual(len(monthly), 2)  # Jan and Mar
-        self.assertEqual(monthly["2025-01"], Decimal("2000.00"))
-        self.assertEqual(monthly["2025-03"], Decimal("3000.00"))
-        self.assertNotIn("2025-02", monthly)  # No data for Feb
-
     def test_get_grand_total(self):
         """Test grand total calculation."""
         total = get_grand_total(CompanyExpense.objects.all())
@@ -161,16 +150,6 @@ class AggregationHelpersTestCase(TestCase):
         CompanyExpense.objects.all().delete()
         total = get_grand_total(CompanyExpense.objects.all())
         self.assertEqual(total, Decimal("0"))
-
-    def test_get_year_over_year_comparison(self):
-        """Test year-over-year comparison."""
-        comparison = get_year_over_year_comparison(CompanyExpense.objects.all(), [2024, 2025])
-
-        self.assertEqual(len(comparison), 2)
-        self.assertEqual(comparison[2024]["total"], Decimal("1500.00"))
-        self.assertIsNone(comparison[2024]["growth"])  # First year has no growth
-        self.assertEqual(comparison[2025]["total"], Decimal("1500.00"))
-        self.assertEqual(comparison[2025]["growth"], 0.0)  # Same as previous year
 
     def test_custom_field_names(self):
         """Test aggregation with custom field names."""

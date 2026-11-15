@@ -83,40 +83,6 @@ def get_category_breakdown(
     return cast(list[dict[str, Any]], results)
 
 
-def get_monthly_breakdown(queryset, year, date_field="date", amount_field="amount"):
-    """
-    Aggregate data by month for a specific year.
-
-    Args:
-        queryset: Django QuerySet to aggregate
-        year: Year to filter by
-        date_field: Name of the date field (default: 'date')
-        amount_field: Name of the amount field to sum (default: 'amount')
-
-    Returns:
-        Dict with month keys (YYYY-MM) and amounts
-
-    Example:
-        monthly = get_monthly_breakdown(CompanyWithdrawal.objects.all(), 2025)
-        # Returns: {'2025-01': Decimal('5000.00'), '2025-02': Decimal('6000.00'), ...}
-    """
-    from collections import defaultdict
-
-    monthly_data = defaultdict(lambda: Decimal("0"))
-
-    monthly_items = (
-        queryset.filter(**{f"{date_field}__year": year})
-        .values(f"{date_field}__month", f"{date_field}__year")
-        .annotate(total=Sum(amount_field))
-    )
-
-    for item in monthly_items:
-        month_key = f"{item[f'{date_field}__year']}-{item[f'{date_field}__month']:02d}"
-        monthly_data[month_key] = Decimal(str(item["total"]))
-
-    return dict(monthly_data)
-
-
 def get_grand_total(queryset, amount_field="amount", filter_condition=None):
     """
     Calculate grand total for a queryset with optional filtering.
@@ -141,47 +107,3 @@ def get_grand_total(queryset, amount_field="amount", filter_condition=None):
 
     result = queryset.aggregate(total=Sum(amount_field))["total"]
     return result or Decimal("0")
-
-
-def get_year_over_year_comparison(queryset, years, date_field="date", amount_field="amount"):
-    """
-    Compare aggregated totals across multiple years.
-
-    Args:
-        queryset: Django QuerySet to aggregate
-        years: List of years to compare
-        date_field: Name of the date field (default: 'date')
-        amount_field: Name of the amount field to sum (default: 'amount')
-
-    Returns:
-        Dict with year keys and totals, plus growth percentages
-
-    Example:
-        comparison = get_year_over_year_comparison(
-            Invoice.objects.filter(status='paid'),
-            [2023, 2024, 2025],
-            date_field='paid_date'
-        )
-        # Returns: {
-        #     2023: {'total': Decimal('100000'), 'growth': None},
-        #     2024: {'total': Decimal('120000'), 'growth': 20.0},
-        #     2025: {'total': Decimal('150000'), 'growth': 25.0}
-        # }
-    """
-    results: dict[str, Any] = {}
-    previous_total: Decimal | None = None
-
-    for year in sorted(years):
-        total = queryset.filter(**{f"{date_field}__year": year}).aggregate(total=Sum(amount_field))[
-            "total"
-        ] or Decimal("0")
-
-        growth = None
-        prev = previous_total  # local copy for type narrowing
-        if prev is not None and prev > Decimal("0"):
-            growth = float((total - prev) / prev * 100)
-
-        results[year] = {"total": total, "growth": growth}
-        previous_total = total
-
-    return results
