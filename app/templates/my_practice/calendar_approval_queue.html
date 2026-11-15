@@ -119,6 +119,7 @@
                     <td>
                         <button type="button" class="btn btn-skip skip-event-btn"
                                 data-event-id="{{ event.pk }}"
+                                data-skip-url="{% url 'calendar_queue_skip' event.pk %}"
                                 title="{% trans 'Skip event' %}">
                             🚫
                         </button>
@@ -137,153 +138,24 @@
     <a href="{% url 'dashboard' %}" class="btn btn-secondary">← {% trans "Back to dashboard" %}</a>
 </div>
 
-{% blocktrans asvar events_imported_singular %}event imported{% endblocktrans %}
-{% blocktrans asvar events_imported_plural %}events imported{% endblocktrans %}
-<script nonce="{{ csp_nonce }}">
-const CSRF_TOKEN = document.cookie.split('; ')
-    .find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
-
-// Skip all duplicates
-const skipDuplicatesBtn = document.getElementById('skip-duplicates-btn');
-if (skipDuplicatesBtn) {
-    skipDuplicatesBtn.addEventListener('click', async function () {
-        this.disabled = true;
-        this.textContent = '{% trans "Skipping…" %}';
-        try {
-            const res = await fetch("{% url 'calendar_queue_skip_duplicates' %}", {
-                method: 'POST',
-                headers: {'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json'},
-            });
-            const data = await res.json();
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('{% trans "Error while skipping." %}');
-                this.disabled = false;
-                this.textContent = '🚫 {% trans "Skip all duplicates" %}';
-            }
-        } catch (e) {
-            alert('{% trans "Network error." %}');
-            this.disabled = false;
-            this.textContent = '🚫 {% trans "Skip all duplicates" %}';
-        }
-    });
-}
-
-// Select all checkboxes within a group
-document.querySelectorAll('[class^="select-all-"]').forEach(selectAll => {
-    const suffix = selectAll.className.split('-').pop();
-    selectAll.addEventListener('change', function () {
-        document.querySelectorAll(`.event-checkbox-group-${suffix}`).forEach(cb => {
-            cb.checked = this.checked;
-        });
-    });
-});
-
-// Skip individual event
-document.querySelectorAll('.skip-event-btn').forEach(btn => {
-    btn.addEventListener('click', async function () {
-        const eventId = this.dataset.eventId;
-        const row = document.querySelector(`tr[data-event-id="${eventId}"]`);
-        try {
-            const res = await fetch(`/calendar/events/${eventId}/skip/`, {
-                method: 'POST',
-                headers: {'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json'},
-            });
-            if (res.ok) {
-                row.style.opacity = '0.35';
-                row.style.transition = 'opacity 0.3s';
-                setTimeout(() => row.remove(), 350);
-            }
-        } catch (e) {
-            alert('{% trans "Error while skipping the event." %}');
-        }
-    });
-});
-
-// Import group
-document.querySelectorAll('.import-group-btn').forEach(btn => {
-    btn.addEventListener('click', async function () {
-        const groupNum = this.dataset.group;
-        const clientPk = this.dataset.client;
-        const month = this.dataset.month;
-        const invoiceSelect = document.querySelector(
-            `.invoice-select-${clientPk}-${month}`
-        );
-        const invoiceId = invoiceSelect?.value || null;
-
-        const checkedBoxes = document.querySelectorAll(
-            `.event-checkbox-group-${groupNum}:checked`
-        );
-        if (checkedBoxes.length === 0) {
-            alert('{% trans "Please select at least one appointment." %}');
-            return;
-        }
-
-        const eventIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
-        const body = {event_ids: eventIds};
-        if (invoiceId === 'new') {
-            body.invoice_id = 'new';
-        } else if (invoiceId) {
-            body.invoice_id = parseInt(invoiceId);
-        }
-
-        btn.disabled = true;
-        btn.textContent = '{% trans "Importing…" %}';
-
-        try {
-            const res = await fetch("{% url 'calendar_queue_import' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': CSRF_TOKEN,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-            });
-            const data = await res.json();
-            if (data.success) {
-                // Remove only the rows that were imported; failed ones stay for a retry or skip
-                data.imported_ids.forEach(id => {
-                    const row = document.querySelector(`tr[data-event-id="${id}"]`);
-                    if (row) row.remove();
-                });
-                // Check if group is now empty
-                const groupEl = document.getElementById(`group-${groupNum}`);
-                const remaining = groupEl.querySelectorAll('tbody tr').length;
-                if (remaining === 0) groupEl.remove();
-
-                // Show success toast
-                const importedLabel = data.created === 1
-                    ? '{{ events_imported_singular }}'
-                    : '{{ events_imported_plural }}';
-                const toast = document.createElement('div');
-                toast.className = 'alert-box success';
-                toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:1000;min-width:260px;';
-                toast.innerHTML = `<strong>✅ ${data.created} ${importedLabel}</strong>` +
-                    (data.skipped ? `<br><small>${data.skipped} {% trans "skipped" %}</small>` : '');
-                // Error texts quote the event summary, which comes from the calendar: textContent only
-                data.errors.forEach(message => {
-                    const line = document.createElement('small');
-                    line.textContent = message;
-                    toast.append(document.createElement('br'), line);
-                });
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), data.errors.length ? 10000 : 4000);
-                if (data.errors.length) {
-                    btn.disabled = false;
-                    btn.textContent = '📥 {% trans "Import" %}';
-                }
-            } else {
-                alert('{% trans "Error" %}: ' + (data.error || '{% trans "Unknown error" %}'));
-                btn.disabled = false;
-                btn.textContent = '📥 {% trans "Import" %}';
-            }
-        } catch (e) {
-            alert('{% trans "Network error while importing." %}');
-            btn.disabled = false;
-            btn.textContent = '📥 {% trans "Import" %}';
-        }
-    });
-});
-</script>
+{% comment %}
+The strings and URLs live here rather than in the .js: the i18n coverage guardrail
+only scans templates, so a translated string hardcoded in JS goes unnoticed.
+{% endcomment %}
+<script src="{% static 'js/calendar_approval_queue.js' %}"
+        id="calendar-approval-queue-js"
+        data-skip-duplicates-url="{% url 'calendar_queue_skip_duplicates' %}"
+        data-import-url="{% url 'calendar_queue_import' %}"
+        data-skipping="{% trans "Skipping…" %}"
+        data-skip-error="{% trans "Error while skipping." %}"
+        data-skip-event-error="{% trans "Error while skipping the event." %}"
+        data-network-error="{% trans "Network error." %}"
+        data-import-network-error="{% trans "Network error while importing." %}"
+        data-select-one="{% trans "Please select at least one appointment." %}"
+        data-importing="{% trans "Importing…" %}"
+        data-error="{% trans "Error" %}"
+        data-unknown-error="{% trans "Unknown error" %}"
+        data-skipped="{% trans "skipped" %}"
+        data-event-imported="{% trans "event imported" %}"
+        data-events-imported="{% trans "events imported" %}"></script>
 {% endblock %}
