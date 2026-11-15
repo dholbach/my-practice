@@ -10,18 +10,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from ..models import Practice, PracticeTodo
-from ..tests.test_helpers import link_user_to_practice
-
-
-def _make_practice(slug):
-    return Practice.objects.create(
-        name="Test Practice",
-        slug=slug,
-        title="Test Practitioner",
-        email="test@practice.example",
-        city="Berlin",
-    )
+from ..models import PracticeTodo
+from ..tests.test_helpers import create_test_practice, link_user_to_practice
 
 
 def _setup_client(user, practice):
@@ -35,7 +25,7 @@ def _setup_client(user, practice):
 
 class FocusQueueViewTest(TestCase):
     def setUp(self):
-        self.practice = _make_practice("focus-queue-1")
+        self.practice = create_test_practice(slug="focus-queue-1")
         self.user = User.objects.create_user(username="fquser", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -203,7 +193,7 @@ class FocusQueueViewTest(TestCase):
 
 class FocusQueueCompleteTest(TestCase):
     def setUp(self):
-        self.practice = _make_practice("focus-queue-2")
+        self.practice = create_test_practice(slug="focus-queue-2")
         self.user = User.objects.create_user(username="fquser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -258,7 +248,7 @@ class FocusQueueCompleteTest(TestCase):
         self.assertEqual(response.status_code, 405)
 
     def test_cross_practice_404(self):
-        other_practice = _make_practice("focus-queue-other")
+        other_practice = create_test_practice(slug="focus-queue-other")
         other_task = PracticeTodo.objects.create(practice=other_practice, title="Other")
         response = self.tc.post(reverse("focus_queue_complete", args=[other_task.pk]))
         self.assertEqual(response.status_code, 404)
@@ -266,7 +256,7 @@ class FocusQueueCompleteTest(TestCase):
 
 class FocusQueueSnoozeTest(TestCase):
     def setUp(self):
-        self.practice = _make_practice("focus-queue-3")
+        self.practice = create_test_practice(slug="focus-queue-3")
         self.user = User.objects.create_user(username="fquser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -296,7 +286,7 @@ class FocusQueueSnoozeTest(TestCase):
 
 class FocusQueueSetDueTodayTest(TestCase):
     def setUp(self):
-        self.practice = _make_practice("focus-queue-4")
+        self.practice = create_test_practice(slug="focus-queue-4")
         self.user = User.objects.create_user(username="fquser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -329,7 +319,7 @@ class FocusQueueSetDueTodayTest(TestCase):
         self.assertEqual(response.status_code, 405)
 
     def test_cross_practice_404(self):
-        other_practice = _make_practice("focus-queue-other-2")
+        other_practice = create_test_practice(slug="focus-queue-other-2")
         other_task = PracticeTodo.objects.create(practice=other_practice, title="Other")
         response = self.tc.post(reverse("focus_queue_due_today", args=[other_task.pk]))
         self.assertEqual(response.status_code, 404)
@@ -344,7 +334,7 @@ class FocusQueueNewTaskReturnsToFilterTest(TestCase):
     """
 
     def setUp(self):
-        self.practice = _make_practice("focus-queue-next")
+        self.practice = create_test_practice(slug="focus-queue-next")
         self.user = User.objects.create_user(username="fqnext", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)

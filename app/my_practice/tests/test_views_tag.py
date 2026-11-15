@@ -9,18 +9,8 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import Client, ClientTag, Practice
-from ..tests.test_helpers import link_user_to_practice
-
-
-def _make_practice(slug):
-    return Practice.objects.create(
-        name="Tag Practice",
-        slug=slug,
-        title="Test Practitioner",
-        email="tags@practice.example",
-        city="Berlin",
-    )
+from ..models import Client, ClientTag
+from ..tests.test_helpers import create_test_practice, link_user_to_practice
 
 
 def _setup_client(user, practice=None):
@@ -37,7 +27,7 @@ class TagListViewTest(TestCase):
     """Tests for TagListView."""
 
     def setUp(self):
-        self.practice = _make_practice("tag-list-1")
+        self.practice = create_test_practice(slug="tag-list-1")
         self.user = User.objects.create_user(username="taguser", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -60,7 +50,7 @@ class TagCreateViewTest(TestCase):
     """Tests for TagCreateView."""
 
     def setUp(self):
-        self.practice = _make_practice("tag-create-1")
+        self.practice = create_test_practice(slug="tag-create-1")
         self.user = User.objects.create_user(username="taguser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -124,7 +114,7 @@ class TagUpdateViewTest(TestCase):
     """Tests for TagUpdateView."""
 
     def setUp(self):
-        self.practice = _make_practice("tag-update-1")
+        self.practice = create_test_practice(slug="tag-update-1")
         self.user = User.objects.create_user(username="taguser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -147,7 +137,7 @@ class TagDeleteViewTest(TestCase):
     """Tests for TagDeleteView."""
 
     def setUp(self):
-        self.practice = _make_practice("tag-delete-1")
+        self.practice = create_test_practice(slug="tag-delete-1")
         self.user = User.objects.create_user(username="taguser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -168,7 +158,7 @@ class ClientAddRemoveTagTest(TestCase):
     """Tests for client_add_tag and client_remove_tag AJAX endpoints."""
 
     def setUp(self):
-        self.practice = _make_practice("tag-api-1")
+        self.practice = create_test_practice(slug="tag-api-1")
         self.user = User.objects.create_user(username="tagapi", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -208,7 +198,7 @@ class GetAvailableTagsTest(TestCase):
     """Tests for get_available_tags AJAX endpoint."""
 
     def setUp(self):
-        self.practice = _make_practice("tag-avail-1")
+        self.practice = create_test_practice(slug="tag-avail-1")
         self.user = User.objects.create_user(username="tagavail", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)

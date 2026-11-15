@@ -9,23 +9,14 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from ..models import Client, Practice, PracticeTodo, Session
+from ..models import Client, PracticeTodo, Session
 from ..utils.weekly_focus_widget import WeeklyFocusWidgetBuilder
-
-
-def _make_practice(slug):
-    return Practice.objects.create(
-        name="Test Practice",
-        slug=slug,
-        title="Test Practitioner",
-        email="test@practice.example",
-        city="Berlin",
-    )
+from .test_helpers import create_test_practice
 
 
 class WeeklyFocusWidgetDueTodayTasksTest(TestCase):
     def setUp(self):
-        self.practice = _make_practice("weekly-focus-widget-1")
+        self.practice = create_test_practice(slug="weekly-focus-widget-1")
         self.today = date(2026, 7, 30)
 
     def _build(self):
@@ -74,7 +65,7 @@ class WeeklyFocusWidgetNextWeekTest(TestCase):
     """Once the current week's last session is behind us, look at next week."""
 
     def setUp(self):
-        self.practice = _make_practice("weekly-focus-widget-2")
+        self.practice = create_test_practice(slug="weekly-focus-widget-2")
         self.client_obj = Client.objects.create(
             client_code="XX-1",
             full_name="Max Mustermann",

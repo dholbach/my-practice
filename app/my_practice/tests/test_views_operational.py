@@ -7,18 +7,8 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import OperationalChecklistCompletion, Practice
-from ..tests.test_helpers import link_user_to_practice
-
-
-def _make_practice(slug):
-    return Practice.objects.create(
-        name="Ops Practice",
-        slug=slug,
-        title="Test Practitioner",
-        email="ops@practice.example",
-        city="Berlin",
-    )
+from ..models import OperationalChecklistCompletion
+from ..tests.test_helpers import create_test_practice, link_user_to_practice
 
 
 def _setup_client(user, practice=None):
@@ -35,7 +25,7 @@ class OperationalChecklistViewTest(TestCase):
     """Tests for OperationalChecklistView."""
 
     def setUp(self):
-        self.practice = _make_practice("ops-checklist-1")
+        self.practice = create_test_practice(slug="ops-checklist-1")
         self.user = User.objects.create_user(username="opsuser", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -78,7 +68,7 @@ class ChecklistCompleteTest(TestCase):
     """Tests for checklist_complete view."""
 
     def setUp(self):
-        self.practice = _make_practice("ops-complete-1")
+        self.practice = create_test_practice(slug="ops-complete-1")
         self.user = User.objects.create_user(username="opsuser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -111,7 +101,7 @@ class ChecklistPauseItemTest(TestCase):
     """Tests for checklist_pause_item view."""
 
     def setUp(self):
-        self.practice = _make_practice("ops-pause-1")
+        self.practice = create_test_practice(slug="ops-pause-1")
         self.user = User.objects.create_user(username="opsuser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -142,7 +132,7 @@ class ChecklistUnpauseItemTest(TestCase):
     """Tests for checklist_unpause_item view."""
 
     def setUp(self):
-        self.practice = _make_practice("ops-unpause-1")
+        self.practice = create_test_practice(slug="ops-unpause-1")
         self.user = User.objects.create_user(username="opsuser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -166,7 +156,7 @@ class BoilerplateViewTest(TestCase):
     """Tests for boilerplate_view."""
 
     def setUp(self):
-        self.practice = _make_practice("ops-boilerplate-1")
+        self.practice = create_test_practice(slug="ops-boilerplate-1")
         self.user = User.objects.create_user(username="opsuser5", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)

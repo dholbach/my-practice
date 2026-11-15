@@ -257,22 +257,25 @@ class BaseTestCase(PracticeTestMixin, TestCase):
     pass
 
 
-def create_test_practice(name="Test Practice", slug=None):
+def create_test_practice(name="Test Practice", slug=None, **overrides):
     """
     Create a test practice with default values.
 
     Args:
         name: Practice name
         slug: URL slug (auto-generated from name if not provided)
+        **overrides: Any other Practice field, replacing the default
 
     Returns:
         Practice instance
     """
-    return Practice.objects.create(
-        name=name,
-        slug=slug or name.lower().replace(" ", "-"),
-        title="Test Practitioner",
-        email=f"{slug or 'test'}@practice.com",
-        city="Berlin",
-        is_active=True,
-    )
+    fields = {
+        "name": name,
+        "slug": slug or name.lower().replace(" ", "-"),
+        "title": "Test Practitioner",
+        "email": f"{slug or 'test'}@practice.com",
+        "city": "Berlin",
+        "is_active": True,
+    }
+    fields.update(overrides)
+    return Practice.objects.create(**fields)
