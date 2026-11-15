@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load static i18n %}
 
 {% block title %}{% trans "Send heads-up email" %}{% endblock %}
 
@@ -98,20 +98,6 @@
     </div>
 </form>
 
-<script nonce="{{ csp_nonce }}">
-document.getElementById('recipients-select-all')?.addEventListener('change', function () {
-    document.querySelectorAll('.recipient-checkbox').forEach(cb => {
-        cb.checked = this.checked;
-    });
-});
-
-document.querySelectorAll('.recipient-checkbox').forEach(cb => {
-    cb.addEventListener('change', function () {
-        const selectAll = document.getElementById('recipients-select-all');
-        const boxes = document.querySelectorAll('.recipient-checkbox');
-        selectAll.checked = Array.from(boxes).every(b => b.checked);
-    });
-});
-</script>
+<script src="{% static 'js/time_off_notice_form.js' %}"></script>
 
 {% endblock %}
