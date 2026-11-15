@@ -354,20 +354,6 @@ class DetermineFetchWindowTest(TestCase):
         self.assertAlmostEqual((start - expected_start).total_seconds(), 0, delta=2)
 
 
-class FetchRawEventsTest(TestCase):
-    def test_paginates_until_no_next_page_token(self):
-        cmd = _make_command()
-        service = MagicMock()
-        service.events.return_value.list.return_value.execute.side_effect = [
-            {"items": [{"id": "e1"}], "nextPageToken": "tok"},
-            {"items": [{"id": "e2"}]},
-        ]
-        events = cmd._fetch_raw_events(
-            service, "cal-1", timezone.now(), timezone.now() + timedelta(days=1)
-        )
-        self.assertEqual([e["id"] for e in events], ["e1", "e2"])
-
-
 class CancelStaleFutureEventsTest(TestCase):
     def setUp(self):
         self.practice = Practice.objects.create(
@@ -886,7 +872,7 @@ class HandleAndFetchForPracticeTest(TestCase):
                 return_value=service,
             ),
             patch(
-                "my_practice.management.commands.fetch_calendar_events.Command._fetch_raw_events",
+                "my_practice.management.commands.fetch_calendar_events.fetch_all_events",
                 side_effect=RuntimeError("api down"),
             ),
         ):
@@ -986,7 +972,10 @@ class OverlongEventTitleTest(UpsertEventTestBase):
                 "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
                 return_value=MagicMock(),
             ),
-            patch.object(Command, "_fetch_raw_events", return_value=raw),
+            patch(
+                "my_practice.management.commands.fetch_calendar_events.fetch_all_events",
+                return_value=raw,
+            ),
         ):
             self.cmd._fetch_for_practice(self.practice, "cal-1", False, 30, 1)
 

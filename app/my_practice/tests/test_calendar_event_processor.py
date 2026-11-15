@@ -59,31 +59,6 @@ class CalendarImportProcessorTestBase(TestCase):
 
 
 class PaginateAndFetchTest(CalendarImportProcessorTestBase):
-    def test_paginate_follows_next_page_token(self):
-        page1 = {"items": [{"id": "e1"}], "nextPageToken": "tok2"}
-        page2 = {"items": [{"id": "e2"}]}
-        service = MagicMock()
-        service.events.return_value.list.return_value.execute.side_effect = [page1, page2]
-
-        events = self.processor._paginate(
-            service, "cal-1", timezone.now(), timezone.now() + timedelta(days=1)
-        )
-
-        self.assertEqual([e["id"] for e in events], ["e1", "e2"])
-        self.assertEqual(service.events.return_value.list.call_count, 2)
-
-    def test_paginate_stops_without_next_page_token(self):
-        page1 = {"items": [{"id": "e1"}]}
-        service = MagicMock()
-        service.events.return_value.list.return_value.execute.return_value = page1
-
-        events = self.processor._paginate(
-            service, "cal-1", timezone.now(), timezone.now() + timedelta(days=1)
-        )
-
-        self.assertEqual(len(events), 1)
-        self.assertEqual(service.events.return_value.list.call_count, 1)
-
     def test_fetch_and_parse_returns_parsed_events(self):
         raw_event = {
             "id": "evt-1",

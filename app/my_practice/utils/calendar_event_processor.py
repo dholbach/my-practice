@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 from ..models import Client, InvoiceItem, PendingCalendarEvent, ServiceType
-from .google_calendar import CalendarEventParser, practice_clients
+from .google_calendar import CalendarEventParser, fetch_all_events, practice_clients
 
 logger = logging.getLogger(__name__)
 
@@ -40,33 +40,10 @@ class CalendarImportProcessor:
 
     def fetch_and_parse(self, service, calendar_id: str, start_date, end_date) -> list[dict]:
         """Fetch all events from a calendar (paginated) and parse them."""
-        raw = self._paginate(service, calendar_id, start_date, end_date)
+        raw = fetch_all_events(service, calendar_id, start_date, end_date)
         return CalendarEventParser.parse_events(
             raw, practice_clients(self.practice), practice=self.practice
         )
-
-    def _paginate(self, service, calendar_id: str, start_date, end_date) -> list:
-        events = []
-        page_token = None
-        while True:
-            result = (
-                service.events()
-                .list(
-                    calendarId=calendar_id,
-                    timeMin=start_date.isoformat(),
-                    timeMax=end_date.isoformat(),
-                    singleEvents=True,
-                    orderBy="startTime",
-                    maxResults=250,
-                    pageToken=page_token,
-                )
-                .execute()
-            )
-            events.extend(result.get("items", []))
-            page_token = result.get("nextPageToken")
-            if not page_token:
-                break
-        return events
 
     # ── Duplicate detection ───────────────────────────────────────────────────
 

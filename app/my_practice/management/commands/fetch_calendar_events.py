@@ -18,6 +18,7 @@ from ...models import GoogleCalendarToken, PendingCalendarEvent, Practice, Sessi
 from ...utils.google_calendar import (
     CalendarEventParser,
     GoogleCalendarOAuth,
+    fetch_all_events,
     practice_clients,
 )
 from ...utils.tag_helpers import sync_no_next_session_tag
@@ -141,7 +142,7 @@ class Command(BaseCommand):
         )
 
         try:
-            raw_events = self._fetch_raw_events(service, calendar_id, start_dt, end_dt)
+            raw_events = fetch_all_events(service, calendar_id, start_dt, end_dt)
         except Exception as e:
             logger.error(f"Error fetching calendar events: {e}")
             self.stdout.write(self.style.ERROR(f"  ✗ API error: {e}"))
@@ -247,29 +248,6 @@ class Command(BaseCommand):
                 else now - timedelta(days=FIRST_RUN_DAYS)
             )
         return start_dt, now + timedelta(days=future_days)
-
-    def _fetch_raw_events(self, service, calendar_id, start_dt, end_dt) -> list:
-        raw_events = []
-        page_token = None
-        while True:
-            result = (
-                service.events()
-                .list(
-                    calendarId=calendar_id,
-                    timeMin=start_dt.isoformat(),
-                    timeMax=end_dt.isoformat(),
-                    singleEvents=True,
-                    orderBy="startTime",
-                    maxResults=250,
-                    pageToken=page_token,
-                )
-                .execute()
-            )
-            raw_events.extend(result.get("items", []))
-            page_token = result.get("nextPageToken")
-            if not page_token:
-                break
-        return raw_events
 
     @staticmethod
     def _pending_events_in_window(practice, start_dt, end_dt):
