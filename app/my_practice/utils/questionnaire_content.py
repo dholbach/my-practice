@@ -29,7 +29,7 @@ class QuestionnaireContent:
     """Raw, unresolved content — ``sections`` still carries per-language dicts.
 
     Each section is a dict with a ``type`` key resolved by
-    ``views.api_views._resolve_questionnaire_section``: ``grid`` (statement
+    ``utils.pdf_generation.resolve_questionnaire_section``: ``grid`` (statement
     rows x response columns), ``checklist`` (statement rows with a single
     yes/no checkbox), or ``freetext`` (a prompt with N blank fillable
     lines). Every section type may also carry an optional ``intro`` dict.

@@ -539,7 +539,7 @@ class UpdateInvoiceStatusTest(TestCase):
 
 
 class PracticeImagesTransparencyTest(TestCase):
-    """Test the RGBA-composite branch of _prepare_practice_images via invoice_pdf."""
+    """Test the RGBA-composite branch of prepare_practice_images via invoice_pdf."""
 
     def setUp(self):
         self.practice = Practice.objects.create(
@@ -590,7 +590,7 @@ class PracticeImagesTransparencyTest(TestCase):
 
 
 class PreparePracticeImagesCacheTest(TestCase):
-    """_prepare_practice_images() caches its decode/resize work per practice."""
+    """prepare_practice_images() caches its decode/resize work per practice."""
 
     def setUp(self):
         self.practice = Practice.objects.create(
@@ -604,21 +604,23 @@ class PreparePracticeImagesCacheTest(TestCase):
         self.practice.save()
 
     def test_second_call_does_not_reopen_the_image(self):
-        from my_practice.views.api_views import _prepare_practice_images
+        from my_practice.utils.pdf_generation import prepare_practice_images
 
-        first = _prepare_practice_images(self.practice)
-        with mock.patch("my_practice.views.api_views.Image.open") as mock_open:
-            second = _prepare_practice_images(self.practice)
+        first = prepare_practice_images(self.practice)
+        with mock.patch("my_practice.utils.pdf_generation.Image.open") as mock_open:
+            second = prepare_practice_images(self.practice)
         mock_open.assert_not_called()
         self.assertEqual(first, second)
 
     def test_replacing_the_logo_invalidates_the_cache(self):
-        from my_practice.views.api_views import _prepare_practice_images
+        from my_practice.utils.pdf_generation import prepare_practice_images
 
-        _prepare_practice_images(self.practice)
+        prepare_practice_images(self.practice)
         self.practice.logo = PracticeImagesTransparencyTest._transparent_png("new-logo.png")
         self.practice.save()
 
-        with mock.patch("my_practice.views.api_views.Image.open", wraps=Image.open) as mock_open:
-            _prepare_practice_images(self.practice)
+        with mock.patch(
+            "my_practice.utils.pdf_generation.Image.open", wraps=Image.open
+        ) as mock_open:
+            prepare_practice_images(self.practice)
         mock_open.assert_called_once()
