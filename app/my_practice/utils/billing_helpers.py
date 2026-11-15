@@ -82,7 +82,7 @@ def create_invoice_item_for_session(
     - the session is already billed on a non-cancelled invoice, or
     - no service type could be resolved.
 
-    Does NOT call recalculate_invoice_total — the caller is responsible for
+    Does NOT call Invoice.recalculate_and_save — the caller is responsible for
     that after all items have been created.
     """
     if is_session_already_billed(session):

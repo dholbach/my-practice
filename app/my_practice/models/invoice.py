@@ -305,6 +305,24 @@ class Invoice(TimestampedModel):
             return True
         return False
 
+    def recalculate_and_save(self) -> None:
+        """Recompute subtotal, tax and total from the items and persist them.
+
+        For a draft this also refreshes invoice_date (see computed_invoice_date)
+        in the same save. Called by the item signals and by views that add or
+        remove items; callers that create many items call it once at the end.
+        """
+        self.calculate_total()
+        update_fields = ["subtotal", "tax_amount", "total"]
+
+        if self.status == Invoice.Status.DRAFT:
+            target_date = self.computed_invoice_date()
+            if self.invoice_date != target_date:
+                self.invoice_date = target_date
+                update_fields.append("invoice_date")
+
+        self.save(update_fields=update_fields)
+
     def calculate_total(self) -> Decimal:
         """Calculate invoice total from items"""
         from django.db.models import Sum

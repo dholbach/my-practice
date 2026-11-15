@@ -32,7 +32,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 ## 🔍 Recent Activity
 
 - **2026-11-14 — v0.12.0 released**: session-page client name, bill actions on logged sessions, read-only dev web container, `prod.py` creates its data directories.
-- **2026-11-15 — First refactoring review**: dropped unused `InvoiceQuerySet`, `stat_card`, seven dead CSS classes and a dead form widget; the Ghostscript recipe is built once in `file_processing.py`, PDF generation moved from `api_views` to `utils/pdf_generation.py`, and seven view tests share `create_test_practice`. The rest is tracked in #602.
+- **2026-11-15 — First refactoring review**: dropped unused `InvoiceQuerySet`, `stat_card`, seven dead CSS classes and a dead form widget; the Ghostscript recipe is built once in `file_processing.py`, PDF generation moved from `api_views` to `utils/pdf_generation.py`, seven view tests share `create_test_practice`, and `recalculate_invoice_total` is now `Invoice.recalculate_and_save()`. The rest is tracked in #602.
 
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
