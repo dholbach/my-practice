@@ -1,6 +1,7 @@
 """Admin configuration for BankTransaction."""
 
 from django.contrib import admin
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
 
@@ -131,8 +132,8 @@ class BankTransactionAdmin(admin.ModelAdmin):
         """Display link to matched invoice."""
         if obj.matched_invoice:
             return format_html(
-                '<a href="/admin/my_practice/invoice/{}/change/">{}</a>',
-                obj.matched_invoice.pk,
+                '<a href="{}">{}</a>',
+                reverse("admin:my_practice_invoice_change", args=[obj.matched_invoice.pk]),
                 obj.matched_invoice.invoice_number,
             )
         return "-"

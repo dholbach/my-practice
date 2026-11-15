@@ -1,6 +1,7 @@
 """Admin configuration for ClientAlias."""
 
 from django.contrib import admin
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy
 
@@ -37,8 +38,8 @@ class ClientAliasAdmin(admin.ModelAdmin):
     def client_link(self, obj):
         """Display link to client."""
         return format_html(
-            '<a href="/admin/my_practice/client/{}/change/">{}</a>',
-            obj.client.pk,
+            '<a href="{}">{}</a>',
+            reverse("admin:my_practice_client_change", args=[obj.client.pk]),
             obj.client.client_code,
         )
 

@@ -218,6 +218,11 @@ def _calculate_weighted_capacity(
     return (available_working_days / 5) * weighted_hours_per_week
 
 
+def _therapist_minutes() -> Sum:
+    """Session minutes per therapist: duration divided by group_size, so a group counts once."""
+    return Sum(Cast("duration", FloatField()) / Cast("group_size", FloatField()))
+
+
 def _get_booked_hours(start_date: date, end_date: date, *, practice: PracticeScope) -> float:
     """
     Get total booked therapist hours from the practice's Sessions for a period.
@@ -245,9 +250,7 @@ def _get_booked_hours(start_date: date, end_date: date, *, practice: PracticeSco
         practice,
         "client__practice",
     )
-    result = sessions.aggregate(
-        total_minutes=Sum(Cast("duration", FloatField()) / Cast("group_size", FloatField()))
-    )
+    result = sessions.aggregate(total_minutes=_therapist_minutes())
     return (result["total_minutes"] or 0) / 60
 
 
@@ -308,9 +311,7 @@ def get_capacity_trends(
         )
         .annotate(month=TruncMonth("session_date"))
         .values("month")
-        .annotate(
-            total_minutes=Sum(Cast("duration", FloatField()) / Cast("group_size", FloatField()))
-        )
+        .annotate(total_minutes=_therapist_minutes())
     )
     for row in monthly_sessions:
         if row["month"]:
