@@ -12,14 +12,14 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from my_practice.models import Client, Practice, UserPractice
+from my_practice.utils.pdf_generation import (
+    generate_questionnaire_pdf_bytes,
+    resolve_questionnaire_section,
+)
 from my_practice.utils.questionnaire_content import (
     QuestionnaireNotFoundError,
     list_available_questionnaires,
     load_questionnaire,
-)
-from my_practice.views.api_views import (
-    _resolve_questionnaire_section,
-    generate_questionnaire_pdf_bytes,
 )
 
 User = get_user_model()
@@ -277,7 +277,7 @@ class SendQuestionnairePdfEmailViewTest(TestCase):
 
 
 class ResolveQuestionnaireSectionTest(TestCase):
-    """Tests for _resolve_questionnaire_section (P-119: checklist + freetext)."""
+    """Tests for resolve_questionnaire_section (P-119: checklist + freetext)."""
 
     def test_grid_resolves_columns_and_field_names(self):
         section = {
@@ -285,7 +285,7 @@ class ResolveQuestionnaireSectionTest(TestCase):
             "columns": [{"de": "Nie", "en": "Never"}, {"de": "Oft", "en": "Often"}],
             "items": [{"de": "Erstens", "en": "First"}, {"de": "Zweitens", "en": "Second"}],
         }
-        resolved = _resolve_questionnaire_section(section, "de", index=2)
+        resolved = resolve_questionnaire_section(section, "de", index=2)
         self.assertEqual(resolved["type"], "grid")
         self.assertEqual(resolved["columns"], ["Nie", "Oft"])
         self.assertEqual(
@@ -311,7 +311,7 @@ class ResolveQuestionnaireSectionTest(TestCase):
             ],
             "items": [{"de": "Erstens", "en": "First"}],
         }
-        resolved = _resolve_questionnaire_section(section, "en", index=1)
+        resolved = resolve_questionnaire_section(section, "en", index=1)
         self.assertEqual(resolved["type"], "grid")
         self.assertEqual(
             resolved["column_groups"],
@@ -336,7 +336,7 @@ class ResolveQuestionnaireSectionTest(TestCase):
             "type": "checklist",
             "items": [{"de": "Scheidung", "en": "Divorce"}, {"de": "Umzug", "en": "Moving"}],
         }
-        resolved = _resolve_questionnaire_section(section, "en", index=0)
+        resolved = resolve_questionnaire_section(section, "en", index=0)
         self.assertEqual(resolved["type"], "checklist")
         self.assertEqual(
             resolved["rows"],
@@ -352,18 +352,18 @@ class ResolveQuestionnaireSectionTest(TestCase):
             "intro": {"de": "Bitte angeben:", "en": "Please indicate:"},
             "lines": 2,
         }
-        resolved = _resolve_questionnaire_section(section, "en", index=3)
+        resolved = resolve_questionnaire_section(section, "en", index=3)
         self.assertEqual(resolved["type"], "freetext")
         self.assertEqual(resolved["intro"], "Please indicate:")
         self.assertEqual(resolved["field_names"], ["s3_f0", "s3_f1"])
 
     def test_freetext_defaults_to_one_line(self):
-        resolved = _resolve_questionnaire_section({"type": "freetext"}, "de", index=0)
+        resolved = resolve_questionnaire_section({"type": "freetext"}, "de", index=0)
         self.assertEqual(resolved["field_names"], ["s0_f0"])
 
     def test_unknown_type_raises_value_error(self):
         with self.assertRaises(ValueError):
-            _resolve_questionnaire_section({"type": "essay"}, "de", index=0)
+            resolve_questionnaire_section({"type": "essay"}, "de", index=0)
 
 
 class MixedSectionQuestionnairePdfTest(TestCase):

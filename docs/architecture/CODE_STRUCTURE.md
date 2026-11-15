@@ -61,7 +61,7 @@ app/my_practice/
 │   ├── __init__.py            # Central exports for all views
 │   ├── crud_mixins.py         # PracticeScopedCreate/Update/Delete/ListView, InvoiceFormsetMixin
 │   ├── analytics_views.py     # Analytics & revenue reports
-│   ├── api_views.py           # JSON API endpoints, PDF generation, invoice_batch_download
+│   ├── api_views.py           # JSON API endpoints, PDF download views, invoice_batch_download
 │   ├── bank_import_views.py   # Bank statement CSV import & review
 │   ├── calendar_views.py      # Google Calendar OAuth + session import approval
 │   ├── client_views.py        # Client list, detail, intake
@@ -114,6 +114,7 @@ app/my_practice/
 │   ├── heatmap_utils.py            # Session heatmap generation
 │   ├── invoice_filter_helper.py    # InvoiceFilterHelper
 │   ├── invoice_helpers.py          # get_next_invoice_number()
+│   ├── pdf_generation.py           # Invoice/contract/intake/questionnaire PDFs as bytes (WeasyPrint)
 │   ├── practice_analysis.py        # PracticeAnalyzer
 │   ├── practice_days.py            # berlin_public_holidays(), PracticeDayCalculator,
 │   │                               #   WorkdayAuditCalculator

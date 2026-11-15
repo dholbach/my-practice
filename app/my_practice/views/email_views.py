@@ -25,14 +25,14 @@ from ..utils.email_utils import (
     get_questionnaire_pdf_email_content,
 )
 from ..utils.formatting import format_currency_de
-from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
-from .api_views import (
-    _prepare_practice_images,
-    _render_invoice_pdf_bytes,
+from ..utils.pdf_generation import (
     generate_contract_pdf_bytes,
     generate_intake_form_pdf_bytes,
     generate_questionnaire_pdf_bytes,
+    prepare_practice_images,
+    render_invoice_pdf_bytes,
 )
+from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
 
 logger = logging.getLogger("my_practice.email")
 
@@ -370,9 +370,9 @@ class SendInvoiceEmailView(View):
         )
 
     def _generate_pdf(self, invoice: Invoice, practice: Practice) -> bytes:
-        """Generate PDF bytes for invoice via shared api_views helpers."""
-        logo_data, signature_data = _prepare_practice_images(practice)
-        pdf_bytes, _filename = _render_invoice_pdf_bytes(
+        """Generate PDF bytes for invoice via the shared pdf_generation helpers."""
+        logo_data, signature_data = prepare_practice_images(practice)
+        pdf_bytes, _filename = render_invoice_pdf_bytes(
             invoice, practice, logo_data, signature_data
         )
         return pdf_bytes
