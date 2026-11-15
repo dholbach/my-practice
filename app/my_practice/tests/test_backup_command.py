@@ -261,6 +261,9 @@ class UpdateBackupTests(SimpleTestCase):
             mock.patch.object(self.prod, "_require_no_foreign_containers"),
             mock.patch.object(self.prod, "_ensure_bind_address"),
             mock.patch.object(self.prod, "_warn_if_proxy_bypassable"),
+            # Would otherwise create the real data directories on the machine
+            # running the tests (and fail where that path is not writable).
+            mock.patch.object(self.prod, "_ensure_data_dirs"),
             mock.patch.object(self.prod, "_passphrase_file", return_value=None),
             mock.patch.object(self.prod, "compose", side_effect=self._compose),
             mock.patch("urllib.request.urlopen", side_effect=OSError("offline")),
@@ -301,6 +304,11 @@ class UpdateBackupTests(SimpleTestCase):
         result, _ = self._update("--skip-backup")
         self.assertEqual(result.returncode, 0)
         self.assertEqual(self.calls, ["pull", "up"])
+
+    def test_creates_data_dirs_before_restart(self):
+        with mock.patch.object(self.prod, "_ensure_data_dirs") as ensure:
+            self._update()
+        ensure.assert_called_once_with()
 
 
 class DashboardBackupWarningTests(BaseTestCase):
