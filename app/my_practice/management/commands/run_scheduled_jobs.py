@@ -50,7 +50,7 @@ class Command(BaseCommand):
             try:
                 call_command(job, *job_args, stdout=self.stdout, stderr=self.stderr)
             except Exception as e:
-                logger.error(f"Scheduled job '{job}' failed: {e}")
+                logger.exception("Scheduled job %r failed", job)
                 self.stderr.write(self.style.ERROR(f"{job} failed: {e}"))
                 failures.append(job)
 

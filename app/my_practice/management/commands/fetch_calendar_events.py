@@ -141,12 +141,10 @@ class Command(BaseCommand):
             f"  Window: {start_dt.strftime('%d.%m.%Y')} – {end_dt.strftime('%d.%m.%Y')}"
         )
 
-        try:
-            raw_events = fetch_all_events(service, calendar_id, start_dt, end_dt)
-        except Exception as e:
-            logger.error(f"Error fetching calendar events: {e}")
-            self.stdout.write(self.style.ERROR(f"  ✗ API error: {e}"))
-            return
+        # An API error propagates: handle() logs it with the traceback, carries on
+        # with the other practices and fails the run, so a persistent outage shows
+        # up as a failed job. The overlap window makes a one-off failure harmless.
+        raw_events = fetch_all_events(service, calendar_id, start_dt, end_dt)
 
         live_ids = {e.get("id") for e in raw_events if e.get("id")}
         parsed = CalendarEventParser.parse_events(
