@@ -668,69 +668,7 @@
 
 </div><!-- /ptab-abrechnung -->
 
-<script nonce="{{ csp_nonce }}">
-function pageTab(tabName, btn) {
-    document.querySelectorAll('.page-tab-content').forEach(el => el.classList.remove('page-tab-active'));
-    document.querySelectorAll('.page-tab-btn').forEach(el => el.classList.remove('page-tab-active'));
-    const tabContainer = document.getElementById('ptab-' + tabName);
-    tabContainer.classList.add('page-tab-active');
-    if (btn) btn.classList.add('page-tab-active');
-
-    if (history.replaceState) history.replaceState(null, '', '#ptab-' + tabName);
-}
-
-// Tab switching and the cockpit shortcuts into a tab, wired here rather than
-// with inline onclick= attributes, which the CSP (script-src without
-// 'unsafe-inline') does not run. A trigger names its tab with data-tab (the tab
-// buttons) or data-page-tab, and may name an Alpine toggle inside that tab to
-// click once it is visible (data-click-in-tab, e.g. "showNote").
-document.addEventListener('click', function(e) {
-    const scrollLink = e.target.closest('[data-smooth-scroll]');
-    if (scrollLink) {
-        e.preventDefault();
-        document.querySelector(scrollLink.getAttribute('href')).scrollIntoView({behavior: 'smooth'});
-        return;
-    }
-    const trigger = e.target.closest('.page-tab-btn[data-tab], [data-page-tab]');
-    if (!trigger) return;
-    e.preventDefault();
-    const tabName = trigger.dataset.pageTab || trigger.dataset.tab;
-    pageTab(tabName, document.querySelector('.page-tab-btn[data-tab="' + tabName + '"]'));
-    const toggle = trigger.dataset.clickInTab;
-    if (toggle) {
-        setTimeout(function() {
-            const el = document.querySelector('#ptab-' + tabName + ' [x-on\\:click*=' + toggle + ']');
-            if (el) el.click();
-        }, 100);
-    }
-});
-
-// Restore tab from URL hash on load
-(function() {
-    const hash = window.location.hash;
-    const valid = ['protokoll', 'profil', 'abrechnung'];
-    if (hash.startsWith('#ptab-')) {
-        const tabName = hash.replace('#ptab-', '');
-        if (valid.includes(tabName)) {
-            const btn = document.querySelector('[data-tab="' + tabName + '"]');
-            pageTab(tabName, btn);
-        }
-    }
-})();
-
-// Surface which tab holds a form_draft_guard'd unsaved edit — the browser's
-// native beforeunload dialog gives no clue which tab it's in.
-document.addEventListener('draftguard:dirty', function(e) {
-    const tabContent = e.target.closest('.page-tab-content');
-    if (!tabContent) return;
-    const tabName = tabContent.id.replace('ptab-', '');
-    const btn = document.querySelector('.page-tab-btn[data-tab="' + tabName + '"]');
-    if (!btn) return;
-    btn.classList.toggle('page-tab-btn--dirty', e.detail.dirty);
-    const label = document.querySelector('.page-tab-bar').dataset.unsavedLabel;
-    btn.title = e.detail.dirty ? label : '';
-});
-</script>
+<script src="{% static 'js/client_detail_tabs.js' %}"></script>
 
 {% if monthly_sessions %}
 <script nonce="{{ csp_nonce }}">
