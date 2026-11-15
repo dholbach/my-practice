@@ -87,9 +87,6 @@ KNOWN_UNPROTECTED: dict[str, frozenset[str]] = {
     "my_practice/bank_expense_review.html": frozenset({"trans.payer_name"}),
     "my_practice/bank_withdrawal_review.html": frozenset({"trans.payer_name"}),
     "my_practice/expense_form.html": frozenset({"tx.payer_name"}),
-    # Passed to fetch() to pre-load client-code suggestions; never inserted into
-    # the page, so there is no rendered text for a blur to cover.
-    "my_practice/inquiry_convert_confirm.html": frozenset({"script:inquiry.full_name"}),
     # `object` here is the Practice being deleted — the therapist's own address.
     "my_practice/practice_confirm_delete.html": frozenset({"object.email"}),
 }

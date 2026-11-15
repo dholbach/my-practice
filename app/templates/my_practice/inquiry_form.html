@@ -195,50 +195,9 @@
     </form>
 </div>
 
-<script nonce="{{ csp_nonce }}">
-(function () {
-    const statusMap = {
-        contacted:     "id_contacted_date",
-        intro_meeting: "id_intro_date",
-        in_intake:     "id_decision_date",
-        declined:      "id_decision_date",
-        not_suitable:  "id_decision_date",
-        unreachable:   "id_decision_date",
-    };
-    const today = new Date().toISOString().slice(0, 10);
-    const statusEl = document.getElementById("id_status");
-    if (statusEl) {
-        statusEl.addEventListener("change", function () {
-            const dateFieldId = statusMap[this.value];
-            if (!dateFieldId) return;
-            const dateEl = document.getElementById(dateFieldId);
-            if (dateEl && !dateEl.value) {
-                dateEl.value = today;
-            }
-        });
-    }
-
-    // Client code suggester — show available codes as name is typed
-    const nameEl = document.getElementById("id_full_name");
-    const strip = document.getElementById("inquiry-code-suggestions");
-    if (!nameEl || !strip) return;
-
-    let debounce;
-    nameEl.addEventListener("input", function () {
-        clearTimeout(debounce);
-        const name = this.value.trim();
-        if (!name) { strip.innerHTML = ""; return; }
-        debounce = setTimeout(function () {
-            fetch("{% url 'suggest_client_code' %}?name=" + encodeURIComponent(name))
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.suggestions.length) { strip.innerHTML = ""; return; }
-                    strip.innerHTML =
-                        '<span class="hint-label">{% trans "Available codes:" %}</span>' +
-                        data.suggestions.map(c => `<span class="code-chip">${c}</span>`).join("");
-                });
-        }, 400);
-    });
-}());
-</script>
+<script src="{% static 'js/code_suggestions.js' %}"></script>
+<script src="{% static 'js/inquiry_form.js' %}"
+        id="inquiry-form-js"
+        data-suggest-url="{% url 'suggest_client_code' %}"
+        data-label="{% trans "Available codes:" %}"></script>
 {% endblock %}
