@@ -28,10 +28,12 @@ from my_practice.models import (
     TimeOff,
 )
 from my_practice.utils.email_utils import (
+    get_cancellation_email_content,
     get_contract_email_content,
     get_gdpr_deletion_email_content,
     get_intake_email_content,
     get_invoice_email_content,
+    get_payment_reminder_email_content,
     get_questionnaire_email_content,
     get_questionnaire_pdf_email_content,
     get_salutation_for_client,
@@ -481,3 +483,71 @@ class TimeOffNoticeContentTest(EmailContentBuilderTestBase):
                 periods = [self._timeoff(date(2026, 7, day), date(2026, 7, day))]
                 _, _, subject_en, _ = get_timeoff_notice_default_content(periods, self.practice)
                 self.assertIn(expected, subject_en)
+
+
+class PaymentReminderContentTest(EmailContentBuilderTestBase):
+    def setUp(self):
+        super().setUp()
+        self.practice.bank_name = "Test Bank"
+        self.practice.iban = "DE00 0000 0000 0000 0000 00"
+        self.practice.bic = "TESTDEXX"
+        self.invoices = [
+            Invoice(
+                invoice_number="INV-001", invoice_date=date(2026, 1, 5), total=Decimal("90.00")
+            ),
+            Invoice(
+                invoice_number="INV-002", invoice_date=date(2026, 2, 5), total=Decimal("180.50")
+            ),
+        ]
+
+    def test_german_lists_invoices_total_and_bank(self):
+        subject, body = get_payment_reminder_email_content(
+            self.client_de, self.practice, self.invoices
+        )
+
+        self.assertEqual(subject, "Zahlungserinnerung – 2 offene Rechnungen")
+        self.assertIn("INV-002  05.02.2026", body)
+        self.assertIn(f"Gesamtbetrag offen: {format_currency_de(Decimal('270.50'))}", body)
+        self.assertIn("Test Bank: DE00 0000 0000 0000 0000 00", body)
+        self.assertIn("BIC: TESTDEXX", body)
+        self.assertIn("Liebe Grüße,\n-- \nViele Grüße\nAnna Schmidt", body)
+
+    def test_english_uses_singular_for_one_invoice(self):
+        subject, body = get_payment_reminder_email_content(
+            self.client_en, self.practice, self.invoices[:1]
+        )
+
+        self.assertEqual(subject, "Payment Reminder – 1 outstanding invoice")
+        self.assertIn("this invoice", body)
+        self.assertIn("Total outstanding:", body)
+
+    def test_bank_lines_left_out_without_iban(self):
+        self.practice.iban = ""
+        _, body = get_payment_reminder_email_content(self.client_de, self.practice, self.invoices)
+        self.assertNotIn("Test Bank", body)
+        self.assertNotIn("BIC:", body)
+
+    def test_custom_salutation_replaces_the_greeting(self):
+        self.client_de.salutation = "Hallo Max"
+        _, body = get_payment_reminder_email_content(self.client_de, self.practice, self.invoices)
+        self.assertTrue(body.startswith("Hallo Max,\n"))
+
+
+class CancellationContentTest(EmailContentBuilderTestBase):
+    def test_german_greets_by_first_name_and_signs(self):
+        subject, body = get_cancellation_email_content(self.client_de, self.practice)
+
+        self.assertEqual(subject, "Absage unserer morgigen Sitzung")
+        self.assertTrue(body.startswith("Liebe/r Max,\n"))
+        self.assertTrue(body.endswith("-- \nViele Grüße\nAnna Schmidt"))
+
+    def test_english_subject_and_greeting(self):
+        subject, body = get_cancellation_email_content(self.client_en, self.practice)
+
+        self.assertEqual(subject, "Cancellation of tomorrow's session")
+        self.assertTrue(body.startswith("Dear Jane,\n"))
+
+    def test_no_dangling_delimiter_without_signature(self):
+        self.practice.email_signature = ""
+        _, body = get_cancellation_email_content(self.client_de, self.practice)
+        self.assertNotIn("-- ", body)
