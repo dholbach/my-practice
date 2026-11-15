@@ -11,7 +11,6 @@ from .billing_helpers import (
     resolve_session_rate,
 )
 from .calculations import (
-    apply_remainder_distribution,
     count_session_hours,
     count_sessions,
     count_sessions_rounded,
@@ -26,10 +25,7 @@ from .chart_helpers import (
 from .client_detail_builder import ClientDetailContextBuilder
 from .client_helpers import (
     annotate_activity_status,
-    calculate_client_session_stats,
-    flatten_invoice_items,
     group_clients_by_activity,
-    group_clients_by_year,
 )
 from .dashboard_context_builder import DashboardContextAssembler
 from .dashboard_widgets import (
@@ -67,7 +63,6 @@ __all__ = [
     "count_sessions",
     "count_session_hours",
     "count_sessions_rounded",
-    "apply_remainder_distribution",
     "get_next_invoice_number",
     "build_service_type_map",
     "create_invoice_item_for_session",
@@ -81,10 +76,7 @@ __all__ = [
     "MONTH_ABBREVIATIONS",
     "prepare_monthly_chart_data",
     "annotate_activity_status",
-    "flatten_invoice_items",
-    "calculate_client_session_stats",
     "group_clients_by_activity",
-    "group_clients_by_year",
     "annotate_client_counts",
     "sort_tags_by_category",
     "sync_no_next_session_tag",
