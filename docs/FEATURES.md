@@ -127,7 +127,7 @@ chronological record; this document only tracks current state.
 ### Dashboard (P-117, narrowed further in P-050 phase 4)
 - ✅ Stats strip — year revenue, year profit, outstanding invoices (count + total, highlights in red), time off with current/upcoming holiday hint
 - ✅ Quick-action buttons — "+ New invoice" / "+ New client" top-right of stats strip
-- ✅ **This Week widget** — `WeeklyFocusWidgetBuilder` shows this week's sessions (Mon–Sun) plus tasks due today or overdue, sharing the Focus Queue's `due_date` signal (P-028, merged into `due_date` in P-050)
+- ✅ **This Week widget** — `WeeklyFocusWidgetBuilder` shows this week's sessions (Mon–Sun) plus tasks due today or overdue, sharing the Focus Queue's `due_date` signal (P-028, merged into `due_date` in P-050); once the last session of the week is past it switches to next week
 - ✅ Capacity monitoring widget — conditional, only shown once a monthly target is configured
 - ✅ Status breakdown (Draft/Sent/Paid/Cancelled) — all-time overview
 - ✅ Recent invoices overview
