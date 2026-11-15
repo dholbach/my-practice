@@ -4,7 +4,7 @@
  * Translated strings, URLs and the per-event skip URL come from data-* attributes
  * on this file's own <script> tag and on the skip buttons (see
  * calendar_approval_queue.html), so the strings stay inside the template surface
- * the i18n coverage guardrail scans. The CSRF token comes from <body data-csrf-token>.
+ * the i18n coverage guardrail scans. Requests go through MPHttp.postJson (post_json.js).
  */
 
 (function () {
@@ -13,18 +13,6 @@
     const tag = document.getElementById("calendar-approval-queue-js");
     if (!tag) return;
     const text = tag.dataset;
-
-    function postJson(url, body) {
-        const options = {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": document.body.dataset.csrfToken,
-                "Content-Type": "application/json",
-            },
-        };
-        if (body !== undefined) options.body = JSON.stringify(body);
-        return fetch(url, options);
-    }
 
     function wireSkipDuplicates() {
         const button = document.getElementById("skip-duplicates-btn");
@@ -38,7 +26,7 @@
             this.disabled = true;
             this.textContent = text.skipping;
             try {
-                const res = await postJson(text.skipDuplicatesUrl);
+                const res = await MPHttp.postJson(text.skipDuplicatesUrl);
                 const data = await res.json();
                 if (data.success) {
                     location.reload();
@@ -71,7 +59,7 @@
             button.addEventListener("click", async function () {
                 const row = document.querySelector(`tr[data-event-id="${this.dataset.eventId}"]`);
                 try {
-                    const res = await postJson(this.dataset.skipUrl);
+                    const res = await MPHttp.postJson(this.dataset.skipUrl);
                     if (res.ok) {
                         row.style.opacity = "0.35";
                         row.style.transition = "opacity 0.3s";
@@ -140,7 +128,7 @@
                 this.textContent = text.importing;
 
                 try {
-                    const res = await postJson(text.importUrl, body);
+                    const res = await MPHttp.postJson(text.importUrl, body);
                     const data = await res.json();
                     if (!data.success) {
                         alert(`${text.error}: ${data.error || text.unknownError}`);

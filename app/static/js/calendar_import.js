@@ -4,8 +4,8 @@
  *
  * Translated strings and the import URL come from data-* attributes on this
  * file's own <script> tag (see calendar_import.html), so the strings stay inside
- * the template surface the i18n coverage guardrail scans. The CSRF token comes
- * from <body data-csrf-token>.
+ * the template surface the i18n coverage guardrail scans. Requests go
+ * through MPHttp.postJson (post_json.js).
  */
 
 (function () {
@@ -119,14 +119,7 @@
         }
 
         try {
-            const response = await fetch(text.importUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": document.body.dataset.csrfToken,
-                },
-                body: JSON.stringify({ events: events }),
-            });
+            const response = await MPHttp.postJson(text.importUrl, { events: events });
             const result = await response.json();
             if (result.success) {
                 alert(importSummary(result));

@@ -19,6 +19,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "calendar_import.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 const I18N = {
     importUrl: "/calendar/import/events/",
@@ -154,6 +155,9 @@ async function setupPage({ rows, fetchImpl }) {
         Set,
     };
     vm.createContext(sandbox);
+    // The page script calls the shared helper, so load it into the same page first.
+    vm.runInContext(POST_JSON, sandbox);
+    sandbox.MPHttp = sandbox.MPHttp || (sandbox.window && sandbox.window.MPHttp);
     vm.runInContext(SOURCE, sandbox);
     document._ready();
     return { alerts, fetchCalls, ids, rows, duplicateRow, sandbox };

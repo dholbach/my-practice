@@ -20,6 +20,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "calendar_approval_queue.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 const I18N = {
     skipDuplicatesUrl: "/calendar/queue/skip-duplicates/",
@@ -122,6 +123,9 @@ function setupPage({ queries = {}, ids = {}, fetchImpl, i18n = I18N } = {}) {
         Array,
     };
     vm.createContext(sandbox);
+    // The page script calls the shared helper, so load it into the same page first.
+    vm.runInContext(POST_JSON, sandbox);
+    sandbox.MPHttp = sandbox.MPHttp || (sandbox.window && sandbox.window.MPHttp);
     vm.runInContext(SOURCE, sandbox);
     return { alerts, fetchCalls, timers, body, sandbox };
 }
