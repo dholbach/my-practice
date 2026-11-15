@@ -151,44 +151,8 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce }}">
-{% trans "All items paused" as js_all_paused %}
-{% trans "%1 of %2 completed" as js_progress %}
-(function() {
-    const jsAllPaused = "{{ js_all_paused|escapejs }}";
-    const jsProgress = "{{ js_progress|escapejs }}";
-    // Only count checkboxes for non-paused items
-    const checkboxes = document.querySelectorAll('.checklist-checkbox[data-required="true"]');
-    const btn = document.getElementById('complete-btn');
-    const hint = document.getElementById('progress-hint');
-    const total = checkboxes.length;
-
-    function updateProgress() {
-        const checked = document.querySelectorAll('.checklist-checkbox[data-required="true"]:checked').length;
-        const allDone = total === 0 || checked === total;
-
-        if (btn) btn.disabled = !allDone;
-        if (hint) {
-            if (total === 0) {
-                hint.textContent = jsAllPaused;
-            } else {
-                hint.textContent = jsProgress.replace('%1', checked).replace('%2', total);
-            }
-        }
-    }
-
-    checkboxes.forEach(function(cb) {
-        cb.addEventListener('change', function() {
-            const row = this.closest('.checklist-row');
-            const label = row ? row.querySelector('.checklist-label') : null;
-            if (label) {
-                label.classList.toggle('checklist-label--done', this.checked);
-            }
-            updateProgress();
-        });
-    });
-
-    updateProgress();
-})();
-</script>
+<script src="{% static 'js/checklist.js' %}"
+        id="checklist-js"
+        data-all-paused="{% trans "All items paused" %}"
+        data-progress="{% trans "%1 of %2 completed" %}"></script>
 {% endblock %}
