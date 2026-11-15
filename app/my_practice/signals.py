@@ -122,8 +122,7 @@ def update_invoice_total_on_save(
     **kwargs,  # noqa: ARG001, vulture
 ):  # pylint: disable=unused-argument
     """Recalculate invoice total when an invoice item is saved."""
-    invoice = instance.invoice
-    recalculate_invoice_total(invoice)
+    instance.invoice.recalculate_and_save()
     sync_session_fields(instance)
 
 
@@ -134,36 +133,10 @@ def update_invoice_total_on_delete(
     **kwargs,  # noqa: ARG001, vulture
 ):  # pylint: disable=unused-argument
     """Recalculate invoice total when an invoice item is deleted."""
-    invoice = instance.invoice
-    recalculate_invoice_total(invoice)
+    instance.invoice.recalculate_and_save()
     # On delete: re-derive cancelled/group_size from any remaining items on this session
     if instance.session_id:
         _resync_session(instance.session_id)
-
-
-def recalculate_invoice_total(invoice):
-    """
-    Calculate and save the total for an invoice based on its items.
-
-    Uses the existing Invoice.calculate_total() method and additionally
-    updates invoice_date for draft invoices.
-    """
-    # Use the model's built-in calculation method
-    # This sets subtotal, tax_amount, and total on the instance
-    invoice.calculate_total()
-
-    # Determine which fields to save
-    update_fields = ["subtotal", "tax_amount", "total"]
-
-    # Auto-update invoice_date to latest session date (only for drafts)
-    if invoice.status == Invoice.Status.DRAFT:
-        target_date = invoice.computed_invoice_date()
-        if invoice.invoice_date != target_date:
-            invoice.invoice_date = target_date
-            update_fields.append("invoice_date")
-
-    # Save only the calculated fields
-    invoice.save(update_fields=update_fields)
 
 
 def sync_session_fields(item: InvoiceItem) -> None:

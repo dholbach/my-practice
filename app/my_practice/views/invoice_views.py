@@ -21,7 +21,6 @@ from django.views.generic import DetailView
 
 from ..invoice_forms import InvoiceForm
 from ..models import Client, Invoice, InvoiceItem, Session
-from ..signals import recalculate_invoice_total
 from ..utils import RevenueCalculator, get_next_invoice_number
 from ..utils.billing_helpers import (
     build_service_type_map,
@@ -370,7 +369,7 @@ class InvoiceEditView(NextRedirectMixin, InvoiceFormsetMixin, PracticeScopedUpda
                 # Signals handle total/date recalculation when items change.
                 # Where no items changed, ensure the draft's date is still
                 # refreshed to max(today, latest_session_date).
-                recalculate_invoice_total(invoice)
+                invoice.recalculate_and_save()
                 _issue_after_items(invoice, target_status, form.cleaned_data["invoice_date"])
 
                 # Refresh invoice from DB to get updated values
@@ -541,7 +540,7 @@ def add_sessions_to_invoice(request, pk):
             added += 1
 
     if added:
-        recalculate_invoice_total(invoice)
+        invoice.recalculate_and_save()
         messages.success(
             request,
             ngettext(
@@ -601,7 +600,7 @@ def create_invoice_with_sessions(request):
                 invoice, session, service_type_map, fallback_service_type
             )
         )
-        recalculate_invoice_total(invoice)
+        invoice.recalculate_and_save()
 
     msg_template = ngettext(
         'Invoice <a href="{}">{}</a> with {} session created.',
