@@ -853,7 +853,7 @@ class HandleAndFetchForPracticeTest(TestCase):
             call_command("fetch_calendar_events", stdout=out)
         self.assertIn("No calendar selected", out.getvalue())
 
-    def test_fetch_for_practice_api_error_is_reported(self):
+    def test_fetch_for_practice_api_error_fails_the_run(self):
         GoogleCalendarToken.objects.create(
             practice=self.practice,
             token="tok",
@@ -877,8 +877,9 @@ class HandleAndFetchForPracticeTest(TestCase):
             ),
         ):
             out = StringIO()
-            call_command("fetch_calendar_events", stdout=out)
-        self.assertIn("API error", out.getvalue())
+            with self.assertRaisesMessage(CommandError, self.practice.name):
+                call_command("fetch_calendar_events", stdout=out)
+        self.assertIn("api down", out.getvalue())
 
     def test_fetch_for_practice_creates_events_end_to_end(self):
         test_client = Client.objects.create(
