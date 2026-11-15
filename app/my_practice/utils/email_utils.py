@@ -214,19 +214,10 @@ def get_invoice_email_content(
     return subject, body
 
 
-def get_questionnaire_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
-    """
-    Get default email content (subject, body) for sending the Anamnesebogen.
-
-    Returns:
-        tuple: (subject, body)
-    """
-    salutation = get_salutation_for_client(client)
-
-    if client.language == "en":
-        subject = "Questionnaire"
-        body = (
-            f"{salutation},\n\n"
+_QUESTIONNAIRE_EMAIL = {
+    "en": (
+        "Questionnaire",
+        (
             "Here is also the questionnaire I mentioned in one of our previous sessions.\n\n"
             "For me it will be helpful to have some background information. "
             "The important things: if it takes a while to fill out, that's fine. "
@@ -234,11 +225,11 @@ def get_questionnaire_email_content(client: "Client", practice: "Practice") -> t
             "Also if any of the questions should be emotionally too taxing in the moment or if you prefer "
             "to talk about it at some stage during our sessions, that's fine as well.\n\n"
             "Thanks in any case in advance."
-        )
-    else:
-        subject = "Anamnesebogen"
-        body = (
-            f"{salutation},\n\n"
+        ),
+    ),
+    "de": (
+        "Anamnesebogen",
+        (
             "anbei auch der Anamnesebogen, den ich in einer unserer letzten Sitzungen erwähnt hatte.\n\n"
             "Für mich ist es hilfreich, einige Hintergrundinformationen zu haben. "
             "Das Wichtigste: Wenn das Ausfüllen eine Weile dauert, ist das völlig in Ordnung. "
@@ -246,11 +237,126 @@ def get_questionnaire_email_content(client: "Client", practice: "Practice") -> t
             "Und falls einzelne Fragen gerade emotional zu belastend sein sollten oder du es vorziehst, "
             "darüber im Laufe unserer Sitzungen zu sprechen, ist das selbstverständlich auch kein Problem.\n\n"
             "Vielen Dank schon im Voraus."
-        )
+        ),
+    ),
+}
 
-    body = _with_signature(body, practice)
+_INTAKE_EMAIL = {
+    "en": (
+        "Intake Form",
+        (
+            "please find attached the intake form for our work together. "
+            "Some details are already pre-filled — you can complete the rest "
+            "directly in the PDF or by hand. "
+            "Please send it back to me or simply bring it to our next session.\n\n"
+            "Feel free to get in touch at any time if you have any questions."
+        ),
+    ),
+    "de": (
+        "Aufnahmebogen",
+        (
+            "anbei findest du den Aufnahmebogen für unsere Zusammenarbeit. "
+            "Einige Angaben sind bereits vorausgefüllt — den Rest kannst du "
+            "direkt im PDF oder handschriftlich ergänzen. "
+            "Bitte sende ihn mir zurück oder bring ihn einfach zur nächsten Sitzung mit.\n\n"
+            "Bei Fragen melde dich gerne jederzeit."
+        ),
+    ),
+}
 
-    return subject, body
+_GDPR_DELETION_EMAIL = {
+    "en": (
+        "Deletion of your personal data",
+        (
+            "pursuant to Art. 17 GDPR (right to erasure) I would like to inform you that "
+            "your personal data held by my practice has been deleted following the expiry "
+            "of the statutory 10-year retention period. Bookkeeping records I am "
+            "required to keep, such as the entries of your payments in my bank "
+            "statements, remain until their own retention period ends.\n\n"
+            "I hope you are well."
+        ),
+    ),
+    "de": (
+        "Löschung Ihrer gespeicherten Daten",
+        (
+            "gemäß Art. 17 DSGVO (Recht auf Löschung) möchte ich Sie darüber informieren, "
+            "dass Ihre bei mir gespeicherten personenbezogenen Daten nach Ablauf der "
+            "gesetzlichen Aufbewahrungsfrist von 10 Jahren gelöscht wurden. "
+            "Buchhaltungsunterlagen, die ich aufbewahren muss, etwa die Einträge Ihrer "
+            "Zahlungen in meinen Kontoauszügen, bleiben bis zum Ende ihrer eigenen "
+            "Aufbewahrungsfrist erhalten.\n\n"
+            "Ich hoffe, es geht Ihnen gut."
+        ),
+    ),
+}
+
+_QUESTIONNAIRE_PDF_EMAIL = {
+    "en": (
+        "Questionnaire",
+        (
+            "please find attached a short questionnaire. You can fill it in "
+            "directly in the PDF or by hand. "
+            "Please send it back to me or simply bring it to our next session.\n\n"
+            "Feel free to get in touch at any time if you have any questions."
+        ),
+    ),
+    "de": (
+        "Fragebogen",
+        (
+            "anbei findest du einen kurzen Fragebogen. Du kannst ihn direkt "
+            "im PDF oder handschriftlich ausfüllen. "
+            "Bitte sende ihn mir zurück oder bring ihn einfach zur nächsten Sitzung mit.\n\n"
+            "Bei Fragen melde dich gerne jederzeit."
+        ),
+    ),
+}
+
+_CONTRACT_EMAIL = {
+    "en": (
+        "Treatment Contract",
+        (
+            "please find attached the therapy agreement for our work together. "
+            "It covers key aspects such as confidentiality and data protection. "
+            "Please read it at your leisure, sign it, and send it back to me — "
+            "or simply bring it to our next session.\n\n"
+            "Feel free to get in touch at any time if you have any questions."
+        ),
+    ),
+    "de": (
+        "Behandlungsvertrag",
+        (
+            "anbei findest du den Behandlungsvertrag für unsere Zusammenarbeit. "
+            "Er deckt grundlegende Aspekte wie Verschwiegenheit und Datenschutz ab. "
+            "Bitte lies ihn in Ruhe durch, unterschreibe ihn und sende ihn mir zurück — "
+            "oder bring ihn einfach zur nächsten Sitzung mit.\n\n"
+            "Bei Fragen melde dich gerne jederzeit."
+        ),
+    ),
+}
+
+
+def _build_client_email(
+    client: "Client", practice: "Practice", texts: dict[str, tuple[str, str]]
+) -> tuple[str, str]:
+    """
+    Build (subject, body) from a {language: (subject, body text)} table.
+
+    Greets the client with their salutation, uses the German text for anything
+    but "en", and appends the practice signature.
+    """
+    subject, text = texts["en" if client.language == "en" else "de"]
+    body = f"{get_salutation_for_client(client)},\n\n{text}"
+    return subject, _with_signature(body, practice)
+
+
+def get_questionnaire_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
+    """
+    Get default email content (subject, body) for sending the Anamnesebogen.
+
+    Returns:
+        tuple: (subject, body)
+    """
+    return _build_client_email(client, practice, _QUESTIONNAIRE_EMAIL)
 
 
 def get_intake_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
@@ -259,65 +365,12 @@ def get_intake_email_content(client: "Client", practice: "Practice") -> tuple[st
     Returns:
         tuple: (subject, body)
     """
-    salutation = get_salutation_for_client(client)
-
-    if client.language == "en":
-        subject = "Intake Form"
-        body = (
-            f"{salutation},\n\n"
-            "please find attached the intake form for our work together. "
-            "Some details are already pre-filled — you can complete the rest "
-            "directly in the PDF or by hand. "
-            "Please send it back to me or simply bring it to our next session.\n\n"
-            "Feel free to get in touch at any time if you have any questions."
-        )
-    else:
-        subject = "Aufnahmebogen"
-        body = (
-            f"{salutation},\n\n"
-            "anbei findest du den Aufnahmebogen für unsere Zusammenarbeit. "
-            "Einige Angaben sind bereits vorausgefüllt — den Rest kannst du "
-            "direkt im PDF oder handschriftlich ergänzen. "
-            "Bitte sende ihn mir zurück oder bring ihn einfach zur nächsten Sitzung mit.\n\n"
-            "Bei Fragen melde dich gerne jederzeit."
-        )
-
-    body = _with_signature(body, practice)
-
-    return subject, body
+    return _build_client_email(client, practice, _INTAKE_EMAIL)
 
 
 def get_gdpr_deletion_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
     """Return (subject, body) for the GDPR Art. 17 data-deletion notification email."""
-    salutation = get_salutation_for_client(client)
-
-    if client.language == "en":
-        subject = "Deletion of your personal data"
-        body = (
-            f"{salutation},\n\n"
-            "pursuant to Art. 17 GDPR (right to erasure) I would like to inform you that "
-            "your personal data held by my practice has been deleted following the expiry "
-            "of the statutory 10-year retention period. Bookkeeping records I am "
-            "required to keep, such as the entries of your payments in my bank "
-            "statements, remain until their own retention period ends.\n\n"
-            "I hope you are well."
-        )
-    else:
-        subject = "Löschung Ihrer gespeicherten Daten"
-        body = (
-            f"{salutation},\n\n"
-            "gemäß Art. 17 DSGVO (Recht auf Löschung) möchte ich Sie darüber informieren, "
-            "dass Ihre bei mir gespeicherten personenbezogenen Daten nach Ablauf der "
-            "gesetzlichen Aufbewahrungsfrist von 10 Jahren gelöscht wurden. "
-            "Buchhaltungsunterlagen, die ich aufbewahren muss, etwa die Einträge Ihrer "
-            "Zahlungen in meinen Kontoauszügen, bleiben bis zum Ende ihrer eigenen "
-            "Aufbewahrungsfrist erhalten.\n\n"
-            "Ich hoffe, es geht Ihnen gut."
-        )
-
-    body = _with_signature(body, practice)
-
-    return subject, body
+    return _build_client_email(client, practice, _GDPR_DELETION_EMAIL)
 
 
 def get_questionnaire_pdf_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
@@ -326,30 +379,7 @@ def get_questionnaire_pdf_email_content(client: "Client", practice: "Practice") 
     Returns:
         tuple: (subject, body)
     """
-    salutation = get_salutation_for_client(client)
-
-    if client.language == "en":
-        subject = "Questionnaire"
-        body = (
-            f"{salutation},\n\n"
-            "please find attached a short questionnaire. You can fill it in "
-            "directly in the PDF or by hand. "
-            "Please send it back to me or simply bring it to our next session.\n\n"
-            "Feel free to get in touch at any time if you have any questions."
-        )
-    else:
-        subject = "Fragebogen"
-        body = (
-            f"{salutation},\n\n"
-            "anbei findest du einen kurzen Fragebogen. Du kannst ihn direkt "
-            "im PDF oder handschriftlich ausfüllen. "
-            "Bitte sende ihn mir zurück oder bring ihn einfach zur nächsten Sitzung mit.\n\n"
-            "Bei Fragen melde dich gerne jederzeit."
-        )
-
-    body = _with_signature(body, practice)
-
-    return subject, body
+    return _build_client_email(client, practice, _QUESTIONNAIRE_PDF_EMAIL)
 
 
 def get_contract_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
@@ -358,32 +388,7 @@ def get_contract_email_content(client: "Client", practice: "Practice") -> tuple[
     Returns:
         tuple: (subject, body)
     """
-    salutation = get_salutation_for_client(client)
-
-    if client.language == "en":
-        subject = "Treatment Contract"
-        body = (
-            f"{salutation},\n\n"
-            "please find attached the therapy agreement for our work together. "
-            "It covers key aspects such as confidentiality and data protection. "
-            "Please read it at your leisure, sign it, and send it back to me — "
-            "or simply bring it to our next session.\n\n"
-            "Feel free to get in touch at any time if you have any questions."
-        )
-    else:
-        subject = "Behandlungsvertrag"
-        body = (
-            f"{salutation},\n\n"
-            "anbei findest du den Behandlungsvertrag für unsere Zusammenarbeit. "
-            "Er deckt grundlegende Aspekte wie Verschwiegenheit und Datenschutz ab. "
-            "Bitte lies ihn in Ruhe durch, unterschreibe ihn und sende ihn mir zurück — "
-            "oder bring ihn einfach zur nächsten Sitzung mit.\n\n"
-            "Bei Fragen melde dich gerne jederzeit."
-        )
-
-    body = _with_signature(body, practice)
-
-    return subject, body
+    return _build_client_email(client, practice, _CONTRACT_EMAIL)
 
 
 def _ordinal_suffix_en(day: int) -> str:
