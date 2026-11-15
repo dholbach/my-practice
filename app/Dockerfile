@@ -91,10 +91,10 @@ FROM production AS development
 
 # postgresql-client: only needed for `./dev.py psql`/`./dev.py sql`, which
 # exec into this (development-target) container — not shipped in production.
-# Node.js 22 (LTS) for CSS rebuilding (npm run watch:css) and JS tests
+# Node.js 26 (same major as the css-builder stage) for CSS rebuilding (npm run watch:css) and JS tests
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 RUN npm install
