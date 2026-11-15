@@ -32,7 +32,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 ## 🔍 Recent Activity
 
 - **2026-11-14 — v0.12.0 released**: session-page client name, bill actions on logged sessions, read-only dev web container, `prod.py` creates its data directories.
-- **2026-11-13 — Dev web container can't edit the source**: `django` mounts `./app` read-only and `./dev.py` runs tests, lint, migrations and i18n in a new `tools` container; `compile-messages` builds the catalogs before startup. Postgres drops to five capabilities, tailwind loses its network and its duplicate image, the healthcheck idles at once a minute.
+- **2026-11-15 — First refactoring review**: dropped unused `InvoiceQuerySet`, `stat_card`, seven dead CSS classes and a dead form widget; the Ghostscript recipe is built once in `file_processing.py`. The rest is tracked in a refactoring issue.
 
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)

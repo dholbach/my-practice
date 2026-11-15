@@ -28,7 +28,6 @@ from .invoice import (
     Invoice,
     InvoiceItem,
     InvoiceLockedError,
-    InvoiceQuerySet,
     allow_issued_invoice_writes,
 )
 from .operational import ChecklistItemPause, OperationalChecklistCompletion
@@ -70,7 +69,6 @@ __all__ = [
     "InvoiceLockedError",
     "allow_issued_invoice_writes",
     "scope_to_practice",
-    "InvoiceQuerySet",
     "Session",
     "SessionLog",
     "SupervisionItem",

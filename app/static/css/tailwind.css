@@ -373,7 +373,6 @@
   /* Analytics card chrome */
   .analytics-card { margin-bottom: 2rem; }
   .chart-subtitle  { color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem; }
-  .chart-canvas-wrapper { position: relative; width: 100%; background: var(--color-surface); border-radius: 8px; padding: 2rem 1rem 3rem 3rem; border: 1px solid var(--color-border); }
 
   /* Tag component */
   .tag-container { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
@@ -423,9 +422,6 @@
   /* Checklist widget */
   .checklist-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; }
   .checklist-item:not(:last-child) { border-bottom: 1px solid var(--color-border); }
-  /* Bank import widget */
-  .bank-import-status__btn  { padding: 0.5rem 1rem; white-space: nowrap; background: #b45309; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; flex-shrink: 0; }
-  .bank-import-status__btn:hover { background: #92400e; color: white; }
   /* Calendar preflight widget */
   .preflight-title { color: var(--color-text-primary); }
   .preflight-table { width: 100%; margin-top: 0.75rem; font-size: 0.875rem; border-collapse: collapse; }
@@ -1082,11 +1078,6 @@
   .invoice-client { color: var(--color-text-secondary); }
   .invoice-amount { font-weight: 700; color: var(--color-text-primary); }
   .chart { display: flex; align-items: flex-end; justify-content: space-between; height: 200px; gap: 0.5rem; }
-  .chart-bar { flex: 1; background: linear-gradient(to top, #667eea, #764ba2); border-radius: 4px 4px 0 0; position: relative; min-height: 10px; transition: all 0.3s; }
-  .chart-bar:hover { opacity: 0.8; }
-  .chart-bar .value { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; color: var(--color-text-primary); white-space: nowrap; }
-  .chart-bar .label { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: var(--color-text-secondary); white-space: nowrap; }
-  .chart-labels { display: flex; justify-content: space-between; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
   .heatmap { overflow-x: auto; }
   .heatmap-grid { display: inline-block; min-width: 100%; }
   .heatmap-header, .heatmap-row { display: flex; gap: 2px; }
@@ -1121,7 +1112,6 @@
   .mp-card-revenue { font-size: 1.25rem; font-weight: 700; color: var(--color-text-primary); }
   .mp-card-invoice-count { font-size: 0.75rem; color: var(--color-text-secondary); }
   .mp-card-switch { display: flex; align-items: center; color: var(--color-link); font-weight: 600; font-size: 0.85rem; }
-  .stat-hint { margin-top: 0.5rem; font-size: 0.875rem; }
 
   /* ── Dashboard redesign (P-117) ── */
   /* Stats strip */
@@ -1317,7 +1307,6 @@
   .match-badge--manual { background: var(--color-info-bg);    color: var(--color-info); }
   .trans-card { background: var(--color-bg-secondary); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--color-border); scroll-margin-top: 2rem; }
   .trans-card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-  .trans-card__header--tight { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
   .trans-card__info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
   .field-label { font-size: 0.75rem; color: var(--color-text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 0.25rem; }
   .monospace-ref { font-family: monospace; font-size: 0.875rem; background: var(--color-bg-primary); padding: 0.5rem; border-radius: 4px; color: var(--color-text-primary); }
@@ -1769,14 +1758,6 @@
   .data-table .th-checkbox-sm { width: 2rem; }
   .data-table .th-action-sm   { width: 6rem; }
   .data-table .th-checkbox-sm input[type="checkbox"] { cursor: pointer; }
-  .badge-duplicate {
-    font-size: 0.75rem;
-    background: #fed7d7;
-    color: #742a2a;
-    padding: 0.1rem 0.45rem;
-    border-radius: 10px;
-    white-space: nowrap;
-  }
   .btn-skip {
     padding: 0.2rem 0.5rem;
     font-size: 0.8rem;

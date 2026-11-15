@@ -117,29 +117,6 @@ def js_number(value, default=0):
         return str(default)
 
 
-@register.simple_tag
-def stat_card(label, value, suffix="", color="primary"):
-    """
-    Render a stat card component.
-    Usage: {% stat_card label="Revenue" value=1234.56 suffix="€" color="success" %}
-    """
-    color_classes = {
-        "primary": "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);",
-        "success": "background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);",
-        "warning": "background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);",
-        "danger": "background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);",
-    }
-
-    style = color_classes.get(color, color_classes["primary"])
-
-    return f"""
-    <div class="stat-card" style="{style}">
-        <div class="stat-value">{value}{suffix}</div>
-        <div class="stat-label">{label}</div>
-    </div>
-    """
-
-
 @register.filter(name="highlight_diff")
 def highlight_diff(value, threshold=0):
     """
