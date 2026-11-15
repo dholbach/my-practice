@@ -393,7 +393,11 @@
         </div>
 
         <!-- Allocation note widget -->
-        <div class="tax-note-widget" data-save-url="{% url 'save_tax_year_note' %}" data-year="{{ year }}">
+        <div class="tax-note-widget" data-save-url="{% url 'save_tax_year_note' %}" data-year="{{ year }}"
+             data-saving="{% trans "Saving…" %}"
+             data-saved-prefix="{% trans "Saved: " %}"
+             data-save-error="{% trans "Error saving." %}"
+             data-network-error="{% trans "Network error." %}">
             <label class="tax-note-widget__label" for="tax-note-textarea">
                 📝 {% trans "Allocation note (e.g. split key used for allowance allocation)" %}
             </label>
@@ -423,39 +427,5 @@
     </div>
 </div>
 
-{% trans "Saving…" as note_saving_msg %}
-{% trans "Saved: " as note_saved_prefix %}
-{% trans "Error saving." as note_save_error_msg %}
-{% trans "Network error." as note_network_error_msg %}
-<script nonce="{{ csp_nonce }}">
-(function () {
-    const widget = document.querySelector('.tax-note-widget');
-    if (!widget) return;
-    const btn = document.getElementById('tax-note-save-btn');
-    const status = document.getElementById('tax-note-status');
-    const textarea = document.getElementById('tax-note-textarea');
-
-    btn.addEventListener('click', function () {
-        const body = new URLSearchParams();
-        body.append('year', widget.dataset.year);
-        body.append('note', textarea.value);
-        body.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
-        btn.disabled = true;
-        status.textContent = '{{ note_saving_msg|escapejs }}';
-
-        fetch(widget.dataset.saveUrl, {method: 'POST', body: body})
-            .then(r => r.json())
-            .then(data => {
-                if (data.saved) {
-                    status.textContent = '{{ note_saved_prefix|escapejs }}' + data.updated_at;
-                } else {
-                    status.textContent = '{{ note_save_error_msg|escapejs }}';
-                }
-            })
-            .catch(() => { status.textContent = '{{ note_network_error_msg|escapejs }}'; })
-            .finally(() => { btn.disabled = false; });
-    });
-})();
-</script>
+<script src="{% static 'js/tax_year_summary.js' %}"></script>
 {% endblock %}

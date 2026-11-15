@@ -136,7 +136,13 @@
     </div>
 
     <!-- Annual Tax Settlement (Steuerbescheid) -->
-    <div class="section-card mt-6" x-data="taxSettlement">
+    <div class="section-card mt-6" x-data="taxSettlement"
+         data-year="{{ year }}"
+         data-save-url="{{ save_note_url }}"
+         data-amount="{{ settlement_amount|default:'' }}"
+         data-settlement-date="{{ settlement_date|date:'Y-m-d'|default:'' }}"
+         data-save-failed="{% trans "Save failed." %}"
+         data-network-error="{% trans "Network error." %}">
         <h2>📄 {% trans "Tax Assessment (Steuerbescheid)" %}</h2>
         <p class="text-sm text-secondary mb-4">
             {% trans "Record the outcome of your annual tax return once the assessment notice arrives." %}
@@ -201,60 +207,5 @@
 
 </div>
 
-<script nonce="{{ csp_nonce }}">
-function taxSettlement() {
-    return {
-        editing: false,
-        saving: false,
-        error: "",
-        amount: "{{ settlement_amount|default:'' }}",
-        settlementDate: "{{ settlement_date|date:'Y-m-d'|default:'' }}",
-
-        startEdit() {
-            this.error = "";
-            this.editing = true;
-        },
-
-        cancel() {
-            this.editing = false;
-            this.error = "";
-        },
-
-        async save() {
-            this.saving = true;
-            this.error = "";
-            const data = new FormData();
-            data.append("year", "{{ year }}");
-            data.append("settlement_amount", this.amount);
-            data.append("settlement_date", this.settlementDate);
-            data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
-            try {
-                const resp = await fetch("{{ save_note_url }}", {method: "POST", body: data});
-                const json = await resp.json();
-                if (json.saved) {
-                    window.location.reload();
-                } else {
-                    this.error = json.error || "{% trans "Save failed." %}";
-                }
-            } catch {
-                this.error = "{% trans "Network error." %}";
-            } finally {
-                this.saving = false;
-            }
-        },
-
-        async clear() {
-            this.amount = "";
-            this.settlementDate = "";
-            await this.save();
-        },
-    };
-}
-
-// Registered by name: the CSP build of Alpine (script-src has no
-// 'unsafe-eval') cannot call a global function from x-data.
-document.addEventListener("alpine:init", function () {
-    Alpine.data("taxSettlement", taxSettlement);
-});
-</script>
+<script src="{% static 'js/tax_settlement.js' %}"></script>
 {% endblock %}
