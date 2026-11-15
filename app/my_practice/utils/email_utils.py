@@ -70,6 +70,18 @@ def _build_sessions_intro(invoice: "Invoice", language: str) -> str:
     return sentence + "\n\n"
 
 
+def _with_signature(body: str, practice: "Practice") -> str:
+    """
+    Append the practice signature after the standard "-- " delimiter.
+
+    Skipped when the practice has no signature, since appending unconditionally
+    left a bare delimiter dangling on the mail.
+    """
+    if not practice.email_signature:
+        return body
+    return body + "\n\n-- \n" + practice.email_signature
+
+
 def get_salutation_for_client(client: "Client") -> str:
     """
     Get email salutation for a client.
@@ -197,11 +209,7 @@ def get_invoice_email_content(
     if custom_message:
         body = body + "\n\n" + custom_message
 
-    # Add signature with standard email delimiter. Guarded like the other
-    # builders below — appending unconditionally left a bare "-- " sig
-    # delimiter dangling on the mail when a practice had no signature set.
-    if practice.email_signature:
-        body = body + "\n\n-- \n" + practice.email_signature
+    body = _with_signature(body, practice)
 
     return subject, body
 
@@ -240,8 +248,7 @@ def get_questionnaire_email_content(client: "Client", practice: "Practice") -> t
             "Vielen Dank schon im Voraus."
         )
 
-    if practice.email_signature:
-        body = body + "\n\n-- \n" + practice.email_signature
+    body = _with_signature(body, practice)
 
     return subject, body
 
@@ -275,8 +282,7 @@ def get_intake_email_content(client: "Client", practice: "Practice") -> tuple[st
             "Bei Fragen melde dich gerne jederzeit."
         )
 
-    if practice.email_signature:
-        body = body + "\n\n-- \n" + practice.email_signature
+    body = _with_signature(body, practice)
 
     return subject, body
 
@@ -309,8 +315,7 @@ def get_gdpr_deletion_email_content(client: "Client", practice: "Practice") -> t
             "Ich hoffe, es geht Ihnen gut."
         )
 
-    if practice.email_signature:
-        body = body + "\n\n-- \n" + practice.email_signature
+    body = _with_signature(body, practice)
 
     return subject, body
 
@@ -342,8 +347,7 @@ def get_questionnaire_pdf_email_content(client: "Client", practice: "Practice") 
             "Bei Fragen melde dich gerne jederzeit."
         )
 
-    if practice.email_signature:
-        body = body + "\n\n-- \n" + practice.email_signature
+    body = _with_signature(body, practice)
 
     return subject, body
 
@@ -377,8 +381,7 @@ def get_contract_email_content(client: "Client", practice: "Practice") -> tuple[
             "Bei Fragen melde dich gerne jederzeit."
         )
 
-    if practice.email_signature:
-        body = body + "\n\n-- \n" + practice.email_signature
+    body = _with_signature(body, practice)
 
     return subject, body
 
@@ -484,8 +487,7 @@ def get_timeoff_notice_default_content(
         "All the best until then."
     )
 
-    if practice.email_signature:
-        body_de = body_de + "\n\n-- \n" + practice.email_signature
-        body_en = body_en + "\n\n-- \n" + practice.email_signature
+    body_de = _with_signature(body_de, practice)
+    body_en = _with_signature(body_en, practice)
 
     return subject_de, body_de, subject_en, body_en
