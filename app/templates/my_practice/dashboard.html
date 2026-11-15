@@ -56,7 +56,7 @@
     </div>
 </div>
 
-{% trans "📆 This Week" as weekly_focus_widget_title %}
+{% if weekly_focus_is_next_week %}{% trans "📆 Next Week" as weekly_focus_widget_title %}{% else %}{% trans "📆 This Week" as weekly_focus_widget_title %}{% endif %}
 {% with widget_content=weekly_focus_widget_html %}
     {% include 'includes/widget_base.html' with widget_id="weekly_focus" widget_title=weekly_focus_widget_title widget_badge=weekly_focus_badge %}
 {% endwith %}

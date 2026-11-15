@@ -10,7 +10,7 @@ via the "Today" quick action. Read-only here; manage due dates in the queue.
 
     <!-- Week Sessions -->
     <div class="weekly-focus-section">
-        <div class="weekly-focus-section-title">📅 {% trans "Sessions this week" %}</div>
+        <div class="weekly-focus-section-title">📅 {% if is_next_week %}{% trans "Sessions next week" %}{% else %}{% trans "Sessions this week" %}{% endif %}</div>
         {% if week_sessions %}
             <div class="weekly-sessions-list">
                 {% for session in week_sessions %}
@@ -24,7 +24,7 @@ via the "Today" quick action. Read-only here; manage due dates in the queue.
                 {% endfor %}
             </div>
         {% else %}
-            <div class="weekly-focus-empty">{% trans "No sessions this week." %}</div>
+            <div class="weekly-focus-empty">{% if is_next_week %}{% trans "No sessions next week." %}{% else %}{% trans "No sessions this week." %}{% endif %}</div>
         {% endif %}
     </div>
 

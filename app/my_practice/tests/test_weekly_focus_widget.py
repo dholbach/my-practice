@@ -5,10 +5,11 @@ flag so it shares one signal with the Focus Queue (P-050).
 """
 
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.test import TestCase
 
-from ..models import Practice, PracticeTodo
+from ..models import Client, Practice, PracticeTodo, Session
 from ..utils.weekly_focus_widget import WeeklyFocusWidgetBuilder
 
 
@@ -67,3 +68,39 @@ class WeeklyFocusWidgetDueTodayTasksTest(TestCase):
         context = self._build()
         titles = [t.title for t in context["due_today_tasks"]]
         self.assertNotIn("Done already", titles)
+
+
+class WeeklyFocusWidgetNextWeekTest(TestCase):
+    """Once the current week's last session is behind us, look at next week."""
+
+    def setUp(self):
+        self.practice = _make_practice("weekly-focus-widget-2")
+        self.client_obj = Client.objects.create(
+            client_code="XX-1",
+            full_name="Max Mustermann",
+            email="mail@example.com",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+        # Wed 2026-11-11 and Fri 2026-11-13 are this week; Tue 2026-11-17 is next.
+        for d in (date(2026, 11, 11), date(2026, 11, 13), date(2026, 11, 17)):
+            Session.objects.create(client=self.client_obj, session_date=d, duration=60)
+
+    def _build(self, today):
+        return WeeklyFocusWidgetBuilder(self.practice, today=today).build_context()
+
+    def test_shows_this_week_while_sessions_remain(self):
+        context = self._build(date(2026, 11, 13))
+        self.assertFalse(context["is_next_week"])
+        self.assertEqual(context["session_count"], 2)
+
+    def test_switches_to_next_week_after_last_session(self):
+        context = self._build(date(2026, 11, 14))
+        self.assertTrue(context["is_next_week"])
+        self.assertEqual(context["week_start"], date(2026, 11, 16))
+        self.assertEqual([s["date"] for s in context["week_sessions"]], [date(2026, 11, 17)])
+
+    def test_empty_week_stays_this_week(self):
+        context = self._build(date(2026, 11, 23))
+        self.assertFalse(context["is_next_week"])
+        self.assertEqual(context["session_count"], 0)

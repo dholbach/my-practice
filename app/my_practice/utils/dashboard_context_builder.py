@@ -154,6 +154,7 @@ class DashboardContextAssembler:
                 else ""
             ),
             "capacity_show_widget": cap_ctx.get("show_widget", False),
+            "weekly_focus_is_next_week": wf_ctx["is_next_week"],
             "weekly_focus_widget_html": _html("includes/weekly_focus_widget_content.html", wf_ctx),
             # Each part went through format_html, so joining them stays safe.
             "weekly_focus_badge": mark_safe(" ".join(wf_badge_parts)),
