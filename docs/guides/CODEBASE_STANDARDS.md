@@ -591,12 +591,10 @@ The `5/7` approximation diverges badly on holiday-heavy periods (Easter, Christm
 
 ```python
 from my_practice.utils.date_helpers import DateRangeHelper
-from my_practice.utils.practice_days import berlin_public_holidays
+from my_practice.utils.practice_days import berlin_public_holidays_between
 
 # Build the holiday set once, covering all years in the date range
-holidays: set[date] = set()
-for yr in range(start_date.year, end_date.year + 1):
-    holidays |= berlin_public_holidays(yr)
+holidays = berlin_public_holidays_between(start_date.year, end_date.year)
 
 # Then pass it to every working-day count in the function
 days = DateRangeHelper.count_working_days(start, end, holidays)
@@ -607,7 +605,7 @@ days = DateRangeHelper.count_working_days(start, end, holidays)
 - `count_working_days(start, end, holidays)` — same but also excludes the given holiday dates.
 - Build the holiday set **once per function call**, not inside a loop.
 - For "days elapsed before a milestone" (half-open `[start, end)`): pass `end - timedelta(days=1)` as the end argument so that a same-day event counts as 0 elapsed days.
-- `berlin_public_holidays(year)` lives in `utils/practice_days.py` and is NOT re-exported from `utils/__init__.py` — import it directly.
+- `berlin_public_holidays(year)` and `berlin_public_holidays_between(start_year, end_year)` live in `utils/practice_days.py` and is NOT re-exported from `utils/__init__.py` — import it directly.
 
 ---
 

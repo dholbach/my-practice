@@ -13,6 +13,7 @@ from my_practice.utils.practice_days import (
     HomeOfficeDayCalculator,
     PracticeDayCalculator,
     berlin_public_holidays,
+    berlin_public_holidays_between,
 )
 
 
@@ -48,6 +49,23 @@ class BerlinPublicHolidaysTestCase(TestCase):
     def test_frauentag_not_before_2019(self):
         holidays_2018 = berlin_public_holidays(2018)
         self.assertNotIn(date(2018, 3, 8), holidays_2018)
+
+
+class BerlinPublicHolidaysBetweenTestCase(TestCase):
+    def test_unions_every_year_in_the_range(self):
+        holidays = berlin_public_holidays_between(2024, 2026)
+        expected = (
+            berlin_public_holidays(2024)
+            | berlin_public_holidays(2025)
+            | berlin_public_holidays(2026)
+        )
+        self.assertEqual(holidays, expected)
+
+    def test_single_year_matches_the_per_year_function(self):
+        self.assertEqual(berlin_public_holidays_between(2025, 2025), berlin_public_holidays(2025))
+
+    def test_empty_when_end_is_before_start(self):
+        self.assertEqual(berlin_public_holidays_between(2026, 2025), set())
 
 
 class PracticeDayCalculatorTestCase(TestCase):
