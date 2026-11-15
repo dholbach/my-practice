@@ -2,6 +2,7 @@
 Email utility functions for invoice sending.
 """
 
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from ..validators import PLACEHOLDER_RE
@@ -384,6 +385,125 @@ def get_contract_email_content(client: "Client", practice: "Practice") -> tuple[
     body = _with_signature(body, practice)
 
     return subject, body
+
+
+def get_payment_reminder_email_content(
+    client: "Client", practice: "Practice", open_invoices: list["Invoice"]
+) -> tuple[str, str]:
+    """Build the default (subject, body) for a payment reminder over open invoices."""
+    total = sum((inv.total for inv in open_invoices), Decimal("0"))
+    count = len(open_invoices)
+    lang = client.language  # 'de' or 'en'
+
+    lines = []
+
+    # Invoice table (shared by both languages)
+    max_num_len = max(len(inv.invoice_number) for inv in open_invoices)
+    invoice_rows = []
+    for inv in open_invoices:
+        num = inv.invoice_number.ljust(max_num_len)
+        date_str = inv.invoice_date.strftime("%d.%m.%Y")
+        invoice_rows.append(f"  {num}  {date_str}  {format_currency_de(inv.total)}")
+
+    if lang == "en":
+        invoice_word = "invoice" if count == 1 else "invoices"
+        lines.append(client.salutation + "," if client.salutation else "Hi,")
+        lines.append("")
+        lines.append(
+            f"Can you take a look and see if you received {'this invoice' if count == 1 else 'these invoices'}?"
+        )
+        lines.append("")
+        lines.extend(invoice_rows)
+        lines.append("")
+        lines.append(f"Total outstanding: {format_currency_de(total)}")
+        lines.append("")
+        lines.append(
+            "I'm happy to re-send if they got lost in transit. "
+            "If I made a mistake and missed your payment, please disregard. "
+            "Otherwise please transfer the amount to the usual bank account:"
+        )
+        if practice.iban:
+            lines.append(f"  {practice.bank_name}: {practice.iban}")
+            if practice.bic:
+                lines.append(f"  BIC: {practice.bic}")
+        lines.append("")
+        lines.append("All the best,")
+        lines.append("-- ")
+        lines.append(practice.email_signature)
+        subject = f"Payment Reminder – {count} outstanding {invoice_word}"
+    else:
+        # German (default)
+        invoice_word_plural = "Rechnungen" if count != 1 else "Rechnung"
+        lines.append(client.salutation + "," if client.salutation else "Hallo,")
+        lines.append("")
+        lines.append(
+            f"kannst du mal schauen, ob du {'diese Rechnungen' if count != 1 else 'diese Rechnung'} erhalten hast?"
+        )
+        lines.append("")
+        lines.extend(invoice_rows)
+        lines.append("")
+        lines.append(f"Gesamtbetrag offen: {format_currency_de(total)}")
+        lines.append("")
+        lines.append(
+            "Ich schicke sie gerne noch einmal, falls sie verloren gegangen sind. "
+            "Falls ich einen Fehler gemacht habe und deine Zahlung übersehen habe, bitte einfach ignorieren. "
+            "Ansonsten bitte den Betrag auf das übliche Konto überweisen:"
+        )
+        if practice.iban:
+            lines.append(f"  {practice.bank_name}: {practice.iban}")
+            if practice.bic:
+                lines.append(f"  BIC: {practice.bic}")
+        lines.append("")
+        lines.append("Liebe Grüße,")
+        lines.append("-- ")
+        lines.append(practice.email_signature)
+        subject = f"Zahlungserinnerung – {count} offene {invoice_word_plural}"
+
+    return subject, "\n".join(lines)
+
+
+def get_cancellation_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
+    """Build the default (subject, body) for cancelling tomorrow's session due to illness."""
+    lang = client.language
+    first_name = client.full_name.split()[0] if client.full_name else client.client_code
+    if client.salutation:
+        greeting = client.salutation + ","
+    elif lang == "en":
+        greeting = f"Dear {first_name},"
+    else:
+        greeting = f"Liebe/r {first_name},"
+
+    if lang == "en":
+        subject = "Cancellation of tomorrow's session"
+        lines = [
+            greeting,
+            "",
+            (
+                "Unfortunately I will have to cancel tomorrow's session due to illness. "
+                "I expect to be well again the following week. "
+                "We can already arrange a new appointment."
+            ),
+            "",
+            "All the best,",
+        ]
+    else:
+        subject = "Absage unserer morgigen Sitzung"
+        lines = [
+            greeting,
+            "",
+            (
+                "Leider werde ich unsere morgige Sitzung aus Krankheitsgründen absagen müssen. "
+                "Ich denke aber, dass ich in der darauffolgenden Woche wieder gesund sein werde. "
+                "Wir können auch gleich schon einen neuen Termin ausmachen."
+            ),
+            "",
+            "Liebe Grüße und alles Gute,",
+        ]
+
+    if practice.email_signature:
+        lines += ["-- ", practice.email_signature]
+
+    return subject, "\n".join(lines)
 
 
 def _ordinal_suffix_en(day: int) -> str:
