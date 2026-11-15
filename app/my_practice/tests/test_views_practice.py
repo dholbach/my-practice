@@ -11,17 +11,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Client, Invoice, Practice, UserPractice
-from ..tests.test_helpers import link_user_to_practice
-
-
-def _make_practice(slug, name="Test Practice"):
-    return Practice.objects.create(
-        name=name,
-        slug=slug,
-        title="Test Practitioner",
-        email="test@practice.example",
-        city="Berlin",
-    )
+from ..tests.test_helpers import create_test_practice, link_user_to_practice
 
 
 def _setup_client(user, practice=None):
@@ -39,8 +29,8 @@ class PracticeSwitchTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="switchuser", password="testpass123")
-        self.practice1 = _make_practice("pswitch-1", "Practice One")
-        self.practice2 = _make_practice("pswitch-2", "Practice Two")
+        self.practice1 = create_test_practice(slug="pswitch-1", name="Practice One")
+        self.practice2 = create_test_practice(slug="pswitch-2", name="Practice Two")
         link_user_to_practice(self.user, self.practice1)
         link_user_to_practice(self.user, self.practice2)
         self.tc = _setup_client(self.user, self.practice1)
@@ -147,7 +137,7 @@ class PracticeSelectTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="selectuser", password="testpass123")
-        self.practice = _make_practice("pselect-1")
+        self.practice = create_test_practice(slug="pselect-1")
         link_user_to_practice(self.user, self.practice)
         self.tc = TestClient()
         self.tc.login(username="selectuser", password="testpass123")
@@ -158,7 +148,7 @@ class PracticeSelectTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_multiple_practices_shows_form(self):
-        practice2 = _make_practice("pselect-2", "Second Practice")
+        practice2 = create_test_practice(slug="pselect-2", name="Second Practice")
         link_user_to_practice(self.user, practice2)
         response = self.tc.get(reverse("practice_select"))
         self.assertEqual(response.status_code, 200)
@@ -170,7 +160,7 @@ class PracticeManagementViewTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="mgmtuser", password="testpass123")
-        self.practice = _make_practice("pmgmt-1")
+        self.practice = create_test_practice(slug="pmgmt-1")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
 
@@ -244,7 +234,7 @@ class PracticeUpdateViewTest(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user(username="ownerpuser", password="testpass123")
         self.other = User.objects.create_user(username="otherpuser", password="testpass123")
-        self.practice = _make_practice("pupdate-1")
+        self.practice = create_test_practice(slug="pupdate-1")
         link_user_to_practice(self.owner, self.practice, is_owner=True)
         link_user_to_practice(self.other, self.practice, is_owner=False)
         self.tc_owner = _setup_client(self.owner, self.practice)
@@ -308,7 +298,7 @@ class PracticeDeleteViewTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="delpuser", password="testpass123")
-        self.practice = _make_practice("pdelete-1")
+        self.practice = create_test_practice(slug="pdelete-1")
         link_user_to_practice(self.user, self.practice, is_owner=True)
         self.tc = _setup_client(self.user, self.practice)
 

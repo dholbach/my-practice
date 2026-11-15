@@ -10,18 +10,8 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import ClientInquiry, InquiryStatus, Practice
-from ..tests.test_helpers import link_user_to_practice
-
-
-def _make_practice(slug):
-    return Practice.objects.create(
-        name="Inquiry Practice",
-        slug=slug,
-        title="Test Practitioner",
-        email="inquiry@practice.example",
-        city="Berlin",
-    )
+from ..models import ClientInquiry, InquiryStatus
+from ..tests.test_helpers import create_test_practice, link_user_to_practice
 
 
 def _setup_client(user, practice):
@@ -48,7 +38,7 @@ class InquiryListViewTest(TestCase):
     """Tests for InquiryListView."""
 
     def setUp(self):
-        self.practice = _make_practice("inq-list-1")
+        self.practice = create_test_practice(slug="inq-list-1")
         self.user = User.objects.create_user(username="inquser", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -81,7 +71,7 @@ class InquiryCreateViewTest(TestCase):
     """Tests for InquiryCreateView."""
 
     def setUp(self):
-        self.practice = _make_practice("inq-create-1")
+        self.practice = create_test_practice(slug="inq-create-1")
         self.user = User.objects.create_user(username="inquser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -119,7 +109,7 @@ class InquiryUpdateViewTest(TestCase):
     """Tests for InquiryUpdateView."""
 
     def setUp(self):
-        self.practice = _make_practice("inq-update-1")
+        self.practice = create_test_practice(slug="inq-update-1")
         self.user = User.objects.create_user(username="inquser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -154,7 +144,7 @@ class InquiryDeleteViewTest(TestCase):
     """Tests for InquiryDeleteView."""
 
     def setUp(self):
-        self.practice = _make_practice("inq-delete-1")
+        self.practice = create_test_practice(slug="inq-delete-1")
         self.user = User.objects.create_user(username="inquser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -175,7 +165,7 @@ class InquiryConvertViewTest(TestCase):
     """Tests for InquiryConvertView."""
 
     def setUp(self):
-        self.practice = _make_practice("inq-convert-1")
+        self.practice = create_test_practice(slug="inq-convert-1")
         self.user = User.objects.create_user(username="inquser5", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)

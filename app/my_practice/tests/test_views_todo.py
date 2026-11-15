@@ -10,18 +10,8 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Client as ClientModel
-from ..models import Practice, PracticeTodo
-from ..tests.test_helpers import link_user_to_practice
-
-
-def _make_practice(slug):
-    return Practice.objects.create(
-        name="Test Practice",
-        slug=slug,
-        title="Test Practitioner",
-        email="test@practice.example",
-        city="Berlin",
-    )
+from ..models import PracticeTodo
+from ..tests.test_helpers import create_test_practice, link_user_to_practice
 
 
 def _setup_client(user, practice):
@@ -38,7 +28,7 @@ class TodoCreateViewTest(TestCase):
     """Tests for TodoCreateView."""
 
     def setUp(self):
-        self.practice = _make_practice("todo-create-1")
+        self.practice = create_test_practice(slug="todo-create-1")
         self.user = User.objects.create_user(username="todouser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -88,7 +78,7 @@ class TodoCreateViewTest(TestCase):
         self.assertEqual(response.context["for_client"], client_obj)
 
     def test_client_param_from_other_practice_404s(self):
-        other_practice = _make_practice("todo-create-other")
+        other_practice = create_test_practice(slug="todo-create-other")
         other_client = ClientModel.objects.create(
             practice=other_practice,
             client_code="CT-3",
@@ -109,7 +99,7 @@ class TodoUpdateViewTest(TestCase):
     """Tests for TodoUpdateView."""
 
     def setUp(self):
-        self.practice = _make_practice("todo-update-1")
+        self.practice = create_test_practice(slug="todo-update-1")
         self.user = User.objects.create_user(username="todouser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -138,7 +128,7 @@ class TodoDeleteViewTest(TestCase):
     """Tests for TodoDeleteView."""
 
     def setUp(self):
-        self.practice = _make_practice("todo-delete-1")
+        self.practice = create_test_practice(slug="todo-delete-1")
         self.user = User.objects.create_user(username="todouser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
@@ -162,7 +152,7 @@ class TodoToggleCompleteTest(TestCase):
     """Tests for todo_toggle_complete view."""
 
     def setUp(self):
-        self.practice = _make_practice("todo-toggle-1")
+        self.practice = create_test_practice(slug="todo-toggle-1")
         self.user = User.objects.create_user(username="todouser5", password="testpass123")
         link_user_to_practice(self.user, self.practice)
         self.tc = _setup_client(self.user, self.practice)
