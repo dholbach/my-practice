@@ -112,6 +112,40 @@ def _pdf_is_parseable(data: bytes) -> bool:
         return False
 
 
+def _run_ghostscript(src: str, dst: str) -> subprocess.CompletedProcess[str]:
+    """Run the shared Ghostscript recompression recipe on *src*, writing *dst*.
+
+    Raises FileNotFoundError when gs is not installed; callers decide what
+    "skip compression" means for them.
+    """
+    return subprocess.run(
+        [
+            "gs",
+            "-dSAFER",
+            "-sDEVICE=pdfwrite",
+            "-dCompatibilityLevel=1.4",
+            f"-dPDFSETTINGS={GS_PDF_PRESET}",
+            "-dNOPAUSE",
+            "-dQUIET",
+            "-dBATCH",
+            "-dEmbedAllFonts=true",
+            "-dSubsetFonts=true",
+            "-dAutoRotatePages=/None",
+            "-dColorImageDownsampleType=/Bicubic",
+            f"-dColorImageResolution={GS_PDF_DPI}",
+            "-dGrayImageDownsampleType=/Bicubic",
+            f"-dGrayImageResolution={GS_PDF_DPI}",
+            "-dMonoImageDownsampleType=/Bicubic",
+            f"-dMonoImageResolution={GS_PDF_DPI}",
+            f"-sOutputFile={dst}",
+            src,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+
+
 def _compress_pdf_bytes(data: bytes) -> bytes:
     """
     Compress PDF bytes via Ghostscript. Returns compressed bytes, or the
@@ -128,32 +162,7 @@ def _compress_pdf_bytes(data: bytes) -> bytes:
     Path(tmp_in).write_bytes(data)
 
     try:
-        result = subprocess.run(
-            [
-                "gs",
-                "-dSAFER",
-                "-sDEVICE=pdfwrite",
-                "-dCompatibilityLevel=1.4",
-                f"-dPDFSETTINGS={GS_PDF_PRESET}",
-                "-dNOPAUSE",
-                "-dQUIET",
-                "-dBATCH",
-                "-dEmbedAllFonts=true",
-                "-dSubsetFonts=true",
-                "-dAutoRotatePages=/None",
-                "-dColorImageDownsampleType=/Bicubic",
-                f"-dColorImageResolution={GS_PDF_DPI}",
-                "-dGrayImageDownsampleType=/Bicubic",
-                f"-dGrayImageResolution={GS_PDF_DPI}",
-                "-dMonoImageDownsampleType=/Bicubic",
-                f"-dMonoImageResolution={GS_PDF_DPI}",
-                f"-sOutputFile={tmp_out}",
-                tmp_in,
-            ],
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
+        result = _run_ghostscript(tmp_in, tmp_out)
         if result.returncode != 0:
             logger.warning("gs failed (upload): %s", result.stderr.strip())
             return data
@@ -341,32 +350,7 @@ def compress_pdf_inplace(path: str) -> int:
         with tempfile.NamedTemporaryFile(suffix=".pdf", dir=parent, delete=False) as tmp:
             tmp_path = tmp.name
 
-        result = subprocess.run(
-            [
-                "gs",
-                "-dSAFER",
-                "-sDEVICE=pdfwrite",
-                "-dCompatibilityLevel=1.4",
-                f"-dPDFSETTINGS={GS_PDF_PRESET}",
-                "-dNOPAUSE",
-                "-dQUIET",
-                "-dBATCH",
-                "-dEmbedAllFonts=true",
-                "-dSubsetFonts=true",
-                "-dAutoRotatePages=/None",
-                "-dColorImageDownsampleType=/Bicubic",
-                f"-dColorImageResolution={GS_PDF_DPI}",
-                "-dGrayImageDownsampleType=/Bicubic",
-                f"-dGrayImageResolution={GS_PDF_DPI}",
-                "-dMonoImageDownsampleType=/Bicubic",
-                f"-dMonoImageResolution={GS_PDF_DPI}",
-                f"-sOutputFile={tmp_path}",
-                path,
-            ],
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
+        result = _run_ghostscript(path, tmp_path)
         if result.returncode != 0:
             logger.warning("gs failed on %s: %s", path, result.stderr.strip())
             return 0

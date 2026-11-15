@@ -192,7 +192,6 @@ class CompanyExpenseForm(StyledFormMixin, forms.ModelForm):
                 attrs={"rows": 3, "placeholder": _("Description of the expense")}
             ),
             "amount": forms.NumberInput(attrs={"step": "0.01", "placeholder": "0.00"}),
-            "receipt": forms.ClearableFileInput(attrs={"accept": "application/pdf,image/*"}),
         }
         labels = {
             "description": _("Description"),

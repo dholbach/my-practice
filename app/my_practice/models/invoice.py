@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
-from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
+from .base import PracticeScopedManager, TimestampedModel
 from .client import Client
 from .service import ServiceType
 
@@ -77,26 +77,6 @@ class InvoiceLockedError(ValidationError):
     Enforced by pre_save/pre_delete signals (signals.py), so it holds for every
     write path — views, admin, helpers and queryset deletes alike.
     """
-
-
-class InvoiceQuerySet(PracticeScopedQuerySet):
-    """Custom QuerySet for Invoice with common access patterns."""
-
-    def with_client(self) -> "InvoiceQuerySet":
-        """Add select_related for client and practice — avoids N+1 on invoice lists."""
-        return self.select_related("client", "practice")
-
-    def with_items(self) -> "InvoiceQuerySet":
-        """Prefetch line items with their session and service type."""
-        return self.prefetch_related("items__session", "items__service_type")
-
-    def paid_in_year(self, year: int) -> "InvoiceQuerySet":
-        """Paid invoices where payment was received in *year* (uses paid_date)."""
-        return self.filter(status="paid", paid_date__year=year)
-
-    def in_year(self, year: int) -> "InvoiceQuerySet":
-        """Invoices issued in *year* (uses invoice_date)."""
-        return self.filter(invoice_date__year=year)
 
 
 class Invoice(TimestampedModel):
@@ -189,8 +169,7 @@ class Invoice(TimestampedModel):
 
     notes = models.TextField(blank=True, verbose_name=gettext_lazy("Notes"))
 
-    # Practice-scoped manager with InvoiceQuerySet helpers
-    objects = PracticeScopedManager.from_queryset(InvoiceQuerySet)()
+    objects = PracticeScopedManager()
 
     class Meta:
         ordering = ["-invoice_date", "-invoice_number"]
