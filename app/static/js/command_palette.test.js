@@ -28,6 +28,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "command_palette.js"), "utf8");
+const TYPING = fs.readFileSync(path.join(__dirname, "typing_target.js"), "utf8");
 
 // ---------------------------------------------------------------------------
 // Minimal DOM stub
@@ -285,6 +286,7 @@ function load(dom, { platform = "Linux x86_64" } = {}) {
     };
     context.globalThis = context;
     vm.createContext(context);
+    vm.runInContext(TYPING, context);
     vm.runInContext(SOURCE, context);
 
     return {

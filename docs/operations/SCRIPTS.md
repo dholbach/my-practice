@@ -161,6 +161,24 @@ sudo systemctl start my-practice-app.service            # start the app now
 - **Immutable hosts (Bluefin, Silverblue):** `/etc/systemd/system/` is writable and
   survives `rpm-ostree` updates, so the installer works unchanged.
 
+## 🧰 Other Scripts in `scripts/`
+
+Everything that is not backup or systemd. Most of these are run for you by a hook, CI or `dev.py`.
+
+| Script | Run by | What it does |
+| --- | --- | --- |
+| `check_env.py` | pre-commit | Fails on duplicate keys in `.env` and on `.env.example` placeholders marked `# CHANGE ME` that `.env` still holds |
+| `check_pii.py` | pre-commit | Blocks commits containing terms from the local denylist `.git/pii-denylist`; `python3 scripts/check_pii.py --all` scans the whole tree (see [SECURITY.md](SECURITY.md)) |
+| `check_requirements_sync.py` | pre-commit, CI, `dev.py lint` | Fails when a pin in `requirements.txt` is missing from `requirements-dev.txt` or differs in version |
+| `check_shared_helpers.py` | pre-commit, CI, `dev.py lint` | Fails when the helpers deliberately duplicated in `dev.py` and `prod.py` drift apart |
+| `ci_docs_only.sh` | CI | Writes `code=true\|false` to `$GITHUB_OUTPUT` so jobs can skip expensive steps on docs-only changes ([ADR-0005](../decisions/ADR-0005-ci-docs-only-short-circuit.md)) |
+| `codebase_metrics.py` | by hand, `dev.py review` | Month-by-month code and commit history from git, written to `docs/development/`; `--largest` lists files of 500+ lines |
+| `create_default_tags.py` | by hand | Creates the standard client tags: `./dev.py run scripts/create_default_tags.py` ([CLIENT_TAGGING.md](../guides/CLIENT_TAGGING.md)) |
+| `check_bank_duplicates.py` | by hand | Lists bank transactions that share practice, date, amount, reference and payer IBAN: `./dev.py run scripts/check_bank_duplicates.py` |
+| `report_monthly_sessions.py` | by hand | Prints a table of therapist hours, billing hours, paid revenue and capacity hours per month: `./dev.py run scripts/report_monthly_sessions.py` |
+| `cleanup_test_db.py` | by hand | Terminates connections to the test database and drops it, for a test run that died halfway |
+| `browser_contrast_tester.js` | by hand | Paste into the browser console to flag low-contrast text in the dark theme |
+
 ## 📤 External Backups
 
 The system creates backups in `$MY_PRACTICE_DATA_DIR/backups/` (outside the repository).

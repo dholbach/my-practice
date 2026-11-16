@@ -68,13 +68,6 @@
         return palette !== null && !palette.hidden;
     }
 
-    function isTyping(target) {
-        if (!target || !target.tagName) return false;
-        const tag = target.tagName.toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
-        return Boolean(target.isContentEditable);
-    }
-
     function clearSelection() {
         selectedIndex = -1;
         staticItems.concat(resultItems).forEach(function (item) {
@@ -316,7 +309,7 @@
         // "/" kept as an alias: it focused the old header search box, and that
         // is the muscle memory this palette inherits.
         if (event.key === '/' && !event.metaKey && !event.ctrlKey && !event.altKey) {
-            if (isOpen() || isTyping(event.target)) return;
+            if (isOpen() || window.MPTyping.isTyping(event.target)) return;
             event.preventDefault();
             open();
         }
