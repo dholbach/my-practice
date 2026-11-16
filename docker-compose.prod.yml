@@ -15,15 +15,52 @@ services:
       timeout: 5s
       retries: 5
 
+  # One-shot, before django starts: hands it the volumes and data directories that
+  # earlier root containers (and Docker, for a missing bind source) left behind.
+  # The only service here that can change ownership. It has no network.
+  fix-ownership:
+    image: ghcr.io/dholbach/my-practice:v0.13.1
+    restart: "no"
+    network_mode: none
+    user: "0:0"
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - static_data:/app/staticfiles
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/media:/app/media
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/documents:/my-practice-data/documents
+      - ${MY_PRACTICE_DATA_DIR:-../my-practice-data}/questionnaires:/my-practice-data/questionnaires
+    command:
+      - sh
+      - -c
+      - >-
+        find /app/staticfiles /app/media /my-practice-data ! -user ${MY_PRACTICE_UID:-1000} -exec chown -h ${MY_PRACTICE_UID:-1000} {} + &&
+        find /app/staticfiles /app/media /my-practice-data ! -group ${MY_PRACTICE_GID:-1000} -exec chgrp -h ${MY_PRACTICE_GID:-1000} {} +
+
   django:
     image: ghcr.io/dholbach/my-practice:v0.13.1
     container_name: my-practice-django
     restart: unless-stopped
+    # Parses uploads (Ghostscript, Pillow) next to real data: no root, no
+    # capabilities, no way to regain them.
+    user: "${MY_PRACTICE_UID:-1000}:${MY_PRACTICE_GID:-1000}"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     ports:
       # Loopback unless .env says otherwise (MY_PRACTICE_BIND_ADDRESS) — see
       # "Network exposure" in docs/operations/SECURITY.md.
       - "${MY_PRACTICE_BIND_ADDRESS:-127.0.0.1}:8000:8000"
     environment:
+      # This UID has no passwd entry, so nothing else gives it a writable home
+      # (fontconfig writes its cache there).
+      - HOME=/tmp
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_DEBUG=False
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
@@ -64,6 +101,8 @@ services:
       retries: 24
       start_period: 10s
     depends_on:
+      fix-ownership:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     command: >

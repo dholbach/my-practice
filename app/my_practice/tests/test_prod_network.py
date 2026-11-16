@@ -62,6 +62,19 @@ class ComposeBindAddressTests(SimpleTestCase):
         for service in ("django", "tailwind"):
             self.assertRegex(compose, rf"(?m)^  {service}:\n    <<: \*unprivileged$")
 
+    def test_prod_django_runs_unprivileged(self):
+        compose = (REPO_ROOT / "docker-compose.prod.yml").read_text()
+        service = re.search(r"(?ms)^  django:\n(.*?)^  \S|^  django:\n(.*)\Z", compose).group(0)
+        self.assertIn('user: "${MY_PRACTICE_UID:-1000}:${MY_PRACTICE_GID:-1000}"', service)
+        self.assertIn("cap_drop:\n      - ALL", service)
+        self.assertIn("no-new-privileges:true", service)
+
+    def test_prod_ownership_fix_has_no_network(self):
+        compose = (REPO_ROOT / "docker-compose.prod.yml").read_text()
+        service = re.search(r"(?ms)^  fix-ownership:\n(.*?)^  django:", compose).group(1)
+        self.assertIn("network_mode: none", service)
+        self.assertIn("cap_drop:\n      - ALL", service)
+
     def test_ownership_fix_has_no_network(self):
         compose = (REPO_ROOT / "docker-compose.yml").read_text()
         service = re.search(r"(?ms)^  fix-ownership:\n(.*?)^  django:", compose).group(1)
