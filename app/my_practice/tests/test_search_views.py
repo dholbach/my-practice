@@ -9,7 +9,6 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import (
-    Client,
     ClientInquiry,
     InquirySource,
     InquiryStatus,
@@ -17,6 +16,7 @@ from ..models import (
     Practice,
     UserPractice,
 )
+from .test_helpers import create_test_client
 
 
 def _display(result):
@@ -37,13 +37,7 @@ def _setup_practice(slug, username):
 
 
 def _make_client(practice, code, name="Max Mustermann", active=True):
-    return Client.objects.create(
-        client_code=code,
-        full_name=name,
-        email=f"{code.lower()}@example.com",
-        active=active,
-        practice=practice,
-    )
+    return create_test_client(practice, code, name, active=active)
 
 
 def _make_invoice(client, number="INV-001"):

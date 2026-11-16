@@ -8,29 +8,20 @@ from django.test import Client as TestClient
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
+from ..models import Invoice, InvoiceItem, ServiceType, Session, UserPractice
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
+from .test_helpers import create_test_client, create_test_practice
 
 TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
 
 
 def _make_practice(slug="gebueh-test"):
-    return Practice.objects.create(
-        name="Test Practice",
-        slug=slug,
-        title="Heilpraktikerin für Psychotherapie",
-        email="test@example.com",
-        city="Berlin",
-    )
+    return create_test_practice(slug=slug, title="Heilpraktikerin für Psychotherapie")
 
 
 def _make_client(practice, code="TS", needs_gebueh=True):
-    return Client.objects.create(
-        client_code=code,
-        full_name="Test Mustermann",
-        practice=practice,
-        hourly_rate_60=Decimal("90.00"),
-        needs_gebueh_invoice=needs_gebueh,
+    return create_test_client(
+        practice, code, full_name="Test Mustermann", needs_gebueh_invoice=needs_gebueh
     )
 
 
