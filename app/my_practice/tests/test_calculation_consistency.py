@@ -24,8 +24,9 @@ from my_practice.utils import count_sessions
 from my_practice.utils.analytics_utils import ClientAnalyzer
 from my_practice.utils.capacity_helpers import _get_booked_hours
 from my_practice.utils.chart_helpers import aggregate_invoice_items_by_month
-from my_practice.utils.heatmap_utils import get_sessions_for_month
 from my_practice.utils.revenue_helpers import RevenueCalculator
+
+from .test_helpers import heatmap_month_clients
 
 
 class SessionCountConsistencyTests(TestCase):
@@ -173,7 +174,7 @@ class SessionCountConsistencyTests(TestCase):
             total=Decimal("180.00"),
         )
 
-        sessions = get_sessions_for_month(date(2026, 1, 1), practice=self.practice)
+        sessions = heatmap_month_clients(date(2026, 1, 1), practice=self.practice)
         self.assertIn("TEST", sessions)
         self.assertEqual(sessions["TEST"], 2.0)
 
@@ -296,9 +297,7 @@ class RevenueConsistencyTests(TestCase):
 
     def test_revenue_calculator_year_revenue(self):
         """Test RevenueCalculator.get_year_revenue()."""
-        year_stats = RevenueCalculator.get_year_revenue(
-            2025, use_paid_date=True, practice=self.practice
-        )
+        year_stats = RevenueCalculator.get_year_revenue(2025, practice=self.practice)
         self.assertEqual(year_stats["total"], Decimal("280.00"))
 
     def test_client_analyzer_top_by_revenue(self):
@@ -322,9 +321,7 @@ class RevenueConsistencyTests(TestCase):
         sum_of_clients = c1_revenue + c2_revenue
 
         # Method 3: Year revenue
-        year_revenue = RevenueCalculator.get_year_revenue(
-            2025, use_paid_date=True, practice=self.practice
-        )["total"]
+        year_revenue = RevenueCalculator.get_year_revenue(2025, practice=self.practice)["total"]
 
         # All should be equal
         self.assertEqual(total_revenue, Decimal("280.00"))

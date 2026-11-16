@@ -523,8 +523,7 @@ Always use RevenueCalculator methods for consistent date filtering:
 # Good - Use RevenueCalculator
 from my_practice.utils import RevenueCalculator
 year_stats = RevenueCalculator.get_year_revenue(
-    2026,
-    use_paid_date=True,  # Use invoice.paid_date instead of invoice_date
+    2026,  # counted by invoice.paid_date
     practice=request.current_practice,
 )
 revenue = year_stats["total"]

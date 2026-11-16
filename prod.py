@@ -177,6 +177,17 @@ def _read_env():
     return env
 
 
+# .env.example marks every value that must be replaced with this trailing comment.
+# _read_env keeps inline comments, so a .env copied from the example still carries it.
+PLACEHOLDER_MARKER = "# CHANGE ME"
+
+
+def _secret_unset(env: dict, key: str) -> bool:
+    """True when `key` is absent, empty, or still holds its .env.example placeholder."""
+    value = env.get(key, "")
+    return not value or PLACEHOLDER_MARKER in value
+
+
 def _write_env(env: dict):
     """Write env dict to .env, preserving existing comments if file exists."""
     existing_lines = []
@@ -303,15 +314,15 @@ def cmd_setup(args):
     env = _read_env()
     added = []
 
-    if not env.get("DJANGO_SECRET_KEY"):
+    if _secret_unset(env, "DJANGO_SECRET_KEY"):
         env["DJANGO_SECRET_KEY"] = secrets.token_urlsafe(50)
         added.append("DJANGO_SECRET_KEY")
 
-    if not env.get("POSTGRES_PASSWORD"):
+    if _secret_unset(env, "POSTGRES_PASSWORD"):
         env["POSTGRES_PASSWORD"] = secrets.token_urlsafe(32)
         added.append("POSTGRES_PASSWORD")
 
-    if not env.get("FERNET_KEY"):
+    if _secret_unset(env, "FERNET_KEY"):
         print("  Generating FERNET_KEY (uses the Docker image — takes a moment)...")
         env["FERNET_KEY"] = _generate_fernet_key()
         added.append("FERNET_KEY")
@@ -423,7 +434,7 @@ def _require_secrets():
             "  FERNET_KEY must match the original or encrypted clinical notes cannot be read."
         )
     env = _read_env()
-    missing = [key for key in REQUIRED_SECRETS if not env.get(key)]
+    missing = [key for key in REQUIRED_SECRETS if _secret_unset(env, key)]
     if missing:
         abort(
             f".env is missing required secrets: {', '.join(missing)}\n"

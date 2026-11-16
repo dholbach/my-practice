@@ -64,7 +64,6 @@
                     {% for month in heatmap_data %}
                     {% with client_hours=month.clients|dict_get:client.code|default:0 %}
                     <div class="heatmap-cell data-cell {% if client_hours > 0 %}has-activity{% if client_hours >= 4 %} high-activity{% elif client_hours >= 2 %} medium-activity{% else %} low-activity{% endif %}{% endif %}"
-                         data-hours="{{ client_hours }}"
                          title="{{ client.code }}: {{ client_hours }}h in {{ month.month }}">
                         {% if client_hours > 0 %}
                         <span class="hours-label">{{ client_hours|format_hours }}</span>

@@ -40,7 +40,6 @@ CSS_PATH = Path(settings.BASE_DIR) / "static" / "css" / "tailwind.css"
 ALLOWED_UNDEFINED_TOKENS = {
     "--card-bg",  # var(--card-bg, var(--color-bg-secondary))
     "--bg-hover",  # var(--bg-hover, var(--color-bg-primary))
-    "--color-primary-soft",  # var(--color-primary-soft, color-mix(...))
     "--year-text",  # set per .year-<n> rule, with a #fff fallback
 }
 

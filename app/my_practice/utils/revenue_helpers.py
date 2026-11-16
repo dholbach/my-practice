@@ -252,23 +252,21 @@ class RevenueCalculator:
     @staticmethod
     def get_revenue_stats(
         filters: dict[str, Any] | None = None,
-        include_avg: bool = True,
         *,
         practice: PracticeScope,
     ) -> dict[str, Any]:
         """
-        Get comprehensive revenue statistics (total, count, optional avg).
+        Get comprehensive revenue statistics (total, count, avg).
 
         Args:
             filters: dict of additional filter kwargs
-            include_avg: whether to include average calculation
             practice: Practice to scope the query to (None gives nothing)
 
         Returns:
             dict: {
                 'total': Decimal,
                 'count': int,
-                'avg': Decimal (if include_avg=True)
+                'avg': Decimal
             }
 
         Example:
@@ -279,36 +277,27 @@ class RevenueCalculator:
         if filters:
             qs = qs.filter(**filters)
 
-        aggregations = {
-            "revenue_total": Sum("total"),
-            "invoice_count": Count("id"),
-        }
-
-        if include_avg:
-            aggregations["revenue_avg"] = Avg("total")
-
-        stats = qs.aggregate(**aggregations)
+        stats = qs.aggregate(
+            revenue_total=Sum("total"),
+            invoice_count=Count("id"),
+            revenue_avg=Avg("total"),
+        )
 
         return {
             "total": (
                 stats["revenue_total"] if stats["revenue_total"] is not None else Decimal("0")
             ),
             "count": stats["invoice_count"] or 0,
-            "avg": (
-                stats.get("revenue_avg") if stats.get("revenue_avg") is not None else Decimal("0")
-            ),
+            "avg": (stats["revenue_avg"] if stats["revenue_avg"] is not None else Decimal("0")),
         }
 
     @staticmethod
-    def get_year_revenue(
-        year: int, use_paid_date: bool = True, *, practice: PracticeScope
-    ) -> dict[str, Any]:
+    def get_year_revenue(year: int, *, practice: PracticeScope) -> dict[str, Any]:
         """
-        Get revenue statistics for a specific year.
+        Get revenue statistics for a specific year, by paid date.
 
         Args:
             year: int year (e.g., 2025)
-            use_paid_date: if True, use paid_date; if False, use invoice_date
             practice: Practice instance for multi-practice filtering
 
         Returns:
@@ -326,10 +315,7 @@ class RevenueCalculator:
 
         qs = scope_to_practice(qs, practice)
 
-        if use_paid_date:
-            qs = qs.filter(RevenueCalculator.build_paid_date_filter(year))
-        else:
-            qs = qs.filter(invoice_date__year=year)
+        qs = qs.filter(RevenueCalculator.build_paid_date_filter(year))
 
         stats = qs.aggregate(
             revenue_total=Sum("total"),
@@ -349,17 +335,15 @@ class RevenueCalculator:
     def get_month_revenue(
         year: int,
         month: int,
-        use_paid_date: bool = True,
         *,
         practice: PracticeScope,
     ) -> dict[str, Any]:
         """
-        Get revenue statistics for a specific month.
+        Get revenue statistics for a specific month, by paid date.
 
         Args:
             year: int year (e.g., 2025)
             month: int month (1-12)
-            use_paid_date: if True, use paid_date; if False, use invoice_date
             practice: Practice instance for multi-practice filtering
 
         Returns:
@@ -377,10 +361,7 @@ class RevenueCalculator:
 
         qs = scope_to_practice(qs, practice)
 
-        if use_paid_date:
-            qs = qs.filter(RevenueCalculator.build_paid_date_filter(year, month))
-        else:
-            qs = qs.filter(invoice_date__year=year, invoice_date__month=month)
+        qs = qs.filter(RevenueCalculator.build_paid_date_filter(year, month))
 
         stats = qs.aggregate(
             revenue_total=Sum("total"),

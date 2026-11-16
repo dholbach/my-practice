@@ -5,7 +5,7 @@ partial response of the complete-toggle checkbox (targets this row only, so
 a just-completed task stays visible — struck through, still checked — as
 an in-place undo affordance instead of vanishing on the next full swap.
 {% endcomment %}
-<div class="todo-item {% if task.is_completed %}completed{% endif %} {% if task.is_overdue %}overdue{% endif %}" data-task-id="{{ task.pk }}">
+<div class="todo-item {% if task.is_completed %}completed{% endif %} {% if task.is_overdue %}overdue{% endif %}">
     <input type="checkbox"
            class="todo-checkbox"
            {% if task.is_completed %}checked{% endif %}

@@ -123,7 +123,7 @@ console.log("invoice_items.js");
     };
     vm.runInNewContext(SOURCE, { document: sourceDocument, console, Event: class {}, Date, Array, RegExp, parseInt, JSON });
     page.addButton.listeners.click();
-    check("add item renumbers the clone's fields", clone.html === 'name="items-2-note"' && clone.attrs["data-form-index"] === 2);
+    check("add item renumbers the clone's fields", clone.html === 'name="items-2-note"');
     check("add item clears values and resets the duration to 60", fields[1].value === "" && fields[0].value === "60" && fields[2].checked === false);
     check("add item labels it with the next number", strong.textContent === "Item 3");
     check("edit: the clone has no delete label and is appended", clone.removedLabel && container.appended === clone);

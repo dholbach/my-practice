@@ -122,7 +122,6 @@
         const newItem = template.cloneNode(true);
         newItem.classList.remove("deleted");
         newItem.innerHTML = newItem.innerHTML.replace(new RegExp("items-(\\d+)-", "g"), "items-" + formNum + "-");
-        if (isEdit) newItem.setAttribute("data-form-index", formNum);
 
         newItem.querySelectorAll("input, select, textarea").forEach(function (field) {
             if (field.type === "checkbox") {

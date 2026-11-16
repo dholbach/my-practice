@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load payment_tags %}
-{% load static i18n %}
+{% load i18n %}
 
 {% block title %}{% blocktrans with month=billing_month|date:"F Y" %}Billing {{ month }}{% endblocktrans %}{% endblock %}
 {% block page_icon %}📅{% endblock %}

@@ -53,9 +53,7 @@ class DashboardContextAssembler:
         total_invoices = Invoice.objects.for_current_practice(self.request).count()
         total_revenue = RevenueCalculator.get_total_revenue(practice=practice)
 
-        year_stats = RevenueCalculator.get_year_revenue(
-            current_year, use_paid_date=True, practice=practice
-        )
+        year_stats = RevenueCalculator.get_year_revenue(current_year, practice=practice)
         month_stats_now = RevenueCalculator.get_month_revenue(
             current_year, current_month, practice=practice
         )
@@ -169,9 +167,9 @@ class DashboardContextAssembler:
             practice_stats.extend(
                 {
                     "practice": p,
-                    "revenue": RevenueCalculator.get_year_revenue(
-                        current_year, use_paid_date=True, practice=p
-                    )["total"],
+                    "revenue": RevenueCalculator.get_year_revenue(current_year, practice=p)[
+                        "total"
+                    ],
                     "invoice_count": Invoice.objects.filter(
                         practice=p, invoice_date__year=current_year
                     ).count(),

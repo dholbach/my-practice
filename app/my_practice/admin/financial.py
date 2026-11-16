@@ -1,7 +1,6 @@
 """Admin configuration for CompanyWithdrawal and CompanyExpense."""
 
 from django.contrib import admin, messages
-from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy, ngettext
 
@@ -21,23 +20,6 @@ class CompanyWithdrawalAdmin(admin.ModelAdmin):
         (gettext_lazy("Withdrawal"), {"fields": ("date", "amount", "category", "practice")}),
         (gettext_lazy("Details"), {"fields": ("description",)}),
     )
-
-    actions = ["mark_as_tax_year"]
-
-    @admin.action(description=gettext_lazy("Flag for current tax year"))
-    def mark_as_tax_year(self, request, queryset):
-        current_year = timezone.localdate().year
-        updated = queryset.filter(date__year=current_year).count()
-        self.message_user(
-            request,
-            ngettext(
-                "%(count)s withdrawal found for tax year %(year)s.",
-                "%(count)s withdrawals found for tax year %(year)s.",
-                updated,
-            )
-            % {"count": updated, "year": current_year},
-            messages.SUCCESS,
-        )
 
     @admin.display(description=gettext_lazy("Notes"))
     def description_short(self, obj):

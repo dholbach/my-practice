@@ -15,16 +15,16 @@ class InvoiceEmailForm(StyledFormMixin, forms.Form):
     """Form for customizing invoice email content before sending."""
 
     recipient = forms.EmailField(
-        label="To",
+        label=_("Recipient"),
         widget=forms.EmailInput(),
     )
     subject = forms.CharField(
-        label="Subject",
+        label=_("Subject"),
         max_length=200,
         widget=forms.TextInput(),
     )
     body = forms.CharField(
-        label="Message",
+        label=_("Message"),
         widget=forms.Textarea(attrs={"rows": 12}),
     )
 

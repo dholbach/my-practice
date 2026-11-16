@@ -94,9 +94,7 @@ class TaxYearContextBuilder:
             .select_related("client")
             .order_by("paid_date", "invoice_date")
         )
-        year_stats = RevenueCalculator.get_year_revenue(
-            self.year, use_paid_date=True, practice=self.practice
-        )
+        year_stats = RevenueCalculator.get_year_revenue(self.year, practice=self.practice)
 
         monthly_revenue: dict[str, dict[str, Any]] = {}
         for invoice in paid_invoices:
@@ -204,9 +202,7 @@ class TaxYearContextBuilder:
         total_revenue_all = Decimal("0")
         this_revenue = Decimal("0")
         for p in active_practices:
-            rev = RevenueCalculator.get_year_revenue(self.year, use_paid_date=True, practice=p)[
-                "total"
-            ]
+            rev = RevenueCalculator.get_year_revenue(self.year, practice=p)["total"]
             total_revenue_all += rev
             if p.pk == self.practice.pk:
                 this_revenue = rev

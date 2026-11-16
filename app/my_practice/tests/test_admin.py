@@ -238,6 +238,20 @@ class RemainingAdminConfigTestCase(TestCase):
         self.assertIn("matched_invoice_link", admin_instance.list_display)
         self.assertIn("match_confidence", admin_instance.list_filter)
 
+    def test_confidence_badge_distinguishes_every_state(self):
+        # A state missing from the style map used to fall back to the red
+        # "unmatched" style, so auto-created rows looked unmatched.
+        admin_instance = BankTransactionAdmin(BankTransaction, self.site)
+        unmatched = admin_instance.confidence_badge(
+            BankTransaction(match_confidence=BankTransaction.Confidence.UNMATCHED)
+        )
+        for state in BankTransaction.Confidence:
+            if state == BankTransaction.Confidence.UNMATCHED:
+                continue
+            with self.subTest(state=state):
+                badge = admin_instance.confidence_badge(BankTransaction(match_confidence=state))
+                self.assertNotEqual(badge.split(";")[0], unmatched.split(";")[0])
+
     def test_session_admin_registered(self):
         admin_instance = SessionAdmin(Session, self.site)
         self.assertIn("client", admin_instance.list_display)
