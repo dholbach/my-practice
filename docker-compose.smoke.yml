@@ -3,9 +3,11 @@
 #
 # Differences from docker-compose.prod.yml, on purpose:
 # - image tag comes from ${SMOKE_VERSION} (set by dev.py)
-# - no container_name, and the only named volume is static_data → runs alongside the dev stack;
+# - no container_name, and only throwaway named volumes (static, media, documents,
+#   questionnaires) → runs alongside the dev stack;
 #   `down -v` under the smoke project name removes every trace
-# - no host bind mounts (backups/media/documents) — nothing touches real data
+# - no host bind mounts (backups/media/documents) — the data directories are
+#   named volumes, so uploads work but nothing touches real data
 # - ephemeral localhost port instead of 8000
 services:
   postgres:
@@ -34,7 +36,10 @@ services:
       - no-new-privileges:true
     volumes:
       - static_data:/app/staticfiles
-    command: chown 1000:1000 /app/staticfiles
+      - media:/app/media
+      - documents:/my-practice-data/documents
+      - questionnaires:/my-practice-data/questionnaires
+    command: chown 1000:1000 /app/staticfiles /app/media /my-practice-data/documents /my-practice-data/questionnaires
 
   django:
     image: ghcr.io/dholbach/my-practice:${SMOKE_VERSION}
@@ -45,6 +50,9 @@ services:
       - no-new-privileges:true
     volumes:
       - static_data:/app/staticfiles
+      - media:/app/media
+      - documents:/my-practice-data/documents
+      - questionnaires:/my-practice-data/questionnaires
     ports:
       - "127.0.0.1::8000"
     environment:
@@ -77,3 +85,6 @@ services:
 
 volumes:
   static_data:
+  media:
+  documents:
+  questionnaires:
