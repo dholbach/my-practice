@@ -122,6 +122,7 @@ app/my_practice/
 │   ├── practice_helpers.py         # Practice-scoped query helpers
 │   ├── questionnaire_content.py    # Loader for clinical questionnaire content (P-118/119/120)
 │   ├── revenue_helpers.py          # RevenueCalculator
+│   ├── bank_review_helpers.py      # Bank review page: invoice matches per transaction, known payers
 │   ├── session_log_helpers.py      # parse_duration(), find_or_create_session(),
 │   │                               #   set_session_duration() (frozen once billed)
 │   ├── tag_helpers.py              # Tag sorting + category helpers
@@ -228,7 +229,7 @@ Weekly capacity is no longer hard-coded at 2023-08-01. The `CapacityPeriod` mode
 | `clinical_views.py` | SessionLog, Notes, Supervision, triage | Fernet encryption for notes/sessions |
 | `calendar_views.py` | Google Calendar OAuth + event approval | `CalendarImportProcessor`; `resolve_session_rate` |
 | `email_views.py` | Email compose + send | `BaseClientEmailView` base class; 5 concrete views |
-| `bank_import_views.py` | CSV import + manual review | `_fetch_invoice_maps()` batch helper; stored `total` |
+| `bank_import_views.py` | CSV import + manual review | `utils/bank_review_helpers.py` (invoice matches per transaction); stored `total` |
 | `tax_views.py` | Tax summary, quarters, workday audit | `TaxYearContextBuilder`; `available_data_years()` |
 | `analytics_views.py` | Revenue & session analytics | `AnalyticsDashboardBuilder` |
 | `inquiry_views.py` | Lead pipeline | Inquiry list, convert flow, email templates (funnel analytics: `utils/inquiry_analytics.py`) |

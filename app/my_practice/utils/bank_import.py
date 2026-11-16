@@ -24,6 +24,15 @@ from ..models import (
     Invoice,
 )
 
+# Bank amounts and invoice totals are compared to the cent: a difference below this
+# counts as the same amount, anything from it upwards as a different one.
+AMOUNT_TOLERANCE = Decimal("0.01")
+
+
+def amounts_match(first: Decimal, second: Decimal) -> bool:
+    """True if two amounts are the same to the cent (the importer's exact-match rule)."""
+    return abs(first - second) < AMOUNT_TOLERANCE
+
 
 class BankStatementImporter:
     """
@@ -230,7 +239,7 @@ class BankStatementImporter:
             invoice_total = invoice.calculate_total()
 
             # Require exact amount match (no tolerance)
-            if abs(invoice_total - amount) >= Decimal("0.01"):
+            if not amounts_match(invoice_total, amount):
                 return None
 
             # Direct match
