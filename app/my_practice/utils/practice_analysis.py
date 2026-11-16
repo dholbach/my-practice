@@ -165,7 +165,7 @@ class PracticeAnalyzer:
             Invoice.objects.filter(
                 RevenueCalculator.build_paid_date_range_filter(self.start_date, self.end_date),
                 client=OuterRef("pk"),
-                status="paid",
+                status=Invoice.Status.PAID,
             )
             .values("client")
             .annotate(total=Sum("total"))

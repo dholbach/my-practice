@@ -130,7 +130,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     # otherwise the list and detail pages keep showing a payment that isn't one.
     @admin.action(description=gettext_lazy("Mark as sent"))
     def mark_as_sent(self, request, queryset):
-        updated = queryset.update(status="sent", paid_date=None)
+        updated = queryset.update(status=Invoice.Status.SENT, paid_date=None)
         self.message_user(
             request,
             ngettext(
@@ -157,7 +157,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 
     @admin.action(description=gettext_lazy("Mark as cancelled"))
     def mark_as_cancelled(self, request, queryset):
-        updated = queryset.update(status="cancelled", paid_date=None)
+        updated = queryset.update(status=Invoice.Status.CANCELLED, paid_date=None)
         self.message_user(
             request,
             ngettext(

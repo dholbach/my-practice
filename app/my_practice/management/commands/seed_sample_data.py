@@ -720,23 +720,24 @@ class Command(BaseCommand):
         months_old: int,
         invoice_date: date,
         rng: random.Random,
-    ) -> tuple[str, date | None]:
+    ) -> tuple[Invoice.Status, date | None]:
         """Return (status, paid_date) based on how old the invoice is."""
+        draft, sent, paid = Invoice.Status.DRAFT, Invoice.Status.SENT, Invoice.Status.PAID
         if months_old >= 6:
             # Old invoices: mostly paid, small chance of written-off (bad debt)
-            statuses = ["draft", "sent", "paid", "written_off"]
+            statuses = [draft, sent, paid, Invoice.Status.WRITTEN_OFF]
             weights = [3, 7, 86, 4]
         elif months_old >= 2:
-            statuses = ["draft", "sent", "paid"]
+            statuses = [draft, sent, paid]
             weights = [10, 30, 60]
         else:
-            statuses = ["draft", "sent", "paid"]
+            statuses = [draft, sent, paid]
             weights = [40, 45, 15]
 
         status = rng.choices(statuses, weights=weights)[0]
-        if status == "paid":
+        if status == paid:
             paid_date = invoice_date + timedelta(days=rng.randint(15, 45))
-            return "paid", paid_date
+            return paid, paid_date
         return status, None
 
     # ── Pending calendar events ───────────────────────────────────────────────

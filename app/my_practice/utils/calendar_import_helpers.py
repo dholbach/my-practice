@@ -276,7 +276,7 @@ def get_or_create_invoice_for_month(client: Client, date: datetime) -> Invoice:
         Invoice object (existing draft or newly created)
     """
     # Check if draft invoice exists for this client
-    existing = Invoice.objects.filter(client=client, status="draft").first()
+    existing = Invoice.objects.filter(client=client, status=Invoice.Status.DRAFT).first()
 
     if existing:
         return existing
@@ -292,7 +292,7 @@ def create_draft_invoice(client: Client, date: datetime) -> Invoice:
         client=client,
         invoice_date=first_day,
         invoice_number=invoice_number,
-        status="draft",
+        status=Invoice.Status.DRAFT,
         practice=client.practice,
     )
 

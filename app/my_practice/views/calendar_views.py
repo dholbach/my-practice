@@ -307,7 +307,7 @@ def calendar_approval_queue(request: HttpRequest) -> HttpResponse:
     client_ids = [g["client"].pk for g in grouped if g["client"] is not None]
     draft_invoices = (
         Invoice.objects.for_practice(practice)
-        .filter(client_id__in=client_ids, status="draft")
+        .filter(client_id__in=client_ids, status=Invoice.Status.DRAFT)
         .annotate(item_count=Count("items"))
         .order_by("-invoice_date")
     )
@@ -540,7 +540,7 @@ def _resolve_quick_action_invoice(action: str, client, event: "PendingCalendarEv
             client=client,
             invoice_date=event.event_date.replace(day=1),
             invoice_number=get_next_invoice_number(client),
-            status="draft",
+            status=Invoice.Status.DRAFT,
             practice=client.practice,
         )
     event_dt = dt.combine(event.event_date, event.event_time or dt.min.time())

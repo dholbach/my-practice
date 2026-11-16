@@ -700,6 +700,7 @@ grow them.
 | `test_practice_scoping.py` | No query helper defaults `practice` to `None`; no `if practice:` filters; a user without a practice sees no data |
 | `test_color_contrast.py` | Text tokens reach 4.5:1 on their backgrounds, and white text on fills, in both themes |
 | `test_csp_coverage.py` | Inline scripts carry the CSP nonce, no inline `on*=` handlers, flash messages escaped |
+| `test_invoice_status_literals.py` | An invoice status is written `Invoice.Status.X`, never as a string, in a `status=` keyword, a comparison or an assignment (Python only: templates and tests are not scanned) |
 | `test_currency_formatting.py` | Money goes through `format_currency_de` / `|currency`, never a hand-rolled `:,.2f` |
 | `test_release_guardrails.py` | No model change without its migration; the three version strings agree |
 | `test_repo_mount_masks.py` | The dev container's `/repo` mount hides `.env`, `.git` and personal notes; no secret-shaped file is readable through it (dev container only) |

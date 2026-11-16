@@ -193,7 +193,7 @@ class RevenueAnalyzer:
         start_date, end_date = _resolve_month_range(start_year, end_date, start_date)
 
         qs = (
-            Invoice.objects.filter(status="paid")
+            Invoice.objects.filter(status=Invoice.Status.PAID)
             .annotate(effective_date=Coalesce("paid_date", "invoice_date"))
             .filter(effective_date__gte=start_date, effective_date__lte=end_date)
         )
@@ -226,7 +226,7 @@ class RevenueAnalyzer:
         start = DateRangeHelper.add_months(date(today.year, today.month, 1), -(months - 1))
 
         qs = Invoice.objects.filter(
-            status="paid",
+            status=Invoice.Status.PAID,
             paid_date__isnull=False,
             paid_date__gte=start,
         ).annotate(
@@ -407,7 +407,11 @@ class SessionAnalyzer:
             # Revenue: sum item totals for paid invoices only (exclude cancellations)
             items_in_month = month_items[month_key]
             revenue = sum(
-                (item.total for item in items_in_month if item.invoice.status == "paid"),
+                (
+                    item.total
+                    for item in items_in_month
+                    if item.invoice.status == Invoice.Status.PAID
+                ),
                 Decimal("0"),
             )
             result.append(
@@ -515,8 +519,10 @@ class ClientAnalyzer:
         """
         # Get clients with revenue aggregation
         clients_qs = Client.objects.annotate(
-            total_revenue=Sum("invoices__total", filter=Q(invoices__status="paid")),
-            invoice_count=Count("invoices", filter=Q(invoices__status="paid"), distinct=True),
+            total_revenue=Sum("invoices__total", filter=Q(invoices__status=Invoice.Status.PAID)),
+            invoice_count=Count(
+                "invoices", filter=Q(invoices__status=Invoice.Status.PAID), distinct=True
+            ),
         ).filter(total_revenue__gt=0)
         clients_qs = scope_to_practice(clients_qs, practice)
         clients_with_revenue = list(clients_qs.order_by("-total_revenue")[:limit])
@@ -528,7 +534,7 @@ class ClientAnalyzer:
         # query-count test guarding this page allowed 360 queries.
         items_by_client: dict[int, list] = defaultdict(list)
         client_items = InvoiceItem.objects.filter(
-            invoice__client__in=clients_with_revenue, invoice__status="paid"
+            invoice__client__in=clients_with_revenue, invoice__status=Invoice.Status.PAID
         ).select_related("invoice", "session", "service_type")
         for item in client_items:
             items_by_client[item.invoice.client_id].append(item)

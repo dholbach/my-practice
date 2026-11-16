@@ -121,7 +121,7 @@ def revenue_report(request):
     available_years = sorted(
         set(
             Invoice.objects.for_current_practice(request)
-            .filter(status="paid")
+            .filter(status=Invoice.Status.PAID)
             .exclude(paid_date__isnull=True)
             .values_list("paid_date__year", flat=True)
             .distinct()
@@ -157,7 +157,7 @@ def revenue_report(request):
         Invoice.objects.for_current_practice(request)
         .filter(
             RevenueCalculator.build_paid_date_filter(selected_year),
-            status="paid",
+            status=Invoice.Status.PAID,
         )
         .select_related("client")  # Optimize client access (2026-01-30)
         .order_by("paid_date", "invoice_date", "invoice_number")
