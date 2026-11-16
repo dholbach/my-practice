@@ -103,6 +103,12 @@ class AnalyticsDashboardViewTest(TestCase):
         response = self.client_instance.get(reverse("analytics"))
         self.assertEqual(response.status_code, 200)
 
+    def test_analytics_dashboard_renders_every_tab(self):
+        """Each tab is its own include; a dropped include would lose a whole tab."""
+        response = self.client_instance.get(reverse("analytics"))
+        for tab in ("revenue", "clients", "capacity", "expenses"):
+            self.assertContains(response, f'id="{tab}-tab"')
+
     def test_analytics_dashboard_has_revenue_data(self):
         """Test that analytics dashboard includes revenue trends."""
         response = self.client_instance.get(reverse("analytics"))

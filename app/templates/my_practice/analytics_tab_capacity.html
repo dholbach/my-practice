@@ -1,0 +1,256 @@
+{% load i18n static payment_tags %}
+<!-- Tab Content: Capacity -->
+<div id="capacity-tab" class="tab-content {% if active_tab == 'capacity' %}active{% endif %}">
+    <h2>📊 {% trans "Capacity & Utilisation" %}</h2>
+
+    {% if practice_analysis %}
+    <!-- Insights Section -->
+    {% if practice_analysis.insights %}
+    <div class="insights-section">
+        <h2>💡 {% trans "Key Insights" %}</h2>
+        <ul class="insights-list">
+            {% for insight in practice_analysis.insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Key Metrics -->
+    <div class="analysis-header">
+        <div class="metric-card primary">
+            <div class="metric-value">{{ practice_analysis.clients.active_in_period }}</div>
+            <div class="metric-label">{% trans "Active Clients" %}</div>
+        </div>
+
+        <div class="metric-card success">
+            <div class="metric-value">{{ practice_analysis.summary.total_sessions_booked|floatformat:0 }}</div>
+            <div class="metric-label">{% trans "Booked Sessions" %}</div>
+        </div>
+
+        <div class="metric-card warning">
+            <div class="metric-value">{{ practice_analysis.capacity.capacity_percentage }}%</div>
+            <div class="metric-label">{% trans "Capacity Used" %}</div>
+            <div class="capacity-bar">
+                <div class="capacity-fill" style="width: {{ practice_analysis.capacity.capacity_percentage }}%;">
+                    {{ practice_analysis.capacity.capacity_percentage }}%
+                </div>
+            </div>
+            {% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %}
+            <div class="hint-text">
+                ℹ️ {% blocktrans with date=practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" %}Bookings until {{ date }}{% endblocktrans %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="metric-card danger">
+            <div class="metric-value">{{ practice_analysis.timeoff.total_workdays }}</div>
+            <div class="metric-label">{% trans "Days Off" %}</div>
+        </div>
+    </div>
+
+    <!-- Capacity Analysis -->
+    <div class="analytics-card mb-4">
+        <h3>📊 {% trans "Capacity Analysis" %}{% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %} ({% blocktrans with date=practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" %}until {{ date }}{% endblocktrans %}){% endif %}</h3>
+        {% if practice_analysis.capacity.is_forward_looking and practice_analysis.capacity.booking_horizon_end %}
+        <p class="hint-paragraph">
+            ℹ️ <strong>{% trans "Note:" %}</strong> {% blocktrans with date=practice_analysis.capacity.booking_horizon_end|date:"d.m.Y" %}For future-oriented periods only the period until <strong>{{ date }}</strong> (2 weeks from today) is considered, as most clients book at short notice.{% endblocktrans %}
+        </p>
+        {% endif %}
+
+        <div class="analysis-header">
+            <div class="metric-card">
+                <div class="metric-value">{{ practice_analysis.capacity.available_hours|floatformat:0 }}h</div>
+                <div class="metric-label">{% trans "Available Hours" %}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{{ practice_analysis.capacity.booked_hours|floatformat:1 }}h</div>
+                <div class="metric-label">{% trans "Booked Hours" %}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{{ practice_analysis.capacity.remaining_hours|floatformat:0 }}h</div>
+                <div class="metric-label">{% trans "Free Capacity" %}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{{ practice_analysis.capacity.working_days_available }}</div>
+                <div class="metric-label">{% trans "Working Days" %}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4-Quarter Trends -->
+    {% if practice_trends %}
+    <div class="analytics-card mb-4">
+        <h3>📈 {% trans "4-Quarter Trends" %}</h3>
+        <div class="table-container">
+            <table class="client-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Quarter" %}</th>
+                        <th class="text-center">{% trans "Capacity %" %}</th>
+                        <th class="text-center">{% trans "Clients" %}</th>
+                        <th class="text-center">{% trans "Hours" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in practice_trends %}
+                    <tr>
+                        <td>{{ q.label }}</td>
+                        <td class="text-center fw-600">{{ q.capacity_percentage }}%</td>
+                        <td class="text-center">{{ q.active_clients }}</td>
+                        <td class="text-center">{{ q.total_sessions|floatformat:0 }}h</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- TimeOff Overview -->
+    {% if practice_analysis.timeoff.entries %}
+    <div class="analytics-card">
+        <h3>🏖️ {% blocktrans with label=practice_analysis.period.label %}Time off in {{ label }}{% endblocktrans %}</h3>
+        <ul class="bare-list">
+            {% for entry in practice_analysis.timeoff.entries %}
+            <li class="timeoff-entry">
+                <span>
+                    <strong class="text-link">{{ entry.title }}</strong>
+                    <span class="text-muted"> ({{ entry.period_days|default:entry.full_days }} {% trans "Days" %})</span>
+                </span>
+                <span class="text-muted">{{ entry.period_start|date:"d.m." }} - {{ entry.period_end|date:"d.m.Y" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- TimeOff Statistics -->
+    <div class="analytics-card mb-4 mt-4">
+        <h3>🏖️ {% blocktrans with label=timeoff_label %}Time off {{ label }}{% endblocktrans %}</h3>
+        <p class="chart-subtitle">
+            {% trans "Days off in selected period" %}
+        </p>
+        <div class="analysis-header">
+            <div class="timeoff-stat">
+                <div class="timeoff-stat-value">{{ total_days_off }}</div>
+                <div class="timeoff-stat-label">{% trans "Total days" %}</div>
+            </div>
+            <div class="timeoff-stat">
+                <div class="timeoff-stat-value">{{ total_weeks_off }}</div>
+                <div class="timeoff-stat-label">{% trans "Weeks" %}</div>
+            </div>
+            <div class="timeoff-stat">
+                <div class="timeoff-stat-value">{{ total_workdays_off }}</div>
+                <div class="timeoff-stat-label">{% trans "Working days off" %}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yearly TimeOff Breakdown -->
+    {% if yearly_timeoff %}
+    <div class="analytics-card mb-4">
+        <h3>📅 {% trans "Time Off by Year" %}</h3>
+        <div class="table-container table-container--wide">
+            <table class="timeoff-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Year" %}</th>
+                        <th>{% trans "Workdays" %}</th>
+                        <th>{% trans "Wk." %}</th>
+                        <th title="{% trans "Time off" %}">🏖️</th>
+                        <th title="{% trans "Training" %}">📚</th>
+                        <th title="{% trans "Sick" %}">🤒</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in yearly_timeoff %}
+                    <tr>
+                        <td>{{ item.year }}</td>
+                        <td>{{ item.workdays }}</td>
+                        <td class="timeoff-table__muted">{{ item.total_weeks }}</td>
+                        <td class="timeoff-table__vacation">{% if item.vacation %}{{ item.vacation }}{% else %}-{% endif %}</td>
+                        <td class="timeoff-table__training">{% if item.training %}{{ item.training }}{% else %}-{% endif %}</td>
+                        <td class="timeoff-table__sick">{% if item.sick %}{{ item.sick }}{% else %}-{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Capacity Utilization Trends -->
+    <div class="analytics-card mb-4 mt-4">
+        <h3>📈 {% trans "Capacity Utilisation Over Time" %}</h3>
+        <p class="chart-subtitle">
+            {% if capacity_periods %}
+                {% trans "Monthly utilisation in % of your weekly target:" %}
+                {% for period in capacity_periods %}{% blocktrans with hours=period.hours_per_week start=period.start_date|date:"M Y" %}{{ hours }} h/week from {{ start }}{% endblocktrans %}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% else %}
+                {% trans "No weekly target set yet." %}
+                {% if request.current_practice %}<a href="{% url 'practice_edit' request.current_practice.slug %}">{% trans "Set target hours in the practice settings" %}</a>{% endif %}
+            {% endif %}
+        </p>
+
+        <div class="chart-wrapper chart-wrapper--lg">
+            <canvas id="capacityTrendsChart"></canvas>
+        </div>
+    </div>
+
+    <script type="application/json" id="capacity-trend-data">[{% for item in capacity_trends %}{"month": "{{ item.month|escapejs }}", "percentage": {{ item.capacity_percentage|js_number }}, "booked_hours": {{ item.booked_hours|js_number }}, "capacity_hours": {{ item.capacity_hours|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+
+    <!-- Cumulative year overlay chart -->
+    {% if cumulative_year_data %}
+    {{ cumulative_year_data|json_script:"cumulative-year-data" }}
+    <div class="analytics-card mt-3">
+        <h3>📈 {% trans "Year Comparison – Hours per Month" %}</h3>
+        <p class="chart-subtitle">
+            {% trans "Therapy hours per calendar month (last 4 years + average)" %}
+        </p>
+        <div class="chart-wrapper chart-wrapper--xs">
+            <canvas id="cumulativeYearsChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Seasonality -->
+    {% if seasonality_data %}
+    <div class="analytics-card mt-3">
+        <h3>🗓️ {% trans "Seasonality" %}</h3>
+        <p class="chart-subtitle">
+            {% trans "Average utilisation per calendar month (Ø over all years, incl. time off)" %}
+        </p>
+        {% with max_pct=seasonality_data|dictsort:"avg_capacity_pct"|last %}
+        <ul class="seasonality-bars">
+            {% for m in seasonality_data %}
+            <li>
+                <span class="month-label">{{ m.month_name }}</span>
+                <div class="bar-track"><div class="seasonality-bar" style="width: {{ m.avg_capacity_pct }}%;"></div></div>
+                <span class="seasonality-hours">{{ m.avg_capacity_pct }}%</span>
+                <span class="seasonality-detail">Ø {{ m.avg_booked_hours }}h / {{ m.avg_capacity_hours }}h</span>
+                <span class="seasonality-years">({{ m.years_count }}×)</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endwith %}
+    </div>
+    {% endif %}
+
+    <!-- Cancellation Rate Trend -->
+    {% if cancellation_trends %}
+    {{ cancellation_trends|json_script:"cancellation-trends-data" }}
+    <div class="analytics-card mt-3">
+        <h3>❌ {% trans "Cancellation Rate" %}</h3>
+        <p class="chart-subtitle">
+            {% trans "Cancelled sessions in % of all sessions per month" %}
+            ({% blocktrans with start=cancellation_trends.0.date|date:"F Y" %}since {{ start }}, not counting cancellations during your own time off{% endblocktrans %})
+        </p>
+        <div class="chart-wrapper chart-wrapper--sm">
+            <canvas id="cancellationTrendsChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+</div>

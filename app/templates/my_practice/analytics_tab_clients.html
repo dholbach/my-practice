@@ -1,0 +1,147 @@
+{% load i18n static payment_tags %}
+<!-- Tab Content: Clients -->
+<div id="clients-tab" class="tab-content {% if active_tab == 'clients' %}active{% endif %}">
+    <h2>👥 {% trans "Client overview" %}</h2>
+
+    <!-- Top Clients by Revenue -->
+    <div class="analytics-card mb-4">
+        <h3>👑 {% trans "Top 10 Clients by Revenue" %}</h3>
+        {% if top_clients %}
+        <div class="table-container">
+            <table class="client-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Rank" %}</th>
+                        <th>{% trans "Code" %}</th>
+                        <th>{% trans "Invoices" %}</th>
+                        <th>{% trans "Hours" %}</th>
+                        <th class="text-right">{% trans "Total revenue" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client_data in top_clients %}
+                    <tr>
+                        <td class="rank">#{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{% url 'client_detail' client_data.client.id %}" class="client-code link-plain">
+                                {{ client_data.client.client_code }}
+                            </a>
+                        </td>
+                        <td class="text-link">{{ client_data.invoice_count }}</td>
+                        <td class="text-link">{{ client_data.session_hours }}h</td>
+                        <td class="revenue-amount text-right fw-700">{{ client_data.total_revenue|currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">{% trans "No revenue data available" %}</p>
+        {% endif %}
+    </div>
+
+    {% if practice_analysis %}
+    <!-- Client Classification Table -->
+    <div class="analytics-card mb-4">
+        <h3>📋 {% blocktrans with label=practice_analysis.period.label %}Client Details ({{ label }}){% endblocktrans %}</h3>
+
+        {% if practice_analysis.clients.list %}
+        <div class="toggle-section mb-2">
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-dormant">
+                <span>{% trans "Show dormant clients" %}</span>
+            </label>
+        </div>
+
+        <div class="table-container table-container--wide">
+            <table class="client-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Code" %}</th>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Sessions (period)" %}</th>
+                        <th>{% trans "Total Sessions" %}</th>
+                        <th>{% trans "Type" %}</th>
+                        <th>{% trans "Invoices" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in practice_analysis.clients.list %}
+                    <tr data-client-status="{{ client.classification }}">
+                        <td class="client-code">{{ client.client_code }}</td>
+                        <td>
+                            <a href="{% url 'client_detail' client.client.id %}">
+                                <span class="sensitive-data">{{ client.client_name }}</span>
+                            </a>
+                        </td>
+                        <td>
+                            {% if client.classification == 'probatoric' %}
+                                <span class="badge badge-probatoric">{% trans "Probatoric" %}</span>
+                            {% elif client.classification == 'active' %}
+                                <span class="badge badge-active">{% trans "Active" %}</span>
+                            {% elif client.classification == 'established' %}
+                                <span class="badge badge-established">{% trans "Established" %}</span>
+                            {% elif client.classification == 'dormant' %}
+                                <span class="badge badge-dormant">{% trans "Dormant" %}</span>
+                            {% endif %}
+                        </td>
+                        <td class="font-weight-600">{{ client.sessions_in_period|floatformat:1 }}h</td>
+                        <td>{{ client.sessions_total|floatformat:1 }}h</td>
+                        <td>
+                            {% if client.is_online %}
+                                <span class="badge badge-online">{% trans "💻 Online" %}</span>
+                            {% else %}
+                                <span class="text-muted">{% trans "In-person" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ client.invoices_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">{% trans "No client data for this period." %}</p>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+    <!-- Session Type Distribution -->
+    <div class="analytics-card">
+        <h3>🎯 {% trans "Session Type Distribution" %}</h3>
+        {% if session_distribution.total > 0 %}
+        <div class="text-center mb-3">
+            <div class="stat-display__value">
+                {{ session_distribution.total }}
+            </div>
+            <div class="stat-display__label">
+                {% trans "Total sessions" %}
+            </div>
+        </div>
+
+        <ul class="session-types-list">
+            {% for type_name, data in session_distribution.types.items %}
+            <li>
+                <span class="text-link">
+                    <span class="type-indicator {% cycle 'chart-dot-1' 'chart-dot-2' 'chart-dot-3' 'chart-dot-4' %}"></span>
+                    {{ type_name }}
+                </span>
+                <span>
+                    <strong class="text-link">{{ data.count }}</strong>
+                    <span class="stat-note">({{ data.percentage }}%)</span>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">{% trans "No session data available" %}</p>
+        {% endif %}
+    </div>
+
+    <!-- Session activity heatmap -->
+    {% with heatmap_url_prefix="tab=clients&period="|add:selected_period|add:"&" %}
+    {% include 'includes/heatmap.html' with heatmap_url_prefix=heatmap_url_prefix %}
+    {% endwith %}
+</div>
