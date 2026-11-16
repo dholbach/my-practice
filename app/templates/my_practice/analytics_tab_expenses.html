@@ -1,0 +1,60 @@
+{% load i18n static payment_tags %}
+<!-- Tab Content: Expenses -->
+<div id="expenses-tab" class="tab-content {% if active_tab == 'expenses' %}active{% endif %}">
+    <h2>💸 {% trans "Expense Overview" %}</h2>
+
+    <!-- Quick Actions -->
+    <div class="tab-actions">
+        <a href="{% url 'expense_list' %}" class="btn btn-secondary btn-sm">
+            💸 {% trans "Manage Expenses" %}
+        </a>
+        <a href="{% url 'withdrawal_list' %}" class="btn btn-secondary btn-sm">
+            💰 {% trans "Manage Withdrawals" %}
+        </a>
+    </div>
+
+    <!-- Expense Category Distribution -->
+    <div class="analytics-card mb-4">
+        <h3>💸 {% trans "Expenses by Category" %}</h3>
+            {% if expense_distribution.total > 0 %}
+            <div class="text-center mb-3">
+                <div class="stat-display__value">
+                    {{ expense_distribution.total|currency_rounded }}
+                </div>
+                <div class="stat-display__label">
+                    {% trans "Total Expenses" %}
+                </div>
+            </div>
+
+            <ul class="session-types-list">
+                {% for category in expense_distribution.categories %}
+                <li class="expense-category-item">
+                    <span class="expense-category-item__label">
+                        <span class="type-indicator shrink-0 {% cycle 'chart-dot-5' 'chart-dot-6' 'chart-dot-7' 'chart-dot-8' 'chart-dot-1' 'chart-dot-2' %}"></span>
+                        <span class="text-break">{{ category.category }}</span>
+                    </span>
+                    <span class="expense-category-item__amount">
+                        <strong class="text-link">{{ category.amount|currency_rounded }}</strong>
+                        <span class="stat-note">({{ category.percentage }}%)</span>
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">{% trans "No expense data available" %}</p>
+            {% endif %}
+        </div>
+
+    <!-- Expense Trends -->
+    <div class="analytics-card mb-4 mt-4">
+        <h3>💸 {% trans "Expense Trends" %}</h3>
+        <p class="chart-subtitle">
+            {% blocktrans with start_year=data_start_year %}Annual operating expenses {{ start_year }}–today{% endblocktrans %}
+        </p>
+
+        <div class="chart-wrapper chart-wrapper--lg-alt">
+            <canvas id="expenseTrendsChart"></canvas>
+        </div>
+    </div>
+
+</div>

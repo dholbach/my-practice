@@ -202,6 +202,14 @@ class ClientDetailViewTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+    def test_client_detail_renders_every_tab(self):
+        """Each page tab is its own include; a dropped include would lose a whole tab."""
+        response = self.client_instance.get(
+            reverse("client_detail", kwargs={"pk": self.test_client.pk})
+        )
+        for tab in ("ptab-profil", "ptab-protokoll", "ptab-abrechnung"):
+            self.assertContains(response, f'id="{tab}"')
+
     def test_client_detail_has_client(self):
         """Test that client is in context."""
         response = self.client_instance.get(

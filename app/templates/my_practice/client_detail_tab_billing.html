@@ -1,0 +1,106 @@
+{% load i18n static payment_tags markdown_filters %}
+<!-- ══ Tab: Abrechnung ════════════════════════════════════════════════════ -->
+<div id="ptab-abrechnung" class="page-tab-content">
+
+    <!-- Billing quick actions -->
+    <div class="client-actions mb-3">
+        <div class="client-actions-left">
+            <a href="{% url 'invoice_create' %}?client={{ client.id }}" class="btn btn-invoice-create">➕ {% trans "New invoice" %}</a>
+            {% if client.email %}
+            {% if reminder_urgency == "high" %}
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-urgent" title="{% blocktrans with days=client.practice.overdue_after_days %}Oldest open invoice: over {{ days }} days{% endblocktrans %}">📧 {% trans "Payment reminder" %}</a>
+            {% elif reminder_urgency == "medium" %}
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-invoice-warning" title="{% blocktrans with min_days=client.practice.payment_terms_days max_days=client.practice.overdue_after_days %}Oldest open invoice: {{ min_days }}–{{ max_days }} days{% endblocktrans %}">📧 {% trans "Payment reminder" %}</a>
+            {% elif reminder_urgency == "low" %}
+            <a href="{% url 'send_payment_reminder' client.pk %}" class="btn btn-secondary" title="{% trans 'Open invoice exists' %}">📧 {% trans "Payment reminder" %}</a>
+            {% else %}
+            <span class="btn btn-secondary btn-disabled" title="{% trans 'No outstanding sent invoices' %}">📧 {% trans "Payment reminder" %}</span>
+            {% endif %}
+            <a href="{% url 'send_cancellation_email' client.pk %}" class="btn btn-secondary" title="{% trans 'Prepare cancellation email due to illness' %}">🤒 {% trans "Cancel session" %}</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if pending_sessions %}
+    <div class="section-card">
+        <h3>📅 {% trans "Pending sessions" %}</h3>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr><th>{% trans "Date" %}</th><th>{% trans "Time" %}</th><th>{% trans "Duration" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr>
+                </thead>
+                <tbody>
+                {% for event in pending_sessions %}
+                <tr>
+                    <td>{{ event.event_date|date:"d.m.Y" }}</td>
+                    <td>{{ event.event_time|time:"H:i"|default:"–" }}</td>
+                    <td>{{ event.duration_minutes }} {% trans "min" %}</td>
+                    <td><span class="status-badge pending">{% trans "Pending" %}</span></td>
+                    <td>
+                        <form method="post" action="{% url 'calendar_event_quick_action' event.pk %}" class="pending-session-actions">
+                            {% csrf_token %}
+                            {% if current_draft_invoice %}
+                            {% blocktrans with num=current_draft_invoice.invoice_number asvar lbl_add_invoice %}+ Invoice {{ num }}{% endblocktrans %}
+                            {% blocktrans with num=current_draft_invoice.invoice_number asvar title_add_invoice %}Add to invoice {{ num }}{% endblocktrans %}
+                            <button type="submit" name="action" value="current_invoice" class="btn btn-sm" title="{{ title_add_invoice }}">{{ lbl_add_invoice }}</button>
+                            <button type="submit" name="action" value="new_invoice" class="btn btn-secondary btn-sm">{% trans "+ Separate invoice" %}</button>
+                            {% else %}
+                            <button type="submit" name="action" value="current_invoice" class="btn btn-sm">{% trans "+ New invoice" %}</button>
+                            {% endif %}
+                            <button type="submit" name="action" value="ignore" class="btn btn-secondary btn-sm">{% trans "Ignore" %}</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section-card">
+        <div class="section-card-header">
+            <h3>📄 {% trans "Invoice history" %}</h3>
+            {% if current_month_pending_count or current_month_unbilled_count %}
+            <a href="{% url 'monthly_billing_overview' month=current_month_str %}" class="current-month-alert">
+                {% if current_month_pending_count %}{% blocktrans count count=current_month_pending_count %}⚠️ {{ count }} appointment pending{% plural %}⚠️ {{ count }} appointments pending{% endblocktrans %}{% endif %}
+                {% if current_month_pending_count and current_month_unbilled_count %} · {% endif %}
+                {% if current_month_unbilled_count %}{% blocktrans count count=current_month_unbilled_count %}📝 {{ count }} session open{% plural %}📝 {{ count }} sessions open{% endblocktrans %}{% endif %}
+            </a>
+            {% endif %}
+        </div>
+        {% if invoices %}
+        <div class="table-container table-container--wide">
+            <table class="data-table">
+                <thead>
+                    <tr><th>{% trans "Invoice no." %}</th><th>{% trans "Date" %}</th><th>{% trans "Sessions" %}</th><th>{% trans "Status" %}</th><th class="text-right">{% trans "Amount" %}</th><th>{% trans "Actions" %}</th></tr>
+                </thead>
+                <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-primary"><span class="invoice-number">{{ invoice.invoice_number }}</span></a></td>
+                    <td>{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                    <td>{{ invoice.items.count }}</td>
+                    <td><span class="status-badge {{ invoice.status }}">{{ invoice.get_status_display|upper }}</span></td>
+                    <td class="text-right fw-700">{{ invoice.total|currency }}</td>
+                    <td><a href="{% url 'invoice_detail' invoice.id %}" class="invoice-link-secondary">👁️ {% trans "View" %}</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state-msg">{% trans "No invoices for this client yet." %}</p>
+        {% endif %}
+    </div>
+
+    {% if monthly_sessions %}
+    <div class="section-card">
+        <h3>📊 {% trans "Session activity" %}</h3>
+        <div class="chart-wrapper chart-wrapper--sm">
+            <canvas id="sessionTimeline"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+</div><!-- /ptab-abrechnung -->

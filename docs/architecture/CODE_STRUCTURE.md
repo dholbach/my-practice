@@ -12,7 +12,8 @@ The application was refactored from a monolithic `views.py` into a modular struc
 app/
 ├── my_practice/
 ├── static/                     # See "Static assets" below — sibling of my_practice/, not nested in it
-├── templates/                   # Sibling of my_practice/ too
+├── templates/                   # Sibling of my_practice/ too; a page with tabs keeps one include per
+│                                #   tab (my_practice/analytics_tab_*.html, client_detail_tab_*.html)
 └── ...
 
 app/my_practice/

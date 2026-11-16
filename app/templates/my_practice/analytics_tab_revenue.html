@@ -1,0 +1,130 @@
+{% load i18n static payment_tags %}
+<!-- Tab Content: Revenue -->
+<div id="revenue-tab" class="tab-content {% if active_tab == 'revenue' %}active{% endif %}">
+    <h2>💰 {% trans "Revenue & Profit" %}</h2>
+
+    <!-- Quick Actions -->
+    <div class="tab-actions">
+        <a href="{% url 'revenue_report' %}" class="btn btn-primary btn-sm">
+            📊 {% trans "Detailed Revenue Report" %}
+        </a>
+    </div>
+
+    <!-- Profit Analysis -->
+    <div class="analytics-card mb-4">
+        <h3>💰 {% trans "Profit (Revenue - Expenses)" %}</h3>
+        <p class="chart-subtitle">
+            {% blocktrans with start_year=data_start_year %}Business profit {{ start_year }}–today · Cumulative development{% endblocktrans %}
+        </p>
+
+        <div class="table-container table-container--wide">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="text-left">{% trans "Year" %}</th>
+                        <th class="text-right">{% trans "Income" %}</th>
+                        <th class="text-right">{% trans "Expenses" %}</th>
+                        <th class="text-right">{% trans "Profit" %}</th>
+                        <th class="text-right">{% trans "Cumulative" %}</th>
+                        <th class="text-right">{% trans "Withdrawals" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in profit_data %}
+                    <tr>
+                        <td class="fw-700 text-link">{{ item.year }}</td>
+                        <td class="text-success text-right">{{ item.revenue|currency }}</td>
+                        <td class="text-warning text-right">{{ item.expenses|currency }}</td>
+                        <td class="text-right fw-700 {{ item.profit|highlight_diff }}">
+                            {{ item.profit|currency }}
+                        </td>
+                        <td class="text-right fw-700 {{ item.cumulative_profit|highlight_diff }}">
+                            {{ item.cumulative_profit|currency }}
+                        </td>
+                        <td class="text-danger text-right">{{ item.withdrawals|currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Revenue vs Expenses vs Withdrawals -->
+    <div class="analytics-card mb-4">
+        <h3>💰 {% trans "Revenue, Expenses & Withdrawals" %}</h3>
+        <p class="chart-subtitle">
+            {% trans "Complete financial overview" %}
+        </p>
+
+        <div id="comparisonChartContainer" class="chart-wrapper chart-wrapper--xl">
+            <canvas id="comparisonChart"></canvas>
+        </div>
+    </div>
+
+    <script type="application/json" id="comparison-data">[{% for item in comparison_data %}{"year": "{{ item.year|escapejs }}", "revenue": {{ item.revenue|js_number }}, "expenses": {{ item.expenses|js_number }}, "withdrawals": {{ item.withdrawals|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+
+    <!-- Revenue Trends Line Chart -->
+    <div class="analytics-card mb-4">
+        <h3>📈 {% trans "Revenue Trend (Monthly)" %}</h3>
+        <p class="chart-subtitle">
+            {% trans "Monthly revenue development · growth visualized" %}
+        </p>
+
+        <div class="chart-wrapper chart-wrapper--lg">
+            <canvas id="revenueLineChart"></canvas>
+        </div>
+
+        <div class="chart-legend mt-2">
+            <div class="legend-item">
+                <div class="legend-line-swatch"></div>
+                <span>{% blocktrans with months=revenue_trends|length max=max_revenue|currency_rounded %}Monthly revenue · {{ months }} months · Max: {{ max }}{% endblocktrans %}</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="application/json" id="revenue-trend-data">[{% for item in revenue_trends %}{"month": "{{ item.month|escapejs }}", "revenue": {{ item.revenue|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+
+    <!-- Busiest Months -->
+    <div class="analytics-card mt-4">
+        <h3>🔥 {% trans "Peak Months" %}</h3>
+        {% with max_month=busiest_months|dictsort:"revenue"|last %}
+        <ul class="busiest-months">
+            {% for month in busiest_months %}
+            <li>
+                <span class="year-badge year-{{ month.year }}">{{ month.year }}</span>
+                <span class="busiest-months__month-name">{{ month.month }}</span>
+                <div class="bar-track"><div class="month-bar year-{{ month.year }}" style="width: {% widthratio month.revenue max_month.revenue 100 %}%;"></div></div>
+                <span class="month-hours">{{ month.session_hours }}h</span>
+                <span class="month-revenue">{{ month.revenue|currency }}</span>
+            </li>
+            {% empty %}
+            <p class="text-muted">{% trans "No data available" %}</p>
+            {% endfor %}
+        </ul>
+        {% endwith %}
+        {% if busiest_years %}
+        <div class="year-legend">
+            {% for yr in busiest_years %}
+            <div class="year-legend-item">
+                <span class="year-legend-dot year-{{ yr }}"></span>
+                {{ yr }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Days to Payment Trend -->
+    {% if days_to_payment %}
+    {{ days_to_payment|json_script:"days-to-payment-data" }}
+    <div class="analytics-card mt-4">
+        <h3>⏱️ {% trans "Payment Delay (last 24 months)" %}</h3>
+        <p class="chart-subtitle">
+            {% trans "Average days from invoice date to payment received" %}
+        </p>
+        <div class="chart-wrapper chart-wrapper--sm">
+            <canvas id="daysToPaymentChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+</div>
