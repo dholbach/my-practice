@@ -1,11 +1,11 @@
-{% load i18n %}
+{% load i18n static %}
 {% comment %}
 Reusable tag display component
 Usage: {% include 'includes/client_tags.html' with client=client editable=True %}
 {% endcomment %}
 
 
-<div class="tag-container">
+<div class="tag-container" data-client-id="{{ client.id }}" data-add-error="{% trans "Error adding tag" %}" data-remove-error="{% trans "Error removing tag" %}">
     {% for tag in client.tags.all %}
         <span class="tag {{ tag.color }}{% if tag.is_system %} system-tag{% endif %}" data-tag-id="{{ tag.id }}">
             {{ tag.name }}
@@ -37,125 +37,5 @@ Usage: {% include 'includes/client_tags.html' with client=client editable=True %
 </div>
 
 {% if editable %}
-<script nonce="{{ csp_nonce }}">
-(function () {
-    const clientId = {{ client.id }};
-
-    function toggleTagDropdown(cid) {
-        const dropdown = document.getElementById('tagDropdown' + cid);
-        const dropdownContent = document.getElementById('tagDropdownContent' + cid);
-        const button = dropdown.querySelector('.tag-add-btn');
-
-        dropdown.classList.toggle('active');
-
-        if (dropdown.classList.contains('active')) {
-            const rect = button.getBoundingClientRect();
-            dropdownContent.style.top = (rect.bottom + 5) + 'px';
-            dropdownContent.style.left = rect.left + 'px';
-
-            setTimeout(() => {
-                document.addEventListener('click', function closeDropdown(e) {
-                    if (!dropdown.contains(e.target)) {
-                        dropdown.classList.remove('active');
-                        document.removeEventListener('click', closeDropdown);
-                    }
-                });
-            }, 100);
-        }
-    }
-
-    function addTag(cid, tagId, tagName, tagColor) {
-        fetch(`/api/clients/${cid}/tags/add/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: `tag_id=${tagId}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('{% trans "Error adding tag" %}');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('{% trans "Error adding tag" %}');
-        });
-    }
-
-    function removeTag(cid, tagId, element) {
-        fetch(`/api/clients/${cid}/tags/${tagId}/remove/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                element.closest('.tag').remove();
-            } else {
-                alert('{% trans "Error removing tag" %}');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('{% trans "Error removing tag" %}');
-        });
-    }
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        if (!cookieValue) {
-            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-            if (csrfInput) {
-                cookieValue = csrfInput.value;
-            }
-        }
-        return cookieValue;
-    }
-
-    // Wire event listeners — DOM elements above are already rendered at this point
-    const dropdown = document.getElementById('tagDropdown' + clientId);
-    if (!dropdown) return;
-
-    const tagContainer = dropdown.closest('.tag-container');
-
-    // Remove-tag buttons
-    tagContainer.querySelectorAll('.tag-remove[data-tag-id]').forEach(function (el) {
-        el.addEventListener('click', function () {
-            removeTag(clientId, parseInt(this.dataset.tagId), this);
-        });
-    });
-
-    // Add-tag dropdown toggle
-    const addBtn = dropdown.querySelector('.tag-add-btn');
-    if (addBtn) {
-        addBtn.addEventListener('click', function () {
-            toggleTagDropdown(clientId);
-        });
-    }
-
-    // Tag dropdown items
-    dropdown.querySelectorAll('.tag-dropdown-item[data-tag-id]').forEach(function (item) {
-        item.addEventListener('click', function () {
-            addTag(clientId, parseInt(this.dataset.tagId), this.dataset.tagName, this.dataset.tagColor);
-        });
-    });
-})();
-</script>
+<script src="{% static 'js/client_tags.js' %}"></script>
 {% endif %}

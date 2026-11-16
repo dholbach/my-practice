@@ -257,6 +257,19 @@ test("does nothing when the page has no dropzone", () => {
     assertTrue(true, "no dropzone must not throw");
 });
 
+test("moves the existing receipts list into its placeholder", () => {
+    const registry = new Map();
+    const document_ = new FakeNode("#document", registry);
+    const list = new FakeNode("div", registry);
+    const placeholder = new FakeNode("div", registry);
+    let replacement = null;
+    placeholder.replaceWith = (node) => { replacement = node; };
+    document_.getElementById = (id) => ({ "receipts-existing": list, "receipts-existing-placeholder": placeholder })[id] || null;
+    vm.runInNewContext(SOURCE, { document: document_, console, DataTransfer: class {} });
+    document_.dispatchEvent(new FakeEvent("DOMContentLoaded"));
+    assertTrue(replacement === list, "the list replaces the placeholder");
+});
+
 test("bails out when the dropzone has no file input", () => {
     const page = setupPage({ withInput: false });
     // Without an input there is nothing to wire, so dragover must not highlight.
