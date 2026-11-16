@@ -18,7 +18,7 @@ from ..models import (
     OperationalChecklistCompletion,
     Session,
 )
-from .date_helpers import checklist_period_start
+from .date_helpers import DateRangeHelper, checklist_period_start
 
 
 class SessionImportWidgetBuilder:
@@ -323,11 +323,8 @@ class CapacityMonitoringWidgetBuilder:
         # Build stats for current month and 2 previous months (oldest → newest)
         months = []
         for offset in range(2, -1, -1):
-            month = today.month - offset
-            year = today.year
-            while month <= 0:
-                month += 12
-                year -= 1
+            month_start = DateRangeHelper.add_months(today.replace(day=1), -offset)
+            year, month = month_start.year, month_start.month
             stats = self._get_month_stats(year, month)
             months.append(
                 {
