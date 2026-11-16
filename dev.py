@@ -386,34 +386,8 @@ def cmd_manage(args):
         print("Usage: dev.py manage <command>")
         return subprocess.CompletedProcess(args=[], returncode=1)
 
-    # If --odt-file points to a host path that isn't already inside the container,
-    # copy it into the container's /tmp/ first and rewrite the argument.
-    args = list(args)
-    container_tmp_path = None
-    for i, arg in enumerate(args):
-        if arg == "--odt-file" and i + 1 < len(args):
-            host_path = os.path.expanduser(args[i + 1])
-            if not host_path.startswith("/app"):
-                filename = os.path.basename(host_path)
-                container_tmp_path = f"/tmp/{filename}"
-                cp_cmd = ["docker", "cp", host_path, f"{TOOLS_CONTAINER}:{container_tmp_path}"]
-                print(f"Copying {host_path} → container:{container_tmp_path}")
-                result = subprocess.run(cp_cmd)
-                if result.returncode != 0:
-                    return result
-                args[i + 1] = container_tmp_path
-            break
-
-    interactive = args[0] in ("createsuperuser", "shell") if args else False
-    result = run_docker_command(["python", "manage.py"] + args, interactive=interactive)
-
-    # Clean up the temporary file from the container.
-    if container_tmp_path:
-        run_docker_command(
-            ["rm", "-f", container_tmp_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-
-    return result
+    interactive = args[0] in ("createsuperuser", "shell")
+    return run_docker_command(["python", "manage.py"] + list(args), interactive=interactive)
 
 
 def cmd_python(args):
