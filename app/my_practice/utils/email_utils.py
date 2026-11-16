@@ -91,6 +91,16 @@ def _with_signature(body: str, practice: "Practice") -> str:
     return body + "\n\n-- \n" + practice.email_signature
 
 
+def _bank_lines(practice: "Practice") -> list[str]:
+    """The indented bank account lines of a payment reminder; none without an IBAN."""
+    if not practice.iban:
+        return []
+    lines = [f"  {practice.bank_name}: {practice.iban}"]
+    if practice.bic:
+        lines.append(f"  BIC: {practice.bic}")
+    return lines
+
+
 def get_salutation_for_client(client: "Client") -> str:
     """
     Get email salutation for a client.
@@ -435,14 +445,9 @@ def get_payment_reminder_email_content(
             "If I made a mistake and missed your payment, please disregard. "
             "Otherwise please transfer the amount to the usual bank account:"
         )
-        if practice.iban:
-            lines.append(f"  {practice.bank_name}: {practice.iban}")
-            if practice.bic:
-                lines.append(f"  BIC: {practice.bic}")
+        lines += _bank_lines(practice)
         lines.append("")
         lines.append("All the best,")
-        if practice.email_signature:
-            lines += ["-- ", practice.email_signature]
         subject = f"Payment Reminder – {count} outstanding {invoice_word}"
     else:
         # German (default)
@@ -462,17 +467,12 @@ def get_payment_reminder_email_content(
             "Falls ich einen Fehler gemacht habe und deine Zahlung übersehen habe, bitte einfach ignorieren. "
             "Ansonsten bitte den Betrag auf das übliche Konto überweisen:"
         )
-        if practice.iban:
-            lines.append(f"  {practice.bank_name}: {practice.iban}")
-            if practice.bic:
-                lines.append(f"  BIC: {practice.bic}")
+        lines += _bank_lines(practice)
         lines.append("")
         lines.append("Liebe Grüße,")
-        if practice.email_signature:
-            lines += ["-- ", practice.email_signature]
         subject = f"Zahlungserinnerung – {count} offene {invoice_word_plural}"
 
-    return subject, "\n".join(lines)
+    return subject, _with_signature("\n".join(lines), practice)
 
 
 def get_cancellation_email_content(client: "Client", practice: "Practice") -> tuple[str, str]:
@@ -513,10 +513,7 @@ def get_cancellation_email_content(client: "Client", practice: "Practice") -> tu
             "Liebe Grüße und alles Gute,",
         ]
 
-    if practice.email_signature:
-        lines += ["-- ", practice.email_signature]
-
-    return subject, "\n".join(lines)
+    return subject, _with_signature("\n".join(lines), practice)
 
 
 def _ordinal_suffix_en(day: int) -> str:

@@ -36,16 +36,12 @@ def get_heatmap_data(
             - range_end_date_full: End of date range
     """
     # Compute the date range once
-    total_months_start = current_year * 12 + current_month - 1 - (months_to_show - 1 + start_offset)
-    range_start_year = total_months_start // 12
-    range_start_month = (total_months_start % 12) + 1
-    range_start_date = date(range_start_year, range_start_month, 1)
-
-    total_months_end = current_year * 12 + current_month - 1 - start_offset
-    range_end_year = total_months_end // 12
-    range_end_month = (total_months_end % 12) + 1
+    current_month_start = date(current_year, current_month, 1)
+    range_start_date = DateRangeHelper.add_months(
+        current_month_start, -(months_to_show - 1 + start_offset)
+    )
     _, range_end_date_full = DateRangeHelper.get_month_range(
-        date(range_end_year, range_end_month, 1)
+        DateRangeHelper.add_months(current_month_start, -start_offset)
     )
 
     # Single query covering the full range; partition by month in Python
@@ -76,13 +72,11 @@ def get_heatmap_data(
             client_buckets[code] = []
         client_buckets[code].append(item)
 
-    # Build heatmap_data in display order (newest first)
+    # Build heatmap_data in display order (oldest first)
     heatmap_data = []
     for i in range(months_to_show - 1 + start_offset, start_offset - 1, -1):
-        total_months = current_year * 12 + current_month - 1 - i
-        year = total_months // 12
-        month = (total_months % 12) + 1
-        month_date = date(year, month, 1)
+        month_date = DateRangeHelper.add_months(current_month_start, -i)
+        year, month = month_date.year, month_date.month
 
         session_data: dict[str, float] = {}
         for code, items in month_buckets.get((year, month), {}).items():
