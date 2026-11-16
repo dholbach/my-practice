@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import SimpleTestCase, TestCase
+from django.utils import timezone
 
 from my_practice.models import (
     Client,
@@ -226,6 +227,47 @@ class InvoiceModelTestCase(TestCase):
         )
         self.assertEqual(invoice.invoice_number, "TC-1")
         self.assertEqual(invoice.status, "draft")
+
+    def _sent_invoice(self, number, invoice_date=date(2026, 1, 5), **fields):
+        return Invoice.objects.create(
+            client=self.client,
+            invoice_number=number,
+            invoice_date=invoice_date,
+            status="sent",
+            practice=self.practice,
+            **fields,
+        )
+
+    def test_mark_paid_with_a_date_uses_it(self):
+        invoice = self._sent_invoice("TC-P1")
+        invoice.mark_paid(date(2026, 1, 20))
+        invoice.refresh_from_db()
+        self.assertEqual((invoice.status, invoice.paid_date), ("paid", date(2026, 1, 20)))
+
+    def test_mark_paid_with_a_date_replaces_an_existing_paid_date(self):
+        invoice = self._sent_invoice("TC-P2", paid_date=date(2026, 1, 10))
+        invoice.mark_paid(date(2026, 1, 20))
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.paid_date, date(2026, 1, 20))
+
+    def test_mark_paid_without_a_date_keeps_an_existing_paid_date(self):
+        invoice = self._sent_invoice("TC-P3", paid_date=date(2026, 1, 10))
+        invoice.mark_paid()
+        invoice.refresh_from_db()
+        self.assertEqual((invoice.status, invoice.paid_date), ("paid", date(2026, 1, 10)))
+
+    def test_mark_paid_without_any_date_uses_today(self):
+        invoice = self._sent_invoice("TC-P4")
+        invoice.mark_paid()
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.paid_date, timezone.localdate())
+
+    def test_mark_paid_refuses_a_payment_before_the_invoice_date(self):
+        invoice = self._sent_invoice("TC-P5", invoice_date=date(2026, 2, 1))
+        with self.assertRaises(ValidationError):
+            invoice.mark_paid(date(2026, 1, 20))
+        invoice.refresh_from_db()
+        self.assertEqual((invoice.status, invoice.paid_date), ("sent", None))
 
     def test_invoice_str(self):
         """Test Invoice string representation"""

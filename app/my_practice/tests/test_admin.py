@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from my_practice.admin import (
     BankTransactionAdmin,
@@ -524,6 +525,20 @@ class InvoiceAdminStatusActionTests(TestCase):
         self.admin = InvoiceAdmin(Invoice, AdminSite())
         self.request = RequestFactory().post("/")
         self.admin.message_user = lambda *args, **kwargs: None
+
+    def test_mark_as_paid_sets_today_when_there_is_no_paid_date(self):
+        Invoice.objects.filter(pk=self.invoice.pk).update(status="sent", paid_date=None)
+        self.admin.mark_as_paid(self.request, Invoice.objects.filter(pk=self.invoice.pk))
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.status, "paid")
+        self.assertEqual(self.invoice.paid_date, timezone.localdate())
+
+    def test_mark_as_paid_keeps_an_existing_paid_date(self):
+        Invoice.objects.filter(pk=self.invoice.pk).update(status="sent")
+        self.admin.mark_as_paid(self.request, Invoice.objects.filter(pk=self.invoice.pk))
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.status, "paid")
+        self.assertEqual(self.invoice.paid_date, date(2026, 1, 20))
 
     def test_mark_as_sent_clears_paid_date(self):
         self.admin.mark_as_sent(self.request, Invoice.objects.filter(pk=self.invoice.pk))

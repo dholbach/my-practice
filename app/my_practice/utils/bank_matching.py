@@ -35,10 +35,8 @@ def record_payment(
         raise ValueError("record_payment needs at least one invoice")
     with db_transaction.atomic():
         for invoice in invoices:
-            invoice.status = Invoice.Status.PAID
-            invoice.paid_date = bank_transaction.transaction_date
             try:
-                invoice.save()
+                invoice.mark_paid(bank_transaction.transaction_date)
             except ValidationError as exc:
                 raise InvoiceNotPayableError(invoice, exc.messages) from exc
 

@@ -245,6 +245,18 @@ class Invoice(TimestampedModel):
 
         super().save(*args, **kwargs)
 
+    def mark_paid(self, paid_on: date | None = None) -> None:
+        """Set the status to paid and save, validated like any other save.
+
+        ``paid_on`` is the payment date: a bank transaction passes its own. Without
+        it the invoice keeps a paid date it already has and otherwise gets today, so
+        marking a paid-and-dated invoice paid again changes nothing. A payment dated
+        before the invoice raises ValidationError and writes nothing.
+        """
+        self.status = Invoice.Status.PAID
+        self.paid_date = paid_on or self.paid_date or timezone.localdate()
+        self.save()
+
     @property
     def is_locked(self) -> bool:
         """True once the invoice has left DRAFT: its content can no longer change."""

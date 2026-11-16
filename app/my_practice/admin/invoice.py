@@ -2,7 +2,6 @@
 
 from django import forms
 from django.contrib import admin, messages
-from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext, gettext_lazy, ngettext
 
@@ -145,10 +144,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     def mark_as_paid(self, request, queryset):
         updated = 0
         for invoice in queryset:
-            invoice.status = "paid"
-            if not invoice.paid_date:
-                invoice.paid_date = timezone.localdate()
-            invoice.save()
+            invoice.mark_paid()
             updated += 1
         self.message_user(
             request,

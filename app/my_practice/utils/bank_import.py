@@ -687,9 +687,7 @@ class BankStatementImporter:
         )
 
         if matched_invoice:
-            matched_invoice.status = "paid"
-            matched_invoice.paid_date = parsed["transaction_date"]
-            matched_invoice.save()
+            matched_invoice.mark_paid(parsed["transaction_date"])
 
         self.results["transactions"].append(bank_transaction)
         return bank_transaction

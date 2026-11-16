@@ -10,7 +10,6 @@ from django.contrib import messages
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
-from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from weasyprint.text.fonts import FontConfiguration
@@ -193,16 +192,13 @@ def update_invoice_status(request, pk):
             status=400,
         )
 
-    invoice.status = new_status
-
-    # Automatically set paid_date when status changes to paid
-    if new_status == Invoice.Status.PAID and not invoice.paid_date:
-        invoice.paid_date = timezone.localdate()
-    # Clear paid_date if status is changed from paid to something else
-    elif new_status != Invoice.Status.PAID and invoice.paid_date:
+    if new_status == Invoice.Status.PAID:
+        invoice.mark_paid()
+    else:
+        # A paid date only belongs to a paid invoice
+        invoice.status = new_status
         invoice.paid_date = None
-
-    invoice.save()
+        invoice.save()
 
     # Partial request: return just the badge HTML for #invoice-status-{pk}
     if is_partial_request(request):

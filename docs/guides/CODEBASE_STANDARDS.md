@@ -14,6 +14,7 @@ and provides the anti-patterns checklist used during periodic reviews
 |------|-----|
 | Revenue totals or breakdowns | `RevenueCalculator.get_total_revenue()` / `get_status_breakdown()` |
 | Client revenue subquery | `RevenueCalculator.get_client_revenue_subquery()` |
+| Marking an invoice paid | `invoice.mark_paid(paid_on=None)`: sets the status and the paid date (the given date, else the existing one, else today) and saves validated; a bank payment passes its own date through `record_payment()` |
 | Invoice filtering (search, year, status, amount) | `InvoiceFilterHelper(qs).apply_filters(...)` |
 | Practice-scoped queryset | inherit `PracticeScopedListView` or call `.for_current_practice(request)` |
 | Practice filter inside a helper | `scope_to_practice(qs, practice)` with `practice` a required keyword; `None` → no rows, `ALL_PRACTICES` → explicit cross-practice |
