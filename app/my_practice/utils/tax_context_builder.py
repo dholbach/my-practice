@@ -88,7 +88,7 @@ class TaxYearContextBuilder:
         paid_invoices = (
             Invoice.objects.filter(
                 RevenueCalculator.build_paid_date_filter(self.year),
-                status="paid",
+                status=Invoice.Status.PAID,
                 practice=self.practice,
             )
             .select_related("client")

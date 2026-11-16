@@ -352,7 +352,7 @@ class SendInvoiceEmailView(View):
         msg.attach(filename, pdf_content, "application/pdf")
 
         def _mark_invoice_sent() -> None:
-            if invoice.status == "draft":
+            if invoice.status == Invoice.Status.DRAFT:
                 invoice.status = Invoice.Status.SENT
                 invoice.save()
                 logger.info("Invoice status updated to 'sent'")

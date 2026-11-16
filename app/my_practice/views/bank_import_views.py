@@ -387,7 +387,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             Invoice,
             id=invoice_id,
             practice=request.current_practice,
-            status="sent",
+            status=Invoice.Status.SENT,
         )
 
         # The suggestion arrives as a hidden form field, so re-apply the

@@ -95,7 +95,7 @@ class InvoiceActionsWidgetBuilder:
     def _get_unpaid_invoices(self) -> QuerySet:
         """Get sent but unpaid invoices (includes overdue), sorted by oldest first"""
         return (
-            Invoice.objects.filter(practice=self.practice, status="sent")
+            Invoice.objects.filter(practice=self.practice, status=Invoice.Status.SENT)
             .select_related("client")
             .order_by("invoice_date")  # Oldest first to prioritize overdue
         )
@@ -108,7 +108,7 @@ class InvoiceActionsWidgetBuilder:
         invoice_unsent materialized task.
         """
         return (
-            Invoice.objects.filter(practice=self.practice, status="draft")
+            Invoice.objects.filter(practice=self.practice, status=Invoice.Status.DRAFT)
             .select_related("client")
             .annotate(last_session_date=Max("items__session__session_date"))
             .order_by("last_session_date")  # Oldest sessions first

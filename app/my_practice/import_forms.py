@@ -80,7 +80,7 @@ class TransactionMatchForm(StyledFormMixin, forms.Form):
             self.fields["invoice"].queryset = (
                 Invoice.objects.filter(
                     practice=practice,
-                    status="sent",  # Only unpaid invoices
+                    status=Invoice.Status.SENT,  # Only unpaid invoices
                 )
                 .select_related("client")
                 # The number breaks ties between invoices of one date: the order decides

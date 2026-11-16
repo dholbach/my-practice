@@ -108,7 +108,7 @@ class RevenueCalculator:
         """
         qs = Invoice.objects.filter(
             RevenueCalculator.build_paid_date_range_filter(start_date, end_date),
-            status="paid",
+            status=Invoice.Status.PAID,
         )
         qs = scope_to_practice(qs, practice)
         result = qs.aggregate(total=Sum("total"))["total"]
@@ -135,7 +135,9 @@ class RevenueCalculator:
             - docs/BUGFIX_CLIENT_REVENUE_2026-01-06.md for background
             - get_client_sessions_subquery() for session counting
         """
-        paid_invoice_subquery = Invoice.objects.filter(client=OuterRef("pk"), status="paid")
+        paid_invoice_subquery = Invoice.objects.filter(
+            client=OuterRef("pk"), status=Invoice.Status.PAID
+        )
         return Subquery(
             paid_invoice_subquery.values("client").annotate(total=Sum("total")).values("total")[:1]
         )
@@ -163,7 +165,7 @@ class RevenueCalculator:
             ... )
         """
         paid_item_subquery = InvoiceItem.objects.filter(
-            invoice__client=OuterRef("pk"), invoice__status="paid"
+            invoice__client=OuterRef("pk"), invoice__status=Invoice.Status.PAID
         )
 
         if exclude_cancellations:
@@ -207,18 +209,18 @@ class RevenueCalculator:
             >>> RevenueCalculator.apply_year_filter(qs, 2026, status_filter="paid")
             # Returns invoices where paid_date is in 2026
         """
-        if status_filter == "paid":
+        if status_filter == Invoice.Status.PAID:
             # Paid invoices: filter by paid_date
             return queryset.filter(paid_date__year=year)
-        elif status_filter in ["draft", "sent", "cancelled"]:
+        elif status_filter in [Invoice.Status.DRAFT, Invoice.Status.SENT, Invoice.Status.CANCELLED]:
             # Other statuses: filter by invoice_date
             return queryset.filter(invoice_date__year=year)
         else:
             # Mixed or no status filter: use Q objects
             # Paid invoices by paid_date, others by invoice_date
             return queryset.filter(
-                Q(status="paid", paid_date__year=year)
-                | Q(~Q(status="paid"), invoice_date__year=year)
+                Q(status=Invoice.Status.PAID, paid_date__year=year)
+                | Q(~Q(status=Invoice.Status.PAID), invoice_date__year=year)
             )
 
     @staticmethod
@@ -241,7 +243,7 @@ class RevenueCalculator:
             >>> RevenueCalculator.get_total_revenue({'paid_date__year': 2025}, practice=practice)
             Decimal('4200.00')
         """
-        qs = scope_to_practice(Invoice.objects.filter(status="paid"), practice)
+        qs = scope_to_practice(Invoice.objects.filter(status=Invoice.Status.PAID), practice)
         if filters:
             qs = qs.filter(**filters)
         result = qs.aggregate(revenue_total=Sum("total"))["revenue_total"]
@@ -273,7 +275,7 @@ class RevenueCalculator:
             >>> RevenueCalculator.get_revenue_stats({'client': client}, practice=practice)
             {'total': Decimal('2800.00'), 'count': 14, 'avg': Decimal('200.00')}
         """
-        qs = scope_to_practice(Invoice.objects.filter(status="paid"), practice)
+        qs = scope_to_practice(Invoice.objects.filter(status=Invoice.Status.PAID), practice)
         if filters:
             qs = qs.filter(**filters)
 
@@ -320,7 +322,7 @@ class RevenueCalculator:
             >>> RevenueCalculator.get_year_revenue(2025, practice=practice)
             {'total': Decimal('4200.00'), 'count': 21, 'avg': Decimal('200.00')}
         """
-        qs = Invoice.objects.filter(status="paid")
+        qs = Invoice.objects.filter(status=Invoice.Status.PAID)
 
         qs = scope_to_practice(qs, practice)
 
@@ -371,7 +373,7 @@ class RevenueCalculator:
             >>> RevenueCalculator.get_month_revenue(2025, 12, practice=practice)
             {'total': Decimal('420.00'), 'count': 3, 'avg': Decimal('140.00')}
         """
-        qs = Invoice.objects.filter(status="paid")
+        qs = Invoice.objects.filter(status=Invoice.Status.PAID)
 
         qs = scope_to_practice(qs, practice)
 
@@ -512,16 +514,16 @@ class RevenueCalculator:
         if clean_filters:
             qs_invoice_date = qs_invoice_date.filter(**clean_filters)
         stats_by_invoice_date = qs_invoice_date.aggregate(
-            draft_count=Count(Case(When(status="draft", then=1))),
-            draft_total=Sum(Case(When(status="draft", then="total"))),
-            sent_count=Count(Case(When(status="sent", then=1))),
-            sent_total=Sum(Case(When(status="sent", then="total"))),
-            cancelled_count=Count(Case(When(status="cancelled", then=1))),
-            cancelled_total=Sum(Case(When(status="cancelled", then="total"))),
+            draft_count=Count(Case(When(status=Invoice.Status.DRAFT, then=1))),
+            draft_total=Sum(Case(When(status=Invoice.Status.DRAFT, then="total"))),
+            sent_count=Count(Case(When(status=Invoice.Status.SENT, then=1))),
+            sent_total=Sum(Case(When(status=Invoice.Status.SENT, then="total"))),
+            cancelled_count=Count(Case(When(status=Invoice.Status.CANCELLED, then=1))),
+            cancelled_total=Sum(Case(When(status=Invoice.Status.CANCELLED, then="total"))),
         )
 
         qs_paid_date = scope_to_practice(
-            Invoice.objects.filter(status="paid", paid_date__year=year), practice
+            Invoice.objects.filter(status=Invoice.Status.PAID, paid_date__year=year), practice
         )
         if clean_filters:
             qs_paid_date = qs_paid_date.filter(**clean_filters)
@@ -546,14 +548,14 @@ class RevenueCalculator:
             qs = qs.filter(**filters)
 
         stats = qs.aggregate(
-            draft_count=Count(Case(When(status="draft", then=1))),
-            draft_total=Sum(Case(When(status="draft", then="total"))),
-            sent_count=Count(Case(When(status="sent", then=1))),
-            sent_total=Sum(Case(When(status="sent", then="total"))),
-            paid_count=Count(Case(When(status="paid", then=1))),
-            paid_total=Sum(Case(When(status="paid", then="total"))),
-            cancelled_count=Count(Case(When(status="cancelled", then=1))),
-            cancelled_total=Sum(Case(When(status="cancelled", then="total"))),
+            draft_count=Count(Case(When(status=Invoice.Status.DRAFT, then=1))),
+            draft_total=Sum(Case(When(status=Invoice.Status.DRAFT, then="total"))),
+            sent_count=Count(Case(When(status=Invoice.Status.SENT, then=1))),
+            sent_total=Sum(Case(When(status=Invoice.Status.SENT, then="total"))),
+            paid_count=Count(Case(When(status=Invoice.Status.PAID, then=1))),
+            paid_total=Sum(Case(When(status=Invoice.Status.PAID, then="total"))),
+            cancelled_count=Count(Case(When(status=Invoice.Status.CANCELLED, then=1))),
+            cancelled_total=Sum(Case(When(status=Invoice.Status.CANCELLED, then="total"))),
         )
 
         return {

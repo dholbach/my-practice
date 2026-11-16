@@ -284,7 +284,7 @@ class InvoiceDetailView(DetailView):
         """Add calendar pre-flight check for draft/sent invoices (P-013)."""
         context = super().get_context_data(**kwargs)
         invoice = self.object
-        if invoice.status in ("draft", "sent"):
+        if invoice.status in (Invoice.Status.DRAFT, Invoice.Status.SENT):
             checker = CalendarPreflightChecker(invoice)
             if checker.has_calendar_events():
                 context["calendar_preflight"] = checker.check()

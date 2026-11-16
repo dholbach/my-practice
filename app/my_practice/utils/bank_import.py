@@ -229,7 +229,7 @@ class BankStatementImporter:
             invoice = Invoice.objects.filter(
                 practice=self.practice,
                 invoice_number=invoice_number,
-                status="sent",  # Only match unpaid invoices
+                status=Invoice.Status.SENT,  # Only match unpaid invoices
             ).first()
 
             if not invoice:

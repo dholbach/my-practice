@@ -110,7 +110,7 @@ class ClientDetailContextBuilder:
         return total_hours, session_count, avg_duration
 
     def _last_invoice_date(self) -> date | None:
-        finalized = [inv for inv in self.invoices if inv.status != "draft"]
+        finalized = [inv for inv in self.invoices if inv.status != Invoice.Status.DRAFT]
         return finalized[0].invoice_date if finalized else None
 
     def _activity_dates(self) -> tuple[date | None, date | None, bool]:
@@ -129,7 +129,9 @@ class ClientDetailContextBuilder:
         return first_session_date, last_session_date, is_recently_active
 
     def _open_amount(self) -> Decimal:
-        return sum((inv.total for inv in self.invoices if inv.status == "sent"), Decimal("0"))
+        return sum(
+            (inv.total for inv in self.invoices if inv.status == Invoice.Status.SENT), Decimal("0")
+        )
 
     def _monthly_chart_data(self) -> list[dict]:
         monthly_aggregation = aggregate_invoice_items_by_month(
@@ -159,7 +161,7 @@ class ClientDetailContextBuilder:
     # ── Billing ───────────────────────────────────────────────────────────────
 
     def _build_billing_context(self) -> dict:
-        sent_invoices = [inv for inv in self.invoices if inv.status == "sent"]
+        sent_invoices = [inv for inv in self.invoices if inv.status == Invoice.Status.SENT]
         if sent_invoices:
             oldest_invoice_date = min(inv.invoice_date for inv in sent_invoices)
             oldest_days = Invoice.days_overdue(oldest_invoice_date, self.today)
@@ -178,7 +180,7 @@ class ClientDetailContextBuilder:
             event_date__gte=self.today,
         ).order_by("event_date", "event_time")
 
-        current_draft_invoice = self.client.invoices.filter(status="draft").first()
+        current_draft_invoice = self.client.invoices.filter(status=Invoice.Status.DRAFT).first()
 
         billed_session_ids = set(
             InvoiceItem.objects.filter(invoice__client=self.client)
