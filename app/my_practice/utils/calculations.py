@@ -74,9 +74,7 @@ def count_sessions(
 
         # Free-form items (day-rate/project billing, no linked session) aren't
         # therapy sessions — exclude them from session-based counts entirely
-        # rather than guessing a duration for them. (Checked via session_id,
-        # not the InvoiceItem.is_free_form property, since callers may pass
-        # duck-typed mock items in tests that don't define that property.)
+        # rather than guessing a duration for them.
         if not item.session_id:
             continue
 

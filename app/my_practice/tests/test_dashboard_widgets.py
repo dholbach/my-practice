@@ -58,3 +58,13 @@ class GetOverdueInvoicesTest(TestCase):
         overdue = InvoiceActionsWidgetBuilder(self.practice).get_overdue_invoices()
 
         self.assertEqual([inv.invoice_number for inv in overdue], ["TC-15"])
+
+    def test_given_the_unpaid_list_it_does_not_query_again(self):
+        self._make_invoice(days_old=31)
+        builder = InvoiceActionsWidgetBuilder(self.practice)
+        unpaid = list(builder._get_unpaid_invoices())
+
+        with self.assertNumQueries(0):
+            overdue = builder.get_overdue_invoices(unpaid=unpaid)
+
+        self.assertEqual([inv.invoice_number for inv in overdue], ["TC-31"])

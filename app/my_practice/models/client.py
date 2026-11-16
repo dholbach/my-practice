@@ -3,11 +3,9 @@
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import cast
 
 from django.core.validators import EmailValidator
 from django.db import models
-from django.db.models import Max, Prefetch
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -16,58 +14,6 @@ from ..fields import EncryptedCharField, EncryptedTextField
 from ..storage import client_document_storage
 from ..validators import validate_upload_extension
 from .base import PracticeScopedQuerySet, TimestampedModel
-
-
-class ClientQuerySet(PracticeScopedQuerySet):
-    """Custom QuerySet for Client model with optimized queries"""
-
-    def with_invoices(
-        self, order_by: str = "-invoice_date", include_tags: bool = True
-    ) -> "ClientQuerySet":
-        """
-        Prefetch invoices with items and optionally tags.
-
-        Args:
-            order_by: Order for invoices ("-invoice_date" or "invoice_date")
-            include_tags: Whether to also prefetch client tags
-
-        Returns:
-            QuerySet: Clients with optimized prefetches
-        """
-        from .invoice import Invoice
-
-        qs = self.prefetch_related(
-            Prefetch(
-                "invoices",
-                queryset=Invoice.objects.order_by(order_by).prefetch_related("items"),
-            )
-        )
-        if include_tags:
-            qs = qs.prefetch_related("tags")
-        return qs
-
-    def with_activity_data(self) -> "ClientQuerySet":
-        """
-        Annotate clients with activity metrics:
-        - last_invoice_date: Date of most recent invoice
-        - last_session_date: Date of most recent session
-        - total_revenue: Total revenue from paid invoices
-        - total_sessions: Total number of sessions from paid invoices
-
-        Returns:
-            QuerySet: Clients annotated with activity data
-        """
-        from ..utils import RevenueCalculator
-
-        return cast(
-            "ClientQuerySet",
-            self.annotate(
-                last_invoice_date=Max("invoices__invoice_date"),
-                last_session_date=Max("sessions__session_date"),
-                total_revenue=RevenueCalculator.get_client_revenue_subquery(),
-                total_sessions=RevenueCalculator.get_client_sessions_subquery(),
-            ),
-        )
 
 
 class Client(TimestampedModel):
@@ -210,7 +156,7 @@ class Client(TimestampedModel):
     )
 
     # Use custom QuerySet
-    objects = ClientQuerySet.as_manager()
+    objects = PracticeScopedQuerySet.as_manager()
 
     class Meta:
         ordering = ["-active", "full_name"]

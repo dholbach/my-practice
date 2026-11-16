@@ -95,12 +95,6 @@ class ClientTag(TimestampedModel):
         verbose_name = _("Client tag")
         verbose_name_plural = _("Client tags")
 
-    @property
-    def category_priority(self) -> int:
-        """Get numeric priority for sorting (1=attention, 2=general, 3=exit)"""
-        priority_map = {"attention": 1, "general": 2, "exit": 3}
-        return priority_map.get(self.category, 99)
-
     def __str__(self) -> str:
         return self.name
 

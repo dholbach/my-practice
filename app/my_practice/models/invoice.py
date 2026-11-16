@@ -414,11 +414,6 @@ class InvoiceItem(models.Model):
             return f"{self.invoice.invoice_number} - {self.session.session_date}"  # type: ignore[union-attr]
         return f"{self.invoice.invoice_number} - {self.description}"
 
-    @property
-    def is_free_form(self) -> bool:
-        """True for description-only items with no linked session (P-122)."""
-        return self.session_id is None
-
     @staticmethod
     def validate_exclusive_session_or_description(has_session: bool, has_description: bool) -> None:
         """Exactly one of session/description must be set. Shared by save()

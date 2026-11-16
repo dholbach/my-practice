@@ -3,7 +3,7 @@ Widget builders for dashboard - P-003 Phase 4 + P-012
 Additional widgets: Session Import, Invoice Actions, Checklist
 """
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 from django.db.models import Max, QuerySet
@@ -18,6 +18,7 @@ from ..models import (
     OperationalChecklistCompletion,
     Session,
 )
+from .date_helpers import checklist_period_start
 
 
 class SessionImportWidgetBuilder:
@@ -113,7 +114,9 @@ class InvoiceActionsWidgetBuilder:
             .order_by("last_session_date")  # Oldest sessions first
         )
 
-    def get_overdue_invoices(self, today: date | None = None) -> list[Invoice]:
+    def get_overdue_invoices(
+        self, today: date | None = None, *, unpaid: list[Invoice] | None = None
+    ) -> list[Invoice]:
         """
         Get sent invoices overdue by more than practice.overdue_after_days.
 
@@ -123,7 +126,7 @@ class InvoiceActionsWidgetBuilder:
         today = today or timezone.localdate()
         return [
             inv
-            for inv in self._get_unpaid_invoices()
+            for inv in (self._get_unpaid_invoices() if unpaid is None else unpaid)
             if Invoice.days_overdue(inv.invoice_date, today) > self.practice.overdue_after_days
         ]
 
@@ -144,7 +147,7 @@ class InvoiceActionsWidgetBuilder:
         # Evaluate each queryset once; overdue is a subset of unpaid, so it is
         # derived in Python instead of hitting the DB again
         unpaid = list(self._get_unpaid_invoices())
-        overdue = self.get_overdue_invoices()
+        overdue = self.get_overdue_invoices(unpaid=unpaid)
         drafts = list(self.get_draft_invoices())
 
         unpaid_total = sum(inv.calculate_total() for inv in unpaid)
@@ -182,19 +185,6 @@ class ChecklistWidgetBuilder:
         ("annual", _("Annual security review")),
     ]
 
-    def _get_period_start(self, checklist_type: str) -> date:
-        """Calculate the first day of the current period for a checklist type."""
-        today = timezone.localdate()
-        if checklist_type == "weekly":
-            return today - timedelta(days=today.weekday())  # Monday
-        elif checklist_type == "monthly":
-            return date(today.year, today.month, 1)
-        elif checklist_type == "quarterly":
-            quarter_start_month = ((today.month - 1) // 3) * 3 + 1
-            return date(today.year, quarter_start_month, 1)
-        else:  # annual
-            return date(today.year, 1, 1)
-
     def build_context(self) -> dict:
         """
         Build context for checklist widget.
@@ -213,7 +203,7 @@ class ChecklistWidgetBuilder:
 
         pending = []
         for ct, label in self.CHECKLIST_CADENCES:
-            period_start = self._get_period_start(ct)
+            period_start = checklist_period_start(ct)
             completed = OperationalChecklistCompletion.objects.filter(
                 checklist_type=ct,
                 year_month=period_start,

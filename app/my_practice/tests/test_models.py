@@ -21,6 +21,7 @@ from my_practice.models import (
     Session,
     TimeOff,
 )
+from my_practice.utils.tag_helpers import sort_tags_by_category
 
 
 class PracticeModelTestCase(TestCase):
@@ -179,19 +180,6 @@ class ServiceTypeModelTestCase(TestCase):
         ServiceType.objects.create(code="therapy_60", name="Session 1", practice=self.practice)
         with self.assertRaises(IntegrityError):
             ServiceType.objects.create(code="therapy_60", name="Session 2", practice=self.practice)
-
-    def test_service_type_get_name(self):
-        """Test get_name method with language fallback"""
-        st = ServiceType.objects.create(
-            code="therapy_60",
-            name="Default Name",
-            name_de="Deutsche Sitzung",
-            name_en="English Session",
-            practice=self.practice,
-        )
-        self.assertEqual(st.get_name("de"), "Deutsche Sitzung")
-        self.assertEqual(st.get_name("en"), "English Session")
-        self.assertEqual(st.get_name("fr"), "Default Name")  # Fallback
 
 
 class InvoiceModelTestCase(TestCase):
@@ -723,22 +711,9 @@ class ClientTagModelTestCase(TestCase):
         ClientTag.objects.create(name="closure", slug="closure", category="exit", color="purple")
         ClientTag.objects.create(name="a-exit", slug="a-exit", category="exit", color="gray")
 
-    def test_category_priority_property(self):
-        """Test that category_priority property returns correct values"""
-        attention_tag = ClientTag.objects.get(slug="urgent")
-        general_tag = ClientTag.objects.get(slug="traveling")
-        exit_tag = ClientTag.objects.get(slug="closure")
-
-        self.assertEqual(attention_tag.category_priority, 1)
-        self.assertEqual(general_tag.category_priority, 2)
-        self.assertEqual(exit_tag.category_priority, 3)
-
     def test_tags_sort_by_category_and_name(self):
         """Test that tags sort by category priority first, then alphabetically"""
-        tags = ClientTag.objects.all()
-
-        # Sort using the same logic as in views
-        sorted_tags = sorted(tags, key=lambda t: (t.category_priority, t.name.lower()))
+        sorted_tags = sort_tags_by_category(ClientTag.objects.all())
 
         # Expected order:
         # 1. Attention (priority 1): follow-up, urgent
@@ -759,8 +734,7 @@ class ClientTagModelTestCase(TestCase):
 
     def test_attention_tags_come_first(self):
         """Test that attention category tags always come before other categories"""
-        tags = ClientTag.objects.all()
-        sorted_tags = sorted(tags, key=lambda t: (t.category_priority, t.name.lower()))
+        sorted_tags = sort_tags_by_category(ClientTag.objects.all())
 
         # First two tags should be attention
         self.assertEqual(sorted_tags[0].category, "attention")
@@ -776,8 +750,7 @@ class ClientTagModelTestCase(TestCase):
 
     def test_alphabetical_within_category(self):
         """Test that tags sort alphabetically within same category"""
-        tags = ClientTag.objects.filter(category="attention")
-        sorted_tags = sorted(tags, key=lambda t: (t.category_priority, t.name.lower()))
+        sorted_tags = sort_tags_by_category(ClientTag.objects.filter(category="attention"))
 
         # Should be: follow-up, urgent (alphabetically)
         self.assertEqual(sorted_tags[0].name, "follow-up")

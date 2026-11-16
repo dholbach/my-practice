@@ -11,6 +11,14 @@ from .formatting import format_currency_de
 if TYPE_CHECKING:
     from ..models import Client, Invoice, Practice, TimeOff
 
+
+def make_from_email(practice: "Practice") -> str:
+    """Build a From address, optionally with a display name."""
+    if practice.email_from_name:
+        return f"{practice.email_from_name} <{practice.email}>"
+    return practice.email
+
+
 _GERMAN_MONTHS = {
     1: "Januar",
     2: "Februar",

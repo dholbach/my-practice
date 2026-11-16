@@ -14,7 +14,6 @@ from .financial import CompanyExpense, CompanyWithdrawal, ExpenseReceipt, TaxYea
 from .gebueh import GebuhZiffer, Leistungserfassung
 from .inquiry import (
     CLOSED_INQUIRY_STATUSES,
-    INQUIRY_LANGUAGE_CHOICES,
     INQUIRY_LAPSE_DAYS,
     INQUIRY_PERSONAL_FIELDS,
     INQUIRY_RETENTION_DAYS,
@@ -53,7 +52,6 @@ __all__ = [
     "INQUIRY_LAPSE_DAYS",
     "INQUIRY_PERSONAL_FIELDS",
     "INQUIRY_RETENTION_DAYS",
-    "INQUIRY_LANGUAGE_CHOICES",
     "InquirySource",
     "InquiryStatus",
     "MarketingPeriod",

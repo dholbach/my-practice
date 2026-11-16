@@ -38,13 +38,32 @@ from my_practice.utils.email_utils import (
     get_questionnaire_pdf_email_content,
     get_salutation_for_client,
     get_timeoff_notice_default_content,
+    make_from_email,
     prepare_invoice_email_context,
     render_email_template,
 )
 from my_practice.utils.formatting import format_currency_de
 from my_practice.validators import validate_email_template_placeholders
 
+from .test_helpers import create_test_practice
+
 NBSP = "\u00a0"  # explicit: an invisible literal here is too easy to "tidy away"
+
+
+class MakeFromEmailTest(TestCase):
+    """make_from_email: the display name is optional."""
+
+    def test_uses_display_name_when_set(self):
+        practice = create_test_practice(
+            slug="from-email-display-name-test",
+            email="practice@test.com",
+            email_from_name="Dr. Test Practitioner",
+        )
+        self.assertEqual(make_from_email(practice), "Dr. Test Practitioner <practice@test.com>")
+
+    def test_bare_email_when_no_display_name(self):
+        practice = create_test_practice(slug="from-email-bare-test", email="practice@test.com")
+        self.assertEqual(make_from_email(practice), "practice@test.com")
 
 
 class FormatCurrencyDeTest(TestCase):

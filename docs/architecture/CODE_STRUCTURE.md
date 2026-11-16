@@ -88,7 +88,8 @@ app/my_practice/
 │   ├── aggregation_helpers.py      # Reusable DB aggregation patterns
 │   ├── analytics_dashboard_builder.py  # AnalyticsDashboardBuilder
 │   ├── analytics_utils.py          # Analytics computations
-│   ├── bank_import.py              # Bank statement CSV parsing (delimiter/columns configurable per practice)
+│   ├── bank_import.py              # BankStatementImporter: CSV parsing (delimiter/columns configurable per practice),
+│   │                               #   source-agnostic ingest_transaction(), amounts_match(), build_counterparty_key()
 │   ├── billing_helpers.py          # Session→InvoiceItem: build_service_type_map,
 │   │                               #   resolve_session_rate, is_session_already_billed,
 │   │                               #   create_invoice_item_for_session
@@ -104,8 +105,9 @@ app/my_practice/
 │   ├── dashboard_context_builder.py # DashboardContextAssembler
 │   ├── dashboard_widgets.py        # Dashboard widget data builders
 │   ├── date_helpers.py             # DateRangeHelper, working-day counts,
-│   │                               #   get_quarter_range, get_quarter_for_date
-│   ├── email_utils.py              # Email composition helpers
+│   │                               #   get_quarter_range, get_quarter_for_date,
+│   │                               #   checklist_period_start() (key of a checklist completion)
+│   ├── email_utils.py              # Email composition helpers, make_from_email()
 │   ├── file_processing.py          # Uploaded media compression (images, PDFs)
 │   ├── financial_list_context_builder.py  # FinancialListContextBuilder
 │   ├── formatting.py               # format_currency_de() — shared money formatting for

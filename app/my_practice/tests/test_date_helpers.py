@@ -8,6 +8,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from my_practice.utils import DateRangeHelper
+from my_practice.utils.date_helpers import checklist_period_start
 
 
 class TestDateRangeHelper(TestCase):
@@ -366,3 +367,36 @@ class TimezoneLocaldateBoundaryTest(TestCase):
         fake_utc_now = datetime(2026, 1, 31, 23, 15, tzinfo=dt_timezone.utc)
         with patch("django.utils.timezone.now", return_value=fake_utc_now):
             self.assertEqual(DateRangeHelper.get_current_month_first(), date(2026, 2, 1))
+
+
+class ChecklistPeriodStartTests(TestCase):
+    """The key a checklist completion is stored under: the first day of its period."""
+
+    def test_weekly_starts_on_monday(self):
+        # Wednesday 2026-11-18 -> Monday 2026-11-16; a Monday and a Sunday of the same week
+        self.assertEqual(checklist_period_start("weekly", date(2026, 11, 18)), date(2026, 11, 16))
+        self.assertEqual(checklist_period_start("weekly", date(2026, 11, 16)), date(2026, 11, 16))
+        self.assertEqual(checklist_period_start("weekly", date(2026, 11, 22)), date(2026, 11, 16))
+
+    def test_monthly_starts_on_the_first(self):
+        self.assertEqual(checklist_period_start("monthly", date(2026, 11, 30)), date(2026, 11, 1))
+
+    def test_quarterly_starts_on_the_first_of_the_quarter(self):
+        for day, start in (
+            (date(2026, 1, 31), date(2026, 1, 1)),
+            (date(2026, 3, 31), date(2026, 1, 1)),
+            (date(2026, 4, 1), date(2026, 4, 1)),
+            (date(2026, 11, 16), date(2026, 10, 1)),
+            (date(2026, 12, 31), date(2026, 10, 1)),
+        ):
+            self.assertEqual(checklist_period_start("quarterly", day), start, day)
+
+    def test_anything_else_is_annual(self):
+        self.assertEqual(checklist_period_start("annual", date(2026, 11, 16)), date(2026, 1, 1))
+        self.assertEqual(checklist_period_start("whatever", date(2026, 11, 16)), date(2026, 1, 1))
+
+    def test_defaults_to_today(self):
+        with patch(
+            "my_practice.utils.date_helpers.timezone.localdate", return_value=date(2026, 5, 20)
+        ):
+            self.assertEqual(checklist_period_start("monthly"), date(2026, 5, 1))

@@ -54,11 +54,3 @@ class ServiceType(models.Model):
 
     def __str__(self) -> str:
         return self.name
-
-    def get_name(self, language: str = "de") -> str:
-        """Get name in specified language, fallback to default name"""
-        if language == "de" and self.name_de:
-            return self.name_de
-        elif language == "en" and self.name_en:
-            return self.name_en
-        return self.name

@@ -4,7 +4,7 @@ Centralized logic for date calculations and range handling.
 """
 
 import calendar
-from datetime import date
+from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
@@ -375,3 +375,21 @@ class DateRangeHelper:
             current += timedelta(days=1)
 
         return working_days
+
+
+def checklist_period_start(checklist_type: str, today: date | None = None) -> date:
+    """First day of the current period of an operational checklist.
+
+    "weekly" starts on Monday, "monthly" and "quarterly" on the first day of the
+    month or calendar quarter; anything else is the annual checklist. The date is
+    the key a completion is stored under, so the dashboard and the checklist views
+    have to agree on it.
+    """
+    today = today or timezone.localdate()
+    if checklist_type == "weekly":
+        return today - timedelta(days=today.weekday())
+    if checklist_type == "monthly":
+        return date(today.year, today.month, 1)
+    if checklist_type == "quarterly":
+        return date(today.year, ((today.month - 1) // 3) * 3 + 1, 1)
+    return date(today.year, 1, 1)

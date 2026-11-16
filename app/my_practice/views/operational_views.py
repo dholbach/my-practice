@@ -4,17 +4,16 @@ Handles checklist display and completion tracking.
 """
 
 import contextlib
-from datetime import date, timedelta
 
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.generic import TemplateView
 
 from ..models import ChecklistItemPause, OperationalChecklistCompletion
+from ..utils.date_helpers import checklist_period_start
 
 # Checklist items per type.
 #
@@ -114,20 +113,6 @@ CHECKLIST_ITEMS: dict[str, list[dict[str, str]]] = {
 }
 
 
-def _get_period_start(checklist_type: str) -> date:
-    """Calculate the first day of the current period for a checklist type."""
-    today = timezone.localdate()
-    if checklist_type == "weekly":
-        return today - timedelta(days=today.weekday())  # Monday
-    elif checklist_type == "monthly":
-        return date(today.year, today.month, 1)
-    elif checklist_type == "quarterly":
-        quarter_start_month = ((today.month - 1) // 3) * 3 + 1
-        return date(today.year, quarter_start_month, 1)
-    else:  # annual
-        return date(today.year, 1, 1)
-
-
 class OperationalChecklistView(TemplateView):
     """Display a checklist page for the given type and current period."""
 
@@ -142,7 +127,7 @@ class OperationalChecklistView(TemplateView):
         if checklist_type not in valid_types:
             checklist_type = "monthly"
 
-        period_start = _get_period_start(checklist_type)
+        period_start = checklist_period_start(checklist_type)
 
         # Get or create the entry for this period (not yet completed)
         checklist, _created = OperationalChecklistCompletion.objects.get_or_create(
@@ -184,7 +169,7 @@ def checklist_complete(request: HttpRequest, checklist_type: str) -> HttpRespons
         messages.error(request, _("Unknown checklist type."))
         return redirect("dashboard")
 
-    period_start = _get_period_start(checklist_type)
+    period_start = checklist_period_start(checklist_type)
     checklist = get_object_or_404(
         OperationalChecklistCompletion,
         checklist_type=checklist_type,

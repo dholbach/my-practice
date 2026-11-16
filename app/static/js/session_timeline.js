@@ -17,5 +17,4 @@
     }
 
     root.MPChart.init("sessionTimeline", build);
-    root.SessionTimeline = { build };
 })(typeof window !== "undefined" ? window : globalThis);

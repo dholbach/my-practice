@@ -84,9 +84,9 @@ class ChecklistCompleteTest(TestCase):
             reverse("checklist_complete", args=["weekly"]), {"notes": "All done"}
         )
         self.assertEqual(response.status_code, 302)
-        from ..views.operational_views import _get_period_start
+        from ..utils.date_helpers import checklist_period_start
 
-        period_start = _get_period_start("weekly")
+        period_start = checklist_period_start("weekly")
         checklist = OperationalChecklistCompletion.objects.get(
             checklist_type="weekly", year_month=period_start
         )
