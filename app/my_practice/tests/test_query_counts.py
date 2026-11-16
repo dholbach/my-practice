@@ -33,7 +33,7 @@ from ..models import (
     Session,
     allow_issued_invoice_writes,
 )
-from .test_helpers import QueryCountMixin, link_user_to_practice
+from .test_helpers import QueryCountMixin, link_user_to_practice, select_practice
 
 
 class QueryCountTestBase(QueryCountMixin, TestCase):
@@ -54,9 +54,7 @@ class QueryCountTestBase(QueryCountMixin, TestCase):
 
         self.http = TestClient()
         self.http.login(username="qcuser", password="testpass123")
-        session = self.http.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.http, self.practice)
 
         self.service_type = ServiceType.objects.create(
             code="individual",

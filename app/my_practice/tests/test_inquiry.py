@@ -19,6 +19,8 @@ from my_practice.models import (
 )
 from my_practice.utils.inquiry_analytics import monthly_chart, open_inquiry_ageing
 
+from .test_helpers import select_practice
+
 
 def _make_user_and_practice(username="testuser"):
     user = User.objects.create_user(username=username, password="testpass")
@@ -105,9 +107,7 @@ class InquiryListViewTestCase(TestCase):
         self.client_obj = self.client  # test client (HTTP)
         self.client_obj.login(username="testuser", password="testpass")
         # Set the practice via session
-        session = self.client_obj.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_obj, self.practice)
 
     def test_list_requires_login(self):
         self.client_obj.logout()
@@ -156,9 +156,7 @@ class InquiryCRUDViewTestCase(TestCase):
         self.user, self.practice = _make_user_and_practice()
         self.http = self.client
         self.http.login(username="testuser", password="testpass")
-        session = self.http.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.http, self.practice)
 
     def test_create_inquiry(self):
         self.http.post(
@@ -219,9 +217,7 @@ class InquiryConvertViewTestCase(TestCase):
         self.user, self.practice = _make_user_and_practice()
         self.http = self.client
         self.http.login(username="testuser", password="testpass")
-        session = self.http.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.http, self.practice)
 
     def test_convert_creates_client(self):
         inquiry = _make_inquiry(

@@ -6,21 +6,12 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
 from ..models import ClientInquiry, InquiryStatus
 from ..tests.test_helpers import create_test_practice, link_user_to_practice
-
-
-def _setup_client(user, practice):
-    tc = TestClient()
-    tc.login(username=user.username, password="testpass123")
-    session = tc.session
-    session["current_practice_slug"] = practice.slug
-    session.save()
-    return tc
+from .test_helpers import login_to_practice
 
 
 def _make_inquiry(practice, name="Anna Schmidt", status=InquiryStatus.NEW):
@@ -41,7 +32,7 @@ class InquiryListViewTest(TestCase):
         self.practice = create_test_practice(slug="inq-list-1")
         self.user = User.objects.create_user(username="inquser", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         _make_inquiry(self.practice, "Anna Schmidt", InquiryStatus.NEW)
         _make_inquiry(self.practice, "Max Mustermann", InquiryStatus.DECLINED)
 
@@ -74,7 +65,7 @@ class InquiryCreateViewTest(TestCase):
         self.practice = create_test_practice(slug="inq-create-1")
         self.user = User.objects.create_user(username="inquser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
 
     def test_get_renders(self):
         response = self.tc.get(reverse("inquiry_create"))
@@ -112,7 +103,7 @@ class InquiryUpdateViewTest(TestCase):
         self.practice = create_test_practice(slug="inq-update-1")
         self.user = User.objects.create_user(username="inquser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.inquiry = _make_inquiry(self.practice, "Anna Schmidt")
 
     def test_get_renders_with_data(self):
@@ -147,7 +138,7 @@ class InquiryDeleteViewTest(TestCase):
         self.practice = create_test_practice(slug="inq-delete-1")
         self.user = User.objects.create_user(username="inquser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.inquiry = _make_inquiry(self.practice, "To Delete Inquiry")
 
     def test_get_shows_confirmation(self):
@@ -168,7 +159,7 @@ class InquiryConvertViewTest(TestCase):
         self.practice = create_test_practice(slug="inq-convert-1")
         self.user = User.objects.create_user(username="inquser5", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.inquiry = _make_inquiry(self.practice, "Convert Me", InquiryStatus.IN_INTAKE)
 
     def test_get_shows_form(self):

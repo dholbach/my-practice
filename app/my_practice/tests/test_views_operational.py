@@ -3,22 +3,12 @@ Tests for operational views (checklist and boilerplate).
 """
 
 from django.contrib.auth.models import User
-from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
 from ..models import OperationalChecklistCompletion
 from ..tests.test_helpers import create_test_practice, link_user_to_practice
-
-
-def _setup_client(user, practice=None):
-    tc = TestClient()
-    tc.login(username=user.username, password="testpass123")
-    if practice:
-        session = tc.session
-        session["current_practice_slug"] = practice.slug
-        session.save()
-    return tc
+from .test_helpers import login_to_practice
 
 
 class OperationalChecklistViewTest(TestCase):
@@ -28,7 +18,7 @@ class OperationalChecklistViewTest(TestCase):
         self.practice = create_test_practice(slug="ops-checklist-1")
         self.user = User.objects.create_user(username="opsuser", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
 
     def test_monthly_checklist_renders(self):
         response = self.tc.get(reverse("checklist", args=["monthly"]))
@@ -71,7 +61,7 @@ class ChecklistCompleteTest(TestCase):
         self.practice = create_test_practice(slug="ops-complete-1")
         self.user = User.objects.create_user(username="opsuser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         # Ensure checklist exists by GETting it first
         self.tc.get(reverse("checklist", args=["weekly"]))
 
@@ -104,7 +94,7 @@ class ChecklistPauseItemTest(TestCase):
         self.practice = create_test_practice(slug="ops-pause-1")
         self.user = User.objects.create_user(username="opsuser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
 
     def test_post_pauses_item(self):
         response = self.tc.post(
@@ -135,7 +125,7 @@ class ChecklistUnpauseItemTest(TestCase):
         self.practice = create_test_practice(slug="ops-unpause-1")
         self.user = User.objects.create_user(username="opsuser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         from ..models import ChecklistItemPause
 
         ChecklistItemPause.objects.create(checklist_type="monthly", item_id="restore_db")
@@ -159,7 +149,7 @@ class BoilerplateViewTest(TestCase):
         self.practice = create_test_practice(slug="ops-boilerplate-1")
         self.user = User.objects.create_user(username="opsuser5", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
 
     def test_get_renders(self):
         response = self.tc.get(reverse("boilerplate"))

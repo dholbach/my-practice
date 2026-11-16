@@ -5,22 +5,13 @@ Tests for Focus Queue views (P-050 phase 3).
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from ..models import PracticeTodo
 from ..tests.test_helpers import create_test_practice, link_user_to_practice
-
-
-def _setup_client(user, practice):
-    tc = TestClient()
-    tc.login(username=user.username, password="testpass123")
-    session = tc.session
-    session["current_practice_slug"] = practice.slug
-    session.save()
-    return tc
+from .test_helpers import login_to_practice
 
 
 class FocusQueueViewTest(TestCase):
@@ -28,7 +19,7 @@ class FocusQueueViewTest(TestCase):
         self.practice = create_test_practice(slug="focus-queue-1")
         self.user = User.objects.create_user(username="fquser", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
 
     def test_get_renders(self):
         response = self.tc.get(reverse("focus_queue"))
@@ -196,7 +187,7 @@ class FocusQueueCompleteTest(TestCase):
         self.practice = create_test_practice(slug="focus-queue-2")
         self.user = User.objects.create_user(username="fquser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.task = PracticeTodo.objects.create(practice=self.practice, title="To complete")
 
     def test_post_marks_completed(self):
@@ -259,7 +250,7 @@ class FocusQueueSnoozeTest(TestCase):
         self.practice = create_test_practice(slug="focus-queue-3")
         self.user = User.objects.create_user(username="fquser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.task = PracticeTodo.objects.create(practice=self.practice, title="To snooze")
 
     def test_snooze_one_day(self):
@@ -289,7 +280,7 @@ class FocusQueueSetDueTodayTest(TestCase):
         self.practice = create_test_practice(slug="focus-queue-4")
         self.user = User.objects.create_user(username="fquser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.task = PracticeTodo.objects.create(
             practice=self.practice, title="Bump to today", priority="low"
         )
@@ -337,7 +328,7 @@ class FocusQueueNewTaskReturnsToFilterTest(TestCase):
         self.practice = create_test_practice(slug="focus-queue-next")
         self.user = User.objects.create_user(username="fqnext", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         PracticeTodo.objects.create(
             practice=self.practice,
             title="Existing task",
