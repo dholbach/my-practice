@@ -24,32 +24,6 @@
     // wasn't worth wiring up).
     const i18n = document.body.dataset;
 
-    // Helper: Check if user is typing in an input field
-    function isTyping(event) {
-        const target = event.target;
-        const tagName = target.tagName.toLowerCase();
-
-        // Exclude input fields, textareas, and contenteditable elements
-        if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
-            return true;
-        }
-
-        if (target.isContentEditable || target.contentEditable === 'true') {
-            return true;
-        }
-
-        // Check if inside a contenteditable parent
-        let parent = target.parentElement;
-        while (parent) {
-            if (parent.isContentEditable || parent.contentEditable === 'true') {
-                return true;
-            }
-            parent = parent.parentElement;
-        }
-
-        return false;
-    }
-
     // Helper: Get current page context
     function getPageContext() {
         const path = window.location.pathname;
@@ -183,7 +157,7 @@
     // Main keyboard event handler
     document.addEventListener('keydown', function(event) {
         // Ignore if user is typing
-        if (isTyping(event)) {
+        if (window.MPTyping.isTyping(event.target)) {
             return;
         }
 

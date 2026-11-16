@@ -24,6 +24,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "keyboard-nav.js"), "utf8");
+const TYPING = fs.readFileSync(path.join(__dirname, "typing_target.js"), "utf8");
 
 // Mirrors the data-kbd-* attributes base.html puts on <body>.
 const I18N = {
@@ -154,7 +155,9 @@ function setupPage(options = {}) {
         },
     };
 
-    vm.runInNewContext(SOURCE, { document: document_, window: window_, console });
+    const context = vm.createContext({ document: document_, window: window_, console });
+    vm.runInContext(TYPING, context);
+    vm.runInContext(SOURCE, context);
 
     return {
         document: document_,

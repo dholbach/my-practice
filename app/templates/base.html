@@ -258,6 +258,9 @@
 
     {% include "includes/command_palette.html" %}
 
+    <!-- Shared "is the user typing?" check for the two keyboard scripts below -->
+    <script src="{% static 'js/typing_target.js' %}"></script>
+
     <!-- Command Palette (P-047) -->
     <script src="{% static 'js/command_palette.js' %}"></script>
 
