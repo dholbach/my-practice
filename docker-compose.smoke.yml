@@ -3,9 +3,11 @@
 #
 # Differences from docker-compose.prod.yml, on purpose:
 # - image tag comes from ${SMOKE_VERSION} (set by dev.py)
-# - no container_name / no named volumes → runs alongside the dev stack;
+# - no container_name, and only throwaway named volumes (static, media, documents,
+#   questionnaires) → runs alongside the dev stack;
 #   `down -v` under the smoke project name removes every trace
-# - no host bind mounts (backups/media/documents) — nothing touches real data
+# - no host bind mounts (backups/media/documents) — the data directories are
+#   named volumes, so uploads work but nothing touches real data
 # - ephemeral localhost port instead of 8000
 services:
   postgres:
@@ -20,12 +22,42 @@ services:
       timeout: 5s
       retries: 12
 
+  # Same one-shot as docker-compose.prod.yml, for the staticfiles volume.
+  fix-ownership:
+    image: ghcr.io/dholbach/my-practice:${SMOKE_VERSION}
+    restart: "no"
+    network_mode: none
+    user: "0:0"
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - static_data:/app/staticfiles
+      - media:/app/media
+      - documents:/my-practice-data/documents
+      - questionnaires:/my-practice-data/questionnaires
+    command: chown 1000:1000 /app/staticfiles /app/media /my-practice-data/documents /my-practice-data/questionnaires
+
   django:
     image: ghcr.io/dholbach/my-practice:${SMOKE_VERSION}
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - static_data:/app/staticfiles
+      - media:/app/media
+      - documents:/my-practice-data/documents
+      - questionnaires:/my-practice-data/questionnaires
     ports:
       - "127.0.0.1::8000"
     environment:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - HOME=/tmp
       - DJANGO_DEBUG=False
       - SECURE_SSL_REDIRECT=false
       - POSTGRES_DB=my_practice
@@ -42,9 +74,17 @@ services:
       retries: 24
       start_period: 10s
     depends_on:
+      fix-ownership:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput --ignore tailwind.css &&
              gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 300 config.wsgi:application"
+
+volumes:
+  static_data:
+  media:
+  documents:
+  questionnaires:

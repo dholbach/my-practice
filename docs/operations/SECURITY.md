@@ -159,6 +159,15 @@ the data directories (media, documents, questionnaires) and it can read `FERNET_
 `network_mode: host` stays because Proton Bridge listens on the host's loopback, so the
 host's loopback services remain reachable too.
 
+## Production Container Privileges
+
+`docker-compose.prod.yml` runs `django` as `MY_PRACTICE_UID:MY_PRACTICE_GID` (default
+1000:1000) with every capability dropped and `no-new-privileges`, for the same reason as the
+dev stack: it parses uploads next to real data. A one-shot `fix-ownership` service (root,
+only `CHOWN` and `DAC_READ_SEARCH`, no network) hands it the `staticfiles` volume and the
+media, documents and questionnaires directories before it starts, which also covers
+installations upgraded from a root-running version. `backups` stays read-only.
+
 ## Network Exposure
 
 `docker-compose.prod.yml` publishes port 8000 on `MY_PRACTICE_BIND_ADDRESS`,
