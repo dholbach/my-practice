@@ -83,7 +83,9 @@ class TransactionMatchForm(StyledFormMixin, forms.Form):
                     status="sent",  # Only unpaid invoices
                 )
                 .select_related("client")
-                .order_by("-invoice_date")
+                # The number breaks ties between invoices of one date: the order decides
+                # which invoice a combined payment is linked to and how its note reads.
+                .order_by("-invoice_date", "invoice_number")
             )
             # Custom label format: <invoice code> (<invoice date>): <invoice amount>
             self.fields["invoice"].label_from_instance = self._invoice_label

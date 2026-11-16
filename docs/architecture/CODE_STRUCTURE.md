@@ -122,6 +122,7 @@ app/my_practice/
 │   ├── practice_helpers.py         # Practice-scoped query helpers
 │   ├── questionnaire_content.py    # Loader for clinical questionnaire content (P-118/119/120)
 │   ├── revenue_helpers.py          # RevenueCalculator
+│   ├── bank_matching.py            # record_payment() (all-or-nothing), payer alias rule
 │   ├── bank_review_helpers.py      # Bank review page: invoice matches per transaction, known payers
 │   ├── session_log_helpers.py      # parse_duration(), find_or_create_session(),
 │   │                               #   set_session_duration() (frozen once billed)
