@@ -121,7 +121,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             super()
             .get_queryset()
             .filter(
-                match_confidence="unmatched",
+                match_confidence=BankTransaction.Confidence.UNMATCHED,
                 processed=False,
             )
             .select_related("matched_invoice")
@@ -163,7 +163,11 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         expense_count = (
             BankTransaction.objects.for_current_practice(self.request)
             .filter(
-                match_confidence__in=["unmatched", "auto-expense", "ignored"],
+                match_confidence__in=[
+                    BankTransaction.Confidence.UNMATCHED,
+                    BankTransaction.Confidence.AUTO_EXPENSE,
+                    BankTransaction.Confidence.IGNORED,
+                ],
                 processed=False,
                 amount__lt=0,
             )
@@ -175,7 +179,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         withdrawal_count = (
             BankTransaction.objects.for_current_practice(self.request)
             .filter(
-                match_confidence="auto-withdrawal",
+                match_confidence=BankTransaction.Confidence.AUTO_WITHDRAWAL,
                 processed=False,
             )
             .count()
@@ -186,7 +190,11 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         recently_matched = (
             BankTransaction.objects.for_current_practice(self.request)
             .filter(
-                match_confidence__in=["exact", "fuzzy", "manual"],
+                match_confidence__in=[
+                    BankTransaction.Confidence.EXACT,
+                    BankTransaction.Confidence.FUZZY,
+                    BankTransaction.Confidence.MANUAL,
+                ],
                 matched_invoice__isnull=False,
             )
             .select_related("matched_invoice", "matched_invoice__client")
@@ -250,7 +258,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             BankTransaction.objects.for_current_practice(request)
             .filter(
                 processed=False,
-                match_confidence="unmatched",
+                match_confidence=BankTransaction.Confidence.UNMATCHED,
             )
             .exclude(id=exclude_transaction.id)
             .order_by("transaction_date")
@@ -267,7 +275,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         transactions = list(
             BankTransaction.objects.for_current_practice(request)
             .filter(
-                match_confidence="unmatched",
+                match_confidence=BankTransaction.Confidence.UNMATCHED,
                 processed=False,
             )
             .select_related("matched_invoice")
@@ -277,7 +285,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         for trans, paid_invoice in paid_invoice_matches(
             transactions, practice=request.current_practice
         ):
-            trans.match_confidence = "ignored"
+            trans.match_confidence = BankTransaction.Confidence.IGNORED
             trans.processed = True
             trans.notes = _("Auto-ignored: invoice %(number)s already paid") % {
                 "number": paid_invoice.invoice_number
@@ -303,11 +311,11 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         updated = (
             BankTransaction.objects.for_current_practice(request)
             .filter(
-                match_confidence="unmatched",
+                match_confidence=BankTransaction.Confidence.UNMATCHED,
                 processed=False,
                 amount__lt=0,
             )
-            .update(match_confidence="ignored")
+            .update(match_confidence=BankTransaction.Confidence.IGNORED)
         )
         messages.success(
             request,
@@ -324,10 +332,10 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         updated = (
             BankTransaction.objects.for_current_practice(request)
             .filter(
-                match_confidence="unmatched",
+                match_confidence=BankTransaction.Confidence.UNMATCHED,
                 processed=False,
             )
-            .update(match_confidence="ignored")
+            .update(match_confidence=BankTransaction.Confidence.IGNORED)
         )
         messages.success(
             request,
@@ -343,7 +351,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
     # ── single-transaction action handlers ───────────────────────────────────
 
     def _handle_ignore(self, request, transaction, redirect_url):
-        transaction.match_confidence = "ignored"
+        transaction.match_confidence = BankTransaction.Confidence.IGNORED
         transaction.processed = True
         transaction.save()
         messages.success(request, _("Transaction ignored."))
@@ -363,7 +371,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
                 transaction.matched_invoice = invoice
                 self._maybe_create_alias(request, transaction, invoice, "confirm")
 
-        transaction.match_confidence = "manual"
+        transaction.match_confidence = BankTransaction.Confidence.MANUAL
         transaction.processed = True
         transaction.save()
 
@@ -401,7 +409,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             return redirect(redirect_url)
 
         try:
-            record_payment(transaction, [invoice], confidence="exact")
+            record_payment(transaction, [invoice], confidence=BankTransaction.Confidence.EXACT)
         except InvoiceNotPayableError as exc:
             return self._refuse_unpayable(request, exc, redirect_url)
 
@@ -445,7 +453,9 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             notes = f"{bulk_note}\n{notes}" if notes else bulk_note
 
         try:
-            record_payment(transaction, invoice_list, confidence="manual", notes=notes)
+            record_payment(
+                transaction, invoice_list, confidence=BankTransaction.Confidence.MANUAL, notes=notes
+            )
         except InvoiceNotPayableError as exc:
             return self._refuse_unpayable(request, exc, redirect_url)
 
@@ -639,7 +649,7 @@ class BankFinancialReviewView(PracticeScopedListView):
 
             notes = f"{self.grouped_note_prefix}: {record} (ID: {record.id})"
             for trans in transactions:
-                trans.match_confidence = "ignored"
+                trans.match_confidence = BankTransaction.Confidence.IGNORED
                 setattr(trans, self.link_field, record)
                 trans.notes = notes
                 trans.processed = True
@@ -665,7 +675,7 @@ class BankFinancialReviewView(PracticeScopedListView):
         orphan_ids = self._orphan_record_ids(transactions)
         with db_transaction.atomic():
             count = transactions.update(
-                match_confidence="ignored",
+                match_confidence=BankTransaction.Confidence.IGNORED,
                 notes="Manuell ignoriert",
                 processed=True,
                 **{self.link_field: None},
@@ -704,7 +714,11 @@ class BankExpenseReviewView(BankFinancialReviewView):
     def queryset_filter(self) -> dict:
         return {
             "amount__lt": 0,
-            "match_confidence__in": ["unmatched", "ignored", "auto-expense"],
+            "match_confidence__in": [
+                BankTransaction.Confidence.UNMATCHED,
+                BankTransaction.Confidence.IGNORED,
+                BankTransaction.Confidence.AUTO_EXPENSE,
+            ],
             "processed": False,
         }
 
@@ -752,4 +766,4 @@ class BankWithdrawalReviewView(BankFinancialReviewView):
     )
 
     def queryset_filter(self) -> dict:
-        return {"match_confidence": "auto-withdrawal", "processed": False}
+        return {"match_confidence": BankTransaction.Confidence.AUTO_WITHDRAWAL, "processed": False}

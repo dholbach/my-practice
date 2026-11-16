@@ -159,7 +159,7 @@ class Command(BaseCommand):
                 processed=False,
                 matched_invoice__isnull=True,
             )
-            .exclude(match_confidence="ignored")
+            .exclude(match_confidence=BankTransaction.Confidence.IGNORED)
             .count()
         )
 
