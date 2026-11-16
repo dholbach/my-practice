@@ -97,7 +97,7 @@ def _dispatch_email(
             )
     except Exception as e:
         logger.exception(f"Failed to send email: {e}")
-        messages.error(request, _("Error while sending: %(error)s") % {"error": e})
+        messages.error(request, _("Error while sending. Details are in the server log."))
     return redirect(redirect_url)
 
 
@@ -206,7 +206,7 @@ class BaseClientEmailView(View):
             attachment = self.get_attachment(client, practice)
         except Exception as e:
             logger.exception(f"Attachment generation failed: {e}")
-            messages.error(request, _("Error creating attachment: %(error)s") % {"error": e})
+            messages.error(request, _("Error creating attachment. Details are in the server log."))
             return self._redirect_to_detail(pk)
 
         msg = EmailMessage(
@@ -335,7 +335,7 @@ class SendInvoiceEmailView(View):
             logger.info(f"PDF generated ({len(pdf_content)} bytes)")
         except Exception as e:
             logger.exception(f"PDF generation failed: {e}")
-            messages.error(request, _("Error creating the PDF: %(error)s") % {"error": e})
+            messages.error(request, _("Error creating the PDF. Details are in the server log."))
             return redirect("invoice_detail", pk=invoice.id)
 
         filename = (

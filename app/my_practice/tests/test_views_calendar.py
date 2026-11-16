@@ -701,3 +701,4 @@ class CalendarEventQuickActionTest(CalendarViewsTestBase):
             )
         messages = list(response.context["messages"])
         self.assertTrue(any("Fehler beim Import" in str(m) for m in messages))
+        self.assertFalse(any("db down" in str(m) for m in messages))

@@ -220,8 +220,10 @@ class SendInvoiceEmailViewTest(TestCase):
         response = self.client_http.post(
             reverse("send_invoice_email", kwargs={"invoice_id": self.invoice.pk}),
             {"quick_send": "true"},
+            follow=True,
         )
         self.assertRedirects(response, reverse("invoice_detail", kwargs={"pk": self.invoice.pk}))
+        self.assertFalse(any("boom" in str(m) for m in response.context["messages"]))
 
     @patch("my_practice.views.email_views.EmailMessage")
     def test_send_exception_shows_error(self, mock_email):
@@ -232,8 +234,10 @@ class SendInvoiceEmailViewTest(TestCase):
         response = self.client_http.post(
             reverse("send_invoice_email", kwargs={"invoice_id": self.invoice.pk}),
             {"quick_send": "true"},
+            follow=True,
         )
         self.assertRedirects(response, reverse("invoice_detail", kwargs={"pk": self.invoice.pk}))
+        self.assertFalse(any("smtp down" in str(m) for m in response.context["messages"]))
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.status, "draft")
 
@@ -815,8 +819,10 @@ class SendContractEmailViewTest(TestCase):
         response = self.client_http.post(
             reverse("send_contract_email", kwargs={"pk": self.test_client.pk}),
             {"recipient": "contract@example.com", "subject": "x", "body": "y"},
+            follow=True,
         )
         self.assertRedirects(response, reverse("client_detail", kwargs={"pk": self.test_client.pk}))
+        self.assertFalse(any("PDF engine crashed" in str(m) for m in response.context["messages"]))
 
 
 class SendQuestionnairePdfEmailViewTest(TestCase):
