@@ -483,17 +483,20 @@ class MyUpdateView(UpdateView):
                 messages.error(self.request, f"{field}: {error}")
         return super().form_invalid(form)
 
-# API Views: Return JsonResponse with appropriate status codes
+# API Views: JsonResponse on success, json_error() on failure. json_error()
+# returns {"success": False, "error": message} with the status code, so the page
+# scripts can test `success` first and show `error`.
 from django.http import JsonResponse
+from ..utils.view_helpers import json_error
 
 def api_endpoint(request):
     try:
         # ... processing ...
         return JsonResponse({"success": True, "data": result})
     except ValueError as e:
-        return JsonResponse({"error": str(e)}, status=400)
-    except Exception as e:
-        return JsonResponse({"error": "Internal server error"}, status=500)
+        return json_error(e)
+    except Exception:
+        return json_error("Internal server error", 500)
 
 # Management Commands: Raise exceptions with logging
 import logging

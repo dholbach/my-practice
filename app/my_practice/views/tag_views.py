@@ -14,6 +14,7 @@ from django.views.generic import ListView
 
 from ..models import Client, ClientTag
 from ..utils import annotate_client_counts, sort_tags_by_category
+from ..utils.view_helpers import json_error
 from .crud_mixins import (
     NextRedirectMixin,
     PracticeScopedCreateView,
@@ -78,7 +79,7 @@ def client_add_tag(request, client_id):
     tag_id = request.POST.get("tag_id")
 
     if not tag_id:
-        return JsonResponse({"error": _("Tag ID required")}, status=400)
+        return json_error(_("Tag ID required"))
 
     tag = get_object_or_404(ClientTag, pk=tag_id)
     client.tags.add(tag)
