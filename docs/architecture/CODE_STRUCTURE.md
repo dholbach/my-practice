@@ -122,6 +122,8 @@ app/my_practice/
 │   ├── practice_helpers.py         # Practice-scoped query helpers
 │   ├── questionnaire_content.py    # Loader for clinical questionnaire content (P-118/119/120)
 │   ├── revenue_helpers.py          # RevenueCalculator
+│   ├── session_log_helpers.py      # parse_duration(), find_or_create_session(),
+│   │                               #   set_session_duration() (frozen once billed)
 │   ├── tag_helpers.py              # Tag sorting + category helpers
 │   ├── tax_context_builder.py      # TaxYearContextBuilder, available_data_years()
 │   ├── timeoff_helpers.py          # Time-off query helpers
