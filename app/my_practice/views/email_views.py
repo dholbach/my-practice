@@ -25,6 +25,7 @@ from ..utils.email_utils import (
     get_payment_reminder_email_content,
     get_questionnaire_email_content,
     get_questionnaire_pdf_email_content,
+    make_from_email,
 )
 from ..utils.pdf_generation import (
     generate_contract_pdf_bytes,
@@ -41,11 +42,19 @@ logger = logging.getLogger("my_practice.email")
 # ── Module-level helpers ────────────────────────────────────────────────────
 
 
-def _make_from_email(practice: Practice) -> str:
-    """Build a From address, optionally with a display name."""
-    if practice.email_from_name:
-        return f"{practice.email_from_name} <{practice.email}>"
-    return practice.email
+def _load_unsent_invoice(
+    request: HttpRequest, invoice_id: int
+) -> tuple[Invoice, HttpResponse | None]:
+    """The practice's invoice, and a redirect to its detail page if it was already sent."""
+    invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=invoice_id)
+    if invoice.status == Invoice.Status.SENT:
+        messages.warning(
+            request,
+            _("Invoice %(number)s has already been sent. Change the status to send it again.")
+            % {"number": invoice.invoice_number},
+        )
+        return invoice, redirect("invoice_detail", pk=invoice_id)
+    return invoice, None
 
 
 def _success_html(text: str, recipient: str):
@@ -203,7 +212,7 @@ class BaseClientEmailView(View):
         msg = EmailMessage(
             subject=subject,
             body=body,
-            from_email=_make_from_email(practice),
+            from_email=make_from_email(practice),
             to=[recipient],
         )
         if attachment:
@@ -232,17 +241,10 @@ class SendInvoiceEmailView(View):
 
     def get(self, request: HttpRequest, invoice_id: int) -> HttpResponse:
         """Show email customization form"""
-        invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=invoice_id)
+        invoice, already_sent = _load_unsent_invoice(request, invoice_id)
+        if already_sent:
+            return already_sent
         practice = invoice.practice
-
-        # Prevent sending if already sent
-        if invoice.status == "sent":
-            messages.warning(
-                request,
-                _("Invoice %(number)s has already been sent. Change the status to send it again.")
-                % {"number": invoice.invoice_number},
-            )
-            return redirect("invoice_detail", pk=invoice_id)
 
         invoice.sync_invoice_date()
 
@@ -267,17 +269,10 @@ class SendInvoiceEmailView(View):
 
     def post(self, request: HttpRequest, invoice_id: int) -> HttpResponse:
         """Send email - either quick or custom"""
-        invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=invoice_id)
+        invoice, already_sent = _load_unsent_invoice(request, invoice_id)
+        if already_sent:
+            return already_sent
         practice = invoice.practice
-
-        # Prevent sending if already sent
-        if invoice.status == "sent":
-            messages.warning(
-                request,
-                _("Invoice %(number)s has already been sent. Change the status to send it again.")
-                % {"number": invoice.invoice_number},
-            )
-            return redirect("invoice_detail", pk=invoice_id)
 
         # Check for quick send
         if "quick_send" in request.POST:
@@ -351,14 +346,14 @@ class SendInvoiceEmailView(View):
         msg = EmailMessage(
             subject=subject,
             body=body,
-            from_email=_make_from_email(practice),
+            from_email=make_from_email(practice),
             to=[recipient],
         )
         msg.attach(filename, pdf_content, "application/pdf")
 
         def _mark_invoice_sent() -> None:
             if invoice.status == "draft":
-                invoice.status = "sent"
+                invoice.status = Invoice.Status.SENT
                 invoice.save()
                 logger.info("Invoice status updated to 'sent'")
 
@@ -392,7 +387,7 @@ class SendPaymentReminderView(BaseClientEmailView):
                 Invoice.objects.filter(
                     client=client,
                     practice=practice,
-                    status="sent",
+                    status=Invoice.Status.SENT,
                 ).order_by("invoice_date")
             )
         return self._open_invoices_cache

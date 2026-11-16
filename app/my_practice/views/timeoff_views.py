@@ -16,6 +16,7 @@ from ..models import Client, TimeOff
 from ..utils.email_utils import (
     get_salutation_for_client,
     get_timeoff_notice_default_content,
+    make_from_email,
     render_email_template,
 )
 from .crud_mixins import (
@@ -24,7 +25,6 @@ from .crud_mixins import (
     PracticeScopedDeleteView,
     PracticeScopedUpdateView,
 )
-from .email_views import _make_from_email
 
 logger = logging.getLogger("my_practice.email")
 
@@ -139,7 +139,7 @@ class SendTimeOffNoticeView(View):
         body_de = form.cleaned_data["body_de"]
         subject_en = form.cleaned_data["subject_en"]
         body_en = form.cleaned_data["body_en"]
-        from_email = _make_from_email(practice)
+        from_email = make_from_email(practice)
 
         sent_count = 0
         failed_clients: list[str] = []

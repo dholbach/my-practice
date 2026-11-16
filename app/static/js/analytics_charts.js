@@ -166,5 +166,4 @@
         root.MPChart.init(canvasId, BUILDERS[canvasId]);
     });
 
-    root.AnalyticsCharts = { BUILDERS };
 })(typeof window !== "undefined" ? window : globalThis);

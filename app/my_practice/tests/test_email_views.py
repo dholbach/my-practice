@@ -15,34 +15,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from my_practice.models import Client, Invoice, Practice, UserPractice
-from my_practice.views.email_views import _make_from_email
 
 User = get_user_model()
-
-
-class MakeFromEmailTest(TestCase):
-    """Unit tests for the _make_from_email helper."""
-
-    def test_uses_display_name_when_set(self):
-        practice = Practice.objects.create(
-            name="Test Practice",
-            slug="from-email-display-name-test",
-            title="Test Practitioner",
-            email="practice@test.com",
-            email_from_name="Dr. Test Practitioner",
-            city="Berlin",
-        )
-        self.assertEqual(_make_from_email(practice), "Dr. Test Practitioner <practice@test.com>")
-
-    def test_bare_email_when_no_display_name(self):
-        practice = Practice.objects.create(
-            name="Test Practice",
-            slug="from-email-bare-test",
-            title="Test Practitioner",
-            email="practice@test.com",
-            city="Berlin",
-        )
-        self.assertEqual(_make_from_email(practice), "practice@test.com")
 
 
 class SendInvoiceEmailViewTest(TestCase):

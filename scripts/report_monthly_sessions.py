@@ -1,7 +1,7 @@
 """
 Monthly session hours + revenue report.
 
-Usage:  ./dev.py run report_monthly_sessions.py
+Usage:  ./dev.py run scripts/report_monthly_sessions.py
 
 Prints a table of every month with:
   - therapist hours (group_size-corrected)

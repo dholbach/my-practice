@@ -43,7 +43,7 @@ async function load({ response = { success: true } } = {}) {
     let reloaded = false;
     const context = {
         document: {
-            cookie: "other=1; csrftoken=tok%20en",
+            body: { dataset: { csrfToken: "body-token" } },
             getElementById: (id) => (id === "tagDropdown7" ? dropdown : null),
             querySelector: () => null,
             querySelectorAll: () => [container],
@@ -51,7 +51,7 @@ async function load({ response = { success: true } } = {}) {
         fetch: (url, init) => { requests.push({ url, init }); return Promise.resolve({ json: () => Promise.resolve(response) }); },
         alert: (m) => alerts.push(m),
         location: { reload: () => (reloaded = true) },
-        console, parseInt, decodeURIComponent, setTimeout,
+        console, parseInt, setTimeout,
     };
     vm.runInNewContext(SOURCE, context);
     const settle = () => new Promise((r) => setImmediate(r));
@@ -65,7 +65,7 @@ console.log("client_tags.js");
     let page = await load();
     page.item.listeners.click();
     await page.settle();
-    check("adding posts the tag id with the CSRF header", page.requests[0].url === "/api/clients/7/tags/add/" && page.requests[0].init.body === "tag_id=5" && page.requests[0].init.headers["X-CSRFToken"] === "tok en");
+    check("adding posts the tag id with the CSRF header", page.requests[0].url === "/api/clients/7/tags/add/" && page.requests[0].init.body === "tag_id=5" && page.requests[0].init.headers["X-CSRFToken"] === "body-token");
     check("a successful add reloads the page", page.reloaded());
 
     page = await load({ response: { success: false } });

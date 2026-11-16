@@ -192,20 +192,6 @@ class PracticeTodoModelTests(TestCase):
             )
             self.assertEqual(todo.task_type, task_type)
 
-    def test_is_snoozed(self):
-        """Test snooze detection based on snoozed_until"""
-        todo = PracticeTodo.objects.create(
-            practice=self.practice,
-            title="Snoozable task",
-        )
-        self.assertFalse(todo.is_snoozed)
-
-        todo.snoozed_until = timezone.localdate() + timedelta(days=1)
-        self.assertTrue(todo.is_snoozed)
-
-        todo.snoozed_until = timezone.localdate() - timedelta(days=1)
-        self.assertFalse(todo.is_snoozed)
-
     def test_related_object_generic_fk(self):
         """Test related_object links a materialized task back to its source"""
         other_practice = Practice.objects.create(

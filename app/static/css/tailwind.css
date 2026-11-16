@@ -249,7 +249,7 @@
   .d-inline-block { display: inline-block; }
   .w-full { width: 100%; } .w-auto { width: auto; }
   .flex-col { flex-direction: column; } .flex-row { flex-direction: row; }
-  .items-start { align-items: flex-start; } .items-center { align-items: center; } .items-end { align-items: flex-end; }
+  .items-center { align-items: center; } .items-end { align-items: flex-end; }
   .justify-center { justify-content: center; } .justify-end { justify-content: flex-end; } .justify-between { justify-content: space-between; }
   .flex-wrap { flex-wrap: wrap; }
   .overflow-x-auto { overflow-x: auto; }
@@ -464,7 +464,7 @@
   .type-indicator.chart-dot-7 { background: var(--color-chart-7); }
   .type-indicator.chart-dot-8 { background: var(--color-chart-8); }
   .busiest-months li { display: grid; grid-template-columns: 52px 80px 1fr 52px 90px; align-items: center; gap: 0.75rem; padding: 0.5rem 0; }
-  .month-bar-track, .seasonality-bar-track, .bar-track { height: 8px; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.06); }
+  .seasonality-bar-track, .bar-track { height: 8px; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.06); }
   .month-bar { height: 100%; background: linear-gradient(to right, #667eea, #764ba2); border-radius: 4px; min-width: 0; }
   /* Year color palette — single source of truth via CSS custom props */
   .year-2026 { --year-color: #f59e0b; --year-text: #111; }

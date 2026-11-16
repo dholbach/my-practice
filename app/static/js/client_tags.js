@@ -3,29 +3,12 @@
  *
  * Wired per .tag-container[data-client-id]; the error texts come from
  * data-add-error / data-remove-error on the container so they stay in the
- * template. The CSRF token is read from the csrftoken cookie, falling back to
- * the csrfmiddlewaretoken input of a form on the page.
+ * template. The CSRF token comes from <body data-csrf-token>, like every other
+ * page script.
  */
 
 (function () {
     "use strict";
-
-    function getCookie(name) {
-        let value = null;
-        if (document.cookie && document.cookie !== "") {
-            document.cookie.split(";").forEach(function (part) {
-                const cookie = part.trim();
-                if (value === null && cookie.substring(0, name.length + 1) === name + "=") {
-                    value = decodeURIComponent(cookie.substring(name.length + 1));
-                }
-            });
-        }
-        if (!value) {
-            const input = document.querySelector("[name=csrfmiddlewaretoken]");
-            if (input) value = input.value;
-        }
-        return value;
-    }
 
     function toggleDropdown(clientId) {
         const dropdown = document.getElementById("tagDropdown" + clientId);
@@ -54,7 +37,7 @@
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                "X-CSRFToken": getCookie("csrftoken"),
+                "X-CSRFToken": document.body.dataset.csrfToken,
             },
             body: "tag_id=" + tagId,
         })
@@ -75,7 +58,7 @@
     function removeTag(clientId, tagId, element, container) {
         fetch("/api/clients/" + clientId + "/tags/" + tagId + "/remove/", {
             method: "POST",
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            headers: { "X-CSRFToken": document.body.dataset.csrfToken },
         })
             .then((response) => response.json())
             .then(function (data) {

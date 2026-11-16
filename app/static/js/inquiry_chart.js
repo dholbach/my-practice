@@ -18,5 +18,4 @@
     }
 
     root.MPChart.init("inquiryMonthlyChart", build);
-    root.InquiryChart = { build };
 })(typeof window !== "undefined" ? window : globalThis);

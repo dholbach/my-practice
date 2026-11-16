@@ -184,11 +184,6 @@ class PracticeTodo(TimestampedModel):
         return self.due_date < timezone.localdate()
 
     @property
-    def is_snoozed(self) -> bool:
-        """Check if task is currently snoozed."""
-        return bool(self.snoozed_until and self.snoozed_until >= timezone.localdate())
-
-    @property
     def related_object_url(self) -> str | None:
         """URL to the related object's detail page, if there is one we know how to link."""
         if self.related_object is None:
