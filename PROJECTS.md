@@ -32,7 +32,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 ## 🔍 Recent Activity
 
 - **2026-11-16 — Production container unprivileged (#650)**: prod `django` runs as `MY_PRACTICE_UID` with no capabilities, a networkless `fix-ownership` one-shot hands it the volumes, and the smoke stack runs the same way. Also fixes new practices being saved inactive. Not yet exercised on a real prod stack (bind-mounted `documents`/`questionnaires`); ships with the next release.
-- **2026-11-16 — v0.13.1 released**: no features; one dashboard query fewer and the third review's refactors. v0.13.0 earlier the same day added next week on the This Week widget and the revenue-by-payment-date, bank-order and calendar-fetch fixes. No migrations.
+- **2026-11-16 — Fourth refactoring review (#656)**: the areas the third one left unread, seven agents, every finding re-checked. Do-now batch in #655: an admin badge that hid four states, a `prod.py` placeholder-as-secret, dead admin actions, forms and parameters, unwrapped form labels. 26 liabilities in the ledger; the compose env-var audit is finished.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
