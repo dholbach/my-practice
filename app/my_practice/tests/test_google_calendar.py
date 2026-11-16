@@ -27,19 +27,15 @@ from my_practice.utils.google_calendar import (
     practice_clients,
 )
 
+from .test_helpers import create_test_practice
+
 
 class GoogleCalendarOAuthTest(TestCase):
     """Test OAuth2 authentication utilities."""
 
     def setUp(self):
         """Create test practice"""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="google-calendar",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="google-calendar")
 
     @patch("my_practice.utils.google_calendar.settings")
     def test_create_flow(self, mock_settings):
@@ -172,13 +168,7 @@ class CalendarEventParserTest(TestCase):
     def setUp(self):
         """Create ServiceType objects needed for tests."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="google_calendar-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="google_calendar-1")
 
         ServiceType.objects.create(
             code="checkin_15",
@@ -214,13 +204,7 @@ class CalendarEventParserTest(TestCase):
     def test_parse_datetime_with_time(self):
         """Test parsing datetime string with time component."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         dt_str = "2025-12-23T14:30:00Z"
         result = CalendarEventParser.parse_datetime(dt_str)
@@ -631,13 +615,7 @@ class UpsertEventReinstatementTest(TestCase):
     """Test that _upsert_event reinstates previously-cancelled events."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="reinstatement-test",
-            title="Test Practitioner",
-            email="test@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="reinstatement-test")
         self.client = Client.objects.create(
             practice=self.practice,
             client_code="XX",
@@ -723,13 +701,7 @@ class FetchTagSyncTest(TestCase):
     def setUp(self):
         from my_practice.models import ClientTag
 
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="fetch-tag-sync-test",
-            title="Test Practitioner",
-            email="test@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="fetch-tag-sync-test")
         self.client_obj = Client.objects.create(
             practice=self.practice,
             client_code="XX-1",

@@ -22,6 +22,8 @@ from my_practice.utils.questionnaire_content import (
     load_questionnaire,
 )
 
+from .test_helpers import create_test_practice
+
 User = get_user_model()
 
 
@@ -103,13 +105,7 @@ class QuestionnairePdfGenerationTest(TestCase):
     """Tests for generate_questionnaire_pdf_bytes / the questionnaire_pdf view."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="questionnaire-pdf-test",
-            title="Test Practitioner",
-            email="practice@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="questionnaire-pdf-test")
         self.user = User.objects.create_user(username="qpdfuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_http = TestClient()
@@ -370,13 +366,7 @@ class MixedSectionQuestionnairePdfTest(TestCase):
     """End-to-end test: a document mixing grid + checklist + freetext sections."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="mixed-questionnaire-test",
-            title="Test Practitioner",
-            email="practice@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="mixed-questionnaire-test")
         self.user = User.objects.create_user(username="mixeduser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
 

@@ -12,11 +12,12 @@ from my_practice.models import (
     Client,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
 )
+
+from .test_helpers import create_test_practice
 
 
 class InvoiceSignalTests(TestCase):
@@ -25,13 +26,7 @@ class InvoiceSignalTests(TestCase):
     def setUp(self):
         """Create test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="signals-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="signals-1")
 
         self.client = Client.objects.create(
             client_code="TEST001",
@@ -340,12 +335,8 @@ class PracticeImageCleanupSignalTests(TestCase):
         return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Signal Test Practice",
-            slug="signal-image-cleanup",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Signal Test Practice", slug="signal-image-cleanup"
         )
 
     def test_replacing_logo_deletes_old_file(self):

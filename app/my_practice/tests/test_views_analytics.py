@@ -27,6 +27,7 @@ from ..models import (
     UserPractice,
     allow_issued_invoice_writes,
 )
+from .test_helpers import create_test_practice
 
 
 class AnalyticsDashboardViewTest(TestCase):
@@ -36,13 +37,7 @@ class AnalyticsDashboardViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_analytics-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_analytics-1")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         # Without a practice the user sees no figures at all (scope_to_practice).
@@ -92,13 +87,7 @@ class AnalyticsDashboardViewTest(TestCase):
     def test_analytics_dashboard_loads(self):
         """Test that analytics dashboard loads successfully."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         response = self.client_instance.get(reverse("analytics"))
         self.assertEqual(response.status_code, 200)
@@ -315,13 +304,7 @@ class AnalyticsFilterTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_analytics-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_analytics-2")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.client_instance = TestClient()
@@ -399,13 +382,7 @@ class AnalyticsClientsTabHeatmapTest(TestCase):
     """Test the ?tab=clients branch of analytics_dashboard (heatmap data)."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics-heatmap",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics-heatmap")
         self.user = User.objects.create_user(username="heatmapuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -480,13 +457,7 @@ class RevenueReportTest(TestCase):
     """Test the revenue_report view."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="revenue-report",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="revenue-report")
         self.user = User.objects.create_user(username="revenueuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()

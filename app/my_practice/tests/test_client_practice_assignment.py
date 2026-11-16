@@ -7,7 +7,9 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from my_practice.models import Client, Practice, UserPractice
+from my_practice.models import Client, UserPractice
+
+from .test_helpers import create_test_practice
 
 
 class ClientPracticeAssignmentTest(TestCase):
@@ -15,13 +17,7 @@ class ClientPracticeAssignmentTest(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice-assignment",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice-assignment")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.client_instance = TestClient()

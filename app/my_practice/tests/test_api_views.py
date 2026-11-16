@@ -14,6 +14,8 @@ from PIL import Image
 
 from my_practice.models import Client, Invoice, Practice, UserPractice
 
+from .test_helpers import create_test_practice
+
 User = get_user_model()
 
 
@@ -23,13 +25,7 @@ class NextInvoiceNumberAPITest(TestCase):
     def setUp(self):
         """Set up test client and data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="api_views-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="api_views-1")
 
         # Create and login user
         self.user = User.objects.create_user(username="apiuser", password="testpass123")
@@ -123,13 +119,7 @@ class InvoicePDFViewTest(TestCase):
     def setUp(self):
         """Set up test data"""
         # Create practice settings
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="api-views-fix",
-            title="Test Practitioner",
-            email="practice@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="api-views-fix")
 
         # Create user and link to practice (needed for middleware)
         self.user = User.objects.create_user(username="testuser", password="testpass123")
@@ -231,13 +221,7 @@ class IntakeFormPdfTest(TestCase):
     """Tests for the fillable Aufnahmebogen PDF."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="intake-pdf-test",
-            title="Test Practitioner",
-            email="practice@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="intake-pdf-test")
         self.user = User.objects.create_user(username="intakepdfuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_http = TestClient()
@@ -393,13 +377,7 @@ class InvoiceBatchDownloadTest(TestCase):
     """Tests for the ZIP batch-download endpoint."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="invoice-batch-download",
-            title="Test Practitioner",
-            email="practice@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="invoice-batch-download")
         self.user = User.objects.create_user(username="batchuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_http = TestClient()
@@ -457,13 +435,7 @@ class UpdateInvoiceStatusTest(TestCase):
     """Tests for the update_invoice_status endpoint."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="update-invoice-status",
-            title="Test Practitioner",
-            email="practice@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="update-invoice-status")
         self.user = User.objects.create_user(username="statususer", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_http = TestClient()
@@ -555,12 +527,8 @@ class PracticeImagesTransparencyTest(TestCase):
     """Test the RGBA-composite branch of prepare_practice_images via invoice_pdf."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="practice-logo-transparency",
-            title="Test Practitioner",
-            email="practice@example.com",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="practice-logo-transparency"
         )
         self.user = User.objects.create_user(username="logouser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
@@ -606,13 +574,7 @@ class PreparePracticeImagesCacheTest(TestCase):
     """prepare_practice_images() caches its decode/resize work per practice."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="practice-image-cache",
-            title="Test Practitioner",
-            email="practice@example.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="practice-image-cache")
         self.practice.logo = PracticeImagesTransparencyTest._transparent_png("logo.png")
         self.practice.save()
 

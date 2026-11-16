@@ -14,11 +14,10 @@ from my_practice.models import Client as ClientModel
 from my_practice.models import (
     CompanyExpense,
     CompanyWithdrawal,
-    Practice,
     UserPractice,
 )
 
-from .test_helpers import select_practice
+from .test_helpers import create_test_practice, select_practice
 
 User = get_user_model()
 
@@ -28,13 +27,7 @@ class ExpenseWithdrawalEdgeCasesTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_edge_cases-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_edge_cases-1")
 
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client = Client()
@@ -222,13 +215,7 @@ class ClientEdgeCasesTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_edge_cases-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_edge_cases-2")
 
         # Create user and login
         self.user = User.objects.create_user(username="edgecaseuser", password="12345")

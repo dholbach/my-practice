@@ -7,13 +7,15 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from my_practice.models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
+from my_practice.models import Client, Invoice, InvoiceItem, ServiceType, Session
 from my_practice.utils.calculations import (
     count_sessions,
     count_sessions_rounded,
     to_float,
 )
 from my_practice.utils.invoice_helpers import get_next_invoice_number
+
+from .test_helpers import create_test_practice
 
 
 class ToFloatTest(TestCase):
@@ -51,13 +53,7 @@ class CountSessionsTest(TestCase):
     def setUp(self):
         """Set up test data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="utils_helpers-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="utils_helpers-1")
 
         self.client = Client.objects.create(
             client_code="TC",
@@ -84,13 +80,7 @@ class CountSessionsTest(TestCase):
     def test_count_sessions_60_min(self):
         """Test counting 60-minute sessions"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         InvoiceItem.objects.create(
             invoice=self.invoice,
@@ -207,13 +197,7 @@ class GetNextInvoiceNumberTest(TestCase):
     def setUp(self):
         """Set up test client"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="utils_helpers-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="utils_helpers-2")
 
         self.client = Client.objects.create(
             client_code="TC",

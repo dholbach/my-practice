@@ -12,14 +12,13 @@ from my_practice.models import (
     Client,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
 )
 from my_practice.utils.analytics_utils import ClientAnalyzer, SessionAnalyzer
 
-from .test_helpers import heatmap_month_clients
+from .test_helpers import create_test_practice, heatmap_month_clients
 
 
 class HeatmapIntegrationTest(TestCase):
@@ -28,13 +27,7 @@ class HeatmapIntegrationTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics_integration-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics_integration-1")
 
         self.client = Client.objects.create(
             client_code="HM",
@@ -199,13 +192,7 @@ class BusiestMonthsIntegrationTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics_integration-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics_integration-2")
 
         self.client = Client.objects.create(
             client_code="BM",
@@ -355,13 +342,7 @@ class TopClientsIntegrationTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics_integration-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics_integration-3")
 
         self.client_a = Client.objects.create(
             client_code="A",

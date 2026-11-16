@@ -68,6 +68,8 @@ from my_practice.models import (
     TimeOff,
 )
 
+from .test_helpers import create_test_practice
+
 
 class MockRequest:
     """Mock request object for admin tests"""
@@ -81,13 +83,7 @@ class AdminConfigTestCase(TestCase):
     def setUp(self):
         """Create admin site and test user"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="admin-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="admin-1")
 
         self.site = AdminSite()
         self.user = User.objects.create_superuser(
@@ -97,13 +93,7 @@ class AdminConfigTestCase(TestCase):
     def test_practice_admin_registered(self):
         """Test PracticeAdmin configuration"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         admin_instance = PracticeAdmin(Practice, self.site)
         # Check fieldsets instead of list_display
@@ -287,13 +277,7 @@ class AdminDisplayMethodsTestCase(TestCase):
     def setUp(self):
         """Create test data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="admin-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="admin-2")
 
         self.site = AdminSite()
         self.client_obj = Client.objects.create(
@@ -330,13 +314,7 @@ class AdminIntegrationTestCase(TestCase):
     def setUp(self):
         """Create test user and client"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="admin-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="admin-3")
 
         self.user = User.objects.create_superuser(
             username="admin", email="admin@example.com", password="testpass123"
@@ -441,13 +419,7 @@ class InvoiceItemAdminFormTests(TestCase):
     normal form error (used by both InvoiceItemInline and InvoiceItemAdmin)."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="admin-invoiceitem-form",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="admin-invoiceitem-form")
         self.service_type = ServiceType.objects.create(
             code="individual", name="60 Min Session", practice=self.practice
         )
@@ -518,13 +490,7 @@ class InvoiceAdminStatusActionTests(TestCase):
     """The bulk status actions keep paid_date consistent with the status."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="admin-status",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="admin-status")
         self.client_obj = Client.objects.create(
             client_code="XX-1", full_name="Max Mustermann", practice=self.practice
         )

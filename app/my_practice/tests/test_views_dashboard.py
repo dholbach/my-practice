@@ -16,11 +16,11 @@ from ..models import (
     CompanyWithdrawal,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     UserPractice,
 )
+from .test_helpers import create_test_practice
 
 
 class DashboardViewTest(TestCase):
@@ -29,13 +29,7 @@ class DashboardViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_dashboard-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_dashboard-1")
 
         # Create test user
         self.user = User.objects.create_user(username="testuser", password="testpass123")
@@ -89,13 +83,7 @@ class DashboardViewTest(TestCase):
     def test_dashboard_view_requires_login(self):
         """Test that dashboard requires authentication."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         # Dashboard is publicly accessible by design (no authentication required)
         pass  # Skip - dashboard intentionally has no login requirement
@@ -222,13 +210,7 @@ class DashboardViewTest(TestCase):
     def test_dashboard_multi_practice_revenue_falls_back_to_invoice_date(self):
         """Practice switcher revenue must count paid invoices with a null paid_date
         (falling back to invoice_date), same as the single-practice stats above."""
-        second_practice = Practice.objects.create(
-            name="Second Practice",
-            slug="views_dashboard-2",
-            title="Test Practitioner",
-            email="second@practice.com",
-            city="Berlin",
-        )
+        second_practice = create_test_practice(name="Second Practice", slug="views_dashboard-2")
         UserPractice.objects.create(user=self.user, practice=second_practice, is_owner=True)
 
         other_client = Client.objects.create(
@@ -260,13 +242,7 @@ class DashboardPerformanceTest(TestCase):
     def setUp(self):
         """Set up test user and client."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_dashboard-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_dashboard-2")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)

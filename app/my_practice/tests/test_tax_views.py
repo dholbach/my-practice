@@ -23,7 +23,7 @@ from my_practice.models import (
     allow_issued_invoice_writes,
 )
 
-from .test_helpers import select_practice
+from .test_helpers import create_test_practice, select_practice
 
 
 class TaxYearSummaryViewTest(TestCase):
@@ -37,13 +37,7 @@ class TaxYearSummaryViewTest(TestCase):
         self.client_http.login(username="testuser", password="12345")
 
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="tax-views-fix",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="tax-views-fix")
         # Add user to practice and set in session
         self.practice.users.add(self.user)
         select_practice(self.client_http, self.practice)
@@ -427,13 +421,7 @@ class TaxYearSummaryRenderingTest(TestCase):
         self.client_instance.login(username="testuser", password="12345")
 
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_tax-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_tax-1")
         # Add user to practice so middleware sets it
         self.practice.users.add(self.user)
 

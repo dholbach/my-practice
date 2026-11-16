@@ -30,6 +30,7 @@ from ..views.billing_views import (
     _determine_client_billing_status,
     _parse_billing_month,
 )
+from .test_helpers import create_test_practice
 
 
 class ParseBillingMonthTests(TestCase):
@@ -90,13 +91,7 @@ class BuildClientRowsTests(TestCase):
     """Test _build_client_rows and _build_billing_summary directly."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="billing-rows",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="billing-rows")
         self.client_a = Client.objects.create(
             client_code="AA",
             full_name="Anna Schmidt",
@@ -146,13 +141,7 @@ class InvoiceCreateFormValidTests(TestCase):
     """Test InvoiceCreateView.form_valid success/error/exception branches."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="invoice-create-fv",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="invoice-create-fv")
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -260,13 +249,7 @@ class InvoiceEditFormValidTests(TestCase):
     """Test InvoiceEditView.form_valid/form_invalid branches."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="invoice-edit-fv",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="invoice-edit-fv")
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -384,13 +367,7 @@ class InvoiceDeleteTests(TestCase):
     """Test invoice_delete GET (confirmation) and POST (deletion)."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="invoice-delete",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="invoice-delete")
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -444,13 +421,7 @@ class AddSessionsToInvoiceTests(TestCase):
     """Test add_sessions_to_invoice view."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="add-sessions",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="add-sessions")
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -530,13 +501,7 @@ class CreateInvoiceWithSessionsTests(TestCase):
     """Test create_invoice_with_sessions view."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="create-with-sessions",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="create-with-sessions")
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -583,13 +548,7 @@ class MonthlyBillingOverviewTests(TestCase):
     """Test monthly_billing_overview and billing_open_overview."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="monthly-billing",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="monthly-billing")
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()

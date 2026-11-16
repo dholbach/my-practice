@@ -16,6 +16,8 @@ from my_practice.models import (
 )
 from my_practice.utils.revenue_helpers import RevenueCalculator
 
+from .test_helpers import create_test_practice
+
 
 class RevenueCalculatorTests(TestCase):
     """Tests for the RevenueCalculator class."""
@@ -24,13 +26,7 @@ class RevenueCalculatorTests(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="revenue_helpers-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="revenue_helpers-1")
 
         # Create test client
         self.client = Client.objects.create(
@@ -389,13 +385,7 @@ class ApplyYearFilterTests(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="revenue_helpers-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="revenue_helpers-2")
 
         self.client = Client.objects.create(
             client_code="TEST",
@@ -472,13 +462,7 @@ class RevenueSubqueryTests(TestCase):
     def setUp(self):
         """Set up test data with items."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="revenue_helpers-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="revenue_helpers-3")
 
         from my_practice.models import InvoiceItem, ServiceType, Session
 

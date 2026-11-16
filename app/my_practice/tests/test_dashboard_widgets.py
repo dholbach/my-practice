@@ -5,8 +5,9 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from ..models import Client, Invoice, Practice
+from ..models import Client, Invoice
 from ..utils.dashboard_widgets import InvoiceActionsWidgetBuilder
+from .test_helpers import create_test_practice
 
 
 class GetOverdueInvoicesTest(TestCase):
@@ -16,13 +17,7 @@ class GetOverdueInvoicesTest(TestCase):
     """
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="dashboard-widgets-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="dashboard-widgets-1")
         self.client_obj = Client.objects.create(
             client_code="TC",
             full_name="Test Client",
