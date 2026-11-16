@@ -56,3 +56,8 @@ python app/odt_to_json.py Behandlung.odt --pretty
 removed in June 2026 — the command was incomplete, format-specific, and not appropriate
 for the OSS release. If this is picked up again, start fresh from the design above rather
 than trying to recover the deleted files from git history.
+
+`./dev.py manage` used to copy an `--odt-file` argument from the host into the tools
+container (`docker cp` to `/tmp`, rewrite the argument, delete it afterwards). That
+went with the command; a new import that takes a file from the host needs the same
+copy step again, or the file placed under `./app`.
