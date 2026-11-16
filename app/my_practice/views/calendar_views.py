@@ -217,8 +217,12 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
                 parsed_events = processor.fetch_specific_events(
                     service, calendar_id, list(event_ids)
                 )
-            except Exception as e:
-                return json_error(_("Error loading events: %(error)s") % {"error": str(e)}, 500)
+            except Exception:
+                logger.exception("Loading calendar events for import failed")
+                return json_error(
+                    _("Import failed due to an unexpected error. Details are in the server log."),
+                    500,
+                )
 
         from ..utils.calendar_import_helpers import create_invoice_items_from_events
 

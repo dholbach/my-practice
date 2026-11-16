@@ -305,7 +305,7 @@ class CalendarImportEventsViewTest(CalendarViewsTestBase):
             patch(
                 "my_practice.utils.calendar_event_processor.CalendarImportProcessor."
                 "fetch_specific_events",
-                side_effect=RuntimeError("boom"),
+                side_effect=RuntimeError("secret-internal-detail"),
             ),
         ):
             response = self.http.post(
@@ -314,6 +314,7 @@ class CalendarImportEventsViewTest(CalendarViewsTestBase):
                 content_type="application/json",
             )
         self.assertEqual(response.status_code, 500)
+        self.assertNotIn("secret-internal-detail", response.content.decode())
 
 
 class CalendarApprovalQueueTest(CalendarViewsTestBase):
