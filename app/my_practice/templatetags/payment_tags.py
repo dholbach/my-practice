@@ -265,3 +265,14 @@ def mood_tag_label(value):
         return MoodTag(value).label
     except ValueError:
         return str(value).replace("_", " ").capitalize()
+
+
+@register.simple_tag
+def doc_field(obj, name, lang):
+    """The ``<name>_de`` or ``<name>_en`` field of ``obj``, for a document in ``lang``.
+
+    Documents pick their language per client, not from the UI language: anything
+    but "en" reads the German field.
+    Usage: {% doc_field practice "subtitle" lang %}  or  {% doc_field x "name" lang as n %}
+    """
+    return getattr(obj, f"{name}_{'en' if lang == 'en' else 'de'}")

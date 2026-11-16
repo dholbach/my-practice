@@ -106,15 +106,16 @@ def render_invoice_pdf_bytes(
         (pdf_bytes, filename) where filename is suitable for download/zip entry.
     """
     if invoice.client.language == "de":
-        template_name = "my_practice/invoice_pdf_de.html"
+        lang = "de"
         filename = f"Rechnung_{invoice.invoice_number}.pdf"
     else:
-        template_name = "my_practice/invoice_pdf_en.html"
+        lang = "en"
         filename = f"Invoice_{invoice.invoice_number}.pdf"
 
     ctx: dict = {
         "invoice": invoice,
         "practice": practice,
+        "lang": lang,
         "logo_data": logo_data,
         "signature_data": signature_data,
     }
@@ -124,7 +125,7 @@ def render_invoice_pdf_bytes(
         ctx["gebueh_total"] = gebueh_total_for_blocks(ctx["gebueh_blocks"])
         ctx["arbeitsdiagnose"] = get_arbeitsdiagnose(invoice.client)
 
-    html_string = render_to_string(template_name, ctx)
+    html_string = render_to_string("my_practice/invoice_pdf.html", ctx)
     # base_url lets WeasyPrint resolve static font files (fonts/ dir) relative to the app
     base_url = f"file://{settings.BASE_DIR}/static/"
     pdf_bytes = HTML(string=html_string, base_url=base_url).write_pdf(font_config=font_config)

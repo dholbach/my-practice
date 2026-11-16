@@ -276,8 +276,11 @@ bilingual smoke test catches it — render or instantiate under both
 
 Not Django-i18n UI text, so not wrapped:
 
-- PDF templates (`invoice_pdf_*.html`, `treatment_contract_pdf.html`,
+- PDF templates (`invoice_pdf.html`, `treatment_contract_pdf.html`,
   `intake_form_pdf.html`, `questionnaire_pdf.html`) — they pick a language per document.
+  The templates take a `lang` (`"de"` or `"en"`) and switch each text with
+  `{% if lang == "en" %}…{% else %}…{% endif %}`; the `<name>_de`/`<name>_en` field pairs of a
+  practice or service type are read with `{% doc_field obj "name" lang %}` (`payment_tags`).
 - Dual-language email content builders (`utils/email_utils.py`,
   `utils/inquiry_email_templates.py` subject/body pairs) and
   `includes/email_card.html`, whose `Betreff`/`Subject`, `Kopieren`/`Copy` labels

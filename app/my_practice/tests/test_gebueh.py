@@ -404,7 +404,7 @@ class GebuhPdfBlocksTest(TestCase):
 
 class GebuhPdfTemplateTest(TestCase):
     """
-    Tests the invoice_pdf_de.html GebüH block markup directly via render_to_string,
+    Tests the invoice_pdf.html GebüH block markup (German) directly via render_to_string,
     without going through WeasyPrint — faster and lets us assert on the rendered HTML.
     """
 
@@ -441,8 +441,9 @@ class GebuhPdfTemplateTest(TestCase):
 
         blocks = self._build(self.invoice)
         html = render_to_string(
-            "my_practice/invoice_pdf_de.html",
+            "my_practice/invoice_pdf.html",
             {
+                "lang": "de",
                 "invoice": self.invoice,
                 "practice": self.practice,
                 "gebueh_blocks": blocks,

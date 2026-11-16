@@ -11,6 +11,7 @@ from my_practice.models import Practice
 from my_practice.templatetags.payment_tags import (
     abs_value,
     currency,
+    doc_field,
     format_month_year,
     highlight_diff,
     hours,
@@ -359,3 +360,28 @@ class PrivacyNameFilterTests(TestCase):
         template = Template("{% load payment_tags %}{{ name|privacy_name }}")
         rendered = template.render(Context({"name": "Anna Schmidt"}))
         self.assertIn('A<span class="sensitive-data pn-rest">nna</span>', rendered)
+
+
+class DocFieldTagTests(TestCase):
+    """doc_field reads the _de or _en field of a document's language."""
+
+    def setUp(self):
+        self.practice = Practice(subtitle_de="Untertitel", subtitle_en="Subtitle")
+
+    def test_english_reads_the_en_field(self):
+        self.assertEqual(doc_field(self.practice, "subtitle", "en"), "Subtitle")
+
+    def test_german_reads_the_de_field(self):
+        self.assertEqual(doc_field(self.practice, "subtitle", "de"), "Untertitel")
+
+    def test_any_other_language_falls_back_to_german(self):
+        self.assertEqual(doc_field(self.practice, "subtitle", ""), "Untertitel")
+        self.assertEqual(doc_field(self.practice, "subtitle", "fr"), "Untertitel")
+
+    def test_renders_escaped_and_works_with_as(self):
+        self.practice.subtitle_en = "A & B"
+        html = Template(
+            '{% load payment_tags %}{% doc_field p "subtitle" lang %}|'
+            '{% doc_field p "subtitle" lang as s %}{{ s }}'
+        ).render(Context({"p": self.practice, "lang": "en"}))
+        self.assertEqual(html, "A &amp; B|A &amp; B")
