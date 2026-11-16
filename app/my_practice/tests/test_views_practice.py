@@ -214,6 +214,8 @@ class PracticeCreateViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Practice.objects.filter(name="New Practice").exists())
         practice = Practice.objects.get(name="New Practice")
+        # The create form has no is_active checkbox; a new practice must not be saved hidden.
+        self.assertTrue(practice.is_active)
         self.assertTrue(
             UserPractice.objects.filter(user=self.user, practice=practice, is_owner=True).exists()
         )

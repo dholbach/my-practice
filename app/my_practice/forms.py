@@ -289,6 +289,10 @@ class PracticeEditForm(StyledFormMixin, forms.ModelForm):
         instance = kwargs.get("instance")
         if instance and instance.practice_weekdays:
             self.fields["practice_weekdays"].initial = [str(d) for d in instance.practice_weekdays]
+        # The template only renders this checkbox when editing; left on the form,
+        # a create POST without it reads as False and saves an inactive practice.
+        if not self.instance.pk:
+            del self.fields["is_active"]
 
     def clean_practice_weekdays(self) -> list[int]:
         return [int(v) for v in self.cleaned_data.get("practice_weekdays") or []]
