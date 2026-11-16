@@ -167,7 +167,27 @@ class InvoiceFormsetMixin:
             item_form.instance.session = session
 
 
-class PracticeScopedListView(LoginRequiredMixin, ListView):
+class _PracticeScopedQuerysetMixin:
+    """Scope ``get_queryset`` to the current practice, so no view reaches another practice's rows."""
+
+    def get_queryset(self):
+        """Get queryset scoped to current practice"""
+        queryset = super().get_queryset()
+        return scope_to_current_practice(queryset, self.request)
+
+
+class _ObjectSuccessMessageMixin:
+    """The ``success_message`` shared by the create, update and delete views."""
+
+    success_message: str | None = None  # Override in subclass, supports .format(obj=instance)
+
+    def add_success_message(self) -> None:
+        """Flash ``success_message`` formatted with ``self.object``, when one is set."""
+        if self.success_message:
+            messages.success(self.request, self.success_message.format(obj=self.object))
+
+
+class PracticeScopedListView(LoginRequiredMixin, _PracticeScopedQuerysetMixin, ListView):
     """
     Base ListView that automatically scopes queryset by current practice.
 
@@ -179,14 +199,8 @@ class PracticeScopedListView(LoginRequiredMixin, ListView):
             template_name = "my_practice/client_list_cards.html"
     """
 
-    def get_queryset(self):
-        """Get queryset scoped to current practice"""
-        queryset = super().get_queryset()
 
-        return scope_to_current_practice(queryset, self.request)
-
-
-class PracticeScopedCreateView(LoginRequiredMixin, CreateView):
+class PracticeScopedCreateView(LoginRequiredMixin, _ObjectSuccessMessageMixin, CreateView):
     """
     Base CreateView that automatically assigns practice to new objects.
 
@@ -202,8 +216,6 @@ class PracticeScopedCreateView(LoginRequiredMixin, CreateView):
             success_message = gettext_lazy("Client {obj.full_name} created successfully!")
     """
 
-    success_message: str | None = None  # Override in subclass, supports .format(obj=instance)
-
     def form_valid(self, form: ModelForm) -> HttpResponse:
         """Save with practice assignment"""
         # Use practice_id (raw attname) rather than the FK descriptor, which raises
@@ -213,15 +225,14 @@ class PracticeScopedCreateView(LoginRequiredMixin, CreateView):
 
         response = super().form_valid(form)
 
-        # Show success message if defined
-        if self.success_message:
-            msg = self.success_message.format(obj=self.object)
-            messages.success(self.request, msg)
+        self.add_success_message()
 
         return response
 
 
-class PracticeScopedUpdateView(LoginRequiredMixin, UpdateView):
+class PracticeScopedUpdateView(
+    LoginRequiredMixin, _PracticeScopedQuerysetMixin, _ObjectSuccessMessageMixin, UpdateView
+):
     """
     Base UpdateView that ensures objects are scoped to current practice.
 
@@ -237,28 +248,20 @@ class PracticeScopedUpdateView(LoginRequiredMixin, UpdateView):
             success_message = gettext_lazy("Client {obj.full_name} updated successfully!")
     """
 
-    success_message: str | None = None  # Override in subclass, supports .format(obj=instance)
     context_object_name: str | None = None  # Override in subclass
-
-    def get_queryset(self):
-        """Get queryset scoped to current practice"""
-        queryset = super().get_queryset()
-
-        return scope_to_current_practice(queryset, self.request)
 
     def form_valid(self, form: ModelForm) -> HttpResponse:
         """Save with success message"""
         response = super().form_valid(form)
 
-        # Show success message if defined
-        if self.success_message:
-            msg = self.success_message.format(obj=self.object)
-            messages.success(self.request, msg)
+        self.add_success_message()
 
         return response
 
 
-class PracticeScopedDeleteView(LoginRequiredMixin, DeleteView):
+class PracticeScopedDeleteView(
+    LoginRequiredMixin, _PracticeScopedQuerysetMixin, _ObjectSuccessMessageMixin, DeleteView
+):
     """
     Base DeleteView scoped to current practice.
 
@@ -274,16 +277,7 @@ class PracticeScopedDeleteView(LoginRequiredMixin, DeleteView):
             success_message = gettext_lazy("Expense from {obj.date:%d.%m.%Y} deleted successfully.")
     """
 
-    success_message: str | None = None
-
-    def get_queryset(self):
-        """Get queryset scoped to current practice"""
-        queryset = super().get_queryset()
-        return scope_to_current_practice(queryset, self.request)
-
     def form_valid(self, form: ModelForm) -> HttpResponse:
         """Delete with optional success message"""
-        if self.success_message:
-            msg = self.success_message.format(obj=self.object)
-            messages.success(self.request, msg)
+        self.add_success_message()
         return super().form_valid(form)
