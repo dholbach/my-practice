@@ -6,10 +6,8 @@ from decimal import Decimal
 from django.test import TestCase
 
 from ..models import (
-    Client,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
@@ -20,14 +18,7 @@ from ..utils.billing_helpers import (
     is_session_already_billed,
     resolve_session_rate,
 )
-
-
-def _make_practice():
-    return Practice.objects.create(
-        name="Billing Test Practice",
-        slug="billing-helpers-test",
-        email="billing@example.com",
-    )
+from .test_helpers import create_test_client, create_test_practice
 
 
 def _make_service_types(practice):
@@ -59,10 +50,9 @@ def _make_service_types(practice):
 
 
 def _make_client(practice):
-    return Client.objects.create(
-        client_code="BH",
-        full_name="Max Mustermann",
-        practice=practice,
+    return create_test_client(
+        practice,
+        "BH",
         hourly_rate_60=Decimal("100.00"),
         hourly_rate_90=Decimal("150.00"),
     )
@@ -88,7 +78,9 @@ def _make_session(client, duration=60):
 
 class BuildServiceTypeMapTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(
+            name="Billing Test Practice", slug="billing-helpers-test"
+        )
         self.st60, self.st90, self.st_free, self.st15 = _make_service_types(self.practice)
 
     def test_maps_duration_to_service_type(self):
@@ -122,7 +114,9 @@ class BuildServiceTypeMapTests(TestCase):
 
 class ResolveSessionRateTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(
+            name="Billing Test Practice", slug="billing-helpers-test"
+        )
         self.st60, self.st90, self.st_free, self.st15 = _make_service_types(self.practice)
         self.client = _make_client(self.practice)
 
@@ -156,7 +150,9 @@ class ResolveSessionRateTests(TestCase):
 
 class IsSessionAlreadyBilledTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(
+            name="Billing Test Practice", slug="billing-helpers-test"
+        )
         self.st60, _, _, _ = _make_service_types(self.practice)
         self.client = _make_client(self.practice)
 
@@ -195,7 +191,9 @@ class IsSessionAlreadyBilledTests(TestCase):
 
 class CreateInvoiceItemForSessionTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(
+            name="Billing Test Practice", slug="billing-helpers-test"
+        )
         self.st60, self.st90, self.st_free, self.st15 = _make_service_types(self.practice)
         self.client = _make_client(self.practice)
         self.invoice = _make_invoice(self.client)

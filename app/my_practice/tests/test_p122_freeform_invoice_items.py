@@ -20,26 +20,16 @@ from django.urls import reverse
 
 from ..forms import ClientIntakeForm
 from ..invoice_forms import InvoiceItemForm
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
+from ..models import Client, Invoice, InvoiceItem, ServiceType, Session, UserPractice
 from ..utils.calculations import count_sessions
 from ..utils.client_helpers import annotate_activity_status, group_clients_by_activity
-
-
-def _make_practice(**kwargs):
-    defaults = {
-        "name": "Test Practice",
-        "title": "Test Practitioner",
-        "email": "test@practice.com",
-        "city": "Berlin",
-    }
-    defaults.update(kwargs)
-    return Practice.objects.create(**defaults)
+from .test_helpers import create_test_practice
 
 
 class InvoiceItemFreeFormModelTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice(slug="p122-model", allows_free_form_items=True)
-        self.strict_practice = _make_practice(
+        self.practice = create_test_practice(slug="p122-model", allows_free_form_items=True)
+        self.strict_practice = create_test_practice(
             slug="p122-model-strict", allows_free_form_items=False
         )
         self.client_obj = Client.objects.create(
@@ -196,7 +186,7 @@ class InvoiceItemFreeFormModelTests(TestCase):
 
 class CountSessionsFreeFormTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice(slug="p122-count", allows_free_form_items=True)
+        self.practice = create_test_practice(slug="p122-count", allows_free_form_items=True)
         self.client_obj = Client.objects.create(
             client_code="TC",
             full_name="Max Mustermann",
@@ -243,8 +233,12 @@ class CountSessionsFreeFormTests(TestCase):
 
 class InvoiceItemFormFreeFormTests(TestCase):
     def setUp(self):
-        self.allowing_practice = _make_practice(slug="p122-form-yes", allows_free_form_items=True)
-        self.strict_practice = _make_practice(slug="p122-form-no", allows_free_form_items=False)
+        self.allowing_practice = create_test_practice(
+            slug="p122-form-yes", allows_free_form_items=True
+        )
+        self.strict_practice = create_test_practice(
+            slug="p122-form-no", allows_free_form_items=False
+        )
 
     def _request_for(self, practice):
         class FakeRequest:
@@ -394,7 +388,7 @@ class InvoiceItemFormFreeFormTests(TestCase):
 
 class InvoiceCreateFreeFormViewTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice(slug="p122-view-create", allows_free_form_items=True)
+        self.practice = create_test_practice(slug="p122-view-create", allows_free_form_items=True)
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -451,7 +445,9 @@ class InvoiceCreateFreeFormDisallowedTests(TestCase):
     """A practice without allows_free_form_items can't submit a free-form row."""
 
     def setUp(self):
-        self.practice = _make_practice(slug="p122-view-disallowed", allows_free_form_items=False)
+        self.practice = create_test_practice(
+            slug="p122-view-disallowed", allows_free_form_items=False
+        )
         self.user = User.objects.create_user(username="testuser2", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -499,7 +495,7 @@ class InvoiceEditFreeFormViewTests(TestCase):
     a missing field here silently resets quantity/total on every edit."""
 
     def setUp(self):
-        self.practice = _make_practice(slug="p122-view-edit", allows_free_form_items=True)
+        self.practice = create_test_practice(slug="p122-view-edit", allows_free_form_items=True)
         self.user = User.objects.create_user(username="testuser3", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -573,10 +569,10 @@ class ClientIntakeFormFreeFormPracticeTests(TestCase):
     for therapy-only details (date of birth, hourly rate, insurance, ...)."""
 
     def setUp(self):
-        self.allowing_practice = _make_practice(
+        self.allowing_practice = create_test_practice(
             slug="p122-client-form-yes", allows_free_form_items=True
         )
-        self.strict_practice = _make_practice(
+        self.strict_practice = create_test_practice(
             slug="p122-client-form-no", allows_free_form_items=False
         )
 
@@ -606,7 +602,7 @@ class GroupClientsByActivityFreeFormTests(TestCase):
     in "needs attention" forever just for never having a session."""
 
     def test_track_session_inactivity_false_skips_the_inactivity_flag(self):
-        practice = _make_practice(slug="p122-group-activity", allows_free_form_items=True)
+        practice = create_test_practice(slug="p122-group-activity", allows_free_form_items=True)
         client_obj = Client.objects.create(
             client_code="CO",
             full_name="Training Institute GmbH",
@@ -626,7 +622,7 @@ class GroupClientsByActivityFreeFormTests(TestCase):
         """Skipping the inactivity check must not swallow real attention tags."""
         from ..models import ClientTag
 
-        practice = _make_practice(slug="p122-group-activity-tag", allows_free_form_items=True)
+        practice = create_test_practice(slug="p122-group-activity-tag", allows_free_form_items=True)
         client_obj = Client.objects.create(
             client_code="CO2",
             full_name="Another Corp",

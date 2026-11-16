@@ -5,6 +5,7 @@ Test helper utilities and mixins for multi-practice testing.
 import io
 import re
 from collections import Counter
+from decimal import Decimal
 
 import pypdf
 from django.contrib.auth import get_user_model
@@ -12,7 +13,7 @@ from django.db import connection
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 
-from ..models import Practice, UserPractice
+from ..models import Client, Practice, UserPractice
 
 User = get_user_model()
 
@@ -279,3 +280,27 @@ def create_test_practice(name="Test Practice", slug=None, **overrides):
     }
     fields.update(overrides)
     return Practice.objects.create(**fields)
+
+
+def create_test_client(practice, code="TC", full_name="Max Mustermann", **overrides):
+    """
+    Create a client of ``practice`` with default values.
+
+    Args:
+        practice: The Practice the client belongs to
+        code: client_code; also the local part of the default email
+        full_name: Client name (dummy names only)
+        **overrides: Any other Client field, replacing the default
+
+    Returns:
+        Client instance
+    """
+    fields = {
+        "practice": practice,
+        "client_code": code,
+        "full_name": full_name,
+        "email": f"{code.lower()}@example.com",
+        "hourly_rate_60": Decimal("90.00"),
+    }
+    fields.update(overrides)
+    return Client.objects.create(**fields)

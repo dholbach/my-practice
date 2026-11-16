@@ -9,23 +9,18 @@ from django.utils import timezone
 
 from ..models import (
     BankTransaction,
-    Client,
     Invoice,
     InvoiceItem,
     OperationalChecklistCompletion,
-    Practice,
     PracticeTodo,
     ServiceType,
     Session,
     SupervisionItem,
     allow_issued_invoice_writes,
 )
+from .test_helpers import create_test_client, create_test_practice
 
 TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
-
-
-def _make_practice(name="Test Practice"):
-    return Practice.objects.create(name=name, title="Testtherapeutin")
 
 
 def _period_start(checklist_type: str) -> date:
@@ -43,11 +38,8 @@ def _period_start(checklist_type: str) -> date:
 
 
 def _make_client(practice, code="XX-1"):
-    return Client.objects.create(
-        practice=practice,
-        client_code=code,
-        full_name="Test Klient",
-        hourly_rate_60=Decimal("100.00"),
+    return create_test_client(
+        practice, code, full_name="Test Klient", hourly_rate_60=Decimal("100.00")
     )
 
 
@@ -85,7 +77,7 @@ def _make_invoice(practice, client, status, days_ago, number):
 
 class SyncMissingSessionLogTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(title="Testtherapeutin")
         self.client_obj = _make_client(self.practice)
 
     def test_creates_task_for_session_missing_log(self):
@@ -174,7 +166,7 @@ class SyncMissingSessionLogTests(TestCase):
         )
 
     def test_practice_isolation(self):
-        other_practice = _make_practice("Other Practice")
+        other_practice = create_test_practice("Other Practice", title="Testtherapeutin")
         other_client = _make_client(other_practice, "YY-2")
         _make_session_missing_log(other_client)
         call_command("sync_focus_queue_tasks")
@@ -193,7 +185,7 @@ class SyncMissingSessionLogTests(TestCase):
 
 class SyncInvoiceUnpaidTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(title="Testtherapeutin")
         self.client_obj = _make_client(self.practice)
 
     def test_creates_task_for_overdue_invoice(self):
@@ -226,7 +218,7 @@ class SyncInvoiceUnpaidTests(TestCase):
 
 class SyncInvoiceUnsentTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(title="Testtherapeutin")
         self.client_obj = _make_client(self.practice)
 
     def test_creates_task_for_draft_invoice(self):
@@ -253,7 +245,7 @@ class SyncInvoiceUnsentTests(TestCase):
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)
 class SyncSupervisionTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(title="Testtherapeutin")
         self.client_obj = _make_client(self.practice)
 
     def test_creates_task_for_open_supervision_item(self):
@@ -295,7 +287,7 @@ class SyncSupervisionTests(TestCase):
         )
 
     def test_practice_isolation(self):
-        other_practice = _make_practice("Other Practice")
+        other_practice = create_test_practice("Other Practice", title="Testtherapeutin")
         other_client = _make_client(other_practice, "YY-2")
         SupervisionItem.objects.create(client=other_client, content="Question")
         call_command("sync_focus_queue_tasks")
@@ -314,7 +306,7 @@ class SyncSupervisionTests(TestCase):
 
 class SyncOperationalChecklistTests(TestCase):
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(title="Testtherapeutin")
 
     def test_creates_single_aggregate_task_when_pending(self):
         call_command("sync_focus_queue_tasks")
@@ -351,7 +343,7 @@ class SyncBankUnmatchedTests(TestCase):
     """Aggregate bank task (#422, option B) — one row per practice, not per transaction."""
 
     def setUp(self):
-        self.practice = _make_practice()
+        self.practice = create_test_practice(title="Testtherapeutin")
 
     def _transaction(self, *, amount="90.00", reference="Test", **overrides):
         fields = {

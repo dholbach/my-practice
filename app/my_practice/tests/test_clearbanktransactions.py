@@ -13,19 +13,14 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-from ..models import BankTransaction, CompanyExpense, CompanyWithdrawal, Practice
+from ..models import BankTransaction, CompanyExpense, CompanyWithdrawal
+from .test_helpers import create_test_practice
 
 PRACTICE_IBAN = "DE89370400440532013000"
 
 
 def _make_practice(slug="cmd-test"):
-    return Practice.objects.create(
-        name="Test Praxis",
-        slug=slug,
-        title="Therapeutin",
-        email="test@example.com",
-        iban=PRACTICE_IBAN,
-    )
+    return create_test_practice(slug=slug, iban=PRACTICE_IBAN)
 
 
 def _make_transaction(practice, **kwargs):

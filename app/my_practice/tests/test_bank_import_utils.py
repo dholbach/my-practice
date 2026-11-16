@@ -21,12 +21,12 @@ from ..models import (
     ExpenseCategoryRule,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
 )
 from ..utils import BankStatementImporter, build_counterparty_key
+from .test_helpers import create_test_practice
 
 PRACTICE_IBAN = "DE89370400440532013000"
 PRIVATE_IBAN = "DE73200400600056789000"
@@ -61,15 +61,7 @@ def _make_importer(practice, rows, csv_iban=PRACTICE_IBAN):
 
 
 def _make_practice(**kwargs):
-    defaults = {
-        "name": "Test Praxis",
-        "slug": "bank-util-test",
-        "title": "Therapeutin",
-        "email": "test@example.com",
-        "iban": PRACTICE_IBAN,
-    }
-    defaults.update(kwargs)
-    return Practice.objects.create(**defaults)
+    return create_test_practice(**{"slug": "bank-util-test", "iban": PRACTICE_IBAN, **kwargs})
 
 
 @allow_issued_invoice_writes()

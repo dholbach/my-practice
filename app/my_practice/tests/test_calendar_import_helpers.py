@@ -10,25 +10,18 @@ from unittest.mock import Mock
 
 from django.test import TestCase
 
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
+from ..models import Client, Invoice, InvoiceItem, ServiceType, Session
 from ..utils.calendar_import_helpers import (
     bill_session,
     create_invoice_items_from_events,
     get_or_create_invoice_for_month,
 )
-
-
-def _make_practice(slug="test-cal"):
-    return Practice.objects.create(name="Test Praxis", slug=slug)
+from .test_helpers import create_test_client, create_test_practice
 
 
 def _make_client(practice, code="TC", hourly_rate_60=90):
-    return Client.objects.create(
-        client_code=code,
-        full_name="Test Klient",
-        email=f"{code.lower()}@example.com",
-        hourly_rate_60=hourly_rate_60,
-        practice=practice,
+    return create_test_client(
+        practice, code, full_name="Test Klient", hourly_rate_60=hourly_rate_60
     )
 
 
@@ -54,7 +47,7 @@ class GetOrCreateInvoiceForMonthTest(TestCase):
     """Tests for get_or_create_invoice_for_month."""
 
     def setUp(self):
-        self.practice = _make_practice("inv-month")
+        self.practice = create_test_practice(slug="inv-month")
         self.client_obj = _make_client(self.practice)
 
     def test_creates_new_draft_invoice(self):
@@ -83,7 +76,7 @@ class CreateInvoiceItemsFromEventsTest(TestCase):
     """Tests for create_invoice_items_from_events."""
 
     def setUp(self):
-        self.practice = _make_practice("create-events")
+        self.practice = create_test_practice(slug="create-events")
         self.client_obj = _make_client(self.practice)
         self.therapy_60 = _make_service_type("therapy_60", 60)
         self.therapy_90 = _make_service_type("therapy_90", 90)
@@ -269,7 +262,7 @@ class CreateInvoiceItemsAlreadyBilledTest(TestCase):
     so a stale queue page could submit it again onto a new draft."""
 
     def setUp(self):
-        self.practice = _make_practice("already-billed")
+        self.practice = create_test_practice(slug="already-billed")
         self.client_obj = _make_client(self.practice)
         self.therapy_60 = _make_service_type("therapy_60", 60)
         self.request = _make_request(self.practice)
@@ -343,7 +336,7 @@ class BillSessionTest(TestCase):
     """Tests for bill_session."""
 
     def setUp(self):
-        self.practice = _make_practice("bill-session")
+        self.practice = create_test_practice(slug="bill-session")
         self.client_obj = _make_client(self.practice)
         self.therapy_60 = _make_service_type("therapy_60", 60)
 
