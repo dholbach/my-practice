@@ -800,3 +800,33 @@ The scan checklist below is the manual half.
 - [ ] Archive PROJECTS.md: move stale WIPs to done/cancelled, keep backlog honest
 - [ ] docs/architecture/CODE_STRUCTURE.md: still accurate? Update if not
 - [ ] New Django/Python features available that simplify existing code?
+
+### Reading the output of `./dev.py review`
+
+For whoever runs a review, or briefs agents for one. The command is long, so redirect it
+to a file; add `--verbose` or steps 5–7 print nothing but their header.
+
+- **"✅ OK" in the closing summary only means the step's exit code was 0.** Steps 4, 6 and 7
+  exit 0 whatever they found, and step 5 fails only when a test does, so read their detail,
+  not the summary.
+- In a captured run the tools' raw output comes first and the numbered headers and summary
+  come after it, so a section's findings are not under its header.
+- `--no-tests` skips step 5; `⏭️` marks a tool that isn't installed, shown as "skipped" and
+  never as a failure.
+
+| Step | What it prints | Clean looks like | Read it with this in mind |
+| --- | --- | --- | --- |
+| 1 Dead code | vulture, `--min-confidence 80` | `No dead code found` | Only high-confidence hits. Names reached through templates, URL confs, signals or `getattr` look used or unused wrongly in either direction; check by grep before acting. |
+| 2 Unused symbols | ruff `F401,F841` | `All checks passed!` | Imports and local variables only. |
+| 3 CVEs | pip-audit, then npm audit | `No known vulnerabilities found`, `found 0 vulnerabilities` | A finding here is an audit item, not a refactor. |
+| 4 Outdated | two tables: the app (container, `requirements.txt`) and dev tools (host, `requirements-dev.txt`) | any list is normal | Informational. Patch and minor drift is routine; read the release notes of a major jump (gunicorn, pypdf, python-dateutil were such cases in 2026-11). |
+| 5 Coverage | runs the whole suite under coverage, then a per-file table sorted by missed lines, `54 files skipped due to complete coverage`, and a `TOTAL` row | a `TOTAL` in the nineties (94%, 662 of 11062 statements missed on 2026-11-16) | Slow: about the length of the full suite. Missed lines in views and models matter; error branches and management commands are usually the bulk. |
+| 6 Complexity | radon `cc`, rank C or worse (cyclomatic 11+), grouped by file, tests included | an empty list is rare; this repo had 46 blocks, nearly all rank C and mostly `Command.handle`, form `__init__` and long views | `Average complexity` is over the listed blocks only, so it can't fall below C and says nothing about the whole codebase. Compare the list with the last review, not with zero. |
+| 7 Long files | per category (app, tests, templates, js): file count, how many are 500+ lines, and those files with their line counts | a short list for app and templates, none for js | Tests are the longest (28 files over 500 on 2026-11-16). `seed_sample_data.py` is long on purpose (small methods, data in `_seed_data.py`). |
+
+What none of it sees, and what a review (or its agents) is for: duplication between modules,
+merge candidates, functions that exist only to forward, unused template tags and CSS classes
+(the `purgecss` pass above covers CSS, and class names built dynamically are false
+positives), form and admin fields that no longer match their model, docs that describe
+things that are gone, and anything the tools are blind to because it is wired through a
+string. Give agents the summary of this output, and what it covers, so they don't repeat it.
