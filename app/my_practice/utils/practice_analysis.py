@@ -16,6 +16,7 @@ from django.utils.translation import ngettext
 from ..models import Client, Invoice
 from ..models.base import PracticeScope, scope_to_practice
 from ..models.session import Session
+from .revenue_helpers import RevenueCalculator
 
 
 class ClientClassification:
@@ -156,13 +157,15 @@ class PracticeAnalyzer:
         Annotate a Client queryset with the per-client aggregates _analyze_client needs,
         computed via Subquery so all clients are covered in one query each instead of
         three extra queries per client (revenue, invoice count, session hours).
+
+        Revenue is counted in the period it was paid, like every other revenue figure
+        (RevenueCalculator); the invoice count is the invoices issued in the period.
         """
         paid_revenue_subquery = (
             Invoice.objects.filter(
+                RevenueCalculator.build_paid_date_range_filter(self.start_date, self.end_date),
                 client=OuterRef("pk"),
                 status="paid",
-                invoice_date__gte=self.start_date,
-                invoice_date__lte=self.end_date,
             )
             .values("client")
             .annotate(total=Sum("total"))
