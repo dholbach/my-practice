@@ -340,7 +340,7 @@ class SendInvoiceEmailView(View):
 
         filename = (
             f"Rechnung_{invoice.invoice_number}.pdf"
-            if invoice.client.language == "de"
+            if invoice.client.language == Client.Language.DE
             else f"Invoice_{invoice.invoice_number}.pdf"
         )
         msg = EmailMessage(
@@ -438,7 +438,9 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
 
     def _get_docx(self, lang: str) -> tuple[str, bytes] | None:
         """Return (filename, bytes) for the docx, or None if not found."""
-        docx_name = "Anamnesebogen.docx" if lang == "de" else "Anamnesebogen (eng).docx"
+        docx_name = (
+            "Anamnesebogen.docx" if lang == Client.Language.DE else "Anamnesebogen (eng).docx"
+        )
         docx_path = settings.MY_PRACTICE_DATA_DIR / "documents" / docx_name
         if not docx_path.exists():
             return None
@@ -449,7 +451,9 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
     ) -> HttpResponse | None:
         lang = client.language or "de"
         if self._get_docx(lang) is None:
-            docx_name = "Anamnesebogen.docx" if lang == "de" else "Anamnesebogen (eng).docx"
+            docx_name = (
+                "Anamnesebogen.docx" if lang == Client.Language.DE else "Anamnesebogen (eng).docx"
+            )
             messages.error(
                 request,
                 _(
@@ -472,7 +476,9 @@ class SendQuestionnaireEmailView(BaseClientEmailView):
         lang = client.language or "de"
         result = self._get_docx(lang)
         if result is None:
-            docx_name = "Anamnesebogen.docx" if lang == "de" else "Anamnesebogen (eng).docx"
+            docx_name = (
+                "Anamnesebogen.docx" if lang == Client.Language.DE else "Anamnesebogen (eng).docx"
+            )
             raise FileNotFoundError(
                 _("File not found: %(path)s.")
                 % {"path": settings.MY_PRACTICE_DATA_DIR / "documents" / docx_name}
@@ -502,7 +508,7 @@ class SendContractEmailView(BaseClientEmailView):
         safe_code = client.client_code.replace("/", "-")
         return (
             f"Behandlungsvertrag_{safe_code}.pdf"
-            if lang == "de"
+            if lang == Client.Language.DE
             else f"TreatmentContract_{safe_code}.pdf"
         )
 
@@ -529,7 +535,11 @@ class SendIntakeFormEmailView(BaseClientEmailView):
     def _get_filename(self, client: Client) -> str:
         lang = client.language or "de"
         safe_code = client.client_code.replace("/", "-")
-        return f"Aufnahmebogen_{safe_code}.pdf" if lang == "de" else f"IntakeForm_{safe_code}.pdf"
+        return (
+            f"Aufnahmebogen_{safe_code}.pdf"
+            if lang == Client.Language.DE
+            else f"IntakeForm_{safe_code}.pdf"
+        )
 
     def get_default_content(self, client: Client, practice: Practice) -> tuple[str, str]:
         return get_intake_email_content(client, practice)

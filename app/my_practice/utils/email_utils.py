@@ -5,11 +5,12 @@ Email utility functions for invoice sending.
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from ..models import Client
 from ..validators import PLACEHOLDER_RE
 from .formatting import format_currency_de
 
 if TYPE_CHECKING:
-    from ..models import Client, Invoice, Practice, TimeOff
+    from ..models import Invoice, Practice, TimeOff
 
 
 def make_from_email(practice: "Practice") -> str:
@@ -59,7 +60,7 @@ def _build_sessions_intro(invoice: "Invoice", language: str) -> str:
     if len(months) == 1:
         year, month = next(iter(months))
         n = len(session_dates)
-        if language == "en":
+        if language == Client.Language.EN:
             month_name = date(year, month, 1).strftime("%B")
             session_word = "session" if n == 1 else "sessions"
             sentence = f"Here is the invoice for our {session_word} in {month_name}."
@@ -69,7 +70,7 @@ def _build_sessions_intro(invoice: "Invoice", language: str) -> str:
             sentence = f"Anbei die Rechnung für unsere {session_word} im {month_name}."
     else:
         n = len(session_dates)
-        if language == "en":
+        if language == Client.Language.EN:
             session_word = "session" if n == 1 else "sessions"
             sentence = f"Here is the invoice for our last {n} {session_word}."
         else:
@@ -116,7 +117,7 @@ def get_salutation_for_client(client: "Client") -> str:
     # Generate fallback - intentionally generic to encourage customization
     first_name = client.full_name.split()[0] if client.full_name else "Client"
 
-    if client.language == "en":
+    if client.language == Client.Language.EN:
         return f"Dear {first_name}"
     else:  # de
         return f"Liebe:r {first_name}"
@@ -209,7 +210,7 @@ def get_invoice_email_content(
     language = invoice.client.language
 
     # Get templates based on language
-    if language == "en":
+    if language == Client.Language.EN:
         subject_template = practice.invoice_email_subject_en
         body_template = practice.invoice_email_body_en
     else:  # de
@@ -363,7 +364,7 @@ def _build_client_email(
     Greets the client with their salutation, uses the German text for anything
     but "en", and appends the practice signature.
     """
-    subject, text = texts["en" if client.language == "en" else "de"]
+    subject, text = texts["en" if client.language == Client.Language.EN else "de"]
     body = f"{get_salutation_for_client(client)},\n\n{text}"
     return subject, _with_signature(body, practice)
 
@@ -428,7 +429,7 @@ def get_payment_reminder_email_content(
         date_str = inv.invoice_date.strftime("%d.%m.%Y")
         invoice_rows.append(f"  {num}  {date_str}  {format_currency_de(inv.total)}")
 
-    if lang == "en":
+    if lang == Client.Language.EN:
         invoice_word = "invoice" if count == 1 else "invoices"
         lines.append(client.salutation + "," if client.salutation else "Hi,")
         lines.append("")
@@ -481,12 +482,12 @@ def get_cancellation_email_content(client: "Client", practice: "Practice") -> tu
     first_name = client.full_name.split()[0] if client.full_name else client.client_code
     if client.salutation:
         greeting = client.salutation + ","
-    elif lang == "en":
+    elif lang == Client.Language.EN:
         greeting = f"Dear {first_name},"
     else:
         greeting = f"Liebe/r {first_name},"
 
-    if lang == "en":
+    if lang == Client.Language.EN:
         subject = "Cancellation of tomorrow's session"
         lines = [
             greeting,

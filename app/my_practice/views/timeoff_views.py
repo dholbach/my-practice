@@ -144,7 +144,7 @@ class SendTimeOffNoticeView(View):
         sent_count = 0
         failed_clients: list[str] = []
         for client in recipients:
-            if client.language == "en":
+            if client.language == Client.Language.EN:
                 subject, body_template = subject_en, body_en
             else:
                 subject, body_template = subject_de, body_de

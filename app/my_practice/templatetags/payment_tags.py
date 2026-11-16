@@ -8,6 +8,7 @@ from decimal import InvalidOperation
 from django import template
 from django.utils.safestring import mark_safe
 
+from ..models import Client
 from ..utils.chart_helpers import MONTH_ABBREVIATIONS
 from ..utils.formatting import format_currency_de
 
@@ -245,4 +246,4 @@ def doc_field(obj, name, lang):
     but "en" reads the German field.
     Usage: {% doc_field practice "subtitle" lang %}  or  {% doc_field x "name" lang as n %}
     """
-    return getattr(obj, f"{name}_{'en' if lang == 'en' else 'de'}")
+    return getattr(obj, f"{name}_{'en' if lang == Client.Language.EN else 'de'}")

@@ -105,7 +105,7 @@ def render_invoice_pdf_bytes(
     Returns:
         (pdf_bytes, filename) where filename is suitable for download/zip entry.
     """
-    if invoice.client.language == "de":
+    if invoice.client.language == Client.Language.DE:
         lang = "de"
         filename = f"Rechnung_{invoice.invoice_number}.pdf"
     else:
@@ -148,7 +148,7 @@ def generate_contract_pdf_bytes(client: Client, practice: Practice, lang: str) -
     safe_code = client.client_code.replace("/", "-")
     filename = (
         f"Behandlungsvertrag_{safe_code}.pdf"
-        if lang == "de"
+        if lang == Client.Language.DE
         else f"TreatmentContract_{safe_code}.pdf"
     )
     return pdf_bytes, filename
@@ -169,7 +169,11 @@ def generate_intake_form_pdf_bytes(
     )
     pdf_bytes = HTML(string=html_string).write_pdf(pdf_forms=True)
     safe_code = client.client_code.replace("/", "-")
-    filename = f"Aufnahmebogen_{safe_code}.pdf" if lang == "de" else f"IntakeForm_{safe_code}.pdf"
+    filename = (
+        f"Aufnahmebogen_{safe_code}.pdf"
+        if lang == Client.Language.DE
+        else f"IntakeForm_{safe_code}.pdf"
+    )
     return pdf_bytes, filename
 
 

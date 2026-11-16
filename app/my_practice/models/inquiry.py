@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 
 from ..fields import EncryptedTextField
 from .base import PracticeScopedManager, PracticeScopedQuerySet, TimestampedModel
+from .client import Client
 
 
 class InquirySource(StrEnum):
@@ -96,10 +97,8 @@ class ClientInquiryQuerySet(PracticeScopedQuerySet):
         return self.exclude(status__in=CLOSED_INQUIRY_STATUSES)
 
 
-INQUIRY_LANGUAGE_CHOICES = [
-    ("de", _("German")),
-    ("en", _("English")),
-]
+# An inquiry's language becomes the client's, so the two share their choices.
+INQUIRY_LANGUAGE_CHOICES = Client.LANGUAGE_CHOICES
 
 
 class ClientInquiry(TimestampedModel):
@@ -137,7 +136,7 @@ class ClientInquiry(TimestampedModel):
     language = models.CharField(
         max_length=2,
         choices=INQUIRY_LANGUAGE_CHOICES,
-        default="de",
+        default=Client.Language.DE,
         verbose_name=_("Language"),
         help_text=_("Preferred language of the person inquiring"),
     )
