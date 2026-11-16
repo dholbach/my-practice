@@ -646,7 +646,8 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
             _("Event on %(date)s added to invoice %(number)s.")
             % {"date": event.event_date.strftime("%d.%m.%Y"), "number": invoice.invoice_number},
         )
-    except Exception as e:
-        messages.error(request, _("Import error: %(error)s") % {"error": e})
+    except Exception:
+        logger.exception("Quick action import of a calendar event failed")
+        messages.error(request, _("Import error. Details are in the server log."))
 
     return redirect_target
