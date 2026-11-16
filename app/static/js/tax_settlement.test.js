@@ -13,6 +13,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "tax_settlement.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 let failures = 0;
 function check(name, condition) {
@@ -39,9 +40,12 @@ function component({ fetchImpl, dataset = {} } = {}) {
             return fetchImpl();
         },
         FormData,
+        URLSearchParams,
         window: { location: { reload: () => (sandbox.reloaded = true) } },
     };
     vm.createContext(sandbox);
+    vm.runInContext(POST_JSON, sandbox);
+    sandbox.MPHttp = sandbox.window.MPHttp; // in a browser window is the global; here it is a stub
     vm.runInContext(SOURCE, sandbox);
     listeners["alpine:init"]();
     const instance = registered.taxSettlement();
@@ -69,7 +73,8 @@ function component({ fetchImpl, dataset = {} } = {}) {
         await instance.save();
         const body = calls[0].options.body;
         check("save posts to the element's URL", calls[0].url === "/tax/settlement/" && calls[0].options.method === "POST");
-        check("it sends year, amount, date and token", body.get("year") === "2025" && body.get("settlement_amount") === "123.45" && body.get("settlement_date") === "2026-03-01" && body.get("csrfmiddlewaretoken") === "tok123");
+        check("it sends year, amount and date form-encoded", body.get("year") === "2025" && body.get("settlement_amount") === "123.45" && body.get("settlement_date") === "2026-03-01");
+        check("the CSRF token goes in the header, not the body", calls[0].options.headers["X-CSRFToken"] === "tok123" && !body.has("csrfmiddlewaretoken"));
         check("a saved settlement reloads the page", sandbox.reloaded === true);
         check("saving is over afterwards", instance.saving === false);
     }

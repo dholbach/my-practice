@@ -4,7 +4,7 @@
  *
  * Browser IIFE wired on load: a throwaway DOM stub and fetch, with the real source
  * loaded via `vm` (plain `node <file>`, see dev.py cmd_test_js). Pinned: the
- * form-encoded body the view reads (year, note, csrfmiddlewaretoken), the status
+ * form-encoded body the view reads (year, note) with the CSRF token as a header, the status
  * messages for saved / refused / unreachable, and that the button comes back.
  */
 
@@ -13,6 +13,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "tax_year_summary.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 let failures = 0;
 function check(name, condition) {
@@ -48,6 +49,7 @@ function load(fetchImpl) {
         URLSearchParams,
     };
     vm.createContext(sandbox);
+    vm.runInContext(POST_JSON, sandbox);
     vm.runInContext(SOURCE, sandbox);
     return { nodes, click: click.click, calls };
 }
@@ -64,7 +66,8 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
         await flush();
         const body = calls[0].options.body;
         check("it posts to the widget's URL", calls[0].url === "/tax/note/" && calls[0].options.method === "POST");
-        check("the body is form-encoded with year, note and token", body.get("year") === "2025" && body.get("note") === "split 95/5" && body.get("csrfmiddlewaretoken") === "tok123");
+        check("the body is form-encoded with year and note", body.get("year") === "2025" && body.get("note") === "split 95/5");
+        check("the CSRF token goes in the header, not the body", calls[0].options.headers["X-CSRFToken"] === "tok123" && !body.has("csrfmiddlewaretoken"));
         check("a saved note shows the prefix and the time", nodes["tax-note-status"].textContent === "Saved: 15.11.2026 10:00");
         check("the button is enabled again", !nodes["tax-note-save-btn"].disabled);
     }

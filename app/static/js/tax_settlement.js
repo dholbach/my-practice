@@ -6,7 +6,8 @@
  * The element carrying x-data="taxSettlement" supplies everything through data-*
  * attributes (see tax_quarter_overview.html): year, save URL, the stored amount
  * and date, and the error texts, so the strings stay inside the template surface
- * the i18n coverage guardrail scans. The CSRF token comes from <body data-csrf-token>.
+ * the i18n coverage guardrail scans. The form is saved through MPHttp.postForm
+ * (post_json.js), which adds the CSRF token.
  */
 
 document.addEventListener("alpine:init", function () {
@@ -37,13 +38,12 @@ document.addEventListener("alpine:init", function () {
                 const text = this.$el.dataset;
                 this.saving = true;
                 this.error = "";
-                const data = new FormData();
-                data.append("year", text.year);
-                data.append("settlement_amount", this.amount);
-                data.append("settlement_date", this.settlementDate);
-                data.append("csrfmiddlewaretoken", document.body.dataset.csrfToken);
                 try {
-                    const response = await fetch(text.saveUrl, { method: "POST", body: data });
+                    const response = await MPHttp.postForm(text.saveUrl, {
+                        year: text.year,
+                        settlement_amount: this.amount,
+                        settlement_date: this.settlementDate,
+                    });
                     const json = await response.json();
                     if (json.saved) {
                         window.location.reload();

@@ -3,8 +3,9 @@
  *
  * The save URL, the year and the status messages come from data-* attributes on
  * the .tax-note-widget element (see tax_year_summary.html), so the strings stay
- * inside the template surface the i18n coverage guardrail scans. The CSRF token
- * comes from <body data-csrf-token>; the view reads a form-encoded POST.
+ * inside the template surface the i18n coverage guardrail scans. The note goes out
+ * through MPHttp.postForm (post_json.js), which adds the CSRF token; the view reads
+ * a form-encoded POST.
  */
 
 (function () {
@@ -18,15 +19,10 @@
     const text = widget.dataset;
 
     button.addEventListener("click", function () {
-        const body = new URLSearchParams();
-        body.append("year", text.year);
-        body.append("note", textarea.value);
-        body.append("csrfmiddlewaretoken", document.body.dataset.csrfToken);
-
         button.disabled = true;
         status.textContent = text.saving;
 
-        fetch(text.saveUrl, { method: "POST", body: body })
+        MPHttp.postForm(text.saveUrl, { year: text.year, note: textarea.value })
             .then((response) => response.json())
             .then((data) => {
                 status.textContent = data.saved ? text.savedPrefix + data.updated_at : text.saveError;

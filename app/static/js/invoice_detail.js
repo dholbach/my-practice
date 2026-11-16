@@ -4,8 +4,9 @@
  *
  * The update URL and the texts come from data-* attributes on this file's own
  * <script> tag (see invoice_detail.html), so the strings stay inside the template
- * surface the i18n coverage guardrail scans. The CSRF token comes from
- * <body data-csrf-token>; the view reads a form-encoded POST.
+ * surface the i18n coverage guardrail scans. The status goes out through
+ * MPHttp.postForm (post_json.js), which adds the CSRF token; the view reads a
+ * form-encoded POST.
  */
 
 (function () {
@@ -46,14 +47,7 @@
         if (!newStatus) return;
 
         try {
-            const response = await fetch(text.updateUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "X-CSRFToken": document.body.dataset.csrfToken,
-                },
-                body: `status=${encodeURIComponent(newStatus)}`,
-            });
+            const response = await MPHttp.postForm(text.updateUrl, { status: newStatus });
             if (!response.ok) return;
 
             const data = await response.json();
