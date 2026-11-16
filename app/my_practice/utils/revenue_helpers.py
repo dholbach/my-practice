@@ -277,19 +277,7 @@ class RevenueCalculator:
         if filters:
             qs = qs.filter(**filters)
 
-        stats = qs.aggregate(
-            revenue_total=Sum("total"),
-            invoice_count=Count("id"),
-            revenue_avg=Avg("total"),
-        )
-
-        return {
-            "total": (
-                stats["revenue_total"] if stats["revenue_total"] is not None else Decimal("0")
-            ),
-            "count": stats["invoice_count"] or 0,
-            "avg": (stats["revenue_avg"] if stats["revenue_avg"] is not None else Decimal("0")),
-        }
+        return RevenueCalculator._aggregate_stats(qs)
 
     @staticmethod
     def get_year_revenue(year: int, *, practice: PracticeScope) -> dict[str, Any]:
@@ -317,19 +305,7 @@ class RevenueCalculator:
 
         qs = qs.filter(RevenueCalculator.build_paid_date_filter(year))
 
-        stats = qs.aggregate(
-            revenue_total=Sum("total"),
-            invoice_count=Count("id"),
-            revenue_avg=Avg("total"),
-        )
-
-        return {
-            "total": (
-                stats["revenue_total"] if stats["revenue_total"] is not None else Decimal("0")
-            ),
-            "count": stats["invoice_count"] or 0,
-            "avg": (stats["revenue_avg"] if stats["revenue_avg"] is not None else Decimal("0")),
-        }
+        return RevenueCalculator._aggregate_stats(qs)
 
     @staticmethod
     def get_month_revenue(
@@ -363,19 +339,7 @@ class RevenueCalculator:
 
         qs = qs.filter(RevenueCalculator.build_paid_date_filter(year, month))
 
-        stats = qs.aggregate(
-            revenue_total=Sum("total"),
-            invoice_count=Count("id"),
-            revenue_avg=Avg("total"),
-        )
-
-        return {
-            "total": (
-                stats["revenue_total"] if stats["revenue_total"] is not None else Decimal("0")
-            ),
-            "count": stats["invoice_count"] or 0,
-            "avg": (stats["revenue_avg"] if stats["revenue_avg"] is not None else Decimal("0")),
-        }
+        return RevenueCalculator._aggregate_stats(qs)
 
     @staticmethod
     def get_client_revenue(
@@ -415,18 +379,7 @@ class RevenueCalculator:
             return RevenueCalculator.get_revenue_stats(filters, practice=client.practice)
 
         qs = scope_to_practice(Invoice.objects.filter(**filters), client.practice)
-        stats = qs.aggregate(
-            revenue_total=Sum("total"),
-            invoice_count=Count("id"),
-            revenue_avg=Avg("total"),
-        )
-        return {
-            "total": (
-                stats["revenue_total"] if stats["revenue_total"] is not None else Decimal("0")
-            ),
-            "count": stats["invoice_count"] or 0,
-            "avg": (stats["revenue_avg"] if stats["revenue_avg"] is not None else Decimal("0")),
-        }
+        return RevenueCalculator._aggregate_stats(qs)
 
     @staticmethod
     def get_status_breakdown(
@@ -464,6 +417,20 @@ class RevenueCalculator:
         if year:
             return RevenueCalculator._status_breakdown_for_year(filters, year, practice=practice)
         return RevenueCalculator._status_breakdown_all_time(filters, practice=practice)
+
+    @staticmethod
+    def _aggregate_stats(qs: QuerySet) -> dict[str, Any]:
+        """Total, count and average of ``qs`` by invoice total; zero for an empty set."""
+        stats = qs.aggregate(
+            revenue_total=Sum("total"),
+            invoice_count=Count("id"),
+            revenue_avg=Avg("total"),
+        )
+        return {
+            "total": RevenueCalculator._zero_if_none(stats["revenue_total"]),
+            "count": stats["invoice_count"] or 0,
+            "avg": RevenueCalculator._zero_if_none(stats["revenue_avg"]),
+        }
 
     @staticmethod
     def _zero_if_none(value: Decimal | None) -> Decimal:

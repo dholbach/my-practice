@@ -716,7 +716,7 @@
   .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: var(--color-bg-secondary); color: var(--color-text-primary); }
   .badge-success  { background: rgba(76, 175, 80, 0.2); color: var(--color-success); }
   .badge-danger   { background: rgba(244, 67, 54, 0.2); color: var(--color-danger); }
-  .badge-warning  { background: rgba(255, 193, 7, 0.2); color: var(--color-warning); }
+  .badge-warning { background: color-mix(in srgb, var(--color-warning) 15%, transparent); color: var(--color-warning); border: 1px solid var(--color-warning); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
   .badge-info     { background: rgba(33, 150, 243, 0.2); color: var(--color-info); }
   .badge-active   { background: var(--color-badge-green-bg); color: var(--color-badge-green-text); }
   .badge-inactive { background: var(--color-badge-red-bg);   color: var(--color-badge-red-text); }
@@ -1412,7 +1412,6 @@
   .row-missing-receipt td { background: color-mix(in srgb, var(--color-warning) 6%, transparent); }
   .btn-filter-missing { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--color-warning); color: var(--color-warning); text-decoration: none; margin-left: 0.5rem; vertical-align: middle; }
   .btn-filter-missing:hover { background: color-mix(in srgb, var(--color-warning) 12%, transparent); }
-  .badge-warning { background: color-mix(in srgb, var(--color-warning) 15%, transparent); color: var(--color-warning); border: 1px solid var(--color-warning); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
   /* .action-btn scoped to avoid conflict with calendar_import.css */
   .expenses-container .action-btn { text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: all 0.2s; cursor: pointer; font-size: 1em; display: inline-flex; align-items: center; justify-content: center; min-width: 32px; }
   .expenses-container .action-btn.edit { color: var(--color-link); }
