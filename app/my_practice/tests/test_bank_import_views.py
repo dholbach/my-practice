@@ -456,6 +456,153 @@ class BankReviewStoredNotesTest(BankReviewViewBase):
         self.assertIn("Created during the bank import of", alias_note)
 
 
+class BankReviewMatchTest(BankReviewViewBase):
+    """Matching one transaction to invoices: what is marked paid, and what is all-or-nothing."""
+
+    def _post(self, trans, **extra):
+        return self.http.post(
+            reverse("bank_review"),
+            {"transaction_id": trans.id, **extra},
+        )
+
+    def _date_invoice(self, invoice, day):
+        Invoice.objects.filter(pk=invoice.pk).update(invoice_date=day)
+
+    def test_match_marks_every_invoice_paid_and_links_the_newest_first(self):
+        older = self._make_invoice(number="MA-1", payer="Max Mustermann")
+        newer = self._make_invoice(number="MB-2", payer="Max Mustermann")
+        self._date_invoice(older, date(2026, 1, 2))
+        self._date_invoice(newer, date(2026, 1, 9))
+        trans = self._make_unmatched(ref="MA-1 MB-2", amount="180,00")
+        self._post(trans, action="match", invoice=[older.id, newer.id])
+
+        for invoice in (older, newer):
+            invoice.refresh_from_db()
+            self.assertEqual((invoice.status, invoice.paid_date), ("paid", date(2026, 1, 15)))
+        trans.refresh_from_db()
+        self.assertEqual(trans.matched_invoice, newer)
+        self.assertEqual(trans.match_confidence, "manual")
+        self.assertTrue(trans.processed)
+
+    def test_match_with_equal_dates_lists_invoices_by_number(self):
+        second = self._make_invoice(number="MD-2", payer="Max Mustermann")
+        first = self._make_invoice(number="MC-1", payer="Max Mustermann")
+        trans = self._make_unmatched(ref="MC-1 MD-2", amount="180,00")
+        self._post(trans, action="match", invoice=[second.id, first.id])
+        trans.refresh_from_db()
+        self.assertEqual(trans.matched_invoice, first)
+
+    def test_match_is_all_or_nothing_when_one_invoice_cannot_be_paid(self):
+        fine = self._make_invoice(number="ME-1", payer="Max Mustermann")
+        too_late = self._make_invoice(number="MF-2", payer="Max Mustermann")
+        self._date_invoice(too_late, date(2026, 2, 1))  # after the payment date
+        trans = self._make_unmatched(ref="ME-1 MF-2", amount="180,00")
+        self._post(trans, action="match", invoice=[fine.id, too_late.id])
+
+        for invoice in (fine, too_late):
+            invoice.refresh_from_db()
+            self.assertEqual(invoice.status, "sent")
+        trans.refresh_from_db()
+        self.assertFalse(trans.processed)
+        self.assertEqual(trans.match_confidence, "unmatched")
+
+    def test_match_without_an_invoice_changes_nothing(self):
+        trans = self._make_unmatched(ref="nothing selected")
+        self._post(trans, action="match")
+        trans.refresh_from_db()
+        self.assertFalse(trans.processed)
+        self.assertIsNone(trans.matched_invoice)
+
+    def test_match_stores_the_notes(self):
+        invoice = self._make_invoice(number="MG-1", payer="Max Mustermann")
+        trans = self._make_unmatched(ref="MG-1")
+        self._post(trans, action="match", invoice=[invoice.id], notes="paid in cash")
+        trans.refresh_from_db()
+        self.assertEqual(trans.notes, "paid in cash")
+
+    def test_auto_match_is_refused_when_the_invoice_cannot_be_paid(self):
+        invoice = self._make_invoice(number="MH-1", payer="Max Mustermann")
+        self._date_invoice(invoice, date(2026, 2, 1))
+        trans = self._make_unmatched(ref="MH-1", amount="90,00")
+        self._post(trans, action="auto_match", suggested_invoice_id=invoice.id)
+        invoice.refresh_from_db()
+        trans.refresh_from_db()
+        self.assertEqual(invoice.status, "sent")
+        self.assertFalse(trans.processed)
+
+
+class BankReviewAliasTest(BankReviewViewBase):
+    """A payer name that differs from the client's is remembered as an alias, once."""
+
+    def setUp(self):
+        super().setUp()
+        self.http.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+
+    def _confirm(self, invoice, payer):
+        trans = self._make_unmatched(ref=f"{invoice.invoice_number} Zahlung", payer=payer)
+        self.http.post(
+            reverse("bank_review"),
+            {
+                "action": "confirm_paid",
+                "transaction_id": trans.id,
+                "suggested_invoice_id": invoice.id,
+            },
+        )
+        return trans
+
+    def _match(self, invoice, payer, create_alias):
+        trans = self._make_unmatched(ref=f"{invoice.invoice_number} Zahlung", payer=payer)
+        data = {"action": "match", "transaction_id": trans.id, "invoice": [invoice.id]}
+        if create_alias:
+            data["create_alias"] = "1"
+        self.http.post(reverse("bank_review"), data)
+        return trans
+
+    def test_confirming_creates_an_alias_with_a_confirm_note(self):
+        invoice = self._make_invoice(number="AL-1", status="paid", payer="Max Mustermann")
+        self._confirm(invoice, payer="M. Schmidt")
+        alias = ClientAlias.objects.get(client=invoice.client)
+        self.assertEqual(alias.alias_name, "M. Schmidt")
+        self.assertIn("Created automatically on confirming the payment of", alias.notes)
+
+    def test_matching_with_the_box_ticked_creates_an_alias_with_an_import_note(self):
+        invoice = self._make_invoice(number="AL-2", payer="Max Mustermann")
+        self._match(invoice, payer="M. Schmidt", create_alias=True)
+        alias = ClientAlias.objects.get(client=invoice.client)
+        self.assertIn("Created during the bank import of", alias.notes)
+
+    def test_matching_without_the_box_creates_no_alias(self):
+        invoice = self._make_invoice(number="AL-3", payer="Max Mustermann")
+        self._match(invoice, payer="M. Schmidt", create_alias=False)
+        self.assertFalse(ClientAlias.objects.exists())
+
+    def test_the_clients_own_name_is_no_alias_whatever_its_case(self):
+        invoice = self._make_invoice(number="AL-4", status="paid", payer="Max Mustermann")
+        self._confirm(invoice, payer="  MAX MUSTERMANN ")
+        self.assertFalse(ClientAlias.objects.exists())
+
+    def test_an_existing_alias_is_not_created_twice(self):
+        invoice = self._make_invoice(number="AL-5", status="paid", payer="Max Mustermann")
+        ClientAlias.objects.create(client=invoice.client, alias_name="m. schmidt")
+        self._confirm(invoice, payer="M. Schmidt")
+        self.assertEqual(ClientAlias.objects.filter(client=invoice.client).count(), 1)
+
+    def test_a_transaction_without_a_payer_name_creates_no_alias(self):
+        invoice = self._make_invoice(number="AL-6", status="paid", payer="Max Mustermann")
+        self._confirm(invoice, payer="")
+        self.assertFalse(ClientAlias.objects.exists())
+
+    def test_confirming_without_an_invoice_still_confirms_the_transaction(self):
+        trans = self._make_unmatched(ref="no invoice")
+        self.http.post(
+            reverse("bank_review"), {"action": "confirm_paid", "transaction_id": trans.id}
+        )
+        trans.refresh_from_db()
+        self.assertEqual((trans.match_confidence, trans.processed), ("manual", True))
+        self.assertIsNone(trans.matched_invoice)
+        self.assertFalse(ClientAlias.objects.exists())
+
+
 # ── BankExpenseReviewView ─────────────────────────────────────────────────────
 
 
