@@ -23,6 +23,8 @@ from my_practice.models import (
     allow_issued_invoice_writes,
 )
 
+from .test_helpers import select_practice
+
 
 class TaxYearSummaryViewTest(TestCase):
     """Tests for tax_year_summary view"""
@@ -44,9 +46,7 @@ class TaxYearSummaryViewTest(TestCase):
         )
         # Add user to practice and set in session
         self.practice.users.add(self.user)
-        session = self.client_http.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_http, self.practice)
 
         # Create test client
         self.test_client = Client.objects.create(
@@ -258,9 +258,7 @@ class TaxYearNoteViewTest(TestCase):
             city="Berlin",
         )
         self.practice.users.add(self.user)
-        session = self.client_http.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_http, self.practice)
 
     def test_save_note_creates_record(self):
         """POST to save_tax_year_note creates a TaxYearNote record."""
@@ -394,9 +392,7 @@ class WorkdayAuditViewTest(TestCase):
             practice_weekdays=[0, 2, 4],  # Mon, Wed, Fri in-practice
         )
         self.practice.users.add(self.user)
-        session = self.client_http.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_http, self.practice)
 
     def test_audit_page_loads(self):
         """GET tax_workday_audit returns 200."""
@@ -442,9 +438,7 @@ class TaxYearSummaryRenderingTest(TestCase):
         self.practice.users.add(self.user)
 
         # Set current practice in session
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
         # Create test data
         self.service_type = ServiceType.objects.create(
@@ -655,9 +649,7 @@ class TaxQuarterOverviewConsistencyTest(TestCase):
             city="Berlin",
         )
         self.practice.users.add(self.user)
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
         self.client_obj = Client.objects.create(
             client_code="TQ1",
