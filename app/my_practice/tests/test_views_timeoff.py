@@ -12,7 +12,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Client, Practice, Session, TimeOff, UserPractice
-from .test_helpers import select_practice
+from .test_helpers import create_test_practice, select_practice
 
 
 class TimeOffCrudViewTest(TestCase):
@@ -22,13 +22,7 @@ class TimeOffCrudViewTest(TestCase):
         self.user = User.objects.create_user(username="timeoffuser", password="12345")
         self.client_instance = TestClient()
 
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_timeoff-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_timeoff-1")
         UserPractice.objects.get_or_create(
             user=self.user, practice=self.practice, defaults={"is_owner": True}
         )

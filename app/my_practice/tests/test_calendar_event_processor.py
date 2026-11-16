@@ -12,13 +12,14 @@ from django.contrib.auth.models import User
 from django.test import RequestFactory, TestCase
 from django.utils import timezone
 
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
+from ..models import Client, Invoice, InvoiceItem, ServiceType, Session, UserPractice
 from ..utils.calendar_event_processor import (
     CalendarImportProcessor,
     _ensure_aware,
     build_user_overrides,
     parse_date_range,
 )
+from .test_helpers import create_test_practice
 
 
 def _fake_request(user, practice):
@@ -32,13 +33,7 @@ def _fake_request(user, practice):
 
 class CalendarImportProcessorTestBase(TestCase):
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="calendar-import-processor",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="calendar-import-processor")
         self.user = User.objects.create_user(username="calimportuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.request = _fake_request(self.user, self.practice)

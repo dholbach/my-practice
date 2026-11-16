@@ -11,7 +11,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import CompanyWithdrawal, Practice, UserPractice
-from .test_helpers import select_practice
+from .test_helpers import create_test_practice, select_practice
 
 
 class WithdrawalListViewTest(TestCase):
@@ -22,13 +22,7 @@ class WithdrawalListViewTest(TestCase):
         self.client_instance = TestClient()
 
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_withdrawal-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_withdrawal-1")
 
         # Link user to practice
         UserPractice.objects.get_or_create(
@@ -96,13 +90,7 @@ class WithdrawalCreateViewTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_withdrawal-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_withdrawal-2")
 
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client_instance = TestClient()
@@ -188,13 +176,7 @@ class WithdrawalUpdateViewTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_withdrawal-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_withdrawal-3")
 
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client_instance = TestClient()
@@ -253,13 +235,7 @@ class WithdrawalDeleteViewTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_withdrawal-4",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_withdrawal-4")
 
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client_instance = TestClient()
@@ -306,13 +282,7 @@ class WithdrawalCategoryTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_withdrawal-5",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_withdrawal-5")
 
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client_instance = TestClient()

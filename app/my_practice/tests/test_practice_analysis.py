@@ -10,7 +10,6 @@ from my_practice.models import (
     Client,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     TimeOff,
@@ -32,13 +31,7 @@ class PracticeAnalyzerTestCase(TestCase):
     def setUp(self):
         """Create test data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="practice_analysis-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="practice_analysis-1")
 
         # Capacity periods required by _calculate_weighted_capacity / get_weekly_capacity_for_date
         CapacityPeriod.objects.create(
@@ -252,13 +245,7 @@ class PracticeAnalyzerTestCase(TestCase):
     def test_analyze_basic_structure(self):
         """Test that analyze returns correct structure"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         analyzer = PracticeAnalyzer(date(2025, 10, 1), date(2025, 12, 31), practice=self.practice)
         analysis = analyzer.analyze()
@@ -462,13 +449,7 @@ class CalculateQuarterTrendsTestCase(TestCase):
     def setUp(self):
         """Create test data spanning multiple quarters"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="practice_analysis-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="practice_analysis-2")
 
         # Create service type
         self.service_type = ServiceType.objects.create(
@@ -575,13 +556,7 @@ class PracticeAnalyzerEdgeCasesTestCase(TestCase):
 
     def setUp(self):
         """Create test practice"""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="practice-analyzer-edge",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="practice-analyzer-edge")
 
     def test_empty_period(self):
         """Test analysis with no clients or sessions"""

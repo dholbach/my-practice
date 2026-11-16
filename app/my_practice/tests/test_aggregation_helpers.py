@@ -7,12 +7,14 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from my_practice.models import CompanyExpense, CompanyWithdrawal, Practice
+from my_practice.models import CompanyExpense, CompanyWithdrawal
 from my_practice.utils.aggregation_helpers import (
     get_category_breakdown,
     get_grand_total,
     get_yearly_totals,
 )
+
+from .test_helpers import create_test_practice
 
 
 class AggregationHelpersTestCase(TestCase):
@@ -21,13 +23,7 @@ class AggregationHelpersTestCase(TestCase):
     def setUp(self):
         """Create test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="aggregation_helpers-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="aggregation_helpers-1")
 
         # Create expenses across different years
         CompanyExpense.objects.create(
@@ -80,13 +76,7 @@ class AggregationHelpersTestCase(TestCase):
     def test_get_yearly_totals(self):
         """Test yearly totals aggregation."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         yearly = get_yearly_totals(CompanyExpense.objects.all())
         yearly_list = list(yearly)

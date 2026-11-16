@@ -16,6 +16,7 @@ from ..models import (
     ServiceType,
     UserPractice,
 )
+from .test_helpers import create_test_practice
 
 
 class PracticeModelTest(TestCase):
@@ -110,12 +111,8 @@ class PracticeScopedModelsTest(TestCase):
     def setUp(self):
         """Create test practices"""
         # Create two practices for comparison
-        self.practice1 = Practice.objects.create(
-            name="Therapy Practice",
-            slug="multi_practice-therapy",
-            title="Test Practitioner",
-            email="therapy@practice.com",
-            city="Berlin",
+        self.practice1 = create_test_practice(
+            name="Therapy Practice", slug="multi_practice-therapy"
         )
 
         self.practice2 = Practice.objects.create(

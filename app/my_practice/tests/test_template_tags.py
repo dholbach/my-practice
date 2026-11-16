@@ -19,6 +19,8 @@ from my_practice.templatetags.payment_tags import (
     privacy_name,
 )
 
+from .test_helpers import create_test_practice
+
 
 class CurrencyFilterTests(TestCase):
     """Tests for the currency template filter."""
@@ -164,13 +166,7 @@ class QueryStringTemplateTagTests(TestCase):
     def setUp(self):
         """Set up test request factory."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="template_tags-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="template_tags-1")
 
         self.factory = RequestFactory()
 

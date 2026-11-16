@@ -10,7 +10,8 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
+from ..models import Client, Invoice, InvoiceItem, ServiceType, Session, UserPractice
+from .test_helpers import create_test_practice
 
 
 class InvoiceListViewTest(TestCase):
@@ -19,13 +20,7 @@ class InvoiceListViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_invoice-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_invoice-1")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.client_instance = TestClient()
@@ -73,13 +68,7 @@ class InvoiceListViewTest(TestCase):
     def test_invoice_list_requires_login(self):
         """Test that invoice list can be accessed."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         # Note: Invoice list doesn't require login in current implementation
         # This tests that it's publicly accessible
@@ -164,13 +153,7 @@ class InvoiceDetailViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_invoice-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_invoice-2")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.client_instance = TestClient()
@@ -262,13 +245,7 @@ class InvoiceCreateViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_invoice-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_invoice-3")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.client_instance = TestClient()

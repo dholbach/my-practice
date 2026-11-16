@@ -6,12 +6,14 @@ from datetime import date
 
 from django.test import TestCase
 
-from my_practice.models import Practice, TimeOff
+from my_practice.models import TimeOff
 from my_practice.utils.date_helpers import DateRangeHelper
 from my_practice.utils.timeoff_helpers import (
     calculate_timeoff_for_period,
     calculate_timeoff_for_year,
 )
+
+from .test_helpers import create_test_practice
 
 
 class DateRangeHelperYearOverlapTestCase(TestCase):
@@ -73,13 +75,7 @@ class CalculateTimeoffForYearTestCase(TestCase):
     def setUp(self):
         """Create test TimeOff entries"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="timeoff_helpers-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="timeoff_helpers-1")
 
         # Create timeoff entries for 2025
         self.winter_holiday = TimeOff.objects.create(
@@ -122,13 +118,7 @@ class CalculateTimeoffForYearTestCase(TestCase):
     def test_calculate_total_days_for_year(self):
         """Total days off should only count days in the specified year"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         result = calculate_timeoff_for_year(2025)
 
@@ -215,13 +205,7 @@ class CalculateTimeoffForPeriodTestCase(TestCase):
     def setUp(self):
         """Create test TimeOff entries"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="timeoff_helpers-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="timeoff_helpers-2")
 
         # Create timeoff entries for 2025
         self.winter_holiday = TimeOff.objects.create(

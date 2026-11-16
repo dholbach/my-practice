@@ -22,6 +22,7 @@ from ..models import (
     ServiceType,
     Session,
 )
+from .test_helpers import create_test_practice
 
 
 def _make_command() -> Command:
@@ -37,13 +38,7 @@ def _make_command() -> Command:
 
 class UpsertEventTestBase(TestCase):
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="upsert-event-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="upsert-event-test")
         self.test_client = Client.objects.create(
             practice=self.practice,
             client_code="TC",
@@ -317,13 +312,7 @@ class AutoCreateSessionTest(UpsertEventTestBase):
 
 class DetermineFetchWindowTest(TestCase):
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="fetch-window-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="fetch-window-test")
         self.cmd = _make_command()
 
     def test_forced_days_overrides_everything(self):
@@ -356,13 +345,7 @@ class DetermineFetchWindowTest(TestCase):
 
 class CancelStaleFutureEventsTest(TestCase):
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="cancel-stale-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="cancel-stale-test")
         self.test_client = Client.objects.create(
             practice=self.practice, client_code="TC", full_name="Max Mustermann"
         )
@@ -520,13 +503,7 @@ class SupersedeMovedEventsTest(TestCase):
     cancel the session *and* create a duplicate one for the same slot."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="supersede-moved-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="supersede-moved-test")
         self.test_client = Client.objects.create(
             practice=self.practice, client_code="TC", full_name="Max Mustermann"
         )
@@ -740,13 +717,7 @@ class SupersedeMovedEventsTest(TestCase):
 
 class HandleAndFetchForPracticeTest(TestCase):
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="handle-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="handle-test")
 
     def test_no_active_tokens_warns(self):
         out = StringIO()

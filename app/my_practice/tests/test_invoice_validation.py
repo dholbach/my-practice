@@ -8,7 +8,8 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from ..models import Client, Invoice, Practice, ServiceType
+from ..models import Client, Invoice, ServiceType
+from .test_helpers import create_test_practice
 
 
 class InvoiceValidationTests(TestCase):
@@ -17,13 +18,7 @@ class InvoiceValidationTests(TestCase):
     def setUp(self):
         """Create test fixtures"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="invoice_validation-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="invoice_validation-1")
 
         self.client = Client.objects.create(
             client_code="TEST",

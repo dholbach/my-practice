@@ -21,6 +21,8 @@ from my_practice.models import (
 )
 from my_practice.tests.test_helpers import make_pdf_bytes, select_practice
 
+from .test_helpers import create_test_practice
+
 User = get_user_model()
 
 
@@ -32,13 +34,7 @@ class ExpenseListViewTest(TestCase):
         self.client = TestClient()
 
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="expense_views-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="expense_views-1")
 
         # Create and login user
         self.user = User.objects.create_user(username="expenseuser", password="testpass123")
@@ -122,13 +118,7 @@ class ExpenseCreateViewTest(TestCase):
     def setUp(self):
         """Set up test client"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="expense_views-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="expense_views-2")
 
         self.client = TestClient()
 
@@ -188,13 +178,7 @@ class ExpenseUpdateViewTest(TestCase):
     def setUp(self):
         """Set up test data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="expense_views-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="expense_views-3")
 
         self.client = TestClient()
 
@@ -321,13 +305,7 @@ class ExpenseDeleteViewTest(TestCase):
     def setUp(self):
         """Set up test data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="expense_views-4",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="expense_views-4")
 
         self.client = TestClient()
 
@@ -372,13 +350,7 @@ class ExpenseReceiptUploadTest(TestCase):
     """Tests for receipt file upload on create and update"""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="expense_receipt-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="expense_receipt-1")
         self.client = TestClient()
         self.user = User.objects.create_user(username="receiptuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
@@ -486,13 +458,7 @@ class ExpenseListRenderingTest(TestCase):
         self.client_instance = TestClient()
 
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_expense-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_expense-1")
 
         # Link user to practice
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
@@ -549,13 +515,7 @@ class ExpenseCreateFieldsTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_expense-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_expense-2")
 
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client_instance = TestClient()
@@ -599,13 +559,7 @@ class ExpenseUpdateFieldsTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_expense-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_expense-3")
 
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client_instance = TestClient()
@@ -661,13 +615,7 @@ class ExpenseDeleteConfirmationTest(TestCase):
 
     def setUp(self):
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_expense-4",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_expense-4")
 
         self.user = User.objects.create_user(username="testuser", password="12345")
         self.client_instance = TestClient()

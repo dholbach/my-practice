@@ -11,12 +11,13 @@ from my_practice.models import (
     Client,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
 )
 from my_practice.utils import count_sessions, count_sessions_rounded
+
+from .test_helpers import create_test_practice
 
 
 class _MockSession:
@@ -274,13 +275,7 @@ class DatabaseIntegrationTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="calculations-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="calculations-1")
 
         self.client = Client.objects.create(
             client_code="TEST",
@@ -324,13 +319,7 @@ class DatabaseIntegrationTest(TestCase):
     def test_database_items_60min(self):
         """Test counting with real database items (60min)."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         s1 = Session.objects.create(client=self.client, session_date=date(2024, 1, 5), duration=60)
         s2 = Session.objects.create(client=self.client, session_date=date(2024, 1, 12), duration=60)

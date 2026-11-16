@@ -13,22 +13,16 @@ from ..models import (
     Invoice,
     InvoiceItem,
     PendingCalendarEvent,
-    Practice,
     ServiceType,
     Session,
 )
 from ..utils.calendar_preflight import CalendarPreflightChecker
+from .test_helpers import create_test_practice
 
 
 class CalendarPreflightCheckerTestBase(TestCase):
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="preflight-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="preflight-test")
         self.service_type = ServiceType.objects.create(
             code="individual",
             name="60 Min Session",

@@ -15,7 +15,6 @@ from my_practice.models import (
     Client,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
@@ -26,7 +25,7 @@ from my_practice.utils.capacity_helpers import _get_booked_hours
 from my_practice.utils.chart_helpers import aggregate_invoice_items_by_month
 from my_practice.utils.revenue_helpers import RevenueCalculator
 
-from .test_helpers import heatmap_month_clients
+from .test_helpers import create_test_practice, heatmap_month_clients
 
 
 class SessionCountConsistencyTests(TestCase):
@@ -36,13 +35,7 @@ class SessionCountConsistencyTests(TestCase):
     def setUp(self):
         """Create test data with known session counts."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="calculation_consistency-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="calculation_consistency-1")
 
         self.service_type = ServiceType.objects.create(
             code="individual",
@@ -124,13 +117,7 @@ class SessionCountConsistencyTests(TestCase):
     def test_count_sessions_direct(self):
         """Test direct count_sessions() call."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         items = InvoiceItem.objects.filter(invoice=self.invoice)
         sessions = count_sessions(items, exclude_cancellations=True)
@@ -205,13 +192,7 @@ class RevenueConsistencyTests(TestCase):
     def setUp(self):
         """Create test data with known revenue."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="calculation_consistency-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="calculation_consistency-2")
 
         self.service_type = ServiceType.objects.create(
             code="individual", name="60 Min Session", practice=self.practice
@@ -336,13 +317,7 @@ class ClientViewsConsistencyTests(TestCase):
     def setUp(self):
         """Create test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="calculation_consistency-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="calculation_consistency-3")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
 
@@ -430,13 +405,7 @@ class CancellationHandlingConsistencyTests(TestCase):
     def setUp(self):
         """Create test data with cancellations."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="calculation_consistency-5",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="calculation_consistency-5")
 
         self.service_type = ServiceType.objects.create(
             code="individual", name="60 Min Session", practice=self.practice

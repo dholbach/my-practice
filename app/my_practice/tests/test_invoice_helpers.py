@@ -6,8 +6,10 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from my_practice.models import Client, Invoice, Practice, ServiceType
+from my_practice.models import Client, Invoice, ServiceType
 from my_practice.utils.invoice_helpers import get_next_invoice_number
+
+from .test_helpers import create_test_practice
 
 
 class GetNextInvoiceNumberTests(TestCase):
@@ -16,13 +18,7 @@ class GetNextInvoiceNumberTests(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="invoice_helpers-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="invoice_helpers-1")
 
         # Create test clients
         self.client_xx = Client.objects.create(
@@ -53,13 +49,7 @@ class GetNextInvoiceNumberTests(TestCase):
     def test_first_invoice_for_client(self):
         """Test that first invoice gets number 1."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         result = get_next_invoice_number(self.client_xx)
         self.assertEqual(result, "XX-1")

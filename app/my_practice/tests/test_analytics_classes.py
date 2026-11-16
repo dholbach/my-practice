@@ -30,6 +30,7 @@ from ..utils.analytics_utils import (
     RevenueAnalyzer,
     SessionAnalyzer,
 )
+from .test_helpers import create_test_practice
 
 
 class RevenueAnalyzerTests(TestCase):
@@ -38,13 +39,7 @@ class RevenueAnalyzerTests(TestCase):
     def setUp(self):
         """Create test fixtures"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics_classes-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics_classes-1")
 
         self.client = Client.objects.create(
             client_code="TEST",
@@ -195,13 +190,7 @@ class SessionAnalyzerTests(TestCase):
     def setUp(self):
         """Create test fixtures"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics_classes-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics_classes-2")
 
         self.client = Client.objects.create(
             client_code="TEST",
@@ -357,13 +346,7 @@ class ClientAnalyzerTests(TestCase):
     def setUp(self):
         """Create test fixtures"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics_classes-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics_classes-3")
 
         self.client1 = Client.objects.create(
             client_code="CL1",
@@ -486,13 +469,7 @@ class ExpenseAnalyzerTests(TestCase):
 
     def setUp(self):
         """Create test practice"""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics-expense",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics-expense")
 
     def test_get_monthly_trends_returns_correct_structure(self):
         """Test monthly expense trends structure"""
@@ -573,13 +550,7 @@ class ProfitCalculatorTests(TestCase):
     def setUp(self):
         """Create test fixtures"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics_classes-4",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics_classes-4")
 
         self.client = Client.objects.create(
             client_code="TEST",

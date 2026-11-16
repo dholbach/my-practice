@@ -24,6 +24,8 @@ from my_practice.models import (
 )
 from my_practice.utils.tag_helpers import sort_tags_by_category
 
+from .test_helpers import create_test_practice
+
 
 class PracticeModelTestCase(TestCase):
     """Tests for Practice model"""
@@ -54,13 +56,7 @@ class ClientModelTestCase(TestCase):
 
     def setUp(self):
         """Create test practice"""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-client",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-client")
 
     def test_client_creation(self):
         """Test creating a client"""
@@ -150,13 +146,7 @@ class ServiceTypeModelTestCase(TestCase):
 
     def setUp(self):
         """Create test practice"""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-servicetype",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-servicetype")
 
     def test_service_type_creation(self):
         """Test creating a service type"""
@@ -189,13 +179,7 @@ class InvoiceModelTestCase(TestCase):
     def setUp(self):
         """Create test client"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-1")
 
         self.client = Client.objects.create(
             client_code="TC",
@@ -385,13 +369,7 @@ class InvoiceItemModelTestCase(TestCase):
     def setUp(self):
         """Create test data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-2")
 
         self.client = Client.objects.create(
             client_code="TC",
@@ -468,13 +446,7 @@ class CompanyWithdrawalModelTestCase(TestCase):
 
     def setUp(self):
         """Create test practice"""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-withdrawal",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-withdrawal")
 
     def test_withdrawal_creation(self):
         """Test creating a withdrawal"""
@@ -513,13 +485,7 @@ class CompanyExpenseModelTestCase(TestCase):
 
     def setUp(self):
         """Create test practice"""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-expense",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-expense")
 
     def test_expense_creation(self):
         """Test creating an expense"""
@@ -640,13 +606,7 @@ class GoogleCalendarTokenModelTestCase(TestCase):
 
     def setUp(self):
         """Create test practice"""
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-token",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-token")
 
     def test_token_creation(self):
         """Test creating a calendar token"""
@@ -673,13 +633,7 @@ class PendingCalendarEventModelTestCase(TestCase):
     """Tests for PendingCalendarEvent model"""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-pce",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-pce")
         self.client_obj = Client.objects.create(
             client_code="TC",
             full_name="Test Client",
@@ -731,13 +685,7 @@ class ClientTagModelTestCase(TestCase):
     def setUp(self):
         """Create tags in mixed order to test sorting"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="models-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="models-3")
 
         # Create in random order (with all needed tags)
         ClientTag.objects.create(

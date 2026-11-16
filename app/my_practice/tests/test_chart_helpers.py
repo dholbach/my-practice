@@ -10,7 +10,6 @@ from my_practice.models import (
     Client,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
@@ -21,6 +20,8 @@ from my_practice.utils.chart_helpers import (
     format_month_label,
     prepare_monthly_chart_data,
 )
+
+from .test_helpers import create_test_practice
 
 
 class FormatMonthKeyTests(TestCase):
@@ -80,13 +81,7 @@ class AggregateInvoiceItemsByMonthTests(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="chart_helpers-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="chart_helpers-1")
 
         self.service_type = ServiceType.objects.create(
             code="individual",
@@ -115,13 +110,7 @@ class AggregateInvoiceItemsByMonthTests(TestCase):
     def test_aggregate_basic(self):
         """Test basic aggregation by month."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         # Create items in different months
         s1 = Session.objects.create(client=self.client, session_date=date(2025, 1, 15), duration=60)

@@ -10,7 +10,8 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
+from ..models import Client, Invoice, InvoiceItem, ServiceType, Session, UserPractice
+from .test_helpers import create_test_practice
 
 
 class InvoiceListViewSimpleTest(TestCase):
@@ -23,13 +24,7 @@ class InvoiceListViewSimpleTest(TestCase):
         self.client_instance.login(username="testuser", password="testpass123")
 
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_invoice_simple-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_invoice_simple-1")
 
         self.service_type = ServiceType.objects.create(
             code="individual",
@@ -99,13 +94,7 @@ class InvoiceDetailViewSimpleTest(TestCase):
         self.client_instance = TestClient()
 
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_invoice_simple-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_invoice_simple-2")
 
         # Link user to practice
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
@@ -185,13 +174,7 @@ class InvoiceCreateViewSimpleTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_invoice_simple-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_invoice_simple-3")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.client_instance = TestClient()

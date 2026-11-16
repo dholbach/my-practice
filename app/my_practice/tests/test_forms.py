@@ -8,7 +8,9 @@ from django.utils import translation
 
 from my_practice.email_forms import InvoiceEmailForm
 from my_practice.invoice_forms import InvoiceForm, InvoiceItemForm
-from my_practice.models import Client, Practice, ServiceType, Session
+from my_practice.models import Client, ServiceType, Session
+
+from .test_helpers import create_test_practice
 
 
 class InvoiceFormTestCase(TestCase):
@@ -17,13 +19,7 @@ class InvoiceFormTestCase(TestCase):
     def setUp(self):
         """Create test client"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="forms-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="forms-1")
 
         self.client = Client.objects.create(
             client_code="TC",
@@ -36,13 +32,7 @@ class InvoiceFormTestCase(TestCase):
     def test_form_valid_data(self):
         """Test form with all valid data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         form_data = {
             "client": self.client.id,
@@ -114,13 +104,7 @@ class InvoiceItemFormTestCase(TestCase):
     def setUp(self):
         """Create test data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="forms-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="forms-2")
 
         self.service_type = ServiceType.objects.create(
             code="therapy_60",
@@ -227,13 +211,7 @@ class InvoiceFormIntegrationTestCase(TestCase):
     def setUp(self):
         """Create test data"""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="forms-4",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="forms-4")
 
         self.client = Client.objects.create(
             client_code="TC",

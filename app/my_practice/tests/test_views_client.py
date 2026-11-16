@@ -32,7 +32,7 @@ from ..models import (
     allow_issued_invoice_writes,
 )
 from ..utils.tag_helpers import SESSION_LOG_MIN_DURATION
-from .test_helpers import make_pdf_bytes, select_practice
+from .test_helpers import create_test_practice, make_pdf_bytes, select_practice
 
 
 class ClientListViewTest(TestCase):
@@ -41,13 +41,7 @@ class ClientListViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_client-1",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_client-1")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
@@ -74,13 +68,7 @@ class ClientListViewTest(TestCase):
     def test_client_list_loads(self):
         """Test that client list loads successfully."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="test-practice",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
 
         response = self.client_instance.get(reverse("client_list"))
         self.assertEqual(response.status_code, 200)
@@ -142,13 +130,7 @@ class ClientDetailViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_client-2",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_client-2")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.client_instance = TestClient()
@@ -260,13 +242,7 @@ class ReminderUrgencyTest(TestCase):
     """
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_client-reminder",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_client-reminder")
         self.user = User.objects.create_user(username="testuser2", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance = TestClient()
@@ -333,13 +309,7 @@ class NoLogNeededSessionIdsTest(TestCase):
 
     @allow_issued_invoice_writes()
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="no-log-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="no-log-test")
         self.user = User.objects.create_user(username="nluser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.http = TestClient()
@@ -441,13 +411,7 @@ class ClientCreateViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_client-3",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="views_client-3")
 
         self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.client_instance = TestClient()
@@ -515,13 +479,7 @@ class ClientIntakeEditTest(TestCase):
     """Test ClientIntakeView in edit mode (get_object with a pk in the URL)."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="intake-edit",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="intake-edit")
         self.user = User.objects.create_user(username="edituser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.http = TestClient()
@@ -553,13 +511,7 @@ class SessionLogDurationThresholdTest(TestCase):
     """
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="log-duration-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="log-duration-test")
         self.user = User.objects.create_user(username="duruser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.http = TestClient()
@@ -684,13 +636,7 @@ class ClientOnboardingStepTest(TestCase):
     """Test the client_onboarding_step view."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="onboarding-step",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="onboarding-step")
         self.user = User.objects.create_user(username="onboarduser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.http = TestClient()
@@ -748,13 +694,7 @@ class ClientDocumentUploadTest(TestCase):
     """Test the client_document_upload and client_document_delete views."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="doc-upload",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="doc-upload")
         self.user = User.objects.create_user(username="docuser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.http = TestClient()
@@ -883,13 +823,7 @@ class ClientGdprDeleteTest(TestCase):
     """Test client_gdpr_delete_confirm and client_gdpr_delete views."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="gdpr-delete",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="gdpr-delete")
         self.user = User.objects.create_user(username="gdpruser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.http = TestClient()

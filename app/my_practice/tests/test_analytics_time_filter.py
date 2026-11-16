@@ -16,12 +16,12 @@ from ..models import (
     CompanyExpense,
     Invoice,
     InvoiceItem,
-    Practice,
     ServiceType,
     Session,
     UserPractice,
     allow_issued_invoice_writes,
 )
+from .test_helpers import create_test_practice
 
 
 class AnalyticsTimeFilterTest(TestCase):
@@ -34,13 +34,7 @@ class AnalyticsTimeFilterTest(TestCase):
         self.url = reverse("analytics")
 
         # Create practice (uses defaults)
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="analytics-time-filter-fix",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="analytics-time-filter-fix")
 
         # Create and log in user — required by LoginRequiredMiddleware
         self.user = User.objects.create_user(username="analyticsuser", password="testpass")

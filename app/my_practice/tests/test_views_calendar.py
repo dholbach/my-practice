@@ -20,22 +20,16 @@ from ..models import (
     Invoice,
     InvoiceItem,
     PendingCalendarEvent,
-    Practice,
     ServiceType,
     Session,
     UserPractice,
 )
+from .test_helpers import create_test_practice
 
 
 class CalendarViewsTestBase(TestCase):
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="calendar-views-test",
-            title="Test Practitioner",
-            email="test@practice.com",
-            city="Berlin",
-        )
+        self.practice = create_test_practice(name="Test Practice", slug="calendar-views-test")
         self.user = User.objects.create_user(username="caluser", password="testpass123")
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.http = TestClient()
