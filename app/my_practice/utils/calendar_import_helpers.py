@@ -2,6 +2,7 @@
 Helper functions for calendar event import to InvoiceItems.
 """
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 
@@ -13,6 +14,8 @@ from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, Service
 from .billing_helpers import resolve_session_rate
 from .invoice_helpers import get_next_invoice_number
 from .tag_helpers import sync_no_next_session_tag
+
+logger = logging.getLogger(__name__)
 
 # ── Private resolution helpers ────────────────────────────────────────────────
 
@@ -254,10 +257,11 @@ def create_invoice_items_from_events(
         except _AlreadyBilled:
             errors.append(duplicate_error)
             skipped += 1
-        except Exception as e:
+        except Exception:
+            logger.exception("Creating an invoice item from a calendar event failed")
             errors.append(
-                _("Error creating %(summary)s: %(error)s")
-                % {"summary": event.get("summary"), "error": str(e)}
+                _("Error creating %(summary)s. Details are in the server log.")
+                % {"summary": event.get("summary")}
             )
 
     return created, skipped, errors

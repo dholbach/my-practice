@@ -581,7 +581,8 @@ class SendQuestionnairePdfEmailView(BaseClientEmailView):
         try:
             load_questionnaire(self.questionnaire_code)
         except QuestionnaireNotFoundError as e:
-            messages.error(request, str(e))
+            logger.warning("%s", e)
+            messages.error(request, _("Questionnaire content file not found."))
             return self._redirect_to_detail(pk)
         return None
 

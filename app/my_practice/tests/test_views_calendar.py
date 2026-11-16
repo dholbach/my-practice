@@ -137,6 +137,7 @@ class CalendarOAuth2CallbackTest(CalendarViewsTestBase):
         self.assertRedirects(response, reverse("dashboard"))
         messages = list(response.context["messages"])
         self.assertTrue(any("Fehler bei der Autorisierung" in str(m) for m in messages))
+        self.assertFalse(any("boom" in str(m) for m in messages))
 
 
 class CalendarImportViewTest(CalendarViewsTestBase):
@@ -217,6 +218,7 @@ class CalendarImportViewTest(CalendarViewsTestBase):
         self.assertRedirects(response, reverse("dashboard"))
         messages = list(response.context["messages"])
         self.assertTrue(any("Fehler beim Laden der Kalender-Einträge" in str(m) for m in messages))
+        self.assertFalse(any("api down" in str(m) for m in messages))
 
 
 class CalendarImportEventsViewTest(CalendarViewsTestBase):

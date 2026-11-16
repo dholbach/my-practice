@@ -83,8 +83,9 @@ def calendar_oauth2callback(request: HttpRequest) -> HttpResponse:
         messages.success(request, _("✅ Google Calendar connected successfully!"))
         return redirect("calendar_import")
 
-    except Exception as e:
-        messages.error(request, _("Authorization error: %(error)s") % {"error": str(e)})
+    except Exception:
+        logger.exception("Google Calendar authorization failed")
+        messages.error(request, _("Authorization error. Details are in the server log."))
         return redirect("dashboard")
 
 
@@ -115,8 +116,9 @@ def calendar_import(request: HttpRequest) -> HttpResponse:
     if not token or not token.calendar_id:
         try:
             calendars = list_calendars(service)
-        except Exception as e:
-            messages.error(request, _("Error loading calendars: %(error)s") % {"error": str(e)})
+        except Exception:
+            logger.exception("Listing Google calendars failed")
+            messages.error(request, _("Error loading calendars. Details are in the server log."))
             calendars = []
         return render(request, "my_practice/calendar_select.html", {"calendars": calendars})
 
@@ -155,8 +157,9 @@ def calendar_import(request: HttpRequest) -> HttpResponse:
         }
         return render(request, "my_practice/calendar_import.html", context)
 
-    except Exception as e:
-        messages.error(request, _("Error loading calendar events: %(error)s") % {"error": str(e)})
+    except Exception:
+        logger.exception("Loading calendar events failed")
+        messages.error(request, _("Error loading calendar events. Details are in the server log."))
         return redirect("dashboard")
 
 

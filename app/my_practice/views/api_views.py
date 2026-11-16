@@ -99,7 +99,8 @@ def questionnaire_pdf(request: HttpRequest, code: str) -> HttpResponse:
     try:
         pdf_bytes, filename = generate_questionnaire_pdf_bytes(code, practice, lang)
     except QuestionnaireNotFoundError as e:
-        messages.error(request, str(e))
+        logger.warning("%s", e)
+        messages.error(request, _("Questionnaire content file not found."))
         return redirect("dashboard")
     response = HttpResponse(pdf_bytes, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
