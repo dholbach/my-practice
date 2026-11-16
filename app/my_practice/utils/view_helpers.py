@@ -10,6 +10,8 @@ from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from ..models import Client
+
 
 def get_year_from_request(
     request: HttpRequest, param: str = "year", default: int | None = None
@@ -66,6 +68,11 @@ def safe_referer_path(request: HttpRequest, fallback: str) -> str:
     if path and url_has_allowed_host_and_scheme(path, allowed_hosts={request.get_host()}):
         return path
     return fallback
+
+
+def get_scoped_client(request: HttpRequest, pk: int) -> Client:
+    """The client ``pk`` of the current practice, or 404 (also for another practice's)."""
+    return get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
 
 
 def get_object_or_403(

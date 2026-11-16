@@ -40,7 +40,7 @@ from ..utils import (
 from ..utils.email_utils import get_gdpr_deletion_email_content
 from ..utils.file_processing import process_upload
 from ..utils.google_calendar import CalendarEventParser
-from ..utils.view_helpers import get_object_or_403, json_error
+from ..utils.view_helpers import get_object_or_403, get_scoped_client, json_error
 from .crud_mixins import NextRedirectMixin, PracticeScopedListView, PracticeScopedUpdateView
 
 logger = logging.getLogger(__name__)
@@ -277,7 +277,7 @@ def client_onboarding_step(request, pk):
     if request.method != "POST":
         return HttpResponseNotAllowed(["POST"])
 
-    client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+    client = get_scoped_client(request, pk)
 
     step = request.POST.get("step", "")
     reset = request.POST.get("reset") == "1"
@@ -301,7 +301,7 @@ def client_document_upload(request: HttpRequest, pk: int) -> JsonResponse:
     from datetime import date as date_type
     from pathlib import Path
 
-    client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+    client = get_scoped_client(request, pk)
     raw_file = request.FILES.get("file")
     if not raw_file:
         return json_error(_("No file selected."))
@@ -385,7 +385,7 @@ def _has_retained_invoices(client: Client) -> bool:
 def client_gdpr_delete_confirm(request: HttpRequest, pk: int) -> HttpResponse:
     """Confirmation page before GDPR deletion of a client record."""
 
-    client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+    client = get_scoped_client(request, pk)
     last_session = client.sessions.aggregate(last=Max("session_date"))["last"]
 
     if client.active or not last_session or last_session > _gdpr_cutoff():
@@ -489,7 +489,7 @@ def _unmatched_events_naming(client: Client) -> list[int]:
 def client_gdpr_delete(request: HttpRequest, pk: int) -> HttpResponse:
     """GDPR Art. 17 deletion: erase client data, then send the notification email."""
 
-    client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+    client = get_scoped_client(request, pk)
     last_session = client.sessions.aggregate(last=Max("session_date"))["last"]
 
     if (

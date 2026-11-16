@@ -35,6 +35,7 @@ from ..utils.pdf_generation import (
     render_invoice_pdf_bytes,
 )
 from ..utils.questionnaire_content import QuestionnaireNotFoundError, load_questionnaire
+from ..utils.view_helpers import get_scoped_client
 
 logger = logging.getLogger("my_practice.email")
 
@@ -155,7 +156,7 @@ class BaseClientEmailView(View):
     def _get_client_and_practice(
         self, request: HttpRequest, pk: int
     ) -> tuple[Client, Practice | None]:
-        client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+        client = get_scoped_client(request, pk)
         practice = request.current_practice
         return client, practice
 
