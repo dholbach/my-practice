@@ -2,7 +2,7 @@
 Tests for API views.
 """
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from unittest import mock
 
@@ -506,6 +506,19 @@ class UpdateInvoiceStatusTest(TestCase):
         self.assertEqual(self.invoice.status, Invoice.Status.PAID)
         self.assertEqual(self.invoice.paid_date, date.today())
         self.assertEqual(response.json()["status"], Invoice.Status.PAID)
+
+    def test_marking_paid_keeps_an_existing_paid_date(self):
+        earlier = date.today() - timedelta(days=3)
+        Invoice.objects.filter(pk=self.invoice.pk).update(
+            invoice_date=date.today() - timedelta(days=10), paid_date=earlier
+        )
+
+        self.client_http.post(
+            reverse("update_invoice_status", kwargs={"pk": self.invoice.pk}),
+            {"status": Invoice.Status.PAID},
+        )
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.paid_date, earlier)
 
     def test_unmarking_paid_clears_paid_date(self):
         self.invoice.status = Invoice.Status.PAID
