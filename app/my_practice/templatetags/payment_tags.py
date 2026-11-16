@@ -84,6 +84,21 @@ def hours(value):
         return value
 
 
+@register.filter(name="format_hours")
+def format_hours(value):
+    """Format hours: show integer if whole number, otherwise 1 decimal.
+
+    Usage: {{ value|format_hours }}
+    """
+    try:
+        num = float(value)
+        if num == int(num):
+            return str(int(num))
+        return f"{num:.1f}".replace(",", ".")
+    except ValueError, TypeError:
+        return value
+
+
 @register.filter(name="js_number")
 def js_number(value, default=0):
     """

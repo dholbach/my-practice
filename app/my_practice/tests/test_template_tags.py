@@ -11,6 +11,7 @@ from my_practice.models import Practice
 from my_practice.templatetags.payment_tags import (
     currency,
     doc_field,
+    format_hours,
     format_month_year,
     highlight_diff,
     hours,
@@ -118,6 +119,22 @@ class HoursFilterTests(TestCase):
     def test_hours_large_number(self):
         """Test hours with large number."""
         self.assertEqual(hours(168.5), "168.5h")  # full week
+
+
+class FormatHoursFilterTests(TestCase):
+    """Tests for the format_hours filter (heatmap labels)."""
+
+    def test_whole_numbers_drop_the_decimal(self):
+        self.assertEqual(format_hours(8), "8")
+        self.assertEqual(format_hours(2.0), "2")
+
+    def test_fractions_keep_one_decimal(self):
+        self.assertEqual(format_hours(2.75), "2.8")
+        self.assertEqual(format_hours(0.5), "0.5")
+
+    def test_non_numbers_pass_through(self):
+        self.assertEqual(format_hours("n/a"), "n/a")
+        self.assertIsNone(format_hours(None))
 
 
 class HighlightDiffFilterTests(TestCase):

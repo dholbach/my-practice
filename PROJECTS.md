@@ -1,7 +1,7 @@
 # 📋 Projekte - Payments System
 
 **Status**: Production-ready
-**Last Updated**: 2026-10-14
+**Last Updated**: 2026-11-16
 
 ## 🔢 Project Numbering
 
@@ -19,8 +19,7 @@ close the gaps — those numbers are cross-referenced from `docs/FEATURES.md`,
 `docs/CHANGELOG.md`, `docs/architecture/CODE_STRUCTURE.md` and code comments. Fill
 from the bottom instead.
 
-Currently unused: 6, 8, 48, 49, 51–93, 96, 98, 101–116. To re-check before claiming
-one:
+To find the unused numbers and re-check one before claiming it:
 
 ```bash
 grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
