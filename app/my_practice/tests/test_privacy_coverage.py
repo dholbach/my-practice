@@ -68,8 +68,7 @@ NON_PERSONAL_ROOTS = frozenset({"form", "practice", "request"})
 # carry the client's real name and address to be valid at all.
 EXEMPT_TEMPLATES = frozenset(
     {
-        "my_practice/invoice_pdf_de.html",
-        "my_practice/invoice_pdf_en.html",
+        "my_practice/invoice_pdf.html",
         "my_practice/treatment_contract_pdf.html",
         "my_practice/intake_form_pdf.html",
         "my_practice/questionnaire_pdf.html",

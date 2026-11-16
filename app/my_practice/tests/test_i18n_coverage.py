@@ -26,8 +26,7 @@ LOCALE_DIR = Path(settings.BASE_DIR) / "locale"
 # Kopieren/Copy) identify the language of the authored bilingual content next
 # to them, not the app's UI language — same rationale as utils/email_utils.py.
 EXEMPT_TEMPLATES = {
-    "my_practice/invoice_pdf_de.html",
-    "my_practice/invoice_pdf_en.html",
+    "my_practice/invoice_pdf.html",
     "my_practice/treatment_contract_pdf.html",
     "my_practice/intake_form_pdf.html",
     "my_practice/questionnaire_pdf.html",

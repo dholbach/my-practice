@@ -182,7 +182,7 @@ narrow band of code that inspects item internals needs a branch.
 - `count_sessions()` (`utils/calculations.py`) — skip items with no session
 - Invoice formset UI — per-row branch: session-linked row vs. free-text row,
   free-text row type only offered when `practice.allows_free_form_items`
-- PDF line-item rendering (`invoice_pdf_*.html`) — label from `description` when
+- PDF line-item rendering (`invoice_pdf.html`) — label from `description` when
   no session
 - Focus Queue / clinical linkage (`SessionLog`) — already tolerate a `Session`
   existing without a log; a null-session `InvoiceItem` is a smaller version of
@@ -197,7 +197,7 @@ narrow band of code that inspects item internals needs a branch.
 #### `Practice` VAT treatment
 - Replace `is_kleinunternehmer: bool` with a `vat_treatment` choice field:
   `exempt_heilpraktiker` / `kleinunternehmer` / `standard_vat`
-- `invoice_pdf_de.html` / `_en.html`: currently a hard binary between
+- `invoice_pdf.html`: currently a hard binary between
   `kleinunternehmer_text` and `vat_exempt_text` — add a third branch for
   standard VAT (show VAT ID, tax rate, no exemption note)
 - Default `tax_rate` (19%) on the invoice form for `standard_vat` practices
