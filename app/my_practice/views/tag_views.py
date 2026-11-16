@@ -12,9 +12,9 @@ from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import ListView
 
-from ..models import Client, ClientTag
+from ..models import ClientTag
 from ..utils import annotate_client_counts, sort_tags_by_category
-from ..utils.view_helpers import json_error
+from ..utils.view_helpers import get_scoped_client, json_error
 from .crud_mixins import (
     NextRedirectMixin,
     PracticeScopedCreateView,
@@ -75,7 +75,7 @@ class TagDeleteView(PracticeScopedDeleteView):
 @require_POST
 def client_add_tag(request, client_id):
     """Add a tag to a client (AJAX endpoint)"""
-    client = get_object_or_404(Client.objects.for_current_practice(request), pk=client_id)
+    client = get_scoped_client(request, client_id)
     tag_id = request.POST.get("tag_id")
 
     if not tag_id:
@@ -97,7 +97,7 @@ def client_add_tag(request, client_id):
 @require_POST
 def client_remove_tag(request, client_id, tag_id):
     """Remove a tag from a client (AJAX endpoint)"""
-    client = get_object_or_404(Client.objects.for_current_practice(request), pk=client_id)
+    client = get_scoped_client(request, client_id)
     tag = get_object_or_404(ClientTag, pk=tag_id)
 
     client.tags.remove(tag)
@@ -120,7 +120,7 @@ def get_available_tags(request):
 
     # Optionally exclude tags already assigned to this client (practice-filtered)
     if client_id:
-        client = get_object_or_404(Client.objects.for_current_practice(request), pk=client_id)
+        client = get_scoped_client(request, client_id)
         tags = tags.exclude(clients=client)
 
     # Sort by category priority (attention → general → exit), then alphabetically

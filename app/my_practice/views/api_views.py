@@ -25,7 +25,7 @@ from ..utils.pdf_generation import (
 )
 from ..utils.practice_helpers import require_practice
 from ..utils.questionnaire_content import QuestionnaireNotFoundError
-from ..utils.view_helpers import is_partial_request, safe_next
+from ..utils.view_helpers import get_scoped_client, is_partial_request, safe_next
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def contract_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     Optional query param ``?lang=en`` switches to the English version;
     otherwise falls back to ``client.language``.
     """
-    client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+    client = get_scoped_client(request, pk)
     practice = client.practice
     lang = request.GET.get("lang") or client.language or "de"
     pdf_bytes, filename = generate_contract_pdf_bytes(client, practice, lang)
@@ -78,7 +78,7 @@ def intake_form_pdf(request: HttpRequest, pk: int) -> HttpResponse:
     Optional query param ``?lang=en`` switches to the English version;
     otherwise falls back to ``client.language``.
     """
-    client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+    client = get_scoped_client(request, pk)
     practice = client.practice
     lang = request.GET.get("lang") or client.language or "de"
     pdf_bytes, filename = generate_intake_form_pdf_bytes(client, practice, lang)

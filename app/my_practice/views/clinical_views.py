@@ -39,12 +39,7 @@ from ..utils.session_log_helpers import (
     parse_duration,
     set_session_duration,
 )
-from ..utils.view_helpers import safe_next
-
-
-def _get_scoped_client(request, pk):
-    """Get a practice-scoped client or 404."""
-    return get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
+from ..utils.view_helpers import get_scoped_client, safe_next
 
 
 def _session_log_choices(request, default_type: str) -> tuple[str | None, list[str]]:
@@ -72,7 +67,7 @@ def _summary(request, default: str) -> str:
 @require_POST
 def client_profile_save(request, pk):
     """Save ClientProfile fields for a client. Creates profile if it doesn't exist."""
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     profile, _created = ClientProfile.objects.get_or_create(client=client)
 
     profile.intake_notes = request.POST.get("intake_notes", profile.intake_notes)
@@ -95,7 +90,7 @@ def session_log_create(request, pk):
          Accepts ?session_date=YYYY-MM-DD to pre-select a date.
     POST: Create Session (find-or-create) + SessionLog, redirect back to client detail.
     """
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
 
     if request.method == "POST":
         session_date_str = request.POST.get("session_date")
@@ -180,7 +175,7 @@ def session_log_create(request, pk):
 
 def session_log_edit(request, client_pk, log_pk):
     """Edit an existing SessionLog entry."""
-    client = _get_scoped_client(request, client_pk)
+    client = get_scoped_client(request, client_pk)
     log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
 
     if request.method == "POST":
@@ -237,7 +232,7 @@ def session_log_edit(request, client_pk, log_pk):
 @require_POST
 def supervision_item_create(request, pk):
     """Create a new SupervisionItem for a client."""
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     content = request.POST.get("content", "").strip()
     if not content:
         messages.error(request, _("Content must not be empty."))
@@ -256,7 +251,7 @@ def supervision_item_create(request, pk):
 @require_POST
 def supervision_item_delete(request, pk, item_pk):
     """Delete a SupervisionItem."""
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
     item.delete()
     messages.success(request, _("Supervision topic deleted."))
@@ -278,7 +273,7 @@ def supervision_item_toggle(request, pk, item_pk):
     notes form would be too heavy. To mark discussed with resolution notes
     from the client detail page, use supervision_item_resolve instead.
     """
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
     if item.status == SupervisionItem.Status.OFFEN:
         item.status = SupervisionItem.Status.BESPROCHEN
@@ -301,7 +296,7 @@ def supervision_item_toggle(request, pk, item_pk):
 @require_POST
 def supervision_item_resolve(request, pk, item_pk):
     """Mark a SupervisionItem discussed, optionally recording resolution notes."""
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
 
     resolved_date_str = request.POST.get("resolved_date", "").strip()
@@ -363,7 +358,7 @@ def supervision_queue(request):
 @require_POST
 def client_note_create(request, pk):
     """Create a dated freeform note for a client."""
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     note_date_str = request.POST.get("note_date", "").strip()
     content = request.POST.get("content", "").strip()
 
@@ -385,7 +380,7 @@ def client_note_create(request, pk):
 @require_POST
 def client_note_update(request, pk, note_pk):
     """Update content and date of a client note."""
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     note = get_object_or_404(ClientNote, pk=note_pk, client=client)
 
     content = request.POST.get("content", "").strip()
@@ -416,7 +411,7 @@ def client_note_update(request, pk, note_pk):
 @require_POST
 def client_note_delete(request, pk, note_pk):
     """Delete a dated client note."""
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     note = get_object_or_404(ClientNote, pk=note_pk, client=client)
     note.delete()
     messages.success(request, _("Note deleted."))
@@ -426,7 +421,7 @@ def client_note_delete(request, pk, note_pk):
 @require_POST
 def session_log_delete(request, client_pk, log_pk):
     """Delete a SessionLog entry (and its linked Session if it has no InvoiceItem)."""
-    client = _get_scoped_client(request, client_pk)
+    client = get_scoped_client(request, client_pk)
     log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
     session = log.session
     log.delete()
@@ -448,7 +443,7 @@ def session_duration_edit(request, pk, session_pk):
     and are not recalculated here, so changing the duration afterwards would
     silently leave the invoice showing stale pricing for the new duration.
     """
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     session = get_object_or_404(Session, pk=session_pk, client=client)
     if is_session_billed(session):
         messages.error(
@@ -480,7 +475,7 @@ def session_delete(request, client_pk, session_pk):
     Blocked if the session has a linked InvoiceItem (already billed).
     The SessionLog cascades automatically if present.
     """
-    client = _get_scoped_client(request, client_pk)
+    client = get_scoped_client(request, client_pk)
     session = get_object_or_404(Session, pk=session_pk, client=client)
     if session.invoice_items.exists():
         messages.error(
@@ -501,7 +496,7 @@ def session_delete(request, client_pk, session_pk):
 @require_POST
 def session_log_mark_noshow(request, client_pk, log_pk):
     """Quick-mark a session log as Ausfall / Absage."""
-    client = _get_scoped_client(request, client_pk)
+    client = get_scoped_client(request, client_pk)
     log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
     log.session_type = SessionLog.SessionType.AUSFALL
     log.save(update_fields=["session_type"])
@@ -519,7 +514,7 @@ def session_bill(request, pk, session_pk):
     """
     from ..utils.calendar_import_helpers import bill_session as _bill_session
 
-    client = _get_scoped_client(request, pk)
+    client = get_scoped_client(request, pk)
     session = get_object_or_404(Session, pk=session_pk, client=client)
     success, message = _bill_session(session, request.current_practice)
     if success:
@@ -589,7 +584,7 @@ def client_triage_summary(request):
 @require_POST
 def session_toggle_billable(request, client_pk, session_pk):
     """Toggle Session.billable — marks intro calls / non-billable sessions as excluded."""
-    client = _get_scoped_client(request, client_pk)
+    client = get_scoped_client(request, client_pk)
     session = get_object_or_404(Session, pk=session_pk, client=client)
     session.billable = not session.billable
     session.save(update_fields=["billable"])
@@ -615,7 +610,7 @@ def gebueh_leistung_create(request, client_pk, session_pk):
     """
     from datetime import timedelta
 
-    client = _get_scoped_client(request, client_pk)
+    client = get_scoped_client(request, client_pk)
     if not client.needs_gebueh_invoice:
         messages.error(request, _("GebüH billing is not enabled for this client."))
         return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
