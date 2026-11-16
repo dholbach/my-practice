@@ -53,5 +53,6 @@ an in-place undo affordance instead of vanishing on the next full swap.
         </div>
         {% endif %}
         <a href="{% url 'todo_edit' task.pk %}" class="link-primary" title="{% trans 'Edit' %}">✏️</a>
+        <a href="{% url 'todo_delete' task.pk %}" class="link-primary" title="{% trans 'Delete' %}">🗑️</a>
     </div>
 </div>

@@ -5,6 +5,7 @@ Utility functions for the payments app.
 from .analytics_dashboard_builder import AnalyticsDashboardBuilder
 from .bank_import import BankStatementImporter, build_counterparty_key
 from .billing_helpers import (
+    bill_sessions_on_invoice,
     build_service_type_map,
     create_invoice_item_for_session,
     is_session_already_billed,
@@ -64,6 +65,7 @@ __all__ = [
     "count_session_hours",
     "count_sessions_rounded",
     "get_next_invoice_number",
+    "bill_sessions_on_invoice",
     "build_service_type_map",
     "create_invoice_item_for_session",
     "is_session_already_billed",

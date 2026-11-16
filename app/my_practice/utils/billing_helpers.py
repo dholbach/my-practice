@@ -101,3 +101,21 @@ def create_invoice_item_for_session(
         quantity=Decimal("1.00"),
         total=rate,
     )
+
+
+def bill_sessions_on_invoice(invoice, sessions, practice) -> int:
+    """
+    Add an item for each session to a draft invoice; return how many were added.
+
+    Sessions that are already billed or have no resolvable service type are
+    skipped. Does NOT call Invoice.recalculate_and_save — the caller does that.
+    """
+    service_type_map = build_service_type_map(practice)
+    fallback_service_type = next(iter(service_type_map.values()), None)
+    return sum(
+        1
+        for session in sessions
+        if create_invoice_item_for_session(
+            invoice, session, service_type_map, fallback_service_type
+        )
+    )

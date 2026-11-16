@@ -137,6 +137,10 @@ class TodoDeleteViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(PracticeTodo.objects.filter(pk=pk).exists())
 
+    def test_focus_queue_links_to_delete(self):
+        response = self.tc.get(reverse("focus_queue"))
+        self.assertContains(response, reverse("todo_delete", args=[self.todo.pk]))
+
 
 class TodoToggleCompleteTest(TestCase):
     """Tests for todo_toggle_complete view."""

@@ -315,7 +315,7 @@ def get_capacity_trends(
     )
     for row in monthly_sessions:
         if row["month"]:
-            month_key = row["month"].strftime("%Y-%m")
+            month_key = format_month_key(row["month"])
             booked_by_month[month_key] = (row["total_minutes"] or 0) / 60
 
     # Query 2: Get all time-off periods that overlap with our range (single query)

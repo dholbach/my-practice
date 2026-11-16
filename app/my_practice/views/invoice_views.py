@@ -22,10 +22,7 @@ from django.views.generic import DetailView
 from ..invoice_forms import InvoiceForm
 from ..models import Client, Invoice, InvoiceItem, Session
 from ..utils import RevenueCalculator, get_next_invoice_number
-from ..utils.billing_helpers import (
-    build_service_type_map,
-    create_invoice_item_for_session,
-)
+from ..utils.billing_helpers import bill_sessions_on_invoice
 from ..utils.calendar_preflight import CalendarPreflightChecker
 from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks, get_arbeitsdiagnose
 from ..utils.invoice_filter_helper import InvoiceFilterHelper
@@ -529,15 +526,7 @@ def add_sessions_to_invoice(request, pk):
         cancelled=False,
     )
 
-    service_type_map = build_service_type_map(practice)
-    fallback_service_type = next(iter(service_type_map.values()), None)
-
-    added = 0
-    for session in sessions:
-        if create_invoice_item_for_session(
-            invoice, session, service_type_map, fallback_service_type
-        ):
-            added += 1
+    added = bill_sessions_on_invoice(invoice, sessions, practice)
 
     if added:
         invoice.recalculate_and_save()
@@ -582,9 +571,6 @@ def create_invoice_with_sessions(request):
         messages.warning(request, _("No sessions specified."))
         return redirect(safe_next(request, fallback=reverse("invoice_list")))
 
-    service_type_map = build_service_type_map(practice)
-    fallback_service_type = next(iter(service_type_map.values()), None)
-
     with transaction.atomic():
         invoice = Invoice.objects.create(
             practice=practice,
@@ -593,13 +579,7 @@ def create_invoice_with_sessions(request):
             status=Invoice.Status.DRAFT,
             invoice_date=timezone.localdate(),
         )
-        added = sum(
-            1
-            for session in sessions
-            if create_invoice_item_for_session(
-                invoice, session, service_type_map, fallback_service_type
-            )
-        )
+        added = bill_sessions_on_invoice(invoice, sessions, practice)
         invoice.recalculate_and_save()
 
     msg_template = ngettext(

@@ -26,6 +26,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { FakeEvent } = require("./test_dom.js");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "bank_review.js"), "utf8");
 
@@ -40,13 +41,6 @@ const I18N = {
 // ---------------------------------------------------------------------------
 // Minimal DOM stub
 // ---------------------------------------------------------------------------
-
-class FakeEvent {
-    constructor(type) {
-        this.type = type;
-        this.target = null;
-    }
-}
 
 /**
  * Stand-in for CSSStyleDeclaration.

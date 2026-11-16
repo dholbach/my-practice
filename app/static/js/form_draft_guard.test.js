@@ -17,25 +17,13 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { FakeEvent } = require("./test_dom.js");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "form_draft_guard.js"), "utf8");
 
 // ---------------------------------------------------------------------------
 // Minimal DOM stub
 // ---------------------------------------------------------------------------
-
-class FakeEvent {
-    constructor(type, options = {}) {
-        this.type = type;
-        this.bubbles = Boolean(options.bubbles);
-        this.detail = options.detail;
-        this.target = null;
-        this.defaultPrevented = false;
-    }
-    preventDefault() {
-        this.defaultPrevented = true;
-    }
-}
 
 class FakeNode {
     constructor(tagName = "div") {

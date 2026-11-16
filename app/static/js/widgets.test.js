@@ -14,6 +14,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { FakeEvent, FakeClassList } = require("./test_dom.js");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "widgets.js"), "utf8");
 
@@ -22,38 +23,6 @@ const PREFIX = "widget_state_";
 // ---------------------------------------------------------------------------
 // Minimal DOM stub
 // ---------------------------------------------------------------------------
-
-class FakeEvent {
-    constructor(type, options = {}) {
-        this.type = type;
-        this.detail = options.detail;
-        this.target = null;
-    }
-}
-
-class FakeClassList {
-    constructor() {
-        this._set = new Set();
-    }
-    add(name) {
-        this._set.add(name);
-    }
-    remove(name) {
-        this._set.delete(name);
-    }
-    contains(name) {
-        return this._set.has(name);
-    }
-    /** Returns the resulting state, which toggleWidget persists. */
-    toggle(name) {
-        if (this._set.has(name)) {
-            this._set.delete(name);
-            return false;
-        }
-        this._set.add(name);
-        return true;
-    }
-}
 
 class FakeNode {
     constructor(tagName = "div") {
