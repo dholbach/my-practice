@@ -282,21 +282,8 @@ def client_onboarding_step(request, pk):
     step = request.POST.get("step", "")
     reset = request.POST.get("reset") == "1"
 
-    field_map = {
-        "intake": "intake_sent_date",
-        "contract": "contract_signed_date",
-        "questionnaire": "questionnaire_sent_date",
-        "complete": "onboarding_complete_date",
-    }
-
-    if step in field_map:
-        setattr(client, field_map[step], None if reset else timezone.localdate())
-        client.save(update_fields=[field_map[step]])
-
-    if step == "complete" and not reset:
-        tag = ClientTag.objects.filter(slug="incomplete-intake").first()
-        if tag:
-            client.tags.remove(tag)
+    if step in Client.ONBOARDING_STEP_FIELDS:
+        client.mark_onboarding_step(step, None if reset else timezone.localdate())
 
     return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-profil")
 
@@ -343,19 +330,17 @@ def client_document_upload(request: HttpRequest, pk: int) -> JsonResponse:
         document_date=doc_date,
     )
 
-    onboarding_step_completed = None
     dt = ClientDocument.DocumentType
-    onboarding_map = {
-        dt.INTAKE: ("intake_sent_date", "intake"),
-        dt.CONTRACT: ("contract_signed_date", "contract"),
-        dt.ANAMNESE: ("questionnaire_sent_date", "anamnese"),
-    }
-    if doc_type in onboarding_map:
-        field, step = onboarding_map[doc_type]
-        if not getattr(client, field):
-            setattr(client, field, doc_date)
-            client.save(update_fields=[field])
-            onboarding_step_completed = step
+    onboarding_step = {
+        dt.INTAKE: "intake",
+        dt.CONTRACT: "contract",
+        dt.ANAMNESE: "questionnaire",
+    }.get(doc_type)
+    onboarding_step_completed = None
+    if onboarding_step and client.mark_onboarding_step(
+        onboarding_step, doc_date, only_if_unset=True
+    ):
+        onboarding_step_completed = onboarding_step
 
     return JsonResponse(
         {

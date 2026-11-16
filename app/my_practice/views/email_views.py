@@ -543,8 +543,7 @@ class SendIntakeFormEmailView(BaseClientEmailView):
         return (self._get_filename(client), pdf_bytes, "application/pdf")
 
     def after_send(self, client: Client) -> None:
-        client.intake_sent_date = timezone.localdate()
-        client.save(update_fields=["intake_sent_date"])
+        client.mark_onboarding_step("intake", timezone.localdate())
 
     def get_success_html(self, recipient: str) -> str:
         return _success_html(_("✅ Intake form sent to {recipient}"), recipient)

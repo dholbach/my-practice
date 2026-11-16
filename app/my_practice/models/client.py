@@ -1,5 +1,6 @@
 """Client model for managing therapy clients"""
 
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -15,9 +16,20 @@ from ..storage import client_document_storage
 from ..validators import validate_upload_extension
 from .base import PracticeScopedQuerySet, TimestampedModel
 
+# The automatic tag update_client_tags puts on a client who started onboarding and has not finished.
+INCOMPLETE_INTAKE_TAG_SLUG = "incomplete-intake"
+
 
 class Client(TimestampedModel):
     """Client model - matches existing 'clients' table"""
+
+    # Onboarding step -> the date field that records it.
+    ONBOARDING_STEP_FIELDS = {
+        "intake": "intake_sent_date",
+        "contract": "contract_signed_date",
+        "questionnaire": "questionnaire_sent_date",
+        "complete": "onboarding_complete_date",
+    }
 
     class Language(StrEnum):
         """Invoice language for bilingual invoice generation."""
@@ -165,6 +177,24 @@ class Client(TimestampedModel):
 
     def __str__(self) -> str:
         return self.client_code
+
+    def mark_onboarding_step(
+        self, step: str, on: date | None, *, only_if_unset: bool = False
+    ) -> bool:
+        """Record an onboarding step as done on ``on``, or reset it with ``on=None``.
+
+        Finishing onboarding also drops the incomplete-intake tag. With
+        ``only_if_unset`` a step that already has a date is left alone. Returns
+        whether the client was changed.
+        """
+        field = self.ONBOARDING_STEP_FIELDS[step]
+        if only_if_unset and getattr(self, field):
+            return False
+        setattr(self, field, on)
+        self.save(update_fields=[field])
+        if step == "complete" and on is not None:
+            self.tags.remove(*self.tags.filter(slug=INCOMPLETE_INTAKE_TAG_SLUG))
+        return True
 
 
 def client_document_upload_path(instance: "ClientDocument", filename: str) -> str:
