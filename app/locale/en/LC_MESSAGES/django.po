@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 21:28+0100\n"
+"POT-Creation-Date: 2026-11-16 21:45+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -2864,7 +2864,7 @@ msgid "Google Calendar event ID if imported"
 msgstr ""
 
 #: my_practice/models/session.py:64 templates/includes/client_card.html:19
-#: templates/includes/heatmap.html:13
+#: templates/includes/heatmap.html:12
 #: templates/my_practice/billing_open_overview.html:61
 #: templates/my_practice/client_detail_tab_billing.html:76
 #: templates/my_practice/monthly_billing_overview.html:58
@@ -3545,7 +3545,7 @@ msgstr "Client ID required"
 msgid "Client not found"
 msgstr "Client not found"
 
-#: my_practice/views/api_views.py:103 my_practice/views/email_views.py:585
+#: my_practice/views/api_views.py:103 my_practice/views/email_views.py:586
 msgid "Questionnaire content file not found."
 msgstr ""
 
@@ -3858,8 +3858,8 @@ msgid "Event on %(date)s added to invoice %(number)s."
 msgstr "Event on %(date)s added to invoice %(number)s."
 
 #
-#: my_practice/views/calendar_views.py:651
 #
+#: my_practice/views/calendar_views.py:651
 msgid "Import error. Details are in the server log."
 msgstr "Import error. Details are in the server log."
 
@@ -3896,132 +3896,132 @@ msgstr ""
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:83
+#: my_practice/views/clinical_views.py:78
 msgid "Client profile saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:103
+#: my_practice/views/clinical_views.py:98
 msgid "Session date is required."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:109
-#: my_practice/views/clinical_views.py:377
-#: my_practice/views/clinical_views.py:402
+#: my_practice/views/clinical_views.py:104
+#: my_practice/views/clinical_views.py:372
+#: my_practice/views/clinical_views.py:397
 msgid "Invalid date."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:115
-#: my_practice/views/clinical_views.py:207
-#: my_practice/views/clinical_views.py:465
+#: my_practice/views/clinical_views.py:110
+#: my_practice/views/clinical_views.py:202
+#: my_practice/views/clinical_views.py:460
 msgid "Invalid duration."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:118
+#: my_practice/views/clinical_views.py:113
 msgid "Invalid session type."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:125
+#: my_practice/views/clinical_views.py:120
 msgid "A log already exists for this session."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:145
+#: my_practice/views/clinical_views.py:140
 #, python-format
 msgid "Session log for %(date)s saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:216
+#: my_practice/views/clinical_views.py:211
 msgid "The duration was not changed: this session has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:221
+#: my_practice/views/clinical_views.py:216
 msgid "Session log updated."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:243
-#: my_practice/views/clinical_views.py:395
+#: my_practice/views/clinical_views.py:238
+#: my_practice/views/clinical_views.py:390
 msgid "Content must not be empty."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:247
+#: my_practice/views/clinical_views.py:242
 msgid "Supervision topic added."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:262
+#: my_practice/views/clinical_views.py:257
 msgid "Supervision topic deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:317
+#: my_practice/views/clinical_views.py:312
 msgid "Supervision topic marked discussed."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:371
+#: my_practice/views/clinical_views.py:366
 msgid "Date and content are required."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:381
+#: my_practice/views/clinical_views.py:376
 msgid "Note saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:407
+#: my_practice/views/clinical_views.py:402
 msgid "Note updated."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:422
+#: my_practice/views/clinical_views.py:417
 msgid "Note deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:437
+#: my_practice/views/clinical_views.py:432
 msgid "Session log deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:457
+#: my_practice/views/clinical_views.py:452
 #, python-format
 msgid "Session of %(date)s cannot be edited: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:470
+#: my_practice/views/clinical_views.py:465
 #, python-format
 msgid "Session duration updated to %(min)s min."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:489
+#: my_practice/views/clinical_views.py:484
 #, python-format
 msgid "Session of %(date)s cannot be deleted: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:497
+#: my_practice/views/clinical_views.py:492
 #, python-format
 msgid "Session of %(date)s deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:508
+#: my_practice/views/clinical_views.py:503
 msgid "Marked as no-show / cancellation."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:620
+#: my_practice/views/clinical_views.py:615
 msgid "GebüH billing is not enabled for this client."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:633
+#: my_practice/views/clinical_views.py:628
 msgid "Invalid input."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:643
+#: my_practice/views/clinical_views.py:638
 #, python-format
 msgid "GebüH entries for %(date)s cleared."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:657
+#: my_practice/views/clinical_views.py:652
 #, python-format
 msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:682
+#: my_practice/views/clinical_views.py:677
 #, python-format
 msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:713
+#: my_practice/views/clinical_views.py:708
 #, python-format
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr ""
@@ -4030,88 +4030,88 @@ msgstr ""
 msgid "Permission denied."
 msgstr ""
 
-#: my_practice/views/email_views.py:53
+#: my_practice/views/email_views.py:54
 #, python-format
 msgid "Invoice %(number)s has already been sent. Change the status to send it again."
 msgstr "Invoice %(number)s has already been sent. Change the status to send it again."
 
-#: my_practice/views/email_views.py:96
+#: my_practice/views/email_views.py:97
 #, python-format
 msgid "Email sending failed (result: %(result)s)."
 msgstr "Email sending failed (result: %(result)s)."
 
 #
-#: my_practice/views/email_views.py:100
 #
+#: my_practice/views/email_views.py:101
 msgid "Error while sending. Details are in the server log."
 msgstr "Error while sending. Details are in the server log."
 
-#: my_practice/views/email_views.py:169 my_practice/views/email_views.py:193
+#: my_practice/views/email_views.py:170 my_practice/views/email_views.py:194
 #: my_practice/views/timeoff_views.py:93 my_practice/views/timeoff_views.py:125
 msgid "Practice settings not configured."
 msgstr "Practice settings not configured."
 
-#: my_practice/views/email_views.py:175
+#: my_practice/views/email_views.py:176
 #, python-format
 msgid "Client %(code)s has no email address on file."
 msgstr "Client %(code)s has no email address on file."
 
-#: my_practice/views/email_views.py:209
 #
+#: my_practice/views/email_views.py:210
 msgid "Error creating attachment. Details are in the server log."
 msgstr "Error creating attachment. Details are in the server log."
 
-#: my_practice/views/email_views.py:329
+#: my_practice/views/email_views.py:330
 #, python-format
 msgid "Invoice date was updated to %(date)s"
 msgstr "Invoice date was updated to %(date)s"
 
-#: my_practice/views/email_views.py:338
 #
+#: my_practice/views/email_views.py:339
 msgid "Error creating the PDF. Details are in the server log."
 msgstr "Error creating the PDF. Details are in the server log."
 
-#: my_practice/views/email_views.py:363
+#: my_practice/views/email_views.py:364
 #, python-brace-format
 msgid "✅ Invoice successfully sent to {recipient}"
 msgstr "✅ Invoice successfully sent to {recipient}"
 
-#: my_practice/views/email_views.py:401
+#: my_practice/views/email_views.py:402
 #, python-format
 msgid "No open invoices for %(code)s."
 msgstr "No open invoices for %(code)s."
 
-#: my_practice/views/email_views.py:419
+#: my_practice/views/email_views.py:420
 #, python-brace-format
 msgid "✅ Payment reminder sent to {recipient}"
 msgstr "✅ Payment reminder sent to {recipient}"
 
-#: my_practice/views/email_views.py:431
+#: my_practice/views/email_views.py:432
 #, python-brace-format
 msgid "✅ Cancellation sent to {recipient}"
 msgstr "✅ Cancellation sent to {recipient}"
 
-#: my_practice/views/email_views.py:460
+#: my_practice/views/email_views.py:461
 #, python-format
 msgid "File not found: %(path)s. Please place the .docx file under MY_PRACTICE_DATA_DIR/documents/."
 msgstr "File not found: %(path)s. Please place the .docx file under MY_PRACTICE_DATA_DIR/documents/."
 
-#: my_practice/views/email_views.py:483
+#: my_practice/views/email_views.py:484
 #, python-format
 msgid "File not found: %(path)s."
 msgstr "File not found: %(path)s."
 
-#: my_practice/views/email_views.py:498 my_practice/views/email_views.py:612
+#: my_practice/views/email_views.py:499 my_practice/views/email_views.py:613
 #, python-brace-format
 msgid "✅ Questionnaire sent to {recipient}"
 msgstr "✅ Questionnaire sent to {recipient}"
 
-#: my_practice/views/email_views.py:527
+#: my_practice/views/email_views.py:528
 #, python-brace-format
 msgid "✅ Treatment contract sent to {recipient}"
 msgstr "✅ Treatment contract sent to {recipient}"
 
-#: my_practice/views/email_views.py:559
+#: my_practice/views/email_views.py:560
 #, python-brace-format
 msgid "✅ Intake form sent to {recipient}"
 msgstr "✅ Intake form sent to {recipient}"
@@ -4642,8 +4642,8 @@ msgstr ""
 msgid "Click to hide sensitive data"
 msgstr ""
 
-#: templates/base.html:132 templates/my_practice/bank_expense_review.html:132
-#: templates/my_practice/bank_withdrawal_review.html:112
+#: templates/base.html:132 templates/my_practice/bank_expense_review.html:101
+#: templates/my_practice/bank_withdrawal_review.html:75
 #: templates/my_practice/checklist.html:16
 #: templates/my_practice/client_detail.html:39
 msgid "Overview"
@@ -4660,6 +4660,11 @@ msgstr ""
 
 #: templates/base.html:153 templates/includes/command_palette.html:86
 msgid "Close"
+msgstr ""
+
+#: templates/includes/bank_transaction_card.html:28
+#, python-format
+msgid "Auto-withdrawal: %(linked_withdrawal)s"
 msgstr ""
 
 #: templates/includes/calendar_preflight_widget.html:16
@@ -4803,7 +4808,7 @@ msgid "Open invoices"
 msgstr ""
 
 #: templates/includes/command_palette.html:44
-#: templates/my_practice/bank_expense_review.html:130
+#: templates/my_practice/bank_expense_review.html:99
 #: templates/my_practice/bank_import.html:4
 #: templates/my_practice/bank_import.html:9
 msgid "Bank import"
@@ -4826,7 +4831,7 @@ msgstr ""
 #: templates/my_practice/analytics.html:94
 #: templates/my_practice/analytics_tab_revenue.html:26
 #: templates/my_practice/bank_review.html:19
-#: templates/my_practice/bank_withdrawal_review.html:110
+#: templates/my_practice/bank_withdrawal_review.html:73
 #: templates/my_practice/expense_list.html:65
 #: templates/my_practice/tax_quarter_overview.html:79
 msgid "Expenses"
@@ -5062,28 +5067,28 @@ msgstr ""
 msgid "GebüH"
 msgstr ""
 
-#: templates/includes/heatmap.html:8
+#: templates/includes/heatmap.html:7
 #, python-format
 msgid "Activity Heatmap (%(n)s months)"
 msgstr ""
 
-#: templates/includes/heatmap.html:10
+#: templates/includes/heatmap.html:9
 msgid "Sort:"
 msgstr ""
 
-#: templates/includes/heatmap.html:17
+#: templates/includes/heatmap.html:16
 msgid "Last active"
 msgstr ""
 
-#: templates/includes/heatmap.html:22
+#: templates/includes/heatmap.html:21
 msgid "Current"
 msgstr ""
 
-#: templates/includes/heatmap.html:28
+#: templates/includes/heatmap.html:27
 msgid "← Earlier"
 msgstr ""
 
-#: templates/includes/heatmap.html:34
+#: templates/includes/heatmap.html:33
 msgid "Later →"
 msgstr ""
 
@@ -5664,20 +5669,20 @@ msgstr "Group into expense"
 msgid "Ignore"
 msgstr ""
 
-#: templates/my_practice/bank_expense_review.html:119
+#: templates/my_practice/bank_expense_review.html:93
 msgid "All transactions matched"
 msgstr "All transactions matched"
 
-#: templates/my_practice/bank_expense_review.html:122
+#: templates/my_practice/bank_expense_review.html:93
 msgid "There are no unmatched negative transactions."
 msgstr ""
 
-#: templates/my_practice/bank_expense_review.html:129
-#: templates/my_practice/bank_withdrawal_review.html:109
+#: templates/my_practice/bank_expense_review.html:98
+#: templates/my_practice/bank_withdrawal_review.html:72
 msgid "← Review invoices"
 msgstr "← Review invoices"
 
-#: templates/my_practice/bank_expense_review.html:131
+#: templates/my_practice/bank_expense_review.html:100
 msgid "Expense list"
 msgstr ""
 
@@ -5918,20 +5923,15 @@ msgstr ""
 msgid "Group into withdrawal"
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:82
-#, python-format
-msgid "Auto-withdrawal: %(linked_withdrawal)s"
-msgstr ""
-
-#: templates/my_practice/bank_withdrawal_review.html:99
+#: templates/my_practice/bank_withdrawal_review.html:67
 msgid "All withdrawals matched"
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:102
+#: templates/my_practice/bank_withdrawal_review.html:67
 msgid "There are no pending automatically detected withdrawals."
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:111
+#: templates/my_practice/bank_withdrawal_review.html:74
 msgid "Withdrawal list"
 msgstr ""
 

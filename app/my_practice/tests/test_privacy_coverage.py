@@ -79,12 +79,11 @@ EXEMPT_TEMPLATES = frozenset(
 # decision, not a backlog item — add one only with a reason that holds up, and
 # only for the specific expression.
 KNOWN_UNPROTECTED: dict[str, frozenset[str]] = {
-    # Negative transactions only (see BankExpenseReviewView/withdrawal review
-    # querysets): the counterparty is a supplier, landlord or the practice's own
+    # Negative transactions only (the card is shared by the expense and withdrawal review
+    # pages; see their querysets): the counterparty is a supplier, landlord or the practice's own
     # account, never a client. Client payments are inbound and live on
     # bank_review.html, where payer_name *is* blurred.
-    "my_practice/bank_expense_review.html": frozenset({"trans.payer_name"}),
-    "my_practice/bank_withdrawal_review.html": frozenset({"trans.payer_name"}),
+    "includes/bank_transaction_card.html": frozenset({"trans.payer_name"}),
     "my_practice/expense_form.html": frozenset({"tx.payer_name"}),
     # `object` here is the Practice being deleted — the therapist's own address.
     "my_practice/practice_confirm_delete.html": frozenset({"object.email"}),

@@ -54,37 +54,7 @@
 
         <!-- Transactions List -->
         {% for trans in transactions %}
-        <div class="expense-trans-card">
-            <div class="expense-trans-card__row">
-                <input type="checkbox" name="transactions" value="{{ trans.id }}" class="expense-trans-card__checkbox">
-
-                <div class="expense-trans-card__body">
-                    <div class="expense-trans-card__header">
-                        <div>
-                            <span class="expense-trans-card__date">{{ trans.transaction_date|date:"d.m.Y" }}</span>
-                            <span class="expense-trans-card__payer">{{ trans.payer_name }}</span>
-                        </div>
-                        <span class="expense-trans-card__amount">{{ trans.amount|currency }}</span>
-                    </div>
-
-                    <div class="expense-trans-card__reference">
-                        {{ trans.reference }}
-                    </div>
-
-                    {% if trans.payer_iban %}
-                    <div class="expense-trans-card__iban">
-                        IBAN: {{ trans.payer_iban }}
-                    </div>
-                    {% endif %}
-
-                    {% if trans.linked_withdrawal %}
-                    <div class="expense-trans-card__iban">
-                        {% blocktrans with linked_withdrawal=trans.linked_withdrawal %}Auto-withdrawal: {{ linked_withdrawal }}{% endblocktrans %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+        {% include 'includes/bank_transaction_card.html' with trans=trans show_linked_withdrawal=True %}
         {% endfor %}
     </form>
 
@@ -94,14 +64,7 @@
     {% endif %}
 
     {% else %}
-    <div class="expense-empty-state">
-        <div class="expense-empty-state__title">
-            ✓ {% trans "All withdrawals matched" %}
-        </div>
-        <div class="expense-empty-state__desc">
-            {% trans "There are no pending automatically detected withdrawals." %}
-        </div>
-    </div>
+    {% include 'includes/bank_review_empty_state.html' with title=_("All withdrawals matched") description=_("There are no pending automatically detected withdrawals.") %}
     {% endif %}
 
     <!-- Navigation Links -->
