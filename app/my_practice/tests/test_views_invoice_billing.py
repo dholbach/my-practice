@@ -252,6 +252,7 @@ class InvoiceCreateFormValidTests(TestCase):
         self.assertEqual(response.status_code, 200)
         messages = list(response.context["messages"])
         self.assertTrue(any("Fehler beim Erstellen der Rechnung" in str(m) for m in messages))
+        self.assertFalse(any("boom" in str(m) for m in messages))
         self.assertFalse(Invoice.objects.filter(client=self.test_client).exists())
 
 

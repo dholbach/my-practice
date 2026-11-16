@@ -8,6 +8,7 @@ from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Case, Count, DecimalField, F, QuerySet, Sum, When
 from django.shortcuts import get_object_or_404, redirect, render
@@ -225,11 +226,18 @@ class InvoiceCreateView(InvoiceFormsetMixin, PracticeScopedCreateView):
                 items.save()  # signals handle total + date recalculation
                 _issue_after_items(self.object, target_status, form.cleaned_data["invoice_date"])
                 self.object.refresh_from_db()
-        except Exception as e:
+        except ValidationError as e:
+            # A model's own validation text is written for the user.
+            messages.error(
+                self.request,
+                _("Error creating invoice: %(error)s") % {"error": "; ".join(e.messages)},
+            )
+            return self.form_invalid(form)
+        except Exception:
             logger.exception("Error creating invoice")
             messages.error(
                 self.request,
-                _("Error creating invoice: %(error)s") % {"error": str(e)},
+                _("Error creating invoice. Details are in the server log."),
             )
             return self.form_invalid(form)
 
@@ -371,11 +379,18 @@ class InvoiceEditView(NextRedirectMixin, InvoiceFormsetMixin, PracticeScopedUpda
 
                 # Refresh invoice from DB to get updated values
                 invoice.refresh_from_db()
-        except Exception as e:
+        except ValidationError as e:
+            # A model's own validation text is written for the user.
+            messages.error(
+                self.request,
+                _("Error updating invoice: %(error)s") % {"error": "; ".join(e.messages)},
+            )
+            return self.form_invalid(form)
+        except Exception:
             logger.exception("Error updating invoice")
             messages.error(
                 self.request,
-                _("Error updating invoice: %(error)s") % {"error": str(e)},
+                _("Error updating invoice. Details are in the server log."),
             )
             return self.form_invalid(form)
 
