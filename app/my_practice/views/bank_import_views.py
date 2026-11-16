@@ -20,7 +20,6 @@ from django.views.generic.edit import FormMixin
 from ..import_forms import BankStatementUploadForm, TransactionMatchForm
 from ..models import (
     BankTransaction,
-    Client,
     ClientAlias,
     CompanyExpense,
     CompanyWithdrawal,
@@ -28,6 +27,8 @@ from ..models import (
     Invoice,
 )
 from ..utils import BankStatementImporter, build_counterparty_key
+from ..utils.bank_import import amounts_match
+from ..utils.bank_review_helpers import annotate_review_rows, paid_invoice_matches
 from .crud_mixins import PracticeScopedListView
 
 
@@ -123,43 +124,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             .order_by("-transaction_date")
         )
 
-        transactions_list = list(transactions)
-
-        invoice_numbers = {
-            t.extracted_invoice_number for t in transactions_list if t.extracted_invoice_number
-        }
-        maps = self._fetch_invoice_maps(
-            self.request.current_practice, invoice_numbers, ["paid", "sent"]
-        )
-        paid_map = maps["paid"]
-        sent_map = maps["sent"]
-        known_names = self._known_payer_names(self.request.current_practice)
-
-        for trans in transactions_list:
-            trans.matching_paid_invoice = None
-            trans.matching_unpaid_invoice = None
-            num = trans.extracted_invoice_number
-            if num:
-                paid = paid_map.get(num)
-                if paid and abs(paid.total - trans.amount) < Decimal("0.01"):
-                    trans.matching_paid_invoice = paid
-                sent = sent_map.get(num)
-                if sent and abs(sent.total - trans.amount) < Decimal("0.01"):
-                    trans.matching_unpaid_invoice = sent
-            trans.payer_name_known = bool(
-                trans.payer_name and trans.payer_name.lower().strip() in known_names
-            )
-
-        return transactions_list
-
-    @staticmethod
-    def _known_payer_names(practice) -> set[str]:
-        """Names that already resolve to a client: exact client names + existing aliases."""
-        client_names = Client.objects.filter(practice=practice).values_list("full_name", flat=True)
-        alias_names = ClientAlias.objects.filter(client__practice=practice).values_list(
-            "alias_name", flat=True
-        )
-        return {n.lower().strip() for n in client_names} | {n.lower().strip() for n in alias_names}
+        return annotate_review_rows(list(transactions), practice=self.request.current_practice)
 
     def get_form_kwargs(self):
         """Add practice to form kwargs"""
@@ -275,28 +240,6 @@ class BankReviewView(FormMixin, PracticeScopedListView):
 
     # ── helpers ───────────────────────────────────────────────────────────────
 
-    @staticmethod
-    def _fetch_invoice_maps(
-        practice, invoice_numbers: set[str], statuses: list[str]
-    ) -> dict[str, dict[str, Invoice]]:
-        """
-        Batch-fetch invoices by number and split by status.
-
-        Returns {status_string: {invoice_number: Invoice}} for each requested
-        status. Replaces the duplicated per-status query loops in get_queryset
-        and _handle_bulk_ignore_paid.
-        """
-        result: dict[str, dict[str, Invoice]] = {s: {} for s in statuses}
-        if invoice_numbers:
-            for inv in Invoice.objects.filter(
-                practice=practice,
-                invoice_number__in=invoice_numbers,
-                status__in=statuses,
-            ):
-                if inv.status in result:
-                    result[inv.status][inv.invoice_number] = inv
-        return result
-
     def _next_redirect_url(self, request, exclude_transaction) -> str:
         """Build review URL anchored to the next unmatched transaction."""
         next_transaction = (
@@ -326,26 +269,17 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             .select_related("matched_invoice")
         )
 
-        invoice_numbers = {
-            t.extracted_invoice_number for t in transactions if t.extracted_invoice_number
-        }
-        paid_map = self._fetch_invoice_maps(request.current_practice, invoice_numbers, ["paid"])[
-            "paid"
-        ]
-
         ignored_count = 0
-        for trans in transactions:
-            if not trans.extracted_invoice_number:
-                continue
-            paid_invoice = paid_map.get(trans.extracted_invoice_number)
-            if paid_invoice and abs(paid_invoice.total - trans.amount) < Decimal("0.01"):
-                trans.match_confidence = "ignored"
-                trans.processed = True
-                trans.notes = _("Auto-ignored: invoice %(number)s already paid") % {
-                    "number": paid_invoice.invoice_number
-                }
-                trans.save()
-                ignored_count += 1
+        for trans, paid_invoice in paid_invoice_matches(
+            transactions, practice=request.current_practice
+        ):
+            trans.match_confidence = "ignored"
+            trans.processed = True
+            trans.notes = _("Auto-ignored: invoice %(number)s already paid") % {
+                "number": paid_invoice.invoice_number
+            }
+            trans.save()
+            ignored_count += 1
 
         if ignored_count > 0:
             messages.success(
@@ -454,7 +388,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
 
         # The suggestion arrives as a hidden form field, so re-apply the
         # importer's exact-amount rule rather than trusting it.
-        if abs(invoice.calculate_total() - transaction.amount) >= Decimal("0.01"):
+        if not amounts_match(invoice.calculate_total(), transaction.amount):
             messages.error(
                 request,
                 _("The amount does not match invoice %(number)s.")
