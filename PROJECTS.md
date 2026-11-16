@@ -31,9 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-14 — v0.12.0 released**: session-page client name, bill actions on logged sessions, read-only dev web container, `prod.py` creates its data directories.
 - **2026-11-15 — First refactoring review**: dropped unused `InvoiceQuerySet`, `stat_card`, seven dead CSS classes and a dead form widget; the Ghostscript recipe is built once in `file_processing.py`, PDF generation moved from `api_views` to `utils/pdf_generation.py`, seven view tests share `create_test_practice`, and `recalculate_invoice_total` is now `Invoice.recalculate_and_save()`. A second round removed six unused helpers in `utils/` and fixed the stale `payments_app` pre-commit excludes. The rest is tracked in #602.
-
+- **2026-11-16 — Inline scripts moved out of templates**: the analytics page's charts, tabs and filters now live in `static/js/analytics_charts.js` and `analytics_page.js`, fed by JSON blocks and `data-*` labels, with Node tests. About a dozen other page scripts moved the same way on 11-15.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

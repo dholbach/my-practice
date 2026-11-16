@@ -10,21 +10,30 @@
 {% block page_subtitle %}{% trans "Revenue, Clients, Capacity & Expenses" %}{% endblock %}
 
 {% block extra_head_scripts %}
-<script nonce="{{ csp_nonce }}">
-const CHART_MESSAGES = {
-    noData: "{% trans 'No data available' %}"
-};
-const MONTH_NAMES = [
-    "{% trans 'Jan' %}", "{% trans 'Feb' %}", "{% trans 'Mar' %}", "{% trans 'Apr' %}",
-    "{% trans 'May' %}", "{% trans 'Jun' %}", "{% trans 'Jul' %}", "{% trans 'Aug' %}",
-    "{% trans 'Sep' %}", "{% trans 'Oct' %}", "{% trans 'Nov' %}", "{% trans 'Dec' %}"
-];
-</script>
 <script src="{% static 'js/chart.umd.min.js' %}"></script>
 <script src="{% static 'js/charts.js' %}"></script>
+<script src="{% static 'js/analytics_charts.js' %}"></script>
+<script src="{% static 'js/analytics_page.js' %}"></script>
 {% endblock %}
 
 {% block content %}
+
+<div id="analytics-labels" hidden
+     data-no-data="{% trans 'No data available' %}"
+     data-revenue="{% trans 'Revenue' %}"
+     data-expenses="{% trans 'Expenses' %}"
+     data-withdrawals="{% trans 'Withdrawals' %}"
+     data-trend="{% trans 'Trend' %}"
+     data-utilisation="{% trans 'Utilisation' %}"
+     data-booked="{% trans 'Booked' %}"
+     data-capacity="{% trans 'Capacity' %}"
+     data-avg="{% trans 'Avg' %}"
+     data-days="{% trans 'days' %}"
+     data-invoices="{% trans 'Invoices' %}"
+     data-cancellation-rate="{% trans 'Cancellation rate' %}"
+     data-cancelled="{% trans 'Cancelled' %}"
+     data-month-0="{% trans 'Jan' %}"
+     data-month-1="{% trans 'Feb' %}" data-month-2="{% trans 'Mar' %}" data-month-3="{% trans 'Apr' %}" data-month-4="{% trans 'May' %}" data-month-5="{% trans 'Jun' %}" data-month-6="{% trans 'Jul' %}" data-month-7="{% trans 'Aug' %}" data-month-8="{% trans 'Sep' %}" data-month-9="{% trans 'Oct' %}" data-month-10="{% trans 'Nov' %}" data-month-11="{% trans 'Dec' %}"></div>
 
 <!-- Time Period Filter -->
 <div class="analytics-card analytics-card--filter-header">
@@ -69,23 +78,6 @@ const MONTH_NAMES = [
     </form>
 </div>
 
-<script nonce="{{ csp_nonce }}">
-function toggleCustomDates() {
-    const period = document.getElementById('period').value;
-    const customDates = document.getElementById('customDates');
-    if (period === 'custom') {
-        customDates.style.display = 'flex';
-    } else {
-        customDates.style.display = 'none';
-    }
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    toggleCustomDates();
-    document.getElementById('period').addEventListener('change', toggleCustomDates);
-});
-</script>
 
 <!-- Tab Navigation -->
 <div class="tabs-container">
@@ -167,24 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <script nonce="{{ csp_nonce }}">
-        MPChart.init('comparisonChart', function(canvas) {
-        const years = [{% for item in comparison_data %}'{{ item.year }}'{% if not forloop.last %},{% endif %}{% endfor %}];
-        const revenues = [{% for item in comparison_data %}{{ item.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        const expenses = [{% for item in comparison_data %}{{ item.expenses|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        const withdrawals = [{% for item in comparison_data %}{{ item.withdrawals|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        if (!years.length) return MPChart.empty(canvas, CHART_MESSAGES.noData);
-        MPChart.bar(canvas, {
-            labels: years,
-            suffix: ' €',
-            series: [
-                { label: '{% trans "Revenue" %}', data: revenues, color: 'chart2' },
-                { label: '{% trans "Expenses" %}', data: expenses, color: 'chart6' },
-                { label: '{% trans "Withdrawals" %}', data: withdrawals, color: 'chart7' }
-            ]
-        });
-    });
-    </script>
+    <script type="application/json" id="comparison-data">[{% for item in comparison_data %}{"year": "{{ item.year|escapejs }}", "revenue": {{ item.revenue|js_number }}, "expenses": {{ item.expenses|js_number }}, "withdrawals": {{ item.withdrawals|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
 
     <!-- Revenue Trends Line Chart -->
     <div class="analytics-card mb-4">
@@ -205,21 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <script nonce="{{ csp_nonce }}">
-        MPChart.init('revenueLineChart', function(canvas) {
-        const rawData   = [{% for month in revenue_trends %}{{ month.revenue|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        const rawLabels = [{% for month in revenue_trends %}'{{ month.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
-        const start = MPChart.firstNonZero(rawData);
-        if (!rawData.some(v => v > 0)) return MPChart.empty(canvas, CHART_MESSAGES.noData);
-        MPChart.line(canvas, {
-            labels: rawLabels.slice(start),
-            monthNames: MONTH_NAMES,
-            suffix: ' €',
-            trend: '{% trans "Trend" %}',
-            series: [{ label: '{% trans "Revenue" %}', data: rawData.slice(start), color: 'chart1', fill: true }]
-        });
-    });
-    </script>
+    <script type="application/json" id="revenue-trend-data">[{% for item in revenue_trends %}{"month": "{{ item.month|escapejs }}", "revenue": {{ item.revenue|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
 
     <!-- Busiest Months -->
     <div class="analytics-card mt-4">
@@ -263,24 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <canvas id="daysToPaymentChart"></canvas>
         </div>
     </div>
-    <script nonce="{{ csp_nonce }}">
-        MPChart.init('daysToPaymentChart', function(canvas) {
-        const raw = JSON.parse(document.getElementById('days-to-payment-data').textContent);
-        if (!raw || raw.length === 0) return MPChart.empty(canvas, CHART_MESSAGES.noData);
-        const days = raw.map(d => d.avg_days);
-        MPChart.line(canvas, {
-            labels: raw.map(d => d.month),
-            monthNames: MONTH_NAMES,
-            suffix: ' d',
-            max: Math.max(60, Math.ceil(Math.max(...days) * 1.3)),
-            series: [{ data: days, color: 'chart8' }],
-            tooltipLabel: (ctx) => [
-                'Ø ' + ctx.parsed.y + ' {% trans "days" %}',
-                raw[ctx.dataIndex].count + ' {% trans "Invoices" %}'
-            ]
-        });
-    });
-    </script>
     {% endif %}
 </div>
 
@@ -391,27 +334,6 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endif %}
     </div>
 
-    <script nonce="{{ csp_nonce }}">
-    function toggleDormantClients() {
-        const checkbox = document.getElementById('toggle-dormant');
-        if (!checkbox) return;
-
-        const rows = document.querySelectorAll('table.client-table tbody tr');
-        rows.forEach(row => {
-            if (row.dataset.clientStatus === 'dormant') {
-                row.style.display = checkbox.checked ? '' : 'none';
-            }
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleDormantClients();
-        const checkbox = document.getElementById('toggle-dormant');
-        if (checkbox) {
-            checkbox.addEventListener('change', toggleDormantClients);
-        }
-    });
-    </script>
     {% endif %}
 
     <!-- Session Type Distribution -->
@@ -652,31 +574,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <script nonce="{{ csp_nonce }}">
-        MPChart.init('capacityTrendsChart', function(canvas) {
-        const rawData = [{% for item in capacity_trends %}{{ item.capacity_percentage|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        const rawLabels = [{% for item in capacity_trends %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
-        const rawBookedHours = [{% for item in capacity_trends %}{{ item.booked_hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        const rawCapacityHours = [{% for item in capacity_trends %}{{ item.capacity_hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        if (!rawData.some(v => v > 0)) return MPChart.empty(canvas, CHART_MESSAGES.noData);
-        const start = MPChart.firstNonZero(rawData);
-        const booked = rawBookedHours.slice(start);
-        const capacity = rawCapacityHours.slice(start);
-        MPChart.line(canvas, {
-            labels: rawLabels.slice(start),
-            monthNames: MONTH_NAMES,
-            suffix: ' %',
-            max: 120,
-            trend: '{% trans "Trend" %}',
-            series: [{ label: '{% trans "Utilisation" %}', data: rawData.slice(start), color: 'chart1', fill: true }],
-            tooltipLabel: (ctx) => ctx.datasetIndex > 0 ? null : [
-                '{% trans "Utilisation" %}: ' + ctx.parsed.y + ' %',
-                '{% trans "Booked" %}: ' + booked[ctx.dataIndex] + ' h',
-                '{% trans "Capacity" %}: ' + capacity[ctx.dataIndex] + ' h'
-            ]
-        });
-    });
-    </script>
+    <script type="application/json" id="capacity-trend-data">[{% for item in capacity_trends %}{"month": "{{ item.month|escapejs }}", "percentage": {{ item.capacity_percentage|js_number }}, "booked_hours": {{ item.booked_hours|js_number }}, "capacity_hours": {{ item.capacity_hours|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
 
     <!-- Cumulative year overlay chart -->
     {% if cumulative_year_data %}
@@ -690,34 +588,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <canvas id="cumulativeYearsChart"></canvas>
         </div>
     </div>
-    <script nonce="{{ csp_nonce }}">
-        MPChart.init('cumulativeYearsChart', function(canvas) {
-        const cyd = JSON.parse(document.getElementById('cumulative-year-data').textContent);
-        if (!cyd || !cyd.years || cyd.years.length === 0) return MPChart.empty(canvas, CHART_MESSAGES.noData);
-        const YEAR_COLORS = {
-            2020: '#374151', 2021: '#64748b', 2022: '#14b8a6',
-            2023: '#8b5cf6', 2024: '#0ea5e9', 2025: '#22c55e', 2026: '#f59e0b'
-        };
-        const n = cyd.years.length;
-        // Oldest year thinnest, newest on top and thickest.
-        const series = cyd.years.map((y, i) => ({
-            label: String(y),
-            data: cyd.datasets[String(y)],
-            color: YEAR_COLORS[y] || '#888888',
-            width: 1.5 + (i / Math.max(n - 1, 1)) * 1.5
-        }));
-        if (cyd.average) {
-            series.push({ label: '{% trans "Avg" %}', data: cyd.average, color: 'text', dashed: true, width: 2 });
-        }
-        MPChart.line(canvas, {
-            labels: MONTH_NAMES,
-            suffix: ' h',
-            points: false,
-            legend: true,
-            series: series
-        });
-    });
-    </script>
     {% endif %}
 
     <!-- Seasonality -->
@@ -756,24 +626,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <canvas id="cancellationTrendsChart"></canvas>
         </div>
     </div>
-    <script nonce="{{ csp_nonce }}">
-        MPChart.init('cancellationTrendsChart', function(canvas) {
-        const raw = JSON.parse(document.getElementById('cancellation-trends-data').textContent);
-        if (!raw || raw.length === 0) return MPChart.empty(canvas, CHART_MESSAGES.noData);
-        const rates = raw.map(d => d.rate);
-        MPChart.line(canvas, {
-            labels: raw.map(d => d.month),
-            monthNames: MONTH_NAMES,
-            suffix: ' %',
-            max: Math.max(20, Math.ceil(Math.max(...rates) * 1.3)),
-            series: [{ data: rates, color: 'chart6' }],
-            tooltipLabel: (ctx) => [
-                '{% trans "Cancellation rate" %}: ' + ctx.parsed.y + ' %',
-                '{% trans "Cancelled" %}: ' + raw[ctx.dataIndex].cancelled + ' / ' + raw[ctx.dataIndex].total
-            ]
-        });
-    });
-    </script>
     {% endif %}
 
 </div>
@@ -836,86 +688,8 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <script nonce="{{ csp_nonce }}">
-        MPChart.init('expenseTrendsChart', function(canvas) {
-        // Yearly totals from comparison_data (same source as the profit table),
-        // so the current year shows actual expenses, not a partial-year sum.
-        const years = [{% for item in comparison_data %}'{{ item.year }}'{% if not forloop.last %},{% endif %}{% endfor %}];
-        const data  = [{% for item in comparison_data %}{{ item.expenses|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-        if (!data.some(v => v > 0)) return MPChart.empty(canvas, CHART_MESSAGES.noData);
-        MPChart.bar(canvas, {
-            labels: years,
-            suffix: ' €',
-            series: [{ label: '{% trans "Expenses" %}', data: data, color: 'chart6' }]
-        });
-    });
-    </script>
 </div>
 
-<!-- Tab Switching Script -->
-<script nonce="{{ csp_nonce }}">
-function switchTab(tabName, clickedButton) {
-    // Update URL with tab parameter
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tabName);
-    window.history.pushState({}, '', url);
-
-    // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-
-    // Remove active class from all buttons
-    document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-
-    // Show selected tab
-    document.getElementById(tabName + '-tab').classList.add('active');
-
-    // Add active class to clicked button
-    clickedButton.classList.add('active');
-
-    // Update hidden input in form
-    const tabInput = document.querySelector('input[name="tab"]');
-    if (tabInput) {
-        tabInput.value = tabName;
-    }
-
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Wire tab buttons
-    document.querySelectorAll('.tab-button[data-tab]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            switchTab(this.dataset.tab, this);
-        });
-    });
-
-    // Get tab from URL if present
-    const urlParams = new URLSearchParams(window.location.search);
-    const activeTab = urlParams.get('tab') || 'revenue';
-
-    // Activate the correct tab
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-
-    const tabContent = document.getElementById(activeTab + '-tab');
-    if (tabContent) {
-        tabContent.classList.add('active');
-    }
-
-    const tabButton = document.querySelector(`.tab-button[data-tab="${activeTab}"]`);
-    if (tabButton) {
-        tabButton.classList.add('active');
-    }
-});
-</script>
 
 <div class="text-center mt-4">
     <a href="{% url 'dashboard' %}" class="btn btn-secondary">🏠 {% trans "Back to overview" %}</a>

@@ -2,6 +2,8 @@
 Tests for analytics views.
 """
 
+import json
+import re
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -197,6 +199,22 @@ class AnalyticsDashboardViewTest(TestCase):
                 first_trend = trends[0]
                 self.assertIn("month", first_trend)
                 self.assertIn("revenue", first_trend)
+
+    def test_chart_data_blocks_are_valid_json(self):
+        """analytics_charts.js parses these blocks; a template slip would blank the charts."""
+        response = self.client_instance.get(reverse("analytics"))
+        html = response.content.decode()
+        for name in ("comparison", "revenue-trend", "capacity-trend"):
+            match = re.search(
+                rf'<script type="application/json" id="{name}-data">(.*?)</script>', html, re.S
+            )
+            self.assertIsNotNone(match, name)
+            rows = json.loads(match.group(1))
+            self.assertIsInstance(rows, list, name)
+        comparison = json.loads(
+            re.search(r'id="comparison-data">(.*?)</script>', html, re.S).group(1)
+        )
+        self.assertEqual({"year", "revenue", "expenses", "withdrawals"}, set(comparison[0]))
 
     def test_analytics_dashboard_top_clients(self):
         """Test that top clients data is included."""
