@@ -13,6 +13,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "invoice_detail.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 let failures = 0;
 function check(name, condition) {
@@ -71,9 +72,10 @@ function load({ response, throws = false }) {
         alert: (message) => alerts.push(message),
         setTimeout: (fn, ms) => timers.push({ fn, ms }),
         console: { error: () => {} },
-        encodeURIComponent,
+        URLSearchParams,
     };
     vm.createContext(sandbox);
+    vm.runInContext(POST_JSON, sandbox);
     vm.runInContext(SOURCE, sandbox);
     return { select, ids, body, alerts, calls, timers };
 }
@@ -86,7 +88,7 @@ const ok = (data) => ({ ok: true, json: async () => data });
     {
         const page = load({ response: ok({ status: "paid", display: "Paid <b>", paid_date: "15.11.2026" }) });
         await page.select._listeners.change.call(page.select);
-        check("posts form-encoded to the configured URL with the token", page.calls[0].url === "/invoices/5/status/" && page.calls[0].options.body === "status=paid" && page.calls[0].options.headers["X-CSRFToken"] === "tok123" && page.calls[0].options.headers["Content-Type"] === "application/x-www-form-urlencoded");
+        check("posts form-encoded to the configured URL with the token", page.calls[0].url === "/invoices/5/status/" && String(page.calls[0].options.body) === "status=paid" && page.calls[0].options.headers["X-CSRFToken"] === "tok123");
         check("the badge gets the new class and text", page.ids["status-badge"].className === "status-badge paid" && page.ids["status-badge"].textContent === "Paid <b>");
         check("the dropdown resets", page.select.value === "");
         check("the paid date is shown", page.ids["paid-date-value"].textContent === "15.11.2026");

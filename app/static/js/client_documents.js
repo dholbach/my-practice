@@ -3,7 +3,8 @@
  * delete them.
  *
  * The upload URL and the texts come from data-* attributes on #client-documents
- * (see client_detail_documents.html); the CSRF token from <body data-csrf-token>.
+ * (see client_detail_documents.html). Uploads and deletes go out through
+ * MPHttp.postForm (post_json.js), which adds the CSRF token.
  * Date, type and description are pre-filled from a filename such as
  * "2026-01-09-behandlungsvertrag.pdf".
  */
@@ -14,7 +15,6 @@
     const section = document.getElementById("client-documents");
     if (!section) return;
     const text = section.dataset;
-    const csrfToken = document.body.dataset.csrfToken;
 
     const dropZone = document.getElementById("docDropZone");
     const fileInput = document.getElementById("docFileInput");
@@ -78,10 +78,7 @@
     function docDelete(btn) {
         if (!confirm(text.deleteConfirm)) return;
         const docId = btn.dataset.docId;
-        fetch("/documents/" + docId + "/delete/", {
-            method: "POST",
-            headers: { "X-CSRFToken": btn.dataset.csrf, "Content-Type": "application/x-www-form-urlencoded" },
-        })
+        MPHttp.postForm("/documents/" + docId + "/delete/")
             .then((r) => r.json())
             .then(function (data) {
                 if (data.success) {
@@ -123,7 +120,6 @@
         del.className = "btn btn-danger btn-sm";
         del.textContent = "🗑️";
         del.dataset.docId = doc.id;
-        del.dataset.csrf = csrfToken;
         del.addEventListener("click", function () {
             docDelete(del);
         });
@@ -161,12 +157,11 @@
         formData.append("document_type", document.getElementById("docTypeSelect").value);
         formData.append("description", document.getElementById("docDescription").value);
         formData.append("document_date", dateInput.value);
-        formData.append("csrfmiddlewaretoken", csrfToken);
 
         uploadBtn.disabled = true;
         progress.classList.add("visible");
 
-        fetch(text.uploadUrl, { method: "POST", body: formData })
+        MPHttp.postForm(text.uploadUrl, formData)
             .then((r) => r.json())
             .then(function (data) {
                 if (data.error) {

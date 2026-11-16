@@ -14,6 +14,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "ui_actions.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 class FakeElement {
     constructor(tagName, attrs = {}, parent = null) {
@@ -106,7 +107,10 @@ function load({ confirmAnswer = true } = {}) {
         setTimeout: (fn) => timers.push(fn),
         encodeURIComponent,
     };
-    vm.runInNewContext(SOURCE, context);
+    vm.createContext(context);
+    vm.runInContext(POST_JSON, context);
+    if (context.window && context.window.MPHttp) context.MPHttp = context.window.MPHttp; // a browser's window is the global
+    vm.runInContext(SOURCE, context);
     function fire(type, target) {
         const event = {
             type,

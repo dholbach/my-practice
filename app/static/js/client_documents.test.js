@@ -12,6 +12,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "client_documents.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 let failures = 0;
 function check(name, condition) {
@@ -53,7 +54,7 @@ function load({ response = { id: 9 }, confirmAnswer = true } = {}) {
     const requests = [];
     const alerts = [];
     let reloaded = false;
-    const deleteButton = node({ dataset: { docId: "4", csrf: "csrf-del" } });
+    const deleteButton = node({ dataset: { docId: "4" } });
     const row = { removed: false, remove() { this.removed = true; } };
     const context = {
         document: {
@@ -67,9 +68,11 @@ function load({ response = { id: 9 }, confirmAnswer = true } = {}) {
         alert: (m) => alerts.push(m),
         confirm: () => confirmAnswer,
         location: { reload: () => (reloaded = true) },
-        Date, String,
+        Date, String, URLSearchParams,
     };
-    vm.runInNewContext(SOURCE, context);
+    vm.createContext(context);
+    vm.runInContext(POST_JSON, context);
+    vm.runInContext(SOURCE, context);
     const settle = () => new Promise((r) => setImmediate(r));
     return { ids, dropLabel, requests, alerts, deleteButton, row, settle, reloaded: () => reloaded };
 }
@@ -84,7 +87,8 @@ console.log("client_documents.js");
     check("the upload form opens and shows the file name", page.ids.docUploadForm.style.display === "block" && page.dropLabel.textContent === "2026-01-09-Behandlungsvertrag-Max.pdf");
 
     page.ids.docUploadBtn.click();
-    check("upload posts to the data-upload-url with the body CSRF token", page.requests[0].url === "/up/" && page.requests[0].init.body.data.csrfmiddlewaretoken === "csrf-body" && page.requests[0].init.body.data.document_type === "contract");
+    check("upload posts the form data to the data-upload-url", page.requests[0].url === "/up/" && page.requests[0].init.body.data.document_type === "contract" && page.requests[0].init.body.data.file.name === "2026-01-09-Behandlungsvertrag-Max.pdf");
+    check("the upload carries the CSRF token in the header, not in the form", page.requests[0].init.headers["X-CSRFToken"] === "csrf-body" && !("csrfmiddlewaretoken" in page.requests[0].init.body.data));
     check("the button is disabled while uploading", page.ids.docUploadBtn.disabled === true);
 
     page = load({ response: { id: 9, onboarding_step_completed: true } });
@@ -110,7 +114,7 @@ console.log("client_documents.js");
     page = load({ response: { success: true } });
     page.deleteButton.click();
     await page.settle();
-    check("delete asks first, then posts and removes the row", page.requests[0].url === "/documents/4/delete/" && page.requests[0].init.headers["X-CSRFToken"] === "csrf-del" && page.row.removed);
+    check("delete asks first, then posts and removes the row", page.requests[0].url === "/documents/4/delete/" && page.requests[0].init.headers["X-CSRFToken"] === "csrf-body" && page.row.removed);
 
     page = load({ confirmAnswer: false });
     page.deleteButton.click();

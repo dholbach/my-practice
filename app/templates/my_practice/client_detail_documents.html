@@ -20,9 +20,7 @@
             <span class="doc-type-badge sidebar-doc-badge">{{ doc.get_document_type_display }}</span>
             <a href="{{ doc.file.url }}" target="_blank" class="sidebar-doc-name" title="{{ doc.filename }}">{% if doc.description %}{{ doc.description }}{% else %}{{ doc.filename }}{% endif %}</a>
             <span class="sidebar-doc-date">{{ doc.document_date|date:"d.m.Y" }}</span>
-            <button class="btn btn-danger btn-sm"
-                    data-doc-id="{{ doc.pk }}"
-                    data-csrf="{{ csrf_token }}">🗑️</button>
+            <button class="btn btn-danger btn-sm" data-doc-id="{{ doc.pk }}">🗑️</button>
         </li>
         {% endfor %}
     </ul>

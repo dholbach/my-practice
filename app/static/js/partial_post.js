@@ -10,8 +10,9 @@
  *           data-post-closest=".todo-item"          the nearest ancestor matching this
  *           data-post-swap="outer">                 "outer" (default) or "inner"
  *
- * The CSRF token comes from <body data-csrf-token>. A data-confirm on the same
- * element is asked first (ui_actions.js listens in the capture phase).
+ * The request goes out through MPHttp.postForm (post_json.js), which adds the CSRF
+ * token. A data-confirm on the same element is asked first (ui_actions.js listens
+ * in the capture phase).
  */
 (function () {
     "use strict";
@@ -25,14 +26,9 @@
     function send(el) {
         const target = targetOf(el);
         if (!target || el.classList.contains("is-pending")) return;
-        const body = new URLSearchParams(el.dataset.postVals ? JSON.parse(el.dataset.postVals) : {});
+        const fields = el.dataset.postVals ? JSON.parse(el.dataset.postVals) : {};
         el.classList.add("is-pending");
-        fetch(el.dataset.post, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "X-CSRFToken": document.body.dataset.csrfToken, "X-Partial": "1" },
-            body: body,
-        })
+        MPHttp.postForm(el.dataset.post, fields, { headers: { "X-Partial": "1" } })
             .then(function (response) {
                 if (!response.ok) throw new Error(response.status);
                 return response.text();

@@ -12,6 +12,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "client_tags.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 let failures = 0;
 function check(name, condition) {
@@ -51,9 +52,11 @@ async function load({ response = { success: true } } = {}) {
         fetch: (url, init) => { requests.push({ url, init }); return Promise.resolve({ json: () => Promise.resolve(response) }); },
         alert: (m) => alerts.push(m),
         location: { reload: () => (reloaded = true) },
-        console, parseInt, setTimeout,
+        console, parseInt, setTimeout, URLSearchParams,
     };
-    vm.runInNewContext(SOURCE, context);
+    vm.createContext(context);
+    vm.runInContext(POST_JSON, context);
+    vm.runInContext(SOURCE, context);
     const settle = () => new Promise((r) => setImmediate(r));
     return { item, removeButton, requests, alerts, settle, reloaded: () => reloaded, removed: () => removed };
 }
@@ -65,7 +68,7 @@ console.log("client_tags.js");
     let page = await load();
     page.item.listeners.click();
     await page.settle();
-    check("adding posts the tag id with the CSRF header", page.requests[0].url === "/api/clients/7/tags/add/" && page.requests[0].init.body === "tag_id=5" && page.requests[0].init.headers["X-CSRFToken"] === "body-token");
+    check("adding posts the tag id with the CSRF header", page.requests[0].url === "/api/clients/7/tags/add/" && String(page.requests[0].init.body) === "tag_id=5" && page.requests[0].init.headers["X-CSRFToken"] === "body-token");
     check("a successful add reloads the page", page.reloaded());
 
     page = await load({ response: { success: false } });
@@ -76,7 +79,7 @@ console.log("client_tags.js");
     page = await load();
     page.removeButton.listeners.click();
     await page.settle();
-    check("removing posts to the remove URL", page.requests[0].url === "/api/clients/7/tags/3/remove/");
+    check("removing posts to the remove URL", page.requests[0].url === "/api/clients/7/tags/3/remove/" && page.requests[0].init.headers["X-CSRFToken"] === "body-token");
     check("a successful remove drops the tag", page.removed());
 
     page = await load({ response: { success: false } });

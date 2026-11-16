@@ -11,7 +11,7 @@
  *   <a|button data-confirm="Really delete?">       confirm before following / submitting
  *   <button data-print>                             window.print()
  *   <a href="/x/" data-post-link>                   follow the link as a POST (with the
- *                                                   CSRF token from <body data-csrf-token>),
+ *                                                   CSRF token from MPHttp.csrfToken()),
  *                                                   for card-shaped links to POST-only views
  *   <select data-navigate="/reports/?year=">       go to that URL + the chosen value
  *   <select data-submit-on-change>                  submit the enclosing form
@@ -38,7 +38,7 @@
         const token = document.createElement("input");
         token.type = "hidden";
         token.name = "csrfmiddlewaretoken";
-        token.value = document.body.dataset.csrfToken;
+        token.value = MPHttp.csrfToken();
         form.appendChild(token);
         document.body.appendChild(form);
         form.submit();

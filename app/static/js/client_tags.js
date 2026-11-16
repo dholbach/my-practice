@@ -3,8 +3,8 @@
  *
  * Wired per .tag-container[data-client-id]; the error texts come from
  * data-add-error / data-remove-error on the container so they stay in the
- * template. The CSRF token comes from <body data-csrf-token>, like every other
- * page script.
+ * template. Both requests go out through MPHttp.postForm (post_json.js), which
+ * adds the CSRF token.
  */
 
 (function () {
@@ -33,14 +33,7 @@
     }
 
     function addTag(clientId, tagId, container) {
-        fetch("/api/clients/" + clientId + "/tags/add/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "X-CSRFToken": document.body.dataset.csrfToken,
-            },
-            body: "tag_id=" + tagId,
-        })
+        MPHttp.postForm("/api/clients/" + clientId + "/tags/add/", { tag_id: tagId })
             .then((response) => response.json())
             .then(function (data) {
                 if (data.success) {
@@ -56,10 +49,7 @@
     }
 
     function removeTag(clientId, tagId, element, container) {
-        fetch("/api/clients/" + clientId + "/tags/" + tagId + "/remove/", {
-            method: "POST",
-            headers: { "X-CSRFToken": document.body.dataset.csrfToken },
-        })
+        MPHttp.postForm("/api/clients/" + clientId + "/tags/" + tagId + "/remove/")
             .then((response) => response.json())
             .then(function (data) {
                 if (data.success) {

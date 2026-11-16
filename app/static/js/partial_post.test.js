@@ -11,6 +11,7 @@ const path = require("path");
 const vm = require("vm");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "partial_post.js"), "utf8");
+const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
 
 class FakeElement {
     constructor(tagName, attrs = {}, parent = null) {
@@ -70,7 +71,9 @@ async function load({ ok = true, html = "<p>new</p>" } = {}) {
             return Promise.resolve({ ok, status: ok ? 200 : 500, text: () => Promise.resolve(html) });
         },
     };
-    vm.runInNewContext(SOURCE, context);
+    vm.createContext(context);
+    vm.runInContext(POST_JSON, context);
+    vm.runInContext(SOURCE, context);
     function fire(type, target) {
         const event = {
             target,
