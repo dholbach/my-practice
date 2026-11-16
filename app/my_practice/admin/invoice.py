@@ -109,6 +109,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         "paid_date",
         "total_formatted",
     ]
+    list_select_related = ["client"]
     list_filter = ["status", "invoice_date", "paid_date", "created_at"]
 
     # Django 5.1: Enhanced search with field lookups

@@ -121,6 +121,9 @@ class ClientAdmin(admin.ModelAdmin):
             return format_html('<span style="color: #667eea;">💻 {}</span>', _("Online"))
         return format_html('<span style="color: #48bb78;">🏢 {}</span>', _("On-site"))
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("practice").prefetch_related("tags")
+
     @admin.display(description=gettext_lazy("Tags"))
     def tag_list(self, obj):
         tags = obj.tags.all()
