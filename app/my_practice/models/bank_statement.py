@@ -103,7 +103,7 @@ class BankTransaction(models.Model):
     match_confidence = models.CharField(
         max_length=20,
         choices=CONFIDENCE_CHOICES,
-        default="unmatched",
+        default=Confidence.UNMATCHED,
         verbose_name=gettext_lazy("Match confidence"),
     )
     extracted_invoice_number = models.CharField(

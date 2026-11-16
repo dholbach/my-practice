@@ -264,7 +264,7 @@ class BankStatementImporter:
 
             # Direct match
             if invoice.client.full_name.lower() == payer_name.lower():
-                return (invoice, "exact")
+                return (invoice, BankTransaction.Confidence.EXACT)
 
             # Fuzzy match via ClientAlias
             alias = ClientAlias.objects.filter(
@@ -272,11 +272,11 @@ class BankStatementImporter:
             ).first()
 
             if alias:
-                return (invoice, "fuzzy")
+                return (invoice, BankTransaction.Confidence.FUZZY)
 
             # Amount matches but name doesn't - still return as exact
             # (user can create alias if needed)
-            return (invoice, "exact")
+            return (invoice, BankTransaction.Confidence.EXACT)
 
         except Invoice.MultipleObjectsReturned:
             # Should not happen with unique invoice_number
@@ -481,12 +481,16 @@ class BankStatementImporter:
             record = withdrawal_or_expense["record"]
             if record_type == "CompanyWithdrawal":
                 match_confidence, linked_expense, linked_withdrawal = (
-                    "auto-withdrawal",
+                    BankTransaction.Confidence.AUTO_WITHDRAWAL,
                     None,
                     record,
                 )
             else:
-                match_confidence, linked_expense, linked_withdrawal = "auto-expense", record, None
+                match_confidence, linked_expense, linked_withdrawal = (
+                    BankTransaction.Confidence.AUTO_EXPENSE,
+                    record,
+                    None,
+                )
             BankTransaction.objects.create(
                 practice=self.practice,
                 transaction_date=parsed["transaction_date"],
@@ -520,7 +524,7 @@ class BankStatementImporter:
         invoice_number: str | None,
     ) -> tuple[str, str, Invoice | None, CompanyWithdrawal | None]:
         """Classify a transaction and update result counters. Returns (confidence, notes, matched_invoice, linked_withdrawal)."""
-        confidence = "unmatched"
+        confidence = BankTransaction.Confidence.UNMATCHED
         notes = ""
         linked_withdrawal = None
         matched_invoice = None
@@ -533,11 +537,11 @@ class BankStatementImporter:
             # (e.g. "Fehlbuchung") are bank errors, not real contributions.
             if correction_keyword_hit:
                 withdrawal_category = "correction"
-                confidence = "auto-correction"
+                confidence = BankTransaction.Confidence.AUTO_CORRECTION
                 notes = _("Erroneous booking / correction from private account")
             else:
                 withdrawal_category = "contribution"
-                confidence = "auto-contribution"
+                confidence = BankTransaction.Confidence.AUTO_CONTRIBUTION
                 notes = _("Capital contribution from private account")
             # Only create for positive (incoming) amounts
             if parsed["amount"] > 0:
@@ -557,7 +561,7 @@ class BankStatementImporter:
                 )
             self.results["needs_review"] += 1
         elif is_self_payment:
-            confidence = "ignored"
+            confidence = BankTransaction.Confidence.IGNORED
             notes = _("Own payment (capital contribution), ignored automatically")
             self.results["ignored"] += 1
         elif invoice_number:

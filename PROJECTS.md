@@ -31,7 +31,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-16 — Production container unprivileged (#650)**: prod `django` runs as `MY_PRACTICE_UID` with no capabilities, a networkless `fix-ownership` one-shot hands it the volumes, and the smoke stack runs the same way. Also fixes new practices being saved inactive. Not yet exercised on a real prod stack (bind-mounted `documents`/`questionnaires`); ships with the next release.
+- **2026-11-16 — Review 4 liabilities, first batch (#656)**: bank match confidences use `BankTransaction.Confidence` everywhere, with a ratchet test (`test_bank_confidence_literals`); `RevenueCalculator` aggregates through one `_aggregate_stats`; `.badge-warning` is defined once (the later definition, which is what rendered).
 - **2026-11-16 — Fourth refactoring review (#656)**: the areas the third one left unread, seven agents, every finding re-checked. Do-now batch in #655: an admin badge that hid four states, a `prod.py` placeholder-as-secret, dead admin actions, forms and parameters, unwrapped form labels. 26 liabilities in the ledger; the compose env-var audit is finished.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
