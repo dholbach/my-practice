@@ -174,6 +174,11 @@ class PendingCalendarEvent(models.Model):
         client = self.matched_client.client_code if self.matched_client else "?"
         return f"{client} — {self.event_date} ({self.duration_minutes} min) [{self.get_status_display()}]"
 
+    def skip(self) -> None:
+        """Drop the event from the queue without importing it."""
+        self.status = self.Status.SKIPPED
+        self.save(update_fields=["status"])
+
     def clean(self) -> None:
         """Defense in depth: practice and matched_client are independent FKs, so
         nothing else guarantees they agree — catch a cross-practice mismatch

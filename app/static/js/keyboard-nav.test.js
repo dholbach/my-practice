@@ -22,6 +22,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { FakeEvent } = require("./test_dom.js");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "keyboard-nav.js"), "utf8");
 const TYPING = fs.readFileSync(path.join(__dirname, "typing_target.js"), "utf8");
@@ -46,21 +47,6 @@ const I18N = {
 // ---------------------------------------------------------------------------
 // Minimal DOM stub
 // ---------------------------------------------------------------------------
-
-class FakeEvent {
-    constructor(type, options = {}) {
-        this.type = type;
-        this.key = options.key;
-        this.target = options.target || null;
-        this.ctrlKey = Boolean(options.ctrlKey);
-        this.altKey = Boolean(options.altKey);
-        this.metaKey = Boolean(options.metaKey);
-        this.defaultPrevented = false;
-    }
-    preventDefault() {
-        this.defaultPrevented = true;
-    }
-}
 
 class FakeNode {
     constructor(tagName = "div", registry = null) {

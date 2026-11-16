@@ -451,8 +451,7 @@ def calendar_queue_skip(request: HttpRequest, pk: int) -> JsonResponse:
             practice=practice,
             status=PendingCalendarEvent.Status.PENDING,
         )
-        event.status = PendingCalendarEvent.Status.SKIPPED
-        event.save(update_fields=["status"])
+        event.skip()
         return JsonResponse({"success": True, "event_id": pk})
     except PendingCalendarEvent.DoesNotExist:
         return json_error(_("Event not found."), 404)
@@ -468,8 +467,7 @@ def _fetch_pending_event(pk: int, practice) -> "PendingCalendarEvent | None":
 
 
 def _skip_pending_event(request: HttpRequest, event: "PendingCalendarEvent", redirect_target):
-    event.status = PendingCalendarEvent.Status.SKIPPED
-    event.save(update_fields=["status"])
+    event.skip()
     messages.success(
         request,
         _("Event on %(date)s skipped.") % {"date": event.event_date.strftime("%d.%m.%Y")},

@@ -12,40 +12,13 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { FakeEvent, FakeClassList } = require("./test_dom.js");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "expense_form.js"), "utf8");
 
 // ---------------------------------------------------------------------------
 // Minimal DOM stub
 // ---------------------------------------------------------------------------
-
-class FakeEvent {
-    constructor(type, options = {}) {
-        this.type = type;
-        this.target = options.target || null;
-        this.relatedTarget = options.relatedTarget || null;
-        this.dataTransfer = options.dataTransfer || null;
-        this.defaultPrevented = false;
-    }
-    preventDefault() {
-        this.defaultPrevented = true;
-    }
-}
-
-class FakeClassList {
-    constructor() {
-        this._set = new Set();
-    }
-    add(name) {
-        this._set.add(name);
-    }
-    remove(name) {
-        this._set.delete(name);
-    }
-    contains(name) {
-        return this._set.has(name);
-    }
-}
 
 class FakeNode {
     constructor(tagName = "div", registry = null) {

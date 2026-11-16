@@ -26,6 +26,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { FakeEvent } = require("./test_dom.js");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "command_palette.js"), "utf8");
 const TYPING = fs.readFileSync(path.join(__dirname, "typing_target.js"), "utf8");
@@ -33,21 +34,6 @@ const TYPING = fs.readFileSync(path.join(__dirname, "typing_target.js"), "utf8")
 // ---------------------------------------------------------------------------
 // Minimal DOM stub
 // ---------------------------------------------------------------------------
-
-class FakeEvent {
-    constructor(type, options = {}) {
-        this.type = type;
-        this.key = options.key || "";
-        this.metaKey = Boolean(options.metaKey);
-        this.ctrlKey = Boolean(options.ctrlKey);
-        this.altKey = Boolean(options.altKey);
-        this.target = options.target || null;
-        this.defaultPrevented = false;
-    }
-    preventDefault() {
-        this.defaultPrevented = true;
-    }
-}
 
 class FakeNode {
     constructor(tagName = "div") {

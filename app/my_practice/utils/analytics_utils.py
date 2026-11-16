@@ -205,7 +205,7 @@ class RevenueAnalyzer:
             .annotate(total=Sum("total"))
         )
         monthly_totals = {
-            row["month"].strftime("%Y-%m"): row["total"] for row in rows if row["month"]
+            format_month_key(row["month"]): row["total"] for row in rows if row["month"]
         }
 
         return _build_monthly_series(monthly_totals, start_date, end_date, value_key="revenue")

@@ -17,6 +17,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { FakeClassList } = require("./test_dom.js");
 
 const SOURCE = fs.readFileSync(path.join(__dirname, "calendar_import.js"), "utf8");
 const POST_JSON = fs.readFileSync(path.join(__dirname, "post_json.js"), "utf8");
@@ -44,21 +45,6 @@ function check(name, condition, detail) {
     } else {
         failures += 1;
         console.log(`  FAIL ${name}${detail ? ` — ${detail}` : ""}`);
-    }
-}
-
-class FakeClassList {
-    constructor() {
-        this.names = new Set();
-    }
-    add(name) {
-        this.names.add(name);
-    }
-    remove(name) {
-        this.names.delete(name);
-    }
-    contains(name) {
-        return this.names.has(name);
     }
 }
 
