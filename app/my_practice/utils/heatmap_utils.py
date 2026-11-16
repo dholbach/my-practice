@@ -9,44 +9,6 @@ from ..models.base import PracticeScope, scope_to_practice
 from . import DateRangeHelper, count_sessions
 
 
-def get_sessions_for_month(month_date, *, practice: PracticeScope):
-    """
-    Get session data from InvoiceItems for a given month.
-
-    Args:
-        month_date: Date object representing the month
-        practice: Practice to scope to; None gives nothing, ALL_PRACTICES everything
-
-    Returns dict: {client_code: hours}
-    """
-    result = {}
-    month_start, month_end = DateRangeHelper.get_month_range(month_date)
-
-    invoice_items = InvoiceItem.objects.filter(
-        session__session_date__gte=month_start,
-        session__session_date__lte=month_end,
-        invoice__client__isnull=False,
-    )
-
-    invoice_items = scope_to_practice(invoice_items, practice, "invoice__practice")
-
-    invoice_items = invoice_items.select_related("invoice__client", "session", "service_type")
-
-    client_items: dict[str, list] = {}
-    for item in invoice_items:
-        client_code = item.invoice.client.client_code
-        if client_code not in client_items:
-            client_items[client_code] = []
-        client_items[client_code].append(item)
-
-    for client_code, items in client_items.items():
-        hours = count_sessions(items, exclude_cancellations=True)
-        if hours > 0:
-            result[client_code] = hours
-
-    return result
-
-
 def get_heatmap_data(
     current_year,
     current_month,

@@ -15,6 +15,7 @@ from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 
 from ..models import Client, Practice, UserPractice
+from ..utils.heatmap_utils import get_heatmap_data
 
 User = get_user_model()
 
@@ -326,3 +327,11 @@ def create_test_client(practice, code="TC", full_name="Max Mustermann", **overri
     }
     fields.update(overrides)
     return Client.objects.create(**fields)
+
+
+def heatmap_month_clients(month_date, *, practice) -> dict[str, float]:
+    """Hours per client code for one month, as the production heatmap computes them."""
+    result = get_heatmap_data(
+        month_date.year, month_date.month, months_to_show=1, practice=practice
+    )
+    return result["heatmap_data"][0]["clients"]

@@ -130,33 +130,13 @@ class RevenueCalculatorTests(TestCase):
         self.assertEqual(result["count"], 1)
         self.assertEqual(result["avg"], Decimal("300.00"))
 
-    def test_get_revenue_stats_without_avg(self):
-        """Test revenue statistics without average."""
-        result = RevenueCalculator.get_revenue_stats(include_avg=False, practice=self.practice)
-
-        self.assertEqual(result["total"], Decimal("500.00"))
-        self.assertEqual(result["count"], 2)
-        self.assertEqual(result["avg"], Decimal("0"))
-
     def test_get_year_revenue_with_paid_date(self):
         """Test year revenue using paid_date."""
-        result = RevenueCalculator.get_year_revenue(
-            2025, use_paid_date=True, practice=self.practice
-        )
+        result = RevenueCalculator.get_year_revenue(2025, practice=self.practice)
 
         self.assertEqual(result["total"], Decimal("200.00"))
         self.assertEqual(result["count"], 1)
         self.assertEqual(result["avg"], Decimal("200.00"))
-
-    def test_get_year_revenue_with_invoice_date(self):
-        """Test year revenue using invoice_date."""
-        result = RevenueCalculator.get_year_revenue(
-            2025, use_paid_date=False, practice=self.practice
-        )
-
-        # Using invoice_date: TEST-1 (200) is from 2025
-        self.assertEqual(result["total"], Decimal("200.00"))
-        self.assertEqual(result["count"], 1)
 
     def test_get_year_revenue_null_paid_date(self):
         """Test year revenue with null paid_date falls back to invoice_date."""
@@ -171,9 +151,7 @@ class RevenueCalculatorTests(TestCase):
             practice=self.practice,
         )
 
-        result = RevenueCalculator.get_year_revenue(
-            2025, use_paid_date=True, practice=self.practice
-        )
+        result = RevenueCalculator.get_year_revenue(2025, practice=self.practice)
 
         # Should include both: TEST-1 (200) + TEST-6 (400) = 600
         self.assertEqual(result["total"], Decimal("600.00"))

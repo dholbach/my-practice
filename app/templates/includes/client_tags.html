@@ -7,7 +7,7 @@ Usage: {% include 'includes/client_tags.html' with client=client editable=True %
 
 <div class="tag-container" data-client-id="{{ client.id }}" data-add-error="{% trans "Error adding tag" %}" data-remove-error="{% trans "Error removing tag" %}">
     {% for tag in client.tags.all %}
-        <span class="tag {{ tag.color }}{% if tag.is_system %} system-tag{% endif %}" data-tag-id="{{ tag.id }}">
+        <span class="tag {{ tag.color }}{% if tag.is_system %} system-tag{% endif %}">
             {{ tag.name }}
             {% if editable and not tag.is_system %}
                 <span class="tag-remove" data-tag-id="{{ tag.id }}">×</span>
@@ -22,7 +22,7 @@ Usage: {% include 'includes/client_tags.html' with client=client editable=True %
             </button>
             <div class="tag-dropdown-content" id="tagDropdownContent{{ client.id }}">
                 {% for tag in available_tags %}
-                    <div class="tag-dropdown-item" data-tag-id="{{ tag.id }}" data-tag-name="{{ tag.name }}" data-tag-color="{{ tag.color }}">
+                    <div class="tag-dropdown-item" data-tag-id="{{ tag.id }}">
                         <span class="tag-preview {{ tag.color }}">{{ tag.name }}</span>
                     </div>
                 {% empty %}

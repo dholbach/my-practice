@@ -7,6 +7,26 @@
 const WIDGET_STATE_PREFIX = 'widget_state_';
 
 /**
+ * localStorage can throw (private windows, blocked site data), and a widget
+ * that can't remember its state should still open and close.
+ */
+function readWidgetState(widgetId) {
+    try {
+        return localStorage.getItem(WIDGET_STATE_PREFIX + widgetId);
+    } catch (e) {
+        return null;
+    }
+}
+
+function writeWidgetState(widgetId, state) {
+    try {
+        localStorage.setItem(WIDGET_STATE_PREFIX + widgetId, state);
+    } catch (e) {
+        // Not persisted; the toggle itself still worked.
+    }
+}
+
+/**
  * Initialize all widgets on page load
  */
 function initializeWidgets() {
@@ -16,7 +36,7 @@ function initializeWidgets() {
         if (!widgetId) return;
 
         // Check LocalStorage for saved state
-        const savedState = localStorage.getItem(WIDGET_STATE_PREFIX + widgetId);
+        const savedState = readWidgetState(widgetId);
         const defaultCollapsed = widget.dataset.defaultCollapsed === 'true';
 
         // Apply state (LocalStorage > default > expanded)
@@ -52,10 +72,7 @@ function toggleWidget(widgetId) {
     const isCollapsed = widget.classList.toggle('collapsed');
 
     // Save state to LocalStorage
-    localStorage.setItem(
-        WIDGET_STATE_PREFIX + widgetId,
-        isCollapsed ? 'collapsed' : 'expanded'
-    );
+    writeWidgetState(widgetId, isCollapsed ? 'collapsed' : 'expanded');
 
     // Trigger custom event for analytics/tracking
     widget.dispatchEvent(new CustomEvent('widgetToggle', {

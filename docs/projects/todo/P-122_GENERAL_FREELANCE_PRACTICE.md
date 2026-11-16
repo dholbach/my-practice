@@ -208,9 +208,10 @@ narrow band of code that inspects item internals needs a branch.
 - `tax_amount` is already stored per invoice, so this is a groupby-and-sum, not
   new plumbing
 - Open design question: cash-basis (Ist-Versteuerung, via `paid_date`) vs.
-  accrual (Soll, via `invoice_date`) — `RevenueCalculator` already supports both
-  via its `use_paid_date` switch, so this reuses existing infrastructure rather
-  than inventing a new one
+  accrual (Soll, via `invoice_date`) — `RevenueCalculator` counts by `paid_date`
+  only (its `use_paid_date` switch was removed in refactoring review 4 because
+  nothing used the `invoice_date` branch), so accrual would need that branch
+  back
 
 ---
 

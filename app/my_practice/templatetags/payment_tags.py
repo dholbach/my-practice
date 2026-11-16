@@ -47,22 +47,6 @@ def currency_rounded(value, symbol="€"):
         return value
 
 
-@register.filter(name="percent")
-def percent(value, decimals=1):
-    """
-    Format a number as percentage.
-    Usage: {{ value|percent }} or {{ value|percent:2 }}
-    """
-    if value is None:
-        return "–"
-
-    try:
-        value = float(value)
-        return f"{value:.{decimals}f}%"
-    except ValueError, TypeError:
-        return value
-
-
 @register.filter(name="percentage")
 def percentage(part, total):
     """
@@ -191,20 +175,6 @@ def dict_get(dictionary, key):
     if not isinstance(dictionary, dict):
         return None
     return dictionary.get(key)
-
-
-@register.filter(name="abs_value")
-def abs_value(value):
-    """
-    Return absolute value of a number.
-    Usage: {{ number|abs_value }}
-    """
-    if value is None:
-        return None
-    try:
-        return abs(float(value))
-    except ValueError, TypeError:
-        return 0
 
 
 _WEEKDAY_NAMES = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]

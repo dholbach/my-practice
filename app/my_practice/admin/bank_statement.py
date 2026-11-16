@@ -113,14 +113,20 @@ class BankTransactionAdmin(admin.ModelAdmin):
         instead of a separate hardcoded label map, so the badge text can't drift
         out of sync with the model's own translated choices.
         """
+        confidence = BankTransaction.Confidence
+        created = "background: #bfdbfe; color: #1e3a8a;"
         badge_styles = {
-            "exact": "background: #bbf7d0; color: #14532d;",
-            "fuzzy": "background: #fef3c7; color: #713f12;",
-            "manual": "background: #ddd6fe; color: #4c1d95;",
-            "ignored": "background: #e5e7eb; color: #374151;",
-            "unmatched": "background: #fecaca; color: #7f1d1d;",
+            confidence.EXACT: "background: #bbf7d0; color: #14532d;",
+            confidence.FUZZY: "background: #fef3c7; color: #713f12;",
+            confidence.MANUAL: "background: #ddd6fe; color: #4c1d95;",
+            confidence.IGNORED: "background: #e5e7eb; color: #374151;",
+            confidence.UNMATCHED: "background: #fecaca; color: #7f1d1d;",
+            confidence.AUTO_WITHDRAWAL: created,
+            confidence.AUTO_EXPENSE: created,
+            confidence.AUTO_CONTRIBUTION: created,
+            confidence.AUTO_CORRECTION: created,
         }
-        style = badge_styles.get(obj.match_confidence, badge_styles["unmatched"])
+        style = badge_styles.get(obj.match_confidence, badge_styles[confidence.UNMATCHED])
         return format_html(
             '<span style="{}; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600;">{}</span>',
             style,

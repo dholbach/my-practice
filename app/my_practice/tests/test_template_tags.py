@@ -9,13 +9,11 @@ from django.test import RequestFactory, TestCase
 
 from my_practice.models import Practice
 from my_practice.templatetags.payment_tags import (
-    abs_value,
     currency,
     doc_field,
     format_month_year,
     highlight_diff,
     hours,
-    percent,
     percentage,
     privacy_name,
 )
@@ -55,39 +53,6 @@ class CurrencyFilterTests(TestCase):
     def test_currency_string_coercion(self):
         """Test currency with string input."""
         self.assertEqual(currency("99.99"), "99,99\u00a0€")
-
-
-class PercentFilterTests(TestCase):
-    """Tests for the percent template filter."""
-
-    def test_percent_basic(self):
-        """Test basic percent formatting."""
-        self.assertEqual(percent(45.6), "45.6%")
-
-    def test_percent_with_decimals(self):
-        """Test percent with custom decimals."""
-        self.assertEqual(percent(45.678, 2), "45.68%")
-
-    def test_percent_with_none(self):
-        """Test percent with None value."""
-        self.assertEqual(percent(None), "–")
-
-    def test_percent_with_zero(self):
-        """Test percent with zero value."""
-        self.assertEqual(percent(0), "0.0%")
-
-    def test_percent_negative(self):
-        """Test percent with negative value."""
-        self.assertEqual(percent(-25.5), "-25.5%")
-
-    def test_percent_very_large(self):
-        """Test percent with very large value."""
-        self.assertEqual(percent(12345.67), "12345.7%")
-
-    def test_percent_rounding(self):
-        """Test percent rounds correctly."""
-        self.assertEqual(percent(45.666, 1), "45.7%")
-        self.assertEqual(percent(45.654, 2), "45.65%")
 
 
 class PercentageFilterTests(TestCase):
@@ -174,30 +139,6 @@ class HighlightDiffFilterTests(TestCase):
         """Test highlight_diff with custom threshold."""
         self.assertEqual(highlight_diff(5, 10), "text-danger")
         self.assertEqual(highlight_diff(15, 10), "text-success")
-
-
-class AbsValueFilterTests(TestCase):
-    """Tests for the abs_value template filter."""
-
-    def test_abs_value_positive(self):
-        """Test abs_value with positive number."""
-        self.assertEqual(abs_value(10), 10)
-
-    def test_abs_value_negative(self):
-        """Test abs_value with negative number."""
-        self.assertEqual(abs_value(-10), 10)
-
-    def test_abs_value_zero(self):
-        """Test abs_value with zero."""
-        self.assertEqual(abs_value(0), 0)
-
-    def test_abs_value_decimal(self):
-        """Test abs_value with decimal."""
-        self.assertEqual(abs_value(-99.99), 99.99)
-
-    def test_abs_value_none(self):
-        """Test abs_value with None returns None."""
-        self.assertIsNone(abs_value(None))
 
 
 class QueryStringTemplateTagTests(TestCase):

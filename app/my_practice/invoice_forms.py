@@ -19,13 +19,13 @@ class InvoiceForm(StyledFormMixin, forms.ModelForm):
 
     # Override invoice_date to handle HTML5 date input properly
     invoice_date = DateFormField(
-        label="Invoice Date / Rechnungsdatum",
+        label=gettext_lazy("Invoice date"),
     )
 
     # Override paid_date to handle HTML5 date input properly
     paid_date = DateFormField(
         required=False,
-        label="Paid Date / Bezahlt am",
+        label=gettext_lazy("Paid on"),
     )
 
     class Meta:
@@ -43,7 +43,7 @@ class InvoiceForm(StyledFormMixin, forms.ModelForm):
             "client": forms.Select(attrs={"id": "id_client"}),
             "invoice_number": forms.TextInput(
                 attrs={
-                    "placeholder": "Auto-generates if empty (e.g., XX-5)",
+                    "placeholder": gettext_lazy("Auto-generated (e.g., JL-5) or enter manually"),
                     "id": "id_invoice_number",
                 }
             ),
@@ -52,16 +52,9 @@ class InvoiceForm(StyledFormMixin, forms.ModelForm):
             "notes": forms.Textarea(
                 attrs={
                     "rows": 3,
-                    "placeholder": "Internal notes / Interne Notizen",
+                    "placeholder": gettext_lazy("Internal notes"),
                 }
             ),
-        }
-        labels = {
-            "client": "Client / Klient",
-            "invoice_number": "Invoice Number / Rechnungsnummer",
-            "status": "Status",
-            "tax_rate": "Tax Rate % / MwSt. %",
-            "notes": "Notes / Notizen",
         }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

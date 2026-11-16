@@ -67,9 +67,16 @@ class FakeNode {
  *
  * @param options.widgets  [{ id, defaultCollapsed }]
  * @param options.storage  pre-existing localStorage entries
+ * @param options.brokenStorage  every localStorage call throws (private window)
  */
 function setupPage(options = {}) {
-    const { widgets = [], storage = {}, readyState = "loading", skipId = false } = options;
+    const {
+        widgets = [],
+        storage = {},
+        readyState = "loading",
+        skipId = false,
+        brokenStorage = false,
+    } = options;
 
     const document_ = new FakeNode("#document");
     document_.readyState = readyState;
@@ -109,11 +116,20 @@ function setupPage(options = {}) {
         document: document_,
         console,
         CustomEvent: FakeEvent,
-        localStorage: {
-            getItem: (k) => (store.has(k) ? store.get(k) : null),
-            setItem: (k, v) => store.set(k, String(v)),
-            removeItem: (k) => store.delete(k),
-        },
+        localStorage: brokenStorage
+            ? {
+                  getItem: () => {
+                      throw new Error("SecurityError");
+                  },
+                  setItem: () => {
+                      throw new Error("SecurityError");
+                  },
+              }
+            : {
+                  getItem: (k) => (store.has(k) ? store.get(k) : null),
+                  setItem: (k, v) => store.set(k, String(v)),
+                  removeItem: (k) => store.delete(k),
+              },
     };
 
     vm.runInNewContext(SOURCE, sandbox);
@@ -252,6 +268,17 @@ test("expanding persists too, rather than clearing the key", () => {
     });
     page.click("revenue");
     assertEquals(page.saved("revenue"), "expanded", "explicit expanded state recorded");
+});
+
+test("a throwing localStorage doesn't stop the widgets from toggling", () => {
+    const page = setupPage({
+        widgets: [{ id: "revenue", defaultCollapsed: true }],
+        brokenStorage: true,
+    });
+    assertTrue(page.collapsed("revenue"), "falls back to the default state");
+    page.click("revenue");
+    assertTrue(!page.collapsed("revenue"), "still toggles");
+    assertEquals(page.toggles.length, 1, "and still announces it");
 });
 
 test("clicking one widget leaves the others alone", () => {

@@ -18,7 +18,8 @@ from my_practice.models import (
     allow_issued_invoice_writes,
 )
 from my_practice.utils.analytics_utils import ClientAnalyzer, SessionAnalyzer
-from my_practice.utils.heatmap_utils import get_sessions_for_month
+
+from .test_helpers import heatmap_month_clients
 
 
 class HeatmapIntegrationTest(TestCase):
@@ -90,7 +91,7 @@ class HeatmapIntegrationTest(TestCase):
             quantity=Decimal("2.00"),
         )
 
-        month_data = get_sessions_for_month(date(2026, 3, 1), practice=self.practice)
+        month_data = heatmap_month_clients(date(2026, 3, 1), practice=self.practice)
         self.assertEqual(month_data["HM"], 2.0)
 
     @allow_issued_invoice_writes()
@@ -109,7 +110,7 @@ class HeatmapIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        month_data = get_sessions_for_month(date(2026, 3, 1), practice=self.practice)
+        month_data = heatmap_month_clients(date(2026, 3, 1), practice=self.practice)
         self.assertEqual(month_data["HM"], 1.5)
 
     @allow_issued_invoice_writes()
@@ -139,7 +140,7 @@ class HeatmapIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        month_data = get_sessions_for_month(date(2026, 3, 1), practice=self.practice)
+        month_data = heatmap_month_clients(date(2026, 3, 1), practice=self.practice)
         self.assertEqual(month_data["HM"], 1.0)  # Only non-cancel counted
 
     @allow_issued_invoice_writes()
@@ -187,7 +188,7 @@ class HeatmapIntegrationTest(TestCase):
             quantity=Decimal("1.00"),
         )
 
-        month_data = get_sessions_for_month(date(2026, 3, 1), practice=self.practice)
+        month_data = heatmap_month_clients(date(2026, 3, 1), practice=self.practice)
         self.assertEqual(month_data["HM"], 1.0)
         self.assertEqual(month_data["HM2"], 1.5)
 

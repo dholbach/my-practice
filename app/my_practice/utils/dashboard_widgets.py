@@ -302,9 +302,7 @@ class CapacityMonitoringWidgetBuilder:
         )
         hours = count_session_hours(sessions)
 
-        revenue = RevenueCalculator.get_month_revenue(
-            year, month, use_paid_date=True, practice=self.practice
-        )["total"]
+        revenue = RevenueCalculator.get_month_revenue(year, month, practice=self.practice)["total"]
 
         return {"hours": round(hours, 1), "revenue": revenue}
 
