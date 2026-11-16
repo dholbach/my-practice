@@ -184,6 +184,9 @@ class ClientAddRemoveTagTest(TestCase):
     def test_add_tag_missing_id_returns_400(self):
         response = self.tc.post(reverse("client_add_tag", args=[self.client_obj.pk]), {})
         self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIs(data["success"], False)
+        self.assertTrue(data["error"])
 
     def test_remove_tag(self):
         self.client_obj.tags.add(self.tag)

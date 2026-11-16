@@ -27,6 +27,7 @@ from ..utils.google_calendar import (
     GoogleCalendarOAuth,
     list_calendars,
 )
+from ..utils.view_helpers import json_error
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
         data = json.loads(request.body)
         events_to_process = data.get("events", [])
         if not events_to_process:
-            return JsonResponse({"success": False, "error": _("No events selected")}, status=400)
+            return json_error(_("No events selected"))
 
         user_overrides = build_user_overrides(events_to_process)
         processor = CalendarImportProcessor(request)
@@ -207,27 +208,17 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
             practice = getattr(request, "current_practice", None)
             service = GoogleCalendarOAuth.get_service(practice=practice)
             if not service:
-                return JsonResponse(
-                    {"success": False, "error": _("Google Calendar not connected")}, status=401
-                )
+                return json_error(_("Google Calendar not connected"), 401)
             token = GoogleCalendarOAuth.get_active_token(practice)
             calendar_id = token.calendar_id if token else ""
             if not calendar_id:
-                return JsonResponse(
-                    {"success": False, "error": _("No calendar selected")}, status=404
-                )
+                return json_error(_("No calendar selected"), 404)
             try:
                 parsed_events = processor.fetch_specific_events(
                     service, calendar_id, list(event_ids)
                 )
             except Exception as e:
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "error": _("Error loading events: %(error)s") % {"error": str(e)},
-                    },
-                    status=500,
-                )
+                return json_error(_("Error loading events: %(error)s") % {"error": str(e)}, 500)
 
         from ..utils.calendar_import_helpers import create_invoice_items_from_events
 
@@ -239,17 +230,11 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
         )
 
     except json.JSONDecodeError:
-        return JsonResponse({"success": False, "error": _("Invalid JSON")}, status=400)
+        return json_error(_("Invalid JSON"))
     except Exception:
         logger.exception("Calendar import failed")
-        return JsonResponse(
-            {
-                "success": False,
-                "error": _(
-                    "Import failed due to an unexpected error. Details are in the server log."
-                ),
-            },
-            status=500,
+        return json_error(
+            _("Import failed due to an unexpected error. Details are in the server log."), 500
         )
 
 
@@ -363,7 +348,7 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
         invoice_id = data.get("invoice_id")
 
         if not event_ids:
-            return JsonResponse({"error": _("No events selected.")}, status=400)
+            return json_error(_("No events selected."))
 
         practice = getattr(request, "current_practice", None)
         events = PendingCalendarEvent.objects.filter(
@@ -417,16 +402,11 @@ def calendar_queue_import(request: HttpRequest) -> JsonResponse:
         )
 
     except json.JSONDecodeError:
-        return JsonResponse({"error": _("Invalid JSON")}, status=400)
+        return json_error(_("Invalid JSON"))
     except Exception:
         logger.exception("Calendar queue import failed")
-        return JsonResponse(
-            {
-                "error": _(
-                    "Import failed due to an unexpected error. Details are in the server log."
-                )
-            },
-            status=500,
+        return json_error(
+            _("Import failed due to an unexpected error. Details are in the server log."), 500
         )
 
 
@@ -475,7 +455,7 @@ def calendar_queue_skip(request: HttpRequest, pk: int) -> JsonResponse:
         event.save(update_fields=["status"])
         return JsonResponse({"success": True, "event_id": pk})
     except PendingCalendarEvent.DoesNotExist:
-        return JsonResponse({"error": _("Event not found.")}, status=404)
+        return json_error(_("Event not found."), 404)
 
 
 def _fetch_pending_event(pk: int, practice) -> "PendingCalendarEvent | None":

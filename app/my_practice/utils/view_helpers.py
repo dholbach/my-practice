@@ -6,7 +6,7 @@ from typing import Any, Callable
 from urllib.parse import urlparse
 
 from django.core.exceptions import PermissionDenied
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.http import url_has_allowed_host_and_scheme
 
@@ -96,3 +96,13 @@ def get_object_or_403(
 def is_partial_request(request) -> bool:
     """True for a request from static/js/partial_post.js, which swaps in an HTML fragment."""
     return request.headers.get("X-Partial") == "1"
+
+
+def json_error(message: object, status: int = 400) -> JsonResponse:
+    """The one error shape of the AJAX endpoints: ``{"success": False, "error": message}``.
+
+    The page scripts test ``success`` first and show ``error``; a response that
+    leaves ``success`` out only works while every caller checks it the same way.
+    ``message`` may be a lazy string or an exception text.
+    """
+    return JsonResponse({"success": False, "error": str(message)}, status=status)

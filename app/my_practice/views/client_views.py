@@ -40,7 +40,7 @@ from ..utils import (
 from ..utils.email_utils import get_gdpr_deletion_email_content
 from ..utils.file_processing import process_upload
 from ..utils.google_calendar import CalendarEventParser
-from ..utils.view_helpers import get_object_or_403
+from ..utils.view_helpers import get_object_or_403, json_error
 from .crud_mixins import NextRedirectMixin, PracticeScopedListView, PracticeScopedUpdateView
 
 logger = logging.getLogger(__name__)
@@ -317,11 +317,11 @@ def client_document_upload(request: HttpRequest, pk: int) -> JsonResponse:
     client = get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
     raw_file = request.FILES.get("file")
     if not raw_file:
-        return JsonResponse({"error": str(_("No file selected."))}, status=400)
+        return json_error(_("No file selected."))
     try:
         doc_file = process_upload(raw_file)
     except ValueError as exc:
-        return JsonResponse({"error": str(exc)}, status=400)
+        return json_error(exc)
 
     doc_type = request.POST.get("document_type", ClientDocument.DocumentType.OTHER)
     valid_types = {dt.value for dt in ClientDocument.DocumentType}
