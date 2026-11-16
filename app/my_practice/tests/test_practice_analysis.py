@@ -22,6 +22,8 @@ from my_practice.utils.practice_analysis import (
     calculate_quarter_trends,
 )
 
+from .test_helpers import create_test_client, create_test_practice
+
 
 class PracticeAnalyzerTestCase(TestCase):
     """Tests for PracticeAnalyzer class"""
@@ -627,3 +629,53 @@ class PracticeAnalyzerEdgeCasesTestCase(TestCase):
             (c for c in analysis["clients"]["list"] if c["client_code"] == "NEW"), None
         )
         self.assertIsNone(new_client)
+
+
+class ClientRevenueBasisTestCase(TestCase):
+    """A client's revenue in a period counts payments received in it, not invoices issued in it."""
+
+    @allow_issued_invoice_writes()
+    def setUp(self):
+        self.practice = create_test_practice(slug="practice-analysis-revenue-1")
+        CapacityPeriod.objects.create(
+            practice=self.practice, start_date=date(2015, 1, 1), hours_per_week=20
+        )
+        self.late_paid = create_test_client(self.practice, "LP")
+        self.legacy = create_test_client(self.practice, "LG")
+        for client in (self.late_paid, self.legacy):
+            Session.objects.create(client=client, session_date=date(2025, 12, 5), duration=60)
+        # Issued in December, paid in January.
+        Invoice.objects.create(
+            client=self.late_paid,
+            practice=self.practice,
+            invoice_number="RB-1",
+            invoice_date=date(2025, 12, 20),
+            paid_date=date(2026, 1, 10),
+            total=Decimal("100.00"),
+            status="paid",
+        )
+        # Paid before the paid date was recorded: counted at its invoice date.
+        Invoice.objects.create(
+            client=self.legacy,
+            practice=self.practice,
+            invoice_number="RB-2",
+            invoice_date=date(2025, 12, 10),
+            total=Decimal("80.00"),
+            status="paid",
+        )
+
+    def _revenue(self, start, end):
+        analysis = PracticeAnalyzer(start, end, practice=self.practice).analyze()
+        return {c["client_code"]: c["revenue_in_period"] for c in analysis["clients"]["list"]}
+
+    def test_a_payment_counts_in_the_period_it_was_received(self):
+        december = self._revenue(date(2025, 12, 1), date(2025, 12, 31))
+        january = self._revenue(date(2026, 1, 1), date(2026, 1, 31))
+        self.assertEqual(december["LP"], 0)
+        self.assertEqual(january["LP"], Decimal("100.00"))
+
+    def test_without_a_paid_date_the_invoice_date_decides(self):
+        december = self._revenue(date(2025, 12, 1), date(2025, 12, 31))
+        january = self._revenue(date(2026, 1, 1), date(2026, 1, 31))
+        self.assertEqual(december["LG"], Decimal("80.00"))
+        self.assertEqual(january["LG"], 0)
