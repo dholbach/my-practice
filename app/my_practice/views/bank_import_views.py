@@ -7,7 +7,6 @@ Handles CSV upload, automatic matching, and manual review of unmatched transacti
 from decimal import Decimal
 
 from django.contrib import messages
-from django.core.exceptions import ValidationError
 from django.db import transaction as db_transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -20,7 +19,6 @@ from django.views.generic.edit import FormMixin
 from ..import_forms import BankStatementUploadForm, TransactionMatchForm
 from ..models import (
     BankTransaction,
-    ClientAlias,
     CompanyExpense,
     CompanyWithdrawal,
     ExpenseCategoryRule,
@@ -28,6 +26,12 @@ from ..models import (
 )
 from ..utils import BankStatementImporter, build_counterparty_key
 from ..utils.bank_import import amounts_match
+from ..utils.bank_matching import (
+    InvoiceNotPayableError,
+    create_payer_alias,
+    payer_needs_alias,
+    record_payment,
+)
 from ..utils.bank_review_helpers import annotate_review_rows, paid_invoice_matches
 from .crud_mixins import PracticeScopedListView
 
@@ -397,27 +401,23 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             return redirect(redirect_url)
 
         try:
-            with db_transaction.atomic():
-                invoice.status = "paid"
-                invoice.paid_date = transaction.transaction_date
-                invoice.save()
-
-                transaction.matched_invoice = invoice
-                transaction.match_confidence = "exact"
-                transaction.processed = True
-                transaction.save()
-        except ValidationError as exc:
-            messages.error(
-                request,
-                _("Invoice %(number)s could not be marked as paid: %(error)s")
-                % {"number": invoice.invoice_number, "error": " ".join(exc.messages)},
-            )
-            return redirect(redirect_url)
+            record_payment(transaction, [invoice], confidence="exact")
+        except InvoiceNotPayableError as exc:
+            return self._refuse_unpayable(request, exc, redirect_url)
 
         messages.success(
             request,
             _("Transaction automatically linked to %(number)s and marked as paid.")
             % {"number": invoice.invoice_number},
+        )
+        return redirect(redirect_url)
+
+    @staticmethod
+    def _refuse_unpayable(request, error: InvoiceNotPayableError, redirect_url):
+        messages.error(
+            request,
+            _("Invoice %(number)s could not be marked as paid: %(error)s")
+            % {"number": error.invoice.invoice_number, "error": " ".join(error.reasons)},
         )
         return redirect(redirect_url)
 
@@ -444,29 +444,10 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             bulk_note = _("Combined payment for: %(numbers)s") % {"numbers": invoice_numbers}
             notes = f"{bulk_note}\n{notes}" if notes else bulk_note
 
-        # All-or-nothing: a transaction recorded as matched while one of its
-        # invoices failed validation would vanish from review with the
-        # invoice still unpaid.
         try:
-            with db_transaction.atomic():
-                for inv in invoice_list:
-                    inv.status = "paid"
-                    inv.paid_date = transaction.transaction_date
-                    inv.save()
-
-                transaction.matched_invoice = first_invoice
-                transaction.match_confidence = "manual"
-                transaction.processed = True
-                if notes:
-                    transaction.notes = notes
-                transaction.save()
-        except ValidationError as exc:
-            messages.error(
-                request,
-                _("Invoice %(number)s could not be marked as paid: %(error)s")
-                % {"number": inv.invoice_number, "error": " ".join(exc.messages)},
-            )
-            return redirect(redirect_url)
+            record_payment(transaction, invoice_list, confidence="manual", notes=notes)
+        except InvoiceNotPayableError as exc:
+            return self._refuse_unpayable(request, exc, redirect_url)
 
         if create_alias and transaction.payer_name and first_invoice:
             self._maybe_create_alias(request, transaction, first_invoice, "import")
@@ -488,14 +469,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
 
     def _maybe_create_alias(self, request, transaction, invoice, context: str) -> None:
         """Create a ClientAlias for the transaction's payer name if it differs from the client."""
-        if not (transaction.payer_name and invoice.client.full_name):
-            return
-        if transaction.payer_name.lower().strip() == invoice.client.full_name.lower().strip():
-            return
-        if ClientAlias.objects.filter(
-            client=invoice.client,
-            alias_name__iexact=transaction.payer_name,
-        ).exists():
+        if not payer_needs_alias(transaction, invoice):
             return
 
         if context == "confirm":
@@ -517,11 +491,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
                 % {"name": transaction.payer_name, "code": invoice.client.client_code},
             )
 
-        ClientAlias.objects.create(
-            client=invoice.client,
-            alias_name=transaction.payer_name,
-            notes=notes,
-        )
+        create_payer_alias(transaction, invoice, notes)
 
 
 class BankFinancialReviewView(PracticeScopedListView):
