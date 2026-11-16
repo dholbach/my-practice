@@ -33,25 +33,18 @@ from ..models.clinical import (
     MoodTag,
 )
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
+from ..utils.session_log_helpers import (
+    find_or_create_session,
+    is_session_billed,
+    parse_duration,
+    set_session_duration,
+)
 from ..utils.view_helpers import safe_next
-
-# A whole day: room for intensive or workshop days, while keeping out typos and values
-# that would overflow the integer column. The duration inputs use the same max.
-MAX_SESSION_MINUTES = 24 * 60
 
 
 def _get_scoped_client(request, pk):
     """Get a practice-scoped client or 404."""
     return get_object_or_404(Client.objects.for_current_practice(request), pk=pk)
-
-
-def _parse_duration(raw: str | None) -> int | None:
-    """Return the duration in minutes, or None unless it is 1 to MAX_SESSION_MINUTES."""
-    try:
-        minutes = int((raw or "").strip())
-    except ValueError:
-        return None
-    return minutes if 0 < minutes <= MAX_SESSION_MINUTES else None
 
 
 def _session_log_choices(request, default_type: str) -> tuple[str | None, list[str]]:
@@ -116,7 +109,7 @@ def session_log_create(request, pk):
             messages.error(request, _("Invalid date."))
             return redirect("client_detail", pk=pk)
 
-        duration = _parse_duration(request.POST.get("duration", "60"))
+        duration = parse_duration(request.POST.get("duration", "60"))
         session_type, mood_tags = _session_log_choices(request, SessionLog.SessionType.STANDARD)
         if duration is None:
             messages.error(request, _("Invalid duration."))
@@ -125,22 +118,7 @@ def session_log_create(request, pk):
             messages.error(request, _("Invalid session type."))
             return redirect("client_detail", pk=pk)
 
-        # A client can have several sessions on one date (calendar import keys on
-        # date + time, and a reschedule can leave a cancelled twin behind), so attach
-        # to the first live one still without a log rather than get_or_create, which
-        # raises MultipleObjectsReturned.
-        same_day = Session.objects.filter(client=client, session_date=session_date).order_by(
-            "session_time", "pk"
-        )
-        live = same_day.filter(cancelled=False)
-        pool = live if live.exists() else same_day
-        session = pool.filter(log__isnull=True).first() or pool.first()
-        if session is None:
-            session = Session.objects.create(
-                client=client,
-                session_date=session_date,
-                duration=duration,
-            )
+        session = find_or_create_session(client, session_date, duration)
 
         # Prevent duplicate logs
         if hasattr(session, "log"):
@@ -224,23 +202,21 @@ def session_log_edit(request, client_pk, log_pk):
             SupervisionItem.objects.create(client=client, content=supervision_question)
 
         duration_str = request.POST.get("duration", "").strip()
-        new_duration = _parse_duration(duration_str) if duration_str else None
+        new_duration = parse_duration(duration_str) if duration_str else None
         if duration_str and new_duration is None:
             messages.warning(request, _("Invalid duration."))
-        elif new_duration is not None and new_duration != log.session.duration:
-            # session.duration feeds the session count and the GebüH fee of the invoice it is
-            # billed on, so it is frozen once billed, as in session_duration_edit.
-            if log.session.invoice_items.exists():
-                messages.warning(
-                    request,
-                    _(
-                        "The duration was not changed: this session has already been billed. "
-                        "Remove the invoice item first."
-                    ),
-                )
-            else:
-                log.session.duration = new_duration
-                log.session.save(update_fields=["duration"])
+        elif (
+            new_duration is not None
+            and new_duration != log.session.duration
+            and not set_session_duration(log.session, new_duration)  # False: already billed
+        ):
+            messages.warning(
+                request,
+                _(
+                    "The duration was not changed: this session has already been billed. "
+                    "Remove the invoice item first."
+                ),
+            )
 
         messages.success(request, _("Session log updated."))
         return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
@@ -474,7 +450,7 @@ def session_duration_edit(request, pk, session_pk):
     """
     client = _get_scoped_client(request, pk)
     session = get_object_or_404(Session, pk=session_pk, client=client)
-    if session.invoice_items.exists():
+    if is_session_billed(session):
         messages.error(
             request,
             _(
@@ -484,12 +460,11 @@ def session_duration_edit(request, pk, session_pk):
             % {"date": session.session_date.strftime("%d.%m.%Y")},
         )
         return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
-    new_duration = _parse_duration(request.POST.get("duration"))
+    new_duration = parse_duration(request.POST.get("duration"))
     if new_duration is None:
         messages.error(request, _("Invalid duration."))
     else:
-        session.duration = new_duration
-        session.save(update_fields=["duration"])
+        set_session_duration(session, new_duration)  # billed sessions were turned away above
         messages.success(
             request,
             _("Session duration updated to %(min)s min.") % {"min": new_duration},
