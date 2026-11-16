@@ -806,8 +806,9 @@ The scan checklist below is the manual half.
 For whoever runs a review, or briefs agents for one. The command is long, so redirect it
 to a file; add `--verbose` or steps 5–7 print nothing but their header.
 
-- **"✅ OK" in the closing summary only means the step's exit code was 0.** Steps 4–7 exit 0
-  whatever they found, so read their detail, not the summary.
+- **"✅ OK" in the closing summary only means the step's exit code was 0.** Steps 4, 6 and 7
+  exit 0 whatever they found, and step 5 fails only when a test does, so read their detail,
+  not the summary.
 - In a captured run the tools' raw output comes first and the numbered headers and summary
   come after it, so a section's findings are not under its header.
 - `--no-tests` skips step 5; `⏭️` marks a tool that isn't installed, shown as "skipped" and
