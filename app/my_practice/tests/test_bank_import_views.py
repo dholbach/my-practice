@@ -626,6 +626,14 @@ class BankExpenseReviewViewTest(BankImportViewBase):
         response = self.http.get(reverse("bank_expense_review"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "my_practice/bank_expense_review.html")
+        self.assertContains(response, "Ausgabe Ref")
+        self.assertContains(response, "Vermieter")
+        self.assertNotContains(response, "Auto-Entnahme")
+
+    def test_empty_state_when_nothing_is_pending(self):
+        response = self.http.get(reverse("bank_expense_review"))
+        self.assertContains(response, "expense-empty-state")
+        self.assertContains(response, "Es gibt keine unzugeordneten negativen Transaktionen.")
 
     def test_group_creates_expense(self):
         trans = self._make_expense_transaction()
@@ -822,6 +830,25 @@ class BankWithdrawalReviewViewTest(BankImportViewBase):
         response = self.http.get(reverse("bank_withdrawal_review"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "my_practice/bank_withdrawal_review.html")
+        self.assertContains(response, "Entnahme")
+        self.assertContains(response, "Praxisinhaber")
+
+    def test_card_names_the_linked_withdrawal(self):
+        trans = self._make_withdrawal_transaction()
+        trans.linked_withdrawal = CompanyWithdrawal.objects.create(
+            practice=self.practice,
+            date=trans.transaction_date,
+            amount=Decimal("500.00"),
+            description="Entnahme",
+            category="salary",
+        )
+        trans.save()
+        response = self.http.get(reverse("bank_withdrawal_review"))
+        self.assertContains(response, "Auto-Entnahme:")
+
+    def test_empty_state_when_nothing_is_pending(self):
+        response = self.http.get(reverse("bank_withdrawal_review"))
+        self.assertContains(response, "Es gibt keine ausstehenden automatisch erkannten Entnahmen.")
 
     def test_group_creates_withdrawal(self):
         trans = self._make_withdrawal_transaction()
