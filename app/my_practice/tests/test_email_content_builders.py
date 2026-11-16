@@ -529,7 +529,7 @@ class PaymentReminderContentTest(EmailContentBuilderTestBase):
         self.assertIn(f"Gesamtbetrag offen: {format_currency_de(Decimal('270.50'))}", body)
         self.assertIn("Test Bank: DE00 0000 0000 0000 0000 00", body)
         self.assertIn("BIC: TESTDEXX", body)
-        self.assertIn("Liebe Grüße,\n-- \nViele Grüße\nAnna Schmidt", body)
+        self.assertIn("Liebe Grüße,\n\n-- \nViele Grüße\nAnna Schmidt", body)
 
     def test_english_uses_singular_for_one_invoice(self):
         subject, body = get_payment_reminder_email_content(
