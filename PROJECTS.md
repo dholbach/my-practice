@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-15 — First refactoring review**: dropped unused `InvoiceQuerySet`, `stat_card`, seven dead CSS classes and a dead form widget; the Ghostscript recipe is built once in `file_processing.py`, PDF generation moved from `api_views` to `utils/pdf_generation.py`, seven view tests share `create_test_practice`, and `recalculate_invoice_total` is now `Invoice.recalculate_and_save()`. A second round removed six unused helpers in `utils/` and fixed the stale `payments_app` pre-commit excludes. The rest is tracked in #602.
-- **2026-11-16 — Inline scripts moved out of templates**: the analytics page's charts, tabs and filters now live in `static/js/analytics_charts.js` and `analytics_page.js`, fed by JSON blocks and `data-*` labels, with Node tests. The remaining page scripts (invoice create/edit items, client documents and tags, the two small charts, the expense receipts list) followed, so only `base.html` still has inline scripts; about a dozen others moved the same way on 11-15. The `scripts/` files are now all in `docs/operations/SCRIPTS.md`, and the keyboard scripts share one `isTyping` (`typing_target.js`).
+- **2026-11-15/16 — Two refactoring reviews**: every liability they found is fixed or accepted with a reason. Page scripts moved to `static/js` (only `base.html` keeps inline scripts); the bank review, inquiry analytics and session-log rules moved from the views to `utils/`; one invoice PDF template for both languages; one AJAX error shape; a client's revenue in a period now counts the payment date. The ledger is in `~/dev/refactors/`.
+- **2026-11-16 — v0.13.0 released**: next week on the This Week widget, the revenue-by-payment-date, bank-order and calendar-fetch fixes, and the refactors above. No migrations.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

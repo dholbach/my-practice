@@ -2,6 +2,26 @@
 
 Major features and milestones in chronological order.
 
+## 2026-11-16 — v0.13.0 minor release
+
+The This Week widget looks ahead once the week is over, a few quiet bugs are fixed, and the code from two refactoring reviews lands: page scripts out of templates, the bank review and session-log rules out of the views, one invoice PDF template.
+
+**Upgrading:** download the new `prod.py` (`./prod.py update` prints the command), then run `./prod.py update`. No migrations, no dependency changes; `docker-compose.prod.yml` is unchanged apart from the version. On the dev stack, `./dev.py restart --force` rebuilds the development image on Node 26.
+
+- **Feature — next week on the dashboard**: the This Week widget switches to next week once the last session of the current week is past.
+- **Fix — client revenue by payment date**: a client's revenue in a period (analytics, clients tab) counted invoices by issue date while every other revenue figure counts the payment date. An invoice issued in December and paid in January showed as December revenue there and as January revenue elsewhere. Month and quarter views of per-client revenue move; year and all-time views barely do.
+- **Fix — combined bank payments keep a stable order**: invoices of one date came back from the match form in whatever order the database chose, which decided which invoice a combined payment was linked to and how its note read. The invoice number now breaks the tie.
+- **Fix — a calendar API error fails the fetch run**: `fetch_calendar_events` logged the error and exited 0, so a persistent outage never showed up as a failure. It now carries on with the other practices and exits with an error at the end.
+- **Fix — no bare `-- ` on payment reminders**: a practice without a signature sent a reminder ending in a dangling delimiter.
+- **Refactor — page scripts in `static/js`**: the inline scripts of the analytics page (charts, tabs, filters), invoice create/edit items, client documents and tags, calendar import and approval queue, tax pages, inquiry and client detail pages are modules with Node tests, fed by JSON blocks and `data-*` attributes. Only `base.html` keeps inline scripts (theme and privacy before first paint). One `isTyping` now serves the command palette and the keyboard shortcuts; the palette's `/` key is also ignored inside a contenteditable parent, as the shortcuts already were.
+- **Refactor — one invoice PDF template**: `invoice_pdf.html` replaces the German and English copies and takes a `lang`. Old and new rendered byte-identical HTML over about 300 combinations of language, tax note, logo, signature, address, birth date and GebüH blocks.
+- **Refactor — one error shape for AJAX endpoints**: the calendar, client and tag views answer errors with `{"success": false, "error": …}` through `json_error()`; the API and tax views still use the bare `{"error": …}`.
+- **Refactor — rules out of the views**: inquiry analytics (`utils/inquiry_analytics.py`), session-log rules (`utils/session_log_helpers.py`), the bank review's invoice matching, payment recording and alias rule (`utils/bank_review_helpers.py`, `utils/bank_matching.py`, one `amounts_match()` for the cent tolerance), the payment-reminder and cancellation email text, the PDF generators and one holiday-set helper. Behaviour is unchanged.
+- **Refactor — dead code**: the unused `InvoiceQuerySet`, `stat_card` tag, seven CSS classes, a form widget for a field that does not exist, and duplicated email-signature and calendar-pagination code.
+- **Tests**: shared `create_test_practice`/`create_test_client` builders in more files, new tests for each moved piece, and the prod update tests no longer create the real data directories on the machine that runs them. 2,255 tests.
+- **Docs**: `docs/operations/SCRIPTS.md` lists every file in `scripts/`; `CODE_STRUCTURE.md` has the new modules.
+- **Chore**: the development image uses Node 26 like the CSS build stage.
+
 ## 2026-11-14 — v0.12.0 minor release
 
 Dev containers that can't edit the source or read local secrets, a `prod.py` that creates its data directories as the right user, and two small interface changes.
