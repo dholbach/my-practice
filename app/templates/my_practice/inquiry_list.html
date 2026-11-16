@@ -297,15 +297,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script nonce="{{ csp_nonce }}">
-MPChart.init('inquiryMonthlyChart', function(canvas) {
-    const data = JSON.parse(document.getElementById('inquiry-monthly-data').textContent);
-    MPChart.bar(canvas, {
-        labels: data.labels,
-        monthNames: canvas.dataset.monthNames.split(','),
-        lanes: data.lanes,
-        series: [{ label: canvas.dataset.seriesLabel, data: data.counts, color: 'chart1' }]
-    });
-});
-</script>
+<script src="{% static 'js/inquiry_chart.js' %}"></script>
 {% endblock %}

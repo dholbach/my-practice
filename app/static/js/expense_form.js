@@ -64,7 +64,16 @@
         });
     }
 
+    // The receipts list is rendered with the form's other fields; show it in the
+    // placeholder inside the receipts card instead.
+    function moveExistingReceipts() {
+        const list = document.getElementById("receipts-existing");
+        const placeholder = document.getElementById("receipts-existing-placeholder");
+        if (list && placeholder) placeholder.replaceWith(list);
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
+        moveExistingReceipts();
         const dropzone = document.getElementById("receipt-dropzone");
         if (dropzone) initDropzone(dropzone);
     });

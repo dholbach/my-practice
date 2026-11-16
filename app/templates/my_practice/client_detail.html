@@ -671,18 +671,8 @@
 <script src="{% static 'js/client_detail_tabs.js' %}"></script>
 
 {% if monthly_sessions %}
-<script nonce="{{ csp_nonce }}">
-MPChart.init('sessionTimeline', function(canvas) {
-    const months = [{% for item in monthly_sessions %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}];
-    const hours = [{% for item in monthly_sessions %}{{ item.hours|js_number }}{% if not forloop.last %},{% endif %}{% endfor %}];
-    MPChart.bar(canvas, {
-        labels: months,
-        suffix: ' h',
-        decimals: 1,
-        series: [{ data: hours, color: 'chart2' }]
-    });
-});
-</script>
+<script type="application/json" id="session-timeline-data">[{% for item in monthly_sessions %}{"month": "{{ item.month|escapejs }}", "hours": {{ item.hours|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+<script src="{% static 'js/session_timeline.js' %}"></script>
 {% endif %}
 
 {% endblock %}
