@@ -368,6 +368,46 @@ class DetectFinancialRecordTest(TestCase):
         self.assertEqual(result["record"].category, "other")
 
 
+class PrivateAccountAndKeywordHelperTest(TestCase):
+    """The two rules detect_and_create_financial_record and ingest_transaction share."""
+
+    def setUp(self):
+        self.practice = _make_practice(slug="helpers-private", private_bank_account=PRIVATE_IBAN)
+        self.importer = _make_importer(self.practice, [])
+
+    def test_the_private_iban_as_payer_counts_however_it_is_spaced_or_cased(self):
+        self.assertTrue(
+            self.importer._is_private_account("de73 2004 0060 0056 7890 00", "Entnahme")
+        )
+
+    def test_the_private_iban_inside_the_reference_counts(self):
+        reference = "Rueckzahlung von DE73 2004 0060 0056 7890 00 Danke"
+        self.assertTrue(self.importer._is_private_account("", reference))
+
+    def test_another_iban_does_not(self):
+        self.assertFalse(
+            self.importer._is_private_account("DE89370400440532013000", "Miete August")
+        )
+
+    def test_without_a_private_account_nothing_counts(self):
+        practice = _make_practice(slug="helpers-no-private")
+        importer = _make_importer(practice, [])
+        self.assertFalse(importer._is_private_account(PRIVATE_IBAN, PRIVATE_IBAN))
+
+    def test_a_keyword_is_found_whatever_the_case(self):
+        importer = self.importer
+        self.assertTrue(
+            importer._has_keyword("Unternehmerlohn Oktober", importer.WITHDRAWAL_KEYWORDS)
+        )
+        self.assertTrue(importer._has_keyword("FEHLBUCHUNG", importer.CORRECTION_KEYWORDS))
+
+    def test_a_keyword_of_the_other_list_or_none_is_not(self):
+        importer = self.importer
+        self.assertFalse(importer._has_keyword("Fehlbuchung", importer.WITHDRAWAL_KEYWORDS))
+        self.assertFalse(importer._has_keyword("Miete August", importer.CORRECTION_KEYWORDS))
+        self.assertFalse(importer._has_keyword("Entnahme", []))
+
+
 class BuildCounterpartyKeyTest(TestCase):
     def test_iban_takes_priority(self):
         key = build_counterparty_key("DE89 3704 0044 0532 0130 00", "Some Name")

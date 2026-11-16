@@ -91,6 +91,26 @@ class BankStatementImporter:
         """Normalize IBAN by removing spaces and uppercasing."""
         return iban.replace(" ", "").upper()
 
+    def _is_private_account(self, payer_iban: str, reference: str) -> bool:
+        """True if the practice's private account is the payer or is named in the reference.
+
+        Banks embed IBANs in the reference text as well as in the payer field, so both
+        count. Always False when no private account is configured.
+        """
+        return bool(
+            self.private_iban
+            and (
+                self._normalize_iban(payer_iban) == self.private_iban
+                or self.private_iban in self._normalize_iban(reference)
+            )
+        )
+
+    @staticmethod
+    def _has_keyword(reference: str, keywords: list[str]) -> bool:
+        """True if any of the (lowercase) keywords occurs in the reference, ignoring case."""
+        reference_lower = reference.lower()
+        return any(keyword in reference_lower for keyword in keywords)
+
     @classmethod
     def for_account(cls, practice, account_iban: str) -> "BankStatementImporter":
         """
@@ -287,26 +307,17 @@ class BankStatementImporter:
         Returns:
             Dictionary with type and created record, or None if not auto-created
         """
-        reference_lower = reference.lower()
         abs_amount = abs(amount)
 
         # IBAN-based detection: if the private account is configured and the
         # transaction goes to/from it (via payer_iban field OR mention in reference
         # text), it's treated as a private-account transaction.
-        iban_match = bool(
-            self.private_iban
-            and (
-                self._normalize_iban(payer_iban) == self.private_iban
-                or self.private_iban in self._normalize_iban(reference)
-            )
-        )
+        iban_match = self._is_private_account(payer_iban, reference)
 
         # Keyword sub-classification — used to assign category regardless of how
         # the withdrawal was detected (IBAN or fallback).
-        salary_keyword_hit = any(keyword in reference_lower for keyword in self.WITHDRAWAL_KEYWORDS)
-        correction_keyword_hit = any(
-            keyword in reference_lower for keyword in self.CORRECTION_KEYWORDS
-        )
+        salary_keyword_hit = self._has_keyword(reference, self.WITHDRAWAL_KEYWORDS)
+        correction_keyword_hit = self._has_keyword(reference, self.CORRECTION_KEYWORDS)
 
         # Keyword fallback: only fires when no private IBAN is configured, to avoid
         # false positives on client payments that mention salary-related words.
@@ -515,8 +526,9 @@ class BankStatementImporter:
         matched_invoice = None
 
         if is_private_contribution:
-            reference_lower = parsed["reference"].lower()
-            correction_keyword_hit = any(kw in reference_lower for kw in self.CORRECTION_KEYWORDS)
+            correction_keyword_hit = self._has_keyword(
+                parsed["reference"], self.CORRECTION_KEYWORDS
+            )
             # Positive transactions from private IBAN with a correction keyword
             # (e.g. "Fehlbuchung") are bank errors, not real contributions.
             if correction_keyword_hit:
@@ -645,14 +657,8 @@ class BankStatementImporter:
 
         # IBAN-based capital contribution detection takes priority over name matching.
         # Check both the payer_iban field AND the reference text (bank embeds IBANs there).
-        payer_iban_normalized = self._normalize_iban(parsed["payer_iban"])
-        reference_normalized = self._normalize_iban(parsed["reference"])
-        is_private_contribution = bool(
-            self.private_iban
-            and (
-                payer_iban_normalized == self.private_iban
-                or self.private_iban in reference_normalized
-            )
+        is_private_contribution = self._is_private_account(
+            parsed["payer_iban"], parsed["reference"]
         )
 
         if parsed["amount"] < 0 and self._handle_negative_row(parsed, skip_negatives):
