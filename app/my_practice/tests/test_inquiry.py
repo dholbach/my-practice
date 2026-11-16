@@ -17,7 +17,7 @@ from my_practice.models import (
     Practice,
     UserPractice,
 )
-from my_practice.views.inquiry_views import _monthly_chart, _open_inquiry_ageing
+from my_practice.utils.inquiry_analytics import monthly_chart, open_inquiry_ageing
 
 
 def _make_user_and_practice(username="testuser"):
@@ -363,7 +363,7 @@ class InquiryChartTestCase(TestCase):
         _make_inquiry(self.practice, inquiry_date=date(2026, 4, 2))
         _make_inquiry(self.practice, inquiry_date=date(2026, 4, 20))
         _make_inquiry(self.practice, inquiry_date=date(2025, 10, 31))  # before the window
-        chart = _monthly_chart(self._qs(), self.practice, self.today)
+        chart = monthly_chart(self._qs(), practice=self.practice, today=self.today)
         self.assertEqual(len(chart["labels"]), 12)
         self.assertEqual(chart["labels"][0], "11/25")
         self.assertEqual(chart["labels"][-1], "10/26")
@@ -386,7 +386,7 @@ class InquiryChartTestCase(TestCase):
             end_date=date(2024, 12, 31),
             description="Long gone",
         )
-        lanes = _monthly_chart(self._qs(), self.practice, self.today)["lanes"]
+        lanes = monthly_chart(self._qs(), practice=self.practice, today=self.today)["lanes"]
         self.assertEqual([lane["label"] for lane in lanes], ["Directory", "Ads"])
         # Started before the window and still running: spans the whole axis.
         self.assertEqual((lanes[0]["from"], lanes[0]["to"]), (-0.5, 11.5))
@@ -397,7 +397,7 @@ class InquiryChartTestCase(TestCase):
         _, other = _make_user_and_practice(username="other")
         _make_inquiry(other, inquiry_date=date(2026, 5, 1))
         MarketingPeriod.objects.create(practice=other, start_date=date(2026, 1, 1), description="X")
-        chart = _monthly_chart(self._qs(), self.practice, self.today)
+        chart = monthly_chart(self._qs(), practice=self.practice, today=self.today)
         self.assertEqual(sum(chart["counts"]), 0)
         self.assertEqual(chart["lanes"], [])
 
@@ -415,7 +415,7 @@ class InquiryChartTestCase(TestCase):
             intro_date=date(2026, 10, 28),  # still ahead
         )
         _make_inquiry(self.practice, status=InquiryStatus.CONVERTED)
-        rows = _open_inquiry_ageing(self._qs(), self.today)
+        rows = open_inquiry_ageing(self._qs(), self.today)
         self.assertEqual([row["inquiry"] for row in rows], [waiting, booked])
         self.assertEqual(rows[0]["days"], 79)
         self.assertEqual(rows[0]["step_date"], date(2026, 8, 3))

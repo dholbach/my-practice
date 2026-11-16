@@ -70,7 +70,7 @@ app/my_practice/
 │   ├── email_views.py         # Email compose + send (invoice, reminder, contract, …)
 │   ├── expense_views.py       # Expense CRUD + list
 │   ├── focus_queue_views.py   # Focus Queue (P-050) — unified manual + materialized task list
-│   ├── inquiry_views.py       # Lead tracking + funnel analytics
+│   ├── inquiry_views.py       # Lead tracking (analytics: utils/inquiry_analytics.py)
 │   ├── billing_views.py       # Billing overview + monthly batch billing
 │   ├── invoice_views.py       # Invoice CRUD
 │   ├── operational_views.py   # Operational checklist
@@ -112,6 +112,7 @@ app/my_practice/
 │   ├── gebueh_helpers.py           # GebüH block building shared by PDF + invoice detail
 │   ├── google_calendar.py          # Google Calendar API wrapper
 │   ├── heatmap_utils.py            # Session heatmap generation
+│   ├── inquiry_analytics.py        # build_inquiry_analytics() — funnel, time in stage, sources, trend
 │   ├── invoice_filter_helper.py    # InvoiceFilterHelper
 │   ├── invoice_helpers.py          # get_next_invoice_number()
 │   ├── pdf_generation.py           # Invoice/contract/intake/questionnaire PDFs as bytes (WeasyPrint)
@@ -228,7 +229,7 @@ Weekly capacity is no longer hard-coded at 2023-08-01. The `CapacityPeriod` mode
 | `bank_import_views.py` | CSV import + manual review | `_fetch_invoice_maps()` batch helper; stored `total` |
 | `tax_views.py` | Tax summary, quarters, workday audit | `TaxYearContextBuilder`; `available_data_years()` |
 | `analytics_views.py` | Revenue & session analytics | `AnalyticsDashboardBuilder` |
-| `inquiry_views.py` | Lead pipeline | Funnel analytics, email templates, client code suggester |
+| `inquiry_views.py` | Lead pipeline | Inquiry list, convert flow, email templates (funnel analytics: `utils/inquiry_analytics.py`) |
 
 ## Support
 
