@@ -10,6 +10,7 @@ from decimal import Decimal
 import pypdf
 from django.contrib.auth import get_user_model
 from django.db import connection
+from django.test import Client as TestClient
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 
@@ -195,6 +196,27 @@ def link_user_to_practice(user, practice, is_owner=True):
         defaults={"is_owner": is_owner},
     )
     return user_practice
+
+
+def select_practice(http_client, practice):
+    """Make ``practice`` the current practice of a logged-in test client.
+
+    The practice middleware reads the slug from the session, so a test client that
+    has logged in still sees no data until this is called. The user also has to be
+    linked to the practice (``link_user_to_practice``).
+    """
+    session = http_client.session
+    session["current_practice_slug"] = practice.slug
+    session.save()
+
+
+def login_to_practice(user, practice=None, password="testpass123"):
+    """A test client logged in as ``user``, with ``practice`` selected when given."""
+    http_client = TestClient()
+    http_client.login(username=user.username, password=password)
+    if practice is not None:
+        select_practice(http_client, practice)
+    return http_client
 
 
 class PracticeTestMixin:

@@ -12,6 +12,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Client, Practice, Session, TimeOff, UserPractice
+from .test_helpers import select_practice
 
 
 class TimeOffCrudViewTest(TestCase):
@@ -33,9 +34,7 @@ class TimeOffCrudViewTest(TestCase):
         )
         self.client_instance.login(username="timeoffuser", password="12345")
 
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
         today = date.today()
         self.upcoming = TimeOff.objects.create(
@@ -148,9 +147,7 @@ class SendTimeOffNoticeViewTest(TestCase):
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance.login(username="noticeuser", password="12345")
 
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
         today = date.today()
         self.time_off = TimeOff.objects.create(

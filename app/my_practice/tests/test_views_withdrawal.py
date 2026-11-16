@@ -11,6 +11,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import CompanyWithdrawal, Practice, UserPractice
+from .test_helpers import select_practice
 
 
 class WithdrawalListViewTest(TestCase):
@@ -37,9 +38,7 @@ class WithdrawalListViewTest(TestCase):
         self.client_instance.login(username="testuser", password="12345")
 
         # Set practice in session for middleware
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
         # Create test withdrawals
         CompanyWithdrawal.objects.create(
@@ -109,9 +108,7 @@ class WithdrawalCreateViewTest(TestCase):
         self.client_instance = TestClient()
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance.login(username="testuser", password="12345")
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
     def test_withdrawal_create_get(self):
         """Test GET request to create withdrawal."""
@@ -210,9 +207,7 @@ class WithdrawalUpdateViewTest(TestCase):
         self.client_instance.login(username="testuser", password="12345")
 
         # Set practice in session for middleware
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
         self.withdrawal = CompanyWithdrawal.objects.create(
             practice=self.practice,
@@ -275,9 +270,7 @@ class WithdrawalDeleteViewTest(TestCase):
 
         self.client_instance.login(username="testuser", password="12345")
 
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
         self.withdrawal = CompanyWithdrawal.objects.create(
             practice=self.practice,
@@ -374,9 +367,7 @@ class WithdrawalCreateNextRedirectTest(TestCase):
         )
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance.login(username="wd_next", password="12345")
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
         self.back = f"{reverse('tax_quarter_overview')}?year=2026"
         self.data = {
             "description": "Tax prepayment Q1",

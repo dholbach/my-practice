@@ -18,6 +18,8 @@ from my_practice.models import (
     UserPractice,
 )
 
+from .test_helpers import select_practice
+
 User = get_user_model()
 
 
@@ -45,9 +47,7 @@ class ExpenseWithdrawalEdgeCasesTest(TestCase):
         self.client.login(username="testuser", password="12345")
 
         # Set practice in session for middleware
-        session = self.client.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client, self.practice)
 
     def test_expense_create_with_negative_amount(self):
         """Test that negative amounts are handled"""

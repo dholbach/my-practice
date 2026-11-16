@@ -32,6 +32,7 @@ from ..models import (
     UserPractice,
     allow_issued_invoice_writes,
 )
+from .test_helpers import select_practice
 
 PRACTICE_IBAN = "DE89370400440532013000"
 
@@ -98,9 +99,7 @@ class BankImportViewBase(TestCase):
 
         self.http = TestClient()
         self.http.login(username="bankuser", password="pass")
-        session = self.http.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.http, self.practice)
 
 
 # ── BankImportView ────────────────────────────────────────────────────────────

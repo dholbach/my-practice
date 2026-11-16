@@ -5,23 +5,13 @@ Tests for todo views.
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Client as ClientModel
 from ..models import PracticeTodo
 from ..tests.test_helpers import create_test_practice, link_user_to_practice
-
-
-def _setup_client(user, practice):
-    """Log in and set session practice slug. Returns TestClient."""
-    tc = TestClient()
-    tc.login(username=user.username, password="testpass123")
-    session = tc.session
-    session["current_practice_slug"] = practice.slug
-    session.save()
-    return tc
+from .test_helpers import login_to_practice
 
 
 class TodoCreateViewTest(TestCase):
@@ -31,7 +21,7 @@ class TodoCreateViewTest(TestCase):
         self.practice = create_test_practice(slug="todo-create-1")
         self.user = User.objects.create_user(username="todouser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
 
     def test_get_renders(self):
         response = self.tc.get(reverse("todo_create"))
@@ -102,7 +92,7 @@ class TodoUpdateViewTest(TestCase):
         self.practice = create_test_practice(slug="todo-update-1")
         self.user = User.objects.create_user(username="todouser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.todo = PracticeTodo.objects.create(
             practice=self.practice, title="Old Title", priority="low"
         )
@@ -131,7 +121,7 @@ class TodoDeleteViewTest(TestCase):
         self.practice = create_test_practice(slug="todo-delete-1")
         self.user = User.objects.create_user(username="todouser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.todo = PracticeTodo.objects.create(
             practice=self.practice, title="To Delete", priority="low"
         )
@@ -155,7 +145,7 @@ class TodoToggleCompleteTest(TestCase):
         self.practice = create_test_practice(slug="todo-toggle-1")
         self.user = User.objects.create_user(username="todouser5", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.todo = PracticeTodo.objects.create(
             practice=self.practice, title="Toggle Me", priority="medium"
         )

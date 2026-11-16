@@ -5,22 +5,12 @@ Tests for tag views.
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Client, ClientTag
 from ..tests.test_helpers import create_test_practice, link_user_to_practice
-
-
-def _setup_client(user, practice=None):
-    tc = TestClient()
-    tc.login(username=user.username, password="testpass123")
-    if practice:
-        session = tc.session
-        session["current_practice_slug"] = practice.slug
-        session.save()
-    return tc
+from .test_helpers import login_to_practice
 
 
 class TagListViewTest(TestCase):
@@ -30,7 +20,7 @@ class TagListViewTest(TestCase):
         self.practice = create_test_practice(slug="tag-list-1")
         self.user = User.objects.create_user(username="taguser", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         ClientTag.objects.create(name="follow-up", color="blue")
         ClientTag.objects.create(name="missing-docs", color="red")
 
@@ -53,7 +43,7 @@ class TagCreateViewTest(TestCase):
         self.practice = create_test_practice(slug="tag-create-1")
         self.user = User.objects.create_user(username="taguser2", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.client_obj = Client.objects.create(
             client_code="MM", full_name="Max Mustermann", practice=self.practice
         )
@@ -117,7 +107,7 @@ class TagUpdateViewTest(TestCase):
         self.practice = create_test_practice(slug="tag-update-1")
         self.user = User.objects.create_user(username="taguser3", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.tag = ClientTag.objects.create(name="old-tag-name", color="blue")
 
     def test_get_renders_with_data(self):
@@ -140,7 +130,7 @@ class TagDeleteViewTest(TestCase):
         self.practice = create_test_practice(slug="tag-delete-1")
         self.user = User.objects.create_user(username="taguser4", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.tag = ClientTag.objects.create(name="to-delete-tag", color="gray")
 
     def test_get_shows_confirmation(self):
@@ -161,7 +151,7 @@ class ClientAddRemoveTagTest(TestCase):
         self.practice = create_test_practice(slug="tag-api-1")
         self.user = User.objects.create_user(username="tagapi", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.client_obj = Client.objects.create(
             client_code="TG-1",
             full_name="Max Mustermann",
@@ -204,7 +194,7 @@ class GetAvailableTagsTest(TestCase):
         self.practice = create_test_practice(slug="tag-avail-1")
         self.user = User.objects.create_user(username="tagavail", password="testpass123")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
         self.tag = ClientTag.objects.create(name="available-tag", color="purple")
 
     def test_returns_tags_json(self):

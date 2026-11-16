@@ -32,7 +32,7 @@ from ..models import (
     allow_issued_invoice_writes,
 )
 from ..utils.tag_helpers import SESSION_LOG_MIN_DURATION
-from .test_helpers import make_pdf_bytes
+from .test_helpers import make_pdf_bytes, select_practice
 
 
 class ClientListViewTest(TestCase):
@@ -453,9 +453,7 @@ class ClientCreateViewTest(TestCase):
         self.client_instance = TestClient()
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance.login(username="testuser", password="testpass123")
-        session = self.client_instance.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_instance, self.practice)
 
     def test_client_create_loads(self):
         """Test that client create form loads."""
@@ -566,9 +564,7 @@ class SessionLogDurationThresholdTest(TestCase):
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.http = TestClient()
         self.http.login(username="duruser", password="testpass123")
-        session = self.http.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.http, self.practice)
 
         self.pat = Client.objects.create(
             client_code="DT1",
@@ -633,9 +629,7 @@ class SuggestClientCodeTest(TestCase):
         UserPractice.objects.create(user=self.user, practice=self.practice)
         self.client_browser = TestClient()
         self.client_browser.login(username="suggest_user", password="pw")
-        session = self.client_browser.session
-        session["current_practice_slug"] = self.practice.slug
-        session.save()
+        select_practice(self.client_browser, self.practice)
 
     def _get(self, name=""):
         return self.client_browser.get(reverse("suggest_client_code"), {"name": name})

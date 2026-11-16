@@ -12,16 +12,7 @@ from django.urls import reverse
 
 from ..models import Client, Invoice, Practice, UserPractice
 from ..tests.test_helpers import create_test_practice, link_user_to_practice
-
-
-def _setup_client(user, practice=None):
-    tc = TestClient()
-    tc.login(username=user.username, password="testpass123")
-    if practice:
-        session = tc.session
-        session["current_practice_slug"] = practice.slug
-        session.save()
-    return tc
+from .test_helpers import login_to_practice
 
 
 class PracticeSwitchTest(TestCase):
@@ -33,7 +24,7 @@ class PracticeSwitchTest(TestCase):
         self.practice2 = create_test_practice(slug="pswitch-2", name="Practice Two")
         link_user_to_practice(self.user, self.practice1)
         link_user_to_practice(self.user, self.practice2)
-        self.tc = _setup_client(self.user, self.practice1)
+        self.tc = login_to_practice(self.user, self.practice1)
 
     def test_switch_sets_practice_in_session(self):
         self.tc.post(reverse("practice_switch", args=[self.practice2.slug]))
@@ -162,7 +153,7 @@ class PracticeManagementViewTest(TestCase):
         self.user = User.objects.create_user(username="mgmtuser", password="testpass123")
         self.practice = create_test_practice(slug="pmgmt-1")
         link_user_to_practice(self.user, self.practice)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
 
     def test_get_lists_practices(self):
         response = self.tc.get(reverse("practice_management"))
@@ -237,8 +228,8 @@ class PracticeUpdateViewTest(TestCase):
         self.practice = create_test_practice(slug="pupdate-1")
         link_user_to_practice(self.owner, self.practice, is_owner=True)
         link_user_to_practice(self.other, self.practice, is_owner=False)
-        self.tc_owner = _setup_client(self.owner, self.practice)
-        self.tc_other = _setup_client(self.other, self.practice)
+        self.tc_owner = login_to_practice(self.owner, self.practice)
+        self.tc_other = login_to_practice(self.other, self.practice)
 
     def test_owner_can_get_edit_form(self):
         response = self.tc_owner.get(reverse("practice_edit", args=[self.practice.slug]))
@@ -300,7 +291,7 @@ class PracticeDeleteViewTest(TestCase):
         self.user = User.objects.create_user(username="delpuser", password="testpass123")
         self.practice = create_test_practice(slug="pdelete-1")
         link_user_to_practice(self.user, self.practice, is_owner=True)
-        self.tc = _setup_client(self.user, self.practice)
+        self.tc = login_to_practice(self.user, self.practice)
 
     def test_get_shows_confirmation(self):
         response = self.tc.get(reverse("practice_delete", args=[self.practice.slug]))
@@ -315,7 +306,7 @@ class PracticeDeleteViewTest(TestCase):
     def test_non_owner_cannot_delete(self):
         other = User.objects.create_user(username="nondelpuser", password="testpass123")
         link_user_to_practice(other, self.practice, is_owner=False)
-        tc_other = _setup_client(other, self.practice)
+        tc_other = login_to_practice(other, self.practice)
         response = tc_other.post(reverse("practice_delete", args=[self.practice.slug]))
         self.assertEqual(response.status_code, 302)
         self.practice.refresh_from_db()
