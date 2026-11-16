@@ -31,8 +31,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-15/16 — Two refactoring reviews**: every liability they found is fixed or accepted with a reason. Page scripts moved to `static/js` (only `base.html` keeps inline scripts); the bank review, inquiry analytics and session-log rules moved from the views to `utils/`; one invoice PDF template for both languages; one AJAX error shape; a client's revenue in a period now counts the payment date. The ledger is in `~/dev/refactors/`.
-- **2026-11-16 — v0.13.0 released**: next week on the This Week widget, the revenue-by-payment-date, bank-order and calendar-fetch fixes, and the refactors above. No migrations.
+- **2026-11-16 — Three refactoring reviews**: every liability they found is fixed or accepted with a reason (the ledger is in `~/dev/refactors/`, the third review's list is #639). Scripts moved out of the templates, the bank review, inquiry analytics and session-log rules moved out of the views, one invoice PDF template, `Invoice.mark_paid()` and `Invoice.Status` instead of four copies and 56 strings, one CSRF path for the page scripts, one file per view-test module.
+- **2026-11-16 — v0.13.1 released**: no features; one dashboard query fewer and the third review's refactors. v0.13.0 earlier the same day added next week on the This Week widget and the revenue-by-payment-date, bank-order and calendar-fetch fixes. No migrations.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

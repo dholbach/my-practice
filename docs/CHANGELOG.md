@@ -2,6 +2,21 @@
 
 Major features and milestones in chronological order.
 
+## 2026-11-16 — v0.13.1 patch release
+
+No new features: the dashboard asks the database less, and the third refactoring review's findings are fixed. Ten refactoring PRs, no migrations, no dependency changes.
+
+**Upgrading:** download the new `prod.py` (`./prod.py update` prints the command), then run `./prod.py update`. No migrations; `docker-compose.prod.yml` is unchanged apart from the version. The page scripts changed how they send the CSRF token (see below), so reload open pages once after the update.
+
+- **Fix — one query fewer on the dashboard**: the invoice-actions widget fetched the unpaid invoices twice on every render; the overdue list is now taken from the first result.
+- **Refactor — page scripts post through one helper**: tags, client documents (upload and delete), the invoice status, the tax note, the Steuerbescheid card and the in-place checklist swaps send their requests through `MPHttp.postForm`, with the CSRF token as the `X-CSRFToken` header and the form as a form-encoded body (`request.POST` reads them as before). Nothing else reads the token from the page or the cookie any more, which a new test keeps true.
+- **Refactor — one `Invoice.mark_paid()`**: the bank review, the bank importer, the invoice status endpoint and the admin "Mark as paid" action each set the status and the paid date by hand. A bank payment still sets the transaction's date; the other two still keep an existing paid date or use today.
+- **Refactor — invoice statuses are `Invoice.Status` members**: 56 bare strings (`"paid"`, `"sent"`, ...) in the revenue helpers, the analytics, the views and a few helpers; a new test fails on any new one.
+- **Refactor — analytics and client detail pages split**: one include per tab (`analytics_tab_*.html`, `client_detail_tab_*.html`), 698 and 678 lines down to 112 and 67. Old and new rendered the same HTML on 61 pages of the demo data.
+- **Refactor — the bank importer states the private-account and keyword rules once**, dead model code is gone (`ClientQuerySet` helpers, `InvoiceItem.is_free_form`, `ServiceType.get_name`, `PracticeTodo.is_snoozed`, `ClientTag.category_priority`), `make_from_email()` is public instead of a private import across views, and the invoice email view has one "already sent" guard.
+- **Tests**: the expense and tax view tests are one file each (ten duplicate tests dropped), `select_practice()` / `login_to_practice()` replace the repeated login block in 15 files, and new guardrails cover the status literals and the CSRF token. 2,276 tests.
+- **Chore**: `./dev.py manage` no longer special-cases `--odt-file` (the import command it served was removed in June).
+
 ## 2026-11-16 — v0.13.0 minor release
 
 The This Week widget looks ahead once the week is over, a few quiet bugs are fixed, and the code from two refactoring reviews lands: page scripts out of templates, the bank review and session-log rules out of the views, one invoice PDF template.
