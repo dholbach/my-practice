@@ -29,10 +29,12 @@ from ..utils.bank_import import amounts_match
 from ..utils.bank_matching import (
     InvoiceNotPayableError,
     create_payer_alias,
+    ignore_already_paid,
+    ignore_unmatched,
     payer_needs_alias,
     record_payment,
 )
-from ..utils.bank_review_helpers import annotate_review_rows, paid_invoice_matches
+from ..utils.bank_review_helpers import annotate_review_rows, review_page_stats
 from .crud_mixins import PracticeScopedListView
 
 
@@ -143,74 +145,16 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         import_results = self.request.session.pop("import_results", None)
         context["import_results"] = import_results
 
-        # Get statistics - only unprocessed transactions
-        stats = (
-            BankTransaction.objects.for_current_practice(self.request)
-            .filter(
-                processed=False,
-            )
-            .values("match_confidence")
-        )
-
-        confidence_counts: dict[str, int] = {}
-        for stat in stats:
-            conf = stat["match_confidence"]
-            confidence_counts[conf] = confidence_counts.get(conf, 0) + 1
-
-        context["stats"] = confidence_counts
-
-        # Count negative amounts (expenses) for review - includes auto-expense
-        expense_count = (
-            BankTransaction.objects.for_current_practice(self.request)
-            .filter(
-                match_confidence__in=[
-                    BankTransaction.Confidence.UNMATCHED,
-                    BankTransaction.Confidence.AUTO_EXPENSE,
-                    BankTransaction.Confidence.IGNORED,
-                ],
-                processed=False,
-                amount__lt=0,
-            )
-            .count()
-        )
-        context["expense_count"] = expense_count
-
-        # Count auto-withdrawal transactions for review
-        withdrawal_count = (
-            BankTransaction.objects.for_current_practice(self.request)
-            .filter(
-                match_confidence=BankTransaction.Confidence.AUTO_WITHDRAWAL,
-                processed=False,
-            )
-            .count()
-        )
-        context["withdrawal_count"] = withdrawal_count
-
-        # Get recently matched transactions for reference (last 10)
-        recently_matched = (
-            BankTransaction.objects.for_current_practice(self.request)
-            .filter(
-                match_confidence__in=[
-                    BankTransaction.Confidence.EXACT,
-                    BankTransaction.Confidence.FUZZY,
-                    BankTransaction.Confidence.MANUAL,
-                ],
-                matched_invoice__isnull=False,
-            )
-            .select_related("matched_invoice", "matched_invoice__client")
-            .order_by("-imported_at")[:10]
-        )
-        context["recently_matched"] = recently_matched
+        context.update(review_page_stats(practice=self.request.current_practice))
 
         # Count transactions with already-paid invoices (for bulk ignore button).
         # Use self.object_list (the full, unpaginated queryset from get_queryset()),
         # not context["transactions"] (the paginated page) — otherwise the banner and
         # count are wrong on any page beyond the first, and don't match what
         # _handle_bulk_ignore_paid actually acts on.
-        paid_invoice_count = 0
-        for trans in self.object_list:
-            if hasattr(trans, "matching_paid_invoice") and trans.matching_paid_invoice:
-                paid_invoice_count += 1
+        paid_invoice_count = sum(
+            1 for trans in self.object_list if getattr(trans, "matching_paid_invoice", None)
+        )
         context["paid_invoice_count"] = paid_invoice_count
 
         return context
@@ -272,26 +216,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
     # ── bulk action handlers ──────────────────────────────────────────────────
 
     def _handle_bulk_ignore_paid(self, request):
-        transactions = list(
-            BankTransaction.objects.for_current_practice(request)
-            .filter(
-                match_confidence=BankTransaction.Confidence.UNMATCHED,
-                processed=False,
-            )
-            .select_related("matched_invoice")
-        )
-
-        ignored_count = 0
-        for trans, paid_invoice in paid_invoice_matches(
-            transactions, practice=request.current_practice
-        ):
-            trans.match_confidence = BankTransaction.Confidence.IGNORED
-            trans.processed = True
-            trans.notes = _("Auto-ignored: invoice %(number)s already paid") % {
-                "number": paid_invoice.invoice_number
-            }
-            trans.save()
-            ignored_count += 1
+        ignored_count = ignore_already_paid(practice=request.current_practice)
 
         if ignored_count > 0:
             messages.success(
@@ -308,15 +233,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         return redirect("bank_review")
 
     def _handle_ignore_all_expenses(self, request):
-        updated = (
-            BankTransaction.objects.for_current_practice(request)
-            .filter(
-                match_confidence=BankTransaction.Confidence.UNMATCHED,
-                processed=False,
-                amount__lt=0,
-            )
-            .update(match_confidence=BankTransaction.Confidence.IGNORED)
-        )
+        updated = ignore_unmatched(practice=request.current_practice, expenses_only=True)
         messages.success(
             request,
             ngettext(
@@ -329,14 +246,7 @@ class BankReviewView(FormMixin, PracticeScopedListView):
         return redirect("bank_review")
 
     def _handle_ignore_all_unmatched(self, request):
-        updated = (
-            BankTransaction.objects.for_current_practice(request)
-            .filter(
-                match_confidence=BankTransaction.Confidence.UNMATCHED,
-                processed=False,
-            )
-            .update(match_confidence=BankTransaction.Confidence.IGNORED)
-        )
+        updated = ignore_unmatched(practice=request.current_practice, expenses_only=False)
         messages.success(
             request,
             ngettext(

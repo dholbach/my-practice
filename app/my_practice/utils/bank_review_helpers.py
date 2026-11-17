@@ -1,5 +1,7 @@
 """Read-side helpers for the bank review page: which unmatched transactions already have an invoice."""
 
+from collections import Counter
+
 from ..models import BankTransaction, Client, ClientAlias, Invoice
 from ..models.base import PracticeScope, scope_to_practice
 from .bank_import import amounts_match
@@ -80,3 +82,33 @@ def paid_invoice_matches(
         if invoice:
             pairs.append((transaction, invoice))
     return pairs
+
+
+def review_page_stats(*, practice: PracticeScope) -> dict:
+    """The counts and recent matches the review page shows beside the unmatched list.
+
+    Only unprocessed transactions are counted. ``expense_count`` includes
+    auto-detected and ignored expenses, so a negative amount stays reachable from
+    the expense tab until it is processed.
+    """
+    Confidence = BankTransaction.Confidence
+    all_rows = scope_to_practice(BankTransaction.objects.all(), practice)
+    unprocessed = all_rows.filter(processed=False)
+    return {
+        "stats": dict(Counter(unprocessed.values_list("match_confidence", flat=True))),
+        "expense_count": unprocessed.filter(
+            match_confidence__in=[
+                Confidence.UNMATCHED,
+                Confidence.AUTO_EXPENSE,
+                Confidence.IGNORED,
+            ],
+            amount__lt=0,
+        ).count(),
+        "withdrawal_count": unprocessed.filter(match_confidence=Confidence.AUTO_WITHDRAWAL).count(),
+        "recently_matched": all_rows.filter(
+            match_confidence__in=[Confidence.EXACT, Confidence.FUZZY, Confidence.MANUAL],
+            matched_invoice__isnull=False,
+        )
+        .select_related("matched_invoice", "matched_invoice__client")
+        .order_by("-imported_at")[:10],
+    }

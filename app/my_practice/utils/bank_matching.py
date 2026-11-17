@@ -1,11 +1,14 @@
-"""Recording a bank payment against invoices, and remembering payer names as aliases."""
+"""Recording a bank payment against invoices, remembering payer names as aliases, and bulk-ignoring transactions."""
 
 from collections.abc import Sequence
 
 from django.core.exceptions import ValidationError
 from django.db import transaction as db_transaction
+from django.utils.translation import gettext as _
 
 from ..models import BankTransaction, ClientAlias, Invoice
+from ..models.base import PracticeScope, scope_to_practice
+from .bank_review_helpers import paid_invoice_matches
 
 
 class InvoiceNotPayableError(Exception):
@@ -70,3 +73,37 @@ def create_payer_alias(
     return ClientAlias.objects.create(
         client=invoice.client, alias_name=bank_transaction.payer_name, notes=notes
     )
+
+
+def _unmatched(practice: PracticeScope):
+    return scope_to_practice(BankTransaction.objects.all(), practice).filter(
+        match_confidence=BankTransaction.Confidence.UNMATCHED, processed=False
+    )
+
+
+def ignore_already_paid(*, practice: PracticeScope) -> int:
+    """Ignore and process the unmatched transactions whose invoice is already paid.
+
+    Returns how many were ignored.
+    """
+    transactions = list(_unmatched(practice).select_related("matched_invoice"))
+    pairs = paid_invoice_matches(transactions, practice=practice)
+    for transaction, paid_invoice in pairs:
+        transaction.match_confidence = BankTransaction.Confidence.IGNORED
+        transaction.processed = True
+        transaction.notes = _("Auto-ignored: invoice %(number)s already paid") % {
+            "number": paid_invoice.invoice_number
+        }
+        transaction.save()
+    return len(pairs)
+
+
+def ignore_unmatched(*, practice: PracticeScope, expenses_only: bool) -> int:
+    """Ignore every unmatched transaction, or only the outgoing ones. Returns how many.
+
+    The rows stay unprocessed, so they remain on the expense tab for review.
+    """
+    unmatched = _unmatched(practice)
+    if expenses_only:
+        unmatched = unmatched.filter(amount__lt=0)
+    return unmatched.update(match_confidence=BankTransaction.Confidence.IGNORED)
