@@ -99,9 +99,13 @@ class Command(BaseCommand):
             # One practice's failure (bad data, a database error) must not
             # skip the practices after it; the run still fails at the end.
             try:
-                self.fetch_for_practice(
+                fetched = self.fetch_for_practice(
                     practice, token.calendar_id, dry_run, forced_days, future_days
                 )
+                # An expired token fetches nothing; a scheduled run must not
+                # report that as success.
+                if fetched is False:
+                    failed.append(practice.name)
             except Exception as e:
                 logger.exception("Calendar fetch failed for practice %s", practice.pk)
                 self.stdout.write(self.style.ERROR(f"  ✗ Failed: {e}"))
@@ -128,7 +132,7 @@ class Command(BaseCommand):
                     "       the 7-day cap, then re-run ./dev.py calendar-auth once."
                 )
             )
-            return
+            return False
 
         if not calendar_id:
             self.stdout.write(
