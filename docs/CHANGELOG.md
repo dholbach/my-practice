@@ -2,6 +2,25 @@
 
 Major features and milestones in chronological order.
 
+## 2026-11-17 — v0.14.0 minor release
+
+The production container no longer runs as root, error messages stop showing exception text, and the fourth refactoring review's 26 liabilities are closed. One small feature: every command that changes data accepts `--dry-run`.
+
+**Upgrading:** download the new `prod.py` **and** `docker-compose.prod.yml` (`./prod.py update` prints both commands; the compose file changed this time), then run `./prod.py update`, which takes a backup before restarting. No migrations; two dependency patch bumps. A new one-shot `fix-ownership` service runs before Django starts and hands the data directories to `MY_PRACTICE_UID`:`MY_PRACTICE_GID` (default 1000:1000, see `.env.example`); set them in `.env` first if your user is not 1000. On the dev stack: `./dev.py restart --force`.
+
+- **Hardening — the production Django container runs unprivileged**: it ran as root with default capabilities while parsing uploads with Ghostscript and Pillow. It now runs as `MY_PRACTICE_UID:MY_PRACTICE_GID` with all capabilities dropped and `no-new-privileges`, like the dev stack. The networkless `fix-ownership` one-shot fixes volumes that earlier root containers created. `dev.py smoke` runs the same way, with throwaway data volumes.
+- **Fix — no exception text in messages**: invoice create and edit, the Google Calendar authorisation and import, email sending, PDF creation and the questionnaire redirect put the exception into a message the user sees (SMTP and driver errors can name hosts and paths, one carried the server's data directory). They log it and show a generic message pointing at the server log. A ratchet test fails on any new `str(e)` in a message.
+- **Fix — new practices were saved inactive**: the create form hides the `is_active` checkbox, so the POST omitted it and the practice dropped out of the list.
+- **Fix — contrast**: about 25 literal text colours (overdue and alert text, negative bank amounts, the home-office and holiday badges, the time-off table, muted text) were between 1.9:1 and 4.1:1 against one theme's surface. They use the theme-aware badge colours now, 5.5:1 or better in both. The unbilled and missing-log pills in the client notes have a dark variant.
+- **Fix — withdrawal delete page**: the amount goes through the currency filter like every other amount instead of `{{ amount }} €`.
+- **Chore — image build**: the workflow refuses a tag that does not match `version.py`, so a mistyped manual run cannot move `:latest`; the delete-confirmation pages and the bank review's expense and withdrawal pages share their markup.
+- **Feature — `--dry-run` everywhere**: `clearbanktransactions --dry-run` shows the preview and stops; `tidy_inquiries` and `check_media` accept it explicitly and refuse to combine it with `--apply` / `--delete-orphans`. Nothing was renamed and no default changed, so the scheduled jobs are unaffected. A test lists the data-changing commands.
+- **Perf — admin change lists**: sessions, clients and invoices fetch related rows once; a test checks that four rows cost the same number of queries as one.
+- **Refactor — fourth refactoring review**: all 26 liabilities fixed or accepted with the reasoning recorded. Among them: `InvoiceForm` requires the request and scopes every client lookup to its practice (it fell back to every practice's clients without one); the five longest management commands are split into steps with tests written first; `prod.py` restore and setup are split and the restore guards are tested; one confirmation prompt for the commands that delete rows; `backup.sh` and `restore.sh` share one `COMPOSE_FILE` lookup; bank match confidences and client languages are enums, not strings; the revenue aggregate, month arithmetic and the email signature each exist once; `CHECKLIST_ITEMS` moved to `utils/checklist_items.py` (the file to edit for your own checklist, `CUSTOMISATION.md` says so).
+- **Tests**: `create_test_user` and more `create_test_practice` uses, the three biggest test files split by topic, the calendar fetch tests share one harness, and new tests for the restore guards, the shell wrappers, the compression run, the deletion cases and the privacy of the inquiry job's output.
+- **Docs**: how to read `./dev.py review`, the `--dry-run` convention, the module map.
+- **Deps**: Python patch group (3 packages) and `types-markdown`.
+
 ## 2026-11-16 — v0.13.1 patch release
 
 No new features: the dashboard asks the database less, and the third refactoring review's findings are fixed. Ten refactoring PRs, no migrations, no dependency changes.

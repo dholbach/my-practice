@@ -31,7 +31,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 ## 🔍 Recent Activity
 
 - **2026-11-17 — Review 4 liabilities, closed out (#670–#687)**: 21 of 26 closed or accepted, several already fixed by earlier PRs. New: image workflow checks the tag against `version.py`; `includes/detail_row.html`; brand-gradient tokens; `create_test_user`; `InvoiceForm` requires a request and scopes every client lookup; `_confirm.confirm_deletion`; `utils/checklist_items.py`; `scripts/_compose_file.sh`; `prod.py` restore and setup split; `test_views_client` and `test_bank_import_views` split by topic; the five management commands' `handle()` split, each with characterisation tests first. Left: dry-run flag spellings (interface decision), redundant-index check (needs `EXPLAIN`), remaining hex in `tailwind.css`, `test_models` and `test_views_analytics` setUps, private-name calls in the calendar tests.
-- **2026-11-16 — Fourth refactoring review (#656)**: the areas the third one left unread, seven agents, every finding re-checked. Do-now batch in #655: an admin badge that hid four states, a `prod.py` placeholder-as-secret, dead admin actions, forms and parameters, unwrapped form labels. First batch of liabilities in #656: bank match confidences through `BankTransaction.Confidence` with a ratchet test, one `_aggregate_stats`, one `.badge-warning`. 26 liabilities in the ledger.
+- **2026-11-17 — v0.14.0**: unprivileged production container (new `fix-ownership` one-shot, compose file changed), no exception text in messages, contrast fix, `--dry-run` on every data-changing command, review 4 closed out. No migrations.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
