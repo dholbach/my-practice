@@ -19,7 +19,7 @@ services:
   # earlier root containers (and Docker, for a missing bind source) left behind.
   # The only service here that can change ownership. It has no network.
   fix-ownership:
-    image: ghcr.io/dholbach/my-practice:v0.13.1
+    image: ghcr.io/dholbach/my-practice:v0.14.0
     restart: "no"
     network_mode: none
     user: "0:0"
@@ -43,7 +43,7 @@ services:
         find /app/staticfiles /app/media /my-practice-data ! -group ${MY_PRACTICE_GID:-1000} -exec chgrp -h ${MY_PRACTICE_GID:-1000} {} +
 
   django:
-    image: ghcr.io/dholbach/my-practice:v0.13.1
+    image: ghcr.io/dholbach/my-practice:v0.14.0
     container_name: my-practice-django
     restart: unless-stopped
     # Parses uploads (Ghostscript, Pillow) next to real data: no root, no
