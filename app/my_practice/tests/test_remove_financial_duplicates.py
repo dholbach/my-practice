@@ -175,3 +175,57 @@ class RemoveFinancialDuplicatesKeepsBookingsTest(RemoveFinancialDuplicatesTest):
         self.assertFalse(CompanyExpense.objects.filter(id=plain.id).exists())
         self.assertTrue(ExpenseReceipt.objects.filter(expense=with_receipt).exists())
         self.assertIn("1 receipt(s)", output)
+
+
+class RemoveFinancialDuplicatesDefinitionTest(TestCase):
+    """What counts as a duplicate: same practice, date, amount and description."""
+
+    def setUp(self):
+        self.practice = create_test_practice(
+            name="Test Practice", slug="dup-def", email="test@practice.example"
+        )
+
+    def _expense(self, practice=None, *, amount="50.00", description="Rent"):
+        return CompanyExpense.objects.create(
+            practice=practice or self.practice,
+            date=date(2025, 1, 1),
+            amount=Decimal(amount),
+            description=description,
+            category="other",
+        )
+
+    def _run(self, *args):
+        out = StringIO()
+        call_command("remove_financial_duplicates", "--yes", *args, stdout=out)
+        return out.getvalue()
+
+    def test_identical_records_of_two_practices_are_not_duplicates(self):
+        other = create_test_practice(name="Other Practice", slug="dup-other")
+        self._expense()
+        self._expense(other)
+
+        output = self._run()
+
+        self.assertIn("No duplicates found", output)
+        self.assertEqual(CompanyExpense.objects.count(), 2)
+
+    def test_a_different_amount_or_description_is_not_a_duplicate(self):
+        self._expense()
+        self._expense(amount="50.01")
+        self._expense(description="Rent, January")
+
+        self._run()
+
+        self.assertEqual(CompanyExpense.objects.count(), 3)
+
+    def test_dry_run_reports_what_would_go_and_the_kept_id(self):
+        keep = self._expense()
+        self._expense()
+        self._expense()
+        out = StringIO()
+
+        call_command("remove_financial_duplicates", "--dry-run", stdout=out)
+
+        self.assertIn("Would delete 2 expenses and 0 withdrawals", out.getvalue())
+        self.assertIn(f"Would keep ID {keep.pk}, delete 2", out.getvalue())
+        self.assertEqual(CompanyExpense.objects.count(), 3)
