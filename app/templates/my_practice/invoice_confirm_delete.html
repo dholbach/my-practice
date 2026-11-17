@@ -8,32 +8,17 @@
 {% block warning_subtext %}<p class="text-sm mt-2 text-text-secondary">{% trans "This action cannot be undone." %}</p>{% endblock %}
 
 {% block detail_rows %}
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Invoice number" %}:</span>
-    <span class="font-semibold">{{ invoice.invoice_number }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Client" %}:</span>
-    <span class="font-semibold sensitive-data">{{ invoice.client.full_name }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Date" %}:</span>
-    <span class="font-semibold">{{ invoice.invoice_date|date:"d.m.Y" }}</span>
-</div>
+{% include 'includes/detail_row.html' with label=_("Invoice number") value=invoice.invoice_number %}
+{% include 'includes/detail_row.html' with label=_("Client") value=invoice.client.full_name value_class="sensitive-data" %}
+{% include 'includes/detail_row.html' with label=_("Date") value=invoice.invoice_date|date:"d.m.Y" %}
 <div class="flex justify-between p-3 border-b border-border last:border-b-0">
     <span class="font-medium text-text-secondary">{% trans "Status" %}:</span>
     <span class="font-semibold">
         {% include 'includes/invoice_status_badge.html' with invoice=invoice static_only=True %}
     </span>
 </div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Total amount" %}:</span>
-    <span class="font-semibold text-lg text-link">{{ invoice.total|currency }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Number of items" %}:</span>
-    <span class="font-semibold">{{ invoice.items.count }}</span>
-</div>
+{% include 'includes/detail_row.html' with label=_("Total amount") value=invoice.total|currency value_class="text-lg text-link" %}
+{% include 'includes/detail_row.html' with label=_("Number of items") value=invoice.items.count %}
 {% endblock %}
 
 {% block cancel_url %}{% if next %}{{ next }}{% else %}{% url 'invoice_detail' invoice.pk %}{% endif %}{% endblock %}

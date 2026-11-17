@@ -1,0 +1,7 @@
+{% load i18n %}
+{# One label/value line of a delete-confirmation summary. #}
+{# Params: label, value, value_class (optional: extra classes for the value). #}
+<div class="flex justify-between p-3 border-b border-border last:border-b-0">
+    <span class="font-medium text-text-secondary">{{ label }}:</span>
+    <span class="font-semibold{% if value_class %} {{ value_class }}{% endif %}">{{ value }}</span>
+</div>

@@ -7,22 +7,10 @@
 {% block warning_text %}{% trans "Are you sure you want to delete this expense?" %}{% endblock %}
 
 {% block detail_rows %}
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Date" %}:</span>
-    <span class="font-semibold">{{ expense.date|date:"d.m.Y" }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Description" %}:</span>
-    <span class="font-semibold">{{ expense.description }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Category" %}:</span>
-    <span class="font-semibold">{{ expense.get_category_display }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Amount" %}:</span>
-    <span class="font-semibold text-lg text-link">{{ expense.amount|currency }}</span>
-</div>
+{% include 'includes/detail_row.html' with label=_("Date") value=expense.date|date:"d.m.Y" %}
+{% include 'includes/detail_row.html' with label=_("Description") value=expense.description %}
+{% include 'includes/detail_row.html' with label=_("Category") value=expense.get_category_display %}
+{% include 'includes/detail_row.html' with label=_("Amount") value=expense.amount|currency value_class="text-lg text-link" %}
 {% endblock %}
 
 {% block cancel_url %}{% url 'expense_list' %}{% endblock %}
