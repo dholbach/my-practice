@@ -574,7 +574,8 @@ def cmd_i18n(args):
 
 
 def cmd_quality(args):
-    """Run code quality checks (ruff format, ruff lint, Tailwind CSS build, tests)
+    """Run code quality checks (ruff format, ruff lint, dev.py/prod.py helper and
+    requirements sync, Tailwind CSS build, tests)
 
     Options:
         --no-tests: Skip test execution
@@ -582,9 +583,8 @@ def cmd_quality(args):
         --only-tests: Run only tests
         --verbose: Show full output (default: minimal)
 
-    Note: vulture and mypy are skipped by default due to many false positives.
-          Run them manually if needed:
-            docker exec my-practice-tools python -m vulture my_practice
+    Note: vulture runs in `./dev.py review`, mypy only in CI (strict modules).
+          Run mypy by hand if needed:
             docker exec my-practice-tools python -m mypy my_practice
     """
     results = []
@@ -1291,6 +1291,9 @@ def print_help():
     print("  test [args]          - Run tests (default: Django + JS)")
     print("  test --js-only       - Run only JavaScript tests (Node.js)")
     print("  test --django-only   - Run only Django tests")
+    print("  test --smart         - Run only the tests affected by changes (testmon)")
+    print("  test --fast          - Full Django suite, parallel and failfast")
+    print("  test --no-keepdb     - Recreate the test database")
     print("  test-js              - Run JavaScript tests (Node.js-based)")
     print("  manage <cmd> [args]  - Run Django management commands")
     print("  python [args]        - Run Python in the container")
@@ -1308,18 +1311,21 @@ def print_help():
     print("  i18n [sub]           - Extract/compile translations (makemessages + compilemessages)")
     print("  lint                 - Fast lint check: ruff format + ruff check (no tests, ~seconds)")
     print("  lint --verbose       - Lint with full output")
-    print("  quality              - Full pre-release check: lint + full test suite (~minutes)")
+    print("  quality              - Full pre-release check: lint + Tailwind build + test suite")
     print("  quality --no-tests   - Run quality checks without tests")
+    print("  quality --only-format - Run only ruff format + lint (and the sync checks)")
     print("  quality --only-tests - Run only tests")
     print("  quality --verbose    - Show full output from all tools")
     print("  review               - Monthly codebase health check (dead code, CVEs, coverage)")
     print("  review --full        - Quarterly review (adds complexity analysis)")
     print("  review --verbose     - Show full tool output during review")
+    print("  review --no-tests    - Skip the test-coverage step (faster, no DB required)")
     print("  format               - Auto-format code with ruff format")
     print("  calendar-auth        - Open the calendar import page to re-authorize an expired token")
     print(
         "  smoke [vX.Y.Z]       - Boot a released GHCR image with a throwaway DB and verify it serves"
     )
+    print("  smoke --no-pull      - Use the image already on this machine")
     print("  smoke --keep         - Leave the smoke stack running for manual inspection")
     print("  smoke --down         - Tear down a smoke stack left running by --keep")
     print("  install-hooks        - Install the pre-commit hooks (run once after clone)")
