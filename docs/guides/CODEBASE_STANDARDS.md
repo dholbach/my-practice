@@ -706,6 +706,7 @@ grow them.
 | `test_exception_text_not_shown.py` | Inside `except ... as e`, the exception is not passed to `messages.*`, `json_error`, `JsonResponse` or `add_error`; log it and show a fixed message. Cannot see text copied into a variable first |
 | `test_currency_formatting.py` | Money goes through `format_currency_de` / `|currency`, never a hand-rolled `:,.2f` |
 | `test_release_guardrails.py` | No model change without its migration; the three version strings agree |
+| `test_migration_lint.py` | A migration that drops, renames or tightens something the previous release still uses carries a `# contract:` comment; the initial migration is exempt |
 | `test_repo_mount_masks.py` | The dev container's `/repo` mount hides `.env`, `.git` and personal notes; no secret-shaped file is readable through it (dev container only) |
 
 `test_release_guardrails.py` covers the two failure modes that only surface
@@ -713,6 +714,16 @@ after the fact: the suite builds its schema from the models, so a missing
 migration stays green until `migrate` runs against a real database; and
 `version.py` / `prod.py` / `docker-compose.prod.yml` drifting apart is what
 makes `./prod.py update` behave surprisingly.
+
+`test_migration_lint.py` is the reason a drop, a rename, a NOT NULL column
+without `db_default` or a column made NOT NULL needs a `# contract: <what no
+release reads any more, and since when>` comment. The suite builds its schema
+from the models, so such a migration stays green until someone runs the previous
+image against a database that already migrated: a rollback after a bad update.
+Do the change in two releases: expand first (add the column nullable or with a
+`db_default`, keep the old one), contract once nothing reads the old name. It
+sees operations, not `RunPython` bodies, and it cannot tell whether a `# contract:`
+claim is true.
 
 ### What CI checks that a local run does not
 
