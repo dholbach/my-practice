@@ -61,6 +61,24 @@ def _summary(request, default: str) -> str:
     return request.POST.get("summary", default)[:max_length]
 
 
+_NARRATIVE_FIELDS = ("content", "interventions", "therapist_reflection", "next_session_ideas")
+
+
+def _narrative(request, current: SessionLog | None = None) -> dict[str, str]:
+    """The posted narrative fields; a field not posted keeps ``current``'s value (or "")."""
+    return {
+        field: request.POST.get(field, getattr(current, field) if current else "")
+        for field in _NARRATIVE_FIELDS
+    }
+
+
+def _add_supervision_question(request, client) -> None:
+    """File the posted supervision question, if any, as an open item for the client."""
+    question = request.POST.get("supervision_question", "").strip()
+    if question:
+        SupervisionItem.objects.create(client=client, content=question)
+
+
 # ─── ClientProfile ─────────────────────────────────────────────────────────────
 
 
@@ -125,15 +143,10 @@ def session_log_create(request, pk):
             session_type=session_type,
             mood_tags=mood_tags,
             summary=_summary(request, ""),
-            content=request.POST.get("content", ""),
-            interventions=request.POST.get("interventions", ""),
-            therapist_reflection=request.POST.get("therapist_reflection", ""),
-            next_session_ideas=request.POST.get("next_session_ideas", ""),
+            **_narrative(request),
         )
 
-        supervision_question = request.POST.get("supervision_question", "").strip()
-        if supervision_question:
-            SupervisionItem.objects.create(client=client, content=supervision_question)
+        _add_supervision_question(request, client)
 
         messages.success(
             request,
@@ -184,17 +197,11 @@ def session_log_edit(request, client_pk, log_pk):
         log.session_type = session_type or log.session_type
         log.mood_tags = mood_tags
         log.summary = _summary(request, log.summary)
-        log.content = request.POST.get("content", log.content)
-        log.interventions = request.POST.get("interventions", log.interventions)
-        log.therapist_reflection = request.POST.get(
-            "therapist_reflection", log.therapist_reflection
-        )
-        log.next_session_ideas = request.POST.get("next_session_ideas", log.next_session_ideas)
+        for field, value in _narrative(request, log).items():
+            setattr(log, field, value)
         log.save()
 
-        supervision_question = request.POST.get("supervision_question", "").strip()
-        if supervision_question:
-            SupervisionItem.objects.create(client=client, content=supervision_question)
+        _add_supervision_question(request, client)
 
         duration_str = request.POST.get("duration", "").strip()
         new_duration = parse_duration(duration_str) if duration_str else None
