@@ -36,6 +36,6 @@ whether a file was resolved from the repo root or against the container's
 
 ## Update 2026-11-17
 
-The image and CI now run Python 3.15. `target-version` stays `py314` in the app: it is the oldest
-syntax the app uses (the bracketless `except A, B:` form arrived in 3.14), not the interpreter that runs it.
-The decision above is unchanged.
+The image and CI run Python 3.15, and the app's `target-version` is now `py315`. The formatter's
+bracketless `except A, B:` form needs 3.14 or later, so the reasoning above holds unchanged for
+the repo-root files and their `py310` floor.

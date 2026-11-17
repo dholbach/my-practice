@@ -94,7 +94,7 @@ Each exists because the bug it prevents is invisible in review. Worked examples:
 
 - **English** for all identifiers, comments, docstrings, filenames, URL slugs and docs (P-038). When touching a file with German comments/identifiers, translate them in the same commit.
 - Relative imports for app code (`from ..models import Client`).
-- Python 3.13 type hints: `str | None`, `list[str]`, `dict[str, int]`.
+- Python 3.15 type hints: `str | None`, `list[str]`, `dict[str, int]`.
 - `select_related` for FK access, `prefetch_related` for reverse relations, `.only()` when building maps.
 - Docstrings on public functions/classes; comments explain *why*. No dead or commented-out code.
 - Formatting: ruff (`./dev.py lint`).
