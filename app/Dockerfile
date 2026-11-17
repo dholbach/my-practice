@@ -27,9 +27,9 @@ FROM python:3.15-slim AS python-builder
 WORKDIR /app
 
 # gcc, libffi-dev, zlib1g-dev, libjpeg-dev, libopenjp2-7-dev: needed to compile
-# Pillow from source on Python 3.14 (no pre-built cp314 wheels available yet
-# for all platforms). psycopg[binary] and cryptography ship prebuilt wheels,
-# so no libpq-dev is needed here.
+# Pillow from source where no pre-built wheel matches the platform and Python
+# version. psycopg[binary] and cryptography ship prebuilt wheels, so no
+# libpq-dev is needed here.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libffi-dev \
