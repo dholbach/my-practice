@@ -1,16 +1,16 @@
 """
 Add fillable AcroForm text fields to the contract PDF.
 
-Uses pdfplumber (already a dependency) to locate sig-label positions
-dynamically, then overlays text fields with pypdf — so no hardcoded
-pixel coordinates and no recalibration needed if the template changes.
+Uses pypdf to locate sig-label positions dynamically, then overlays text
+fields with it — so no hardcoded pixel coordinates and no recalibration
+needed if the template changes.
 """
 
 import io
+import math
 from typing import cast
 
-import pdfplumber
-from pypdf import PdfReader, PdfWriter
+from pypdf import PageObject, PdfReader, PdfWriter
 from pypdf.generic import (
     ArrayObject,
     BooleanObject,
@@ -31,6 +31,9 @@ _SIG_LINE_GAP_PT = 0.1 * 28.346  # ≈ 2.83
 # Page margins from @page rule (2 cm left/right, 1.5 cm bottom).
 _LEFT_MARGIN_PT = 2.0 * 28.346  # ≈ 56.69
 _RIGHT_EDGE_PT = 595.28 - _LEFT_MARGIN_PT  # ≈ 538.59  (A4 width - right margin)
+
+# Used when a font carries no /Descent: a typical sans-serif (Liberation Sans: -0.212 em).
+_DEFAULT_DESCENT = -0.212
 
 
 def _classify_sig_label(first: str, next_text: str) -> tuple[str, str] | None:
@@ -55,16 +58,16 @@ def _build_field_spec(
     word: dict, kind: str, tooltip: str, page_num: int, page_height: float, mid_x: float
 ) -> dict:
     """Build a {page, name, tooltip, rect} spec for a sig-label word."""
-    # pdfplumber: y=0 at top, increases downward.
-    # pypdf:      y=0 at bottom, increases upward.
-    label_top_plumber = float(word["top"])
+    # word["top"] has y=0 at the page top and grows downward; the PDF rect has y=0
+    # at the bottom and grows upward.
+    label_top = float(word["top"])
 
     # The sig-line (0.8 cm) sits just above the label with a 0.1 cm gap.
-    field_bottom_plumber = label_top_plumber - _SIG_LINE_GAP_PT
-    field_top_plumber = field_bottom_plumber - _SIG_LINE_HEIGHT_PT
+    field_bottom = label_top - _SIG_LINE_GAP_PT
+    field_top = field_bottom - _SIG_LINE_HEIGHT_PT
 
-    y1 = page_height - field_bottom_plumber  # lower PDF y-coord
-    y2 = page_height - field_top_plumber  # upper PDF y-coord
+    y1 = page_height - field_bottom  # lower PDF y-coord
+    y2 = page_height - field_top  # upper PDF y-coord
 
     label_x = float(word["x0"])
     is_left = label_x < mid_x
@@ -75,6 +78,54 @@ def _build_field_spec(
     name = f"p{page_num + 1}_{kind}_{side}"
 
     return {"page": page_num, "name": name, "tooltip": tooltip, "rect": (x1, y1, x2, y2)}
+
+
+def _resolve(obj):
+    """The object behind an indirect reference, or ``obj`` itself."""
+    return obj.get_object() if hasattr(obj, "get_object") else obj
+
+
+def _font_descent(font_dict) -> float:
+    """The font's descent in em (negative), read from its descriptor.
+
+    WeasyPrint embeds Type0 fonts, whose descriptor sits on the descendant font.
+    """
+    node = _resolve(font_dict) if font_dict else {}
+    for _ in range(2):
+        descriptor = node.get("/FontDescriptor")
+        if descriptor is not None:
+            descent = _resolve(descriptor).get("/Descent")
+            return float(descent) / 1000 if descent is not None else _DEFAULT_DESCENT
+        descendants = node.get("/DescendantFonts")
+        if not descendants:
+            break
+        node = _resolve(_resolve(descendants)[0])
+    return _DEFAULT_DESCENT
+
+
+def _text_lines(page: PageObject) -> list[dict]:
+    """Every text chunk on the page as ``{text, x0, top}``, in points.
+
+    ``x0`` is the chunk's left edge and ``top`` the top of its glyph box measured
+    down from the page top: the baseline raised by the font size less its descent.
+    """
+    page_height = float(page.mediabox.height)
+    lines: list[dict] = []
+
+    def visit(text, cm, tm, font_dict, font_size):
+        text = text.strip()
+        if not text:
+            return
+        x = tm[4] * cm[0] + tm[5] * cm[2] + cm[4]
+        baseline_up = tm[4] * cm[1] + tm[5] * cm[3] + cm[5]
+        # The font size is in text space; scale it by the matrices' y axis.
+        scale = math.hypot(tm[2] * cm[0] + tm[3] * cm[2], tm[2] * cm[1] + tm[3] * cm[3])
+        size = float(font_size) * scale
+        glyph_top = baseline_up + size * (1 + _font_descent(font_dict))
+        lines.append({"text": text, "x0": x, "top": page_height - glyph_top})
+
+    page.extract_text(visitor_text=visit)
+    return lines
 
 
 def _detect_sig_fields(pdf_bytes: bytes) -> list[dict]:
@@ -91,26 +142,20 @@ def _detect_sig_fields(pdf_bytes: bytes) -> list[dict]:
     field_specs: list[dict] = []
     mid_x = (_LEFT_MARGIN_PT + _RIGHT_EDGE_PT) / 2  # ≈ 297.6
 
-    with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
-        for page_num, page in enumerate(pdf.pages):
-            page_height = float(page.height)
-            words = page.extract_words(x_tolerance=3, y_tolerance=3)
+    for page_num, page in enumerate(PdfReader(io.BytesIO(pdf_bytes)).pages):
+        page_height = float(page.mediabox.height)
+        for line in _text_lines(page):
+            if not line["text"].startswith("("):
+                continue
 
-            for i, word in enumerate(words):
-                first = word["text"]
-                if not first.startswith("("):
-                    continue
+            # Classify by the first two words of the line.
+            words = line["text"].split()
+            classified = _classify_sig_label(words[0], words[1] if len(words) > 1 else "")
+            if classified is None:
+                continue
+            kind, tooltip = classified
 
-                # Peek at next word to classify the label type.
-                next_text = words[i + 1]["text"] if i + 1 < len(words) else ""
-                classified = _classify_sig_label(first, next_text)
-                if classified is None:
-                    continue
-                kind, tooltip = classified
-
-                field_specs.append(
-                    _build_field_spec(word, kind, tooltip, page_num, page_height, mid_x)
-                )
+            field_specs.append(_build_field_spec(line, kind, tooltip, page_num, page_height, mid_x))
 
     return field_specs
 
