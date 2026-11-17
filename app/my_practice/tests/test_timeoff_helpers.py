@@ -11,6 +11,9 @@ from my_practice.utils.date_helpers import DateRangeHelper
 from my_practice.utils.timeoff_helpers import (
     calculate_timeoff_for_period,
     calculate_timeoff_for_year,
+    overlap,
+    workdays_by_type,
+    workdays_within,
 )
 
 from .test_helpers import create_test_practice
@@ -307,3 +310,41 @@ class CalculateTimeoffForPeriodTestCase(TestCase):
         self.assertEqual(entry["period_start"], date(2025, 8, 10))
         self.assertEqual(entry["period_end"], date(2025, 8, 20))
         self.assertEqual(entry["period_days"], 11)  # Aug 10-20
+
+
+class OverlapHelperTests(TestCase):
+    """overlap, workdays_within and workdays_by_type clamp a time-off to a period."""
+
+    def setUp(self):
+        # Mon 2025-08-04 to Sun 2025-08-17: ten workdays, fourteen days.
+        self.off = TimeOff(
+            title="Summer", type="vacation", start_date=date(2025, 8, 4), end_date=date(2025, 8, 17)
+        )
+
+    def test_overlap_clamps_to_the_period(self):
+        self.assertEqual(
+            overlap(self.off, date(2025, 8, 11), date(2025, 8, 31)),
+            (date(2025, 8, 11), date(2025, 8, 17)),
+        )
+
+    def test_overlap_is_none_when_the_period_is_missed(self):
+        self.assertIsNone(overlap(self.off, date(2025, 9, 1), date(2025, 9, 30)))
+
+    def test_workdays_within_counts_only_the_overlap(self):
+        self.assertEqual(workdays_within(self.off, date(2025, 8, 11), date(2025, 8, 31), set()), 5)
+
+    def test_workdays_within_skips_holidays(self):
+        self.assertEqual(
+            workdays_within(self.off, date(2025, 8, 4), date(2025, 8, 8), {date(2025, 8, 6)}), 4
+        )
+
+    def test_workdays_within_is_zero_without_overlap(self):
+        self.assertEqual(workdays_within(self.off, date(2025, 9, 1), date(2025, 9, 30), set()), 0)
+
+    def test_workdays_by_type_sums_entries_of_one_type(self):
+        entries = [
+            {"type": "vacation", "period_workdays": 3},
+            {"type": "sick", "period_workdays": 2},
+            {"type": "vacation", "period_workdays": 4},
+        ]
+        self.assertEqual(workdays_by_type(entries), {"vacation": 7, "sick": 2})

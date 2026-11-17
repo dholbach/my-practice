@@ -18,7 +18,7 @@ from ..models import CapacityPeriod, Session
 from ..models.base import PracticeScope, scope_to_practice
 from .date_helpers import DateRangeHelper
 from .practice_days import berlin_public_holidays_between
-from .timeoff_helpers import calculate_timeoff_for_period
+from .timeoff_helpers import calculate_timeoff_for_period, workdays_within
 
 
 def _get_capacity_periods(*, practice: PracticeScope) -> list[tuple[date, int]]:
@@ -342,14 +342,9 @@ def get_capacity_trends(
         working_days = DateRangeHelper.count_working_days(month_start, month_end, _holidays)
 
         # Time-off days: count actual non-holiday working days in each overlapping period
-        timeoff_days = 0
-        for t in timeoff_periods:
-            if t.start_date <= month_end and t.end_date >= month_start:
-                actual_start = max(t.start_date, month_start)
-                actual_end = min(t.end_date, month_end)
-                timeoff_days += DateRangeHelper.count_working_days(
-                    actual_start, actual_end, _holidays
-                )
+        timeoff_days = sum(
+            workdays_within(t, month_start, month_end, _holidays) for t in timeoff_periods
+        )
 
         available_working_days = max(0, working_days - timeoff_days)
 
