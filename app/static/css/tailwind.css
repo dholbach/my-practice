@@ -158,7 +158,7 @@
   /* ── common.css batch 3 (stat-cards, form-controls, utilities, tag colors) ── */
 
   /* Stat Cards */
-  .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 1.5rem; border-radius: 8px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border: 2px solid transparent; }
+  .stat-card { background: linear-gradient(135deg, var(--color-brand-start) 0%, var(--color-brand-end) 100%); color: #ffffff; padding: 1.5rem; border-radius: 8px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border: 2px solid transparent; }
   .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--color-shadow); }
   .stat-card.active { border-color: var(--color-link); background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }
   .stat-card.active h3, .stat-card.active .value, .stat-card.active .label, .stat-card.active .stat-value, .stat-card.active .stat-label { color: var(--color-text-primary) !important; text-shadow: none !important; }
@@ -306,7 +306,7 @@
 
   /* Form utilities — later definitions override invoice_forms versions in @layer */
   .form-container { max-width: 800px; margin: 0 auto; padding: 1.25rem; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
   .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
   .form-check { display: flex; align-items: center; gap: 0.5rem; }
   .form-check input[type="checkbox"], .form-check input[type="radio"] { width: 1.125rem; height: 1.125rem; cursor: pointer; }
@@ -465,7 +465,7 @@
   .type-indicator.chart-dot-8 { background: var(--color-chart-8); }
   .busiest-months li { display: grid; grid-template-columns: 52px 80px 1fr 52px 90px; align-items: center; gap: 0.75rem; padding: 0.5rem 0; }
   .seasonality-bar-track, .bar-track { height: 8px; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.06); }
-  .month-bar { height: 100%; background: linear-gradient(to right, #667eea, #764ba2); border-radius: 4px; min-width: 0; }
+  .month-bar { height: 100%; background: linear-gradient(to right, var(--color-brand-start), var(--color-brand-end)); border-radius: 4px; min-width: 0; }
   /* Year color palette — single source of truth via CSS custom props */
   .year-2026 { --year-color: #f59e0b; --year-text: #111; }
   .year-2025 { --year-color: #22c55e; --year-text: #111; }
@@ -519,12 +519,11 @@
   .client-table .badge-established { background: var(--color-success-bg);       color: var(--color-success); }
   .client-table .badge-dormant     { background: var(--color-badge-neutral-bg); color: var(--color-badge-neutral-text); }
   .client-table .badge-online      { background: var(--color-badge-indigo-bg);  color: var(--color-badge-indigo-text); }
-  .chart-wrapper { position: relative; width: 100%; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); }
   .chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; margin: 0; color: var(--color-text-secondary); }
   .timeoff-stat { text-align: center; padding: 1rem; background: var(--color-bg-secondary); border-radius: 8px; }
   .timeoff-stat-value { font-size: 2rem; font-weight: 700; color: var(--color-text-primary); }
   .timeoff-stat-label { font-size: 0.875rem; color: var(--color-text-secondary); margin-top: 0.5rem; }
-  .insights-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
+  .insights-section { background: linear-gradient(135deg, var(--color-brand-start) 0%, var(--color-brand-end) 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
   .insights-section h2 { margin-top: 0; color: white; }
   .insights-list { list-style: none; padding: 0; margin: 0; }
   .insights-list li { padding: 0.5rem 0 0.5rem 1.5rem; position: relative; }
@@ -543,7 +542,7 @@
   .hint-text { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.5rem; }
   .hint-paragraph { color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 1rem; }
   .busiest-months__month-name { min-width: 72px; color: var(--color-text-primary); }
-  .legend-line-swatch { width: 30px; height: 3px; background: linear-gradient(to right, #667eea, #764ba2); border-radius: 2px; }
+  .legend-line-swatch { width: 30px; height: 3px; background: linear-gradient(to right, var(--color-brand-start), var(--color-brand-end)); border-radius: 2px; }
   /* !important beats common.css's unlayered .chart-wrapper { height: 250px } */
   .chart-wrapper--xl     { height: 600px !important; padding: 2rem 1rem 5rem 3rem !important; overflow: visible !important; }
   .chart-wrapper--lg     { height: 500px !important; padding: 1.5rem 1rem 3rem 2.5rem !important; }
@@ -565,7 +564,7 @@
   .timeoff-table td:first-child { text-align: left; font-weight: 600; }
   .timeoff-table td.timeoff-table__muted { color: var(--color-text-secondary); }
   .timeoff-table__vacation { color: #48bb78; }
-  .timeoff-table__training { color: #667eea; }
+  .timeoff-table__training { color: var(--color-brand-start); }
   .timeoff-table__sick     { color: #f6ad55; }
 
   /* ── Client notes / clinical documentation (cn-* namespace) ── */
@@ -726,7 +725,7 @@
   .badge-current  { background: var(--color-success-bg); color: var(--color-success); }
 
   /* Progress bar */
-  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #48bb78 100%); transition: width 0.3s; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--color-brand-start) 0%, #48bb78 100%); transition: width 0.3s; }
 
   /* Empty states */
   .empty-state { padding: 3rem 1rem; }
@@ -1023,7 +1022,7 @@
      .btn is defined further down the file. At equal specificity the later rule
      wins, so the plain .btn-invoice-* forms lost to .btn's own background and the
      urgency colour-coding never rendered. */
-  .btn.btn-invoice-create  { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+  .btn.btn-invoice-create  { background: linear-gradient(135deg, var(--color-brand-start) 0%, var(--color-brand-end) 100%); color: white; }
   .btn.btn-invoice-urgent  { background: #dc2626; color: white; }
   .btn.btn-invoice-warning { background: #b45309; color: white; }
   .data-table a.invoice-link-primary   { color: var(--color-text-primary); text-decoration: none; font-weight: 600; }
@@ -1031,7 +1030,7 @@
   .empty-state-msg { padding: 2rem; }
   .doc-upload-hidden { display: none; }
   .btn-done     { background: #48bb78; color: #fff; }
-  .btn-complete { background: #667eea; color: #fff; }
+  .btn-complete { background: var(--color-brand-start); color: #fff; }
   .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   .contact-grid > * { min-width: 0; }
   .contact-grid-full { grid-column: span 2; }
@@ -1749,7 +1748,7 @@
   .queue-group-header__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
   .invoice-select { width: auto; font-size: 0.875rem; padding: 0.375rem 0.625rem; }
   .btn-import-group {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-brand-start) 0%, var(--color-brand-end) 100%);
     color: white;
     white-space: nowrap;
     border: none;
@@ -1936,11 +1935,6 @@
   .btn-due-today:hover { background: var(--color-link); color: white; }
 
   /* Invoice create/edit form formset — .formset-item/.deleted also driven by JS */
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
   .formset-container {
     margin-top: 2rem;
     padding: 1.5rem;
@@ -2678,6 +2672,11 @@
   /* ── Body gradient ───────────────────────────────────────────────── */
   --color-bg-gradient-start: #667eea;
   --color-bg-gradient-end:   #764ba2;
+
+  /* Brand gradient on stat cards, bars and swatches: the same in both themes,
+     unlike --color-bg-gradient-* which dark mode darkens for the page body. */
+  --color-brand-start: #667eea;
+  --color-brand-end:   #764ba2;
 
   /* ── Badge colour palette ────────────────────────────────────────── */
   --color-badge-neutral-bg: #f1f5f9; --color-badge-neutral-text: #475569; --color-badge-neutral-border: #cbd5e1;
