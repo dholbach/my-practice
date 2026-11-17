@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load payment_tags %}
+{% load i18n %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ page_title }}</h1>
+
+    <!-- Statistics -->
+    <div class="expense-stats-card">
+        <div class="expense-stats-grid">
+            <div>
+                <div class="expense-stat__label">{% block stat_label %}{% endblock %}</div>
+                <div class="expense-stat__value expense-stat__value--warning">{{ stats.unmatched }}</div>
+            </div>
+            <div>
+                <div class="expense-stat__label">{% trans "Total amount" %}</div>
+                <div class="expense-stat__value expense-stat__value--primary">{{ stats.total_amount|currency }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if transactions %}
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+
+        <!-- Action Controls -->
+        <div class="expense-action-panel">
+            <div class="expense-action-panel__fields">
+                <div class="expense-action-panel__field-wide">
+                    <label class="expense-action-panel__field-label">{% trans "Category" %}</label>
+                    <select name="category" required class="expense-action-panel__select">
+{% block category_options %}{% endblock %}
+                    </select>
+                </div>
+
+                <div class="expense-action-panel__field-xl">
+                    <label class="expense-action-panel__field-label">{% trans "Description (optional)" %}</label>
+                    <textarea name="description" rows="2" placeholder="{% trans 'Auto-generated if left empty' %}" class="expense-action-panel__textarea"></textarea>
+                </div>
+
+{% block extra_fields %}{% endblock %}
+            </div>
+
+            <div class="expense-action-panel__buttons">
+                <button type="submit" name="action" value="group" class="btn btn-primary">
+                    ✓ {% block group_label %}{% endblock %}
+                </button>
+                <button type="submit" name="action" value="ignore" class="btn btn-secondary">
+                    ➖ {% trans "Ignore" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Transactions List -->
+        {% for trans in transactions %}
+        {% block transaction_card %}{% include 'includes/bank_transaction_card.html' with trans=trans %}{% endblock %}
+        {% endfor %}
+    </form>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    {% include 'includes/pagination_bar.html' with page_obj=page_obj %}
+    {% endif %}
+
+    {% else %}
+    {% block empty_state %}{% endblock %}
+    {% endif %}
+
+    <!-- Navigation Links -->
+    <div class="expense-nav-footer">
+        <a href="{% url 'bank_review' %}" class="btn btn-secondary">{% trans "← Review invoices" %}</a>
+        {% block footer_links %}{% endblock %}
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">{% trans "Overview" %}</a>
+    </div>
+</div>
+{% endblock %}

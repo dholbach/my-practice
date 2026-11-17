@@ -1,35 +1,9 @@
-{% extends 'base.html' %}
-{% load payment_tags %}
+{% extends 'my_practice/bank_financial_review.html' %}
 {% load i18n %}
 
-{% block content %}
-<div class="container">
-    <h1>{{ page_title }}</h1>
+{% block stat_label %}{% trans "Unmatched" %}{% endblock %}
 
-    <!-- Statistics -->
-    <div class="expense-stats-card">
-        <div class="expense-stats-grid">
-            <div>
-                <div class="expense-stat__label">{% trans "Unmatched" %}</div>
-                <div class="expense-stat__value expense-stat__value--warning">{{ stats.unmatched }}</div>
-            </div>
-            <div>
-                <div class="expense-stat__label">{% trans "Total amount" %}</div>
-                <div class="expense-stat__value expense-stat__value--primary">{{ stats.total_amount|currency }}</div>
-            </div>
-        </div>
-    </div>
-
-    {% if transactions %}
-    <form method="post" class="mb-4">
-        {% csrf_token %}
-
-        <!-- Action Controls -->
-        <div class="expense-action-panel">
-            <div class="expense-action-panel__fields">
-                <div class="expense-action-panel__field-wide">
-                    <label class="expense-action-panel__field-label">{% trans "Category" %}</label>
-                    <select name="category" required class="expense-action-panel__select">
+{% block category_options %}
                         <option value="miete">{% trans "Rent" %}</option>
                         <option value="telefon">{% trans "Phone" %}</option>
                         <option value="verband">{% trans "Association / membership fees" %}</option>
@@ -48,14 +22,9 @@
                         <option value="literatur">{% trans "Literature" %}</option>
                         <option value="kongress">{% trans "Conference" %}</option>
                         <option value="other" selected>{% trans "Other" %}</option>
-                    </select>
-                </div>
+{% endblock %}
 
-                <div class="expense-action-panel__field-xl">
-                    <label class="expense-action-panel__field-label">{% trans "Description (optional)" %}</label>
-                    <textarea name="description" rows="2" placeholder="{% trans 'Auto-generated if left empty' %}" class="expense-action-panel__textarea"></textarea>
-                </div>
-
+{% block extra_fields %}
                 <div class="expense-action-panel__checkboxes">
                     <label class="expense-action-panel__checkbox-label">
                         <input type="checkbox" name="has_invoice">
@@ -66,39 +35,13 @@
                         <span class="expense-action-panel__checkbox-text">{% trans "Tax deductible" %}</span>
                     </label>
                 </div>
-            </div>
+{% endblock %}
 
-            <div class="expense-action-panel__buttons">
-                <button type="submit" name="action" value="group" class="btn btn-primary">
-                    ✓ {% trans "Group into expense" %}
-                </button>
-                <button type="submit" name="action" value="ignore" class="btn btn-secondary">
-                    ➖ {% trans "Ignore" %}
-                </button>
-            </div>
-        </div>
+{% block group_label %}{% trans "Group into expense" %}{% endblock %}
 
-        <!-- Transactions List -->
-        {% for trans in transactions %}
-        {% include 'includes/bank_transaction_card.html' with trans=trans %}
-        {% endfor %}
-    </form>
+{% block empty_state %}{% include 'includes/bank_review_empty_state.html' with title=_("All transactions matched") description=_("There are no unmatched negative transactions.") %}{% endblock %}
 
-    <!-- Pagination -->
-    {% if is_paginated %}
-    {% include 'includes/pagination_bar.html' with page_obj=page_obj %}
-    {% endif %}
-
-    {% else %}
-    {% include 'includes/bank_review_empty_state.html' with title=_("All transactions matched") description=_("There are no unmatched negative transactions.") %}
-    {% endif %}
-
-    <!-- Navigation Links -->
-    <div class="expense-nav-footer">
-        <a href="{% url 'bank_review' %}" class="btn btn-secondary">{% trans "← Review invoices" %}</a>
+{% block footer_links %}
         <a href="{% url 'bank_import' %}" class="btn btn-secondary">{% trans "Bank import" %}</a>
         <a href="{% url 'expense_list' %}" class="btn btn-secondary">{% trans "Expense list" %}</a>
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">{% trans "Overview" %}</a>
-    </div>
-</div>
-{% endblock %}
+        {% endblock %}
