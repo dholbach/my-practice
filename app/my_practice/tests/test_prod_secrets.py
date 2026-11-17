@@ -8,6 +8,7 @@ value look set to setup and to the pre-flight check.
 
 import contextlib
 import io
+from unittest import mock
 
 from django.test import SimpleTestCase
 
@@ -48,3 +49,72 @@ class RequireSecretsTests(ProdNetworkTestBase):
     def test_real_secrets_pass(self):
         self.env_file.write_text("DJANGO_SECRET_KEY=a\nPOSTGRES_PASSWORD=b\nFERNET_KEY=c\n")
         self.prod._require_secrets()
+
+
+class GenerateMissingSecretsTests(SimpleTestCase):
+    def setUp(self):
+        from .test_prod_network import _load_prod
+
+        self.prod = _load_prod()
+
+    def generate(self, env):
+        with (
+            mock.patch.object(self.prod, "_generate_fernet_key", return_value="fernet-from-image"),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            return self.prod._generate_missing_secrets(env)
+
+    def test_an_empty_env_gets_all_three(self):
+        env, added = self.generate({})
+        self.assertEqual(added, ["DJANGO_SECRET_KEY", "POSTGRES_PASSWORD", "FERNET_KEY"])
+        self.assertEqual(env["FERNET_KEY"], "fernet-from-image")
+        self.assertGreaterEqual(len(env["DJANGO_SECRET_KEY"]), 50)
+
+    def test_existing_secrets_are_never_replaced(self):
+        existing = {"DJANGO_SECRET_KEY": "a", "POSTGRES_PASSWORD": "b", "FERNET_KEY": "c"}
+        env, added = self.generate(dict(existing))
+        self.assertEqual(added, [])
+        self.assertEqual(env, existing)
+
+    def test_a_placeholder_is_replaced_and_a_real_value_kept(self):
+        env, added = self.generate(
+            {
+                "DJANGO_SECRET_KEY": "GENERATE_A_KEY_AND_PUT_IT_HERE  # CHANGE ME",
+                "POSTGRES_PASSWORD": "kept",
+                "FERNET_KEY": "kept-too",
+            }
+        )
+        self.assertEqual(added, ["DJANGO_SECRET_KEY"])
+        self.assertEqual(env["POSTGRES_PASSWORD"], "kept")
+        self.assertEqual(env["FERNET_KEY"], "kept-too")
+
+
+class ManageInteractivelyTests(SimpleTestCase):
+    def setUp(self):
+        from .test_prod_network import _load_prod
+
+        self.prod = _load_prod()
+
+    def run_step(self, returncode):
+        out = io.StringIO()
+        with (
+            mock.patch.object(
+                self.prod, "manage", return_value=mock.Mock(returncode=returncode)
+            ) as manage,
+            contextlib.redirect_stdout(out),
+        ):
+            self.prod._manage_interactively(
+                "Creating your login", "Prompts follow.", "createsuperuser"
+            )
+        return manage, out.getvalue()
+
+    def test_success_prints_only_the_intro(self):
+        manage, out = self.run_step(0)
+        manage.assert_called_once_with("createsuperuser")
+        self.assertIn("Prompts follow.", out)
+        self.assertNotIn("did not complete", out)
+
+    def test_failure_says_how_to_run_it_later_and_carries_on(self):
+        _manage, out = self.run_step(1)
+        self.assertIn("createsuperuser did not complete", out)
+        self.assertIn("./prod.py manage createsuperuser", out)
