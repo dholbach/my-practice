@@ -30,8 +30,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-17 — Review 4 liabilities, second batch (#670–#675)**: 13 of 26 closed, several already fixed by earlier PRs. New: image workflow checks the tag against `version.py`, `includes/detail_row.html` for the delete pages, brand-gradient tokens, `create_test_user`, restore-guard tests, `_confirm.confirm_deletion` for the two row-deleting commands. Left: `cmd_restore`/`cmd_setup` split, management command flag conventions.
-- **2026-11-16 — Review 4 liabilities, first batch (#656)**: bank match confidences use `BankTransaction.Confidence` everywhere, with a ratchet test (`test_bank_confidence_literals`); `RevenueCalculator` aggregates through one `_aggregate_stats`; `.badge-warning` is defined once.
+- **2026-11-17 — Review 4 liabilities, closed out (#670–#687)**: 21 of 26 closed or accepted, several already fixed by earlier PRs. New: image workflow checks the tag against `version.py`; `includes/detail_row.html`; brand-gradient tokens; `create_test_user`; `InvoiceForm` requires a request and scopes every client lookup; `_confirm.confirm_deletion`; `utils/checklist_items.py`; `scripts/_compose_file.sh`; `prod.py` restore and setup split; `test_views_client` and `test_bank_import_views` split by topic; the five management commands' `handle()` split, each with characterisation tests first. Left: dry-run flag spellings (interface decision), redundant-index check (needs `EXPLAIN`), remaining hex in `tailwind.css`, `test_models` and `test_views_analytics` setUps, private-name calls in the calendar tests.
+- **2026-11-16 — Fourth refactoring review (#656)**: the areas the third one left unread, seven agents, every finding re-checked. Do-now batch in #655: an admin badge that hid four states, a `prod.py` placeholder-as-secret, dead admin actions, forms and parameters, unwrapped form labels. First batch of liabilities in #656: bank match confidences through `BankTransaction.Confidence` with a ratchet test, one `_aggregate_stats`, one `.badge-warning`. 26 liabilities in the ledger.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
