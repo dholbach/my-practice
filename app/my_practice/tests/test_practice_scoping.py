@@ -30,7 +30,6 @@ from ..models import (
     MarketingPeriod,
     Practice,
     Session,
-    UserPractice,
     scope_to_practice,
 )
 from ..utils import RevenueCalculator, annotate_client_counts
@@ -43,7 +42,7 @@ from ..views.crud_mixins import (
     PracticeScopedListView,
     PracticeScopedUpdateView,
 )
-from .test_helpers import create_test_practice, link_user_to_practice
+from .test_helpers import create_test_practice, create_test_user, link_user_to_practice
 
 APP_DIR = Path(settings.BASE_DIR) / "my_practice"
 
@@ -368,8 +367,7 @@ class NoPracticeSeesNothingTests(TestCase):
         self.assertEqual(response.context["top_clients"], [])
 
     def test_analytics_page_for_member_shows_its_clients(self):
-        user = User.objects.create_user(username="member", password="testpass123")
-        UserPractice.objects.create(user=user, practice=self.practice, is_owner=True)
+        create_test_user(self.practice, username="member", password="testpass123")
         self.client.login(username="member", password="testpass123")
 
         response = self.client.get(reverse("analytics"))
@@ -472,8 +470,7 @@ class AggregatesStayInTheirPracticeTests(TestCase):
         tag = ClientTag.objects.create(name="Warteliste", slug="warteliste")
         self.client_a.tags.add(tag)
         self.client_b.tags.add(tag)
-        user = User.objects.create_user(username="tags-a", password="testpass123")
-        UserPractice.objects.create(user=user, practice=self.a, is_owner=True)
+        create_test_user(self.a, username="tags-a", password="testpass123")
         self.client.login(username="tags-a", password="testpass123")
 
         for url_name, key in (("tag_list", "tags"), ("client_list", "all_tags")):

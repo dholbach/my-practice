@@ -12,7 +12,6 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import Client as TestClient
 from django.test import TestCase
@@ -20,10 +19,10 @@ from django.urls import reverse
 
 from ..forms import ClientIntakeForm
 from ..invoice_forms import InvoiceItemForm
-from ..models import Client, Invoice, InvoiceItem, ServiceType, Session, UserPractice
+from ..models import Client, Invoice, InvoiceItem, ServiceType, Session
 from ..utils.calculations import count_sessions
 from ..utils.client_helpers import annotate_activity_status, group_clients_by_activity
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 
 class InvoiceItemFreeFormModelTests(TestCase):
@@ -389,8 +388,7 @@ class InvoiceItemFormFreeFormTests(TestCase):
 class InvoiceCreateFreeFormViewTests(TestCase):
     def setUp(self):
         self.practice = create_test_practice(slug="p122-view-create", allows_free_form_items=True)
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -448,8 +446,7 @@ class InvoiceCreateFreeFormDisallowedTests(TestCase):
         self.practice = create_test_practice(
             slug="p122-view-disallowed", allows_free_form_items=False
         )
-        self.user = User.objects.create_user(username="testuser2", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser2", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser2", password="testpass123")
 
@@ -496,8 +493,7 @@ class InvoiceEditFreeFormViewTests(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(slug="p122-view-edit", allows_free_form_items=True)
-        self.user = User.objects.create_user(username="testuser3", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser3", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser3", password="testpass123")
 

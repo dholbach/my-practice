@@ -7,13 +7,13 @@ per-session Focus Queue tasks — see test_tag_helpers.py for that coverage).
 from datetime import timedelta
 from io import StringIO
 
-from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from ..models import Client, ClientTag, Practice, Session, UserPractice
+from ..models import Client, ClientTag, Practice, Session
 from ..utils.tag_helpers import RECENT_ACTIVITY_WINDOW_DAYS, sync_no_next_session_tag
+from .test_helpers import create_test_user
 
 
 class UpdateClientTagsTestBase(TestCase):
@@ -25,8 +25,7 @@ class UpdateClientTagsTestBase(TestCase):
             email="test@practice.example",
             city="Berlin",
         )
-        self.user = User.objects.create_user(username="tagtestuser", password="pass")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="tagtestuser", password="pass")
 
         self.client_obj = Client.objects.create(
             client_code="ZZ-1",

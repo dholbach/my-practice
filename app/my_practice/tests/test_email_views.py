@@ -14,7 +14,9 @@ from django.test import Client as TestClient
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from my_practice.models import Client, Invoice, Practice, UserPractice
+from my_practice.models import Client, Invoice
+
+from .test_helpers import create_test_practice, create_test_user
 
 User = get_user_model()
 
@@ -30,17 +32,12 @@ class SendInvoiceEmailViewTest(TestCase):
         self.client_http = TestClient()
 
         # Create practice
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="email-test-practice",  # Unique slug for this test
-            title="Test Practitioner",
-            email="practice@test.com",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="email-test-practice", email="practice@test.com"
         )
 
         # Create and login user
-        self.user = User.objects.create_user(username="emailuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="emailuser", password="testpass123")
         self.client_http.login(username="emailuser", password="testpass123")
 
         # Create test client and invoice
@@ -286,15 +283,12 @@ class SendIntakeFormEmailViewTest(TestCase):
         logging.getLogger("my_practice.email").setLevel(logging.ERROR)
 
         self.client_http = TestClient()
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="intake-email-test-practice",
-            title="Test Practitioner",
-            email="practice@test.com",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="intake-email-test-practice", email="practice@test.com"
         )
-        self.user = User.objects.create_user(username="intakeemailuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(
+            self.practice, username="intakeemailuser", password="testpass123"
+        )
         self.client_http.login(username="intakeemailuser", password="testpass123")
 
         self.test_client = Client.objects.create(
@@ -364,18 +358,17 @@ class SendPaymentReminderViewTest(TestCase):
     def setUp(self):
         logging.getLogger("my_practice.email").setLevel(logging.ERROR)
         self.client_http = TestClient()
-        self.practice = Practice.objects.create(
+        self.practice = create_test_practice(
             name="Test Practice",
             slug="reminder-email-test-practice",
-            title="Test Practitioner",
             email="practice@test.com",
-            city="Berlin",
             bank_name="Testbank",
             iban="DE00 0000 0000 0000 0000 00",
             bic="TESTDEFFXXX",
         )
-        self.user = User.objects.create_user(username="reminderemailuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(
+            self.practice, username="reminderemailuser", password="testpass123"
+        )
         self.client_http.login(username="reminderemailuser", password="testpass123")
 
     def _url(self, client_obj):
@@ -550,17 +543,12 @@ class SendCancellationEmailViewTest(TestCase):
     def setUp(self):
         logging.getLogger("my_practice.email").setLevel(logging.ERROR)
         self.client_http = TestClient()
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="cancellation-email-test-practice",
-            title="Test Practitioner",
-            email="practice@test.com",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="cancellation-email-test-practice", email="practice@test.com"
         )
-        self.user = User.objects.create_user(
-            username="cancellationemailuser", password="testpass123"
+        self.user = create_test_user(
+            self.practice, username="cancellationemailuser", password="testpass123"
         )
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_http.login(username="cancellationemailuser", password="testpass123")
 
     def _url(self, client_obj):
@@ -692,17 +680,14 @@ class SendQuestionnaireEmailViewTest(TestCase):
     def setUp(self):
         logging.getLogger("my_practice.email").setLevel(logging.ERROR)
         self.client_http = TestClient()
-        self.practice = Practice.objects.create(
+        self.practice = create_test_practice(
             name="Test Practice",
             slug="questionnaire-email-test-practice",
-            title="Test Practitioner",
             email="practice@test.com",
-            city="Berlin",
         )
-        self.user = User.objects.create_user(
-            username="questionnaireemailuser", password="testpass123"
+        self.user = create_test_user(
+            self.practice, username="questionnaireemailuser", password="testpass123"
         )
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_http.login(username="questionnaireemailuser", password="testpass123")
         self.test_client = Client.objects.create(
             client_code="QC",
@@ -766,15 +751,12 @@ class SendContractEmailViewTest(TestCase):
     def setUp(self):
         logging.getLogger("my_practice.email").setLevel(logging.ERROR)
         self.client_http = TestClient()
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="contract-email-test-practice",
-            title="Test Practitioner",
-            email="practice@test.com",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="contract-email-test-practice", email="practice@test.com"
         )
-        self.user = User.objects.create_user(username="contractemailuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(
+            self.practice, username="contractemailuser", password="testpass123"
+        )
         self.client_http.login(username="contractemailuser", password="testpass123")
         self.test_client = Client.objects.create(
             client_code="TC",
@@ -831,17 +813,14 @@ class SendQuestionnairePdfEmailViewTest(TestCase):
     def setUp(self):
         logging.getLogger("my_practice.email").setLevel(logging.ERROR)
         self.client_http = TestClient()
-        self.practice = Practice.objects.create(
+        self.practice = create_test_practice(
             name="Test Practice",
             slug="questionnaire-pdf-email-test-practice",
-            title="Test Practitioner",
             email="practice@test.com",
-            city="Berlin",
         )
-        self.user = User.objects.create_user(
-            username="questionnairepdfemailuser", password="testpass123"
+        self.user = create_test_user(
+            self.practice, username="questionnairepdfemailuser", password="testpass123"
         )
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_http.login(username="questionnairepdfemailuser", password="testpass123")
         self.test_client = Client.objects.create(
             client_code="QP",

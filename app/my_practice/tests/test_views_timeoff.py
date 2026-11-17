@@ -11,8 +11,8 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import Client, Practice, Session, TimeOff, UserPractice
-from .test_helpers import create_test_practice, select_practice
+from ..models import Client, Session, TimeOff, UserPractice
+from .test_helpers import create_test_practice, create_test_user, select_practice
 
 
 class TimeOffCrudViewTest(TestCase):
@@ -130,15 +130,10 @@ class SendTimeOffNoticeViewTest(TestCase):
 
         self.client_instance = TestClient()
 
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_timeoff-notice-1",
-            title="Test Practitioner",
-            email="practice@test.com",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="views_timeoff-notice-1", email="practice@test.com"
         )
-        self.user = User.objects.create_user(username="noticeuser", password="12345")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="noticeuser", password="12345")
         self.client_instance.login(username="noticeuser", password="12345")
 
         select_practice(self.client_instance, self.practice)

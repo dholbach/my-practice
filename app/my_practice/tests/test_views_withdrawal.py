@@ -10,7 +10,7 @@ from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
 
-from ..models import CompanyWithdrawal, Practice, UserPractice
+from ..models import CompanyWithdrawal, UserPractice
 from .test_helpers import create_test_practice, select_practice
 
 
@@ -328,12 +328,8 @@ class WithdrawalCreateNextRedirectTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="wd_next", password="12345")
         self.client_instance = TestClient()
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="views_withdrawal-next",
-            title="Test Practitioner",
-            email="test@practice.example",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="views_withdrawal-next", email="test@practice.example"
         )
         UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
         self.client_instance.login(username="wd_next", password="12345")

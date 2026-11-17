@@ -7,7 +7,6 @@ from datetime import date, time, timedelta
 from decimal import Decimal
 from unittest import mock
 
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import Client as TestClient
 from django.test import TestCase
@@ -21,7 +20,6 @@ from ..models import (
     Practice,
     ServiceType,
     Session,
-    UserPractice,
     allow_issued_invoice_writes,
 )
 from ..views.billing_views import (
@@ -30,7 +28,7 @@ from ..views.billing_views import (
     _determine_client_billing_status,
     _parse_billing_month,
 )
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 
 class ParseBillingMonthTests(TestCase):
@@ -142,8 +140,7 @@ class InvoiceCreateFormValidTests(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="invoice-create-fv")
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -250,8 +247,7 @@ class InvoiceEditFormValidTests(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="invoice-edit-fv")
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -368,8 +364,7 @@ class InvoiceDeleteTests(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="invoice-delete")
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -422,8 +417,7 @@ class AddSessionsToInvoiceTests(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="add-sessions")
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -502,8 +496,7 @@ class CreateInvoiceWithSessionsTests(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="create-with-sessions")
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -549,8 +542,7 @@ class MonthlyBillingOverviewTests(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="monthly-billing")
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 

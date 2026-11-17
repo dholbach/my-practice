@@ -10,17 +10,14 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase
 
-from ..models import BankTransaction, CompanyExpense, CompanyWithdrawal, ExpenseReceipt, Practice
+from ..models import BankTransaction, CompanyExpense, CompanyWithdrawal, ExpenseReceipt
+from .test_helpers import create_test_practice
 
 
 class RemoveFinancialDuplicatesTest(TestCase):
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="dup-cmd",
-            title="Test Practitioner",
-            email="test@practice.example",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="dup-cmd", email="test@practice.example"
         )
 
     def _make_expense(

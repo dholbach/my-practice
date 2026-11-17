@@ -156,8 +156,6 @@ class ValidateEmailTemplatePlaceholdersTest(TestCase):
         """The admin is the only edit path for these fields — check it really rejects."""
         from django.contrib import admin as django_admin
 
-        from my_practice.models import Practice
-
         model_admin = django_admin.site._registry[Practice]
         form_class = model_admin.get_form(request=None)
 
@@ -183,12 +181,10 @@ class EmailContentBuilderTestBase(TestCase):
     """Shared fixtures: one practice, one German client, one English client."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
+        self.practice = create_test_practice(
             name="Test Practice",
             slug="email-content-builders",
-            title="Test Practitioner",
             email="practice@practice.example",
-            city="Berlin",
             email_signature="Viele Grüße\nAnna Schmidt",
         )
         self.client_de = Client.objects.create(

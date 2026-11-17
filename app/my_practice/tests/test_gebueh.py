@@ -10,7 +10,7 @@ from django.urls import reverse
 
 from ..models import Invoice, InvoiceItem, ServiceType, Session, UserPractice
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
-from .test_helpers import create_test_client, create_test_practice
+from .test_helpers import create_test_client, create_test_practice, create_test_user
 
 TEST_FERNET_KEY = "7zIJPIlZkdMSPifNsPuNBjIAIqiUkFHmRJN8HGG8ytQ="  # gitleaks:allow
 
@@ -574,8 +574,7 @@ class GebuhInvoiceDetailViewTest(TestCase):
             total=Decimal("90.00"),
         )
 
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.test_client = TestClient()
         self.test_client.login(username="testuser", password="testpass123")
 

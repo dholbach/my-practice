@@ -6,7 +6,6 @@ from datetime import date
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
-from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
@@ -18,10 +17,9 @@ from ..models import (
     InvoiceItem,
     ServiceType,
     Session,
-    UserPractice,
     allow_issued_invoice_writes,
 )
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 
 class AnalyticsTimeFilterTest(TestCase):
@@ -37,8 +35,7 @@ class AnalyticsTimeFilterTest(TestCase):
         self.practice = create_test_practice(name="Test Practice", slug="analytics-time-filter-fix")
 
         # Create and log in user — required by LoginRequiredMiddleware
-        self.user = User.objects.create_user(username="analyticsuser", password="testpass")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="analyticsuser", password="testpass")
         self.client_http.login(username="analyticsuser", password="testpass")
 
         # Create client and service type
