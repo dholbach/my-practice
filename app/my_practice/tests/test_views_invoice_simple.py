@@ -2,6 +2,8 @@
 Simplified tests for invoice views based on actual implementation.
 """
 
+import json
+import re
 from datetime import date
 from decimal import Decimal
 
@@ -11,7 +13,13 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Client, Invoice, InvoiceItem, ServiceType, Session, UserPractice
-from .test_helpers import create_test_practice
+from .test_helpers import (
+    create_test_client,
+    create_test_invoice,
+    create_test_practice,
+    create_test_user,
+    login_to_practice,
+)
 
 
 class InvoiceListViewSimpleTest(TestCase):
@@ -203,3 +211,44 @@ class InvoiceCreateViewSimpleTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         # Page loads successfully with client parameter
+
+
+class InvoiceFormClientRatesTest(TestCase):
+    """Both invoice forms hand invoice_items.js the practice's client rates as JSON."""
+
+    def setUp(self):
+        self.practice = create_test_practice(slug="invoice-client-rates")
+        self.http = login_to_practice(create_test_user(self.practice), self.practice)
+        self.max = create_test_client(self.practice, "XX-1", hourly_rate_60=Decimal("90.00"))
+        self.anna = create_test_client(
+            self.practice,
+            "YY-2",
+            "Anna Schmidt",
+            hourly_rate_60=Decimal("100.00"),
+            hourly_rate_90=Decimal("140.50"),
+        )
+        other = create_test_practice(name="Other Practice", slug="invoice-client-rates-2")
+        create_test_client(other, "ZZ-3", hourly_rate_60=Decimal("55.00"))
+        self.invoice = create_test_invoice(self.max, "XX-1-1")
+
+    def rates(self, url):
+        response = self.http.get(url)
+        self.assertEqual(response.status_code, 200)
+        match = re.search(
+            r'<script type="application/json" id="client-rates-data">(.*?)</script>',
+            response.content.decode(),
+            re.S,
+        )
+        self.assertIsNotNone(match, "the rates script is missing")
+        return json.loads(match.group(1))
+
+    def assert_rates(self, rates):
+        self.assertEqual(rates[str(self.max.pk)]["code"], "XX-1")
+        self.assertEqual(rates[str(self.anna.pk)]["rate_90"], 140.5)
+        self.assertEqual(len(rates), 2, "only the current practice's clients")
+
+    def test_new_invoice_form_lists_the_practice_clients_with_rates(self):
+        self.assert_rates(self.rates(reverse("invoice_create")))
+
+    def test_edit_invoice_form_lists_the_practice_clients_with_rates(self):
+        self.assert_rates(self.rates(reverse("invoice_edit", args=[self.invoice.pk])))
