@@ -101,6 +101,7 @@ app/my_practice/
 │   ├── chart_helpers.py            # Chart data preparation
 │   ├── client_detail_builder.py    # ClientDetailContextBuilder
 │   ├── client_helpers.py           # Client convenience helpers
+│   ├── checklist_items.py          # CHECKLIST_ITEMS: the operational checklist steps (edit for your own setup)
 │   ├── contract_form.py            # Contract PDF generation helpers
 │   ├── dashboard_context_builder.py # DashboardContextAssembler
 │   ├── dashboard_widgets.py        # Dashboard widget data builders

@@ -12,7 +12,16 @@ from django.utils import timezone
 
 from ..models import CapacityPeriod, CompanyExpense, CompanyWithdrawal, Invoice, TimeOff
 from ..models.base import scope_to_practice
+from ..utils.analytics_utils import (
+    ClientAnalyzer,
+    ExpenseAnalyzer,
+    ProfitCalculator,
+    RevenueAnalyzer,
+    SessionAnalyzer,
+    get_yearly_financials_series,
+)
 from ..utils.capacity_helpers import get_capacity_trends
+from ..utils.chart_helpers import MONTH_ABBREVIATIONS
 from ..utils.date_helpers import DateRangeHelper
 from ..utils.practice_days import berlin_public_holidays
 from ..utils.timeoff_helpers import (
@@ -76,25 +85,6 @@ class AnalyticsDashboardBuilder:
         Returns:
             Dictionary with all dashboard data for template rendering
         """
-        # Import analyzers locally to avoid circular import
-        # (analytics_utils.py imports from utils/__init__.py)
-        from .analytics_utils import (
-            ClientAnalyzer,
-            ExpenseAnalyzer,
-            ProfitCalculator,
-            RevenueAnalyzer,
-            SessionAnalyzer,
-            get_yearly_financials_series,
-        )
-
-        # Store as instance variables for other methods to use
-        self.RevenueAnalyzer = RevenueAnalyzer
-        self.SessionAnalyzer = SessionAnalyzer
-        self.ClientAnalyzer = ClientAnalyzer
-        self.ExpenseAnalyzer = ExpenseAnalyzer
-        self.ProfitCalculator = ProfitCalculator
-        self.get_yearly_financials_series = get_yearly_financials_series
-
         self._parse_date_range()
 
         comparison = self._get_comparison_data()
@@ -172,9 +162,9 @@ class AnalyticsDashboardBuilder:
 
     def _get_trend_data(self) -> dict:
         """Get revenue and expense trend data."""
-        revenue_trends = self.RevenueAnalyzer.get_monthly_trends(**self._common_kwargs)
-        expense_trends = self.ExpenseAnalyzer.get_monthly_trends(**self._common_kwargs)
-        days_to_payment = self.RevenueAnalyzer.get_days_to_payment_trends(practice=self.practice)
+        revenue_trends = RevenueAnalyzer.get_monthly_trends(**self._common_kwargs)
+        expense_trends = ExpenseAnalyzer.get_monthly_trends(**self._common_kwargs)
+        days_to_payment = RevenueAnalyzer.get_days_to_payment_trends(practice=self.practice)
 
         # Calculate yearly totals from monthly data
         yearly_totals = {}
@@ -202,15 +192,9 @@ class AnalyticsDashboardBuilder:
     def _get_distribution_data(self) -> dict:
         """Get session and expense distribution data."""
         return {
-            "session_distribution": self.SessionAnalyzer.get_type_distribution(
-                practice=self.practice
-            ),
-            "expense_distribution": self.ExpenseAnalyzer.get_expense_breakdown(
-                practice=self.practice
-            ),
-            "cancellation_trends": self.SessionAnalyzer.get_cancellation_trends(
-                practice=self.practice
-            ),
+            "session_distribution": SessionAnalyzer.get_type_distribution(practice=self.practice),
+            "expense_distribution": ExpenseAnalyzer.get_expense_breakdown(practice=self.practice),
+            "cancellation_trends": SessionAnalyzer.get_cancellation_trends(practice=self.practice),
         }
 
     def _get_client_data(self) -> dict:
@@ -218,13 +202,13 @@ class AnalyticsDashboardBuilder:
         # For busiest months, use 2020+ for all-time to reduce noise
         busiest_start_year = self.start_year if self.period != "all" else 2020
 
-        all_months = self.SessionAnalyzer.get_busiest_months(
+        all_months = SessionAnalyzer.get_busiest_months(
             start_year=busiest_start_year, practice=self.practice
         )
         busiest_years = sorted({m["year"] for m in all_months})
 
         return {
-            "top_clients": self.ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice),
+            "top_clients": ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice),
             "busiest_months": all_months[:20],  # Top 20 busiest months
             "busiest_years": busiest_years,
         }
@@ -239,7 +223,6 @@ class AnalyticsDashboardBuilder:
             dict: {years: [int], datasets: {str(year): [float|None]*12}, average: [float|None]*12}
                   None entries represent months without data (future months in current year).
         """
-        from collections import defaultdict
 
         by_year: dict[int, dict[int, float]] = defaultdict(dict)
         for item in capacity_trends:
@@ -276,9 +259,6 @@ class AnalyticsDashboardBuilder:
                   {month_name, month_num, avg_capacity_pct, avg_booked_hours,
                    avg_capacity_hours, years_count}
         """
-        from collections import defaultdict
-
-        from ..utils.chart_helpers import MONTH_ABBREVIATIONS
 
         by_month: dict[int, list] = defaultdict(list)
         for item in capacity_trends:
@@ -315,13 +295,13 @@ class AnalyticsDashboardBuilder:
         # Computed once and shared by both analyzers below, since they'd
         # otherwise each independently run the same per-year revenue/expense/
         # withdrawal queries for this identical range.
-        yearly_financials = self.get_yearly_financials_series(**self._common_kwargs)
+        yearly_financials = get_yearly_financials_series(**self._common_kwargs)
 
         return {
-            "comparison_data": self.RevenueAnalyzer.get_yearly_comparison(
+            "comparison_data": RevenueAnalyzer.get_yearly_comparison(
                 **self._common_kwargs, yearly_financials=yearly_financials
             ),
-            "profit_data": self.ProfitCalculator.calculate_yearly(
+            "profit_data": ProfitCalculator.calculate_yearly(
                 **self._common_kwargs, yearly_financials=yearly_financials
             ),
             "capacity_trends": get_capacity_trends(
