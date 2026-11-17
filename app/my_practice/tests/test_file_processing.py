@@ -92,6 +92,18 @@ class ImageFormatAllowListTest(TestCase):
             validate_image_content(SimpleUploadedFile("logo.jpg", EPS_BYTES))
         validate_image_content(SimpleUploadedFile("logo.jpg", _make_jpeg_bytes()))
 
+    def test_validator_reports_a_decompression_bomb_as_a_form_error(self):
+        from django.core.exceptions import ValidationError
+
+        from ..validators import validate_image_content
+
+        # Pillow raises this past twice MAX_IMAGE_PIXELS, and it is not an OSError.
+        with (
+            patch.object(Image, "MAX_IMAGE_PIXELS", 1),
+            self.assertRaises(ValidationError),
+        ):
+            validate_image_content(SimpleUploadedFile("logo.jpg", _make_jpeg_bytes()))
+
 
 class ProcessUploadTest(TestCase):
     def test_rejects_disallowed_extension(self):

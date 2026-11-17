@@ -43,7 +43,7 @@ def validate_image_content(value) -> None:
         value.seek(0)
         with Image.open(value, formats=PIL_IMAGE_FORMATS):
             pass
-    except OSError, ValueError:
+    except OSError, ValueError, Image.DecompressionBombError:
         raise ValidationError(
             gettext("Image file '%(name)s' could not be processed."),
             code="invalid_image",
