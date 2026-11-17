@@ -2,6 +2,23 @@
 
 Major features and milestones in chronological order.
 
+## 2026-11-17 — v0.14.1 patch release
+
+No new features: an expired Google calendar token now fails the scheduled fetch instead of passing quietly, three small fixes, a delta security audit with no findings, and the leftovers of the second and fourth refactoring reviews. No migrations and no compose-file change. Three packages leave the image.
+
+**Upgrading:** download the new `prod.py` (`./prod.py update` prints the command), then run `./prod.py update`, which takes a backup before restarting. No migrations; `docker-compose.prod.yml` is unchanged apart from the version. One behaviour change to know about: `fetch_calendar_events` now exits non-zero when a practice's Google token is expired, so a cron job or timer that runs it reports the failure instead of succeeding while fetching nothing.
+
+- **Fix — expired calendar token**: the command printed the "expired or invalid" message and exited 0, so a scheduled run looked successful while fetching nothing (every seven days while the consent screen is in "Testing"). The practice now counts as failed like any other fetch error, and the run ends in an error naming it.
+- **Fix — default tags**: `scripts/create_default_tags.py` set no category, so all ten starter tags landed in "General". The four exit reasons (`end-process`, `no-fit`, `moved-away`, `referral-out`) are "Exit reasons" and `missing-paperwork`, `follow-up`, `needs-documentation` and `urgent` are "Needs attention". Only fresh seeding changes; existing tags are untouched.
+- **Fix — admin "Mark as paid"**: a payment dated before its invoice raised an uncaught error and turned the whole bulk action into a 500. It reports that invoice with the usual "could not be marked as paid" message and marks the others.
+- **Fix — logo and signature upload**: an image far past the pixel limit raised Pillow's decompression-bomb error, which the validator did not catch, so the page answered 500 instead of a form error.
+- **Security — delta audit**: the sixth security audit (the diff since the fifth, 235 commits, partial and diff-scoped) found nothing; the two fixes above came out of its hardening notes. The invoice-number, invoice-status and tax-note endpoints also answer errors in the one shape the other AJAX endpoints use (`{"success": false, "error": ...}`; the JS never read either key), and `test_json_error_shape.py` keeps new endpoints from building it by hand.
+- **Refactor — second and fourth review leftovers**: the bank review page's counts and bulk-ignore rules moved out of the view (`review_page_stats`, `ignore_already_paid`, `ignore_unmatched`); session-log create and edit share their narrative fields and supervision-question code; the time-off clamping lives in `timeoff_helpers` and the yearly breakdown queries once per year instead of twice; the bank expense and withdrawal review pages extend one base template (rendered HTML identical before and after); the two invoice forms share their client-rates script; the contract form's signature fields are located with `pypdf` (all six field rectangles identical to before).
+- **Deps**: `pdfplumber` is gone, and with it `pdfminer.six` and `pypdfium2`.
+- **Tests**: `test_migration_lint.py` fails a migration that drops, renames or tightens something unless it carries a `# contract:` comment; `create_test_invoice` replaces four hand-built invoice helpers.
+- **Chore — Python 3.15**: CI runs the suite on 3.15, the interpreter the image ships, and the app's ruff and mypy targets are 3.15 (the repo-root scripts keep their older floor because they run on the host Python).
+- **Docs**: the standards guide lists the two new guardrail tests, ADR-0003 notes the move to 3.15, and the README badge says 3.15.
+
 ## 2026-11-17 — v0.14.0 minor release
 
 The production container no longer runs as root, error messages stop showing exception text, and the fourth refactoring review's 26 liabilities are closed. One small feature: every command that changes data accepts `--dry-run`.
