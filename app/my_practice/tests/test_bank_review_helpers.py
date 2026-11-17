@@ -16,11 +16,13 @@ from ..models import (
     allow_issued_invoice_writes,
 )
 from ..utils.bank_import import amounts_match
+from ..utils.bank_matching import ignore_already_paid, ignore_unmatched
 from ..utils.bank_review_helpers import (
     annotate_review_rows,
     fetch_invoice_maps,
     known_payer_names,
     paid_invoice_matches,
+    review_page_stats,
 )
 from .test_helpers import create_test_practice
 
@@ -166,3 +168,83 @@ class PaidInvoiceMatchesTests(BankReviewHelperBase):
         mismatch = self.make_transaction("AA-1", amount="12.00")
         pairs = paid_invoice_matches([match, sent_only, mismatch], practice=self.practice)
         self.assertEqual(pairs, [(match, paid)])
+
+
+Confidence = BankTransaction.Confidence
+
+
+class ReviewPageStatsTests(BankReviewHelperBase):
+    def test_counts_only_unprocessed_rows_of_the_practice(self):
+        unmatched = self.make_transaction("AA-1", amount="-20.00")
+        BankTransaction.objects.filter(pk=unmatched.pk).update(
+            match_confidence=Confidence.AUTO_EXPENSE
+        )
+        withdrawal = self.make_transaction("BB-1", amount="-5.00")
+        BankTransaction.objects.filter(pk=withdrawal.pk).update(
+            match_confidence=Confidence.AUTO_WITHDRAWAL
+        )
+        done = self.make_transaction("CC-1")
+        BankTransaction.objects.filter(pk=done.pk).update(processed=True)
+        elsewhere = self.make_transaction("DD-1", amount="-1.00")
+        BankTransaction.objects.filter(pk=elsewhere.pk).update(practice=self.other)
+
+        stats = review_page_stats(practice=self.practice)
+
+        self.assertEqual(
+            stats["stats"], {Confidence.AUTO_EXPENSE: 1, Confidence.AUTO_WITHDRAWAL: 1}
+        )
+        self.assertEqual(stats["expense_count"], 1)
+        self.assertEqual(stats["withdrawal_count"], 1)
+
+    def test_recently_matched_lists_matched_invoices_only(self):
+        matched = self.make_transaction("AA-1")
+        BankTransaction.objects.filter(pk=matched.pk).update(
+            match_confidence=Confidence.EXACT, matched_invoice=self.make_invoice("AA-1")
+        )
+        self.make_transaction("BB-1")
+
+        self.assertEqual(
+            [t.pk for t in review_page_stats(practice=self.practice)["recently_matched"]],
+            [matched.pk],
+        )
+
+    def test_no_practice_gives_empty_stats(self):
+        self.make_transaction("AA-1")
+        stats = review_page_stats(practice=None)
+        self.assertEqual(stats["stats"], {})
+        self.assertEqual(stats["expense_count"], 0)
+
+
+class IgnoreTests(BankReviewHelperBase):
+    def test_ignore_already_paid_marks_only_paid_matches_processed(self):
+        self.make_invoice("AA-1", status="paid")
+        self.make_invoice("BB-1", status="sent")
+        paid = self.make_transaction("AA-1")
+        unpaid = self.make_transaction("BB-1")
+
+        self.assertEqual(ignore_already_paid(practice=self.practice), 1)
+
+        paid.refresh_from_db()
+        unpaid.refresh_from_db()
+        self.assertEqual((paid.match_confidence, paid.processed), (Confidence.IGNORED, True))
+        self.assertIn("AA-1", paid.notes)
+        self.assertEqual((unpaid.match_confidence, unpaid.processed), (Confidence.UNMATCHED, False))
+
+    def test_ignore_unmatched_expenses_only_leaves_incoming_payments(self):
+        expense = self.make_transaction("", amount="-10.00")
+        income = self.make_transaction("", amount="10.00")
+
+        self.assertEqual(ignore_unmatched(practice=self.practice, expenses_only=True), 1)
+
+        expense.refresh_from_db()
+        income.refresh_from_db()
+        self.assertEqual((expense.match_confidence, expense.processed), (Confidence.IGNORED, False))
+        self.assertEqual(income.match_confidence, Confidence.UNMATCHED)
+
+    def test_ignore_unmatched_is_limited_to_the_practice(self):
+        other = self.make_transaction("")
+        BankTransaction.objects.filter(pk=other.pk).update(practice=self.other)
+
+        self.assertEqual(ignore_unmatched(practice=self.practice, expenses_only=False), 0)
+        other.refresh_from_db()
+        self.assertEqual(other.match_confidence, Confidence.UNMATCHED)
