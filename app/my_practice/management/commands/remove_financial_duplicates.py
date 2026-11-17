@@ -4,12 +4,11 @@ Management command to remove duplicate CompanyExpense and CompanyWithdrawal reco
 Consolidates functionality from cleanup_expense_duplicates and remove_duplicates commands.
 """
 
-import sys
-
 from django.core.management.base import BaseCommand
 from django.db.models import Count, Model, QuerySet
 
 from ...models import CompanyExpense, CompanyWithdrawal
+from ._confirm import confirm_deletion
 
 
 class Command(BaseCommand):
@@ -110,22 +109,11 @@ class Command(BaseCommand):
             )
             return
 
-        # Confirmation for actual deletion
-        if not skip_confirm:
-            # Check if stdin is a TTY (interactive terminal)
-            if sys.stdin.isatty():
-                total_to_delete = total_expense_to_delete + total_withdrawal_to_delete
-                response = input(f"\n⚠️  Delete {total_to_delete} duplicate records? (yes/no): ")
-                if response.lower() != "yes":
-                    self.stdout.write(self.style.ERROR("❌ Aborted"))
-                    return
-            else:
-                # Non-interactive mode
-                self.stdout.write(
-                    self.style.WARNING("⚠️  No interactive terminal detected. Use --yes to confirm.")
-                )
-                self.stdout.write(self.style.ERROR("❌ Aborted"))
-                return
+        total_to_delete = total_expense_to_delete + total_withdrawal_to_delete
+        if not confirm_deletion(
+            self, f"\n⚠️  Delete {total_to_delete} duplicate records? (yes/no): ", skip_confirm
+        ):
+            return
 
         # Actually delete duplicates
         self.stdout.write("")
