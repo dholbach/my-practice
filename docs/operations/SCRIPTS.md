@@ -169,6 +169,7 @@ Everything that is not backup or systemd. Most of these are run for you by a hoo
 
 | Script | Run by | What it does |
 | --- | --- | --- |
+| `_compose_file.sh` | `backup.sh`, `restore.sh` | Sourced, not run: sets `COMPOSE_FILE` to what a plain `docker compose` uses here (environment, then `.env`, else `docker-compose.yml`) |
 | `check_env.py` | pre-commit | Fails on duplicate keys in `.env` and on `.env.example` placeholders marked `# CHANGE ME` that `.env` still holds |
 | `check_pii.py` | pre-commit | Blocks commits containing terms from the local denylist `.git/pii-denylist`; `python3 scripts/check_pii.py --all` scans the whole tree (see [SECURITY.md](SECURITY.md)) |
 | `check_requirements_sync.py` | pre-commit, CI, `dev.py lint` | Fails when a pin in `requirements.txt` is missing from `requirements-dev.txt` or differs in version |
