@@ -22,11 +22,10 @@ from ..utils.analytics_utils import (
 )
 from ..utils.capacity_helpers import get_capacity_trends
 from ..utils.chart_helpers import MONTH_ABBREVIATIONS
-from ..utils.date_helpers import DateRangeHelper
-from ..utils.practice_days import berlin_public_holidays
 from ..utils.timeoff_helpers import (
     calculate_timeoff_for_period,
     calculate_timeoff_for_year,
+    workdays_by_type,
 )
 
 
@@ -379,7 +378,7 @@ class AnalyticsDashboardBuilder:
         yearly_data = []
         for year in timeoff_years:
             year_data = calculate_timeoff_for_year(year)
-            type_breakdown = self._get_timeoff_by_type_for_year(year)
+            type_breakdown = workdays_by_type(year_data["entries"])
             workdays = year_data["total_workdays"]
 
             yearly_data.append(
@@ -398,24 +397,8 @@ class AnalyticsDashboardBuilder:
         return yearly_data
 
     def _get_timeoff_by_type_for_year(self, year: int) -> dict:
-        """Get time-off workdays (Mon-Fri, excluding Berlin public holidays) broken down by type for a specific year."""
-        year_start = date(year, 1, 1)
-        year_end = date(year, 12, 31)
-
-        # Get all timeoff that touches this year
-        timeoff_periods = TimeOff.objects.filter(start_date__lte=year_end, end_date__gte=year_start)
-        holidays = berlin_public_holidays(year)
-
-        type_days: dict[str, int] = defaultdict(int)
-
-        for t in timeoff_periods:
-            # Clamp dates to this year
-            actual_start = max(t.start_date, year_start)
-            actual_end = min(t.end_date, year_end)
-            workdays = DateRangeHelper.count_working_days(actual_start, actual_end, holidays)
-            type_days[t.type] += workdays
-
-        return dict(type_days)
+        """Time-off workdays (Mon-Fri, excluding Berlin public holidays) by type for a year."""
+        return workdays_by_type(calculate_timeoff_for_year(year)["entries"])
 
     def _get_filter_data(self) -> dict:
         """Get filter parameters for template."""
