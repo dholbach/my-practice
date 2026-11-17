@@ -8,7 +8,6 @@ from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
@@ -22,16 +21,14 @@ from ..models import (
     PendingCalendarEvent,
     ServiceType,
     Session,
-    UserPractice,
 )
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 
 class CalendarViewsTestBase(TestCase):
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="calendar-views-test")
-        self.user = User.objects.create_user(username="caluser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="caluser", password="testpass123")
         self.http = TestClient()
         self.http.login(username="caluser", password="testpass123")
 

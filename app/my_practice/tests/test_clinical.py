@@ -14,7 +14,6 @@ Covers:
 from datetime import date, time
 from decimal import Decimal
 
-from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -23,12 +22,11 @@ from ..models import (
     Client,
     ClientNote,
     ClientProfile,
-    Practice,
     Session,
     SessionLog,
     SupervisionItem,
-    UserPractice,
 )
+from .test_helpers import create_test_practice, create_test_user
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Use a deterministic test Fernet key so encrypted fields work in tests.
@@ -42,15 +40,12 @@ class ClinicalTestBase(TestCase):
     """Shared setUp for all clinical tests."""
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="clinical-test-1",
-            title="Test Practitioner",
-            email="test@practice.example",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="clinical-test-1", email="test@practice.example"
         )
-        self.user = User.objects.create_user(username="clinicaltestuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(
+            self.practice, username="clinicaltestuser", password="testpass123"
+        )
 
         self.client_obj = Client.objects.create(
             client_code="AB-1",

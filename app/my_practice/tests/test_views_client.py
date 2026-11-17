@@ -32,7 +32,7 @@ from ..models import (
     allow_issued_invoice_writes,
 )
 from ..utils.tag_helpers import SESSION_LOG_MIN_DURATION
-from .test_helpers import create_test_practice, make_pdf_bytes, select_practice
+from .test_helpers import create_test_practice, create_test_user, make_pdf_bytes, select_practice
 
 
 class ClientListViewTest(TestCase):
@@ -43,8 +43,7 @@ class ClientListViewTest(TestCase):
         # Create practice
         self.practice = create_test_practice(name="Test Practice", slug="views_client-1")
 
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -243,8 +242,7 @@ class ReminderUrgencyTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="views_client-reminder")
-        self.user = User.objects.create_user(username="testuser2", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser2", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser2", password="testpass123")
 
@@ -310,8 +308,7 @@ class NoLogNeededSessionIdsTest(TestCase):
     @allow_issued_invoice_writes()
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="no-log-test")
-        self.user = User.objects.create_user(username="nluser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="nluser", password="testpass123")
         self.http = TestClient()
         self.http.login(username="nluser", password="testpass123")
 
@@ -480,8 +477,7 @@ class ClientIntakeEditTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="intake-edit")
-        self.user = User.objects.create_user(username="edituser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="edituser", password="testpass123")
         self.http = TestClient()
         self.http.login(username="edituser", password="testpass123")
 
@@ -512,8 +508,7 @@ class SessionLogDurationThresholdTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="log-duration-test")
-        self.user = User.objects.create_user(username="duruser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="duruser", password="testpass123")
         self.http = TestClient()
         self.http.login(username="duruser", password="testpass123")
         select_practice(self.http, self.practice)
@@ -637,8 +632,7 @@ class ClientOnboardingStepTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="onboarding-step")
-        self.user = User.objects.create_user(username="onboarduser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="onboarduser", password="testpass123")
         self.http = TestClient()
         self.http.login(username="onboarduser", password="testpass123")
 
@@ -695,8 +689,7 @@ class ClientDocumentUploadTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="doc-upload")
-        self.user = User.objects.create_user(username="docuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="docuser", password="testpass123")
         self.http = TestClient()
         self.http.login(username="docuser", password="testpass123")
 
@@ -824,8 +817,7 @@ class ClientGdprDeleteTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="gdpr-delete")
-        self.user = User.objects.create_user(username="gdpruser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="gdpruser", password="testpass123")
         self.http = TestClient()
         self.http.login(username="gdpruser", password="testpass123")
 

@@ -12,9 +12,9 @@ from django.test import TestCase
 from django.urls import reverse
 from PIL import Image
 
-from my_practice.models import Client, Invoice, Practice, UserPractice
+from my_practice.models import Client, Invoice, Practice
 
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 User = get_user_model()
 
@@ -28,8 +28,7 @@ class NextInvoiceNumberAPITest(TestCase):
         self.practice = create_test_practice(name="Test Practice", slug="api_views-1")
 
         # Create and login user
-        self.user = User.objects.create_user(username="apiuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="apiuser", password="testpass123")
 
         self.client_http = TestClient()
         self.client_http.login(username="apiuser", password="testpass123")
@@ -122,8 +121,7 @@ class InvoicePDFViewTest(TestCase):
         self.practice = create_test_practice(name="Test Practice", slug="api-views-fix")
 
         # Create user and link to practice (needed for middleware)
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
 
         # Create authenticated client
         self.client_http = TestClient()
@@ -222,8 +220,9 @@ class IntakeFormPdfTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="intake-pdf-test")
-        self.user = User.objects.create_user(username="intakepdfuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(
+            self.practice, username="intakepdfuser", password="testpass123"
+        )
         self.client_http = TestClient()
         self.client_http.login(username="intakepdfuser", password="testpass123")
 
@@ -300,8 +299,9 @@ class ContractPdfTest(TestCase):
             email="practice@example.com",
             city="Berlin",
         )
-        self.user = User.objects.create_user(username="contractpdfuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(
+            self.practice, username="contractpdfuser", password="testpass123"
+        )
         self.client_http = TestClient()
         self.client_http.login(username="contractpdfuser", password="testpass123")
 
@@ -347,8 +347,9 @@ class InvoicePdfGebuehTest(TestCase):
             email="practice@example.com",
             city="Berlin",
         )
-        self.user = User.objects.create_user(username="gebuehpdfuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(
+            self.practice, username="gebuehpdfuser", password="testpass123"
+        )
         self.client_http = TestClient()
         self.client_http.login(username="gebuehpdfuser", password="testpass123")
 
@@ -378,8 +379,7 @@ class InvoiceBatchDownloadTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="invoice-batch-download")
-        self.user = User.objects.create_user(username="batchuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="batchuser", password="testpass123")
         self.client_http = TestClient()
         self.client_http.login(username="batchuser", password="testpass123")
 
@@ -436,8 +436,7 @@ class UpdateInvoiceStatusTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="update-invoice-status")
-        self.user = User.objects.create_user(username="statususer", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="statususer", password="testpass123")
         self.client_http = TestClient()
         self.client_http.login(username="statususer", password="testpass123")
 
@@ -530,8 +529,7 @@ class PracticeImagesTransparencyTest(TestCase):
         self.practice = create_test_practice(
             name="Test Practice", slug="practice-logo-transparency"
         )
-        self.user = User.objects.create_user(username="logouser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="logouser", password="testpass123")
         self.client_http = TestClient()
         self.client_http.login(username="logouser", password="testpass123")
 

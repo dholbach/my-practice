@@ -305,6 +305,24 @@ def create_test_practice(name="Test Practice", slug=None, **overrides):
     return Practice.objects.create(**fields)
 
 
+def create_test_user(practice, username="testuser", password="testpass123", **user_fields):
+    """
+    Create a user who owns ``practice``.
+
+    Args:
+        practice: The Practice the user belongs to (as its owner)
+        username: Login name
+        password: Login password
+        **user_fields: Any other User field, passed to ``create_user``
+
+    Returns:
+        User instance
+    """
+    user = User.objects.create_user(username=username, password=password, **user_fields)
+    UserPractice.objects.create(user=user, practice=practice, is_owner=True)
+    return user
+
+
 def create_test_client(practice, code="TC", full_name="Max Mustermann", **overrides):
     """
     Create a client of ``practice`` with default values.

@@ -27,13 +27,17 @@ from ..models import (
     Client,
     Invoice,
     InvoiceItem,
-    Practice,
     PracticeTodo,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
 )
-from .test_helpers import QueryCountMixin, link_user_to_practice, select_practice
+from .test_helpers import (
+    QueryCountMixin,
+    create_test_practice,
+    link_user_to_practice,
+    select_practice,
+)
 
 
 class QueryCountTestBase(QueryCountMixin, TestCase):
@@ -42,12 +46,8 @@ class QueryCountTestBase(QueryCountMixin, TestCase):
     slug = "query-counts"
 
     def setUp(self):
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug=self.slug,
-            title="Test Practitioner",
-            email="test@practice.example",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug=self.slug, email="test@practice.example"
         )
         self.user = User.objects.create_user(username="qcuser", password="testpass123")
         link_user_to_practice(self.user, self.practice)

@@ -20,7 +20,7 @@ from ..models import (
     Session,
     UserPractice,
 )
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 
 class DashboardViewTest(TestCase):
@@ -32,10 +32,7 @@ class DashboardViewTest(TestCase):
         self.practice = create_test_practice(name="Test Practice", slug="views_dashboard-1")
 
         # Create test user
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-
-        # Link user to practice
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
 
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
@@ -244,8 +241,7 @@ class DashboardPerformanceTest(TestCase):
         # Create practice
         self.practice = create_test_practice(name="Test Practice", slug="views_dashboard-2")
 
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 

@@ -629,12 +629,8 @@ class TaxQuarterOverviewConsistencyTest(TestCase):
         self.client_instance = TestClient()
         self.client_instance.login(username="quarteruser", password="12345")
 
-        self.practice = Practice.objects.create(
-            name="Quarter Practice",
-            slug="views_tax-quarter",
-            title="Test Practitioner",
-            email="quarter@practice.example",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Quarter Practice", slug="views_tax-quarter", email="quarter@practice.example"
         )
         self.practice.users.add(self.user)
         select_practice(self.client_instance, self.practice)

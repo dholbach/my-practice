@@ -24,10 +24,9 @@ from ..models import (
     Practice,
     ServiceType,
     Session,
-    UserPractice,
     allow_issued_invoice_writes,
 )
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 
 class AnalyticsDashboardViewTest(TestCase):
@@ -39,9 +38,7 @@ class AnalyticsDashboardViewTest(TestCase):
         # Create practice
         self.practice = create_test_practice(name="Test Practice", slug="views_analytics-1")
 
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        # Without a practice the user sees no figures at all (scope_to_practice).
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="testuser", password="testpass123")
 
@@ -327,8 +324,7 @@ class CapacityTargetSubtitleTest(TestCase):
 
     def setUp(self):
         self.practice = Practice.objects.create(name="Test Practice", slug="capacity-subtitle")
-        user = User.objects.create_user(username="capacityuser", password="testpass123")
-        UserPractice.objects.create(user=user, practice=self.practice, is_owner=True)
+        create_test_user(self.practice, username="capacityuser", password="testpass123")
         self.http = TestClient()
         self.http.login(username="capacityuser", password="testpass123")
 
@@ -383,8 +379,7 @@ class AnalyticsClientsTabHeatmapTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="analytics-heatmap")
-        self.user = User.objects.create_user(username="heatmapuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="heatmapuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="heatmapuser", password="testpass123")
 
@@ -458,8 +453,7 @@ class RevenueReportTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="revenue-report")
-        self.user = User.objects.create_user(username="revenueuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="revenueuser", password="testpass123")
         self.client_instance = TestClient()
         self.client_instance.login(username="revenueuser", password="testpass123")
 

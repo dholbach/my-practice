@@ -11,7 +11,7 @@ from django.test import Client as TestClient
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from my_practice.models import Client, Practice, UserPractice
+from my_practice.models import Client
 from my_practice.utils.pdf_generation import (
     generate_questionnaire_pdf_bytes,
     resolve_questionnaire_section,
@@ -22,7 +22,7 @@ from my_practice.utils.questionnaire_content import (
     load_questionnaire,
 )
 
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 User = get_user_model()
 
@@ -106,8 +106,7 @@ class QuestionnairePdfGenerationTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="questionnaire-pdf-test")
-        self.user = User.objects.create_user(username="qpdfuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="qpdfuser", password="testpass123")
         self.client_http = TestClient()
         self.client_http.login(username="qpdfuser", password="testpass123")
 
@@ -170,15 +169,10 @@ class SendQuestionnairePdfEmailViewTest(TestCase):
         logging.getLogger("my_practice.email").setLevel(logging.ERROR)
 
         self.client_http = TestClient()
-        self.practice = Practice.objects.create(
-            name="Test Practice",
-            slug="questionnaire-email-test",
-            title="Test Practitioner",
-            email="practice@test.com",
-            city="Berlin",
+        self.practice = create_test_practice(
+            name="Test Practice", slug="questionnaire-email-test", email="practice@test.com"
         )
-        self.user = User.objects.create_user(username="qemailuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="qemailuser", password="testpass123")
         self.client_http.login(username="qemailuser", password="testpass123")
 
         self.test_client = Client.objects.create(
@@ -367,8 +361,7 @@ class MixedSectionQuestionnairePdfTest(TestCase):
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="mixed-questionnaire-test")
-        self.user = User.objects.create_user(username="mixeduser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="mixeduser", password="testpass123")
 
     def _get_form_fields(self, pdf_bytes: bytes) -> dict:
         from pypdf import PdfReader

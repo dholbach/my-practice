@@ -21,7 +21,7 @@ from my_practice.models import (
 )
 from my_practice.tests.test_helpers import make_pdf_bytes, select_practice
 
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 User = get_user_model()
 
@@ -37,8 +37,7 @@ class ExpenseListViewTest(TestCase):
         self.practice = create_test_practice(name="Test Practice", slug="expense_views-1")
 
         # Create and login user
-        self.user = User.objects.create_user(username="expenseuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="expenseuser", password="testpass123")
         self.client.login(username="expenseuser", password="testpass123")
 
         # Create expenses for different years
@@ -123,8 +122,7 @@ class ExpenseCreateViewTest(TestCase):
         self.client = TestClient()
 
         # Create and login user
-        self.user = User.objects.create_user(username="expenseuser2", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="expenseuser2", password="testpass123")
         self.client.login(username="expenseuser2", password="testpass123")
 
     def test_expense_create_form_loads(self):
@@ -183,8 +181,7 @@ class ExpenseUpdateViewTest(TestCase):
         self.client = TestClient()
 
         # Create and login user
-        self.user = User.objects.create_user(username="expenseuser3", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="expenseuser3", password="testpass123")
         self.client.login(username="expenseuser3", password="testpass123")
 
         self.expense = CompanyExpense.objects.create(
@@ -310,8 +307,7 @@ class ExpenseDeleteViewTest(TestCase):
         self.client = TestClient()
 
         # Create and login user
-        self.user = User.objects.create_user(username="expenseuser4", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="expenseuser4", password="testpass123")
         self.client.login(username="expenseuser4", password="testpass123")
 
         self.expense = CompanyExpense.objects.create(
@@ -352,8 +348,7 @@ class ExpenseReceiptUploadTest(TestCase):
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="expense_receipt-1")
         self.client = TestClient()
-        self.user = User.objects.create_user(username="receiptuser", password="testpass123")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="receiptuser", password="testpass123")
         self.client.login(username="receiptuser", password="testpass123")
 
     def _pdf_file(self, name="rechnung.pdf"):

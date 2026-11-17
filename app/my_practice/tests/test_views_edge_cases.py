@@ -17,7 +17,7 @@ from my_practice.models import (
     UserPractice,
 )
 
-from .test_helpers import create_test_practice, select_practice
+from .test_helpers import create_test_practice, create_test_user, select_practice
 
 User = get_user_model()
 
@@ -218,8 +218,7 @@ class ClientEdgeCasesTest(TestCase):
         self.practice = create_test_practice(name="Test Practice", slug="views_edge_cases-2")
 
         # Create user and login
-        self.user = User.objects.create_user(username="edgecaseuser", password="12345")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="edgecaseuser", password="12345")
 
         self.client = Client()
         self.client.login(username="edgecaseuser", password="12345")

@@ -13,7 +13,6 @@ Covers:
 
 from datetime import date, timedelta
 
-from django.contrib.auth.models import User
 from django.test import Client as TestClient
 from django.test import TestCase
 from django.urls import reverse
@@ -22,9 +21,9 @@ from ..models import (
     ChecklistItemPause,
     OperationalChecklistCompletion,
     Practice,
-    UserPractice,
 )
 from ..utils import ChecklistWidgetBuilder
+from .test_helpers import create_test_user
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -40,8 +39,7 @@ def _make_user_with_practice(username: str) -> tuple:
         email="test@example.com",
         city="Berlin",
     )
-    user = User.objects.create_user(username=username, password="testpass")
-    UserPractice.objects.create(user=user, practice=practice, is_owner=True)
+    user = create_test_user(practice, username=username, password="testpass")
     client = TestClient()
     client.login(username=username, password="testpass")
     return user, practice, client

@@ -16,7 +16,7 @@ from ..models import (
     ServiceType,
     UserPractice,
 )
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, create_test_user
 
 
 class PracticeModelTest(TestCase):
@@ -242,10 +242,7 @@ class MultiPracticeWorkflowTest(TestCase):
         )
 
         # Create user
-        self.user = User.objects.create_user(username="practitioner", password="test123")
-
-        # Assign user to both practices
-        UserPractice.objects.create(user=self.user, practice=self.therapy, is_owner=True)
+        self.user = create_test_user(self.therapy, username="practitioner", password="test123")
         UserPractice.objects.create(user=self.user, practice=self.coaching, is_owner=False)
 
     def test_user_has_access_to_multiple_practices(self):

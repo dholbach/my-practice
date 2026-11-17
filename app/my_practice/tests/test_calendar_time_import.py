@@ -7,9 +7,10 @@ from unittest.mock import Mock
 
 from django.test import TestCase
 
-from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session, UserPractice
+from ..models import Client, Invoice, InvoiceItem, Practice, ServiceType, Session
 from ..utils.calendar_import_helpers import create_invoice_items_from_events
 from ..utils.google_calendar import CalendarEventParser
+from .test_helpers import create_test_user
 
 
 class CalendarTimeImportTest(TestCase):
@@ -24,11 +25,7 @@ class CalendarTimeImportTest(TestCase):
         )
 
         # Create test user (admin superuser created by Django)
-        from django.contrib.auth import get_user_model
-
-        User = get_user_model()
-        self.user = User.objects.create_user(username="testuser", password="testpass")
-        UserPractice.objects.create(user=self.user, practice=self.practice, is_owner=True)
+        self.user = create_test_user(self.practice, username="testuser", password="testpass")
 
         # Create test client
         self.client_obj = Client.objects.create(
