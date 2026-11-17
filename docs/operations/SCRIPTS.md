@@ -11,6 +11,8 @@ The path is read from `.env` (default: `../my-practice-data` — sibling directo
 $MY_PRACTICE_DATA_DIR/
   backups/    ← PostgreSQL dumps + media archives (bind-mounted → /app/backups in container)
   media/      ← Practice logo, signature, receipt files (bind-mounted → /app/media in container)
+  documents/      ← Client documents (bind-mounted → /my-practice-data/documents)
+  questionnaires/ ← Questionnaire files (bind-mounted → /my-practice-data/questionnaires)
 ```
 
 This ensures a `rm -rf` or `git clean` of the repo never destroys data.

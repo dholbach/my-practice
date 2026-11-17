@@ -36,10 +36,18 @@ jobs:
           INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
           if [ "$EVENT_NAME" = "push" ]; then
-            echo "tag=$REF_NAME" >> "$GITHUB_OUTPUT"
+            TAG="$REF_NAME"
           else
-            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+            TAG="$INPUT_TAG"
           fi
+          # :latest must never point at an image whose tag disagrees with the
+          # code inside it, so a mistyped dispatch input fails here.
+          VERSION="$(sed -n 's/^VERSION = "\(.*\)"$/\1/p' app/my_practice/version.py)"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "::error::Tag $TAG does not match version.py ($VERSION)"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
