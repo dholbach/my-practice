@@ -126,6 +126,25 @@ class TidyInquiriesTestCase(TestCase):
         self._run("--apply")
         self.assertIn("0 lapsed, 0 anonymised", self._run("--apply"))
 
+    def test_output_names_inquiries_by_id_only(self):
+        inquiry = self._inquiry(300)
+        output = self._run("--apply")
+        self.assertIn(f"#{inquiry.pk}", output)
+        for personal in ("Mustermann", "max@example.com", "+49 123 456789", "Some notes"):
+            self.assertNotIn(personal, output)
+
+    def test_a_failure_while_applying_rolls_back_the_whole_run(self):
+        """Lapsing and anonymising share one transaction: an error leaves every inquiry as it was."""
+        inquiry = self._inquiry(300)
+        with (
+            patch.object(ClientInquiry, "anonymise", side_effect=RuntimeError("boom")),
+            self.assertRaises(RuntimeError),
+        ):
+            self._run("--apply")
+        inquiry.refresh_from_db()
+        self.assertEqual(inquiry.status, InquiryStatus.CONTACTED)
+        self.assertEqual(inquiry.full_name, "Max Mustermann")
+
 
 class AnonymisedInquiryEditingTestCase(TestCase):
     """An anonymised inquiry's personal fields can't be filled in again."""

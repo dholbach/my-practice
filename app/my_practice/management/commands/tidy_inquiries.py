@@ -56,25 +56,8 @@ class Command(BaseCommand):
         today = timezone.localdate()
         prefix = "" if apply else "[dry-run] "
 
-        to_lapse = []
-        for inquiry in ClientInquiry.objects.open():
-            step_date, _field = inquiry.last_step()
-            if (today - step_date).days > INQUIRY_LAPSE_DAYS:
-                to_lapse.append((inquiry, (today - step_date).days))
-
-        # Lapsing happens first, so an inquiry can lapse and be anonymised in the
-        # same run — both thresholds count from the same last step.
-        lapsing_ids = {inquiry.pk for inquiry, _days in to_lapse}
-        to_anonymise = []
-        candidates = ClientInquiry.objects.filter(
-            anonymised_at__isnull=True, converted_client__isnull=True
-        )
-        for inquiry in candidates:
-            if inquiry.status not in CLOSED_INQUIRY_STATUSES and inquiry.pk not in lapsing_ids:
-                continue
-            step_date, _field = inquiry.last_step()
-            if (today - step_date).days > INQUIRY_RETENTION_DAYS:
-                to_anonymise.append((inquiry, (today - step_date).days))
+        to_lapse = self._inquiries_to_lapse(today)
+        to_anonymise = self._inquiries_to_anonymise(today, {i.pk for i, _days in to_lapse})
 
         for inquiry, days in to_lapse:
             self.stdout.write(
@@ -86,15 +69,7 @@ class Command(BaseCommand):
             )
 
         if apply:
-            with transaction.atomic():
-                for inquiry, _days in to_lapse:
-                    inquiry.status = InquiryStatus.LAPSED
-                    inquiry.save(update_fields=["status", "updated_at"])
-                for inquiry, _days in to_anonymise:
-                    inquiry.anonymise()
-            logger.info(
-                "tidy_inquiries: lapsed %d, anonymised %d", len(to_lapse), len(to_anonymise)
-            )
+            self._apply(to_lapse, to_anonymise)
 
         verb = "" if apply else "would be "
         self.stdout.write(
@@ -102,3 +77,43 @@ class Command(BaseCommand):
                 f"{len(to_lapse)} {verb}lapsed, {len(to_anonymise)} {verb}anonymised."
             )
         )
+
+    @staticmethod
+    def _inquiries_to_lapse(today) -> list[tuple[ClientInquiry, int]]:
+        """Open inquiries whose newest step is older than INQUIRY_LAPSE_DAYS, with that age."""
+        found = []
+        for inquiry in ClientInquiry.objects.open():
+            step_date, _field = inquiry.last_step()
+            if (today - step_date).days > INQUIRY_LAPSE_DAYS:
+                found.append((inquiry, (today - step_date).days))
+        return found
+
+    @staticmethod
+    def _inquiries_to_anonymise(today, lapsing_ids: set[int]) -> list[tuple[ClientInquiry, int]]:
+        """Closed (or about to lapse) inquiries past retention that no client record covers.
+
+        Lapsing happens first, so an inquiry can lapse and be anonymised in the
+        same run — both thresholds count from the same last step.
+        """
+        found = []
+        candidates = ClientInquiry.objects.filter(
+            anonymised_at__isnull=True, converted_client__isnull=True
+        )
+        for inquiry in candidates:
+            if inquiry.status not in CLOSED_INQUIRY_STATUSES and inquiry.pk not in lapsing_ids:
+                continue
+            step_date, _field = inquiry.last_step()
+            if (today - step_date).days > INQUIRY_RETENTION_DAYS:
+                found.append((inquiry, (today - step_date).days))
+        return found
+
+    @staticmethod
+    def _apply(to_lapse, to_anonymise) -> None:
+        """Lapse and anonymise in one transaction: an error leaves every inquiry as it was."""
+        with transaction.atomic():
+            for inquiry, _days in to_lapse:
+                inquiry.status = InquiryStatus.LAPSED
+                inquiry.save(update_fields=["status", "updated_at"])
+            for inquiry, _days in to_anonymise:
+                inquiry.anonymise()
+        logger.info("tidy_inquiries: lapsed %d, anonymised %d", len(to_lapse), len(to_anonymise))
