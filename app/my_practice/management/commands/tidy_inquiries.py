@@ -16,13 +16,13 @@ Two passes, both across every practice:
    left behind by a client deleted before the client-delete signal existed —
    follows the normal retention period.
 
-Dry run by default; --apply makes the changes. Anonymising cannot be undone.
+Dry run by default (--dry-run says so explicitly); --apply makes the changes. Anonymising cannot be undone.
 Output names inquiries by id only — never by name.
 """
 
 import logging
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -50,9 +50,16 @@ class Command(BaseCommand):
             action="store_true",
             help="Make the changes (default: only list what would change)",
         )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Only list what would change (the default; spelled out for symmetry)",
+        )
 
     def handle(self, *args, **options):
         apply = options["apply"]
+        if apply and options["dry_run"]:
+            raise CommandError("--apply and --dry-run contradict each other")
         today = timezone.localdate()
         prefix = "" if apply else "[dry-run] "
 

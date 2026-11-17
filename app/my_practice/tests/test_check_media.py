@@ -7,6 +7,7 @@ from io import StringIO
 from pathlib import Path
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 
 from ..management.commands.check_media import _models_with_file_fields
@@ -80,6 +81,24 @@ class CheckMediaCommandTests(TestCase):
 
         self.assertTrue(stray.exists())
         self.assertIn("To delete: ./dev.py manage check_media --delete-orphans", output)
+
+    def test_explicit_dry_run_reports_and_deletes_nothing(self):
+        (self.media_root / "logos").mkdir(parents=True)
+        stray = self.media_root / "logos" / "stray.png"
+        stray.write_bytes(b"fake-png")
+        out = StringIO()
+        with override_settings(MEDIA_ROOT=self.media_root):
+            call_command("check_media", "--dry-run", stdout=out)
+        self.assertTrue(stray.exists())
+        self.assertIn("Orphaned files (1)", out.getvalue())
+
+    def test_delete_orphans_and_dry_run_contradict_each_other(self):
+        (self.media_root / "logos").mkdir(parents=True)
+        stray = self.media_root / "logos" / "stray.png"
+        stray.write_bytes(b"fake-png")
+        with override_settings(MEDIA_ROOT=self.media_root), self.assertRaises(CommandError):
+            call_command("check_media", "--delete-orphans", "--dry-run", stdout=StringIO())
+        self.assertTrue(stray.exists())
 
     def test_delete_orphans_keeps_files_the_database_references(self):
         expense = CompanyExpense.objects.create(

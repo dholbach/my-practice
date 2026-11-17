@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from django.contrib.admin.sites import AdminSite
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import RequestFactory, TestCase
 
 from my_practice.admin import ClientInquiryAdmin
@@ -125,6 +126,20 @@ class TidyInquiriesTestCase(TestCase):
         self._inquiry(300)
         self._run("--apply")
         self.assertIn("0 lapsed, 0 anonymised", self._run("--apply"))
+
+    def test_explicit_dry_run_changes_nothing(self):
+        inquiry = self._inquiry(300)
+        output = self._run("--dry-run")
+        inquiry.refresh_from_db()
+        self.assertEqual(inquiry.status, InquiryStatus.CONTACTED)
+        self.assertIn("would be lapsed", output)
+
+    def test_apply_and_dry_run_contradict_each_other(self):
+        inquiry = self._inquiry(300)
+        with self.assertRaises(CommandError):
+            self._run("--apply", "--dry-run")
+        inquiry.refresh_from_db()
+        self.assertEqual(inquiry.status, InquiryStatus.CONTACTED)
 
     def test_output_names_inquiries_by_id_only(self):
         inquiry = self._inquiry(300)

@@ -8,6 +8,7 @@ Covers: filter modes (default/--all/--since/--imported-on/--today),
 from datetime import date, timedelta
 from decimal import Decimal
 from io import StringIO
+from unittest import mock
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -215,3 +216,23 @@ class ClearWithFinancialsTest(TestCase):
 
         self.assertEqual(BankTransaction.objects.count(), 0)
         self.assertTrue(CompanyExpense.objects.filter(id=manual.id).exists())
+
+
+class ClearDryRunTest(TestCase):
+    """--dry-run shows the preview and stops: nothing deleted, nothing asked."""
+
+    def setUp(self):
+        self.practice = _make_practice("cmd-dry-run")
+
+    def test_dry_run_deletes_nothing_even_with_yes(self):
+        _make_transaction(self.practice)
+        out = StringIO()
+        call_command("clearbanktransactions", "--dry-run", "--yes", stdout=out)
+        self.assertEqual(BankTransaction.objects.count(), 1)
+        self.assertIn("DRY RUN", out.getvalue())
+
+    def test_dry_run_does_not_prompt(self):
+        _make_transaction(self.practice)
+        with mock.patch("builtins.input", side_effect=AssertionError("prompted")):
+            call_command("clearbanktransactions", "--dry-run", stdout=StringIO())
+        self.assertEqual(BankTransaction.objects.count(), 1)

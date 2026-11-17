@@ -10,7 +10,7 @@ from pathlib import Path
 
 from django.apps import apps
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import models
 
 
@@ -67,8 +67,15 @@ class Command(BaseCommand):
             action="store_true",
             help="Delete orphaned files with no DB record (without this flag: report only)",
         )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Report only (the default; spelled out for symmetry)",
+        )
 
     def handle(self, *args, **options):
+        if options["delete_orphans"] and options["dry_run"]:
+            raise CommandError("--delete-orphans and --dry-run contradict each other")
         media_root = Path(settings.MEDIA_ROOT)
 
         if not media_root.exists():

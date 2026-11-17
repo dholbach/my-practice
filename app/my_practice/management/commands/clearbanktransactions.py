@@ -46,6 +46,11 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Show what would be deleted, without deleting or asking",
+        )
+        parser.add_argument(
             "--yes",
             action="store_true",
             help="Skip confirmation prompt",
@@ -70,6 +75,9 @@ class Command(BaseCommand):
         self._print_preview(transactions, expenses_qs, withdrawals_qs, scope)
 
         total = count + expense_count + withdrawal_count
+        if options["dry_run"]:
+            self.stdout.write(self.style.WARNING("📋 DRY RUN - No changes made"))
+            return
         if not self._confirm(total, options["yes"]):
             return
 

@@ -516,6 +516,8 @@ class Command(BaseCommand):
             raise CommandError(f"Operation failed: {e}")
 ```
 
+A management command that deletes or rewrites data accepts `--dry-run`, which always means "show, change nothing" (`test_management_dry_run.py` lists them). The older action flags stay where the scheduled jobs call them (`tidy_inquiries --apply`, `check_media --delete-orphans`); each command keeps its own safe default, and combining `--dry-run` with the action flag is a `CommandError`. Row-deleting commands share the "type yes" prompt in `management/commands/_confirm.py`.
+
 ### Date Filter Patterns (M-PAT-02)
 Always use RevenueCalculator methods for consistent date filtering:
 
