@@ -20,7 +20,7 @@ from ..models import CompanyExpense, CompanyWithdrawal, TaxYearNote
 from ..utils import DateRangeHelper, RevenueCalculator, TaxYearContextBuilder
 from ..utils.practice_days import WorkdayAuditCalculator
 from ..utils.tax_context_builder import available_data_years
-from ..utils.view_helpers import get_year_from_request
+from ..utils.view_helpers import get_year_from_request, json_error
 
 
 def tax_year_summary(request: HttpRequest) -> HttpResponse:
@@ -48,15 +48,15 @@ def save_tax_year_note(request: HttpRequest) -> JsonResponse:
     """
     practice = request.current_practice
     if not practice:
-        return JsonResponse({"error": _("No practice selected")}, status=400)
+        return json_error(_("No practice selected"))
 
     try:
         year = int(request.POST.get("year", 0))
     except TypeError, ValueError:
-        return JsonResponse({"error": _("Invalid year")}, status=400)
+        return json_error(_("Invalid year"))
 
     if not (1900 <= year <= 2100):
-        return JsonResponse({"error": _("Invalid year")}, status=400)
+        return json_error(_("Invalid year"))
 
     note_form = TaxYearNoteForm()
 
@@ -71,7 +71,7 @@ def save_tax_year_note(request: HttpRequest) -> JsonResponse:
                 raw_amount.replace(",", ".")
             )
         except ValidationError:
-            return JsonResponse({"error": _("Invalid amount")}, status=400)
+            return json_error(_("Invalid amount"))
     elif "settlement_amount" in request.POST:
         defaults["settlement_amount"] = None
 
@@ -80,7 +80,7 @@ def save_tax_year_note(request: HttpRequest) -> JsonResponse:
         try:
             defaults["settlement_date"] = note_form.fields["settlement_date"].clean(raw_date)
         except ValidationError:
-            return JsonResponse({"error": _("Invalid date")}, status=400)
+            return json_error(_("Invalid date"))
     elif "settlement_date" in request.POST:
         defaults["settlement_date"] = None
 
