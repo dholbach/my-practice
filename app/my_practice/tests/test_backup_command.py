@@ -5,6 +5,7 @@ the real command against a fake `docker` that plays pg_dump, find and tar, so
 every verification step is exercised without containers.
 """
 
+import ast
 import contextlib
 import gzip
 import importlib.util
@@ -442,3 +443,60 @@ class DashboardBackupWarningTests(BaseTestCase):
     @override_settings(BACKUP_MAX_AGE_HOURS=0)
     def test_check_can_be_turned_off(self):
         self.assertIsNone(self._warning())
+
+
+class WrapperComposeFileTests(SimpleTestCase):
+    """scripts/backup.sh and restore.sh point prod.py at the compose file `docker compose` would use."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        (self.root / "scripts").mkdir()
+        for name in ("backup.sh", "restore.sh", "_compose_file.sh"):
+            shutil.copy(REPO_ROOT / "scripts" / name, self.root / "scripts" / name)
+        # prod.py stand-in: report the arguments the wrapper passed on.
+        (self.root / "prod.py").write_text("import sys\nprint(sys.argv[1:])\n")
+
+    def run_wrapper(self, name, *args, env=None):
+        environ = {k: v for k, v in os.environ.items() if k != "COMPOSE_FILE"}
+        environ.update(env or {})
+        result = subprocess.run(
+            ["bash", str(self.root / "scripts" / name), *args],
+            capture_output=True,
+            text=True,
+            env=environ,
+            cwd=self.root,  # relative arguments resolve against where the caller stands
+            check=True,
+        )
+        return ast.literal_eval(result.stdout)  # the list of strings our stand-in prints
+
+    def test_defaults_to_docker_compose_yml(self):
+        self.assertEqual(
+            self.run_wrapper("backup.sh"), ["backup", "--compose-file", "docker-compose.yml"]
+        )
+
+    def test_last_assignment_in_env_wins_and_comments_are_stripped(self):
+        (self.root / ".env").write_text(
+            "COMPOSE_FILE=old.yml\n  COMPOSE_FILE=docker-compose.prod.yml  # prod\n"
+        )
+        self.assertEqual(
+            self.run_wrapper("backup.sh"),
+            ["backup", "--compose-file", "docker-compose.prod.yml"],
+        )
+
+    def test_the_environment_beats_env(self):
+        (self.root / ".env").write_text("COMPOSE_FILE=from-env-file.yml\n")
+        self.assertEqual(
+            self.run_wrapper("backup.sh", env={"COMPOSE_FILE": "from-environment.yml"}),
+            ["backup", "--compose-file", "from-environment.yml"],
+        )
+
+    def test_restore_resolves_paths_before_changing_directory(self):
+        (self.root / "dump.sql.gz").write_bytes(b"")
+        args = self.run_wrapper("restore.sh", "dump.sql.gz", "missing.tar.gz")
+        self.assertEqual(args[:3], ["restore", "--compose-file", "docker-compose.yml"])
+        self.assertEqual(args[3], str(self.root.resolve() / "dump.sql.gz"))
+        self.assertEqual(
+            args[4], "missing.tar.gz"
+        )  # not a file: passed through for prod.py to name

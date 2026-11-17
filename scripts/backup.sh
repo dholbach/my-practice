@@ -13,10 +13,8 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-if [ -z "${COMPOSE_FILE:-}" ] && [ -f "${REPO_DIR}/.env" ]; then
-    COMPOSE_FILE=$(grep -E '^[[:space:]]*COMPOSE_FILE=' "${REPO_DIR}/.env" | tail -n 1 \
-        | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//') || true
-fi
+# shellcheck source=scripts/_compose_file.sh
+. "${REPO_DIR}/scripts/_compose_file.sh"
 
 cd "$REPO_DIR"
-exec python3 "${REPO_DIR}/prod.py" backup --compose-file "${COMPOSE_FILE:-docker-compose.yml}" "$@"
+exec python3 "${REPO_DIR}/prod.py" backup --compose-file "$COMPOSE_FILE" "$@"
