@@ -7,7 +7,7 @@ from django.test import TestCase
 
 from ..models import Client, Invoice
 from ..utils.dashboard_widgets import InvoiceActionsWidgetBuilder
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_invoice, create_test_practice
 
 
 class GetOverdueInvoicesTest(TestCase):
@@ -27,13 +27,12 @@ class GetOverdueInvoicesTest(TestCase):
         )
 
     def _make_invoice(self, days_old: int) -> Invoice:
-        return Invoice.objects.create(
-            client=self.client_obj,
-            invoice_number=f"TC-{days_old}",
-            invoice_date=date.today() - timedelta(days=days_old),
+        return create_test_invoice(
+            self.client_obj,
+            f"TC-{days_old}",
+            Invoice.Status.SENT,
+            date.today() - timedelta(days=days_old),
             total=Decimal("90.00"),
-            status="sent",
-            practice=self.practice,
         )
 
     def test_default_threshold_matches_previous_hardcoded_30_days(self):

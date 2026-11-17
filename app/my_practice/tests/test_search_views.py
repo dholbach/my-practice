@@ -12,11 +12,10 @@ from ..models import (
     ClientInquiry,
     InquirySource,
     InquiryStatus,
-    Invoice,
     Practice,
     UserPractice,
 )
-from .test_helpers import create_test_client
+from .test_helpers import create_test_client, create_test_invoice
 
 
 def _display(result):
@@ -41,12 +40,7 @@ def _make_client(practice, code, name="Max Mustermann", active=True):
 
 
 def _make_invoice(client, number="INV-001"):
-    return Invoice.objects.create(
-        client=client,
-        invoice_number=number,
-        invoice_date="2026-04-01",
-        practice=client.practice,
-    )
+    return create_test_invoice(client, number, invoice_date="2026-04-01")
 
 
 def _make_inquiry(practice, name="Neue Anfrage", status=InquiryStatus.NEW):
