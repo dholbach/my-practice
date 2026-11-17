@@ -30,8 +30,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-16 — Review 4 liabilities, first batch (#656)**: bank match confidences use `BankTransaction.Confidence` everywhere, with a ratchet test (`test_bank_confidence_literals`); `RevenueCalculator` aggregates through one `_aggregate_stats`; `.badge-warning` is defined once (the later definition, which is what rendered).
-- **2026-11-16 — Fourth refactoring review (#656)**: the areas the third one left unread, seven agents, every finding re-checked. Do-now batch in #655: an admin badge that hid four states, a `prod.py` placeholder-as-secret, dead admin actions, forms and parameters, unwrapped form labels. 26 liabilities in the ledger; the compose env-var audit is finished.
+- **2026-11-17 — Review 4 liabilities, second batch (#670–#675)**: 13 of 26 closed, several already fixed by earlier PRs. New: image workflow checks the tag against `version.py`, `includes/detail_row.html` for the delete pages, brand-gradient tokens, `create_test_user`, restore-guard tests, `_confirm.confirm_deletion` for the two row-deleting commands. Left: `cmd_restore`/`cmd_setup` split, management command flag conventions.
+- **2026-11-16 — Review 4 liabilities, first batch (#656)**: bank match confidences use `BankTransaction.Confidence` everywhere, with a ratchet test (`test_bank_confidence_literals`); `RevenueCalculator` aggregates through one `_aggregate_stats`; `.badge-warning` is defined once.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

@@ -2,13 +2,13 @@
 Management command to clear bank transactions for reimporting.
 """
 
-import sys
 from datetime import date
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from ...models import BankTransaction, CompanyExpense, CompanyWithdrawal
+from ._confirm import confirm_deletion
 
 
 class Command(BaseCommand):
@@ -222,19 +222,7 @@ class Command(BaseCommand):
     # ── confirmation ──────────────────────────────────────────────────────────
 
     def _confirm(self, total: int, skip_confirm: bool) -> bool:
-        if skip_confirm:
-            return True
-        if not sys.stdin.isatty():
-            self.stdout.write(
-                self.style.WARNING("⚠️  No interactive terminal detected. Use --yes to confirm.")
-            )
-            self.stdout.write(self.style.ERROR("❌ Aborted"))
-            return False
-        response = input(f"⚠️  Delete {total} entries? (yes/no): ")
-        if response.lower() != "yes":
-            self.stdout.write(self.style.ERROR("❌ Aborted"))
-            return False
-        return True
+        return confirm_deletion(self, f"⚠️  Delete {total} entries? (yes/no): ", skip_confirm)
 
     # ── deletion ──────────────────────────────────────────────────────────────
 
