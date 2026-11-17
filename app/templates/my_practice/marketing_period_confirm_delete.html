@@ -6,18 +6,10 @@
 {% block warning_text %}{% trans "Are you sure you want to delete this marketing period?" %}{% endblock %}
 
 {% block detail_rows %}
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Description" %}:</span>
-    <span class="font-semibold">{{ period.description }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "From" %}:</span>
-    <span class="font-semibold">{{ period.start_date|date:"d.m.Y" }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "To" %}:</span>
-    <span class="font-semibold">{% if period.end_date %}{{ period.end_date|date:"d.m.Y" }}{% else %}{% trans "ongoing" %}{% endif %}</span>
-</div>
+{% include 'includes/detail_row.html' with label=_("Description") value=period.description %}
+{% include 'includes/detail_row.html' with label=_("From") value=period.start_date|date:"d.m.Y" %}
+{% trans "ongoing" as ongoing %}
+{% include 'includes/detail_row.html' with label=_("To") value=period.end_date|date:"d.m.Y"|default:ongoing %}
 {% endblock %}
 
 {% block cancel_url %}{% url 'inquiry_list' %}{% endblock %}

@@ -6,22 +6,10 @@
 {% block warning_text %}{% trans "Are you sure you want to delete this inquiry?" %}{% endblock %}
 
 {% block detail_rows %}
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Name" %}:</span>
-    <span class="font-semibold">{{ inquiry.full_name|privacy_name }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Date received" %}:</span>
-    <span class="font-semibold">{{ inquiry.inquiry_date|date:"d.m.Y" }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Source" %}:</span>
-    <span class="font-semibold">{{ inquiry.get_source_display }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Status" %}:</span>
-    <span class="font-semibold">{{ inquiry.get_status_display }}</span>
-</div>
+{% include 'includes/detail_row.html' with label=_("Name") value=inquiry.full_name|privacy_name %}
+{% include 'includes/detail_row.html' with label=_("Date received") value=inquiry.inquiry_date|date:"d.m.Y" %}
+{% include 'includes/detail_row.html' with label=_("Source") value=inquiry.get_source_display %}
+{% include 'includes/detail_row.html' with label=_("Status") value=inquiry.get_status_display %}
 {% endblock %}
 
 {% block cancel_url %}{% url 'inquiry_list' %}{% endblock %}

@@ -1,5 +1,5 @@
 {% extends 'my_practice/_confirm_delete_base.html' %}
-{% load i18n %}
+{% load i18n payment_tags %}
 
 {% block title %}{% trans "Delete withdrawal" %}{% endblock %}
 {% block heading %}{% trans "Delete withdrawal" %}{% endblock %}
@@ -7,23 +7,11 @@
 {% block warning_subtext %}<p class="text-sm mt-2 text-text-secondary">{% trans "This action cannot be undone." %}</p>{% endblock %}
 
 {% block detail_rows %}
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Date" %}:</span>
-    <span class="font-semibold">{{ withdrawal.date|date:"d.m.Y" }}</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Amount" %}:</span>
-    <span class="font-semibold text-lg text-link">{{ withdrawal.amount }} €</span>
-</div>
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Category" %}:</span>
-    <span class="font-semibold">{{ withdrawal.get_category_display }}</span>
-</div>
+{% include 'includes/detail_row.html' with label=_("Date") value=withdrawal.date|date:"d.m.Y" %}
+{% include 'includes/detail_row.html' with label=_("Amount") value=withdrawal.amount|currency value_class="text-lg text-link" %}
+{% include 'includes/detail_row.html' with label=_("Category") value=withdrawal.get_category_display %}
 {% if withdrawal.description %}
-<div class="flex justify-between p-3 border-b border-border last:border-b-0">
-    <span class="font-medium text-text-secondary">{% trans "Description" %}:</span>
-    <span class="font-semibold">{{ withdrawal.description }}</span>
-</div>
+{% include 'includes/detail_row.html' with label=_("Description") value=withdrawal.description %}
 {% endif %}
 {% endblock %}
 

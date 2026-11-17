@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 21:45+0100\n"
+"POT-Creation-Date: 2026-11-17 07:41+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -49,8 +49,8 @@ msgstr "Zuordnung"
 #: templates/my_practice/calendar_import.html:99
 #: templates/my_practice/client_detail_tab_billing.html:30
 #: templates/my_practice/client_detail_tab_billing.html:76
-#: templates/my_practice/inquiry_confirm_delete.html:22
-#: templates/my_practice/invoice_confirm_delete.html:24
+#: templates/my_practice/inquiry_confirm_delete.html:12
+#: templates/my_practice/invoice_confirm_delete.html:15
 #: templates/my_practice/invoice_detail.html:33
 #: templates/my_practice/invoice_list.html:169
 #: templates/my_practice/monthly_billing_overview.html:61
@@ -70,7 +70,7 @@ msgstr "Zahler"
 #: templates/my_practice/bank_import.html:87
 #: templates/my_practice/bank_review.html:196
 #: templates/my_practice/client_detail_tab_billing.html:76
-#: templates/my_practice/expense_confirm_delete.html:23
+#: templates/my_practice/expense_confirm_delete.html:13
 #: templates/my_practice/expense_list.html:81
 #: templates/my_practice/invoice_list.html:170
 #: templates/my_practice/revenue_report.html:54
@@ -79,7 +79,7 @@ msgstr "Zahler"
 #: templates/my_practice/tax_year_summary.html:134
 #: templates/my_practice/tax_year_summary.html:172
 #: templates/my_practice/tax_year_summary.html:209
-#: templates/my_practice/withdrawal_confirm_delete.html:15
+#: templates/my_practice/withdrawal_confirm_delete.html:11
 #: templates/my_practice/withdrawal_list.html:60
 #: templates/my_practice/withdrawal_list.html:111
 msgid "Amount"
@@ -112,7 +112,7 @@ msgstr "Rechnung"
 #: templates/my_practice/billing_open_overview.html:59
 #: templates/my_practice/calendar_import.html:97
 #: templates/my_practice/client_detail.html:6
-#: templates/my_practice/invoice_confirm_delete.html:16
+#: templates/my_practice/invoice_confirm_delete.html:12
 #: templates/my_practice/invoice_list.html:167
 #: templates/my_practice/monthly_billing_overview.html:56
 #: templates/my_practice/revenue_report.html:49
@@ -245,7 +245,7 @@ msgstr "Details"
 #: my_practice/models/financial.py:64 my_practice/models/inquiry.py:145
 #: my_practice/models/invoice.py:170 my_practice/models/operational.py:56
 #: my_practice/models/timeoff.py:54 templates/my_practice/checklist.html:119
-#: templates/my_practice/time_off_confirm_delete.html:28
+#: templates/my_practice/time_off_confirm_delete.html:15
 #: templates/my_practice/withdrawal_list.html:62
 #: templates/my_practice/withdrawal_list.html:113
 msgid "Notes"
@@ -296,11 +296,11 @@ msgstr "Metadaten"
 #: my_practice/models/tag.py:77
 #: templates/my_practice/bank_expense_review.html:31
 #: templates/my_practice/bank_withdrawal_review.html:31
-#: templates/my_practice/expense_confirm_delete.html:19
+#: templates/my_practice/expense_confirm_delete.html:12
 #: templates/my_practice/expense_list.html:80
 #: templates/my_practice/tax_year_summary.html:170
 #: templates/my_practice/tax_year_summary.html:200
-#: templates/my_practice/withdrawal_confirm_delete.html:19
+#: templates/my_practice/withdrawal_confirm_delete.html:12
 #: templates/my_practice/withdrawal_list.html:61
 #: templates/my_practice/withdrawal_list.html:112
 msgid "Category"
@@ -352,13 +352,13 @@ msgstr "Allgemein"
 #: my_practice/models/financial.py:151 my_practice/models/gebueh.py:29
 #: my_practice/models/inquiry.py:268 my_practice/models/invoice.py:406
 #: my_practice/models/tag.py:84
-#: templates/my_practice/expense_confirm_delete.html:15
+#: templates/my_practice/expense_confirm_delete.html:11
 #: templates/my_practice/expense_list.html:79
 #: templates/my_practice/invoice_edit.html:135
-#: templates/my_practice/marketing_period_confirm_delete.html:10
+#: templates/my_practice/marketing_period_confirm_delete.html:9
 #: templates/my_practice/tag_list.html:27
 #: templates/my_practice/tax_year_summary.html:199
-#: templates/my_practice/withdrawal_confirm_delete.html:24
+#: templates/my_practice/withdrawal_confirm_delete.html:14
 msgid "Description"
 msgstr "Beschreibung"
 
@@ -758,18 +758,18 @@ msgstr "Honorar 90 Min (€)"
 #: templates/my_practice/calendar_import.html:93
 #: templates/my_practice/client_detail_tab_billing.html:30
 #: templates/my_practice/client_detail_tab_billing.html:76
-#: templates/my_practice/expense_confirm_delete.html:11
+#: templates/my_practice/expense_confirm_delete.html:10
 #: templates/my_practice/expense_list.html:78
 #: templates/my_practice/inquiry_list.html:201
 #: templates/my_practice/inquiry_list.html:249
-#: templates/my_practice/invoice_confirm_delete.html:20
+#: templates/my_practice/invoice_confirm_delete.html:13
 #: templates/my_practice/invoice_detail.html:19
 #: templates/my_practice/invoice_detail.html:84
 #: templates/my_practice/invoice_list.html:168
 #: templates/my_practice/send_payment_reminder.html:20
 #: templates/my_practice/tax_workday_audit.html:60
 #: templates/my_practice/tax_year_summary.html:198
-#: templates/my_practice/withdrawal_confirm_delete.html:11
+#: templates/my_practice/withdrawal_confirm_delete.html:10
 #: templates/my_practice/withdrawal_list.html:59
 #: templates/my_practice/withdrawal_list.html:110
 msgid "Date"
@@ -815,7 +815,7 @@ msgstr "Enddatum"
 #: my_practice/forms.py:219 my_practice/models/timeoff.py:45
 #: templates/my_practice/analytics_tab_clients.html:65
 #: templates/my_practice/tax_workday_audit.html:62
-#: templates/my_practice/time_off_confirm_delete.html:15
+#: templates/my_practice/time_off_confirm_delete.html:11
 #: templates/my_practice/time_off_list.html:33
 #: templates/my_practice/time_off_list.html:80
 msgid "Type"
@@ -823,7 +823,7 @@ msgstr "Typ"
 
 #: my_practice/forms.py:220 my_practice/models/timeoff.py:49
 #: templates/my_practice/calendar_approval_queue.html:94
-#: templates/my_practice/time_off_confirm_delete.html:11
+#: templates/my_practice/time_off_confirm_delete.html:10
 #: templates/my_practice/time_off_list.html:32
 #: templates/my_practice/time_off_list.html:79
 msgid "Title"
@@ -913,7 +913,7 @@ msgid "Optional notes for the manual match"
 msgstr "Optionale Notizen zur manuellen Zuordnung"
 
 #: my_practice/inquiry_forms.py:23 my_practice/models/inquiry.py:134
-#: templates/my_practice/inquiry_confirm_delete.html:14
+#: templates/my_practice/inquiry_confirm_delete.html:10
 msgid "Date received"
 msgstr "Eingangsdatum"
 
@@ -952,13 +952,13 @@ msgstr "Kürzel \"%(code)s\" ist bereits vergeben."
 
 #: my_practice/inquiry_forms.py:118 my_practice/models/inquiry.py:259
 #: templates/my_practice/analytics.html:57
-#: templates/my_practice/marketing_period_confirm_delete.html:14
+#: templates/my_practice/marketing_period_confirm_delete.html:10
 msgid "From"
 msgstr "Von"
 
 #: my_practice/inquiry_forms.py:119 my_practice/models/inquiry.py:263
 #: templates/my_practice/analytics.html:63
-#: templates/my_practice/marketing_period_confirm_delete.html:18
+#: templates/my_practice/marketing_period_confirm_delete.html:12
 msgid "To"
 msgstr "Bis"
 
@@ -2090,7 +2090,7 @@ msgstr "Versandet"
 #: templates/my_practice/bank_import.html:85
 #: templates/my_practice/bank_review.html:210
 #: templates/my_practice/client_list_cards.html:106
-#: templates/my_practice/inquiry_confirm_delete.html:10
+#: templates/my_practice/inquiry_confirm_delete.html:9
 #: templates/my_practice/inquiry_convert_confirm.html:17
 #: templates/my_practice/inquiry_list.html:202
 #: templates/my_practice/inquiry_list.html:250
@@ -2101,7 +2101,7 @@ msgid "Name"
 msgstr "Name"
 
 #: my_practice/models/inquiry.py:124
-#: templates/my_practice/inquiry_confirm_delete.html:18
+#: templates/my_practice/inquiry_confirm_delete.html:11
 #: templates/my_practice/inquiry_convert_confirm.html:29
 #: templates/my_practice/inquiry_list.html:203
 #: templates/my_practice/inquiry_list.html:251
@@ -2183,7 +2183,7 @@ msgid "Marketing periods"
 msgstr "Marketing-Zeiträume"
 
 #: my_practice/models/inquiry.py:280
-#: templates/my_practice/marketing_period_confirm_delete.html:19
+#: templates/my_practice/marketing_period_confirm_delete.html:11
 msgid "ongoing"
 msgstr "laufend"
 
@@ -2214,7 +2214,7 @@ msgid "Written off"
 msgstr "Abgeschrieben"
 
 #: my_practice/models/invoice.py:114
-#: templates/my_practice/invoice_confirm_delete.html:12
+#: templates/my_practice/invoice_confirm_delete.html:11
 msgid "Invoice number"
 msgstr "Rechnungsnummer"
 
@@ -2245,7 +2245,7 @@ msgstr "Steuerbetrag"
 #: my_practice/models/invoice.py:167
 #: templates/my_practice/bank_expense_review.html:17
 #: templates/my_practice/bank_withdrawal_review.html:17
-#: templates/my_practice/invoice_confirm_delete.html:30
+#: templates/my_practice/invoice_confirm_delete.html:20
 msgid "Total amount"
 msgstr "Gesamtbetrag"
 
@@ -7695,7 +7695,7 @@ msgstr "Möchten Sie diese Rechnung wirklich löschen?"
 msgid "This action cannot be undone."
 msgstr "Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: templates/my_practice/invoice_confirm_delete.html:34
+#: templates/my_practice/invoice_confirm_delete.html:21
 msgid "Number of items"
 msgstr "Anzahl Positionen"
 
@@ -9096,13 +9096,13 @@ msgstr "Urlaub/Abwesenheit löschen"
 msgid "Do you really want to delete this time-off period?"
 msgstr "Möchten Sie diesen Zeitraum wirklich löschen?"
 
-#: templates/my_practice/time_off_confirm_delete.html:19
+#: templates/my_practice/time_off_confirm_delete.html:12
 #: templates/my_practice/time_off_list.html:34
 #: templates/my_practice/time_off_list.html:81
 msgid "Start"
 msgstr "Beginn"
 
-#: templates/my_practice/time_off_confirm_delete.html:23
+#: templates/my_practice/time_off_confirm_delete.html:13
 #: templates/my_practice/time_off_list.html:35
 #: templates/my_practice/time_off_list.html:82
 msgid "End"
