@@ -11,7 +11,7 @@ import pypdf
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.test import Client as TestClient
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.test.utils import CaptureQueriesContext
 
 from ..models import Client, Practice, UserPractice
@@ -321,6 +321,13 @@ def create_test_user(practice, username="testuser", password="testpass123", **us
     user = User.objects.create_user(username=username, password=password, **user_fields)
     UserPractice.objects.create(user=user, practice=practice, is_owner=True)
     return user
+
+
+def practice_request(practice, path="/"):
+    """A GET request whose current practice is ``practice`` (what the scoped forms read)."""
+    request = RequestFactory().get(path)
+    request.current_practice = practice
+    return request
 
 
 def create_test_client(practice, code="TC", full_name="Max Mustermann", **overrides):
