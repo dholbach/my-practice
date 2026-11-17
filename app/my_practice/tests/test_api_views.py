@@ -47,6 +47,8 @@ class NextInvoiceNumberAPITest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json())
         self.assertEqual(response.json()["error"], "Klienten-ID erforderlich")
+        # The shared AJAX error shape: page scripts can test ``success`` on any endpoint.
+        self.assertIs(response.json()["success"], False)
 
     def test_next_invoice_number_invalid_client(self):
         """Test API returns 404 for non-existent client"""

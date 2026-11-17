@@ -25,7 +25,7 @@ from ..utils.pdf_generation import (
 )
 from ..utils.practice_helpers import require_practice
 from ..utils.questionnaire_content import QuestionnaireNotFoundError
-from ..utils.view_helpers import get_scoped_client, is_partial_request, safe_next
+from ..utils.view_helpers import get_scoped_client, is_partial_request, json_error, safe_next
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +34,14 @@ def next_invoice_number(request: HttpRequest) -> JsonResponse:
     """API endpoint to get next invoice number for a client"""
     client_id = request.GET.get("client")
     if not client_id:
-        return JsonResponse({"error": _("Client ID required")}, status=400)
+        return json_error(_("Client ID required"))
 
     try:
         client = Client.objects.for_current_practice(request).get(pk=client_id)
         suggested_number = get_next_invoice_number(client)
         return JsonResponse({"suggested_number": suggested_number})
     except Client.DoesNotExist:
-        return JsonResponse({"error": _("Client not found")}, status=404)
+        return json_error(_("Client not found"), 404)
 
 
 def invoice_pdf(request: HttpRequest, pk: int) -> HttpResponse:
@@ -168,7 +168,7 @@ def invoice_batch_download(request: HttpRequest) -> HttpResponse:
 def update_invoice_status(request, pk):
     """Update invoice status via POST"""
     if request.method != "POST":
-        return JsonResponse({"error": _("POST required")}, status=405)
+        return json_error(_("POST required"), 405)
 
     invoice = get_object_or_404(Invoice.objects.for_current_practice(request), pk=pk)
     new_status = request.POST.get("status")
@@ -181,16 +181,13 @@ def update_invoice_status(request, pk):
         Invoice.Status.WRITTEN_OFF,
     }
     if new_status not in valid_statuses:
-        return JsonResponse({"error": _("Invalid status")}, status=400)
+        return json_error(_("Invalid status"))
     if invoice.is_locked and new_status == Invoice.Status.DRAFT:
-        return JsonResponse(
-            {
-                "error": _(
-                    "An issued invoice cannot be set back to draft. "
-                    "Cancel it and create a corrected copy instead."
-                )
-            },
-            status=400,
+        return json_error(
+            _(
+                "An issued invoice cannot be set back to draft. "
+                "Cancel it and create a corrected copy instead."
+            )
         )
 
     if new_status == Invoice.Status.PAID:
