@@ -49,6 +49,15 @@ def _db_media_paths() -> dict[str, list[str]]:
     return paths
 
 
+def _disk_media_paths(media_root: Path) -> set[str]:
+    """Every file under ``media_root``, as a path relative to it."""
+    return {
+        str((Path(root) / name).relative_to(media_root))
+        for root, _dirs, files in os.walk(media_root)
+        for name in files
+    }
+
+
 class Command(BaseCommand):
     help = "Audit media files against database records (orphans and missing files)"
 
@@ -60,66 +69,53 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        delete_orphans = options["delete_orphans"]
         media_root = Path(settings.MEDIA_ROOT)
 
         if not media_root.exists():
             self.stdout.write(self.style.WARNING(f"MEDIA_ROOT not found: {media_root}"))
             return
 
-        # --- Collect DB paths ---
         db_paths_by_model = _db_media_paths()
         all_db_paths: set[str] = {p for paths in db_paths_by_model.values() for p in paths}
+        disk_paths = _disk_media_paths(media_root)
 
-        # --- Collect disk paths (relative to MEDIA_ROOT) ---
-        disk_paths: set[str] = set()
-        for root, _dirs, files in os.walk(media_root):
-            for fname in files:
-                abs_path = Path(root) / fname
-                rel = str(abs_path.relative_to(media_root))
-                disk_paths.add(rel)
-
-        # --- Missing: in DB but not on disk ---
-        missing = sorted(all_db_paths - disk_paths)
-        # --- Orphans: on disk but not in DB ---
-        orphans = sorted(disk_paths - all_db_paths)
-
-        # Summary header
         self.stdout.write(self.style.HTTP_INFO(f"\nMEDIA_ROOT: {media_root}"))
         self.stdout.write(f"  Files on disk:  {len(disk_paths)}")
         self.stdout.write(f"  DB entries:     {len(all_db_paths)}")
 
-        # --- Report missing files ---
-        if missing:
-            self.stdout.write(
-                self.style.ERROR(f"\n❌ Missing files ({len(missing)}) — in DB, not on disk:")
-            )
-            for path in missing:
-                # Find which model references it
-                model_name = next(
-                    (m for m, paths in db_paths_by_model.items() if path in paths),
-                    "?",
-                )
-                self.stdout.write(f"   [{model_name}] {path}")
-        else:
-            self.stdout.write(self.style.SUCCESS("\n✅ No missing files"))
-
-        # --- Report orphans ---
-        if orphans:
-            self.stdout.write(
-                self.style.WARNING(f"\n⚠️  Orphaned files ({len(orphans)}) — on disk, not in DB:")
-            )
-            for path in orphans:
-                abs_path = media_root / path
-                size_kb = abs_path.stat().st_size / 1024
-                self.stdout.write(f"   {path}  ({size_kb:.0f} KB)")
-                if delete_orphans:
-                    abs_path.unlink()
-            if delete_orphans:
-                self.stdout.write(self.style.SUCCESS(f"   → {len(orphans)} files deleted"))
-            else:
-                self.stdout.write("   → To delete: ./dev.py manage check_media --delete-orphans")
-        else:
-            self.stdout.write(self.style.SUCCESS("\n✅ No orphaned files"))
-
+        self._report_missing(sorted(all_db_paths - disk_paths), db_paths_by_model)
+        self._report_orphans(
+            sorted(disk_paths - all_db_paths), media_root, options["delete_orphans"]
+        )
         self.stdout.write("")
+
+    def _report_missing(self, missing: list[str], db_paths_by_model: dict[str, list[str]]) -> None:
+        """Files the database names that are gone from disk."""
+        if not missing:
+            self.stdout.write(self.style.SUCCESS("\n✅ No missing files"))
+            return
+        self.stdout.write(
+            self.style.ERROR(f"\n❌ Missing files ({len(missing)}) — in DB, not on disk:")
+        )
+        for path in missing:
+            model_name = next((m for m, paths in db_paths_by_model.items() if path in paths), "?")
+            self.stdout.write(f"   [{model_name}] {path}")
+
+    def _report_orphans(self, orphans: list[str], media_root: Path, delete: bool) -> None:
+        """Files on disk that no record names; removed only when ``delete`` is set."""
+        if not orphans:
+            self.stdout.write(self.style.SUCCESS("\n✅ No orphaned files"))
+            return
+        self.stdout.write(
+            self.style.WARNING(f"\n⚠️  Orphaned files ({len(orphans)}) — on disk, not in DB:")
+        )
+        for path in orphans:
+            abs_path = media_root / path
+            size_kb = abs_path.stat().st_size / 1024
+            self.stdout.write(f"   {path}  ({size_kb:.0f} KB)")
+            if delete:
+                abs_path.unlink()
+        if delete:
+            self.stdout.write(self.style.SUCCESS(f"   → {len(orphans)} files deleted"))
+        else:
+            self.stdout.write("   → To delete: ./dev.py manage check_media --delete-orphans")

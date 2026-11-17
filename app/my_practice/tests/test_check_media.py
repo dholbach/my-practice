@@ -71,6 +71,33 @@ class CheckMediaCommandTests(TestCase):
         self.assertIn("1 files deleted", out.getvalue())
         self.assertFalse(stray.exists())
 
+    def test_report_only_run_deletes_nothing_and_says_how_to_delete(self):
+        (self.media_root / "logos").mkdir(parents=True)
+        stray = self.media_root / "logos" / "stray.png"
+        stray.write_bytes(b"fake-png")
+
+        output = self._run()
+
+        self.assertTrue(stray.exists())
+        self.assertIn("To delete: ./dev.py manage check_media --delete-orphans", output)
+
+    def test_delete_orphans_keeps_files_the_database_references(self):
+        expense = CompanyExpense.objects.create(
+            practice=self.practice, date=date(2026, 3, 1), amount=Decimal("50.00")
+        )
+        (self.media_root / "receipts").mkdir()
+        kept = self.media_root / "receipts" / "kept.pdf"
+        kept.write_bytes(b"%PDF")
+        ExpenseReceipt.objects.create(expense=expense, file="receipts/kept.pdf")
+        stray = self.media_root / "receipts" / "stray.pdf"
+        stray.write_bytes(b"%PDF")
+
+        with override_settings(MEDIA_ROOT=self.media_root):
+            call_command("check_media", "--delete-orphans", stdout=StringIO())
+
+        self.assertTrue(kept.exists())
+        self.assertFalse(stray.exists())
+
 
 class CheckMediaCoverageTests(TestCase):
     """A model this command does not know about has its files deleted.
