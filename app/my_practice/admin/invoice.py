@@ -2,6 +2,7 @@
 
 from django import forms
 from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 from django.utils.translation import gettext, gettext_lazy, ngettext
 
@@ -145,8 +146,20 @@ class InvoiceAdmin(admin.ModelAdmin):
     def mark_as_paid(self, request, queryset):
         updated = 0
         for invoice in queryset:
-            invoice.mark_paid()
+            try:
+                invoice.mark_paid()
+            except ValidationError as exc:
+                # A payment dated before its invoice must not abort the whole batch.
+                self.message_user(
+                    request,
+                    gettext("Invoice %(number)s could not be marked as paid: %(error)s")
+                    % {"number": invoice.invoice_number, "error": " ".join(exc.messages)},
+                    messages.ERROR,
+                )
+                continue
             updated += 1
+        if not updated:
+            return
         self.message_user(
             request,
             ngettext(

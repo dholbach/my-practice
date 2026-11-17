@@ -4,7 +4,7 @@ from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
 from django.test import Client as TestClient
@@ -519,6 +519,17 @@ class InvoiceAdminStatusActionTests(TestCase):
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.status, "paid")
         self.assertEqual(self.invoice.paid_date, date(2026, 1, 20))
+
+    def test_mark_as_paid_reports_a_payment_dated_before_the_invoice(self):
+        Invoice.objects.filter(pk=self.invoice.pk).update(status="sent", paid_date=date(2026, 1, 1))
+        sent = []
+        self.admin.message_user = lambda request, message, level=None: sent.append((message, level))
+        self.admin.mark_as_paid(self.request, Invoice.objects.filter(pk=self.invoice.pk))
+        self.invoice.refresh_from_db()
+        self.assertEqual(self.invoice.status, "sent")
+        self.assertEqual(len(sent), 1)
+        self.assertIn("XX-1-1", sent[0][0])
+        self.assertEqual(sent[0][1], messages.ERROR)
 
     def test_mark_as_sent_clears_paid_date(self):
         self.admin.mark_as_sent(self.request, Invoice.objects.filter(pk=self.invoice.pk))
