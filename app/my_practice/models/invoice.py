@@ -221,8 +221,15 @@ class Invoice(TimestampedModel):
                         }
                     )
 
-        # Validate paid_date is not before invoice_date
-        if self.paid_date and self.invoice_date and self.paid_date < self.invoice_date:
+        # A hand-entered payment date earlier than the invoice is most likely a typo.
+        # A bank transaction's date is not (the client may have paid at the session
+        # and the invoice came afterwards), so mark_paid(bank_dated=True) skips this,
+        # and so does any later save that leaves both dates as they were stored.
+        if (
+            self.paid_before_invoice_date
+            and not self._payment_date_from_bank
+            and not self._dates_unchanged_since_saved()
+        ):
             raise ValidationError(
                 {"paid_date": _("Payment date must not be before the invoice date")}
             )
@@ -245,17 +252,40 @@ class Invoice(TimestampedModel):
 
         super().save(*args, **kwargs)
 
-    def mark_paid(self, paid_on: date | None = None) -> None:
+    # Set only for the duration of mark_paid(bank_dated=True); see clean().
+    _payment_date_from_bank = False
+
+    def _dates_unchanged_since_saved(self) -> bool:
+        """True if the stored row already has this invoice date and paid date."""
+        return bool(
+            self.pk
+            and Invoice.objects.filter(
+                pk=self.pk, invoice_date=self.invoice_date, paid_date=self.paid_date
+            ).exists()
+        )
+
+    @property
+    def paid_before_invoice_date(self) -> bool:
+        """True if the payment is dated earlier than the invoice (worth a second look)."""
+        return bool(self.paid_date and self.invoice_date and self.paid_date < self.invoice_date)
+
+    def mark_paid(self, paid_on: date | None = None, *, bank_dated: bool = False) -> None:
         """Set the status to paid and save, validated like any other save.
 
-        ``paid_on`` is the payment date: a bank transaction passes its own. Without
-        it the invoice keeps a paid date it already has and otherwise gets today, so
-        marking a paid-and-dated invoice paid again changes nothing. A payment dated
-        before the invoice raises ValidationError and writes nothing.
+        ``paid_on`` is the payment date: a bank transaction passes its own, with
+        ``bank_dated=True``. Without it the invoice keeps a paid date it already has
+        and otherwise gets today, so marking a paid-and-dated invoice paid again
+        changes nothing. A payment dated before the invoice raises ValidationError
+        and writes nothing, unless ``bank_dated`` says the date is a real transfer
+        date: that is recorded as it happened, because revenue is grouped by it.
         """
         self.status = Invoice.Status.PAID
         self.paid_date = paid_on or self.paid_date or timezone.localdate()
-        self.save()
+        self._payment_date_from_bank = bank_dated
+        try:
+            self.save()
+        finally:
+            self._payment_date_from_bank = False
 
     @property
     def is_locked(self) -> bool:

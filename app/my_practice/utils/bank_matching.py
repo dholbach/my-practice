@@ -26,20 +26,24 @@ def record_payment(
     *,
     confidence: str,
     notes: str = "",
-) -> None:
+) -> list[Invoice]:
     """Mark ``invoices`` paid on the transaction's date and link the transaction to the first.
 
     All or nothing: a transaction recorded as matched while one of its invoices
     failed validation would vanish from review with that invoice still unpaid, so
-    the first invoice that cannot be saved (a payment dated before the invoice, for
-    one) raises InvoiceNotPayableError and nothing is written.
+    the first invoice that cannot be saved raises InvoiceNotPayableError and
+    nothing is written.
+
+    A transfer dated before the invoice is accepted (the bank date is the truth and
+    revenue is grouped by it). Those invoices are returned so the caller can ask the
+    user to double-check them.
     """
     if not invoices:
         raise ValueError("record_payment needs at least one invoice")
     with db_transaction.atomic():
         for invoice in invoices:
             try:
-                invoice.mark_paid(bank_transaction.transaction_date)
+                invoice.mark_paid(bank_transaction.transaction_date, bank_dated=True)
             except ValidationError as exc:
                 raise InvoiceNotPayableError(invoice, exc.messages) from exc
 
@@ -49,6 +53,7 @@ def record_payment(
         if notes:
             bank_transaction.notes = notes
         bank_transaction.save()
+    return [invoice for invoice in invoices if invoice.paid_before_invoice_date]
 
 
 def payer_needs_alias(bank_transaction: BankTransaction, invoice: Invoice) -> bool:

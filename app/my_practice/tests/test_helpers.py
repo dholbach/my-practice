@@ -5,11 +5,14 @@ Test helper utilities and mixins for multi-practice testing.
 import io
 import re
 from collections import Counter
+from contextlib import contextmanager
 from datetime import date
 from decimal import Decimal
+from unittest.mock import patch
 
 import pypdf
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.test import Client as TestClient
 from django.test import RequestFactory, TestCase
@@ -19,6 +22,24 @@ from ..models import Client, Invoice, Practice, UserPractice
 from ..utils.heatmap_utils import get_heatmap_data
 
 User = get_user_model()
+
+
+@contextmanager
+def mark_paid_fails_for(*invoice_numbers):
+    """Make ``Invoice.mark_paid`` raise ValidationError for the given invoice numbers.
+
+    Stands in for any validation failure while marking an invoice paid, to test
+    that a bank payment is recorded all-or-nothing.
+    """
+    original = Invoice.mark_paid
+
+    def mark_paid(self, *args, **kwargs):
+        if self.invoice_number in invoice_numbers:
+            raise ValidationError("This invoice cannot be saved.")
+        return original(self, *args, **kwargs)
+
+    with patch.object(Invoice, "mark_paid", mark_paid):
+        yield
 
 
 def make_pdf_bytes(num_pages: int = 1, rotate: int = 0) -> bytes:

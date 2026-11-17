@@ -68,7 +68,7 @@ from my_practice.models import (
     TimeOff,
 )
 
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, mark_paid_fails_for
 
 
 class MockRequest:
@@ -520,11 +520,12 @@ class InvoiceAdminStatusActionTests(TestCase):
         self.assertEqual(self.invoice.status, "paid")
         self.assertEqual(self.invoice.paid_date, date(2026, 1, 20))
 
-    def test_mark_as_paid_reports_a_payment_dated_before_the_invoice(self):
-        Invoice.objects.filter(pk=self.invoice.pk).update(status="sent", paid_date=date(2026, 1, 1))
+    def test_mark_as_paid_reports_an_invoice_that_cannot_be_saved(self):
+        Invoice.objects.filter(pk=self.invoice.pk).update(status="sent", paid_date=None)
         sent = []
         self.admin.message_user = lambda request, message, level=None: sent.append((message, level))
-        self.admin.mark_as_paid(self.request, Invoice.objects.filter(pk=self.invoice.pk))
+        with mark_paid_fails_for(self.invoice.invoice_number):
+            self.admin.mark_as_paid(self.request, Invoice.objects.filter(pk=self.invoice.pk))
         self.invoice.refresh_from_db()
         self.assertEqual(self.invoice.status, "sent")
         self.assertEqual(len(sent), 1)
