@@ -1,78 +1,21 @@
-{% extends 'base.html' %}
-{% load payment_tags %}
+{% extends 'my_practice/bank_financial_review.html' %}
 {% load i18n %}
 
-{% block content %}
-<div class="container">
-    <h1>{{ page_title }}</h1>
+{% block stat_label %}{% trans "Pending" %}{% endblock %}
 
-    <!-- Statistics -->
-    <div class="expense-stats-card">
-        <div class="expense-stats-grid">
-            <div>
-                <div class="expense-stat__label">{% trans "Pending" %}</div>
-                <div class="expense-stat__value expense-stat__value--warning">{{ stats.unmatched }}</div>
-            </div>
-            <div>
-                <div class="expense-stat__label">{% trans "Total amount" %}</div>
-                <div class="expense-stat__value expense-stat__value--primary">{{ stats.total_amount|currency }}</div>
-            </div>
-        </div>
-    </div>
-
-    {% if transactions %}
-    <form method="post" class="mb-4">
-        {% csrf_token %}
-
-        <!-- Action Controls -->
-        <div class="expense-action-panel">
-            <div class="expense-action-panel__fields">
-                <div class="expense-action-panel__field-wide">
-                    <label class="expense-action-panel__field-label">{% trans "Category" %}</label>
-                    <select name="category" required class="expense-action-panel__select">
+{% block category_options %}
                         {% for value, label in category_choices %}
                         <option value="{{ value }}"{% if value == 'salary' %} selected{% endif %}>{{ label }}</option>
                         {% endfor %}
-                    </select>
-                </div>
+{% endblock %}
 
-                <div class="expense-action-panel__field-xl">
-                    <label class="expense-action-panel__field-label">{% trans "Description (optional)" %}</label>
-                    <textarea name="description" rows="2" placeholder="{% trans 'Auto-generated if left empty' %}" class="expense-action-panel__textarea"></textarea>
-                </div>
-            </div>
+{% block group_label %}{% trans "Group into withdrawal" %}{% endblock %}
 
-            <div class="expense-action-panel__buttons">
-                <button type="submit" name="action" value="group" class="btn btn-primary">
-                    ✓ {% trans "Group into withdrawal" %}
-                </button>
-                <button type="submit" name="action" value="ignore" class="btn btn-secondary">
-                    ➖ {% trans "Ignore" %}
-                </button>
-            </div>
-        </div>
+{% block transaction_card %}{% include 'includes/bank_transaction_card.html' with trans=trans show_linked_withdrawal=True %}{% endblock %}
 
-        <!-- Transactions List -->
-        {% for trans in transactions %}
-        {% include 'includes/bank_transaction_card.html' with trans=trans show_linked_withdrawal=True %}
-        {% endfor %}
-    </form>
+{% block empty_state %}{% include 'includes/bank_review_empty_state.html' with title=_("All withdrawals matched") description=_("There are no pending automatically detected withdrawals.") %}{% endblock %}
 
-    <!-- Pagination -->
-    {% if is_paginated %}
-    {% include 'includes/pagination_bar.html' with page_obj=page_obj %}
-    {% endif %}
-
-    {% else %}
-    {% include 'includes/bank_review_empty_state.html' with title=_("All withdrawals matched") description=_("There are no pending automatically detected withdrawals.") %}
-    {% endif %}
-
-    <!-- Navigation Links -->
-    <div class="expense-nav-footer">
-        <a href="{% url 'bank_review' %}" class="btn btn-secondary">{% trans "← Review invoices" %}</a>
+{% block footer_links %}
         <a href="{% url 'bank_expense_review' %}" class="btn btn-secondary">💸 {% trans "Expenses" %}</a>
         <a href="{% url 'withdrawal_list' %}" class="btn btn-secondary">{% trans "Withdrawal list" %}</a>
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">{% trans "Overview" %}</a>
-    </div>
-</div>
-{% endblock %}
+        {% endblock %}

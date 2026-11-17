@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 07:41+0100\n"
+"POT-Creation-Date: 2026-11-17 16:23+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -178,13 +178,13 @@ msgstr ""
 msgid "Tags for organizing and categorizing clients"
 msgstr ""
 
-#: my_practice/admin/client.py:93 my_practice/admin/invoice.py:195
+#: my_practice/admin/client.py:93 my_practice/admin/invoice.py:208
 msgid "Additional"
 msgstr ""
 
 #: my_practice/admin/client.py:105 my_practice/admin/clinical.py:29
 #: my_practice/admin/clinical.py:61 my_practice/admin/clinical.py:87
-#: my_practice/admin/clinical.py:114 my_practice/admin/invoice.py:197
+#: my_practice/admin/clinical.py:114 my_practice/admin/invoice.py:210
 #: my_practice/admin/tag.py:35
 msgid "Timestamps"
 msgstr ""
@@ -233,7 +233,7 @@ msgid "Assignment"
 msgstr ""
 
 #: my_practice/admin/client_alias.py:30 my_practice/admin/financial.py:21
-#: my_practice/admin/financial.py:97 my_practice/admin/invoice.py:270
+#: my_practice/admin/financial.py:97 my_practice/admin/invoice.py:283
 #: templates/my_practice/client_detail_tab_overview.html:74
 msgid "Details"
 msgstr ""
@@ -259,7 +259,7 @@ msgstr ""
 msgid "Working Diagnosis"
 msgstr ""
 
-#: my_practice/admin/clinical.py:54 my_practice/admin/invoice.py:268
+#: my_practice/admin/clinical.py:54 my_practice/admin/invoice.py:281
 #: my_practice/models/calendar.py:149 my_practice/models/clinical.py:222
 #: my_practice/models/gebueh.py:89 my_practice/models/invoice.py:398
 #: my_practice/models/session.py:63
@@ -294,8 +294,7 @@ msgstr ""
 #: my_practice/forms.py:198 my_practice/models/expense_category_rule.py:39
 #: my_practice/models/financial.py:70 my_practice/models/financial.py:156
 #: my_practice/models/tag.py:77
-#: templates/my_practice/bank_expense_review.html:31
-#: templates/my_practice/bank_withdrawal_review.html:31
+#: templates/my_practice/bank_financial_review.html:31
 #: templates/my_practice/expense_confirm_delete.html:12
 #: templates/my_practice/expense_list.html:80
 #: templates/my_practice/tax_year_summary.html:170
@@ -362,56 +361,61 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: my_practice/admin/invoice.py:91 my_practice/views/api_views.py:189
+#: my_practice/admin/invoice.py:92 my_practice/views/api_views.py:188
 msgid "An issued invoice cannot be set back to draft. Cancel it and create a corrected copy instead."
 msgstr ""
 
-#: my_practice/admin/invoice.py:132
+#: my_practice/admin/invoice.py:133
 msgid "Mark as sent"
 msgstr ""
 
-#: my_practice/admin/invoice.py:138
+#: my_practice/admin/invoice.py:139
 #, python-format
 msgid "%(count)s invoice marked as sent."
 msgid_plural "%(count)s invoices marked as sent."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin/invoice.py:144
+#: my_practice/admin/invoice.py:145
 msgid "Mark as paid"
 msgstr ""
 
-#: my_practice/admin/invoice.py:153
+#: my_practice/admin/invoice.py:155 my_practice/views/bank_import_views.py:337
+#, python-format
+msgid "Invoice %(number)s could not be marked as paid: %(error)s"
+msgstr ""
+
+#: my_practice/admin/invoice.py:166
 #, python-format
 msgid "%(count)s invoice marked as paid."
 msgid_plural "%(count)s invoices marked as paid."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin/invoice.py:159
+#: my_practice/admin/invoice.py:172
 msgid "Mark as cancelled"
 msgstr ""
 
-#: my_practice/admin/invoice.py:165
+#: my_practice/admin/invoice.py:178
 #, python-format
 msgid "%(count)s invoice marked as cancelled."
 msgid_plural "%(count)s invoices marked as cancelled."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin/invoice.py:175
+#: my_practice/admin/invoice.py:188
 msgid "Invoice Information"
 msgstr ""
 
-#: my_practice/admin/invoice.py:187
+#: my_practice/admin/invoice.py:200
 msgid "Amounts"
 msgstr ""
 
-#: my_practice/admin/invoice.py:191
+#: my_practice/admin/invoice.py:204
 msgid "Amounts are calculated automatically from invoice items"
 msgstr ""
 
-#: my_practice/admin/invoice.py:202 my_practice/models/invoice.py:378
+#: my_practice/admin/invoice.py:215 my_practice/models/invoice.py:378
 #: templates/my_practice/bank_review.html:77
 #: templates/my_practice/invoice_detail.html:88
 #: templates/my_practice/invoice_list.html:21
@@ -419,14 +423,14 @@ msgstr ""
 msgid "Total"
 msgstr ""
 
-#: my_practice/admin/invoice.py:224
+#: my_practice/admin/invoice.py:237
 #, python-format
 msgid "%(count)s issued invoice was kept: it is still within its retention period."
 msgid_plural "%(count)s issued invoices were kept: they are still within their retention period."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin/invoice.py:269 templates/includes/command_palette.html:42
+#: my_practice/admin/invoice.py:282 templates/includes/command_palette.html:42
 #: templates/my_practice/client_detail.html:44
 msgid "Billing"
 msgstr ""
@@ -705,7 +709,7 @@ msgstr ""
 #: my_practice/forms.py:123 my_practice/models/client.py:71
 #: my_practice/models/financial.py:117 my_practice/models/inquiry.py:120
 #: my_practice/models/practice.py:103
-#: templates/my_practice/bank_expense_review.html:34
+#: templates/my_practice/bank_expense_review.html:8
 #: templates/my_practice/client_detail_tab_overview.html:159
 #: templates/my_practice/inquiry_convert_confirm.html:25
 #: templates/my_practice/practice_form.html:120
@@ -788,13 +792,13 @@ msgid "Description of the expense"
 msgstr ""
 
 #: my_practice/forms.py:200 my_practice/models/financial.py:159
-#: templates/my_practice/bank_expense_review.html:66
+#: templates/my_practice/bank_expense_review.html:35
 #: templates/my_practice/expense_list.html:26
 msgid "Tax deductible"
 msgstr ""
 
 #: my_practice/forms.py:201 my_practice/models/financial.py:158
-#: templates/my_practice/bank_expense_review.html:62
+#: templates/my_practice/bank_expense_review.html:31
 msgid "Invoice available"
 msgstr ""
 
@@ -990,36 +994,36 @@ msgstr ""
 msgid "Internal notes"
 msgstr ""
 
-#: my_practice/invoice_forms.py:123 my_practice/models/session.py:24
+#: my_practice/invoice_forms.py:106 my_practice/models/session.py:24
 #: templates/my_practice/invoice_edit.html:100
 #: templates/my_practice/session_log_form.html:26
 #: templates/my_practice/session_log_form.html:32
 msgid "Session date"
 msgstr ""
 
-#: my_practice/invoice_forms.py:130 my_practice/models/calendar.py:120
+#: my_practice/invoice_forms.py:113 my_practice/models/calendar.py:120
 #: my_practice/models/session.py:33
 #: templates/my_practice/session_log_form.html:39
 msgid "Duration (minutes)"
 msgstr ""
 
-#: my_practice/invoice_forms.py:152
+#: my_practice/invoice_forms.py:135
 msgid "Free-text line item — no linked session"
 msgstr ""
 
-#: my_practice/invoice_forms.py:226
+#: my_practice/invoice_forms.py:209
 msgid "Choose either a session date or a free-text description, not both."
 msgstr ""
 
-#: my_practice/invoice_forms.py:230
+#: my_practice/invoice_forms.py:213
 msgid "Enter either a session date or a free-text description."
 msgstr ""
 
-#: my_practice/invoice_forms.py:234
+#: my_practice/invoice_forms.py:217
 msgid "Duration is required for a session item."
 msgstr ""
 
-#: my_practice/invoice_forms.py:249
+#: my_practice/invoice_forms.py:232
 msgid "Converting a session-linked item to a free-form item isn't supported — delete this item and add a new free-form item instead."
 msgstr ""
 
@@ -1040,7 +1044,7 @@ msgid "Ignored (Expense/Duplicate)"
 msgstr ""
 
 #: my_practice/models/bank_statement.py:42
-#: templates/my_practice/bank_expense_review.html:13
+#: templates/my_practice/bank_expense_review.html:4
 msgid "Unmatched"
 msgstr ""
 
@@ -1242,7 +1246,7 @@ msgid "expires"
 msgstr ""
 
 #: my_practice/models/calendar.py:99
-#: templates/my_practice/bank_withdrawal_review.html:13
+#: templates/my_practice/bank_withdrawal_review.html:4
 #: templates/my_practice/client_detail_tab_billing.html:38
 msgid "Pending"
 msgstr ""
@@ -1451,7 +1455,7 @@ msgstr ""
 #: my_practice/models/client.py:240 my_practice/models/financial.py:32
 #: my_practice/models/financial.py:133 my_practice/models/inquiry.py:36
 #: my_practice/models/todo.py:91 my_practice/views/inquiry_views.py:139
-#: templates/my_practice/bank_expense_review.html:50
+#: templates/my_practice/bank_expense_review.html:24
 msgid "Other"
 msgstr ""
 
@@ -1803,47 +1807,47 @@ msgid "Company Withdrawals"
 msgstr ""
 
 #: my_practice/models/financial.py:116
-#: templates/my_practice/bank_expense_review.html:33
+#: templates/my_practice/bank_expense_review.html:7
 msgid "Rent"
 msgstr ""
 
 #: my_practice/models/financial.py:118
-#: templates/my_practice/bank_expense_review.html:35
+#: templates/my_practice/bank_expense_review.html:9
 msgid "Association / membership fees"
 msgstr ""
 
 #: my_practice/models/financial.py:119
-#: templates/my_practice/bank_expense_review.html:36
+#: templates/my_practice/bank_expense_review.html:10
 msgid "Insurance"
 msgstr ""
 
 #: my_practice/models/financial.py:120
-#: templates/my_practice/bank_expense_review.html:37
+#: templates/my_practice/bank_expense_review.html:11
 msgid "Account / account fees"
 msgstr ""
 
 #: my_practice/models/financial.py:121
-#: templates/my_practice/bank_expense_review.html:38
+#: templates/my_practice/bank_expense_review.html:12
 msgid "Website / domain"
 msgstr ""
 
 #: my_practice/models/financial.py:122
-#: templates/my_practice/bank_expense_review.html:39
+#: templates/my_practice/bank_expense_review.html:13
 msgid "Advertising / marketing"
 msgstr ""
 
 #: my_practice/models/financial.py:123
-#: templates/my_practice/bank_expense_review.html:40
+#: templates/my_practice/bank_expense_review.html:14
 msgid "Software"
 msgstr ""
 
 #: my_practice/models/financial.py:124
-#: templates/my_practice/bank_expense_review.html:41
+#: templates/my_practice/bank_expense_review.html:15
 msgid "Personal therapy (training)"
 msgstr ""
 
 #: my_practice/models/financial.py:125 my_practice/models/todo.py:71
-#: templates/my_practice/bank_expense_review.html:42
+#: templates/my_practice/bank_expense_review.html:16
 #: templates/my_practice/client_detail_tab_protocol.html:23
 #: templates/my_practice/client_detail_tab_protocol.html:168
 #: templates/my_practice/supervision_queue.html:5
@@ -1851,37 +1855,37 @@ msgid "Supervision"
 msgstr "Supervision"
 
 #: my_practice/models/financial.py:126
-#: templates/my_practice/bank_expense_review.html:43
+#: templates/my_practice/bank_expense_review.html:17
 msgid "Training / continuing education"
 msgstr ""
 
 #: my_practice/models/financial.py:127
-#: templates/my_practice/bank_expense_review.html:44
+#: templates/my_practice/bank_expense_review.html:18
 msgid "Training location"
 msgstr ""
 
 #: my_practice/models/financial.py:128
-#: templates/my_practice/bank_expense_review.html:45
+#: templates/my_practice/bank_expense_review.html:19
 msgid "Group"
 msgstr ""
 
 #: my_practice/models/financial.py:129
-#: templates/my_practice/bank_expense_review.html:46
+#: templates/my_practice/bank_expense_review.html:20
 msgid "Materials"
 msgstr ""
 
 #: my_practice/models/financial.py:130
-#: templates/my_practice/bank_expense_review.html:47
+#: templates/my_practice/bank_expense_review.html:21
 msgid "Hardware"
 msgstr ""
 
 #: my_practice/models/financial.py:131
-#: templates/my_practice/bank_expense_review.html:48
+#: templates/my_practice/bank_expense_review.html:22
 msgid "Literature"
 msgstr ""
 
 #: my_practice/models/financial.py:132
-#: templates/my_practice/bank_expense_review.html:49
+#: templates/my_practice/bank_expense_review.html:23
 msgid "Conference"
 msgstr ""
 
@@ -2243,8 +2247,7 @@ msgid "Tax amount"
 msgstr ""
 
 #: my_practice/models/invoice.py:167
-#: templates/my_practice/bank_expense_review.html:17
-#: templates/my_practice/bank_withdrawal_review.html:17
+#: templates/my_practice/bank_financial_review.html:17
 #: templates/my_practice/invoice_confirm_delete.html:20
 msgid "Total amount"
 msgstr "Total amount"
@@ -2318,22 +2321,22 @@ msgid "This practice doesn't allow free-form invoice items."
 msgstr ""
 
 #: my_practice/models/operational.py:31
-#: my_practice/utils/dashboard_widgets.py:183
+#: my_practice/utils/dashboard_widgets.py:184
 msgid "Weekly backup"
 msgstr ""
 
 #: my_practice/models/operational.py:32
-#: my_practice/utils/dashboard_widgets.py:182
+#: my_practice/utils/dashboard_widgets.py:183
 msgid "Monthly restore test"
 msgstr ""
 
 #: my_practice/models/operational.py:35
-#: my_practice/utils/dashboard_widgets.py:184
+#: my_practice/utils/dashboard_widgets.py:185
 msgid "MicroSD offsite backup (card A/B alternating, every 2 weeks)"
 msgstr ""
 
 #: my_practice/models/operational.py:37
-#: my_practice/utils/dashboard_widgets.py:185
+#: my_practice/utils/dashboard_widgets.py:186
 msgid "Annual security review"
 msgstr ""
 
@@ -3141,15 +3144,15 @@ msgstr ""
 msgid "Invoice %(number)s has been issued and must be kept until the end of %(year)s. Cancel it instead of deleting it."
 msgstr ""
 
-#: my_practice/utils/analytics_utils.py:332
+#: my_practice/utils/analytics_utils.py:329
 msgid "60-min sessions"
 msgstr ""
 
-#: my_practice/utils/analytics_utils.py:340
+#: my_practice/utils/analytics_utils.py:337
 msgid "90-min sessions"
 msgstr ""
 
-#: my_practice/utils/analytics_utils.py:348
+#: my_practice/utils/analytics_utils.py:345
 msgid "Group sessions"
 msgstr ""
 
@@ -3180,6 +3183,11 @@ msgstr ""
 #, python-format
 msgid "Row from %(date)s over %(amount)s could not be imported: %(error)s"
 msgstr ""
+
+#: my_practice/utils/bank_matching.py:94
+#, python-format
+msgid "Auto-ignored: invoice %(number)s already paid"
+msgstr "Auto-ignored: invoice %(number)s already paid"
 
 #: my_practice/utils/calendar_import_helpers.py:30
 #, python-format
@@ -3321,6 +3329,94 @@ msgstr ""
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Dec"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:14
+msgid "Connect external USB drive to laptop"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:17
+msgid "Run backup command (./dev.py backup or scripts/backup.sh)"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:19
+msgid "Check USB and NAS backup logs for errors"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:22
+msgid "Confirm that NAS backup was triggered automatically"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:24
+msgid "Safely disconnect USB drive"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:29
+msgid "Pick a random backup source (USB or NAS)"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:33
+msgid "Decrypt backup (passphrase from sealed envelope)"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:35
+msgid "Restore database to test instance"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:38
+msgid "Compare invoice count & client count with production"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:42
+msgid "Download a media file and verify checksum"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:46
+msgid "Log result: \"Restore test [DATE] [USB/NAS] [record count] ✅\""
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:54
+msgid "Take the other card from the cabinet (alternate Card A and Card B)"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:59
+msgid "Copy latest Pika-Backup snapshot to card"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:63
+msgid "Encrypt card (same passphrase as USB/NAS)"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:67
+msgid "Quick test: check 1–2 files + database count for readability"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:71
+msgid "Label card: \"Card A/B — [Date]\""
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:75
+msgid "Store in locked cabinet (location separate from laptop)"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:81
+msgid "Full restore test from MicroSD (offsite scenario)"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:85
+msgid "Check backup tool versions & security updates"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:89
+msgid "Review DPIA document for processing changes"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:93
+msgid "Review backup logs (no unexplained errors)"
+msgstr ""
+
+#: my_practice/utils/checklist_items.py:97
+msgid "Update emergency access plan (P-010) if needed"
 msgstr ""
 
 #: my_practice/utils/client_detail_builder.py:155
@@ -3566,7 +3662,7 @@ msgstr "POST required"
 msgid "Invalid status"
 msgstr "Invalid status"
 
-#: my_practice/views/api_views.py:215
+#: my_practice/views/api_views.py:212
 #, python-format
 msgid "Status changed to: %(status)s"
 msgstr "Status changed to: %(status)s"
@@ -3579,169 +3675,159 @@ msgstr ""
 msgid "Two-factor sign-in is now off."
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:88
+#: my_practice/views/bank_import_views.py:90
 #, python-format
 msgid "%(count)s automatically matched"
 msgstr "%(count)s automatically matched"
 
-#: my_practice/views/bank_import_views.py:89
+#: my_practice/views/bank_import_views.py:91
 #, python-format
 msgid "%(count)s require manual review"
 msgstr "%(count)s require manual review"
 
-#: my_practice/views/bank_import_views.py:93
+#: my_practice/views/bank_import_views.py:95
 #, python-format
 msgid "%(count)s expenses detected automatically"
 msgstr "%(count)s expenses detected automatically"
 
-#: my_practice/views/bank_import_views.py:95
+#: my_practice/views/bank_import_views.py:97
 #, python-format
 msgid "%(count)s ignored"
 msgstr "%(count)s ignored"
 
-#: my_practice/views/bank_import_views.py:98
+#: my_practice/views/bank_import_views.py:100
 #, python-format
 msgid "Import complete: %(details)s."
 msgstr "Import complete: %(details)s."
 
-#: my_practice/views/bank_import_views.py:233
+#: my_practice/views/bank_import_views.py:177
 msgid "No transaction selected."
 msgstr "No transaction selected."
 
-#: my_practice/views/bank_import_views.py:290
-#, python-format
-msgid "Auto-ignored: invoice %(number)s already paid"
-msgstr "Auto-ignored: invoice %(number)s already paid"
-
-#: my_practice/views/bank_import_views.py:300
+#: my_practice/views/bank_import_views.py:225
 #, python-format
 msgid "✅ %(count)s transaction with already-paid invoice ignored."
 msgid_plural "✅ %(count)s transactions with already-paid invoices ignored."
 msgstr[0] "✅ %(count)s transaction with already-paid invoice ignored."
 msgstr[1] "✅ %(count)s transactions with already-paid invoices ignored."
 
-#: my_practice/views/bank_import_views.py:307
+#: my_practice/views/bank_import_views.py:232
 msgid "No matching transactions to ignore."
 msgstr "No matching transactions to ignore."
 
-#: my_practice/views/bank_import_views.py:323
+#: my_practice/views/bank_import_views.py:240
 #, python-format
 msgid "%(count)s expense ignored."
 msgid_plural "%(count)s expenses ignored."
 msgstr[0] "%(count)s expense ignored."
 msgstr[1] "%(count)s expenses ignored."
 
-#: my_practice/views/bank_import_views.py:343
-#: my_practice/views/bank_import_views.py:688
+#: my_practice/views/bank_import_views.py:253
+#: my_practice/views/bank_import_views.py:598
 #, python-format
 msgid "%(count)s transaction ignored."
 msgid_plural "%(count)s transactions ignored."
 msgstr[0] "%(count)s transaction ignored."
 msgstr[1] "%(count)s transactions ignored."
 
-#: my_practice/views/bank_import_views.py:357
+#: my_practice/views/bank_import_views.py:267
 msgid "Transaction ignored."
 msgstr "Transaction ignored."
 
-#: my_practice/views/bank_import_views.py:381
+#: my_practice/views/bank_import_views.py:291
 #, python-format
 msgid "Transaction linked to %(number)s (already paid)."
 msgstr "Transaction linked to %(number)s (already paid)."
 
-#: my_practice/views/bank_import_views.py:385
+#: my_practice/views/bank_import_views.py:295
 msgid "Transaction confirmed (invoice already paid)."
 msgstr "Transaction confirmed (invoice already paid)."
 
-#: my_practice/views/bank_import_views.py:391
+#: my_practice/views/bank_import_views.py:301
 msgid "No invoice specified."
 msgstr "No invoice specified."
 
-#: my_practice/views/bank_import_views.py:406
+#: my_practice/views/bank_import_views.py:316
 #, python-format
 msgid "The amount does not match invoice %(number)s."
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:418
+#: my_practice/views/bank_import_views.py:328
 #, python-format
 msgid "Transaction automatically linked to %(number)s and marked as paid."
 msgstr "Transaction automatically linked to %(number)s and marked as paid."
 
-#: my_practice/views/bank_import_views.py:427
-#, python-format
-msgid "Invoice %(number)s could not be marked as paid: %(error)s"
-msgstr ""
-
-#: my_practice/views/bank_import_views.py:436
+#: my_practice/views/bank_import_views.py:346
 msgid "Error processing form."
 msgstr "Error processing form."
 
-#: my_practice/views/bank_import_views.py:441
+#: my_practice/views/bank_import_views.py:351
 msgid "Please select at least one invoice."
 msgstr "Please select at least one invoice."
 
-#: my_practice/views/bank_import_views.py:452
+#: my_practice/views/bank_import_views.py:362
 #, python-format
 msgid "Combined payment for: %(numbers)s"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:468
+#: my_practice/views/bank_import_views.py:378
 #, python-format
 msgid "Payment successfully assigned to invoice %(number)s."
 msgstr "Payment successfully assigned to invoice %(number)s."
 
-#: my_practice/views/bank_import_views.py:475
+#: my_practice/views/bank_import_views.py:385
 #, python-format
 msgid "Payment successfully assigned to %(count)s invoices: %(numbers)s"
 msgstr "Payment successfully assigned to %(count)s invoices: %(numbers)s"
 
-#: my_practice/views/bank_import_views.py:486
+#: my_practice/views/bank_import_views.py:396
 #, python-format
 msgid "Created automatically on confirming the payment of %(date)s"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:491
+#: my_practice/views/bank_import_views.py:401
 #, python-format
 msgid "📌 Alias '%(name)s' for %(code)s saved."
 msgstr "📌 Alias '%(name)s' for %(code)s saved."
 
-#: my_practice/views/bank_import_views.py:495
+#: my_practice/views/bank_import_views.py:405
 #, python-format
 msgid "Created during the bank import of %(date)s"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:500
+#: my_practice/views/bank_import_views.py:410
 #, python-format
 msgid "Alias '%(name)s' for %(code)s saved."
 msgstr "Alias '%(name)s' for %(code)s saved."
 
-#: my_practice/views/bank_import_views.py:583
+#: my_practice/views/bank_import_views.py:493
 msgid "Please select at least one transaction."
 msgstr "Please select at least one transaction."
 
-#: my_practice/views/bank_import_views.py:614
+#: my_practice/views/bank_import_views.py:524
 msgid "No transactions found."
 msgstr "No transactions found."
 
-#: my_practice/views/bank_import_views.py:619
+#: my_practice/views/bank_import_views.py:529
 msgid "Invalid category."
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:704
+#: my_practice/views/bank_import_views.py:614
 msgid "Bank Import - Assign Expenses"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:709
+#: my_practice/views/bank_import_views.py:619
 #, python-format
 msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
 msgstr[0] "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgstr[1] "%(count)s transactions successfully grouped into expense: %(amount)s €"
 
-#: my_practice/views/bank_import_views.py:758
+#: my_practice/views/bank_import_views.py:668
 msgid "Bank Import - Assign Withdrawals"
 msgstr ""
 
-#: my_practice/views/bank_import_views.py:763
+#: my_practice/views/bank_import_views.py:673
 #, python-format
 msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
@@ -3896,132 +3982,132 @@ msgstr ""
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:78
+#: my_practice/views/clinical_views.py:96
 msgid "Client profile saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:98
+#: my_practice/views/clinical_views.py:116
 msgid "Session date is required."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:104
-#: my_practice/views/clinical_views.py:372
-#: my_practice/views/clinical_views.py:397
+#: my_practice/views/clinical_views.py:122
+#: my_practice/views/clinical_views.py:379
+#: my_practice/views/clinical_views.py:404
 msgid "Invalid date."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:110
-#: my_practice/views/clinical_views.py:202
-#: my_practice/views/clinical_views.py:460
+#: my_practice/views/clinical_views.py:128
+#: my_practice/views/clinical_views.py:209
+#: my_practice/views/clinical_views.py:467
 msgid "Invalid duration."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:113
+#: my_practice/views/clinical_views.py:131
 msgid "Invalid session type."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:120
+#: my_practice/views/clinical_views.py:138
 msgid "A log already exists for this session."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:140
+#: my_practice/views/clinical_views.py:153
 #, python-format
 msgid "Session log for %(date)s saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:211
+#: my_practice/views/clinical_views.py:218
 msgid "The duration was not changed: this session has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:216
+#: my_practice/views/clinical_views.py:223
 msgid "Session log updated."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:238
-#: my_practice/views/clinical_views.py:390
+#: my_practice/views/clinical_views.py:245
+#: my_practice/views/clinical_views.py:397
 msgid "Content must not be empty."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:242
+#: my_practice/views/clinical_views.py:249
 msgid "Supervision topic added."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:257
+#: my_practice/views/clinical_views.py:264
 msgid "Supervision topic deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:312
+#: my_practice/views/clinical_views.py:319
 msgid "Supervision topic marked discussed."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:366
+#: my_practice/views/clinical_views.py:373
 msgid "Date and content are required."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:376
+#: my_practice/views/clinical_views.py:383
 msgid "Note saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:402
+#: my_practice/views/clinical_views.py:409
 msgid "Note updated."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:417
+#: my_practice/views/clinical_views.py:424
 msgid "Note deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:432
+#: my_practice/views/clinical_views.py:439
 msgid "Session log deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:452
+#: my_practice/views/clinical_views.py:459
 #, python-format
 msgid "Session of %(date)s cannot be edited: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:465
+#: my_practice/views/clinical_views.py:472
 #, python-format
 msgid "Session duration updated to %(min)s min."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:484
+#: my_practice/views/clinical_views.py:491
 #, python-format
 msgid "Session of %(date)s cannot be deleted: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:492
+#: my_practice/views/clinical_views.py:499
 #, python-format
 msgid "Session of %(date)s deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:503
+#: my_practice/views/clinical_views.py:510
 msgid "Marked as no-show / cancellation."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:615
+#: my_practice/views/clinical_views.py:622
 msgid "GebüH billing is not enabled for this client."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:628
+#: my_practice/views/clinical_views.py:635
 msgid "Invalid input."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:638
+#: my_practice/views/clinical_views.py:645
 #, python-format
 msgid "GebüH entries for %(date)s cleared."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:652
+#: my_practice/views/clinical_views.py:659
 #, python-format
 msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:677
+#: my_practice/views/clinical_views.py:684
 #, python-format
 msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:708
+#: my_practice/views/clinical_views.py:715
 #, python-format
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr ""
@@ -4297,117 +4383,29 @@ msgid_plural "Invoice <a href=\"{}\">{}</a> with {} sessions created."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/views/operational_views.py:27
-msgid "Connect external USB drive to laptop"
-msgstr ""
-
-#: my_practice/views/operational_views.py:30
-msgid "Run backup command (./dev.py backup or scripts/backup.sh)"
-msgstr ""
-
-#: my_practice/views/operational_views.py:32
-msgid "Check USB and NAS backup logs for errors"
-msgstr ""
-
-#: my_practice/views/operational_views.py:35
-msgid "Confirm that NAS backup was triggered automatically"
-msgstr ""
-
-#: my_practice/views/operational_views.py:37
-msgid "Safely disconnect USB drive"
-msgstr ""
-
-#: my_practice/views/operational_views.py:42
-msgid "Pick a random backup source (USB or NAS)"
-msgstr ""
-
-#: my_practice/views/operational_views.py:46
-msgid "Decrypt backup (passphrase from sealed envelope)"
-msgstr ""
-
-#: my_practice/views/operational_views.py:48
-msgid "Restore database to test instance"
-msgstr ""
-
-#: my_practice/views/operational_views.py:51
-msgid "Compare invoice count & client count with production"
-msgstr ""
-
-#: my_practice/views/operational_views.py:55
-msgid "Download a media file and verify checksum"
-msgstr ""
-
-#: my_practice/views/operational_views.py:59
-msgid "Log result: \"Restore test [DATE] [USB/NAS] [record count] ✅\""
-msgstr ""
-
-#: my_practice/views/operational_views.py:67
-msgid "Take the other card from the cabinet (alternate Card A and Card B)"
-msgstr ""
-
 #: my_practice/views/operational_views.py:72
-msgid "Copy latest Pika-Backup snapshot to card"
-msgstr ""
-
-#: my_practice/views/operational_views.py:76
-msgid "Encrypt card (same passphrase as USB/NAS)"
-msgstr ""
-
-#: my_practice/views/operational_views.py:80
-msgid "Quick test: check 1–2 files + database count for readability"
-msgstr ""
-
-#: my_practice/views/operational_views.py:84
-msgid "Label card: \"Card A/B — [Date]\""
-msgstr ""
-
-#: my_practice/views/operational_views.py:88
-msgid "Store in locked cabinet (location separate from laptop)"
-msgstr ""
-
-#: my_practice/views/operational_views.py:94
-msgid "Full restore test from MicroSD (offsite scenario)"
-msgstr ""
-
-#: my_practice/views/operational_views.py:98
-msgid "Check backup tool versions & security updates"
-msgstr ""
-
-#: my_practice/views/operational_views.py:102
-msgid "Review DPIA document for processing changes"
-msgstr ""
-
-#: my_practice/views/operational_views.py:106
-msgid "Review backup logs (no unexplained errors)"
-msgstr ""
-
-#: my_practice/views/operational_views.py:110
-msgid "Update emergency access plan (P-010) if needed"
-msgstr ""
-
-#: my_practice/views/operational_views.py:169
 msgid "Unknown checklist type."
 msgstr ""
 
-#: my_practice/views/operational_views.py:182
+#: my_practice/views/operational_views.py:85
 #, python-format
 msgid "%(type)s has already been completed."
 msgstr ""
 
-#: my_practice/views/operational_views.py:191
+#: my_practice/views/operational_views.py:94
 #, python-format
 msgid "✅ %(type)s for %(period)s completed."
 msgstr ""
 
-#: my_practice/views/operational_views.py:208
+#: my_practice/views/operational_views.py:111
 msgid "Unknown checklist item."
 msgstr ""
 
-#: my_practice/views/operational_views.py:225
+#: my_practice/views/operational_views.py:128
 msgid "⏸ Item paused."
 msgstr ""
 
-#: my_practice/views/operational_views.py:235
+#: my_practice/views/operational_views.py:138
 msgid "▶️ Pause removed."
 msgstr ""
 
@@ -4642,8 +4640,7 @@ msgstr ""
 msgid "Click to hide sensitive data"
 msgstr ""
 
-#: templates/base.html:132 templates/my_practice/bank_expense_review.html:101
-#: templates/my_practice/bank_withdrawal_review.html:75
+#: templates/base.html:132 templates/my_practice/bank_financial_review.html:74
 #: templates/my_practice/checklist.html:16
 #: templates/my_practice/client_detail.html:39
 msgid "Overview"
@@ -4808,7 +4805,7 @@ msgid "Open invoices"
 msgstr ""
 
 #: templates/includes/command_palette.html:44
-#: templates/my_practice/bank_expense_review.html:99
+#: templates/my_practice/bank_expense_review.html:45
 #: templates/my_practice/bank_import.html:4
 #: templates/my_practice/bank_import.html:9
 msgid "Bank import"
@@ -4831,7 +4828,7 @@ msgstr ""
 #: templates/my_practice/analytics.html:94
 #: templates/my_practice/analytics_tab_revenue.html:26
 #: templates/my_practice/bank_review.html:19
-#: templates/my_practice/bank_withdrawal_review.html:73
+#: templates/my_practice/bank_withdrawal_review.html:19
 #: templates/my_practice/expense_list.html:65
 #: templates/my_practice/tax_quarter_overview.html:79
 msgid "Expenses"
@@ -5644,47 +5641,43 @@ msgstr ""
 msgid "Average days from invoice date to payment received"
 msgstr ""
 
-#: templates/my_practice/bank_expense_review.html:55
-#: templates/my_practice/bank_withdrawal_review.html:40
+#: templates/my_practice/bank_expense_review.html:40
+msgid "Group into expense"
+msgstr "Group into expense"
+
+#: templates/my_practice/bank_expense_review.html:42
+msgid "All transactions matched"
+msgstr "All transactions matched"
+
+#: templates/my_practice/bank_expense_review.html:42
+msgid "There are no unmatched negative transactions."
+msgstr ""
+
+#: templates/my_practice/bank_expense_review.html:46
+msgid "Expense list"
+msgstr ""
+
+#: templates/my_practice/bank_financial_review.html:38
 #: templates/my_practice/client_detail_documents.html:45
 #: templates/my_practice/tag_form.html:44
 msgid "Description (optional)"
 msgstr ""
 
-#: templates/my_practice/bank_expense_review.html:56
-#: templates/my_practice/bank_withdrawal_review.html:41
+#: templates/my_practice/bank_financial_review.html:39
 msgid "Auto-generated if left empty"
 msgstr ""
 
-#: templates/my_practice/bank_expense_review.html:73
-msgid "Group into expense"
-msgstr "Group into expense"
-
-#: templates/my_practice/bank_expense_review.html:76
+#: templates/my_practice/bank_financial_review.html:50
 #: templates/my_practice/bank_review.html:279
 #: templates/my_practice/bank_review.html:296
 #: templates/my_practice/bank_review.html:327
-#: templates/my_practice/bank_withdrawal_review.html:50
 #: templates/my_practice/client_detail_tab_billing.html:50
 msgid "Ignore"
 msgstr ""
 
-#: templates/my_practice/bank_expense_review.html:93
-msgid "All transactions matched"
-msgstr "All transactions matched"
-
-#: templates/my_practice/bank_expense_review.html:93
-msgid "There are no unmatched negative transactions."
-msgstr ""
-
-#: templates/my_practice/bank_expense_review.html:98
-#: templates/my_practice/bank_withdrawal_review.html:72
+#: templates/my_practice/bank_financial_review.html:72
 msgid "← Review invoices"
 msgstr "← Review invoices"
-
-#: templates/my_practice/bank_expense_review.html:100
-msgid "Expense list"
-msgstr ""
 
 #: templates/my_practice/bank_import.html:11
 msgid "Go to review"
@@ -5919,19 +5912,19 @@ msgstr ""
 msgid "Difference:"
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:47
+#: templates/my_practice/bank_withdrawal_review.html:12
 msgid "Group into withdrawal"
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:67
+#: templates/my_practice/bank_withdrawal_review.html:16
 msgid "All withdrawals matched"
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:67
+#: templates/my_practice/bank_withdrawal_review.html:16
 msgid "There are no pending automatically detected withdrawals."
 msgstr ""
 
-#: templates/my_practice/bank_withdrawal_review.html:74
+#: templates/my_practice/bank_withdrawal_review.html:20
 msgid "Withdrawal list"
 msgstr ""
 
