@@ -40,40 +40,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        dry_run = options["dry_run"]
-        skip_confirm = options["yes"]
         year = options["year"]
         record_type = options["type"]
 
-        # Build filter message
         filter_msg = []
         if year:
             filter_msg.append(f"year {year}")
         if record_type != "both":
             filter_msg.append(record_type)
-
         filter_str = f" ({', '.join(filter_msg)})" if filter_msg else ""
 
         self.stdout.write(self.style.WARNING(f"🔍 Searching for duplicates{filter_str}..."))
         self.stdout.write("")
 
-        # Build querysets with optional filters
-        expense_qs = CompanyExpense.objects.all()
-        withdrawal_qs = CompanyWithdrawal.objects.all()
-
-        if year:
-            expense_qs = expense_qs.filter(date__year=year)
-            withdrawal_qs = withdrawal_qs.filter(date__year=year)
-
-        expense_duplicates = (
-            self._find_duplicate_groups(expense_qs) if record_type in ["expenses", "both"] else None
-        )
-        withdrawal_duplicates = (
-            self._find_duplicate_groups(withdrawal_qs)
-            if record_type in ["withdrawals", "both"]
-            else None
-        )
-
+        expense_duplicates, withdrawal_duplicates = self._find_groups(year, record_type)
         expense_groups = expense_duplicates.count() if expense_duplicates else 0
         withdrawal_groups = withdrawal_duplicates.count() if withdrawal_duplicates else 0
 
@@ -85,24 +65,14 @@ class Command(BaseCommand):
         self.stdout.write(f"📊 Found {withdrawal_groups} duplicate withdrawal groups")
         self.stdout.write("")
 
-        expense_to_process: list[tuple[type[Model], list[int]]] = []
-        total_expense_to_delete = 0
-        if expense_groups > 0:
-            assert expense_duplicates is not None
-            expense_to_process, total_expense_to_delete = self._display_duplicates(
-                CompanyExpense, expense_duplicates, "🧾", "Expenses"
-            )
+        expense_to_process, total_expense_to_delete = self._plan(
+            CompanyExpense, expense_duplicates, "🧾", "Expenses"
+        )
+        withdrawal_to_process, total_withdrawal_to_delete = self._plan(
+            CompanyWithdrawal, withdrawal_duplicates, "💰", "Withdrawals"
+        )
 
-        withdrawal_to_process: list[tuple[type[Model], list[int]]] = []
-        total_withdrawal_to_delete = 0
-        if withdrawal_groups > 0:
-            assert withdrawal_duplicates is not None
-            withdrawal_to_process, total_withdrawal_to_delete = self._display_duplicates(
-                CompanyWithdrawal, withdrawal_duplicates, "💰", "Withdrawals"
-            )
-
-        # Dry run - just show what would be deleted
-        if dry_run:
+        if options["dry_run"]:
             self.stdout.write(self.style.WARNING("📋 DRY RUN - No changes made"))
             self.stdout.write(
                 f"Would delete {total_expense_to_delete} expenses and {total_withdrawal_to_delete} withdrawals"
@@ -111,11 +81,10 @@ class Command(BaseCommand):
 
         total_to_delete = total_expense_to_delete + total_withdrawal_to_delete
         if not confirm_deletion(
-            self, f"\n⚠️  Delete {total_to_delete} duplicate records? (yes/no): ", skip_confirm
+            self, f"\n⚠️  Delete {total_to_delete} duplicate records? (yes/no): ", options["yes"]
         ):
             return
 
-        # Actually delete duplicates
         self.stdout.write("")
         self.stdout.write(self.style.WARNING("🗑️  Deleting duplicates..."))
 
@@ -129,6 +98,34 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"✅ Deleted {total_withdrawal_deleted} withdrawal duplicates")
         )
 
+    def _find_groups(
+        self, year: int | None, record_type: str
+    ) -> tuple[QuerySet | None, QuerySet | None]:
+        """Duplicate groups of expenses and of withdrawals; None for a type not asked for."""
+        expense_qs = CompanyExpense.objects.all()
+        withdrawal_qs = CompanyWithdrawal.objects.all()
+        if year:
+            expense_qs = expense_qs.filter(date__year=year)
+            withdrawal_qs = withdrawal_qs.filter(date__year=year)
+
+        expense_duplicates = (
+            self._find_duplicate_groups(expense_qs) if record_type in ["expenses", "both"] else None
+        )
+        withdrawal_duplicates = (
+            self._find_duplicate_groups(withdrawal_qs)
+            if record_type in ["withdrawals", "both"]
+            else None
+        )
+        return expense_duplicates, withdrawal_duplicates
+
+    def _plan(
+        self, model: type[Model], groups: QuerySet | None, emoji: str, label: str
+    ) -> tuple[list[tuple[type[Model], list[int]]], int]:
+        """Print the groups of one record type and return what would be deleted ([], 0 if none)."""
+        if not groups or groups.count() == 0:
+            return [], 0
+        return self._display_duplicates(model, groups, emoji, label)
+
     @staticmethod
     def _find_duplicate_groups(queryset: QuerySet) -> QuerySet:
         """Group by the fields that define a duplicate, keeping only groups with >1 record."""
@@ -138,6 +135,34 @@ class Command(BaseCommand):
             .filter(count__gt=1)
             .order_by("-count")
         )
+
+    @staticmethod
+    def _choose_deletions(records: list) -> tuple[set[int], list[int]]:
+        """Which ids of one duplicate group stay and which go (``records`` ordered by id)."""
+        protected = [r for r in records if r.linked or getattr(r, "receipt_count", 0)]
+        keep = {r.id for r in protected} or {records[0].id}
+        return keep, [r.id for r in records if r.id not in keep]
+
+    def _print_group(self, dup: dict, records: list, keep: set[int], delete_ids: list[int]) -> None:
+        """Print one duplicate group: its records, what ties them to other data, the decision."""
+        categories = sorted({r.category for r in records})
+        self.stdout.write(
+            f"  {dup['date']} | {dup['amount']}€ | {', '.join(categories)} | Count: {len(records)}"
+        )
+        desc_short = dup["description"][:60]
+        self.stdout.write(f"    Description: {desc_short}...")
+
+        id_details = []
+        for r in records:
+            detail = f"ID {r.id} ({r.category}"
+            if r.linked:
+                detail += f", {r.linked} bank transaction(s)"
+            if getattr(r, "receipt_count", 0):
+                detail += f", {r.receipt_count} receipt(s)"
+            id_details.append(detail + ")")
+        self.stdout.write(f"    Records: {', '.join(id_details)}")
+        kept = ", ".join(str(i) for i in sorted(keep))
+        self.stdout.write(f"      → Would keep ID {kept}, delete {len(delete_ids)}")
 
     def _display_duplicates(
         self, model: type[Model], duplicate_groups: QuerySet, emoji: str, label: str
@@ -175,28 +200,8 @@ class Command(BaseCommand):
             if not records:
                 continue
 
-            protected = [r for r in records if r.linked or getattr(r, "receipt_count", 0)]
-            keep = {r.id for r in protected} or {records[0].id}
-            delete_ids = [r.id for r in records if r.id not in keep]
-
-            categories = sorted({r.category for r in records})
-            self.stdout.write(
-                f"  {dup['date']} | {dup['amount']}€ | {', '.join(categories)} | Count: {len(records)}"
-            )
-            desc_short = dup["description"][:60]
-            self.stdout.write(f"    Description: {desc_short}...")
-
-            id_details = []
-            for r in records:
-                detail = f"ID {r.id} ({r.category}"
-                if r.linked:
-                    detail += f", {r.linked} bank transaction(s)"
-                if getattr(r, "receipt_count", 0):
-                    detail += f", {r.receipt_count} receipt(s)"
-                id_details.append(detail + ")")
-            self.stdout.write(f"    Records: {', '.join(id_details)}")
-            kept = ", ".join(str(i) for i in sorted(keep))
-            self.stdout.write(f"      → Would keep ID {kept}, delete {len(delete_ids)}")
+            keep, delete_ids = self._choose_deletions(records)
+            self._print_group(dup, records, keep, delete_ids)
 
             if delete_ids:
                 to_process.append((model, delete_ids))
