@@ -18,6 +18,8 @@ from my_practice.forms import (
 )
 from my_practice.invoice_forms import InvoiceForm
 
+from .test_helpers import practice_request
+
 
 class TemplateFieldValidationTestCase(TestCase):
     """Test that templates render all required form fields"""
@@ -55,7 +57,7 @@ class TemplateFieldValidationTestCase(TestCase):
 
     def test_invoice_template_has_all_fields(self):
         """Test that invoice_form.html renders all InvoiceForm fields"""
-        form = InvoiceForm()
+        form = InvoiceForm(request=practice_request(None))
         template_content = self._get_template_content("my_practice/invoice_form.html")
 
         # Extract fields referenced in template

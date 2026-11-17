@@ -57,54 +57,37 @@ class InvoiceForm(StyledFormMixin, forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize form with active clients and today's date for new invoices."""
-        # Extract request for practice-scoped queries
-        self.request = kwargs.pop("request", None)
+    def __init__(self, *args: Any, request: Any, **kwargs: Any) -> None:
+        """Initialize form with the current practice's clients and today's date for new invoices.
+
+        ``request`` is required: the client choices come from its current practice,
+        and a form built without one would have to guess (or offer every practice's clients).
+        """
+        self.request = request
         super().__init__(*args, **kwargs)
 
-        # Show active clients, plus the current client if editing an existing invoice
+        practice_clients = Client.objects.for_current_practice(request)
         if self.instance.pk and self.instance.client:
-            # Editing existing invoice - include all clients from current practice
-            if self.request:
-                cast(
-                    ModelChoiceField, self.fields["client"]
-                ).queryset = Client.objects.for_current_practice(self.request)
-            else:
-                cast(ModelChoiceField, self.fields["client"]).queryset = Client.objects.all()
+            # Editing: every client of the practice, so a deactivated one stays selectable
+            clients = practice_clients
         else:
-            # Creating new invoice - show active clients from current practice
-            if self.request:
-                active_clients = Client.objects.for_current_practice(self.request).filter(
-                    active=True
-                )
-            else:
-                active_clients = Client.objects.filter(active=True)
-
-            # Check both self.initial (from form kwargs) and form's initial data
-            initial_client = self.initial.get("client")
-            # Also check if client is already set in the form data
-            if not initial_client and "client" in self.data:
-                client_lookup = (
-                    Client.objects.for_current_practice(self.request)
-                    if self.request
-                    else Client.objects.all()
-                )
-                try:
-                    initial_client = client_lookup.get(pk=self.data.get("client") or "")
-                except Client.DoesNotExist, ValueError, TypeError:
-                    initial_client = None
-
-            if initial_client and not initial_client.active:
-                # Include the inactive pre-selected client in the queryset
-                cast(ModelChoiceField, self.fields["client"]).queryset = (
-                    active_clients | Client.objects.filter(pk=initial_client.pk)
-                )
-            else:
-                cast(ModelChoiceField, self.fields["client"]).queryset = active_clients
-        # Set initial values if creating new
-        if not self.instance.pk:
+            # Creating: active clients, plus an inactive one that is already chosen
+            clients = practice_clients.filter(active=True)
+            chosen = self._chosen_client(practice_clients)
+            if chosen and not chosen.active:
+                clients = clients | practice_clients.filter(pk=chosen.pk)
             cast(ModelChoiceField, self.fields["invoice_date"]).initial = timezone.localdate()
+        cast(ModelChoiceField, self.fields["client"]).queryset = clients
+
+    def _chosen_client(self, practice_clients: Any) -> Client | None:
+        """The client preselected through ``initial`` or already submitted in the form data."""
+        chosen = self.initial.get("client")
+        if chosen or "client" not in self.data:
+            return chosen
+        try:
+            return practice_clients.get(pk=self.data.get("client") or "")
+        except Client.DoesNotExist, ValueError, TypeError:
+            return None
 
 
 class InvoiceItemForm(StyledFormMixin, forms.ModelForm):

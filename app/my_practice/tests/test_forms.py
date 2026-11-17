@@ -10,7 +10,7 @@ from my_practice.email_forms import InvoiceEmailForm
 from my_practice.invoice_forms import InvoiceForm, InvoiceItemForm
 from my_practice.models import Client, ServiceType, Session
 
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, practice_request
 
 
 class InvoiceFormTestCase(TestCase):
@@ -31,9 +31,6 @@ class InvoiceFormTestCase(TestCase):
 
     def test_form_valid_data(self):
         """Test form with all valid data"""
-        # Create practice
-        self.practice = create_test_practice(name="Test Practice", slug="test-practice")
-
         form_data = {
             "client": self.client.id,
             "invoice_number": "TC-123",
@@ -42,7 +39,7 @@ class InvoiceFormTestCase(TestCase):
             "tax_rate": "0.00",
             "notes": "Test notes",
         }
-        form = InvoiceForm(data=form_data)
+        form = InvoiceForm(data=form_data, request=practice_request(self.practice))
         self.assertTrue(form.is_valid())
 
     def test_form_auto_generates_invoice_number(self):
@@ -54,12 +51,12 @@ class InvoiceFormTestCase(TestCase):
             "status": "draft",
             "tax_rate": "0.00",
         }
-        form = InvoiceForm(data=form_data)
+        form = InvoiceForm(data=form_data, request=practice_request(self.practice))
         self.assertTrue(form.is_valid())
 
     def test_form_sets_default_invoice_date(self):
         """Test that invoice_date defaults to today"""
-        form = InvoiceForm()
+        form = InvoiceForm(request=practice_request(self.practice))
         self.assertEqual(form.fields["invoice_date"].initial, date.today())
 
     def test_form_only_shows_active_clients(self):
@@ -71,10 +68,69 @@ class InvoiceFormTestCase(TestCase):
             active=False,
             practice=self.practice,
         )
-        form = InvoiceForm()
+        form = InvoiceForm(request=practice_request(self.practice))
         client_ids = [c.id for c in form.fields["client"].queryset]
         self.assertIn(self.client.id, client_ids)
         self.assertNotIn(inactive_client.id, client_ids)
+
+    def test_form_offers_only_the_current_practice_clients(self):
+        other = create_test_practice(name="Other Practice", slug="forms-other")
+        stranger = Client.objects.create(client_code="ST", full_name="Anna Schmidt", practice=other)
+        form = InvoiceForm(request=practice_request(self.practice))
+        self.assertNotIn(stranger.id, [c.id for c in form.fields["client"].queryset])
+        submitted = InvoiceForm(
+            data={"client": stranger.id, "invoice_date": "2025-12-24", "status": "draft"},
+            request=practice_request(self.practice),
+        )
+        self.assertFalse(submitted.is_valid())
+        self.assertIn("client", submitted.errors)
+
+    def test_form_without_a_practice_offers_no_clients(self):
+        form = InvoiceForm(request=practice_request(None))
+        self.assertEqual(list(form.fields["client"].queryset), [])
+
+    def test_form_requires_a_request(self):
+        with self.assertRaises(TypeError):
+            InvoiceForm()
+
+    def test_preselected_inactive_client_stays_selectable(self):
+        inactive = Client.objects.create(
+            client_code="IC", full_name="Inactive Client", active=False, practice=self.practice
+        )
+        form = InvoiceForm(initial={"client": inactive}, request=practice_request(self.practice))
+        ids = [c.id for c in form.fields["client"].queryset]
+        self.assertIn(inactive.id, ids)
+        self.assertIn(self.client.id, ids)
+
+    def test_submitted_inactive_client_stays_selectable(self):
+        inactive = Client.objects.create(
+            client_code="IC", full_name="Inactive Client", active=False, practice=self.practice
+        )
+        form = InvoiceForm(
+            data={
+                "client": inactive.id,
+                "invoice_date": "2025-12-24",
+                "status": "draft",
+                "tax_rate": "0.00",
+            },
+            request=practice_request(self.practice),
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_editing_keeps_inactive_clients_of_the_practice(self):
+        from my_practice.models import Invoice
+
+        inactive = Client.objects.create(
+            client_code="IC", full_name="Inactive Client", active=False, practice=self.practice
+        )
+        invoice = Invoice.objects.create(
+            practice=self.practice,
+            client=inactive,
+            invoice_number="IC-1",
+            invoice_date=date(2025, 12, 24),
+        )
+        form = InvoiceForm(instance=invoice, request=practice_request(self.practice))
+        self.assertIn(inactive.id, [c.id for c in form.fields["client"].queryset])
 
     def test_form_invalid_without_client(self):
         """Test form validation fails without client"""
@@ -82,7 +138,7 @@ class InvoiceFormTestCase(TestCase):
             "invoice_date": "2025-12-24",
             "status": "draft",
         }
-        form = InvoiceForm(data=form_data)
+        form = InvoiceForm(data=form_data, request=practice_request(self.practice))
         self.assertFalse(form.is_valid())
         self.assertIn("client", form.errors)
 
@@ -93,7 +149,7 @@ class InvoiceFormTestCase(TestCase):
             "invoice_date": "invalid-date",
             "status": "draft",
         }
-        form = InvoiceForm(data=form_data)
+        form = InvoiceForm(data=form_data, request=practice_request(self.practice))
         self.assertFalse(form.is_valid())
         self.assertIn("invoice_date", form.errors)
 
@@ -236,7 +292,7 @@ class InvoiceFormIntegrationTestCase(TestCase):
             "status": "draft",
             "tax_rate": "0.00",
         }
-        invoice_form = InvoiceForm(data=invoice_data)
+        invoice_form = InvoiceForm(data=invoice_data, request=practice_request(self.practice))
         self.assertTrue(invoice_form.is_valid())
         invoice = invoice_form.save(commit=False)
         invoice.practice = self.practice
