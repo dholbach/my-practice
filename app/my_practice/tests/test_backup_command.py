@@ -6,6 +6,7 @@ every verification step is exercised without containers.
 """
 
 import contextlib
+import gzip
 import importlib.util
 import io
 import os
@@ -51,6 +52,8 @@ elif args[0] == "psql":
         out.write(sys.stdin.buffer.read())
     sys.exit(1 if mode == "psql_fails" else 0)
 elif args[0] == "sh":
+    if mode == "media_fails":
+        sys.exit(1)
     # The real script, aimed at a fake media directory.
     script = args[2].replace("/app/media", os.path.join(os.environ["FAKE_RESTORE_DIR"], "media"))
     sys.exit(subprocess.call(["sh", "-c", script]))
@@ -120,6 +123,21 @@ class BackupFixture(SimpleTestCase):
         ):
             result = self.prod.cmd_restore([*files, "--yes"])
         return result.returncode, err.getvalue()
+
+    def _restore_raw(self, args, answer=None):
+        """Run cmd_restore with exactly ``args`` (no --yes added); returns (returncode, out, err)."""
+        os.environ["FAKE_PSQL_OUT"] = str(self.root / "restored.sql")
+        os.environ["FAKE_RESTORE_DIR"] = str(self.root / "restored")
+        out, err = io.StringIO(), io.StringIO()
+        with (
+            mock.patch.object(self.prod, "_compose_cmd", return_value=self.compose),
+            mock.patch.object(self.prod, "_passphrase_file", return_value=None),
+            mock.patch("builtins.input", return_value=answer),
+            contextlib.redirect_stdout(out),
+            contextlib.redirect_stderr(err),
+        ):
+            result = self.prod.cmd_restore(args)
+        return result.returncode, out.getvalue(), err.getvalue()
 
     def _listing(self):
         return sorted(p.name for p in self.backup_dir.iterdir()) if self.backup_dir.exists() else []
@@ -247,6 +265,75 @@ class RestoreTests(BackupFixture):
         code, err = self._restore(self.db, self.media, mode="psql_fails")
         self.assertEqual(code, 1)
         self.assertIn("the database is unchanged", err)
+        self.assertEqual([p.name for p in self.current.iterdir()], ["current.pdf"])
+
+
+class RestoreGuardTests(BackupFixture):
+    """What cmd_restore refuses or skips before it touches any data."""
+
+    def setUp(self):
+        super().setUp()
+        self.db, self.media = self._backup()
+        self.current = self.root / "restored" / "media"
+        self.current.mkdir(parents=True)
+        (self.current / "current.pdf").write_bytes(b"%PDF current")
+
+    def _nothing_touched(self):
+        self.assertFalse((self.root / "restored.sql").exists())
+        self.assertEqual([p.name for p in self.current.iterdir()], ["current.pdf"])
+
+    def test_without_files_it_prints_usage_and_fails(self):
+        with mock.patch.object(self.prod, "_backup_dir", return_value="/data/backups"):
+            code, out, _err = self._restore_raw([])
+        self.assertEqual(code, 1)
+        self.assertIn("Usage: ./prod.py restore", out)
+        self.assertIn("/data/backups", out)
+
+    def test_a_compose_file_value_is_not_taken_for_a_backup(self):
+        code, out, _err = self._restore_raw(["--compose-file", "other.yml"])
+        self.assertEqual(code, 1)
+        self.assertIn("Usage", out)
+
+    def test_missing_file_is_named_and_nothing_runs(self):
+        code, _out, err = self._restore_raw([self.db, str(self.root / "nope.tar.gz"), "--yes"])
+        self.assertEqual(code, 1)
+        self.assertIn("nope.tar.gz", err)
+        self._nothing_touched()
+
+    def test_anything_but_yes_cancels_with_exit_zero(self):
+        for answer in ["", "y", "no", "YES please"]:
+            with self.subTest(answer=answer):
+                code, out, _err = self._restore_raw([self.db, self.media], answer=answer)
+                self.assertEqual(code, 0)
+                self.assertIn("Restore cancelled", out)
+                self._nothing_touched()
+
+    def test_typing_yes_goes_ahead(self):
+        code, _out, err = self._restore_raw([self.db, self.media], answer=" yes ")
+        self.assertEqual((code, err), (0, ""))
+        self.assertTrue((self.root / "restored.sql").exists())
+
+    def test_truncated_dump_is_refused_before_psql_runs(self):
+        truncated = self.root / "db_backup_truncated.sql.gz"
+        with gzip.open(truncated, "wb") as dump:
+            dump.write(b"CREATE TABLE t (id int);\n" * 1000)
+        code, _out, err = self._restore_raw([str(truncated), "--yes"])
+        self.assertEqual(code, 1)
+        self.assertIn("pg_dump trailer missing", err)
+        self._nothing_touched()
+
+    def test_database_only_restore_leaves_media_alone(self):
+        code, out, _err = self._restore_raw([self.db, "--yes"])
+        self.assertEqual(code, 0)
+        self.assertNotIn("Media restored", out)
+        self.assertEqual([p.name for p in self.current.iterdir()], ["current.pdf"])
+
+    def test_failed_media_step_is_reported_after_the_database_is_back(self):
+        os.environ["FAKE_MODE"] = "media_fails"
+        code, out, err = self._restore_raw([self.db, self.media, "--yes"])
+        self.assertEqual(code, 1)
+        self.assertIn("Database restored", out)
+        self.assertIn("existing media files are unchanged", err)
         self.assertEqual([p.name for p in self.current.iterdir()], ["current.pdf"])
 
 
