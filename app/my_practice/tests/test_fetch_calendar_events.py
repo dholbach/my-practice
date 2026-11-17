@@ -805,7 +805,8 @@ class HandleAndFetchForPracticeTest(TestCase):
             return_value=None,
         ):
             out = StringIO()
-            call_command("fetch_calendar_events", stdout=out)
+            with self.assertRaises(CommandError):
+                call_command("fetch_calendar_events", stdout=out)
         self.assertIn("expired or invalid", out.getvalue())
 
     def test_fetch_for_practice_no_calendar_selected_warns(self):

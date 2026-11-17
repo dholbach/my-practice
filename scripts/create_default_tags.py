@@ -23,16 +23,19 @@ DEFAULT_TAGS = [
     # Process-related tags
     {
         "name": "missing-paperwork",
+        "category": ClientTag.Category.ATTENTION,
         "color": "red",
         "description": "Intake oder andere erforderliche Dokumente fehlen noch",
     },
     {
         "name": "follow-up",
+        "category": ClientTag.Category.ATTENTION,
         "color": "orange",
         "description": "Benötigt Follow-up Kontakt oder Check-in",
     },
     {
         "name": "needs-documentation",
+        "category": ClientTag.Category.ATTENTION,
         "color": "yellow",
         "description": "Sitzungsnotizen oder diagnostische Materialien ausstehend",
     },
@@ -44,27 +47,32 @@ DEFAULT_TAGS = [
     # Status tags for inactive clients
     {
         "name": "end-process",
+        "category": ClientTag.Category.EXIT,
         "color": "green",
         "description": "Therapie erfolgreich abgeschlossen",
     },
     {
         "name": "no-fit",
+        "category": ClientTag.Category.EXIT,
         "color": "gray",
         "description": "Klient hat entschieden, dass Therapie nicht passt",
     },
     {
         "name": "moved-away",
+        "category": ClientTag.Category.EXIT,
         "color": "gray",
         "description": "Klient ist umgezogen / nicht mehr erreichbar",
     },
     {
         "name": "referral-out",
+        "category": ClientTag.Category.EXIT,
         "color": "purple",
         "description": "An anderen Therapeuten / andere Einrichtung überwiesen",
     },
     # Priority tags
     {
         "name": "urgent",
+        "category": ClientTag.Category.ATTENTION,
         "color": "red",
         "description": "Dringende Aufmerksamkeit erforderlich",
     },
