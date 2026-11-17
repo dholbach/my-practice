@@ -349,7 +349,7 @@ class ChecklistWidgetBuilderTests(TestCase):
 
     def test_fully_paused_checklist_not_pending(self):
         """If all items of a checklist type are paused, it should not show as pending."""
-        from ..views.operational_views import CHECKLIST_ITEMS
+        from ..utils.checklist_items import CHECKLIST_ITEMS
 
         for item in CHECKLIST_ITEMS["monthly"]:
             ChecklistItemPause.objects.create(
@@ -376,7 +376,7 @@ class ChecklistWidgetBuilderTests(TestCase):
 
     def test_expired_pauses_do_not_suppress(self):
         """Expired pauses should not suppress the checklist from the widget."""
-        from ..views.operational_views import CHECKLIST_ITEMS
+        from ..utils.checklist_items import CHECKLIST_ITEMS
 
         for item in CHECKLIST_ITEMS["monthly"]:
             ChecklistItemPause.objects.create(

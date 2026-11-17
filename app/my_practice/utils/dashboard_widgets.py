@@ -18,6 +18,7 @@ from ..models import (
     OperationalChecklistCompletion,
     Session,
 )
+from .checklist_items import CHECKLIST_ITEMS
 from .date_helpers import DateRangeHelper, checklist_period_start
 
 
@@ -198,9 +199,6 @@ class ChecklistWidgetBuilder:
                 - pending_count: int
                 - show_widget: bool (True if any pending)
         """
-        # Deferred import to avoid circular dependency (views -> utils)
-        from ..views.operational_views import CHECKLIST_ITEMS
-
         pending = []
         for ct, label in self.CHECKLIST_CADENCES:
             period_start = checklist_period_start(ct)

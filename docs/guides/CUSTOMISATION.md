@@ -14,7 +14,7 @@ reusable; only the text inside needs replacing.
 |------|----------|------------|
 | Treatment contract PDF | `app/templates/my_practice/treatment_contract_pdf.html` | Contains DE-specific legal clauses (§ Heilpraktiker, GebüH, cancellation policy, DSGVO). Replace the body text with your own contract. A comment at the top of the file marks the sections to change. |
 | Contract email template | `app/templates/my_practice/send_contract_email.html` | Short cover email accompanying the contract. Read it before sending — it will need your wording. |
-| Backup checklist items | `app/my_practice/views/operational_views.py` → `CHECKLIST_ITEMS` | The checklist engine (completion tracking, pausing, dashboard widget) is fully reusable. The default steps match one specific LUKS/Yubikey/NAS setup. Replace them with your own rotation steps. See [BACKUP_SETUP.md](BACKUP_SETUP.md) for context. |
+| Backup checklist items | `app/my_practice/utils/checklist_items.py` → `CHECKLIST_ITEMS` | The checklist engine (completion tracking, pausing, dashboard widget) is fully reusable. The default steps match one specific LUKS/Yubikey/NAS setup. Replace them with your own rotation steps. See [BACKUP_SETUP.md](BACKUP_SETUP.md) for context. |
 
 ---
 
