@@ -43,6 +43,32 @@ class CompressMediaTest(TestCase):
         call_command("compress_media", *args, stdout=out)
         return out.getvalue()
 
+    def test_run_reports_what_it_scanned_and_skipped(self):
+        self._write("a.pdf", _make_pdf_bytes())  # tiny: under the size threshold
+        output = self._run()
+        self.assertIn("a.pdf", output)
+        self.assertIn("under", output)  # "under N KB threshold"
+        self.assertIn(
+            "Done: 1 files scanned, 0 compressed (0 KB saved), 1 skipped, 0 errors", output
+        )
+
+    def test_unreadable_image_is_counted_as_an_error_and_left_in_place(self):
+        path = self._write("broken.jpg", b"not an image")
+        output = self._run()
+        self.assertIn("✗ broken.jpg", output)
+        self.assertIn("1 errors", output)
+        self.assertIn("Check logs above", output)
+        self.assertEqual(Path(path).read_bytes(), b"not an image")
+
+    def test_encrypted_files_are_neither_listed_nor_touched(self):
+        from ..storage import FERNET_PREFIX
+
+        ciphertext = FERNET_PREFIX + b"opaque"
+        path = self._write("clients/ab-1/doc.pdf", ciphertext)
+        self.assertIn("0 processable files found", self._run("--dry-run"))
+        self.assertIn("0 files scanned", self._run())
+        self.assertEqual(Path(path).read_bytes(), ciphertext)
+
     def test_missing_path_raises_command_error(self):
         with self.assertRaises(CommandError):
             self._run("--path", "does/not/exist")

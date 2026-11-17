@@ -116,33 +116,55 @@ class Command(BaseCommand):
                 self.style.WARNING("FORCE mode — size threshold bypassed for images\n")
             )
 
+        if dry_run:
+            self._list_candidates(root, media_root)
+        else:
+            self._compress_all(root, media_root, force)
+
+    @staticmethod
+    def _processable_files(root: Path):
+        """The images and PDFs under ``root`` that are not encrypted, in a stable order."""
+        for filepath in sorted(root.rglob("*")):
+            if (
+                filepath.is_file()
+                and filepath.suffix.lower() in _PROCESSABLE
+                and not _is_encrypted(filepath)
+            ):
+                yield filepath
+
+    def _list_candidates(self, root: Path, media_root: Path) -> None:
+        """Dry run: say which files would be processed, touch nothing."""
+        total_files = 0
+        for filepath in self._processable_files(root):
+            total_files += 1
+            is_image = filepath.suffix.lower() in _IMAGE_EXTENSIONS
+            size = filepath.stat().st_size
+            skip_threshold = IMAGE_SKIP_BYTES if is_image else PDF_SKIP_BYTES
+            label = "image" if is_image else "pdf"
+            flag = "" if size > skip_threshold else "  (likely already small)"
+            rel = filepath.relative_to(media_root)
+            self.stdout.write(f"  [{label}] {rel}  {size / 1024:.0f} KB{flag}")
+
+        self.stdout.write(f"\n{total_files} processable files found.")
+        self.stdout.write("Re-run without --dry-run to compress them.")
+        self.stdout.write(
+            "Add --force to also reprocess small images (e.g. to fix EXIF orientation)."
+        )
+
+    def _compress_all(self, root: Path, media_root: Path, force: bool) -> None:
+        """Compress every candidate in place and print the summary."""
         total_files = 0
         total_compressed = 0
         total_saved = 0
         total_skipped = 0
         total_errors = 0
 
-        for filepath in sorted(root.rglob("*")):
-            if not filepath.is_file():
-                continue
-            ext = filepath.suffix.lower()
-            if ext not in _PROCESSABLE or _is_encrypted(filepath):
-                continue
-
+        for filepath in self._processable_files(root):
             total_files += 1
-            original_size = filepath.stat().st_size
             rel = filepath.relative_to(media_root)
-
-            # Report candidates in dry-run mode
-            if dry_run:
-                is_image = ext in _IMAGE_EXTENSIONS
-                skip_threshold = IMAGE_SKIP_BYTES if is_image else PDF_SKIP_BYTES
-                label = "image" if is_image else "pdf"
-                flag = "" if original_size > skip_threshold else "  (likely already small)"
-                self.stdout.write(f"  [{label}] {rel}  {original_size / 1024:.0f} KB{flag}")
-                continue
-
-            status, message, saved = self._process_file(filepath, rel, ext, original_size, force)
+            status, message, saved = self._process_file(
+                filepath, rel, filepath.suffix.lower(), filepath.stat().st_size, force
+            )
             if status == "compressed":
                 total_compressed += 1
                 total_saved += saved
@@ -153,14 +175,6 @@ class Command(BaseCommand):
             else:
                 total_errors += 1
                 self.stdout.write(self.style.ERROR(message))
-
-        if dry_run:
-            self.stdout.write(f"\n{total_files} processable files found.")
-            self.stdout.write("Re-run without --dry-run to compress them.")
-            self.stdout.write(
-                "Add --force to also reprocess small images (e.g. to fix EXIF orientation)."
-            )
-            return
 
         saved_kb = total_saved / 1024
         saved_mb = saved_kb / 1024
