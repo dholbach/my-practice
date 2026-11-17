@@ -99,9 +99,9 @@ app/my_practice/
 │   ├── calendar_preflight.py       # Calendar connection preflight checks
 │   ├── capacity_helpers.py         # Capacity / utilisation calculations
 │   ├── chart_helpers.py            # Chart data preparation
+│   ├── checklist_items.py          # CHECKLIST_ITEMS: the operational checklist steps (edit for your own setup)
 │   ├── client_detail_builder.py    # ClientDetailContextBuilder
 │   ├── client_helpers.py           # Client convenience helpers
-│   ├── checklist_items.py          # CHECKLIST_ITEMS: the operational checklist steps (edit for your own setup)
 │   ├── contract_form.py            # Contract PDF generation helpers
 │   ├── dashboard_context_builder.py # DashboardContextAssembler
 │   ├── dashboard_widgets.py        # Dashboard widget data builders
