@@ -4,7 +4,7 @@ Management command to fetch Google Calendar events into the pending queue (P-013
 Run every few hours via systemd timer. Idempotent: the (practice, google_event_id)
 unique constraint prevents duplicates. On each run, also marks previously-fetched events as 'cancelled'
 if they no longer appear in Google Calendar — unless the same session simply moved
-to a new Google event id, which _supersede_moved_events() re-binds first.
+to a new Google event id, which supersede_moved_events() re-binds first.
 """
 
 import logging
@@ -99,7 +99,7 @@ class Command(BaseCommand):
             # One practice's failure (bad data, a database error) must not
             # skip the practices after it; the run still fails at the end.
             try:
-                self._fetch_for_practice(
+                self.fetch_for_practice(
                     practice, token.calendar_id, dry_run, forced_days, future_days
                 )
             except Exception as e:
@@ -110,7 +110,10 @@ class Command(BaseCommand):
         if failed:
             raise CommandError(f"Calendar fetch failed for: {', '.join(failed)}")
 
-    def _fetch_for_practice(self, practice, calendar_id, dry_run, forced_days, future_days=1):
+    # The pipeline stages below (fetch_for_practice … auto_create_session) have no
+    # leading underscore on purpose: the tests drive them one at a time, so their
+    # names are a contract and a rename should be a decision, not a refactor side effect.
+    def fetch_for_practice(self, practice, calendar_id, dry_run, forced_days, future_days=1):
         service = GoogleCalendarOAuth.get_service(practice=practice)
         if not service:
             self.stdout.write(
@@ -136,7 +139,7 @@ class Command(BaseCommand):
             )
             return
 
-        start_dt, end_dt = self._determine_fetch_window(practice, forced_days, future_days)
+        start_dt, end_dt = self.determine_fetch_window(practice, forced_days, future_days)
         self.stdout.write(
             f"  Window: {start_dt.strftime('%d.%m.%Y')} – {end_dt.strftime('%d.%m.%Y')}"
         )
@@ -158,22 +161,22 @@ class Command(BaseCommand):
 
         # Must run before both passes below: it re-binds rows whose Google id
         # changed, so they are neither cancelled as stale nor re-created as new.
-        moved_count = self._supersede_moved_events(
+        moved_count = self.supersede_moved_events(
             practice, start_dt, end_dt, parsed, live_ids, dry_run
         )
-        cancelled_count, flagged_count = self._cancel_stale_future_events(
+        cancelled_count, flagged_count = self.cancel_stale_future_events(
             practice, start_dt, end_dt, live_ids, dry_run, affected_clients
         )
-        counts = self._upsert_all_events(parsed, practice, dry_run, affected_clients)
+        counts = self.upsert_all_events(parsed, practice, dry_run, affected_clients)
         self._report_fetch_summary(dry_run, cancelled_count, flagged_count, moved_count, counts)
 
         if not dry_run:
-            self._sync_no_next_session_tags(affected_clients)
+            self.sync_no_next_session_tags(affected_clients)
         if counts["failed"]:
             # The other events are stored; failing the run keeps it visible.
             raise RuntimeError(f"{counts['failed']} calendar event(s) could not be stored")
 
-    def _upsert_all_events(
+    def upsert_all_events(
         self, parsed_events: list, practice, dry_run: bool, affected_clients: set
     ) -> dict[str, int]:
         counts = {"created": 0, "skipped": 0, "rescheduled": 0, "reinstated": 0, "failed": 0}
@@ -182,7 +185,7 @@ class Command(BaseCommand):
             # window out of the approval queue.
             try:
                 with transaction.atomic():
-                    result = self._upsert_event(event, practice, dry_run, affected_clients)
+                    result = self.upsert_event(event, practice, dry_run, affected_clients)
             except Exception:
                 logger.exception("Could not store calendar event %s", event.get("id"))
                 counts["failed"] += 1
@@ -217,7 +220,7 @@ class Command(BaseCommand):
             parts.append(f"{counts['failed']} failed (see log)")
         self.stdout.write(self.style.SUCCESS(f"  ✅ {action}: {', '.join(parts)}"))
 
-    def _sync_no_next_session_tags(self, clients: set) -> None:
+    def sync_no_next_session_tags(self, clients: set) -> None:
         for client in clients:
             changed = sync_no_next_session_tag(client)
             if changed is True:
@@ -229,7 +232,7 @@ class Command(BaseCommand):
                     self.style.SUCCESS(f"  🏷  -no-next-session: {client.client_code}")
                 )
 
-    def _determine_fetch_window(self, practice, forced_days, future_days):
+    def determine_fetch_window(self, practice, forced_days, future_days):
         now = timezone.now()
         if forced_days:
             start_dt = now - timedelta(days=forced_days)
@@ -258,7 +261,7 @@ class Command(BaseCommand):
             status=PendingCalendarEvent.Status.PENDING,
         )
 
-    def _supersede_moved_events(
+    def supersede_moved_events(
         self, practice, start_dt, end_dt, parsed_events: list, live_ids: set, dry_run: bool
     ) -> int:
         """Re-bind a pending event whose Google id changed but whose session is
@@ -359,7 +362,7 @@ class Command(BaseCommand):
             )
         )
 
-    def _cancel_stale_future_events(
+    def cancel_stale_future_events(
         self,
         practice,
         start_dt,
@@ -404,7 +407,7 @@ class Command(BaseCommand):
             self.stdout.write(f"  🚫 Cancelled: {code} on {db_event.event_date}")
         return cancelled, flagged
 
-    def _upsert_event(
+    def upsert_event(
         self, event, practice, dry_run, affected_clients: set | None = None
     ) -> str | None:
         """Return 'created', 'skipped', 'rescheduled', 'reinstated', or None (invalid/no-id/no-start)."""
@@ -434,7 +437,7 @@ class Command(BaseCommand):
             },
         )
         if was_created:
-            session_client = self._auto_create_session(
+            session_client = self.auto_create_session(
                 event, event_id, event_date, event_time, status
             )
             if session_client and affected_clients is not None:
@@ -649,7 +652,7 @@ class Command(BaseCommand):
             return PendingCalendarEvent.Status.SKIPPED
         return PendingCalendarEvent.Status.PENDING
 
-    def _auto_create_session(self, event, event_id, event_date, event_time, status):
+    def auto_create_session(self, event, event_id, event_date, event_time, status):
         """Create a Session for a matched event; return its client (or None)."""
         matched_client = event.get("matched_client")
         if not matched_client:

@@ -1,6 +1,6 @@
 """
 Tests for the fetch_calendar_events management command (P-013): the
-Command.handle() -> _fetch_for_practice() -> _upsert_event() pipeline that
+Command.handle() -> fetch_for_practice() -> upsert_event() pipeline that
 syncs Google Calendar events into the pending approval queue.
 """
 
@@ -38,7 +38,7 @@ def _make_command() -> Command:
 
 
 def _parsed_event(client, start, event_id, summary, is_cancelled=False) -> dict:
-    """The parsed-event dict CalendarEventParser hands to Command._upsert_event."""
+    """The parsed-event dict CalendarEventParser hands to Command.upsert_event."""
     return {
         "id": event_id,
         "start": start,
@@ -68,15 +68,15 @@ class UpsertEventTestBase(TestCase):
 
 class UpsertEventInvalidAndDryRunTest(UpsertEventTestBase):
     def test_no_id_returns_none(self):
-        result = self.cmd._upsert_event(self._event(id=None), self.practice, dry_run=False)
+        result = self.cmd.upsert_event(self._event(id=None), self.practice, dry_run=False)
         self.assertIsNone(result)
 
     def test_no_start_returns_none(self):
-        result = self.cmd._upsert_event(self._event(start=None), self.practice, dry_run=False)
+        result = self.cmd.upsert_event(self._event(start=None), self.practice, dry_run=False)
         self.assertIsNone(result)
 
     def test_dry_run_reports_created_without_writing(self):
-        result = self.cmd._upsert_event(self._event(), self.practice, dry_run=True)
+        result = self.cmd.upsert_event(self._event(), self.practice, dry_run=True)
         self.assertEqual(result, "created")
         self.assertFalse(PendingCalendarEvent.objects.exists())
 
@@ -84,7 +84,7 @@ class UpsertEventInvalidAndDryRunTest(UpsertEventTestBase):
 class UpsertEventCreateTest(UpsertEventTestBase):
     def test_creates_new_event_and_session(self):
         affected: set = set()
-        result = self.cmd._upsert_event(
+        result = self.cmd.upsert_event(
             self._event(), self.practice, dry_run=False, affected_clients=affected
         )
         self.assertEqual(result, "created")
@@ -94,9 +94,7 @@ class UpsertEventCreateTest(UpsertEventTestBase):
         self.assertIn(self.test_client, affected)
 
     def test_cancelled_new_event_creates_cancelled_pce_no_session(self):
-        result = self.cmd._upsert_event(
-            self._event(is_cancelled=True), self.practice, dry_run=False
-        )
+        result = self.cmd.upsert_event(self._event(is_cancelled=True), self.practice, dry_run=False)
         self.assertEqual(result, "created")
         pce = PendingCalendarEvent.objects.get(google_event_id="evt-1")
         self.assertEqual(pce.status, PendingCalendarEvent.Status.CANCELLED)
@@ -106,7 +104,7 @@ class UpsertEventCreateTest(UpsertEventTestBase):
         free_type = ServiceType.objects.create(
             code="initial_consultation", name="Free consult", default_duration=30
         )
-        result = self.cmd._upsert_event(
+        result = self.cmd.upsert_event(
             self._event(suggested_service_type_obj=free_type), self.practice, dry_run=False
         )
         self.assertEqual(result, "created")
@@ -117,7 +115,7 @@ class UpsertEventCreateTest(UpsertEventTestBase):
     def test_invitation_from_someone_else_creates_no_session(self):
         # Anyone can invite the owner and title the event with a client code.
         invitation = {"organizer": {"email": "stranger@example.com"}}
-        result = self.cmd._upsert_event(
+        result = self.cmd.upsert_event(
             self._event(original=invitation), self.practice, dry_run=False
         )
         self.assertEqual(result, "created")
@@ -128,11 +126,11 @@ class UpsertEventCreateTest(UpsertEventTestBase):
 
     def test_event_the_owner_organised_creates_session(self):
         own = {"organizer": {"email": "owner@practice.example", "self": True}}
-        self.cmd._upsert_event(self._event(original=own), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(original=own), self.practice, dry_run=False)
         self.assertIsNotNone(PendingCalendarEvent.objects.get(google_event_id="evt-1").session)
 
     def test_unmatched_client_creates_no_session(self):
-        result = self.cmd._upsert_event(
+        result = self.cmd.upsert_event(
             self._event(matched_client=None), self.practice, dry_run=False
         )
         self.assertEqual(result, "created")
@@ -142,22 +140,22 @@ class UpsertEventCreateTest(UpsertEventTestBase):
 
 class UpsertEventNoChangeTest(UpsertEventTestBase):
     def test_unchanged_event_is_skipped(self):
-        self.cmd._upsert_event(self._event(), self.practice, dry_run=False)
-        result = self.cmd._upsert_event(self._event(), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(), self.practice, dry_run=False)
+        result = self.cmd.upsert_event(self._event(), self.practice, dry_run=False)
         self.assertEqual(result, "skipped")
 
 
 class UpsertEventRescheduleTest(UpsertEventTestBase):
     def setUp(self):
         super().setUp()
-        self.cmd._upsert_event(self._event(), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(), self.practice, dry_run=False)
         self.pce = PendingCalendarEvent.objects.get(google_event_id="evt-1")
         self.session = self.pce.session
 
     def test_date_change_reschedules_and_propagates_to_session(self):
         new_date = date(2026, 3, 5)
         affected: set = set()
-        result = self.cmd._upsert_event(
+        result = self.cmd.upsert_event(
             self._event(start=new_date), self.practice, dry_run=False, affected_clients=affected
         )
         self.assertEqual(result, "rescheduled")
@@ -173,7 +171,7 @@ class UpsertEventRescheduleTest(UpsertEventTestBase):
         was reported as 'already present' and the stored time stayed wrong."""
         moved = self._event(start=datetime(2026, 3, 1, 16, 30))
         affected: set = set()
-        result = self.cmd._upsert_event(
+        result = self.cmd.upsert_event(
             moved, self.practice, dry_run=False, affected_clients=affected
         )
         self.assertEqual(result, "rescheduled")
@@ -186,12 +184,12 @@ class UpsertEventRescheduleTest(UpsertEventTestBase):
 
     def test_time_change_refetched_is_skipped_not_rescheduled(self):
         moved = self._event(start=datetime(2026, 3, 1, 16, 30))
-        self.cmd._upsert_event(moved, self.practice, dry_run=False)
-        result = self.cmd._upsert_event(moved, self.practice, dry_run=False)
+        self.cmd.upsert_event(moved, self.practice, dry_run=False)
+        result = self.cmd.upsert_event(moved, self.practice, dry_run=False)
         self.assertEqual(result, "skipped")
 
     def test_duration_change_reschedules_and_propagates_to_session(self):
-        result = self.cmd._upsert_event(
+        result = self.cmd.upsert_event(
             self._event(duration_minutes=90), self.practice, dry_run=False
         )
         self.assertEqual(result, "rescheduled")
@@ -205,7 +203,7 @@ class UpsertEventRescheduleTest(UpsertEventTestBase):
         self.pce.session = None
         self.pce.save()
 
-        self.cmd._upsert_event(self._event(start=date(2026, 3, 9)), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(start=date(2026, 3, 9)), self.practice, dry_run=False)
 
         self.pce.refresh_from_db()
         self.assertEqual(self.pce.status, PendingCalendarEvent.Status.PENDING)
@@ -214,7 +212,7 @@ class UpsertEventRescheduleTest(UpsertEventTestBase):
         self.pce.status = PendingCalendarEvent.Status.IMPORTED
         self.pce.save()
 
-        self.cmd._upsert_event(self._event(start=date(2026, 3, 9)), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(start=date(2026, 3, 9)), self.practice, dry_run=False)
 
         self.pce.refresh_from_db()
         self.assertEqual(self.pce.status, PendingCalendarEvent.Status.IMPORTED)
@@ -223,7 +221,7 @@ class UpsertEventRescheduleTest(UpsertEventTestBase):
 class UpsertEventReinstateTest(UpsertEventTestBase):
     def setUp(self):
         super().setUp()
-        self.cmd._upsert_event(self._event(), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(), self.practice, dry_run=False)
         self.pce = PendingCalendarEvent.objects.get(google_event_id="evt-1")
         self.session = self.pce.session
         PendingCalendarEvent.objects.filter(pk=self.pce.pk).update(
@@ -237,7 +235,7 @@ class UpsertEventReinstateTest(UpsertEventTestBase):
         date/time/duration immediately — not just flip status — otherwise the
         next run sees a stale date and reports a spurious 'rescheduled'."""
         new_date = date(2026, 3, 5)
-        result = self.cmd._upsert_event(self._event(start=new_date), self.practice, dry_run=False)
+        result = self.cmd.upsert_event(self._event(start=new_date), self.practice, dry_run=False)
         self.assertEqual(result, "reinstated")
         self.pce.refresh_from_db()
         self.session.refresh_from_db()
@@ -251,8 +249,8 @@ class UpsertEventReinstateTest(UpsertEventTestBase):
         """Regression test: fetching the same live event twice in a row after
         a reinstate must not report a second 'rescheduled' change."""
         new_date = date(2026, 3, 5)
-        self.cmd._upsert_event(self._event(start=new_date), self.practice, dry_run=False)
-        result = self.cmd._upsert_event(self._event(start=new_date), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(start=new_date), self.practice, dry_run=False)
+        result = self.cmd.upsert_event(self._event(start=new_date), self.practice, dry_run=False)
         self.assertEqual(result, "skipped")
 
 
@@ -275,7 +273,7 @@ class ResolveEventStatusTest(TestCase):
 
 class AutoCreateSessionTest(UpsertEventTestBase):
     def test_no_matched_client_returns_none(self):
-        result = self.cmd._auto_create_session(
+        result = self.cmd.auto_create_session(
             self._event(matched_client=None),
             "evt-1",
             date(2026, 3, 1),
@@ -285,7 +283,7 @@ class AutoCreateSessionTest(UpsertEventTestBase):
         self.assertIsNone(result)
 
     def test_cancelled_status_returns_none_without_session(self):
-        result = self.cmd._auto_create_session(
+        result = self.cmd.auto_create_session(
             self._event(),
             "evt-1",
             date(2026, 3, 1),
@@ -304,7 +302,7 @@ class AutoCreateSessionTest(UpsertEventTestBase):
             duration_minutes=60,
             status=PendingCalendarEvent.Status.PENDING,
         )
-        result = self.cmd._auto_create_session(
+        result = self.cmd.auto_create_session(
             self._event(),
             "evt-1",
             date(2026, 3, 1),
@@ -322,12 +320,12 @@ class DetermineFetchWindowTest(TestCase):
         self.cmd = _make_command()
 
     def test_forced_days_overrides_everything(self):
-        start, end = self.cmd._determine_fetch_window(self.practice, forced_days=7, future_days=1)
+        start, end = self.cmd.determine_fetch_window(self.practice, forced_days=7, future_days=1)
         now = timezone.now()
         self.assertAlmostEqual((now - start).total_seconds(), 7 * 86400, delta=60)
 
     def test_first_run_uses_first_run_days(self):
-        start, _end = self.cmd._determine_fetch_window(
+        start, _end = self.cmd.determine_fetch_window(
             self.practice, forced_days=None, future_days=1
         )
         now = timezone.now()
@@ -341,7 +339,7 @@ class DetermineFetchWindowTest(TestCase):
             event_date=date.today(),
             duration_minutes=60,
         )
-        start, _end = self.cmd._determine_fetch_window(
+        start, _end = self.cmd.determine_fetch_window(
             self.practice, forced_days=None, future_days=1
         )
         last_fetch = PendingCalendarEvent.objects.first().fetched_at
@@ -374,7 +372,7 @@ class CancelStaleFutureEventsTest(TestCase):
             status=PendingCalendarEvent.Status.PENDING,
             session=session,
         )
-        cancelled, flagged = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd.cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
@@ -404,7 +402,7 @@ class CancelStaleFutureEventsTest(TestCase):
             session=session,
             missing_since=timezone.now() - timedelta(hours=6),
         )
-        cancelled, flagged = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd.cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
@@ -426,7 +424,7 @@ class CancelStaleFutureEventsTest(TestCase):
             status=PendingCalendarEvent.Status.PENDING,
             missing_since=timezone.now() - timedelta(hours=6),
         )
-        cancelled, flagged = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd.cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
@@ -447,7 +445,7 @@ class CancelStaleFutureEventsTest(TestCase):
             duration_minutes=60,
             status=PendingCalendarEvent.Status.PENDING,
         )
-        cancelled, flagged = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd.cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
@@ -466,7 +464,7 @@ class CancelStaleFutureEventsTest(TestCase):
             duration_minutes=60,
             status=PendingCalendarEvent.Status.PENDING,
         )
-        cancelled, flagged = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd.cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
@@ -489,7 +487,7 @@ class CancelStaleFutureEventsTest(TestCase):
             status=PendingCalendarEvent.Status.PENDING,
             missing_since=timezone.now() - timedelta(hours=6),
         )
-        cancelled, flagged = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd.cancel_stale_future_events(
             self.practice,
             timezone.now(),
             timezone.now() + timedelta(days=10),
@@ -559,7 +557,7 @@ class SupersedeMovedEventsTest(TestCase):
 
     def _supersede(self, parsed, dry_run=False):
         live_ids = {e["id"] for e in parsed}
-        return self.cmd._supersede_moved_events(
+        return self.cmd.supersede_moved_events(
             self.practice, self.start, self.end, parsed, live_ids, dry_run
         )
 
@@ -590,13 +588,13 @@ class SupersedeMovedEventsTest(TestCase):
         parsed = [self._live_event()]
         live_ids = {e["id"] for e in parsed}
 
-        self.cmd._supersede_moved_events(
+        self.cmd.supersede_moved_events(
             self.practice, self.start, self.end, parsed, live_ids, dry_run=False
         )
-        cancelled, flagged = self.cmd._cancel_stale_future_events(
+        cancelled, flagged = self.cmd.cancel_stale_future_events(
             self.practice, self.start, self.end, live_ids, dry_run=False
         )
-        counts = self.cmd._upsert_all_events(parsed, self.practice, False, set())
+        counts = self.cmd.upsert_all_events(parsed, self.practice, False, set())
 
         self.assertEqual((cancelled, flagged), (0, 0))
         self.assertEqual(counts["created"], 0)
@@ -762,7 +760,7 @@ class HandleAndFetchForPracticeTest(TestCase):
             )
         with (
             patch.object(
-                Command, "_fetch_for_practice", side_effect=[RuntimeError("boom"), None]
+                Command, "fetch_for_practice", side_effect=[RuntimeError("boom"), None]
             ) as fetch,
             self.assertRaisesMessage(CommandError, "Calendar fetch failed for"),
         ):
@@ -938,7 +936,7 @@ class OverlongEventTitleTest(UpsertEventTestBase):
         }
 
     def test_long_title_is_stored_truncated(self):
-        self.cmd._upsert_event(self._event(summary="A" * 600), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(summary="A" * 600), self.practice, dry_run=False)
         self.assertEqual(
             len(PendingCalendarEvent.objects.get(google_event_id="evt-1").summary), 500
         )
@@ -955,7 +953,7 @@ class OverlongEventTitleTest(UpsertEventTestBase):
                 return_value=raw,
             ),
         ):
-            self.cmd._fetch_for_practice(self.practice, "cal-1", False, 30, 1)
+            self.cmd.fetch_for_practice(self.practice, "cal-1", False, 30, 1)
 
         self.assertEqual(
             set(PendingCalendarEvent.objects.values_list("google_event_id", flat=True)),
@@ -964,7 +962,7 @@ class OverlongEventTitleTest(UpsertEventTestBase):
 
     def test_one_failing_event_does_not_stop_the_rest(self):
         events = [self._event(id="e1"), self._event(id="e2"), self._event(id="e3")]
-        real_upsert = Command._upsert_event
+        real_upsert = Command.upsert_event
 
         def upsert(cmd, event, *args, **kwargs):
             if event["id"] == "e2":
@@ -972,10 +970,10 @@ class OverlongEventTitleTest(UpsertEventTestBase):
             return real_upsert(cmd, event, *args, **kwargs)
 
         with (
-            patch.object(Command, "_upsert_event", upsert),
+            patch.object(Command, "upsert_event", upsert),
             self.assertLogs("my_practice.management.commands.fetch_calendar_events", "ERROR"),
         ):
-            counts = self.cmd._upsert_all_events(events, self.practice, False, set())
+            counts = self.cmd.upsert_all_events(events, self.practice, False, set())
 
         self.assertEqual((counts["created"], counts["failed"]), (2, 1))
         self.assertEqual(
@@ -990,18 +988,18 @@ class EventIdPerPracticeTest(UpsertEventTestBase):
     def setUp(self):
         super().setUp()
         self.other = Practice.objects.create(name="Test GmbH", slug="upsert-other", title="T")
-        self.cmd._upsert_event(self._event(), self.practice, dry_run=False)
+        self.cmd.upsert_event(self._event(), self.practice, dry_run=False)
         self.own_row = PendingCalendarEvent.objects.get(practice=self.practice)
         self.session = Session.objects.get(client=self.test_client)
 
     def test_other_practice_gets_its_own_row(self):
-        result = self.cmd._upsert_event(self._event(matched_client=None), self.other, dry_run=False)
+        result = self.cmd.upsert_event(self._event(matched_client=None), self.other, dry_run=False)
         self.assertEqual(result, "created")
         self.assertEqual(PendingCalendarEvent.objects.filter(google_event_id="evt-1").count(), 2)
 
     def test_other_practices_cancellation_leaves_this_practice_alone(self):
-        self.cmd._upsert_event(self._event(matched_client=None), self.other, dry_run=False)
-        self.cmd._upsert_event(
+        self.cmd.upsert_event(self._event(matched_client=None), self.other, dry_run=False)
+        self.cmd.upsert_event(
             self._event(matched_client=None, is_cancelled=True), self.other, dry_run=False
         )
         self.own_row.refresh_from_db()
@@ -1011,7 +1009,7 @@ class EventIdPerPracticeTest(UpsertEventTestBase):
 
 
 class UpsertEventReinstatementTest(TestCase):
-    """Test that _upsert_event reinstates previously-cancelled events."""
+    """Test that upsert_event reinstates previously-cancelled events."""
 
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="reinstatement-test")
@@ -1049,7 +1047,7 @@ class UpsertEventReinstatementTest(TestCase):
     def test_reinstates_cancelled_event(self):
         """An event returning as active in Google Calendar un-cancels the local Session."""
         cmd = _make_command()
-        result = cmd._upsert_event(
+        result = cmd.upsert_event(
             self._make_event(is_cancelled=False), self.practice, dry_run=False
         )
 
@@ -1067,9 +1065,7 @@ class UpsertEventReinstatementTest(TestCase):
         self.session.save()
 
         cmd = _make_command()
-        result = cmd._upsert_event(
-            self._make_event(is_cancelled=True), self.practice, dry_run=False
-        )
+        result = cmd.upsert_event(self._make_event(is_cancelled=True), self.practice, dry_run=False)
 
         self.assertEqual(result, "skipped")
         self.pce.refresh_from_db()
@@ -1119,13 +1115,13 @@ class FetchTagSyncTest(TestCase):
         cmd = _make_command()
         affected: set = set()
 
-        result = cmd._upsert_event(
+        result = cmd.upsert_event(
             self._make_event("new-event-1"), self.practice, dry_run=False, affected_clients=affected
         )
 
         self.assertEqual(result, "created")
         self.assertIn(self.client_obj, affected)
-        cmd._sync_no_next_session_tags(affected)
+        cmd.sync_no_next_session_tags(affected)
         self.assertFalse(self.client_obj.tags.filter(slug="no-next-session").exists())
 
     def test_cancelling_only_future_session_adds_tag(self):
@@ -1149,7 +1145,7 @@ class FetchTagSyncTest(TestCase):
         cmd = _make_command()
         affected: set = set()
 
-        result = cmd._upsert_event(
+        result = cmd.upsert_event(
             self._make_event("event-to-cancel", is_cancelled=True),
             self.practice,
             dry_run=False,
@@ -1158,11 +1154,11 @@ class FetchTagSyncTest(TestCase):
 
         self.assertEqual(result, "skipped")
         self.assertIn(self.client_obj, affected)
-        cmd._sync_no_next_session_tags(affected)
+        cmd.sync_no_next_session_tags(affected)
         self.assertTrue(self.client_obj.tags.filter(slug="no-next-session").exists())
 
     def test_stale_event_cancellation_collects_client(self):
-        """_cancel_stale_future_events collects the client when its session is
+        """cancel_stale_future_events collects the client when its session is
         cancelled — which only happens on the second consecutive miss (the
         first miss just starts the debounce clock, see missing_since)."""
         session = Session.objects.create(
@@ -1187,7 +1183,7 @@ class FetchTagSyncTest(TestCase):
 
         start_dt = timezone.now()
         end_dt = start_dt + timedelta(days=14)
-        cancelled, flagged = cmd._cancel_stale_future_events(
+        cancelled, flagged = cmd.cancel_stale_future_events(
             self.practice,
             start_dt,
             end_dt,
