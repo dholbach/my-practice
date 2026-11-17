@@ -264,6 +264,58 @@ def _wait_for_healthy(timeout=120):
     return False
 
 
+def _ensure_compose_file():
+    """Download docker-compose.prod.yml next to prod.py when it is not there yet."""
+    if os.path.exists(COMPOSE_FILE):
+        return
+    print("  docker-compose.prod.yml not found — downloading...")
+    compose_url = f"{RAW_BASE}/docker-compose.prod.yml"
+    try:
+        with (
+            urllib.request.urlopen(compose_url, timeout=10) as r,
+            open(COMPOSE_FILE, "wb") as f,
+        ):
+            f.write(r.read())
+        print(f"  Saved to {COMPOSE_FILE}")
+    except Exception as e:
+        abort(
+            f"Could not download docker-compose.prod.yml: {e}\n"
+            "  Download it manually:\n"
+            "    curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml\n"
+            "  then re-run ./prod.py setup"
+        )
+
+
+def _add_missing_keys(env):
+    """Fill in the keys ``env`` lacks, in place; returns the names it added."""
+    added = []
+
+    if _secret_unset(env, "DJANGO_SECRET_KEY"):
+        env["DJANGO_SECRET_KEY"] = secrets.token_urlsafe(50)
+        added.append("DJANGO_SECRET_KEY")
+
+    if _secret_unset(env, "POSTGRES_PASSWORD"):
+        env["POSTGRES_PASSWORD"] = secrets.token_urlsafe(32)
+        added.append("POSTGRES_PASSWORD")
+
+    if _secret_unset(env, "FERNET_KEY"):
+        print("  Generating FERNET_KEY (uses the Docker image — takes a moment)...")
+        env["FERNET_KEY"] = _generate_fernet_key()
+        added.append("FERNET_KEY")
+    return added
+
+
+def _manage_interactively(title, intro, command):
+    """One interactive setup step; a failure only prints how to run it later."""
+    step(title)
+    print(f"  {intro}")
+    if manage(command).returncode != 0:
+        print(
+            f"\n  {command} did not complete — you can run it later:\n"
+            f"    ./prod.py manage {command}"
+        )
+
+
 def cmd_setup(args):
     """First-time setup: generate secrets, pull image, start, create login.
 
@@ -281,23 +333,7 @@ def cmd_setup(args):
     print("  Docker OK")
     _require_no_foreign_containers()
 
-    if not os.path.exists(COMPOSE_FILE):
-        print("  docker-compose.prod.yml not found — downloading...")
-        compose_url = f"{RAW_BASE}/docker-compose.prod.yml"
-        try:
-            with (
-                urllib.request.urlopen(compose_url, timeout=10) as r,
-                open(COMPOSE_FILE, "wb") as f,
-            ):
-                f.write(r.read())
-            print(f"  Saved to {COMPOSE_FILE}")
-        except Exception as e:
-            abort(
-                f"Could not download docker-compose.prod.yml: {e}\n"
-                "  Download it manually:\n"
-                "    curl -O https://raw.githubusercontent.com/dholbach/my-practice/main/docker-compose.prod.yml\n"
-                "  then re-run ./prod.py setup"
-            )
+    _ensure_compose_file()
 
     # 2. Pull image (needed before we can generate the Fernet key inside it)
     step("Pulling image")
@@ -312,21 +348,7 @@ def cmd_setup(args):
     # 3. Generate secrets (only for keys not already set)
     step("Generating secrets")
     env = _read_env()
-    added = []
-
-    if _secret_unset(env, "DJANGO_SECRET_KEY"):
-        env["DJANGO_SECRET_KEY"] = secrets.token_urlsafe(50)
-        added.append("DJANGO_SECRET_KEY")
-
-    if _secret_unset(env, "POSTGRES_PASSWORD"):
-        env["POSTGRES_PASSWORD"] = secrets.token_urlsafe(32)
-        added.append("POSTGRES_PASSWORD")
-
-    if _secret_unset(env, "FERNET_KEY"):
-        print("  Generating FERNET_KEY (uses the Docker image — takes a moment)...")
-        env["FERNET_KEY"] = _generate_fernet_key()
-        added.append("FERNET_KEY")
-
+    added = _add_missing_keys(env)
     if added:
         _write_env(env)
         print(f"  Generated and saved to .env: {', '.join(added)}")
@@ -372,26 +394,20 @@ def cmd_setup(args):
         )
 
     # 7. Create superuser
-    step("Creating your login")
-    print("  You'll be prompted for a username, email address, and password.")
-    print("  This will be your login for the web UI and Django admin.\n")
-    result = manage("createsuperuser")
-    if result.returncode != 0:
-        print(
-            "\n  createsuperuser did not complete — you can run it later:\n"
-            "    ./prod.py manage createsuperuser"
-        )
+    _manage_interactively(
+        "Creating your login",
+        "You'll be prompted for a username, email address, and password.\n"
+        "  This will be your login for the web UI and Django admin.\n",
+        "createsuperuser",
+    )
 
     # 8. Setup practice
-    step("Setting up your practice")
-    print("  You'll be prompted for your name, address, and bank details.")
-    print("  These appear on invoices — you can edit them later in the admin.\n")
-    result = manage("setup_practice")
-    if result.returncode != 0:
-        print(
-            "\n  setup_practice did not complete — you can run it later:\n"
-            "    ./prod.py manage setup_practice"
-        )
+    _manage_interactively(
+        "Setting up your practice",
+        "You'll be prompted for your name, address, and bank details.\n"
+        "  These appear on invoices — you can edit them later in the admin.\n",
+        "setup_practice",
+    )
 
     # 9. Done
     print()
@@ -1084,18 +1100,83 @@ def _verify_media_archive(path):
         raise BackupError(f"Media backup is not a readable tar.gz archive ({exc})") from None
 
 
-def cmd_restore(args):
-    """Restore a database backup (and optionally a media backup) — overwrites current data."""
+def _restore_files(args):
+    """The backup files named in ``args``: (db_file, media_file or None), or None for no files."""
     files = [
         a
         for i, a in enumerate(args)
         if not a.startswith("--") and (i == 0 or args[i - 1] != "--compose-file")
     ]
     if not files:
+        return None
+    return files[0], (files[1] if len(files) > 1 else None)
+
+
+def _restore_database(compose_cmd, plain_db):
+    """Load a verified dump into an emptied schema, all or nothing."""
+    # --single-transaction: an error rolls the whole restore back
+    # instead of leaving the --clean drops done and the data half-loaded.
+    # ON_ERROR_STOP: psql otherwise logs a failed statement and exits 0.
+    psql = subprocess.Popen(
+        [
+            *compose_cmd,
+            "exec",
+            "-T",
+            "postgres",
+            "psql",
+            "-U",
+            _setting("POSTGRES_USER", "my_practice"),
+            "-d",
+            _setting("POSTGRES_DB", "my_practice"),
+            "--quiet",
+            "--single-transaction",
+            "-v",
+            "ON_ERROR_STOP=1",
+        ],
+        stdin=subprocess.PIPE,
+    )
+    try:
+        # pg_dump --clean only drops objects the *dumped* database had.
+        # A target migrated past the backup keeps extra foreign keys
+        # that block dropping primary keys, so start from an empty schema.
+        psql.stdin.write(b"DROP SCHEMA public CASCADE;\nCREATE SCHEMA public;\n")
+        with gzip.open(plain_db, "rb") as dump:
+            for chunk in iter(lambda: dump.read(1 << 20), b""):
+                psql.stdin.write(chunk)
+        # The dump brings back the sessions that were live when it was
+        # taken; sign everyone in afresh instead of reviving them.
+        # The dump empties search_path, so the table must be schema-qualified.
+        psql.stdin.write(b"\nTRUNCATE public.django_session;\n")
+        psql.stdin.close()
+    except BrokenPipeError:
+        # psql already exited on an error; its message is on stderr
+        # and the exit status below reports the failure.
+        pass
+    if psql.wait() != 0:
+        raise BackupError("Database restore failed; the database is unchanged")
+    print("✅ Database restored")
+
+
+def _restore_media(compose_cmd, plain_media):
+    """Unpack a verified media archive over the media directory."""
+    with open(plain_media, "rb") as archive:
+        result = subprocess.run(
+            [*compose_cmd, "exec", "-T", "django", "sh", "-c", MEDIA_RESTORE_SCRIPT],
+            stdin=archive,
+        )
+    if result.returncode != 0:
+        raise BackupError("Media restore failed; the existing media files are unchanged")
+    print("✅ Media restored")
+
+
+def cmd_restore(args):
+    """Restore a database backup (and optionally a media backup) — overwrites current data."""
+    named = _restore_files(args)
+    if not named:
         print("Usage: ./prod.py restore <db_backup_file> [media_backup_file]")
         print(f"Backups live in {_backup_dir()}")
         return subprocess.CompletedProcess(args=[], returncode=1)
-    db_file, media_file = files[0], (files[1] if len(files) > 1 else None)
+    db_file, media_file = named
     for path in filter(None, (db_file, media_file)):
         if not os.path.isfile(path):
             print(f"❌ Backup file not found: {path}", file=sys.stderr)
@@ -1118,59 +1199,9 @@ def cmd_restore(args):
             if plain_media:
                 _verify_media_archive(plain_media)
 
-            # --single-transaction: an error rolls the whole restore back
-            # instead of leaving the --clean drops done and the data half-loaded.
-            # ON_ERROR_STOP: psql otherwise logs a failed statement and exits 0.
-            psql = subprocess.Popen(
-                [
-                    *compose_cmd,
-                    "exec",
-                    "-T",
-                    "postgres",
-                    "psql",
-                    "-U",
-                    _setting("POSTGRES_USER", "my_practice"),
-                    "-d",
-                    _setting("POSTGRES_DB", "my_practice"),
-                    "--quiet",
-                    "--single-transaction",
-                    "-v",
-                    "ON_ERROR_STOP=1",
-                ],
-                stdin=subprocess.PIPE,
-            )
-            try:
-                # pg_dump --clean only drops objects the *dumped* database had.
-                # A target migrated past the backup keeps extra foreign keys
-                # that block dropping primary keys, so start from an empty schema.
-                psql.stdin.write(b"DROP SCHEMA public CASCADE;\nCREATE SCHEMA public;\n")
-                with gzip.open(plain_db, "rb") as dump:
-                    for chunk in iter(lambda: dump.read(1 << 20), b""):
-                        psql.stdin.write(chunk)
-                # The dump brings back the sessions that were live when it was
-                # taken; sign everyone in afresh instead of reviving them.
-                # The dump empties search_path, so the table must be schema-qualified.
-                psql.stdin.write(b"\nTRUNCATE public.django_session;\n")
-                psql.stdin.close()
-            except BrokenPipeError:
-                # psql already exited on an error; its message is on stderr
-                # and the exit status below reports the failure.
-                pass
-            if psql.wait() != 0:
-                raise BackupError("Database restore failed; the database is unchanged")
-            print("✅ Database restored")
-
+            _restore_database(compose_cmd, plain_db)
             if plain_media:
-                with open(plain_media, "rb") as archive:
-                    result = subprocess.run(
-                        [*compose_cmd, "exec", "-T", "django", "sh", "-c", MEDIA_RESTORE_SCRIPT],
-                        stdin=archive,
-                    )
-                if result.returncode != 0:
-                    raise BackupError(
-                        "Media restore failed; the existing media files are unchanged"
-                    )
-                print("✅ Media restored")
+                _restore_media(compose_cmd, plain_media)
     except BackupError as exc:
         print(f"❌ {exc}", file=sys.stderr)
         return subprocess.CompletedProcess(args=[], returncode=1)
