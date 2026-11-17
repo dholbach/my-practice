@@ -51,11 +51,11 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: scripts/ci_docs_only.sh
 
-      - name: Set up Python 3.14
+      - name: Set up Python 3.15
         if: steps.scope.outputs.code == 'true'
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.14"
+          python-version: "3.15"
           cache: pip
           cache-dependency-path: app/requirements-dev.txt
 
@@ -237,11 +237,11 @@ jobs:
             ghostscript \
             gettext
 
-      - name: Set up Python 3.14
+      - name: Set up Python 3.15
         if: steps.scope.outputs.code == 'true'
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.14"
+          python-version: "3.15"
           cache: pip
           cache-dependency-path: app/requirements-dev.txt
 
