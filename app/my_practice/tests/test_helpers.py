@@ -5,6 +5,7 @@ Test helper utilities and mixins for multi-practice testing.
 import io
 import re
 from collections import Counter
+from datetime import date
 from decimal import Decimal
 
 import pypdf
@@ -14,7 +15,7 @@ from django.test import Client as TestClient
 from django.test import RequestFactory, TestCase
 from django.test.utils import CaptureQueriesContext
 
-from ..models import Client, Practice, UserPractice
+from ..models import Client, Invoice, Practice, UserPractice
 from ..utils.heatmap_utils import get_heatmap_data
 
 User = get_user_model()
@@ -352,6 +353,34 @@ def create_test_client(practice, code="TC", full_name="Max Mustermann", **overri
     }
     fields.update(overrides)
     return Client.objects.create(**fields)
+
+
+def create_test_invoice(
+    client, number="INV-001", status=Invoice.Status.DRAFT, invoice_date=None, **overrides
+):
+    """
+    Create an invoice for ``client`` (in the client's practice) without items.
+
+    Args:
+        client: The Client being billed; its practice becomes the invoice's practice
+        number: invoice_number
+        status: An ``Invoice.Status`` value
+        invoice_date: Defaults to today. A draft's date is reset to today on creation
+            by ``Invoice.save()``, so pin it afterwards if a test needs another one.
+        **overrides: Any other Invoice field, replacing the default
+
+    Returns:
+        Invoice instance
+    """
+    fields = {
+        "practice": client.practice,
+        "client": client,
+        "invoice_number": number,
+        "status": status,
+        "invoice_date": invoice_date or date.today(),
+    }
+    fields.update(overrides)
+    return Invoice.objects.create(**fields)
 
 
 def heatmap_month_clients(month_date, *, practice) -> dict[str, float]:

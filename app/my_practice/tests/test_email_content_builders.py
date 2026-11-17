@@ -45,7 +45,7 @@ from my_practice.utils.email_utils import (
 from my_practice.utils.formatting import format_currency_de
 from my_practice.validators import validate_email_template_placeholders
 
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_invoice, create_test_practice
 
 NBSP = "\u00a0"  # explicit: an invisible literal here is too easy to "tidy away"
 
@@ -223,13 +223,7 @@ class SalutationTest(EmailContentBuilderTestBase):
 
 class InvoiceEmailContentTest(EmailContentBuilderTestBase):
     def _make_invoice(self, client, total="1234.50"):
-        invoice = Invoice.objects.create(
-            client=client,
-            invoice_number=f"{client.client_code}-1",
-            status="draft",
-            total=Decimal(total),
-            practice=self.practice,
-        )
+        invoice = create_test_invoice(client, f"{client.client_code}-1", total=Decimal(total))
         # Invoice.save() forces invoice_date to today when creating a draft,
         # so pin it afterwards to keep the rendered date assertion stable.
         invoice.invoice_date = date(2026, 8, 15)

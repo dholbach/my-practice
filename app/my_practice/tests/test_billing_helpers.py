@@ -18,7 +18,7 @@ from ..utils.billing_helpers import (
     is_session_already_billed,
     resolve_session_rate,
 )
-from .test_helpers import create_test_client, create_test_practice
+from .test_helpers import create_test_client, create_test_invoice, create_test_practice
 
 
 def _make_service_types(practice):
@@ -59,13 +59,7 @@ def _make_client(practice):
 
 
 def _make_invoice(client, status=Invoice.Status.DRAFT):
-    return Invoice.objects.create(
-        practice=client.practice,
-        client=client,
-        invoice_number="BH-1",
-        invoice_date=date.today(),
-        status=status,
-    )
+    return create_test_invoice(client, "BH-1", status)
 
 
 def _make_session(client, duration=60):
