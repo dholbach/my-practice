@@ -52,45 +52,20 @@ KNOWN_HARDCODED_HEX_PREFIXES = (
     ".color-box",  # the tag colour picker's fixed swatch palette
     ".year-",  # per-year chart palette
     ".heatmap-cell",  # activity gradient, deliberately light in both themes
-    ".todo-badge",  # category/priority palette
-    ".billing-summary__chip",
-    ".cn-session-",
     ".btn-",  # coloured action buttons (white on brand colour)
     ".btn.btn-",  # …and the compound forms that have to outrank .btn itself
-    ".badge--",
-    ".audit-",
-    ".month-bar",
-    ".seasonality-bar",
+    ".audit-",  # print-only row tints
+    ".seasonality-bar",  # bar fills, the same in both themes
     ".capacity-fill",
-    ".insights-section",
-    ".legend-",
-    ".timeoff-table__",
     ".progress-bar-fill",
-    ".summary-table",
-    ".summary-cards",
-    ".tax-summary-container",
-    ".checklist-",
-    ".text-muted-light",
-    ".bank-tx-",
-    ".receipt-delete-btn",
-    ".expenses-container",
-    ".client-card",
-    ".last-invoice",
-    ".client-workflow-stats",
-    ".weekly-focus-task",
+    ".summary-cards",  # the info card's accent border
+    ".tax-summary-container",  # blue gradient card
+    ".checklist-",  # checkbox accent
+    ".client-card",  # red accent borders: 3.0:1 on white, 4.0:1 on the dark surface
     ".todo-item",
-    ".todo-due-date",
     ".status-card",
-    ".placeholder-warning",
-    ".step-",
-    ".cockpit-",
-    ".onboarding-step",
-    ".row-",
-    ".dropzone-",
-    ".action-btn",
-    ".cn-needs-log",
-    ".col-",
-    ".alert-",
+    ".dropzone-",  # hex only as var() fallbacks
+    ".action-btn",  # white text on a coloured button
     "code",
 )
 

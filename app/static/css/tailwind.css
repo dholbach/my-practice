@@ -183,7 +183,7 @@
   .text-warning { color: var(--color-warning); }
   .text-danger  { color: var(--color-danger); }
   .text-info    { color: var(--color-info); }
-  .text-muted-light { color: #a0aec0; }
+  .text-muted-light { color: var(--color-text-muted); }
   code { background-color: rgba(0, 0, 0, 0.05); color: #e53e3e; padding: 0.2em 0.4em; border-radius: 3px; font-family: 'Courier New', Courier, monospace; font-size: 0.9em; }
   [data-theme="dark"] code { background-color: rgba(255, 255, 255, 0.1); color: #fca5a5; }
   .text-xs { font-size: 0.75rem; }
@@ -563,9 +563,9 @@
   .timeoff-table td { text-align: right; padding: 0.5rem 0.25rem; color: var(--color-text-primary); }
   .timeoff-table td:first-child { text-align: left; font-weight: 600; }
   .timeoff-table td.timeoff-table__muted { color: var(--color-text-secondary); }
-  .timeoff-table__vacation { color: #48bb78; }
-  .timeoff-table__training { color: var(--color-brand-start); }
-  .timeoff-table__sick     { color: #f6ad55; }
+  .timeoff-table__vacation { color: var(--color-badge-green-text); }
+  .timeoff-table__training { color: var(--color-badge-indigo-text); }
+  .timeoff-table__sick     { color: var(--color-badge-orange-text); }
 
   /* ── Client notes / clinical documentation (cn-* namespace) ── */
   /* Form fields */
@@ -602,11 +602,10 @@
   .cn-session-date { font-weight: 600; font-size: 0.9rem; min-width: 80px; }
   .cn-session-duration { font-size: 0.8rem; color: var(--color-text-secondary); }
   .cn-session-type { font-size: 0.8rem; color: var(--color-text-secondary); font-style: italic; }
-  .cn-session-unbilled     { font-size: 0.75rem; color: #b7791f; background: #fefcbf; border: 1px solid #f6e05e; border-radius: 3px; padding: 0 0.35rem; font-weight: 500; }
-  .cn-session-not-billable { font-size: 0.75rem; color: #718096; background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 3px; padding: 0 0.35rem; font-weight: 500; }
-  [data-theme="dark"] .cn-session-not-billable { color: #94a3b8; background: #1e293b; border-color: #334155; }
-  .cn-session-missing-log  { font-size: 0.75rem; color: #c05621; background: #fff5f5; border: 1px solid #feb2b2; border-radius: 3px; padding: 0 0.35rem; font-weight: 500; }
-  .cn-needs-log { border-left-color: #e53e3e; }
+  .cn-session-unbilled     { font-size: 0.75rem; color: var(--color-badge-yellow-text); background: var(--color-badge-yellow-bg); border: 1px solid var(--color-badge-yellow-border); border-radius: 3px; padding: 0 0.35rem; font-weight: 500; }
+  .cn-session-not-billable { font-size: 0.75rem; color: var(--color-badge-neutral-text); background: var(--color-badge-neutral-bg); border: 1px solid var(--color-badge-neutral-border); border-radius: 3px; padding: 0 0.35rem; font-weight: 500; }
+  .cn-session-missing-log  { font-size: 0.75rem; color: var(--color-badge-red-text); background: var(--color-badge-red-bg); border: 1px solid var(--color-badge-red-border); border-radius: 3px; padding: 0 0.35rem; font-weight: 500; }
+  .cn-needs-log { border-left-color: var(--color-badge-red-text); }
   .cn-session-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; min-width: 0; }
   .cn-duration-edit-form { display: inline-flex; align-items: center; gap: 0.25rem; }
   .cn-duration-input { width: 4.5rem; padding: 0.2rem 0.4rem; font-size: 0.85rem; }
@@ -1014,7 +1013,7 @@
   .doc-upload-progress { font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.5rem; display: none; }
   .doc-upload-progress.visible { display: block; }
   .pending-session-actions { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
-  .placeholder-warning { margin-top: 1.5rem; padding: 1rem; background: var(--color-status-cancelled-bg); border-left: 4px solid #e53e3e; border-radius: 4px; color: var(--color-status-cancelled-text); }
+  .placeholder-warning { margin-top: 1.5rem; padding: 1rem; background: var(--color-status-cancelled-bg); border-left: 4px solid var(--color-badge-red-text); border-radius: 4px; color: var(--color-status-cancelled-text); }
   .placeholder-warning a { color: var(--color-status-cancelled-text); text-decoration: underline; font-weight: 600; }
   .client-actions { margin-top: 1.5rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
   .client-actions-left, .client-actions-right { display: flex; flex-wrap: wrap; gap: 1rem; }
@@ -1134,10 +1133,10 @@
   .weekly-session-client { flex: 1; color: var(--color-text-primary); }
   .weekly-focus-tasks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; }
   .weekly-focus-task-item { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.875rem; }
-  .weekly-focus-task-item.is-overdue .weekly-focus-task-title { color: #f56565; }
+  .weekly-focus-task-item.is-overdue .weekly-focus-task-title { color: var(--color-badge-red-text); }
   .weekly-focus-task-meta { display: flex; align-items: center; gap: 0.25rem; flex: 1; }
   .weekly-focus-task-due { font-size: 0.8rem; color: var(--color-text-secondary); white-space: nowrap; }
-  .weekly-focus-task-due.due-overdue { color: #f56565; font-weight: 600; }
+  .weekly-focus-task-due.due-overdue { color: var(--color-badge-red-text); font-weight: 600; }
   .btn-focus-complete { background: none; border: 1px solid var(--color-border); border-radius: 3px; cursor: pointer; font-size: 0.85rem; padding: 0 0.2rem; color: var(--color-text-secondary); line-height: 1.2; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
   .btn-focus-complete:hover { background: #48bb78; color: white; border-color: #48bb78; }
   .weekly-focus-empty { color: var(--color-text-secondary); font-size: 0.875rem; font-style: italic; }
@@ -1242,7 +1241,7 @@
   .checklist-list__divider { border-bottom: 1px solid var(--color-border); }
   .checklist-list__divider:last-child { border-bottom: none; }
   .checklist-item-done { padding: 0.875rem 1.25rem; display: flex; align-items: center; gap: 1rem; }
-  .checklist-item-done__icon { color: #10b981; font-size: 1.1rem; }
+  .checklist-item-done__icon { color: var(--color-badge-green-text); font-size: 1.1rem; }
   .checklist-item-done__title { color: var(--color-text-secondary); text-decoration: line-through; }
   .checklist-item-paused { display: flex; align-items: flex-start; gap: 1rem; padding: 0.875rem 1.25rem; background: var(--color-warning-bg); }
   .checklist-item-paused__icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
@@ -1328,7 +1327,7 @@
   .receipt-filename { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-link); }
   .receipt-delete-form { display: inline; margin: 0; padding: 0; }
   .receipt-delete-btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 0.95rem; padding: 0 0.1rem; }
-  .receipt-delete-btn:hover { color: #e53e3e; }
+  .receipt-delete-btn:hover { color: var(--color-badge-red-text); }
   .receipt-dropzone { position: relative; border: 2px dashed var(--color-border); border-radius: 8px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; background: var(--color-bg-secondary); }
   .receipt-dropzone:hover, .receipt-dropzone.dragover { border-color: var(--color-primary); background: var(--color-bg-primary); }
   .receipt-dropzone.dragover { border-style: solid; }
@@ -1350,10 +1349,10 @@
   .bank-tx-payer { font-weight: 500; min-width: 10rem; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text-primary); }
   .bank-tx-ref { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text-secondary); font-size: 0.8rem; }
   .bank-tx-amount { white-space: nowrap; font-weight: 600; min-width: 6rem; text-align: right; }
-  .bank-tx-amount--negative { color: #e53e3e; }
+  .bank-tx-amount--negative { color: var(--color-badge-red-text); }
   .bank-tx-action-form { display: inline; margin: 0; padding: 0; }
   .bank-tx-unlink-btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 0.9rem; padding: 0 0.15rem; line-height: 1; }
-  .bank-tx-unlink-btn:hover { color: #e53e3e; }
+  .bank-tx-unlink-btn:hover { color: var(--color-badge-red-text); }
   .bank-link-search { margin-top: 0.5rem; border-top: 1px solid var(--color-border); padding-top: 0.75rem; }
   .bank-link-search__toggle { cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--color-link); user-select: none; list-style: none; }
   .bank-link-search__toggle::before { content: '+ '; }
@@ -1432,7 +1431,7 @@
   .summary-cards .stat-card.stat-card--success { border-left: 3px solid var(--color-success); }
   .summary-cards .stat-card.stat-card--success .value { color: var(--color-success); }
   .summary-cards .stat-card.stat-card--info { border-left: 3px solid #2196F3; }
-  .summary-cards .stat-card.stat-card--info .value { color: #2196F3; }
+  .summary-cards .stat-card.stat-card--info .value { color: var(--color-badge-blue-text); }
   .summary-cards .stat-card.stat-card--warning { border-left: 3px solid var(--color-warning); }
   .summary-cards .stat-card.stat-card--warning .value { color: var(--color-warning); }
   .summary-cards .stat-card.stat-card--danger { border-left: 3px solid var(--color-danger); }
@@ -1577,13 +1576,13 @@
   .tag-mini.pink   { background: var(--color-tag-pink); }
   .tag-mini.gray   { background: var(--color-tag-gray); }
   .last-invoice { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.5rem; }
-  .last-invoice.warning { color: #ed8936; font-weight: 600; }
-  .last-invoice.alert   { color: #f56565; font-weight: 700; }
+  .last-invoice.warning { color: var(--color-badge-orange-text); font-weight: 600; }
+  .last-invoice.alert   { color: var(--color-badge-red-text); font-weight: 700; }
   .client-workflow-stats { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
   .client-workflow-stats .stat-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem; flex: 1; min-width: 150px; color: var(--color-text-primary); }
   .client-workflow-stats .stat-label { font-size: 0.75rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
   .client-workflow-stats .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); }
-  .client-workflow-stats .stat-value.alert { color: #f56565; }
+  .client-workflow-stats .stat-value.alert { color: var(--color-badge-red-text); }
   .client-card-link { text-decoration: none; color: inherit; }
   .client-card-link:hover { text-decoration: none; color: inherit; }
 
@@ -1656,9 +1655,9 @@
   }
   .audit-stat__label { font-size: 0.8rem; color: var(--color-text-secondary); }
   .audit-stat__value { font-size: 1.6rem; font-weight: 700; }
-  .audit-stat__value.practice    { color: #3b82f6; }
-  .audit-stat__value.home-office { color: #10b981; }
-  .audit-stat__value.holiday     { color: #f59e0b; }
+  .audit-stat__value.practice    { color: var(--color-badge-blue-text); }
+  .audit-stat__value.home-office { color: var(--color-badge-green-text); }
+  .audit-stat__value.holiday     { color: var(--color-badge-amber-text); }
   .audit-stat__value.timeoff     { color: var(--color-text-secondary); }
   .audit-print-btn-wrap { margin-bottom: 1.5rem; }
   .btn-print {
@@ -1678,9 +1677,9 @@
   .audit-row--holiday td { background: rgba(245, 158, 11, 0.05); }
   .audit-row--timeoff td { background: var(--color-bg-secondary); }
   /* .badge base defined in common.css @layer section above */
-  .badge--practice    { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
-  .badge--home-office { background: rgba(16, 185, 129, 0.12); color: #10b981; }
-  .badge--holiday     { background: rgba(245, 158, 11, 0.12);  color: #f59e0b; }
+  .badge--practice    { background: rgba(59, 130, 246, 0.12); color: var(--color-badge-blue-text); }
+  .badge--home-office { background: rgba(16, 185, 129, 0.12); color: var(--color-badge-green-text); }
+  .badge--holiday     { background: rgba(245, 158, 11, 0.12);  color: var(--color-badge-amber-text); }
   .badge--timeoff     { background: var(--color-bg-secondary); color: var(--color-text-secondary); }
   .audit-footer { margin-top: 1.5rem; font-size: 0.8rem; color: var(--color-text-secondary); border-top: 1px solid var(--color-border); padding-top: 0.75rem; }
   .empty-hint { color: var(--color-text-secondary); font-style: italic; }
@@ -1907,7 +1906,7 @@
   .filter-pill.filter-pill-operational_checklist { background: var(--color-badge-green-bg); color: var(--color-badge-green-text); }
   .filter-pill.filter-pill-bank_unmatched      { background: var(--color-badge-yellow-bg); color: var(--color-badge-yellow-text); }
   .todo-due-date { color: var(--color-text-secondary); font-size: 0.8125rem; }
-  .todo-due-date.overdue { color: #f56565; font-weight: 600; }
+  .todo-due-date.overdue { color: var(--color-badge-red-text); font-weight: 600; }
   .todo-reference-date { color: var(--color-text-secondary); font-size: 0.8125rem; }
   .todo-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; flex-shrink: 0; }
   .focus-queue-snooze-group { display: flex; gap: 0.25rem; }
