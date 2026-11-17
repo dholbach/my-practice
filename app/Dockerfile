@@ -23,7 +23,7 @@ RUN rm static/css/tailwind.css
 # ── Stage 2: compile Python dependencies ─────────────────────────────────────
 # Isolated so the compiler toolchain (gcc + dev headers) never lands in the
 # final image — only the compiled packages get copied over.
-FROM python:3.14-slim AS python-builder
+FROM python:3.15-slim AS python-builder
 WORKDIR /app
 
 # gcc, libffi-dev, zlib1g-dev, libjpeg-dev, libopenjp2-7-dev: needed to compile
@@ -47,7 +47,7 @@ RUN pip install --upgrade pip \
     && find /install -path '*/discovery_cache/documents/*.json' ! -name 'calendar.v3.json' -delete
 
 # ── Stage 3: production image ────────────────────────────────────────────────
-FROM python:3.14-slim AS production
+FROM python:3.15-slim AS production
 WORKDIR /app
 
 # Runtime-only system dependencies for WeasyPrint, Ghostscript and Pillow.
