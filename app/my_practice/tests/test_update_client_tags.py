@@ -190,3 +190,18 @@ class UpdateClientTagsCommandTest(UpdateClientTagsTestBase):
         call_command("update_client_tags", stdout=out, stderr=StringIO())
 
         self.assertIn("Added", out.getvalue())
+
+    def test_a_second_run_changes_nothing(self):
+        """The scheduled job runs it hourly; once the tags are right, it must stay quiet."""
+        Session.objects.create(
+            client=self.client_obj,
+            session_date=self.today - timedelta(days=10),
+            duration=60,
+            cancelled=False,
+        )
+        call_command("update_client_tags", stdout=StringIO(), stderr=StringIO())
+        out = StringIO()
+        call_command("update_client_tags", stdout=out, stderr=StringIO())
+
+        self.assertIn("Added 0 tags, removed 0 tags", out.getvalue())
+        self.assertTrue(self._has_tag("no-next-session"))
