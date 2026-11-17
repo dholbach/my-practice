@@ -16,6 +16,7 @@ from django.utils import timezone
 from ..management.commands.fetch_calendar_events import FIRST_RUN_DAYS, OVERLAP_HOURS, Command
 from ..models import (
     Client,
+    ClientTag,
     GoogleCalendarToken,
     PendingCalendarEvent,
     Practice,
@@ -36,6 +37,19 @@ def _make_command() -> Command:
     return cmd
 
 
+def _parsed_event(client, start, event_id, summary, is_cancelled=False) -> dict:
+    """The parsed-event dict CalendarEventParser hands to Command._upsert_event."""
+    return {
+        "id": event_id,
+        "start": start,
+        "summary": summary,
+        "duration_minutes": 60,
+        "matched_client": client,
+        "suggested_service_type_obj": None,
+        "is_cancelled": is_cancelled,
+    }
+
+
 class UpsertEventTestBase(TestCase):
     def setUp(self):
         self.practice = create_test_practice(name="Test Practice", slug="upsert-event-test")
@@ -47,15 +61,7 @@ class UpsertEventTestBase(TestCase):
         self.cmd = _make_command()
 
     def _event(self, **overrides):
-        base = {
-            "id": "evt-1",
-            "start": date(2026, 3, 1),
-            "summary": "TC 60min",
-            "duration_minutes": 60,
-            "matched_client": self.test_client,
-            "suggested_service_type_obj": None,
-            "is_cancelled": False,
-        }
+        base = _parsed_event(self.test_client, date(2026, 3, 1), "evt-1", "TC 60min")
         base.update(overrides)
         return base
 
@@ -1002,3 +1008,196 @@ class EventIdPerPracticeTest(UpsertEventTestBase):
         self.session.refresh_from_db()
         self.assertEqual(self.own_row.status, PendingCalendarEvent.Status.PENDING)
         self.assertFalse(self.session.cancelled)
+
+
+class UpsertEventReinstatementTest(TestCase):
+    """Test that _upsert_event reinstates previously-cancelled events."""
+
+    def setUp(self):
+        self.practice = create_test_practice(name="Test Practice", slug="reinstatement-test")
+        self.client = Client.objects.create(
+            practice=self.practice,
+            client_code="XX",
+            full_name="Max Mustermann",
+            email="max@example.com",
+        )
+        self.session_date = date(2026, 6, 10)
+        self.session = Session.objects.create(
+            client=self.client,
+            session_date=self.session_date,
+            session_time=None,
+            duration=60,
+            cancelled=True,
+        )
+        self.pce = PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="test-event-id-123",
+            summary="XX 60min",
+            event_date=self.session_date,
+            event_time=None,
+            duration_minutes=60,
+            matched_client=self.client,
+            status=PendingCalendarEvent.Status.CANCELLED,
+            session=self.session,
+        )
+
+    def _make_event(self, is_cancelled=False):
+        return _parsed_event(
+            self.client, self.session_date, "test-event-id-123", "XX 60min", is_cancelled
+        )
+
+    def test_reinstates_cancelled_event(self):
+        """An event returning as active in Google Calendar un-cancels the local Session."""
+        cmd = _make_command()
+        result = cmd._upsert_event(
+            self._make_event(is_cancelled=False), self.practice, dry_run=False
+        )
+
+        self.assertEqual(result, "reinstated")
+        self.pce.refresh_from_db()
+        self.session.refresh_from_db()
+        self.assertEqual(self.pce.status, PendingCalendarEvent.Status.PENDING)
+        self.assertFalse(self.session.cancelled)
+
+    def test_cancellation_still_works(self):
+        """A PENDING event returned as cancelled is still cancelled correctly."""
+        self.pce.status = PendingCalendarEvent.Status.PENDING
+        self.pce.save()
+        self.session.cancelled = False
+        self.session.save()
+
+        cmd = _make_command()
+        result = cmd._upsert_event(
+            self._make_event(is_cancelled=True), self.practice, dry_run=False
+        )
+
+        self.assertEqual(result, "skipped")
+        self.pce.refresh_from_db()
+        self.session.refresh_from_db()
+        self.assertEqual(self.pce.status, PendingCalendarEvent.Status.CANCELLED)
+        self.assertTrue(self.session.cancelled)
+
+
+class FetchTagSyncTest(TestCase):
+    """The fetch command re-syncs the no-next-session tag for clients whose
+    sessions it created or cancelled, instead of waiting for the next
+    update_client_tags run."""
+
+    def setUp(self):
+        self.practice = create_test_practice(name="Test Practice", slug="fetch-tag-sync-test")
+        self.client_obj = Client.objects.create(
+            practice=self.practice,
+            client_code="XX-1",
+            full_name="Max Mustermann",
+            email="max@example.com",
+        )
+        self.tag = ClientTag.objects.create(
+            slug="no-next-session",
+            name="no-next-session",
+            color="orange",
+            category="attention",
+            is_system=True,
+        )
+        self.today = timezone.localdate()
+        # Recent past session so the client counts as "recently active"
+        Session.objects.create(
+            client=self.client_obj,
+            session_date=self.today - timedelta(days=5),
+            duration=60,
+            cancelled=False,
+        )
+        self.future_date = self.today + timedelta(days=7)
+
+    def _make_event(self, event_id, is_cancelled=False):
+        return _parsed_event(
+            self.client_obj, self.future_date, event_id, "XX-1 60min", is_cancelled
+        )
+
+    def test_auto_created_future_session_removes_tag(self):
+        """A new future event auto-creates a Session → tag is removed."""
+        self.client_obj.tags.add(self.tag)
+        cmd = _make_command()
+        affected: set = set()
+
+        result = cmd._upsert_event(
+            self._make_event("new-event-1"), self.practice, dry_run=False, affected_clients=affected
+        )
+
+        self.assertEqual(result, "created")
+        self.assertIn(self.client_obj, affected)
+        cmd._sync_no_next_session_tags(affected)
+        self.assertFalse(self.client_obj.tags.filter(slug="no-next-session").exists())
+
+    def test_cancelling_only_future_session_adds_tag(self):
+        """Cancelling the client's only future session → tag is added."""
+        session = Session.objects.create(
+            client=self.client_obj,
+            session_date=self.future_date,
+            duration=60,
+            cancelled=False,
+        )
+        PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="event-to-cancel",
+            summary="XX-1 60min",
+            event_date=self.future_date,
+            duration_minutes=60,
+            matched_client=self.client_obj,
+            status=PendingCalendarEvent.Status.PENDING,
+            session=session,
+        )
+        cmd = _make_command()
+        affected: set = set()
+
+        result = cmd._upsert_event(
+            self._make_event("event-to-cancel", is_cancelled=True),
+            self.practice,
+            dry_run=False,
+            affected_clients=affected,
+        )
+
+        self.assertEqual(result, "skipped")
+        self.assertIn(self.client_obj, affected)
+        cmd._sync_no_next_session_tags(affected)
+        self.assertTrue(self.client_obj.tags.filter(slug="no-next-session").exists())
+
+    def test_stale_event_cancellation_collects_client(self):
+        """_cancel_stale_future_events collects the client when its session is
+        cancelled — which only happens on the second consecutive miss (the
+        first miss just starts the debounce clock, see missing_since)."""
+        session = Session.objects.create(
+            client=self.client_obj,
+            session_date=self.future_date,
+            duration=60,
+            cancelled=False,
+        )
+        PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="vanished-event",
+            summary="XX-1 60min",
+            event_date=self.future_date,
+            duration_minutes=60,
+            matched_client=self.client_obj,
+            status=PendingCalendarEvent.Status.PENDING,
+            session=session,
+            missing_since=timezone.now() - timedelta(hours=6),
+        )
+        cmd = _make_command()
+        affected: set = set()
+
+        start_dt = timezone.now()
+        end_dt = start_dt + timedelta(days=14)
+        cancelled, flagged = cmd._cancel_stale_future_events(
+            self.practice,
+            start_dt,
+            end_dt,
+            live_ids=set(),
+            dry_run=False,
+            affected_clients=affected,
+        )
+
+        self.assertEqual(cancelled, 1)
+        self.assertEqual(flagged, 0)
+        self.assertIn(self.client_obj, affected)
+        session.refresh_from_db()
+        self.assertTrue(session.cancelled)
