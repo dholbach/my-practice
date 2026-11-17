@@ -33,3 +33,9 @@ whether a file was resolved from the repo root or against the container's
 - Raise the root `target-version` only when the oldest Python a contributor
   might run `./dev.py` with is new enough — which is not the same question as
   what the container runs.
+
+## Update 2026-11-17
+
+The image and CI now run Python 3.15. `target-version` stays `py314` in the app: it is the oldest
+syntax the app uses (the bracketless `except A, B:` form arrived in 3.14), not the interpreter that runs it.
+The decision above is unchanged.

@@ -24,7 +24,7 @@ COMPOSE = ["docker", "compose"]
 # so they're held to the same pinned ruff version as the app.
 #
 # Their *config* has to differ in one respect, though: these files run on the
-# host Python, not the container's 3.14, and the app's target-version = "py314"
+# host Python, not the container's 3.15, and the app's target-version = "py314"
 # makes the formatter rewrite `except (A, B):` into 3.14's bracketless form —
 # a SyntaxError on 3.13 and older, which would make ./dev.py itself unrunnable.
 # The repo-root ruff.toml sets the lower target, but the container can't see it
