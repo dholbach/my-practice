@@ -1,0 +1,2 @@
+{% load payment_tags %}{# Hourly rates per client for invoice_items.js, which pre-fills an item's rate from the chosen client. #}
+<script type="application/json" id="client-rates-data">{ {% for client in clients %}"{{ client.id }}": {"code": "{{ client.client_code|escapejs }}", "rate_60": {{ client.hourly_rate_60|js_number }}, "rate_90": {{ client.hourly_rate_90|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %} }</script>

@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load payment_tags %}
 {% load i18n %}
 
 {% block title %}{% trans "Edit invoice" %} - {{ invoice.invoice_number }}{% endblock %}
@@ -152,6 +151,6 @@
     </div>
 </form>
 
-<script type="application/json" id="client-rates-data">{ {% for client in form.fields.client.queryset %}"{{ client.id }}": {"code": "{{ client.client_code|escapejs }}", "rate_60": {{ client.hourly_rate_60|js_number }}, "rate_90": {{ client.hourly_rate_90|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %} }</script>
+{% include 'includes/invoice_client_rates.html' with clients=form.fields.client.queryset %}
 <script src="{% static 'js/invoice_items.js' %}"></script>
 {% endblock %}
