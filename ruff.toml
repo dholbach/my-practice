@@ -4,9 +4,9 @@
 # These are held to the same line-length and rule set as the app (see
 # app/pyproject.toml), with one deliberate difference: target-version.
 #
-# The app runs on Python 3.15 inside the container and uses 3.14 syntax, so
-# app/pyproject.toml sets target-version = "py314" and the formatter normalises exception tuples to
-# 3.14's bracketless `except A, B:` form. These files run on the *host* Python
+# The app runs on Python 3.15 inside the container, so app/pyproject.toml sets
+# target-version = "py315" and the formatter normalises exception tuples to the
+# bracketless `except A, B:` form (Python 3.14 and later). These files run on the *host* Python
 # instead, where that syntax is a hard SyntaxError on 3.13 and older — a
 # reformat under the app's target would make ./dev.py itself unrunnable for
 # anyone not already on 3.14. Hence a conservative floor here.

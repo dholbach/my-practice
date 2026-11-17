@@ -26,7 +26,7 @@ repos:
   # is how an 806-line 0001_initial once landed as 3,106 formatted lines.
   #
   # Config is resolved per file: app/**.py picks up app/pyproject.toml
-  # (target-version py314), dev.py / prod.py / scripts/*.py pick up the root
+  # (target-version py315), dev.py / prod.py / scripts/*.py pick up the root
   # ruff.toml (py310, because they run on the host Python).
   - repo: local
     hooks:

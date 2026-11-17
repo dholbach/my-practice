@@ -125,7 +125,7 @@ addopts = "--tb=short"
 
 [tool.ruff]
 line-length = 100
-target-version = "py314"
+target-version = "py315"
 cache-dir = "~/.cache/ruff"
 exclude = [
     ".git",
@@ -175,5 +175,5 @@ ignore = ["PERF203", "UP034", "DJ012"]
 
 # Python 3.14 introduced bracketless multi-exception syntax (`except A, B:`)
 # as equivalent to `except (A, B):` — see https://github.com/astral-sh/ruff/issues/23090
-# ruff format normalises to the bracketless form for target-version = "py314", which
-# is correct. No `# fmt: skip` workarounds needed; the old ones have been removed.
+# ruff format normalises to the bracketless form for any target-version from "py314"
+# on (ours is "py315"), which is correct. No `# fmt: skip` workarounds needed; the old ones have been removed.
