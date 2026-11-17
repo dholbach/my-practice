@@ -51,7 +51,7 @@ class RequireSecretsTests(ProdNetworkTestBase):
         self.prod._require_secrets()
 
 
-class GenerateMissingSecretsTests(SimpleTestCase):
+class AddMissingKeysTests(SimpleTestCase):
     def setUp(self):
         from .test_prod_network import _load_prod
 
@@ -62,7 +62,8 @@ class GenerateMissingSecretsTests(SimpleTestCase):
             mock.patch.object(self.prod, "_generate_fernet_key", return_value="fernet-from-image"),
             contextlib.redirect_stdout(io.StringIO()),
         ):
-            return self.prod._generate_missing_secrets(env)
+            added = self.prod._add_missing_keys(env)
+        return env, added
 
     def test_an_empty_env_gets_all_three(self):
         env, added = self.generate({})

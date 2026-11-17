@@ -286,8 +286,8 @@ def _ensure_compose_file():
         )
 
 
-def _generate_missing_secrets(env):
-    """Fill in the secrets ``env`` lacks; returns (env, names of the keys it added)."""
+def _add_missing_keys(env):
+    """Fill in the keys ``env`` lacks, in place; returns the names it added."""
     added = []
 
     if _secret_unset(env, "DJANGO_SECRET_KEY"):
@@ -302,7 +302,7 @@ def _generate_missing_secrets(env):
         print("  Generating FERNET_KEY (uses the Docker image — takes a moment)...")
         env["FERNET_KEY"] = _generate_fernet_key()
         added.append("FERNET_KEY")
-    return env, added
+    return added
 
 
 def _manage_interactively(title, intro, command):
@@ -347,7 +347,8 @@ def cmd_setup(args):
 
     # 3. Generate secrets (only for keys not already set)
     step("Generating secrets")
-    env, added = _generate_missing_secrets(_read_env())
+    env = _read_env()
+    added = _add_missing_keys(env)
     if added:
         _write_env(env)
         print(f"  Generated and saved to .env: {', '.join(added)}")
