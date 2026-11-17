@@ -89,6 +89,29 @@ class InvoiceModelTestCase(TestCase):
         invoice.refresh_from_db()
         self.assertEqual((invoice.status, invoice.paid_date), ("sent", None))
 
+    def test_mark_paid_accepts_a_bank_date_before_the_invoice_date(self):
+        invoice = self._sent_invoice("TC-P6", invoice_date=date(2026, 2, 1))
+        invoice.mark_paid(date(2026, 1, 20), bank_dated=True)
+        invoice.refresh_from_db()
+        self.assertEqual((invoice.status, invoice.paid_date), ("paid", date(2026, 1, 20)))
+        self.assertTrue(invoice.paid_before_invoice_date)
+
+    def test_bank_dated_is_not_remembered_for_later_saves(self):
+        invoice = self._sent_invoice("TC-P7", invoice_date=date(2026, 2, 1))
+        invoice.mark_paid(date(2026, 1, 20), bank_dated=True)
+        invoice.paid_date = date(2026, 1, 10)  # a hand edit to another early date
+        with self.assertRaises(ValidationError):
+            invoice.save()
+
+    def test_an_early_bank_payment_does_not_block_later_edits(self):
+        invoice = self._sent_invoice("TC-P8", invoice_date=date(2026, 2, 1))
+        invoice.mark_paid(date(2026, 1, 20), bank_dated=True)
+        invoice = Invoice.objects.get(pk=invoice.pk)
+        invoice.notes = "paid at the session"
+        invoice.save()  # dates untouched, so the typo check has nothing to say
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.notes, "paid at the session")
+
     def test_invoice_str(self):
         """Test Invoice string representation"""
         invoice = Invoice.objects.create(

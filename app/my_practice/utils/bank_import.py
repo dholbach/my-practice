@@ -161,6 +161,7 @@ class BankStatementImporter:
             "needs_review": 0,
             "ignored": 0,
             "errors": [],
+            "early_payments": [],
             "transactions": [],
         }
 
@@ -697,7 +698,9 @@ class BankStatementImporter:
         )
 
         if matched_invoice:
-            matched_invoice.mark_paid(parsed["transaction_date"])
+            matched_invoice.mark_paid(parsed["transaction_date"], bank_dated=True)
+            if matched_invoice.paid_before_invoice_date:
+                self.results["early_payments"].append(matched_invoice.invoice_number)
 
         self.results["transactions"].append(bank_transaction)
         return bank_transaction

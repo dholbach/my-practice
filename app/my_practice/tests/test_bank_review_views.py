@@ -16,6 +16,7 @@ from ..models import (
     Invoice,
 )
 from .bank_import_helpers import PRACTICE_IBAN, BankImportViewBase, make_invoice_item
+from .test_helpers import mark_paid_fails_for
 
 
 class BankReviewViewBase(BankImportViewBase):
@@ -371,12 +372,12 @@ class BankReviewMatchTest(BankReviewViewBase):
 
     def test_match_is_all_or_nothing_when_one_invoice_cannot_be_paid(self):
         fine = self._make_invoice(number="ME-1", payer="Max Mustermann")
-        too_late = self._make_invoice(number="MF-2", payer="Max Mustermann")
-        self._date_invoice(too_late, date(2026, 2, 1))  # after the payment date
+        broken = self._make_invoice(number="MF-2", payer="Max Mustermann")
         trans = self._make_unmatched(ref="ME-1 MF-2", amount="180,00")
-        self._post(trans, action="match", invoice=[fine.id, too_late.id])
+        with mark_paid_fails_for("MF-2"):
+            self._post(trans, action="match", invoice=[fine.id, broken.id])
 
-        for invoice in (fine, too_late):
+        for invoice in (fine, broken):
             invoice.refresh_from_db()
             self.assertEqual(invoice.status, "sent")
         trans.refresh_from_db()
@@ -399,13 +400,49 @@ class BankReviewMatchTest(BankReviewViewBase):
 
     def test_auto_match_is_refused_when_the_invoice_cannot_be_paid(self):
         invoice = self._make_invoice(number="MH-1", payer="Max Mustermann")
-        self._date_invoice(invoice, date(2026, 2, 1))
         trans = self._make_unmatched(ref="MH-1", amount="90,00")
-        self._post(trans, action="auto_match", suggested_invoice_id=invoice.id)
+        with mark_paid_fails_for("MH-1"):
+            self._post(trans, action="auto_match", suggested_invoice_id=invoice.id)
         invoice.refresh_from_db()
         trans.refresh_from_db()
         self.assertEqual(invoice.status, "sent")
         self.assertFalse(trans.processed)
+
+    def _post_following(self, trans, **extra):
+        return self.http.post(
+            reverse("bank_review"), {"transaction_id": trans.id, **extra}, follow=True
+        )
+
+    def test_match_before_the_invoice_date_is_recorded_with_a_warning(self):
+        invoice = self._make_invoice(number="MI-1", payer="Max Mustermann")
+        self._date_invoice(invoice, date(2026, 2, 1))  # after the payment date
+        trans = self._make_unmatched(ref="MI-1", amount="90,00")
+        response = self._post_following(trans, action="match", invoice=[invoice.id])
+
+        invoice.refresh_from_db()
+        trans.refresh_from_db()
+        self.assertEqual((invoice.status, invoice.paid_date), ("paid", date(2026, 1, 15)))
+        self.assertTrue(trans.processed)
+        warnings = [m for m in response.context["messages"] if m.level_tag == "warning"]
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("MI-1", warnings[0].message)
+
+    def test_auto_match_before_the_invoice_date_is_recorded_with_a_warning(self):
+        invoice = self._make_invoice(number="MJ-1", payer="Max Mustermann")
+        self._date_invoice(invoice, date(2026, 2, 1))
+        trans = self._make_unmatched(ref="MJ-1", amount="90,00")
+        response = self._post_following(trans, action="auto_match", suggested_invoice_id=invoice.id)
+
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.status, "paid")
+        warnings = [m for m in response.context["messages"] if m.level_tag == "warning"]
+        self.assertEqual(len(warnings), 1)
+
+    def test_a_payment_after_the_invoice_date_raises_no_warning(self):
+        invoice = self._make_invoice(number="MK-1", payer="Max Mustermann")
+        trans = self._make_unmatched(ref="MK-1", amount="90,00")
+        response = self._post_following(trans, action="match", invoice=[invoice.id])
+        self.assertFalse([m for m in response.context["messages"] if m.level_tag == "warning"])
 
 
 class BankReviewAliasTest(BankReviewViewBase):
