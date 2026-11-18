@@ -240,6 +240,7 @@ chronological record; this document only tracks current state.
 - ✅ Duplicate detection
 - ✅ Error reporting with line numbers
 - ✅ Bank statement import (`/bank/import`): delimiter and column names are configurable per practice (Practice admin settings), defaulting to GLS Bank's export format — other banks' CSV exports work without touching code (issue #11)
+- ✅ A bank transfer dated before its invoice (paid at the session, invoice written afterwards) is matched with the real transfer date instead of refused, with a warning to double-check it; typing such a date by hand on the invoice still fails
 - ✅ "Overdue after" threshold is a per-practice setting (`Practice.overdue_after_days`, default 30) instead of a hardcoded value — controls the dashboard's overdue-invoice widget, the Focus Queue's unpaid-invoice task, and the client detail page's payment-reminder urgency (issue #195)
 
 ### Google Calendar Integration (Phase 1-5 - Complete ✅)

@@ -100,6 +100,16 @@ class BankImportView(FormView):
             _("Import complete: %(details)s.") % {"details": ", ".join(msg_parts)},
         )
 
+        if results["early_payments"]:
+            messages.warning(
+                self.request,
+                _(
+                    "Payment date is before the invoice date for: %(numbers)s. "
+                    "Please check that this is correct."
+                )
+                % {"numbers": ", ".join(results["early_payments"])},
+            )
+
         # Redirect to review page
         return redirect("bank_review")
 
@@ -319,9 +329,12 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             return redirect(redirect_url)
 
         try:
-            record_payment(transaction, [invoice], confidence=BankTransaction.Confidence.EXACT)
+            early = record_payment(
+                transaction, [invoice], confidence=BankTransaction.Confidence.EXACT
+            )
         except InvoiceNotPayableError as exc:
             return self._refuse_unpayable(request, exc, redirect_url)
+        self._warn_paid_before_invoice(request, early)
 
         messages.success(
             request,
@@ -329,6 +342,23 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             % {"number": invoice.invoice_number},
         )
         return redirect(redirect_url)
+
+    @staticmethod
+    def _warn_paid_before_invoice(request, invoices) -> None:
+        """Ask the user to double-check a payment dated before its invoice."""
+        for invoice in invoices:
+            messages.warning(
+                request,
+                _(
+                    "Payment date (%(paid)s) is before the invoice date (%(issued)s) "
+                    "of invoice %(number)s. Please check that this is correct."
+                )
+                % {
+                    "paid": date_format(invoice.paid_date, "SHORT_DATE_FORMAT"),
+                    "issued": date_format(invoice.invoice_date, "SHORT_DATE_FORMAT"),
+                    "number": invoice.invoice_number,
+                },
+            )
 
     @staticmethod
     def _refuse_unpayable(request, error: InvoiceNotPayableError, redirect_url):
@@ -363,11 +393,12 @@ class BankReviewView(FormMixin, PracticeScopedListView):
             notes = f"{bulk_note}\n{notes}" if notes else bulk_note
 
         try:
-            record_payment(
+            early = record_payment(
                 transaction, invoice_list, confidence=BankTransaction.Confidence.MANUAL, notes=notes
             )
         except InvoiceNotPayableError as exc:
             return self._refuse_unpayable(request, exc, redirect_url)
+        self._warn_paid_before_invoice(request, early)
 
         if create_alias and transaction.payer_name and first_invoice:
             self._maybe_create_alias(request, transaction, first_invoice, "import")

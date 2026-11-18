@@ -21,7 +21,7 @@ from ..utils.bank_matching import (
     payer_needs_alias,
     record_payment,
 )
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, mark_paid_fails_for
 
 
 class BankMatchingBase(TestCase):
@@ -100,20 +100,37 @@ class RecordPaymentTests(BankMatchingBase):
 
     def test_nothing_is_written_when_one_invoice_cannot_be_paid(self):
         fine = self.make_invoice("AA-1")
-        too_late = self.make_invoice("BB-2", invoice_date=date(2026, 2, 1))
+        broken = self.make_invoice("BB-2")
         transaction = self.make_transaction()
 
-        with self.assertRaises(InvoiceNotPayableError) as caught:
-            record_payment(transaction, [fine, too_late], confidence="manual")
+        with mark_paid_fails_for("BB-2"), self.assertRaises(InvoiceNotPayableError) as caught:
+            record_payment(transaction, [fine, broken], confidence="manual")
 
-        self.assertEqual(caught.exception.invoice, too_late)
+        self.assertEqual(caught.exception.invoice, broken)
         self.assertTrue(caught.exception.reasons)
-        for invoice in (fine, too_late):
+        for invoice in (fine, broken):
             invoice.refresh_from_db()
             self.assertEqual(invoice.status, "sent")
         transaction.refresh_from_db()
         self.assertFalse(transaction.processed)
         self.assertIsNone(transaction.matched_invoice)
+
+    def test_a_transfer_before_the_invoice_date_is_recorded_and_reported(self):
+        ahead = self.make_invoice("AA-1", invoice_date=date(2026, 2, 1))
+        on_time = self.make_invoice("BB-2")
+        transaction = self.make_transaction()
+
+        early = record_payment(transaction, [ahead, on_time], confidence="manual")
+
+        self.assertEqual([invoice.invoice_number for invoice in early], ["AA-1"])
+        ahead.refresh_from_db()
+        self.assertEqual((ahead.status, ahead.paid_date), ("paid", date(2026, 1, 15)))
+        transaction.refresh_from_db()
+        self.assertTrue(transaction.processed)
+
+    def test_nothing_is_reported_when_every_payment_follows_its_invoice(self):
+        invoice = self.make_invoice("AA-1")
+        self.assertEqual(record_payment(self.make_transaction(), [invoice], confidence="exact"), [])
 
     def test_needs_at_least_one_invoice(self):
         with self.assertRaises(ValueError):

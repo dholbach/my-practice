@@ -26,7 +26,7 @@ from ..models import (
     allow_issued_invoice_writes,
 )
 from ..utils import BankStatementImporter, build_counterparty_key
-from .test_helpers import create_test_practice
+from .test_helpers import create_test_practice, mark_paid_fails_for
 
 PRACTICE_IBAN = "DE89370400440532013000"
 PRIVATE_IBAN = "DE73200400600056789000"
@@ -715,7 +715,7 @@ class IngestFailureIsolationTest(TestCase):
             invoice_date=date(2026, 1, 1),
         )
         _make_invoice_item(self.paid_ok, self.practice, self.client_obj)
-        # Dated after the payment below, so Invoice.clean() rejects paid_date.
+        # Stands in for an invoice that fails validation when marked paid.
         self.future_dated = Invoice.objects.create(
             practice=self.practice,
             client=self.client_obj,
@@ -738,7 +738,7 @@ class IngestFailureIsolationTest(TestCase):
 
     def test_failed_invoice_save_rolls_back_the_transaction_row(self):
         importer = BankStatementImporter.for_account(self.practice, PRACTICE_IBAN)
-        with self.assertRaises(ValidationError):
+        with mark_paid_fails_for("MF-2"), self.assertRaises(ValidationError):
             importer.ingest_transaction(self._parsed("MF-2"), skip_negatives=False)
 
         # Nothing committed, so the next import retries instead of skipping
@@ -746,6 +746,16 @@ class IngestFailureIsolationTest(TestCase):
         self.assertFalse(BankTransaction.objects.exists())
         self.future_dated.refresh_from_db()
         self.assertEqual(self.future_dated.status, "sent")
+
+    def test_a_transfer_before_the_invoice_date_is_recorded_and_reported(self):
+        importer = BankStatementImporter.for_account(self.practice, PRACTICE_IBAN)
+        importer.ingest_transaction(self._parsed("MF-2"), skip_negatives=False)
+
+        self.future_dated.refresh_from_db()
+        self.assertEqual(
+            (self.future_dated.status, self.future_dated.paid_date), ("paid", date(2026, 1, 15))
+        )
+        self.assertEqual(importer.results["early_payments"], ["MF-2"])
 
     def test_csv_import_skips_only_the_failing_row(self):
         importer = _make_importer(
@@ -765,7 +775,8 @@ class IngestFailureIsolationTest(TestCase):
                 },
             ],
         )
-        results = importer.process(skip_negatives=False)
+        with mark_paid_fails_for("MF-2"):
+            results = importer.process(skip_negatives=False)
 
         self.assertEqual(len(results["errors"]), 1)
         self.assertEqual(BankTransaction.objects.count(), 1)
