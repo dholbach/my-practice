@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install deps first so this layer is cached unless package.json/lock changes
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # Only the files Tailwind's @source directives scan
 COPY static/css/tailwind.css static/css/tailwind.css
@@ -26,24 +26,33 @@ RUN rm static/css/tailwind.css
 FROM python:3.15-slim AS python-builder
 WORKDIR /app
 
+# Every apt step mounts the apt cache and drops Debian's docker-clean hook, which
+# deletes each .deb after install and would leave the cache empty. A retry after a
+# dropped connection then only fetches the packages it is still missing.
+#
 # gcc, libffi-dev, zlib1g-dev, libjpeg-dev, libopenjp2-7-dev: needed to compile
 # Pillow from source where no pre-built wheel matches the platform and Python
 # version. psycopg[binary] and cryptography ship prebuilt wheels, so no
 # libpq-dev is needed here.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libffi-dev \
     zlib1g-dev \
     libjpeg-dev \
-    libopenjp2-7-dev \
-    && rm -rf /var/lib/apt/lists/*
+    libopenjp2-7-dev
 
 COPY requirements.txt .
 # google-api-python-client bundles a static discovery JSON for every Google
 # API it supports (586 files, ~98MB) — this app only ever calls
 # build("calendar", "v3", ...), so all but that one file are dead weight.
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir --prefix=/install -r requirements.txt \
+# The pip cache mount lives outside the image layers: a rebuild after a changed
+# pin (or a dropped connection) only downloads what it doesn't already have.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip \
+    && pip install --prefix=/install -r requirements.txt \
     && find /install -path '*/discovery_cache/documents/*.json' ! -name 'calendar.v3.json' -delete
 
 # ── Stage 3: production image ────────────────────────────────────────────────
@@ -55,7 +64,10 @@ WORKDIR /app
 # -dev headers used to compile Pillow in the python-builder stage above.
 # postgresql-client is intentionally NOT installed here — it's only used by
 # `./dev.py psql`/`./dev.py sql`, which run against the development image.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
@@ -67,10 +79,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libopenjp2-7 \
     zlib1g \
     ghostscript \
-    gettext \
-    && rm -rf /var/lib/apt/lists/*
+    gettext
 
-RUN pip install --upgrade pip
+RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip
 COPY --from=python-builder /install /usr/local
 
 # App source, already including the compiled CSS and minus the Tailwind
@@ -92,12 +103,16 @@ FROM production AS development
 # postgresql-client: only needed for `./dev.py psql`/`./dev.py sql`, which
 # exec into this (development-target) container — not shipped in production.
 # Node.js 26 (same major as the css-builder stage) for CSS rebuilding (npm run watch:css) and JS tests
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     && curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/*
-RUN npm install
+    && apt-get install -y --no-install-recommends nodejs
+RUN --mount=type=cache,target=/root/.npm npm install
 
-# Dev Python dependencies (requirements-dev.txt already present from COPY . .)
-RUN pip install --no-cache-dir -r requirements-dev.txt
+# Dev Python dependencies (requirements-dev.txt already present from COPY . .).
+# This layer sits above the app source, so any code change reruns it; the cache
+# mounts keep that rerun from re-downloading every package.
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements-dev.txt
