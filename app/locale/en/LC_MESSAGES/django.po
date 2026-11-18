@@ -1468,7 +1468,7 @@ msgid "File"
 msgstr ""
 
 #: my_practice/models/client.py:262
-msgid "PDF, JPG, PNG or DOCX"
+msgid "PDF, JPG, PNG, DOC or DOCX"
 msgstr ""
 
 #: my_practice/models/client.py:273
@@ -1910,7 +1910,7 @@ msgid "Expense"
 msgstr ""
 
 #: my_practice/models/financial.py:211
-msgid "PDF, JPG or PNG of the receipt / invoice"
+msgid "PDF, JPG, PNG, DOC or DOCX of the receipt / invoice"
 msgstr ""
 
 #: my_practice/models/financial.py:217

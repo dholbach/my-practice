@@ -23,7 +23,7 @@ PIL_IMAGE_FORMATS = ("JPEG", "PNG", "GIF", "WEBP", "BMP", "TIFF")
 PDF_EXTENSIONS = {".pdf"}
 # Explicit allowlist — anything outside this is rejected by process_upload.
 # Active-content types (.svg, .html, .xml, .js, …) are intentionally excluded.
-UPLOAD_EXTENSIONS = IMAGE_EXTENSIONS | PDF_EXTENSIONS | {".docx"}
+UPLOAD_EXTENSIONS = IMAGE_EXTENSIONS | PDF_EXTENSIONS | {".doc", ".docx"}
 
 # The same allowlists on the model fields, so an upload that bypasses
 # process_upload (the admin inlines) is held to them too. For the ImageFields

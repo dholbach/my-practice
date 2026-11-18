@@ -1468,8 +1468,8 @@ msgid "File"
 msgstr "Datei"
 
 #: my_practice/models/client.py:262
-msgid "PDF, JPG, PNG or DOCX"
-msgstr "PDF, JPG, PNG oder DOCX"
+msgid "PDF, JPG, PNG, DOC or DOCX"
+msgstr "PDF, JPG, PNG, DOC oder DOCX"
 
 #: my_practice/models/client.py:273
 msgid "Document date"
@@ -1910,8 +1910,8 @@ msgid "Expense"
 msgstr "Ausgabe"
 
 #: my_practice/models/financial.py:211
-msgid "PDF, JPG or PNG of the receipt / invoice"
-msgstr "PDF, JPG oder PNG der Quittung / Rechnung"
+msgid "PDF, JPG, PNG, DOC or DOCX of the receipt / invoice"
+msgstr "PDF, JPG, PNG, DOC oder DOCX der Quittung / Rechnung"
 
 #: my_practice/models/financial.py:217
 #: templates/my_practice/expense_list.html:82

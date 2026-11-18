@@ -223,7 +223,7 @@ def process_upload(upload) -> ContentFile:
     """
     Compress an uploaded file for storage.
     Images are resized and converted to JPEG; PDFs are compressed via Ghostscript.
-    Non-image/PDF types in the allowlist (e.g. .docx) are passed through unchanged.
+    Non-image/PDF types in the allowlist (e.g. .doc, .docx) are passed through unchanged.
 
     Raises ValueError for any extension not in _ALLOWED_EXTENSIONS so that
     active-content types (.svg, .html, .js, …) are never silently stored, and
@@ -250,7 +250,7 @@ def process_upload(upload) -> ContentFile:
     if content_type == "application/pdf" or ext in _PDF_EXTENSIONS:
         return _process_pdf_upload(upload, name)
 
-    # Allowed but not compressed (e.g. .docx)
+    # Allowed but not compressed (e.g. .doc, .docx)
     return upload
 
 
