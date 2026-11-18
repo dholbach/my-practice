@@ -259,7 +259,7 @@ class ClientDocument(TimestampedModel):
         storage=client_document_storage,
         validators=[validate_upload_extension],
         verbose_name=_("File"),
-        help_text=_("PDF, JPG, PNG or DOCX"),
+        help_text=_("PDF, JPG, PNG, DOC or DOCX"),
     )
     # Encrypted like the file itself: the description of an intake form or a
     # doctor's letter tends to say what it is about.

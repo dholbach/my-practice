@@ -208,7 +208,7 @@ class ExpenseReceipt(models.Model):
         upload_to=expense_attachment_upload_path,
         validators=[validate_upload_extension],
         verbose_name=_("File"),
-        help_text=_("PDF, JPG or PNG of the receipt / invoice"),
+        help_text=_("PDF, JPG, PNG, DOC or DOCX of the receipt / invoice"),
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
