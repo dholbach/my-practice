@@ -207,7 +207,7 @@ chronological record; this document only tracks current state.
 ### Company Expenses
 - ✅ Business expense tracking (17 categories)
 - ✅ Tax deductible flag
-- ✅ Receipt management
+- ✅ Receipt management (PDF, images, DOC and DOCX)
 - ✅ Category-based organization
 - ✅ Date range filtering
 - ✅ Year filtering

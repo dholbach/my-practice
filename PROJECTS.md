@@ -30,8 +30,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
+- **2026-11-23 — v0.15.0**: `.doc` uploads for expense receipts and client documents (migration 0015, validators only), a bank transfer dated before its invoice can be matched, BuildKit cache mounts for pip/npm/apt. Quarterly `review --full` was clean.
 - **2026-11-17 — v0.14.1**: an expired calendar token fails the fetch run, admin mark-paid and logo upload errors are handled, `pdfplumber` is gone, the bank review pages share a base template, `test_migration_lint.py` guards migrations, CI and the app's tool targets are on Python 3.15. No migrations, no compose change.
-- **2026-11-17 — Audit run 6 and the review-2 leftovers (#699–#705)**: delta security audit of 668b10f..2dd7d4b (quick profile, three waves): no findings, 70 of 103 changed files read, the rest listed in the run's `unreviewed-changed-files.txt`. Fixed from it and from #602: an expired calendar token now fails the fetch run; the default tags get categories; admin "mark paid" reports a payment dated before its invoice; a decompression-bomb logo is a form error. Refactors: `review_page_stats`, `ignore_already_paid` and `ignore_unmatched` leave `BankReviewView`; session-log create and edit share their narrative fields; `timeoff_helpers.overlap` and `workdays_within` replace the clamping loops. New guardrail: `test_migration_lint.py` (a drop, rename or NOT NULL tightening needs a `# contract:` comment). New test builder: `create_test_invoice`. Left in #602: `pdfplumber` to `pypdf`, the AJAX error shapes, the remaining inline page scripts and template splits.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
