@@ -2,6 +2,16 @@
 
 Major features and milestones in chronological order.
 
+## 2026-11-23 — v0.15.0 minor release
+
+Expense receipts and client documents accept Word files, and a bank transfer dated before its invoice can be matched. The image builds faster on a slow link. One migration, which only changes the stored upload-extension validators (no table change); no compose-file change beyond the version.
+
+**Upgrading:** download the new `prod.py` (`./prod.py update` prints the command), then run `./prod.py update`, which takes a backup before restarting and applies the migration. On the dev stack: `./dev.py restart --force`.
+
+- **Feature — `.doc` uploads**: expense receipts and client documents accept `.doc` as well as `.docx`, PDF and images. Migration `0015_allow_doc_uploads` records the wider extension list; the help texts and the German translation follow.
+- **Fix — bank transfer before the invoice date**: matching a transaction (manual, auto-match or CSV import) failed with "Payment date must not be before the invoice date" when the client had paid before the invoice was dated, and the transaction stayed unmatched. The bank date is kept as it happened, so revenue stays in the month it was received. The check still applies to dates typed by hand. The review page and the import summary warn about each invoice paid before its date.
+- **Build — cache mounts**: pip, npm and apt downloads are cached across local image rebuilds, so a rebuild after a changed pin or a dropped connection fetches only what is missing (pip step: 34 minutes cold, 15 seconds warm). CI timings are unchanged.
+
 ## 2026-11-17 — v0.14.1 patch release
 
 No new features: an expired Google calendar token now fails the scheduled fetch instead of passing quietly, three small fixes, a delta security audit with no findings, and the leftovers of the second and fourth refactoring reviews. No migrations and no compose-file change. Three packages leave the image.
