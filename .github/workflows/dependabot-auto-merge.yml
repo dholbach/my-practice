@@ -40,10 +40,33 @@ jobs:
         id: meta
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
 
+      # Who opened the PR is not what is in it: anyone with write access can push
+      # another commit onto a Dependabot branch, and the PR still looks like
+      # Dependabot's. So auto-merge only when Dependabot wrote every commit
+      # (read through the API: still nothing of the PR is checked out or run).
+      # A mixed PR is left for a human, with a warning rather than a red check.
+      - name: Check that Dependabot wrote every commit
+        id: commits
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          others=$(gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/commits" \
+            --jq '.[] | select(.author.login != "dependabot[bot]") | .sha[0:7]')
+          if [ -z "$others" ]; then
+            echo "only_dependabot=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "only_dependabot=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Auto-merge skipped::Commits not written by Dependabot: ${others//$'\n'/ }. Review and merge by hand."
+          fi
+
       # For a grouped PR, update-type is the highest bump in the group — so
       # this is true only when every package in the group is a patch bump.
       - name: Enable auto-merge for patch updates
-        if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+        if: >-
+          steps.meta.outputs.update-type == 'version-update:semver-patch' &&
+          steps.commits.outputs.only_dependabot == 'true'
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
