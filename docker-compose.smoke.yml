@@ -11,7 +11,7 @@
 # - ephemeral localhost port instead of 8000
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17-alpine@sha256:f9cf3e1f0066f0eb0c48707d864f0ac5941e9ff454a072077d97a4d278d07d73
     environment:
       - POSTGRES_DB=my_practice
       - POSTGRES_USER=my_practice
