@@ -31,7 +31,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 ## 🔍 Recent Activity
 
 - **2026-11-23 — v0.15.0**: `.doc` uploads for expense receipts and client documents (migration 0015, validators only), a bank transfer dated before its invoice can be matched, BuildKit cache mounts for pip/npm/apt. Quarterly `review --full` was clean.
-- **2026-11-17 — v0.14.1**: an expired calendar token fails the fetch run, admin mark-paid and logo upload errors are handled, `pdfplumber` is gone, the bank review pages share a base template, `test_migration_lint.py` guards migrations, CI and the app's tool targets are on Python 3.15. No migrations, no compose change.
+- **2026-11-24 — bank review state (#569)**: bulk "ignore" now marks transactions processed like the single button, and the always-empty auto-withdrawal review page is gone (auto-withdrawals are trusted and created processed).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
