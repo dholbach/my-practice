@@ -739,6 +739,8 @@ claim is true.
 - `scripts/check_requirements_sync.py` and `scripts/check_shared_helpers.py`
   (§ Files that duplicate content on purpose) also run in pre-commit and
   `./dev.py quality`.
+- `scripts/check_image_digests.py`: every third-party `image:` in the compose files and
+  workflows carries `@sha256:`. Locally built and own release images are exempt.
 
 ---
 

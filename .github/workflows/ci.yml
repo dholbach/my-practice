@@ -112,6 +112,10 @@ jobs:
         if: steps.scope.outputs.code == 'true'
         run: python scripts/check_requirements_sync.py
 
+      - name: Check container images are pinned by digest
+        if: steps.scope.outputs.code == 'true'
+        run: python scripts/check_image_digests.py
+
       # shellcheck ships preinstalled on GitHub-hosted ubuntu-latest runners.
       # -S warning skips style/info-level nitpicks (SC2181 "$?" checks, SC2162
       # "read -r", etc.) so the gate catches real bugs — like the inline .env
@@ -177,7 +181,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:17-alpine@sha256:f9cf3e1f0066f0eb0c48707d864f0ac5941e9ff454a072077d97a4d278d07d73
         env:
           POSTGRES_DB: my_practice
           POSTGRES_USER: my_practice

@@ -3,6 +3,7 @@ Description=Run hourly background jobs (calendar sync, tag update, Focus Queue s
 After=network.target my-practice-app.service
 
 [Service]
+NoNewPrivileges=yes
 Type=oneshot
 User=YOUR_USERNAME
 Group=YOUR_USERNAME

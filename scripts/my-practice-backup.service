@@ -3,6 +3,7 @@ Description=My Practice System Backup
 After=docker.service my-practice-app.service
 
 [Service]
+NoNewPrivileges=yes
 Type=oneshot
 User=YOUR_USERNAME
 WorkingDirectory=/path/to/my-practice

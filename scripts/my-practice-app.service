@@ -5,6 +5,7 @@ Wants=network-online.target
 Requires=docker.service
 
 [Service]
+NoNewPrivileges=yes
 Type=oneshot
 RemainAfterExit=yes
 User=YOUR_USERNAME

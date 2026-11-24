@@ -109,3 +109,13 @@ updates:
         docker-minor:
           patterns: ["*"]
           update-types: ["minor"]
+
+    # Compose images carry `tag@sha256:digest`; Dependabot bumps both together.
+    # scripts/check_image_digests.py fails CI when a new image comes in bare.
+    - package-ecosystem: "docker-compose"
+      directory: "/"
+      schedule:
+        interval: "weekly"
+      cooldown:
+        default-days: 3
+      open-pull-requests-limit: 5
