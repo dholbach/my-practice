@@ -19,11 +19,6 @@
                 💸 {% trans "Expenses" %} ({{ expense_count }})
             </a>
             {% endif %}
-            {% if withdrawal_count > 0 %}
-            <a href="{% url 'bank_withdrawal_review' %}" class="btn btn-secondary">
-                🏧 {% trans "Withdrawals" %} ({{ withdrawal_count }})
-            </a>
-            {% endif %}
             <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
                 📄 {% trans "Invoices" %}
             </a>

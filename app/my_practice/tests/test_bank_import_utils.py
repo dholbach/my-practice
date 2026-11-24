@@ -493,6 +493,25 @@ class ProcessCSVTest(TestCase):
         self.assertTrue(results.get("account_mismatch"))
         self.assertEqual(BankTransaction.objects.count(), 0)
 
+    def test_auto_withdrawal_is_processed_and_not_counted_for_review(self):
+        practice = _make_practice(slug="auto-withdrawal-done", private_bank_account=PRIVATE_IBAN)
+        importer = _make_importer(
+            practice,
+            [
+                {
+                    "payer": "Max Mustermann",
+                    "payer_iban": PRIVATE_IBAN,
+                    "amount": "-300,00",
+                    "ref": "Entnahme",
+                }
+            ],
+        )
+        results = importer.process(skip_negatives=True)
+        self.assertEqual(results["needs_review"], 0)
+        transaction = BankTransaction.objects.get(practice=practice)
+        self.assertEqual(transaction.match_confidence, BankTransaction.Confidence.AUTO_WITHDRAWAL)
+        self.assertTrue(transaction.processed)
+
     def test_negative_skipped_when_not_withdrawal(self):
         # No private IBAN → no withdrawal detection → auto-expense is created regardless
         # but skip_negatives=True should still ignore unknown negatives after auto-create fails

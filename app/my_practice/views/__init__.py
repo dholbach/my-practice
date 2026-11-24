@@ -28,7 +28,6 @@ from .bank_import_views import (
     BankExpenseReviewView,
     BankImportView,
     BankReviewView,
-    BankWithdrawalReviewView,
 )
 
 # Billing views
@@ -270,7 +269,6 @@ __all__ = [
     "BankExpenseReviewView",
     "BankImportView",
     "BankReviewView",
-    "BankWithdrawalReviewView",
     # Email views
     "SendCancellationEmailView",
     "SendContractEmailView",
