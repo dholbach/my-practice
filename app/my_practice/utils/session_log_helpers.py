@@ -71,6 +71,7 @@ CASE_SHEET_EXCERPT: tuple[tuple[str, str], ...] = (
     ("case_notes", FUTURE_WORK_HEADING),
 )
 RECENT_LOGS_SHOWN = 3
+RECENT_COVERED_SHOWN = 5
 
 
 def case_sheet_excerpt(client: Client) -> list[tuple[str, str]]:
@@ -106,6 +107,11 @@ def build_log_context(client: Client, *, before: date | None, exclude_log_pk: in
     recent = list(logs.order_by("-session__session_date", "-pk")[:RECENT_LOGS_SHOWN])
     return {
         "scratch_items": list(ScratchItem.objects.filter(client=client, done_at__isnull=True)),
+        "covered_scratch_items": list(
+            ScratchItem.objects.filter(client=client, done_at__isnull=False).order_by("-done_at")[
+                :RECENT_COVERED_SHOWN
+            ]
+        ),
         "previous_log": recent[0] if recent and recent[0].next_session_ideas.strip() else None,
         "recent_logs": [log for log in recent if log.summary],
         "case_sheet_excerpt": case_sheet_excerpt(client),

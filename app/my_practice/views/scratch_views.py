@@ -31,12 +31,27 @@ def scratch_item_create(request, pk):
 
 
 @require_POST
+def scratch_item_update(request, pk, item_pk):
+    """Fix a reminder's wording."""
+    client = get_scoped_client(request, pk)
+    item = get_object_or_404(ScratchItem, pk=item_pk, client=client)
+    text = clean_reminder(request.POST.get("text", ""))
+    if not text:
+        messages.error(request, _("Reminder must not be empty."))
+    elif text != item.text:
+        item.text = text
+        item.save(update_fields=["text", "updated_at"])
+    return _back(request, pk)
+
+
+@require_POST
 def scratch_item_toggle(request, pk, item_pk):
     """Mark a reminder covered, or open it again."""
     client = get_scoped_client(request, pk)
     item = get_object_or_404(ScratchItem, pk=item_pk, client=client)
     item.done_at = None if item.done_at else timezone.now()
-    item.save(update_fields=["done_at", "updated_at"])
+    item.covered_in_session = None  # ticked here, or opened again: no log covered it
+    item.save(update_fields=["done_at", "covered_in_session", "updated_at"])
     return _back(request, pk)
 
 

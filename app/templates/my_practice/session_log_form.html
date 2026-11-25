@@ -142,18 +142,33 @@
     <div class="section-card">
         {% if scratch_items %}
         <h3>{% trans "For this session" %}</h3>
+        {% trans "Mark as covered" as lbl_cover %}
+        {% trans "Edit reminder" as lbl_edit %}
         {% for item in scratch_items %}
-        <label class="cn-next-check">
-            <input type="checkbox" name="scratch_done" value="{{ item.pk }}" form="session-log-form">
-            <span>{{ item.text }}</span>
-        </label>
+        <div class="cn-next-check">
+            <input type="checkbox" name="scratch_done" value="{{ item.pk }}" form="session-log-form"
+                   aria-label="{{ lbl_cover }}">
+            <input type="text" name="scratch_edit_{{ item.pk }}" value="{{ item.text }}" maxlength="300"
+                   form="session-log-form" class="cn-next-edit-input" aria-label="{{ lbl_edit }}">
+        </div>
         {% endfor %}
-        <p class="cn-log-context-date">{% trans "Ticked reminders count as covered when you save." %}</p>
+        <p class="cn-log-context-date">{% trans "Ticked reminders count as covered, and edited wording is saved, when you save." %}</p>
         {% endif %}
         <label class="cn-label cn-next-new-label" for="id_scratch_new">{% trans "For next time" %}</label>
         <textarea id="id_scratch_new" name="scratch_new" form="session-log-form" rows="2"
                   class="form-control cn-textarea-small"
                   placeholder="{% trans "One reminder per line, e.g. ask about sleep" %}"></textarea>
+        {% if covered_scratch_items %}
+        <details class="cn-next-covered">
+            <summary>{% blocktrans count count=covered_scratch_items|length %}{{ count }} recently covered reminder{% plural %}{{ count }} recently covered reminders{% endblocktrans %}</summary>
+            {% for item in covered_scratch_items %}
+            <div class="cn-log-context-row">
+                <span class="cn-log-context-date">{{ item.done_at|date:"d.m." }}</span>
+                <span class="cn-next-done"><span>{{ item.text }}</span></span>
+            </div>
+            {% endfor %}
+        </details>
+        {% endif %}
     </div>
     {% if previous_log %}
     <div class="section-card">

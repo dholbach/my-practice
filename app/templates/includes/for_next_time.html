@@ -11,6 +11,8 @@
 
     {% trans "Mark as covered" as lbl_cover %}
     {% trans "Delete reminder" as lbl_delete %}
+    {% trans "Edit reminder" as lbl_edit %}
+    {% trans "Save" as lbl_save %}
     {% for item in for_next_time.open_items %}
     <div class="cn-next-row">
         <form method="post" action="{% url 'scratch_item_toggle' client.pk item.pk %}" class="cn-next-form">
@@ -20,6 +22,15 @@
                 <span>{{ item.text }}</span>
             </label>
         </form>
+        <details class="cn-next-edit">
+            <summary aria-label="{{ lbl_edit }}" title="{{ lbl_edit }}">✎</summary>
+            <form method="post" action="{% url 'scratch_item_update' client.pk item.pk %}" class="cn-next-add">
+                {% csrf_token %}
+                <input type="text" name="text" value="{{ item.text }}" maxlength="300" required
+                       class="form-control" aria-label="{{ lbl_edit }}">
+                <button type="submit" class="btn btn-secondary btn-sm">{{ lbl_save }}</button>
+            </form>
+        </details>
         <form method="post" action="{% url 'scratch_item_delete' client.pk item.pk %}" class="form-inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-secondary btn-sm" aria-label="{{ lbl_delete }}">🗑️</button>
@@ -61,7 +72,18 @@
                     <span>{{ item.text }}</span>
                 </label>
             </form>
-            <span class="cn-next-source">{{ item.done_at|date:"d.m." }}</span>
+            <details class="cn-next-edit">
+                <summary aria-label="{{ lbl_edit }}" title="{{ lbl_edit }}">✎</summary>
+                <form method="post" action="{% url 'scratch_item_update' client.pk item.pk %}" class="cn-next-add">
+                    {% csrf_token %}
+                    <input type="text" name="text" value="{{ item.text }}" maxlength="300" required
+                           class="form-control" aria-label="{{ lbl_edit }}">
+                    <button type="submit" class="btn btn-secondary btn-sm">{{ lbl_save }}</button>
+                </form>
+            </details>
+            <span class="cn-next-source">
+                {% if item.covered_in_session.log %}<a href="{% url 'session_log_edit' client.pk item.covered_in_session.log.pk %}">{{ item.done_at|date:"d.m." }}</a>{% else %}{{ item.done_at|date:"d.m." }}{% endif %}
+            </span>
         </div>
         {% endfor %}
     </details>

@@ -81,6 +81,9 @@ Each PR is useful on its own. 1–3 need no new clinical data model; 5 and 6 bui
 - Open reminders are also checkboxes in the log form's side panel (new log and edit alike); saving the log marks
   the ticked ones covered. The panel also has a field for new reminders, one per line, created on save, so a
   reminder can be added where the work happens without leaving the form.
+- Reminders can be reworded (✎ on the client page, an editable field in the log form, saved with the log). A
+  reminder ticked in a log records `covered_in_session`, so covered ones show their date as a link to that log;
+  ticking on the client page records no session. The card folds the covered ones away; the log form lists the last 5.
 - **Follow-up (PR 2b):** capture from anywhere through the command palette (P-047), e.g. "note XX-1 ask about
   sleep". It needs a command mode in `command_palette.js` (today every entry is a plain link), so it is its own PR.
 - *Why:* gives quick reminders a home that is as fast as a note on paper and shows up at the right moment.

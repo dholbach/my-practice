@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 21:45+0100\n"
+"POT-Creation-Date: 2026-11-25 22:19+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -1570,7 +1570,7 @@ msgstr ""
 msgid "Initial session + clinical assessment (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:185 templates/includes/for_next_time.html:39
+#: my_practice/models/clinical.py:185 templates/includes/for_next_time.html:50
 #: templates/my_practice/client_detail_tab_overview.html:135
 msgid "Case notes"
 msgstr "Case notes"
@@ -1750,7 +1750,7 @@ msgstr ""
 msgid "Note"
 msgstr ""
 
-#: my_practice/models/clinical.py:410 my_practice/models/clinical.py:430
+#: my_practice/models/clinical.py:410 my_practice/models/clinical.py:441
 msgid "Reminder"
 msgstr ""
 
@@ -1762,11 +1762,15 @@ msgstr ""
 msgid "Covered on"
 msgstr ""
 
-#: my_practice/models/clinical.py:422
+#: my_practice/models/clinical.py:429
+msgid "Covered in session"
+msgstr ""
+
+#: my_practice/models/clinical.py:433
 msgid "Reminder for next time"
 msgstr ""
 
-#: my_practice/models/clinical.py:423
+#: my_practice/models/clinical.py:434
 msgid "Reminders for next time"
 msgstr ""
 
@@ -4000,132 +4004,132 @@ msgstr ""
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:126
+#: my_practice/views/clinical_views.py:140
 msgid "Client profile saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:146
+#: my_practice/views/clinical_views.py:160
 msgid "Session date is required."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:152
-#: my_practice/views/clinical_views.py:420
-#: my_practice/views/clinical_views.py:445
+#: my_practice/views/clinical_views.py:166
+#: my_practice/views/clinical_views.py:436
+#: my_practice/views/clinical_views.py:461
 msgid "Invalid date."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:158
-#: my_practice/views/clinical_views.py:248
-#: my_practice/views/clinical_views.py:508
+#: my_practice/views/clinical_views.py:172
+#: my_practice/views/clinical_views.py:264
+#: my_practice/views/clinical_views.py:524
 msgid "Invalid duration."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:161
+#: my_practice/views/clinical_views.py:175
 msgid "Invalid session type."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:168
+#: my_practice/views/clinical_views.py:182
 msgid "A log already exists for this session."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:185
+#: my_practice/views/clinical_views.py:200
 #, python-format
 msgid "Session log for %(date)s saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:257
+#: my_practice/views/clinical_views.py:273
 msgid "The duration was not changed: this session has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:262
+#: my_practice/views/clinical_views.py:278
 msgid "Session log updated."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:286
-#: my_practice/views/clinical_views.py:438
+#: my_practice/views/clinical_views.py:302
+#: my_practice/views/clinical_views.py:454
 msgid "Content must not be empty."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:290
+#: my_practice/views/clinical_views.py:306
 msgid "Supervision topic added."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:305
+#: my_practice/views/clinical_views.py:321
 msgid "Supervision topic deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:360
+#: my_practice/views/clinical_views.py:376
 msgid "Supervision topic marked discussed."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:414
+#: my_practice/views/clinical_views.py:430
 msgid "Date and content are required."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:424
+#: my_practice/views/clinical_views.py:440
 msgid "Note saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:450
+#: my_practice/views/clinical_views.py:466
 msgid "Note updated."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:465
+#: my_practice/views/clinical_views.py:481
 msgid "Note deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:480
+#: my_practice/views/clinical_views.py:496
 msgid "Session log deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:500
+#: my_practice/views/clinical_views.py:516
 #, python-format
 msgid "Session of %(date)s cannot be edited: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:513
+#: my_practice/views/clinical_views.py:529
 #, python-format
 msgid "Session duration updated to %(min)s min."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:532
+#: my_practice/views/clinical_views.py:548
 #, python-format
 msgid "Session of %(date)s cannot be deleted: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:540
+#: my_practice/views/clinical_views.py:556
 #, python-format
 msgid "Session of %(date)s deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:551
+#: my_practice/views/clinical_views.py:567
 msgid "Marked as no-show / cancellation."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:663
+#: my_practice/views/clinical_views.py:679
 msgid "GebüH billing is not enabled for this client."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:676
+#: my_practice/views/clinical_views.py:692
 msgid "Invalid input."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:686
+#: my_practice/views/clinical_views.py:702
 #, python-format
 msgid "GebüH entries for %(date)s cleared."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:700
+#: my_practice/views/clinical_views.py:716
 #, python-format
 msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:725
+#: my_practice/views/clinical_views.py:741
 #, python-format
 msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:756
+#: my_practice/views/clinical_views.py:772
 #, python-format
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr ""
@@ -4463,7 +4467,7 @@ msgstr ""
 msgid "Practice '%(name)s' deactivated."
 msgstr ""
 
-#: my_practice/views/scratch_views.py:27
+#: my_practice/views/scratch_views.py:27 my_practice/views/scratch_views.py:40
 msgid "Reminder must not be empty."
 msgstr ""
 
@@ -5081,7 +5085,7 @@ msgid "Delete"
 msgstr ""
 
 #: templates/includes/for_next_time.html:5
-#: templates/my_practice/session_log_form.html:153
+#: templates/my_practice/session_log_form.html:157
 msgid "For next time"
 msgstr ""
 
@@ -5090,6 +5094,7 @@ msgid "Nothing planned yet. Jot down what to pick up next time."
 msgstr ""
 
 #: templates/includes/for_next_time.html:12
+#: templates/my_practice/session_log_form.html:145
 msgid "Mark as covered"
 msgstr ""
 
@@ -5097,29 +5102,50 @@ msgstr ""
 msgid "Delete reminder"
 msgstr ""
 
-#: templates/includes/for_next_time.html:33
+#: templates/includes/for_next_time.html:14
+#: templates/my_practice/session_log_form.html:146
+msgid "Edit reminder"
+msgstr ""
+
+#: templates/includes/for_next_time.html:15
+#: templates/my_practice/client_detail_tab_protocol.html:15
+#: templates/my_practice/client_detail_tab_protocol.html:155
+#: templates/my_practice/expense_form.html:99
+#: templates/my_practice/gebueh_leistung_form.html:41
+#: templates/my_practice/inquiry_form.html:192
+#: templates/my_practice/invoice_edit.html:148
+#: templates/my_practice/marketing_period_form.html:52
+#: templates/my_practice/tag_form.html:56
+#: templates/my_practice/tax_quarter_overview.html:197
+#: templates/my_practice/time_off_form.html:73
+#: templates/my_practice/todo_form.html:81
+#: templates/my_practice/withdrawal_form.html:76
+msgid "Save"
+msgstr "Save"
+
+#: templates/includes/for_next_time.html:44
 msgid "Ideas"
 msgstr ""
 
-#: templates/includes/for_next_time.html:46
+#: templates/includes/for_next_time.html:57
 msgid "New reminder"
 msgstr ""
 
-#: templates/includes/for_next_time.html:47
+#: templates/includes/for_next_time.html:58
 msgid "e.g. ask about sleep"
 msgstr ""
 
-#: templates/includes/for_next_time.html:48
+#: templates/includes/for_next_time.html:59
 #: templates/my_practice/client_detail_tab_protocol.html:28
 #: templates/my_practice/inquiry_list.html:35
 msgid "Add"
 msgstr "Add"
 
-#: templates/includes/for_next_time.html:52
+#: templates/includes/for_next_time.html:63
 msgid "Mark as open again"
 msgstr ""
 
-#: templates/includes/for_next_time.html:54
+#: templates/includes/for_next_time.html:65
 #, python-format
 msgid "%(count)s covered reminder"
 msgid_plural "%(count)s covered reminders"
@@ -6743,7 +6769,7 @@ msgid "Open balance"
 msgstr ""
 
 #: templates/my_practice/client_detail_tab_overview.html:36
-#: templates/my_practice/session_log_form.html:167
+#: templates/my_practice/session_log_form.html:182
 msgid "Recent sessions"
 msgstr ""
 
@@ -6928,21 +6954,6 @@ msgstr ""
 #: templates/my_practice/client_detail_tab_overview.html:294
 msgid "Source inquiry"
 msgstr ""
-
-#: templates/my_practice/client_detail_tab_protocol.html:15
-#: templates/my_practice/client_detail_tab_protocol.html:155
-#: templates/my_practice/expense_form.html:99
-#: templates/my_practice/gebueh_leistung_form.html:41
-#: templates/my_practice/inquiry_form.html:192
-#: templates/my_practice/invoice_edit.html:148
-#: templates/my_practice/marketing_period_form.html:52
-#: templates/my_practice/tag_form.html:56
-#: templates/my_practice/tax_quarter_overview.html:197
-#: templates/my_practice/time_off_form.html:73
-#: templates/my_practice/todo_form.html:81
-#: templates/my_practice/withdrawal_form.html:76
-msgid "Save"
-msgstr "Save"
 
 #: templates/my_practice/client_detail_tab_protocol.html:17
 msgid "Note (Markdown supported)…"
@@ -8563,19 +8574,26 @@ msgstr ""
 msgid "For this session"
 msgstr ""
 
-#: templates/my_practice/session_log_form.html:151
-msgid "Ticked reminders count as covered when you save."
-msgstr ""
-
-#: templates/my_practice/session_log_form.html:156
-msgid "One reminder per line, e.g. ask about sleep"
+#: templates/my_practice/session_log_form.html:155
+msgid "Ticked reminders count as covered, and edited wording is saved, when you save."
 msgstr ""
 
 #: templates/my_practice/session_log_form.html:160
+msgid "One reminder per line, e.g. ask about sleep"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:163
+#, python-format
+msgid "%(count)s recently covered reminder"
+msgid_plural "%(count)s recently covered reminders"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/my_practice/session_log_form.html:175
 msgid "Ideas from last session"
 msgstr ""
 
-#: templates/my_practice/session_log_form.html:178
+#: templates/my_practice/session_log_form.html:193
 msgid "From the case notes"
 msgstr ""
 

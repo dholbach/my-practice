@@ -82,12 +82,26 @@ def _narrative(request, current: SessionLog | None = None) -> dict[str, str]:
     }
 
 
-def _complete_scratch_items(request, client) -> None:
-    """Mark the reminders ticked in the log form's side panel as covered."""
+def _update_scratch_items(request, client) -> None:
+    """Save the wording of open reminders edited in the log form's side panel."""
+    edited = {
+        int(name.removeprefix("scratch_edit_")): clean_reminder(value)
+        for name, value in request.POST.items()
+        if name.startswith("scratch_edit_") and name.removeprefix("scratch_edit_").isdigit()
+    }
+    for item in ScratchItem.objects.filter(client=client, pk__in=edited, done_at__isnull=True):
+        # A cleared field leaves the reminder as it was: removing one is the client page's job.
+        if edited[item.pk] and edited[item.pk] != item.text:
+            item.text = edited[item.pk]
+            item.save(update_fields=["text", "updated_at"])
+
+
+def _complete_scratch_items(request, client, session) -> None:
+    """Mark the reminders ticked in the log form's side panel as covered in ``session``."""
     ids = [int(raw) for raw in request.POST.getlist("scratch_done") if raw.isdigit()]
     if ids:
         ScratchItem.objects.filter(client=client, pk__in=ids, done_at__isnull=True).update(
-            done_at=timezone.now()
+            done_at=timezone.now(), covered_in_session=session
         )
 
 
@@ -177,7 +191,8 @@ def session_log_create(request, pk):
         )
 
         _add_supervision_question(request, client)
-        _complete_scratch_items(request, client)
+        _update_scratch_items(request, client)
+        _complete_scratch_items(request, client, session)
         _add_scratch_items(request, client)
 
         messages.success(
@@ -239,7 +254,8 @@ def session_log_edit(request, client_pk, log_pk):
         log.save()
 
         _add_supervision_question(request, client)
-        _complete_scratch_items(request, client)
+        _update_scratch_items(request, client)
+        _complete_scratch_items(request, client, log.session)
         _add_scratch_items(request, client)
 
         duration_str = request.POST.get("duration", "").strip()
