@@ -90,6 +90,18 @@ def _complete_scratch_items(request, client) -> None:
         )
 
 
+MAX_NEW_SCRATCH_ITEMS = 10
+
+
+def _add_scratch_items(request, client) -> None:
+    """Create a reminder for next time per non-empty line of the log form's side panel."""
+    max_length = ScratchItem._meta.get_field("text").max_length
+    lines = [line.strip()[:max_length] for line in request.POST.get("scratch_new", "").splitlines()]
+    ScratchItem.objects.bulk_create(
+        [ScratchItem(client=client, text=line) for line in lines if line][:MAX_NEW_SCRATCH_ITEMS]
+    )
+
+
 def _add_supervision_question(request, client) -> None:
     """File the posted supervision question, if any, as an open item for the client."""
     question = request.POST.get("supervision_question", "").strip()
@@ -166,6 +178,7 @@ def session_log_create(request, pk):
 
         _add_supervision_question(request, client)
         _complete_scratch_items(request, client)
+        _add_scratch_items(request, client)
 
         messages.success(
             request,
@@ -227,6 +240,7 @@ def session_log_edit(request, client_pk, log_pk):
 
         _add_supervision_question(request, client)
         _complete_scratch_items(request, client)
+        _add_scratch_items(request, client)
 
         duration_str = request.POST.get("duration", "").strip()
         new_duration = parse_duration(duration_str) if duration_str else None

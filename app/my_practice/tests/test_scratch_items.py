@@ -231,3 +231,77 @@ class ForNextTimeCardAndLogFormTests(ClinicalTestBase):
         )
         foreign.refresh_from_db()
         self.assertIsNone(foreign.done_at)
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class AddRemindersFromLogFormTests(ClinicalTestBase):
+    """Reminders typed into the log form's side panel are created when the log is saved."""
+
+    def _create_url(self):
+        return reverse("session_log_create", kwargs={"pk": self.client_obj.pk})
+
+    def _post(self, scratch_new):
+        return self.http.post(
+            self._create_url(),
+            {"session_date": "2026-03-20", "content": "x", "scratch_new": scratch_new},
+        )
+
+    def _texts(self):
+        return [item.text for item in ScratchItem.objects.filter(client=self.client_obj)]
+
+    def test_one_reminder_per_non_empty_line(self):
+        self._post("ask about sleep\n\n  Hund mitbringen  \n   \n")
+        self.assertEqual(self._texts(), ["ask about sleep", "Hund mitbringen"])
+
+    def test_the_new_reminders_are_open(self):
+        self._post("a")
+        self.assertIsNone(ScratchItem.objects.get().done_at)
+
+    def test_nothing_is_created_for_an_empty_field(self):
+        self._post("")
+        self._post(" \n ")
+        self.assertEqual(self._texts(), [])
+
+    def test_long_lines_are_cut_and_the_number_is_capped(self):
+        from ..views.clinical_views import MAX_NEW_SCRATCH_ITEMS
+
+        self._post("\n".join(["x" * 400] + [f"line {n}" for n in range(30)]))
+        texts = self._texts()
+        self.assertEqual(len(texts), MAX_NEW_SCRATCH_ITEMS)
+        self.assertEqual(len(texts[0]), 300)
+
+    def test_editing_a_log_can_add_reminders_too(self):
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), duration=60
+        )
+        log = SessionLog.objects.create(session=session, content="x")
+        url = reverse(
+            "session_log_edit", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}
+        )
+        self.http.post(url, {"content": "x", "scratch_new": "from the edit page"})
+        self.assertEqual(self._texts(), ["from the edit page"])
+
+    def test_a_ticked_reminder_and_a_new_one_in_the_same_save(self):
+        old = ScratchItem.objects.create(client=self.client_obj, text="old")
+        self.http.post(
+            self._create_url(),
+            {
+                "session_date": "2026-03-20",
+                "content": "x",
+                "scratch_done": [str(old.pk)],
+                "scratch_new": "new",
+            },
+        )
+        old.refresh_from_db()
+        self.assertIsNotNone(old.done_at)
+        self.assertEqual(self._texts(), ["old", "new"])
+
+    def test_the_panel_offers_the_field_on_the_edit_page_as_well(self):
+        session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), duration=60
+        )
+        log = SessionLog.objects.create(session=session, content="x")
+        url = reverse(
+            "session_log_edit", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}
+        )
+        self.assertContains(self.http.get(url), 'name="scratch_new" form="session-log-form"')

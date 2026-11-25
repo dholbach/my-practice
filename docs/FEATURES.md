@@ -36,7 +36,7 @@ chronological record; this document only tracks current state.
 - ✅ GebüH-recorded indicator on session rows — the GebüH button shows a visual marker once a code has been entered for that session
 - ✅ Session log form names the client (privacy-blurred) beside the code; session rows with a log offer the bill / non-billable actions while still unbilled
 - ✅ Lighter session log form (P-006): nothing prefilled, reminder prompts as chips that insert into the note, own reflection as its own field below it, interventions / ideas / supervision question folded behind "More", and a side panel with last session's ideas, the last three one-liners and the hypothesis, triggers, resources and future-work sections of the case notes
-- ✅ "For next time" (P-006): short encrypted reminders per client, added and ticked off on the client page's overview tab next to last session's ideas and the case notes' future-work section; open reminders are also listed as checkboxes beside the session log form, and saving the log marks the ticked ones covered
+- ✅ "For next time" (P-006): short encrypted reminders per client, added and ticked off on the client page's overview tab next to last session's ideas and the case notes' future-work section; open reminders are also listed as checkboxes beside the session log form, and saving the log marks the ticked ones covered; the same panel has a field for new reminders (one per line), created on save, on the new-log and edit pages alike
 
 ### Client Detail Cockpit (P-094)
 - ✅ Tabbed layout: Overview / Protokoll / Abrechnung — replaces sidebar layout; the former Dokumente tab now sits on the Overview tab beside the intake and questionnaire sections it belongs with

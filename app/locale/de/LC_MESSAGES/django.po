@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 21:27+0100\n"
+"POT-Creation-Date: 2026-11-25 21:45+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -4002,132 +4002,132 @@ msgstr "Voraussetzungen für die DSGVO-Löschung nicht erfüllt."
 msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr "Klient:in %(code)s wurde gemäß DSGVO Art. 17 gelöscht."
 
-#: my_practice/views/clinical_views.py:114
+#: my_practice/views/clinical_views.py:126
 msgid "Client profile saved."
 msgstr "Klientenprofil gespeichert."
 
-#: my_practice/views/clinical_views.py:134
+#: my_practice/views/clinical_views.py:146
 msgid "Session date is required."
 msgstr "Sitzungsdatum ist erforderlich."
 
-#: my_practice/views/clinical_views.py:140
-#: my_practice/views/clinical_views.py:406
-#: my_practice/views/clinical_views.py:431
+#: my_practice/views/clinical_views.py:152
+#: my_practice/views/clinical_views.py:420
+#: my_practice/views/clinical_views.py:445
 msgid "Invalid date."
 msgstr "Ungültiges Datum."
 
-#: my_practice/views/clinical_views.py:146
-#: my_practice/views/clinical_views.py:234
-#: my_practice/views/clinical_views.py:494
+#: my_practice/views/clinical_views.py:158
+#: my_practice/views/clinical_views.py:248
+#: my_practice/views/clinical_views.py:508
 msgid "Invalid duration."
 msgstr "Ungültige Dauer."
 
-#: my_practice/views/clinical_views.py:149
+#: my_practice/views/clinical_views.py:161
 msgid "Invalid session type."
 msgstr "Ungültiger Sitzungstyp."
 
-#: my_practice/views/clinical_views.py:156
+#: my_practice/views/clinical_views.py:168
 msgid "A log already exists for this session."
 msgstr "Für diese Sitzung existiert bereits ein Protokoll."
 
-#: my_practice/views/clinical_views.py:172
+#: my_practice/views/clinical_views.py:185
 #, python-format
 msgid "Session log for %(date)s saved."
 msgstr "Sitzungsprotokoll für %(date)s gespeichert."
 
-#: my_practice/views/clinical_views.py:243
+#: my_practice/views/clinical_views.py:257
 msgid "The duration was not changed: this session has already been billed. Remove the invoice item first."
 msgstr "Die Dauer wurde nicht geändert: Die Sitzung ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
 
-#: my_practice/views/clinical_views.py:248
+#: my_practice/views/clinical_views.py:262
 msgid "Session log updated."
 msgstr "Sitzungsprotokoll aktualisiert."
 
-#: my_practice/views/clinical_views.py:272
-#: my_practice/views/clinical_views.py:424
+#: my_practice/views/clinical_views.py:286
+#: my_practice/views/clinical_views.py:438
 msgid "Content must not be empty."
 msgstr "Inhalt darf nicht leer sein."
 
-#: my_practice/views/clinical_views.py:276
+#: my_practice/views/clinical_views.py:290
 msgid "Supervision topic added."
 msgstr "Supervisionsthema hinzugefügt."
 
-#: my_practice/views/clinical_views.py:291
+#: my_practice/views/clinical_views.py:305
 msgid "Supervision topic deleted."
 msgstr "Supervisionsthema gelöscht."
 
-#: my_practice/views/clinical_views.py:346
+#: my_practice/views/clinical_views.py:360
 msgid "Supervision topic marked discussed."
 msgstr "Supervisionsthema als besprochen markiert."
 
-#: my_practice/views/clinical_views.py:400
+#: my_practice/views/clinical_views.py:414
 msgid "Date and content are required."
 msgstr "Datum und Inhalt sind erforderlich."
 
-#: my_practice/views/clinical_views.py:410
+#: my_practice/views/clinical_views.py:424
 msgid "Note saved."
 msgstr "Notiz gespeichert."
 
-#: my_practice/views/clinical_views.py:436
+#: my_practice/views/clinical_views.py:450
 msgid "Note updated."
 msgstr "Notiz aktualisiert."
 
-#: my_practice/views/clinical_views.py:451
+#: my_practice/views/clinical_views.py:465
 msgid "Note deleted."
 msgstr "Notiz gelöscht."
 
-#: my_practice/views/clinical_views.py:466
+#: my_practice/views/clinical_views.py:480
 msgid "Session log deleted."
 msgstr "Sitzungsprotokoll gelöscht."
 
-#: my_practice/views/clinical_views.py:486
+#: my_practice/views/clinical_views.py:500
 #, python-format
 msgid "Session of %(date)s cannot be edited: it has already been billed. Remove the invoice item first."
 msgstr "Sitzung vom %(date)s kann nicht bearbeitet werden: sie ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
 
-#: my_practice/views/clinical_views.py:499
+#: my_practice/views/clinical_views.py:513
 #, python-format
 msgid "Session duration updated to %(min)s min."
 msgstr "Sitzungsdauer auf %(min)s Min. aktualisiert."
 
-#: my_practice/views/clinical_views.py:518
+#: my_practice/views/clinical_views.py:532
 #, python-format
 msgid "Session of %(date)s cannot be deleted: it has already been billed. Remove the invoice item first."
 msgstr "Sitzung vom %(date)s kann nicht gelöscht werden: sie ist bereits abgerechnet. Rechnungsposition zuerst entfernen."
 
-#: my_practice/views/clinical_views.py:526
+#: my_practice/views/clinical_views.py:540
 #, python-format
 msgid "Session of %(date)s deleted."
 msgstr "Sitzung vom %(date)s gelöscht."
 
-#: my_practice/views/clinical_views.py:537
+#: my_practice/views/clinical_views.py:551
 msgid "Marked as no-show / cancellation."
 msgstr "Als Ausfall / Absage markiert."
 
-#: my_practice/views/clinical_views.py:649
+#: my_practice/views/clinical_views.py:663
 msgid "GebüH billing is not enabled for this client."
 msgstr "GebüH-Abrechnung ist für diesen Klienten nicht aktiviert."
 
-#: my_practice/views/clinical_views.py:662
+#: my_practice/views/clinical_views.py:676
 msgid "Invalid input."
 msgstr "Ungültige Eingabe."
 
-#: my_practice/views/clinical_views.py:672
+#: my_practice/views/clinical_views.py:686
 #, python-format
 msgid "GebüH entries for %(date)s cleared."
 msgstr "GebüH-Einträge für %(date)s gelöscht."
 
-#: my_practice/views/clinical_views.py:686
+#: my_practice/views/clinical_views.py:700
 #, python-format
 msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
 msgstr "Achtung: Ziffer %(nr)s ist nur als Alleinleistung erstattungsfähig und sollte nicht mit anderen Ziffern kombiniert werden."
 
-#: my_practice/views/clinical_views.py:711
+#: my_practice/views/clinical_views.py:725
 #, python-format
 msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
 msgstr "Achtung: Ziffer %(nr)s – bereits %(count)s× innerhalb von %(days)s Tagen abgerechnet (Maximum: %(max)s×)."
 
-#: my_practice/views/clinical_views.py:742
+#: my_practice/views/clinical_views.py:756
 #, python-format
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr "%(count)s GebüH-Ziffer(n) für %(date)s gespeichert."
@@ -5087,6 +5087,7 @@ msgid "Delete"
 msgstr "Löschen"
 
 #: templates/includes/for_next_time.html:5
+#: templates/my_practice/session_log_form.html:153
 msgid "For next time"
 msgstr "Fürs nächste Mal"
 
@@ -6748,7 +6749,7 @@ msgid "Open balance"
 msgstr "Offener Betrag"
 
 #: templates/my_practice/client_detail_tab_overview.html:36
-#: templates/my_practice/session_log_form.html:164
+#: templates/my_practice/session_log_form.html:167
 msgid "Recent sessions"
 msgstr "Letzte Sitzungen"
 
@@ -8562,23 +8563,27 @@ msgstr "Aktualisieren"
 msgid "Save protocol"
 msgstr "Protokoll speichern"
 
-#: templates/my_practice/session_log_form.html:142
+#: templates/my_practice/session_log_form.html:141
 msgid "Context for this session"
 msgstr "Kontext zu dieser Sitzung"
 
-#: templates/my_practice/session_log_form.html:145
+#: templates/my_practice/session_log_form.html:144
 msgid "For this session"
 msgstr "Für diese Sitzung"
 
-#: templates/my_practice/session_log_form.html:152
+#: templates/my_practice/session_log_form.html:151
 msgid "Ticked reminders count as covered when you save."
 msgstr "Abgehakte Erinnerungen gelten beim Speichern als besprochen."
 
-#: templates/my_practice/session_log_form.html:157
+#: templates/my_practice/session_log_form.html:156
+msgid "One reminder per line, e.g. ask about sleep"
+msgstr "Eine Erinnerung pro Zeile, z. B. nach dem Schlaf fragen"
+
+#: templates/my_practice/session_log_form.html:160
 msgid "Ideas from last session"
 msgstr "Ideen aus der letzten Sitzung"
 
-#: templates/my_practice/session_log_form.html:175
+#: templates/my_practice/session_log_form.html:178
 msgid "From the case notes"
 msgstr "Aus den Fallnotizen"
 

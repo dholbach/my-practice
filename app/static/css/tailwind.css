@@ -597,6 +597,8 @@
   .cn-next-source { font-size: 0.75rem; color: var(--color-text-secondary); white-space: nowrap; }
   .cn-next-add { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
   .cn-next-add .form-control { flex: 1; min-width: 0; }
+  .cn-next-new-label { margin-top: 0.75rem; }
+  .cn-log-context .cn-next-new-label:first-child { margin-top: 0; }
   .cn-next-covered { margin-top: 0.75rem; font-size: 0.875rem; }
   .cn-next-covered > summary { cursor: pointer; color: var(--color-text-secondary); }
   /* Prompt chips above the session note: insert a reminder, or jump to a field */

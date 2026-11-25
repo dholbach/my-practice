@@ -197,8 +197,12 @@ class SessionLogFormViewTests(ClinicalTestBase):
         self.assertContains(response, "Telefon als Trigger")
         self.assertContains(response, "Übererregung")
 
-    def test_no_context_panel_for_a_client_without_history(self):
-        self.assertNotContains(self.http.get(self._create_url()), "cn-log-context")
+    def test_a_client_without_history_gets_no_context_but_can_still_add_reminders(self):
+        response = self.http.get(self._create_url())
+        self.assertEqual(response.context["recent_logs"], [])
+        self.assertIsNone(response.context["previous_log"])
+        self.assertEqual(response.context["case_sheet_excerpt"], [])
+        self.assertContains(response, 'name="scratch_new" form="session-log-form"')
 
     def test_session_date_limits_the_context_to_earlier_sessions(self):
         session = Session.objects.create(
@@ -216,4 +220,4 @@ class SessionLogFormViewTests(ClinicalTestBase):
         url = reverse(
             "session_log_edit", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}
         )
-        self.assertNotContains(self.http.get(url), "cn-log-context")
+        self.assertEqual(self.http.get(url).context["recent_logs"], [])
