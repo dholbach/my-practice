@@ -2,10 +2,10 @@
 
 from datetime import date, timedelta
 from decimal import Decimal
+from functools import cached_property
 from itertools import chain
 
 from dateutil.relativedelta import relativedelta
-from django.db.models import Max, Min
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -20,7 +20,6 @@ from ..models import (
 )
 from ..models.clinical import MoodTag
 from ..models.session import Session
-from .calculations import count_sessions
 from .case_sheet import build_case_sheet, working_diagnosis
 from .chart_helpers import (
     MONTH_ABBREVIATIONS,
@@ -97,38 +96,37 @@ class ClientDetailContextBuilder:
             "available_tags": sort_tags_by_category(available_tags),
         }
 
+    @cached_property
+    def _held_sessions(self) -> list[tuple[date, int]]:
+        """``(date, minutes)`` of every session held: not cancelled, and not after today.
+
+        Cancelled sessions did not take place and future ones have not yet. Read from the
+        sessions, not from the invoices, so a session that is not invoiced yet counts: the
+        invoice-based figures lagged behind by up to a billing cycle. (The per-month chart in
+        the admin mode stays invoice-based: it is about what was billed.)
+        """
+        return list(
+            self.client.sessions.filter(cancelled=False, session_date__lte=self.today).values_list(
+                "session_date", "duration"
+            )
+        )
+
     def _session_stats(self) -> tuple[float, int, int]:
-        # Free-form items (P-122 day-rate/project billing) carry no session and
-        # no duration, so they must not reach the session-based stats: counting
-        # them inflated session_count and, contributing 0 minutes each, dragged
-        # avg_duration down — a client with one 60-min session plus one
-        # free-form item read "2 sessions, Ø 30 min" beside total_hours of 1.0.
-        # count_sessions() already excludes them; this now agrees with it.
-        session_items = [
-            item for item in self.all_items if item.session_id and not item.session.cancelled
-        ]
-        total_hours = count_sessions(self.all_items, exclude_cancellations=True)
-        session_count = len(session_items)
-        total_minutes = sum(item.session.duration for item in session_items)
-        avg_duration = round(total_minutes / session_count) if session_count > 0 else 0
-        return total_hours, session_count, avg_duration
+        """Hours, number and average length (minutes) of the sessions held."""
+        minutes = [duration for _day, duration in self._held_sessions]
+        total_minutes = sum(minutes)
+        session_count = len(minutes)
+        avg_duration = round(total_minutes / session_count) if session_count else 0
+        return total_minutes / 60, session_count, avg_duration
 
     def _last_invoice_date(self) -> date | None:
         finalized = [inv for inv in self.invoices if inv.status != Invoice.Status.DRAFT]
         return finalized[0].invoice_date if finalized else None
 
     def _activity_dates(self) -> tuple[date | None, date | None, bool]:
-        """First and last session held, and whether the client is recently active.
-
-        Read from the sessions themselves, not from the invoices: a session that is not
-        invoiced yet is still the last one held, and the invoice-based date lagged behind
-        by up to a billing cycle. Cancelled sessions did not take place and future ones
-        have not yet, so neither counts.
-        """
-        held = self.client.sessions.filter(cancelled=False, session_date__lte=self.today).aggregate(
-            first=Min("session_date"), last=Max("session_date")
-        )
-        first_session_date, last_session_date = held["first"], held["last"]
+        """First and last session held, and whether the client is recently active."""
+        days = [day for day, _minutes in self._held_sessions]
+        first_session_date, last_session_date = (min(days), max(days)) if days else (None, None)
 
         four_months_ago = self.today - relativedelta(months=4)
         is_recently_active = bool(
