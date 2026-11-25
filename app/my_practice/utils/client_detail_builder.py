@@ -5,6 +5,7 @@ from decimal import Decimal
 from itertools import chain
 
 from dateutil.relativedelta import relativedelta
+from django.db.models import Max, Min
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -117,13 +118,17 @@ class ClientDetailContextBuilder:
         return finalized[0].invoice_date if finalized else None
 
     def _activity_dates(self) -> tuple[date | None, date | None, bool]:
-        items_with_session = [item for item in self.all_items if item.session_id]
-        if items_with_session:
-            session_dates = [item.session.session_date for item in items_with_session]
-            first_session_date = min(session_dates)
-            last_session_date = max(session_dates)
-        else:
-            first_session_date = last_session_date = None
+        """First and last session held, and whether the client is recently active.
+
+        Read from the sessions themselves, not from the invoices: a session that is not
+        invoiced yet is still the last one held, and the invoice-based date lagged behind
+        by up to a billing cycle. Cancelled sessions did not take place and future ones
+        have not yet, so neither counts.
+        """
+        held = self.client.sessions.filter(cancelled=False, session_date__lte=self.today).aggregate(
+            first=Min("session_date"), last=Max("session_date")
+        )
+        first_session_date, last_session_date = held["first"], held["last"]
 
         four_months_ago = self.today - relativedelta(months=4)
         is_recently_active = bool(
