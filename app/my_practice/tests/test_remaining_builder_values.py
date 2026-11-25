@@ -182,6 +182,56 @@ class ClientDetailStatsTest(BuilderTestBase):
         self.assertEqual(stats["first_session_date"], date(YEAR, 3, 2))
         self.assertEqual(stats["last_session_date"], date(YEAR, 3, 16))
 
+    def test_hours_count_and_average_include_uninvoiced_sessions(self):
+        """The card said "billed hours": a client with sessions after the last billing run
+        looked as if they had worked less than they had."""
+        self.add_session_item(day=2, duration=60)
+        Session.objects.create(client=self.client_a, session_date=date(YEAR, 3, 20), duration=90)
+
+        stats = self.build_stats()
+
+        self.assertEqual(stats["session_count"], 2)
+        self.assertEqual(stats["total_hours"], 2.5)
+        self.assertEqual(stats["avg_duration"], 75)
+
+    def test_future_sessions_are_not_counted_in_hours(self):
+        self.add_session_item(day=2, duration=60)
+        future = timezone.localdate() + timedelta(days=3)
+        Session.objects.create(client=self.client_a, session_date=future, duration=60)
+
+        stats = self.build_stats()
+
+        self.assertEqual((stats["session_count"], stats["total_hours"]), (1, 1.0))
+
+    def test_a_session_today_counts_in_hours(self):
+        Session.objects.create(client=self.client_a, session_date=timezone.localdate(), duration=45)
+
+        stats = self.build_stats()
+
+        self.assertEqual((stats["session_count"], stats["total_hours"]), (1, 0.75))
+
+    def test_a_client_without_held_sessions_has_zero_hours(self):
+        Session.objects.create(
+            client=self.client_a, session_date=timezone.localdate() + timedelta(days=3), duration=60
+        )
+
+        stats = self.build_stats()
+
+        self.assertEqual(
+            (stats["session_count"], stats["total_hours"], stats["avg_duration"]), (0, 0, 0)
+        )
+
+    def test_the_monthly_chart_stays_invoice_based(self):
+        """It sits in the billing view and is about what was billed."""
+        self.add_session_item(day=2, duration=60)
+        Session.objects.create(client=self.client_a, session_date=date(YEAR, 3, 20), duration=60)
+
+        client = Client.objects.get(pk=self.client_a.pk)
+        context = ClientDetailContextBuilder(client, self.make_request()).build()
+
+        self.assertEqual(sum(row["hours"] for row in context["monthly_sessions"]), 1.0)
+        self.assertEqual(context["stats"]["total_hours"], 2.0)
+
     def test_an_uninvoiced_session_is_the_last_session(self):
         """The date came from the invoices, so a session held after the last billing run
         did not show: the card read "23.09." with sessions in October and November."""
