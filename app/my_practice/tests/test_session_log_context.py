@@ -137,12 +137,33 @@ class SessionLogFormViewTests(ClinicalTestBase):
         )
         self.assertEqual(body.group(1), "")
 
-    def test_reflection_chip_only_jumps_to_its_own_field(self):
+    def test_reflection_chip_writes_its_prompt_into_the_reflection_field(self):
         response = self.http.get(self._create_url())
         html = response.content.decode()
         chip = html.split('data-prompt-target="id_therapist_reflection"')[1].split(">")[0]
-        self.assertNotIn("data-prompt-text", chip)
+        self.assertIn('data-prompt-text="Wie ging es mir dabei: "', chip)
         self.assertContains(response, 'id="id_therapist_reflection"')
+
+    def test_a_field_holding_only_a_prompt_is_saved_as_empty(self):
+        self.http.post(
+            self._create_url(),
+            {
+                "session_date": "2026-03-20",
+                "content": "Sitzung: ",
+                "therapist_reflection": "Wie ging es mir dabei: ",
+                "interventions": "Pendeln",
+            },
+        )
+        log = SessionLog.objects.get(session__client=self.client_obj)
+        self.assertEqual((log.content, log.therapist_reflection), ("", ""))
+        self.assertEqual(log.interventions, "Pendeln")
+
+    def test_a_prompt_followed_by_text_is_kept(self):
+        self.http.post(
+            self._create_url(),
+            {"session_date": "2026-03-20", "content": "Sitzung: ruhig"},
+        )
+        self.assertEqual(SessionLog.objects.get().content, "Sitzung: ruhig")
 
     def test_more_fields_are_collapsed_on_a_new_log(self):
         response = self.http.get(self._create_url())

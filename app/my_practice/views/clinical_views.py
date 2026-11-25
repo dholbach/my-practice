@@ -62,11 +62,21 @@ def _summary(request, default: str) -> str:
 _NARRATIVE_FIELDS = ("content", "interventions", "therapist_reflection", "next_session_ideas")
 
 
+# A prompt chip writes "Label: " into a field; clicked and then not filled in, that is not a note.
+_BARE_PROMPTS = {f"{label}:" for label, _field in SESSION_LOG_PROMPTS}
+
+
 def _narrative(request, current: SessionLog | None = None) -> dict[str, str]:
-    """The posted narrative fields; a field not posted keeps ``current``'s value (or "")."""
-    return {
+    """The posted narrative fields; a field not posted keeps ``current``'s value (or "").
+
+    A field holding nothing but a prompt chip's label is saved as empty.
+    """
+    posted = {
         field: request.POST.get(field, getattr(current, field) if current else "")
         for field in _NARRATIVE_FIELDS
+    }
+    return {
+        field: "" if value.strip() in _BARE_PROMPTS else value for field, value in posted.items()
     }
 
 

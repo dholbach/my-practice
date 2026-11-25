@@ -109,9 +109,10 @@ CASE_NOTES_TEMPLATE = """\
 """
 
 # Reminder prompts for the session log form, shown as chips above the notes. Each is
-# (label, field): a chip for ``content`` inserts "label: " into the session note, one for
-# ``therapist_reflection`` jumps to that field, so countertransference stays out of the
-# note and an export can leave it out. Nothing is prefilled, so nothing has to be deleted.
+# (label, field): a chip inserts "label: " into that field and focuses it. The reflection
+# chip targets ``therapist_reflection``, not the note, so countertransference stays out of
+# the note and an export can leave it out. Nothing is prefilled, so nothing has to be
+# deleted; a field left holding only a prompt is saved as empty (views/clinical_views.py).
 SESSION_LOG_PROMPTS: tuple[tuple[str, str], ...] = (
     ("Gefühl danach", "content"),
     ("Wahrnehmung", "content"),

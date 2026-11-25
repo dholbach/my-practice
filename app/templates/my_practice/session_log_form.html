@@ -81,7 +81,7 @@
             {% for label, field in prompts %}
             <button type="button" class="cn-prompt-chip"
                     data-prompt-target="id_{{ field }}"
-                    {% if field == "content" %}data-prompt-text="{{ label }}: "{% endif %}>{{ label }}</button>
+                    data-prompt-text="{{ label }}: ">{{ label }}</button>
             {% endfor %}
         </div>
         <textarea id="id_content" name="content" class="form-control cn-textarea-large"
