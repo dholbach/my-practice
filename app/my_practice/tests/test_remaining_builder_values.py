@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase, override_settings
+from django.utils import timezone
 
 from my_practice.models import (
     Client,
@@ -180,6 +181,53 @@ class ClientDetailStatsTest(BuilderTestBase):
 
         self.assertEqual(stats["first_session_date"], date(YEAR, 3, 2))
         self.assertEqual(stats["last_session_date"], date(YEAR, 3, 16))
+
+    def test_an_uninvoiced_session_is_the_last_session(self):
+        """The date came from the invoices, so a session held after the last billing run
+        did not show: the card read "23.09." with sessions in October and November."""
+        self.add_session_item(day=2)
+        Session.objects.create(client=self.client_a, session_date=date(YEAR, 3, 20), duration=60)
+
+        stats = self.build_stats()
+
+        self.assertEqual(stats["last_session_date"], date(YEAR, 3, 20))
+        self.assertEqual(stats["first_session_date"], date(YEAR, 3, 2))
+
+    def test_future_sessions_are_not_the_last_session(self):
+        self.add_session_item(day=2)
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        Session.objects.create(client=self.client_a, session_date=tomorrow, duration=60)
+
+        self.assertEqual(self.build_stats()["last_session_date"], date(YEAR, 3, 2))
+
+    def test_a_session_today_counts(self):
+        today = timezone.localdate()
+        Session.objects.create(client=self.client_a, session_date=today, duration=60)
+
+        self.assertEqual(self.build_stats()["last_session_date"], today)
+
+    def test_a_cancelled_session_is_not_the_last_session(self):
+        self.add_session_item(day=2)
+        self.add_session_item(day=20, cancelled=True)  # billed as a cancellation fee
+
+        self.assertEqual(self.build_stats()["last_session_date"], date(YEAR, 3, 2))
+
+    def test_only_future_sessions_means_no_dates(self):
+        future = timezone.localdate() + timedelta(days=7)
+        Session.objects.create(client=self.client_a, session_date=future, duration=60)
+
+        stats = self.build_stats()
+
+        self.assertIsNone(stats["first_session_date"])
+        self.assertIsNone(stats["last_session_date"])
+        self.assertFalse(stats["is_recently_active"])
+
+    def test_a_recent_uninvoiced_session_makes_the_client_recently_active(self):
+        self.add_session_item(day=2)  # billed in March: long ago
+        recent = timezone.localdate() - timedelta(days=10)
+        Session.objects.create(client=self.client_a, session_date=recent, duration=60)
+
+        self.assertTrue(self.build_stats()["is_recently_active"])
 
     def test_open_amount_sums_only_sent_invoices(self):
         self.invoice.status = "sent"
