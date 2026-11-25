@@ -47,6 +47,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ### Concept / Mid-term
 
+- **P-006 Clinical documentation that stays up to date**: one clinical page (case sheet over sessions, billing in an Admin view), a lighter log form with context, a "for next time" scratchpad, dated and sourced case sheet lines (`ClinicalFact`), a one-line digest after each log, and a cheap review view; six PRs → [docs/projects/todo/P-006_CLINICAL_DOCUMENTATION.md](docs/projects/todo/P-006_CLINICAL_DOCUMENTATION.md)
+
 - **P-122 General Freelance Practice Type**: Phase 1 (free-form invoice items) done — Phase 2 (standard VAT + advance-payment report) deferred until the Kleinunternehmer election is actually dropped → [docs/projects/todo/P-122_GENERAL_FREELANCE_PRACTICE.md](docs/projects/todo/P-122_GENERAL_FREELANCE_PRACTICE.md)
 - **P-029 Import Old Session Logs**: `import_session_logs` management command (`--file`, `--dry-run`, `--create-sessions`); CSV import with Fernet encryption. *Approach: start piecemeal via UI for active clients.*
 - **P-023 SMS**: seven.io integration for cancellations + quick SMS; AVV required before API key; ~4h → [docs/projects/todo/P-023_SMS_CANCELLATION.md](docs/projects/todo/P-023_SMS_CANCELLATION.md)
