@@ -576,6 +576,21 @@
   .cn-textarea-large:focus, .cn-textarea-medium:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); background: var(--color-surface); }
   .cn-textarea-small:focus  { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
   .cn-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 1rem; }
+  /* Session log form: the form and its context side by side, stacked below ~900px (M-PAT-09) */
+  .cn-log-layout { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; }
+  .cn-log-main { flex: 999 1 560px; min-width: 0; margin-bottom: 0; }
+  .cn-log-main .cn-textarea-large { min-height: 320px; }
+  .cn-log-context { flex: 1 1 280px; min-width: 0; }
+  .cn-log-context .section-card { padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .cn-log-context .section-card h3 { margin-bottom: 0.5rem; font-size: 0.95rem; }
+  .cn-log-context-date { font-size: 0.75rem; color: var(--color-text-secondary); }
+  .cn-log-context-row { display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: 0.5rem; padding: 0.25rem 0; font-size: 0.875rem; }
+  .cn-log-context-section + .cn-log-context-section { margin-top: 0.75rem; }
+  /* Prompt chips above the session note: insert a reminder, or jump to a field */
+  .cn-prompt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+  .cn-prompt-chip { padding: 0.15rem 0.7rem; border: 1px dashed var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 0.8125rem; cursor: pointer; }
+  .cn-prompt-chip:hover { border-color: var(--color-primary); color: var(--color-link); }
+  .cn-more > summary { margin-bottom: 1rem; color: var(--color-link); font-size: 0.875rem; cursor: pointer; }
   .cn-actions-top { margin-bottom: 1rem; margin-top: 0; }
   /* Mood tag checkboxes */
   .cn-tag-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }

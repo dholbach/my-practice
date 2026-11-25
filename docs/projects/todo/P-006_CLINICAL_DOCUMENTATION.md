@@ -63,7 +63,8 @@ Each PR is useful on its own. 1–3 need no new clinical data model; 5 and 6 bui
   behind "More", which opens automatically when any of them has content.
 - **Own reflection stays a separate field** (decided 2026-11-25), so that an export, if one is ever required,
   can leave countertransference out and stay neutral. It sits right below the session note as a small field.
-  A "Wie ging es mir dabei" chip moves the cursor there instead of inserting text into the note.
+  A "Wie ging es mir dabei" chip writes its prompt into that field and focuses it, as a nudge. A field left
+  holding only a prompt is saved as empty.
 - **Context panel** beside the form: last session's ideas for next time, the last 3 one-liners, and an excerpt
   of the case formulation (hypothesis, current triggers, resources).
 - *Why:* the log is where the work happens already. Showing the open threads there costs nothing and addresses

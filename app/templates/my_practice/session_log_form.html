@@ -8,7 +8,8 @@
 
 
 {% block content %}
-<div class="section-card">
+<div class="cn-log-layout">
+<div class="section-card cn-log-main">
     {% if is_edit %}
     <form method="post" action="{% url 'session_log_edit' client.pk log.pk %}" id="session-log-form"
     {% else %}
@@ -74,31 +75,17 @@
                value="{% if is_edit %}{{ log.summary }}{% endif %}">
     </div>
 
-    <div class="cn-field flex gap-4 flex-wrap">
-        <div class="flex-1 min-w-[260px]">
-            <label class="cn-label" for="id_therapist_reflection">{% trans "Own reflection" %}</label>
-            <textarea id="id_therapist_reflection" name="therapist_reflection"
-                      class="form-control cn-textarea-small"
-                      placeholder="{% trans "How did I feel? Countertransference impulses…" %}">{% if is_edit %}{{ log.therapist_reflection }}{% endif %}</textarea>
-            {% if is_edit and log.therapist_reflection %}
-            <details class="cn-notes-preview">
-                <summary>📖 {% trans "Preview (saved state)" %}</summary>
-                <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
-            </details>
-            {% endif %}
-        </div>
-        <div class="flex-1 min-w-[260px]">
-            <label class="cn-label" for="id_interventions">{% trans "Interventions" %}</label>
-            <textarea id="id_interventions" name="interventions"
-                      class="form-control cn-textarea-small"
-                      placeholder="{% trans "Applied techniques, methods…" %}">{% if is_edit %}{{ log.interventions }}{% endif %}</textarea>
-        </div>
-    </div>
-
     <div class="cn-field">
         <label class="cn-label" for="id_content">{% trans "Session note" %}</label>
+        <div class="cn-prompt-chips" role="group" aria-label="{% trans "Prompts" %}">
+            {% for label, field in prompts %}
+            <button type="button" class="cn-prompt-chip"
+                    data-prompt-target="id_{{ field }}"
+                    data-prompt-text="{{ label }}: ">{{ label }}</button>
+            {% endfor %}
+        </div>
         <textarea id="id_content" name="content" class="form-control cn-textarea-large"
-                  placeholder="{% trans "Reflection after the session…" %}">{% if is_edit %}{{ log.content }}{% else %}{{ content_template }}{% endif %}</textarea>
+                  placeholder="{% trans "Reflection after the session…" %}">{% if is_edit %}{{ log.content }}{% endif %}</textarea>
         {% if is_edit and log.content %}
         <details class="cn-notes-preview">
             <summary>📖 {% trans "Preview (saved state)" %}</summary>
@@ -108,18 +95,39 @@
     </div>
 
     <div class="cn-field">
-        <label class="cn-label" for="id_next_session_ideas">{% trans "Ideas for next session" %}</label>
-        <textarea id="id_next_session_ideas" name="next_session_ideas"
+        <label class="cn-label" for="id_therapist_reflection">{% trans "Own reflection" %}</label>
+        <textarea id="id_therapist_reflection" name="therapist_reflection"
                   class="form-control cn-textarea-small"
-                  placeholder="{% trans "Topics, interventions, homework for next session…" %}">{% if is_edit %}{{ log.next_session_ideas }}{% endif %}</textarea>
+                  placeholder="{% trans "How did I feel? Countertransference impulses…" %}">{% if is_edit %}{{ log.therapist_reflection }}{% endif %}</textarea>
+        {% if is_edit and log.therapist_reflection %}
+        <details class="cn-notes-preview">
+            <summary>📖 {% trans "Preview (saved state)" %}</summary>
+            <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
+        </details>
+        {% endif %}
     </div>
 
-    <div class="cn-field">
-        <label class="cn-label" for="id_supervision_question">{% trans "Supervision question" %} <span class="fieldset-hint">{% trans "(saved to supervision queue)" %}</span></label>
-        <textarea id="id_supervision_question" name="supervision_question"
-                  class="form-control cn-textarea-small"
-                  placeholder="{% trans "What do I want to bring to supervision?…" %}"></textarea>
-    </div>
+    <details class="cn-more" {% if log.interventions or log.next_session_ideas %}open{% endif %}>
+        <summary>{% trans "More: interventions, ideas for next time, supervision question" %}</summary>
+        <div class="cn-field">
+            <label class="cn-label" for="id_interventions">{% trans "Interventions" %}</label>
+            <textarea id="id_interventions" name="interventions"
+                      class="form-control cn-textarea-small"
+                      placeholder="{% trans "Applied techniques, methods…" %}">{% if is_edit %}{{ log.interventions }}{% endif %}</textarea>
+        </div>
+        <div class="cn-field">
+            <label class="cn-label" for="id_next_session_ideas">{% trans "Ideas for next session" %}</label>
+            <textarea id="id_next_session_ideas" name="next_session_ideas"
+                      class="form-control cn-textarea-small"
+                      placeholder="{% trans "Topics, interventions, homework for next session…" %}">{% if is_edit %}{{ log.next_session_ideas }}{% endif %}</textarea>
+        </div>
+        <div class="cn-field">
+            <label class="cn-label" for="id_supervision_question">{% trans "Supervision question" %} <span class="fieldset-hint">{% trans "(saved to supervision queue)" %}</span></label>
+            <textarea id="id_supervision_question" name="supervision_question"
+                      class="form-control cn-textarea-small"
+                      placeholder="{% trans "What do I want to bring to supervision?…" %}"></textarea>
+        </div>
+    </details>
 
     <div class="cn-actions">
         <button type="submit" class="btn btn-primary">
@@ -128,5 +136,40 @@
         <a href="{% url 'client_detail' client.pk %}#ptab-protokoll" class="btn btn-secondary">{% trans "Cancel" %}</a>
     </div>
     </form>
+</div>
+
+{% if previous_log or recent_logs or case_sheet_excerpt %}
+<aside class="cn-log-context" aria-label="{% trans "Context for this session" %}">
+    {% if previous_log %}
+    <div class="section-card">
+        <h3>{% trans "Ideas from last session" %}</h3>
+        <div class="cn-log-context-date">{{ previous_log.session.session_date|date:"d.m.Y" }}</div>
+        <div class="md-rendered">{{ previous_log.next_session_ideas|render_markdown }}</div>
+    </div>
+    {% endif %}
+    {% if recent_logs %}
+    <div class="section-card">
+        <h3>{% trans "Recent sessions" %}</h3>
+        {% for recent in recent_logs %}
+        <div class="cn-log-context-row">
+            <span class="cn-log-context-date">{{ recent.session.session_date|date:"d.m.Y" }}</span>
+            <span>{{ recent.summary }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if case_sheet_excerpt %}
+    <div class="section-card">
+        <h3>{% trans "From the case notes" %}</h3>
+        {% for heading, text in case_sheet_excerpt %}
+        <div class="cn-log-context-section">
+            <div class="cn-log-context-date">{{ heading }}</div>
+            <div class="md-rendered">{{ text|render_markdown }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</aside>
+{% endif %}
 </div>
 {% endblock %}

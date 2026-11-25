@@ -30,8 +30,8 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-23 — v0.15.0**: `.doc` uploads for expense receipts and client documents (migration 0015, validators only), a bank transfer dated before its invoice can be matched, BuildKit cache mounts for pip/npm/apt. Quarterly `review --full` was clean.
 - **2026-11-24 — bank review state (#569)**: bulk "ignore" now marks transactions processed like the single button, and the always-empty auto-withdrawal review page is gone (auto-withdrawals are trusted and created processed).
+- **2026-11-25 — P-006 clinical documentation**: spec merged (#727); PR 1 reworks the session log form (prompt chips instead of a prefilled template, "More" fields, context panel).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

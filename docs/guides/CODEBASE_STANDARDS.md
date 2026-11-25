@@ -287,7 +287,8 @@ Not Django-i18n UI text, so not wrapped:
   `includes/email_card.html`, whose `Betreff`/`Subject`, `Kopieren`/`Copy` labels
   identify the language of the content beside them, not the UI language.
 - Clinical scaffolding baked into form `initial=` (`INTAKE_NOTES_TEMPLATE`,
-  `CASE_NOTES_TEMPLATE`, `SESSION_LOG_TEMPLATE` in `models/clinical.py`) — authored
+  `CASE_NOTES_TEMPLATE`) and the session log's prompt chips (`SESSION_LOG_PROMPTS`), all in
+  `models/clinical.py` — authored
   Somatic-Experiencing terminology with no English counterpart.
 - `ClientTag` and other free-text data — seeded tag names are data, like a client name.
 

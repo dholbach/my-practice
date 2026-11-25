@@ -56,7 +56,7 @@ class FakeElement {
     }
 }
 
-function load({ confirmAnswer = true } = {}) {
+function load({ confirmAnswer = true, fields = {} } = {}) {
     const listeners = {};
     const calls = { confirm: [], print: 0, clipboard: [], href: null, submitted: 0, posted: [] };
     const timers = [];
@@ -72,6 +72,7 @@ function load({ confirmAnswer = true } = {}) {
             addEventListener(type, fn) {
                 (listeners[type] = listeners[type] || []).push(fn);
             },
+            getElementById: (id) => fields[id] || null,
             createElement(tagName) {
                 return {
                     tagName: tagName.toUpperCase(),
@@ -105,6 +106,11 @@ function load({ confirmAnswer = true } = {}) {
             },
         },
         setTimeout: (fn) => timers.push(fn),
+        Event: class {
+            constructor(type) {
+                this.type = type;
+            }
+        },
         encodeURIComponent,
     };
     vm.createContext(context);
@@ -243,6 +249,60 @@ test("a declined data-confirm on a data-post-link posts nothing", () => {
     link.getAttribute = (name) => link.attrs[name];
     fire("click", link);
     assertEqual(calls.posted.length, 0, "forms submitted");
+});
+
+function fakeField(value = "") {
+    return {
+        value,
+        events: [],
+        focused: false,
+        caret: null,
+        dispatchEvent(event) {
+            this.events.push(event.type);
+        },
+        focus() {
+            this.focused = true;
+        },
+        setSelectionRange(start, end) {
+            this.caret = [start, end];
+        },
+    };
+}
+
+test("a prompt chip puts its text in the empty field, focuses it and counts as typing", () => {
+    const field = fakeField();
+    const { fire } = load({ fields: { id_content: field } });
+    fire("click", new FakeElement("button", { "data-prompt-target": "id_content", "data-prompt-text": "Sitzung: " }));
+    assertEqual(field.value, "Sitzung: ", "value");
+    assertEqual(field.focused, true, "focused");
+    assertEqual(field.caret.join(","), "9,9", "caret at the end");
+    assertEqual(field.events.join(","), "input", "input event for the draft guard");
+});
+
+test("a prompt chip starts a new line after existing text, but not after a newline", () => {
+    const field = fakeField("Gefühl danach: ruhig");
+    const { fire } = load({ fields: { id_content: field } });
+    const chip = new FakeElement("button", { "data-prompt-target": "id_content", "data-prompt-text": "Was half: " });
+    fire("click", chip);
+    assertEqual(field.value, "Gefühl danach: ruhig\nWas half: ", "after text");
+    field.value = "Sitzung: x\n";
+    fire("click", chip);
+    assertEqual(field.value, "Sitzung: x\nWas half: ", "after a newline");
+});
+
+test("a prompt chip without text only focuses the field and leaves its value alone", () => {
+    const field = fakeField("kept");
+    const { fire } = load({ fields: { id_therapist_reflection: field } });
+    fire("click", new FakeElement("button", { "data-prompt-target": "id_therapist_reflection" }));
+    assertEqual(field.value, "kept", "value");
+    assertEqual(field.focused, true, "focused");
+    assertEqual(field.events.length, 0, "no input event");
+});
+
+test("a prompt chip whose target is missing does nothing", () => {
+    const { fire } = load();
+    const event = fire("click", new FakeElement("button", { "data-prompt-target": "id_gone", "data-prompt-text": "x" }));
+    assertEqual(event.defaultPrevented, false, "prevented");
 });
 
 if (failures) {

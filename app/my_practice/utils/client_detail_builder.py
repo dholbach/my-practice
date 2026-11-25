@@ -20,7 +20,6 @@ from ..models import (
 from ..models.clinical import (
     CASE_NOTES_TEMPLATE,
     INTAKE_NOTES_TEMPLATE,
-    SESSION_LOG_TEMPLATE,
     MoodTag,
 )
 from ..models.session import Session
@@ -312,7 +311,6 @@ class ClientDetailContextBuilder:
             "mood_tag_choices": MoodTag.choices,
             "intake_notes_template": INTAKE_NOTES_TEMPLATE,
             "case_notes_template": CASE_NOTES_TEMPLATE,
-            "session_log_template": SESSION_LOG_TEMPLATE,
             "documents": self.client.documents.order_by("-document_date", "-created_at"),
             "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,
             "gebueh_diagnostic_count": gebueh_diagnostic_count,

@@ -35,6 +35,7 @@ chronological record; this document only tracks current state.
 - ✅ Unbilled session delete (blocked if already invoiced)
 - ✅ GebüH-recorded indicator on session rows — the GebüH button shows a visual marker once a code has been entered for that session
 - ✅ Session log form names the client (privacy-blurred) beside the code; session rows with a log offer the bill / non-billable actions while still unbilled
+- ✅ Lighter session log form (P-006): nothing prefilled, reminder prompts as chips that insert into the note, own reflection as its own field below it, interventions / ideas / supervision question folded behind "More", and a side panel with last session's ideas, the last three one-liners and the hypothesis, triggers, resources and future-work sections of the case notes
 
 ### Client Detail Cockpit (P-094)
 - ✅ Tabbed layout: Overview / Protokoll / Abrechnung — replaces sidebar layout; the former Dokumente tab now sits on the Overview tab beside the intake and questionnaire sections it belongs with
