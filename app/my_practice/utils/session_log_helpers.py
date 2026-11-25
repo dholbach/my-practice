@@ -1,8 +1,10 @@
-"""Rules behind the session-log views: which session a log belongs to, and its duration."""
+"""Rules behind the session-log views: which session a log belongs to, its duration, and the
+context shown beside the form."""
 
 from datetime import date
 
-from ..models import Client, Session
+from ..models import Client, ClientProfile, Session, SessionLog
+from .markdown_sections import has_content, split_sections
 
 # A whole day: room for intensive or workshop days, while keeping out typos and values
 # that would overflow the integer column. The duration inputs use the same max.
@@ -57,3 +59,51 @@ def set_session_duration(session: Session, minutes: int) -> bool:
     session.duration = minutes
     session.save(update_fields=["duration"])
     return True
+
+
+# What the form shows from the case notes while a log is written: (profile field, heading).
+CASE_SHEET_EXCERPT: tuple[tuple[str, str], ...] = (
+    ("intake_notes", "Arbeitshypothese"),
+    ("intake_notes", "Aktuelle Trigger"),
+    ("intake_notes", "Ressourcen"),
+    ("case_notes", "Zukünftige Arbeit / Fragen"),
+)
+RECENT_LOGS_SHOWN = 3
+
+
+def case_sheet_excerpt(client: Client) -> list[tuple[str, str]]:
+    """The filled ``(heading, text)`` sections of CASE_SHEET_EXCERPT for the client.
+
+    Reads the profile without creating it: opening a log form must not write.
+    """
+    profile = ClientProfile.objects.filter(client=client).first()
+    if profile is None:
+        return []
+    parsed = {
+        field: split_sections(getattr(profile, field))
+        for field in {f for f, _h in CASE_SHEET_EXCERPT}
+    }
+    return [
+        (heading, parsed[field][heading])
+        for field, heading in CASE_SHEET_EXCERPT
+        if has_content(parsed[field].get(heading, ""))
+    ]
+
+
+def build_log_context(client: Client, *, before: date | None, exclude_log_pk: int | None) -> dict:
+    """What to show beside the log form: the last logs, their ideas, the case sheet excerpt.
+
+    ``before`` limits it to sessions dated earlier (the day being logged), None for all;
+    ``exclude_log_pk`` keeps the log being edited out of its own context.
+    """
+    logs = SessionLog.objects.filter(session__client=client).select_related("session")
+    if before is not None:
+        logs = logs.filter(session__session_date__lt=before)
+    if exclude_log_pk is not None:
+        logs = logs.exclude(pk=exclude_log_pk)
+    recent = list(logs.order_by("-session__session_date", "-pk")[:RECENT_LOGS_SHOWN])
+    return {
+        "previous_log": recent[0] if recent and recent[0].next_session_ideas.strip() else None,
+        "recent_logs": [log for log in recent if log.summary],
+        "case_sheet_excerpt": case_sheet_excerpt(client),
+    }

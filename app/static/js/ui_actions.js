@@ -19,6 +19,10 @@
  *   <button data-copy-previous data-copied-label="✓ Copied">
  *                                                   copy the attribute, or the previous
  *                                                   sibling's text, and confirm briefly
+ *   <button data-prompt-target="id_x" data-prompt-text="Label: ">
+ *                                                   append the text to that field (on its own
+ *                                                   line) and focus it; without
+ *                                                   data-prompt-text it only focuses the field
  */
 (function () {
     "use strict";
@@ -42,6 +46,20 @@
         form.appendChild(token);
         document.body.appendChild(form);
         form.submit();
+    }
+
+    function usePrompt(chip) {
+        const field = document.getElementById(chip.dataset.promptTarget);
+        if (!field) return;
+        const text = chip.dataset.promptText;
+        if (text) {
+            const sep = field.value && !field.value.endsWith("\n") ? "\n" : "";
+            field.value += sep + text;
+            // The draft guard listens for input on the form, so a chip counts as typing.
+            field.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        field.focus();
+        if (field.setSelectionRange) field.setSelectionRange(field.value.length, field.value.length);
     }
 
     function flashCopied(button) {
@@ -78,6 +96,11 @@
             if (postLink) {
                 event.preventDefault();
                 submitAsPost(postLink.getAttribute("href"));
+                return;
+            }
+            const prompt = event.target.closest("[data-prompt-target]");
+            if (prompt) {
+                usePrompt(prompt);
                 return;
             }
             if (event.target.closest("[data-print]")) {

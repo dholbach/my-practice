@@ -108,18 +108,17 @@ CASE_NOTES_TEMPLATE = """\
 
 """
 
-SESSION_LOG_TEMPLATE = """\
-## Gefühl danach
-
-
-## Wahrnehmung
-
-
-## Sitzung
-
-
-## Was half
-"""
+# Reminder prompts for the session log form, shown as chips above the notes. Each is
+# (label, field): a chip for ``content`` inserts "label: " into the session note, one for
+# ``therapist_reflection`` jumps to that field, so countertransference stays out of the
+# note and an export can leave it out. Nothing is prefilled, so nothing has to be deleted.
+SESSION_LOG_PROMPTS: tuple[tuple[str, str], ...] = (
+    ("Gefühl danach", "content"),
+    ("Wahrnehmung", "content"),
+    ("Sitzung", "content"),
+    ("Was half", "content"),
+    ("Wie ging es mir dabei", "therapist_reflection"),
+)
 
 
 # ─── Mood tag constants ────────────────────────────────────────────────────────

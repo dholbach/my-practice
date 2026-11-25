@@ -28,12 +28,10 @@ from ..models import (
     SessionLog,
     SupervisionItem,
 )
-from ..models.clinical import (
-    SESSION_LOG_TEMPLATE,
-    MoodTag,
-)
+from ..models.clinical import SESSION_LOG_PROMPTS, MoodTag
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
 from ..utils.session_log_helpers import (
+    build_log_context,
     find_or_create_session,
     is_session_billed,
     parse_duration,
@@ -181,7 +179,12 @@ def session_log_create(request, pk):
         "prefill_duration": prefill_duration,
         "session_type_choices": SessionLog.SessionType.choices,
         "mood_tag_choices": MoodTag.choices,
-        "content_template": SESSION_LOG_TEMPLATE,
+        "prompts": SESSION_LOG_PROMPTS,
+        **build_log_context(
+            client,
+            before=date.fromisoformat(prefill_date) if prefill_date else None,
+            exclude_log_pk=None,
+        ),
     }
     return render(request, "my_practice/session_log_form.html", context)
 
@@ -228,7 +231,9 @@ def session_log_edit(request, client_pk, log_pk):
         "log": log,
         "session_type_choices": SessionLog.SessionType.choices,
         "mood_tag_choices": MoodTag.choices,
+        "prompts": SESSION_LOG_PROMPTS,
         "is_edit": True,
+        **build_log_context(client, before=log.session.session_date, exclude_log_pk=log.pk),
     }
     return render(request, "my_practice/session_log_form.html", context)
 
