@@ -31,6 +31,7 @@ from ..models import (
 )
 from ..models.clinical import SESSION_LOG_PROMPTS, MoodTag
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
+from ..utils.for_next_time import clean_reminder
 from ..utils.session_log_helpers import (
     build_log_context,
     find_or_create_session,
@@ -95,8 +96,7 @@ MAX_NEW_SCRATCH_ITEMS = 10
 
 def _add_scratch_items(request, client) -> None:
     """Create a reminder for next time per non-empty line of the log form's side panel."""
-    max_length = ScratchItem._meta.get_field("text").max_length
-    lines = [line.strip()[:max_length] for line in request.POST.get("scratch_new", "").splitlines()]
+    lines = [clean_reminder(line) for line in request.POST.get("scratch_new", "").splitlines()]
     ScratchItem.objects.bulk_create(
         [ScratchItem(client=client, text=line) for line in lines if line][:MAX_NEW_SCRATCH_ITEMS]
     )

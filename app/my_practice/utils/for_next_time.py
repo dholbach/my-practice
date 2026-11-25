@@ -5,10 +5,22 @@ session's "ideas for next time" and the case notes' future-work section are show
 them so the whole list is in one spot, but they live where they were written.
 """
 
+import re
+
 from ..models import Client, ScratchItem
 from .session_log_helpers import FUTURE_WORK_HEADING, build_log_context
 
 COVERED_SHOWN = 10
+
+# A list marker typed or pasted in front of a reminder: "- ", " - ", "* ", "• ". It must be
+# followed by a space or end the line, so "-5 Grad" or "*wichtig*" keep their first character.
+_LIST_MARKER = re.compile(r"^\s*[-*•](?:\s+|$)")
+
+
+def clean_reminder(raw: str) -> str:
+    """One reminder as typed: list marker and surrounding whitespace removed, cut to length."""
+    max_length = ScratchItem._meta.get_field("text").max_length
+    return _LIST_MARKER.sub("", raw).strip()[:max_length]
 
 
 def build_for_next_time(client: Client) -> dict:

@@ -3,12 +3,12 @@
 from datetime import date
 from decimal import Decimal
 
-from django.test import override_settings
+from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from ..models import Client, ClientProfile, ScratchItem, Session, SessionLog
-from ..utils.for_next_time import COVERED_SHOWN, build_for_next_time
+from ..utils.for_next_time import COVERED_SHOWN, build_for_next_time, clean_reminder
 from .test_clinical import TEST_FERNET_KEY, ClinicalTestBase
 from .test_helpers import create_test_practice
 
@@ -305,3 +305,45 @@ class AddRemindersFromLogFormTests(ClinicalTestBase):
             "session_log_edit", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}
         )
         self.assertContains(self.http.get(url), 'name="scratch_new" form="session-log-form"')
+
+
+class CleanReminderTests(SimpleTestCase):
+    def test_removes_a_leading_list_marker(self):
+        for raw in ("- ask", " - ask", "-   ask", "* ask", "• ask", "\t- ask  "):
+            self.assertEqual(clean_reminder(raw), "ask", repr(raw))
+
+    def test_keeps_text_that_only_starts_like_a_marker(self):
+        for raw in ("-5 Grad draußen", "*wichtig* nachfragen", "--", "Hund - Bruder"):
+            self.assertEqual(clean_reminder(raw), raw)
+
+    def test_a_marker_alone_leaves_nothing(self):
+        for raw in ("- ", "-", " * ", "   "):
+            self.assertEqual(clean_reminder(raw), "", repr(raw))
+
+    def test_only_the_first_marker_goes(self):
+        self.assertEqual(clean_reminder("- - ask"), "- ask")
+
+    def test_cut_to_the_field_length_after_the_marker_is_removed(self):
+        self.assertEqual(len(clean_reminder("- " + "x" * 400)), 300)
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class ListMarkersInTheFormTests(ClinicalTestBase):
+    def test_pasted_list_loses_its_markers_in_the_log_form(self):
+        self.http.post(
+            reverse("session_log_create", kwargs={"pk": self.client_obj.pk}),
+            {
+                "session_date": "2026-03-20",
+                "content": "x",
+                "scratch_new": "- ask about sleep\n - bring the dog",
+            },
+        )
+        self.assertEqual(
+            [i.text for i in ScratchItem.objects.all()], ["ask about sleep", "bring the dog"]
+        )
+
+    def test_the_client_page_form_strips_the_marker_too(self):
+        self.http.post(
+            reverse("scratch_item_create", kwargs={"pk": self.client_obj.pk}), {"text": "- ask"}
+        )
+        self.assertEqual(ScratchItem.objects.get().text, "ask")

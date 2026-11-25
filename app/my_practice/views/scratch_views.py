@@ -8,6 +8,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from ..models import ScratchItem
+from ..utils.for_next_time import clean_reminder
 from ..utils.view_helpers import get_scoped_client, safe_next
 
 
@@ -21,8 +22,7 @@ def _back(request, client_pk):
 def scratch_item_create(request, pk):
     """Add a reminder for next time."""
     client = get_scoped_client(request, pk)
-    max_length = ScratchItem._meta.get_field("text").max_length
-    text = request.POST.get("text", "").strip()[:max_length]
+    text = clean_reminder(request.POST.get("text", ""))
     if not text:
         messages.error(request, _("Reminder must not be empty."))
     else:
