@@ -1,5 +1,6 @@
 """Reminders for next time (P-006 PR 2): ScratchItem, its views, the client page card and the log form."""
 
+import re
 from datetime import date
 from decimal import Decimal
 
@@ -182,11 +183,11 @@ class ForNextTimeCardAndLogFormTests(ClinicalTestBase):
         self.assertContains(response, 'name="scratch_done"')
         self.assertContains(response, f'value="{item.pk}" form="session-log-form"')
 
-    def test_log_form_leaves_covered_reminders_out(self):
+    def test_log_form_offers_no_checkbox_for_covered_reminders(self):
         ScratchItem.objects.create(
             client=self.client_obj, text="done thing", done_at=timezone.now()
         )
-        self.assertNotContains(self._log_form(), "done thing")
+        self.assertNotContains(self._log_form(), 'name="scratch_done"')
 
     def _post_log(self, url, **extra):
         return self.http.post(url, {"session_date": "2026-03-20", "content": "x", **extra})
@@ -347,3 +348,187 @@ class ListMarkersInTheFormTests(ClinicalTestBase):
             reverse("scratch_item_create", kwargs={"pk": self.client_obj.pk}), {"text": "- ask"}
         )
         self.assertEqual(ScratchItem.objects.get().text, "ask")
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class EditAndHistoryTests(ClinicalTestBase):
+    """Fixing a reminder's wording, and seeing which session covered it."""
+
+    def setUp(self):
+        super().setUp()
+        self.session = Session.objects.create(
+            client=self.client_obj, session_date=date(2026, 3, 20), duration=60
+        )
+
+    def _item(self, text="ask about slepp", **fields):
+        return ScratchItem.objects.create(client=self.client_obj, text=text, **fields)
+
+    def _url(self, name, *args):
+        return reverse(name, args=[self.client_obj.pk, *args])
+
+    def _covered_source(self, response):
+        """The date cell of the first covered reminder on the card (what follows its heading)."""
+        tail = response.content.decode().split('<details class="cn-next-covered">')[1]
+        return re.search(r'<span class="cn-next-source">(.*?)</span>', tail, re.S).group(1)
+
+    def _log_url(self, log):
+        return reverse(
+            "session_log_edit", kwargs={"client_pk": self.client_obj.pk, "log_pk": log.pk}
+        )
+
+    # ── client page: update view ──
+
+    def test_update_fixes_the_wording_and_cleans_it(self):
+        item = self._item()
+        self.http.post(self._url("scratch_item_update", item.pk), {"text": "- ask about sleep "})
+        item.refresh_from_db()
+        self.assertEqual(item.text, "ask about sleep")
+
+    def test_update_works_on_a_covered_reminder_and_keeps_it_covered(self):
+        item = self._item(done_at=timezone.now())
+        self.http.post(self._url("scratch_item_update", item.pk), {"text": "fixed"})
+        item.refresh_from_db()
+        self.assertEqual(item.text, "fixed")
+        self.assertIsNotNone(item.done_at)
+
+    def test_update_rejects_empty_text(self):
+        item = self._item()
+        self.http.post(self._url("scratch_item_update", item.pk), {"text": " - "})
+        item.refresh_from_db()
+        self.assertEqual(item.text, "ask about slepp")
+
+    def test_update_only_accepts_post_and_this_clients_items(self):
+        item = self._item()
+        self.assertEqual(self.http.get(self._url("scratch_item_update", item.pk)).status_code, 405)
+        other = Client.objects.create(
+            client_code="XX-8",
+            full_name="Anna Schmidt",
+            email="anna2@example.com",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+        foreign = ScratchItem.objects.create(client=other, text="theirs")
+        response = self.http.post(
+            self._url("scratch_item_update", foreign.pk), {"text": "mine now"}
+        )
+        self.assertEqual(response.status_code, 404)
+        foreign.refresh_from_db()
+        self.assertEqual(foreign.text, "theirs")
+
+    def test_the_card_offers_an_edit_form_for_open_and_covered_reminders(self):
+        open_item = self._item("open one")
+        covered = self._item("covered one", done_at=timezone.now())
+        response = self.http.get(reverse("client_detail", kwargs={"pk": self.client_obj.pk}))
+        for item in (open_item, covered):
+            self.assertContains(response, self._url("scratch_item_update", item.pk))
+
+    # ── log form: edit wording on save ──
+
+    def test_saving_a_log_saves_edited_wording_of_open_reminders(self):
+        item = self._item()
+        self.http.post(
+            reverse("session_log_create", kwargs={"pk": self.client_obj.pk}),
+            {
+                "session_date": "2026-03-21",
+                "content": "x",
+                f"scratch_edit_{item.pk}": "- ask about sleep",
+            },
+        )
+        item.refresh_from_db()
+        self.assertEqual(item.text, "ask about sleep")
+        self.assertIsNone(item.done_at)
+
+    def test_a_cleared_field_leaves_the_reminder_unchanged(self):
+        item = self._item()
+        self.http.post(
+            reverse("session_log_create", kwargs={"pk": self.client_obj.pk}),
+            {"session_date": "2026-03-21", "content": "x", f"scratch_edit_{item.pk}": "  "},
+        )
+        item.refresh_from_db()
+        self.assertEqual(item.text, "ask about slepp")
+
+    def test_edit_in_the_log_form_ignores_covered_and_foreign_reminders(self):
+        covered = self._item("covered", done_at=timezone.now())
+        other = Client.objects.create(
+            client_code="XX-8",
+            full_name="Anna Schmidt",
+            email="anna2@example.com",
+            hourly_rate_60=Decimal("90.00"),
+            practice=self.practice,
+        )
+        foreign = ScratchItem.objects.create(client=other, text="theirs")
+        self.http.post(
+            reverse("session_log_create", kwargs={"pk": self.client_obj.pk}),
+            {
+                "session_date": "2026-03-21",
+                "content": "x",
+                f"scratch_edit_{covered.pk}": "changed",
+                f"scratch_edit_{foreign.pk}": "changed",
+                "scratch_edit_abc": "ignored, not a number",
+            },
+        )
+        covered.refresh_from_db()
+        foreign.refresh_from_db()
+        self.assertEqual((covered.text, foreign.text), ("covered", "theirs"))
+
+    def test_the_log_form_renders_an_editable_field_per_open_reminder(self):
+        item = self._item()
+        response = self.http.get(reverse("session_log_create", kwargs={"pk": self.client_obj.pk}))
+        self.assertContains(response, f'name="scratch_edit_{item.pk}"')
+        self.assertContains(response, 'value="ask about slepp"')
+
+    # ── history: which session covered it ──
+
+    def test_saving_a_new_log_records_the_session_that_covered_the_reminder(self):
+        item = self._item()
+        self.http.post(
+            reverse("session_log_create", kwargs={"pk": self.client_obj.pk}),
+            {"session_date": "2026-03-21", "content": "x", "scratch_done": [str(item.pk)]},
+        )
+        item.refresh_from_db()
+        self.assertEqual(item.covered_in_session.session_date, date(2026, 3, 21))
+
+    def test_saving_an_edited_log_records_its_session(self):
+        log = SessionLog.objects.create(session=self.session, content="x")
+        item = self._item()
+        self.http.post(self._log_url(log), {"content": "x", "scratch_done": [str(item.pk)]})
+        item.refresh_from_db()
+        self.assertEqual(item.covered_in_session, self.session)
+
+    def test_ticking_on_the_client_page_records_no_session_and_reopening_clears_it(self):
+        item = self._item(done_at=timezone.now(), covered_in_session=self.session)
+        self.http.post(self._url("scratch_item_toggle", item.pk))  # reopen
+        item.refresh_from_db()
+        self.assertEqual((item.done_at, item.covered_in_session), (None, None))
+        self.http.post(self._url("scratch_item_toggle", item.pk))  # cover again, here
+        item.refresh_from_db()
+        self.assertIsNotNone(item.done_at)
+        self.assertIsNone(item.covered_in_session)
+
+    def test_deleting_the_session_keeps_the_reminder(self):
+        item = self._item(done_at=timezone.now(), covered_in_session=self.session)
+        self.session.delete()
+        item.refresh_from_db()
+        self.assertIsNone(item.covered_in_session)
+        self.assertIsNotNone(item.done_at)
+
+    def test_the_card_links_a_covered_reminder_to_the_log_that_covered_it(self):
+        log = SessionLog.objects.create(session=self.session, content="x")
+        self._item("covered", done_at=timezone.now(), covered_in_session=self.session)
+        response = self.http.get(reverse("client_detail", kwargs={"pk": self.client_obj.pk}))
+        block = self._covered_source(response)
+        self.assertIn(f'href="{self._log_url(log)}"', block)
+
+    def test_a_covered_reminder_without_a_session_shows_just_the_date(self):
+        log = SessionLog.objects.create(session=self.session, content="x")
+        self._item("covered", done_at=timezone.now())
+        response = self.http.get(reverse("client_detail", kwargs={"pk": self.client_obj.pk}))
+        block = self._covered_source(response)
+        self.assertNotIn("<a ", block)
+        self.assertNotIn(self._log_url(log), block)
+
+    def test_the_log_form_lists_recently_covered_reminders_folded(self):
+        self._item("old news", done_at=timezone.now())
+        response = self.http.get(reverse("session_log_create", kwargs={"pk": self.client_obj.pk}))
+        self.assertEqual([i.text for i in response.context["covered_scratch_items"]], ["old news"])
+        self.assertContains(response, "old news")

@@ -10,7 +10,8 @@ import re
 from ..models import Client, ScratchItem
 from .session_log_helpers import FUTURE_WORK_HEADING, build_log_context
 
-COVERED_SHOWN = 10
+# Folded away on the card, so showing nearly everything costs no room.
+COVERED_SHOWN = 100
 
 # A list marker typed or pasted in front of a reminder: "- ", " - ", "* ", "• ". It must be
 # followed by a space or end the line, so "-5 Grad" or "*wichtig*" keep their first character.
@@ -26,9 +27,9 @@ def clean_reminder(raw: str) -> str:
 def build_for_next_time(client: Client) -> dict:
     """The open and recently covered reminders, last ideas and future work of a client."""
     covered = list(
-        ScratchItem.objects.filter(client=client, done_at__isnull=False).order_by("-done_at")[
-            :COVERED_SHOWN
-        ]
+        ScratchItem.objects.filter(client=client, done_at__isnull=False)
+        .select_related("covered_in_session__log")
+        .order_by("-done_at")[:COVERED_SHOWN]
     )
     context = build_log_context(client, before=None, exclude_log_pk=None)
     future_work = next(

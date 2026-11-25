@@ -422,6 +422,11 @@ urlpatterns = [
         name="scratch_item_create",
     ),
     path(
+        "clients/<int:pk>/scratch/<int:item_pk>/update/",
+        views.scratch_item_update,
+        name="scratch_item_update",
+    ),
+    path(
         "clients/<int:pk>/scratch/<int:item_pk>/toggle/",
         views.scratch_item_toggle,
         name="scratch_item_toggle",

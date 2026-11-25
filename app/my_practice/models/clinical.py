@@ -418,6 +418,17 @@ class ScratchItem(TimestampedModel):
         verbose_name=_("Covered on"),
     )
 
+    # The session whose log was saved with the reminder ticked; empty when it was ticked
+    # on the client page, and after that session is deleted.
+    covered_in_session = models.ForeignKey(
+        Session,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="covered_reminders",
+        verbose_name=_("Covered in session"),
+    )
+
     class Meta:
         verbose_name = _("Reminder for next time")
         verbose_name_plural = _("Reminders for next time")
