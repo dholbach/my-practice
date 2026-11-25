@@ -34,15 +34,25 @@
     {% trans "▴ Collapse" as txt_collapse %}
     {% trans "▾ Show older entries" as txt_show_older %}
     {% trans "more" as txt_more %}
-    <div class="cn-session-list" x-data="{ showOld: false, oldCount: {{ log_entries|length|add:'-10' }} }">
+    {% trans "{count} matching entries" as txt_count_template %}
+    <div class="cn-timeline-tools">
+        <input type="search" class="form-control cn-timeline-search" autocomplete="off"
+               data-timeline-search="#cn-timeline" data-timeline-count="#cn-timeline-count"
+               data-timeline-empty="#cn-timeline-empty" data-count-template="{{ txt_count_template }}"
+               aria-label="{% trans "Search sessions and notes" %}"
+               placeholder="{% trans "Search sessions and notes…" %}">
+        <span id="cn-timeline-count" class="cn-timeline-count" aria-live="polite"></span>
+    </div>
+    <p id="cn-timeline-empty" class="cn-empty-state" hidden>{% trans "No entries match." %}</p>
+    <div class="cn-session-list" id="cn-timeline">
     {% for entry in log_entries %}
     {% if forloop.counter == 11 %}
     <button type="button" id="cn-old-entries-toggle" class="btn btn-secondary btn-sm cn-old-toggle"
-            x-on:click="showOld = !showOld"
-            x-text="showOld ? '{{ txt_collapse }}' : '{{ txt_show_older }} (' + oldCount + ' {{ txt_more }})'">
+            data-timeline-toggle="#cn-timeline"
+            data-label-show="{{ txt_show_older }} ({{ log_entries|length|add:'-10' }} {{ txt_more }})"
+            data-label-hide="{{ txt_collapse }}">
         {{ txt_show_older }} ({{ log_entries|length|add:'-10' }} {{ txt_more }})
     </button>
-    <div x-show="showOld">
     {% endif %}
 
     {% if entry.type == "session" %}
@@ -53,31 +63,38 @@
     {% trans "🚫 No-show" as lbl_noshow %}
     {% trans "Delete session log?" as confirm_delete_log %}
     {% trans "Delete session?" as confirm_delete_session %}
-    <div class="cn-session-row {% if log %}cn-has-log{% endif %}{% if session.pk in recent_sessions_needing_log %} cn-needs-log{% endif %}">
+    <div class="cn-session-row cn-timeline-entry{% if forloop.counter > 10 %} cn-timeline-old{% endif %}{% if log %} cn-has-log{% endif %}{% if session.pk in recent_sessions_needing_log %} cn-needs-log{% endif %}">
         {% if log and log.content or log and log.summary or log and log.interventions or log and log.therapist_reflection or log and log.next_session_ideas %}
         <div class="cn-session-grid">
             <div class="cn-session-left">
-                <span class="cn-session-date">{{ session.session_date|date:"d.m.Y" }}</span>
+                <span class="cn-session-date cn-searchable">{{ session.session_date|date:"d.m.Y" }}</span>
                 <span class="cn-session-duration">{{ session.duration }} {% trans "min" %}</span>
                 {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">{% trans "Unbilled" %}</span>{% else %}<span class="cn-session-not-billable">{% trans "Non-billable" %}</span>{% endif %}{% endif %}
                 {% if log.session_type %}<span class="cn-session-type">{{ log.get_session_type_display }}</span>{% endif %}
-                {% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|mood_tag_label }}</span>{% endfor %}
+                {% if log.interventions %}<span class="cn-session-interventions cn-searchable">{{ log.interventions }}</span>{% endif %}
                 {% if session.gebueh_leistungen.all %}<div class="cn-gebueh-ziffern">{% for le in session.gebueh_leistungen.all %}<span class="cn-gebueh-chip">{{ le.ziffer.nummer }}</span>{% endfor %}</div>{% endif %}
             </div>
             <div class="cn-session-content">
-                {% if log.summary %}<p class="cn-session-summary">{{ log.summary }}</p>{% endif %}
-                {% if log.content %}<div class="md-rendered">{{ log.content|render_markdown }}</div>{% endif %}
-                {% if log.interventions %}<div class="cn-session-interventions">{{ log.interventions }}</div>{% endif %}
-                {% if log.therapist_reflection %}
-                <details class="cn-reflection">
-                    <summary class="cn-reflection-label">{% trans "Own reflection" %}</summary>
-                    <div class="md-rendered">{{ log.therapist_reflection|render_markdown }}</div>
-                </details>
-                {% endif %}
-                {% if log.next_session_ideas %}
-                <details class="cn-reflection">
-                    <summary class="cn-reflection-label">💡 {% trans "Ideas for next session" %}</summary>
-                    <div class="md-rendered">{{ log.next_session_ideas|render_markdown }}</div>
+                <div class="cn-session-headline">
+                    {% if log.summary %}<span class="cn-session-summary cn-searchable">{{ log.summary }}</span>{% endif %}
+                    {% for tag in log.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|mood_tag_label }}</span>{% endfor %}
+                </div>
+                {% if log.content or log.therapist_reflection or log.next_session_ideas %}
+                <details class="cn-note-fold"{% if session.pk == open_note_session_id %} open{% endif %}>
+                    <summary>{% trans "Session note" %}</summary>
+                    {% if log.content %}<div class="md-rendered cn-searchable">{{ log.content|render_markdown }}</div>{% endif %}
+                    {% if log.therapist_reflection %}
+                    <details class="cn-reflection">
+                        <summary class="cn-reflection-label">{% trans "Own reflection" %}</summary>
+                        <div class="md-rendered cn-searchable">{{ log.therapist_reflection|render_markdown }}</div>
+                    </details>
+                    {% endif %}
+                    {% if log.next_session_ideas %}
+                    <details class="cn-reflection">
+                        <summary class="cn-reflection-label">💡 {% trans "Ideas for next session" %}</summary>
+                        <div class="md-rendered cn-searchable">{{ log.next_session_ideas|render_markdown }}</div>
+                    </details>
+                    {% endif %}
                 </details>
                 {% endif %}
             </div>
@@ -93,7 +110,7 @@
         </div>
         {% else %}
         <div class="cn-session-meta">
-            <span class="cn-session-date">{{ session.session_date|date:"d.m.Y" }}</span>
+            <span class="cn-session-date cn-searchable">{{ session.session_date|date:"d.m.Y" }}</span>
             <span class="cn-session-duration">{{ session.duration }} {% trans "min" %}</span>
             {% if not session.invoice_items.all %}{% if session.billable %}<span class="cn-session-unbilled">{% trans "Unbilled" %}</span>{% else %}<span class="cn-session-not-billable">{% trans "Non-billable" %}</span>{% endif %}{% endif %}
             {% if session.pk in recent_sessions_needing_log %}<span class="cn-session-missing-log">📝 {% trans "Log missing" %}</span>{% endif %}
@@ -133,9 +150,9 @@
     {% elif entry.type == "note" %}
     {% with note=entry.obj %}
     {% trans "Delete note?" as confirm_del_note %}
-    <div class="cn-note-item" x-data="{ editing: false }">
+    <div class="cn-note-item cn-timeline-entry{% if forloop.counter > 10 %} cn-timeline-old{% endif %}" x-data="{ editing: false }">
         <div class="cn-note-header">
-            <span class="cn-note-date">{{ note.note_date|date:"d.m.Y" }}</span>
+            <span class="cn-note-date cn-searchable">{{ note.note_date|date:"d.m.Y" }}</span>
             <button type="button" class="btn btn-secondary btn-sm" x-on:click="editing = !editing">✏️</button>
             <form method="post" action="{% url 'client_note_delete' client.pk note.pk %}" class="form-inline"
                   data-confirm="{{ confirm_del_note }}">
@@ -143,7 +160,7 @@
                 <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
             </form>
         </div>
-        <div class="cn-note-content md-rendered">{{ note.content|render_markdown }}</div>
+        <div class="cn-note-content md-rendered cn-searchable">{{ note.content|render_markdown }}</div>
         <div class="cn-note-edit-form" x-show="editing">
             <form method="post" action="{% url 'client_note_update' client.pk note.pk %}">
                 {% csrf_token %}
@@ -164,7 +181,7 @@
     {% elif entry.type == "supervision" %}
     {% with item=entry.obj %}
     {% trans "Delete supervision topic?" as confirm_del_supervision %}
-    <div class="cn-supervision-item cn-status-{{ item.status }}" x-data="{ resolving: false }">
+    <div class="cn-supervision-item cn-timeline-entry{% if forloop.counter > 10 %} cn-timeline-old{% endif %} cn-status-{{ item.status }}" x-data="{ resolving: false }">
         <div class="cn-supervision-meta">
             <span class="cn-supervision-label">🔍 {% trans "Supervision" %}</span>
             <span class="cn-status-badge cn-status-{{ item.status }}">{{ item.get_status_display }}</span>
@@ -173,9 +190,9 @@
             <span class="cn-date-hint">{% trans "Discussed on" %} {{ item.resolved_date|date:"d.m.Y" }}</span>
             {% endif %}
         </div>
-        <div class="cn-supervision-content">{{ item.content }}</div>
+        <div class="cn-supervision-content cn-searchable">{{ item.content }}</div>
         {% if item.resolution_notes %}
-        <div class="cn-supervision-resolution md-rendered">{{ item.resolution_notes|render_markdown }}</div>
+        <div class="cn-supervision-resolution md-rendered cn-searchable">{{ item.resolution_notes|render_markdown }}</div>
         {% endif %}
         <div class="cn-supervision-actions">
         {% if item.status == "offen" %}
@@ -203,7 +220,6 @@
     {% endif %}
 
     {% endfor %}
-    {% if log_entries|length > 10 %}</div>{% endif %}
     </div>
     {% else %}
     <p class="cn-empty-state">{% trans "No entries yet. Session logs are created when adding new entries." %}</p>

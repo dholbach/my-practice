@@ -39,6 +39,12 @@ def _fmt_month(d: date) -> str:
     return f"{MONTH_ABBREVIATIONS[d.month - 1]} {d.strftime('%y')}"
 
 
+def _has_note(session) -> bool:
+    """Whether the session's log has a note, a reflection or ideas (what the timeline folds)."""
+    log = getattr(session, "log", None)  # no log: RelatedObjectDoesNotExist, an AttributeError
+    return bool(log and (log.content or log.therapist_reflection or log.next_session_ideas))
+
+
 class ClientDetailContextBuilder:
     """Builds the full context dict for the client_detail view.
 
@@ -283,6 +289,12 @@ class ClientDetailContextBuilder:
             key=lambda e: e["date"],
             reverse=True,
         )
+        # The newest session with a note is shown unfolded, so the latest work reads without
+        # a click; older ones fold away, which keeps the timeline scannable.
+        open_note_session_id = next(
+            (e["obj"].pk for e in log_entries if e["type"] == "session" and _has_note(e["obj"])),
+            None,
+        )
 
         gebueh_diagnostic_count = 0
         if self.client.needs_gebueh_invoice:
@@ -297,6 +309,7 @@ class ClientDetailContextBuilder:
             "profile": profile,
             "intake_steps_done": intake_steps_done,
             "log_entries": log_entries,
+            "open_note_session_id": open_note_session_id,
             "recent_sessions_needing_log": recent_sessions_needing_log,
             "no_log_needed_session_ids": no_log_needed_session_ids,
             "open_supervision_count": sum(

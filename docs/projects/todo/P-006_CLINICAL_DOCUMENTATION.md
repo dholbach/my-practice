@@ -97,7 +97,7 @@ Split in two: **3a** (the Clinical / Admin modes) and **3b** (timeline layout an
   onboarding. Assessments and documents follow the timeline in the clinical mode; contact and the source
   inquiry sit with onboarding in the admin mode. The overview's recent-sessions card is dropped (the timeline is
   right below), and a slim intake hint links to the admin mode while onboarding is open.
-- **3b:** timeline rows follow the original template's layout: date, type and interventions in the left column; one-liner and
+- **3b (built):** timeline rows follow the original template's layout: date, type and interventions in the left column; one-liner and
   tags on the right; the note folds open.
 - **3b:** search across all entries, older ones included. Done in the browser over decrypted, server-rendered
   entries, since a client has at most a few hundred.
