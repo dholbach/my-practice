@@ -221,22 +221,18 @@ class ClientDetailContextBuilder:
 
         profile, _created = ClientProfile.objects.get_or_create(client=self.client)
 
-        # Last 5 session logs for the overview tab (unencrypted metadata only)
-        recent_session_logs = (
-            SessionLog.objects.filter(session__client=self.client, session__cancelled=False)
-            .select_related("session")
-            .order_by("-session__session_date")[:5]
+        # Intake progress: 4 steps tracked as date fields on Client (the overview shows
+        # "N of 4" while the intake process is open; the checklist itself is in the admin mode).
+        intake_steps_done = sum(
+            1
+            for step_date in (
+                self.client.intake_sent_date,
+                self.client.contract_signed_date,
+                self.client.questionnaire_sent_date,
+                self.client.onboarding_complete_date,
+            )
+            if step_date
         )
-
-        # Intake progress: 4 steps tracked as date fields on Client. Labels reuse
-        # the exact msgids from the profile-tab onboarding checklist (client_detail.html).
-        intake_steps = [
-            (_("Intake"), self.client.intake_sent_date),
-            (_("Contract"), self.client.contract_signed_date),
-            (_("Anamnesis"), self.client.questionnaire_sent_date),
-            (_("Intake complete"), self.client.onboarding_complete_date),
-        ]
-        intake_steps_done = sum(1 for _, d in intake_steps if d)
 
         sessions_qs = (
             self.client.sessions.filter(cancelled=False)
@@ -299,8 +295,6 @@ class ClientDetailContextBuilder:
 
         return {
             "profile": profile,
-            "recent_session_logs": recent_session_logs,
-            "intake_steps": intake_steps,
             "intake_steps_done": intake_steps_done,
             "log_entries": log_entries,
             "recent_sessions_needing_log": recent_sessions_needing_log,

@@ -39,11 +39,11 @@ chronological record; this document only tracks current state.
 - ✅ "For next time" (P-006): short encrypted reminders per client, added and ticked off on the client page's overview tab next to last session's ideas and the case notes' future-work section; open reminders are also listed as checkboxes beside the session log form, and saving the log marks the ticked ones covered; the same panel has a field for new reminders (one per line), created on save, on the new-log and edit pages alike. Wording can be fixed in place (✎ on the client page, an editable field in the log form), covered reminders keep their date and link to the log that covered them, and the log form lists the recently covered ones
 
 ### Client Detail Cockpit (P-094)
-- ✅ Tabbed layout: Overview / Protokoll / Abrechnung — replaces sidebar layout; the former Dokumente tab now sits on the Overview tab beside the intake and questionnaire sections it belongs with
-- ✅ Overview tab: stat cards (diagnosis, last session, session hours, open balance), intake progress widget (4-step bar from existing date fields), recent session one-liners, and the client's profile/tag/onboarding detail further down the same tab — originally two separate tabs (Überblick + Profil), merged once the split proved to be mostly duplicated content
-- ✅ `SessionLog.summary` — unencrypted one-liner field (max 120 chars) shown in the Overview tab without Fernet decryption; editable in session log form
+- ✅ Two modes on the client page (P-006): **Clinical** shows the overview and the protocol in one scroll (stat cards, "For next time", case formulation, then the session timeline, assessments and documents), **Admin & billing** shows billing, contact and conditions, the onboarding checklist and the source inquiry. The old `#ptab-profil` / `#ptab-protokoll` / `#ptab-abrechnung` links still work: `#ptab-protokoll` opens the clinical mode scrolled to the timeline
+- ✅ Clinical overview: stat cards (diagnosis, last session, session hours, open balance), an intake hint ("N of 4 steps") linking to the admin mode while onboarding is open, quick actions, tags and the profile fields. The former recent-sessions card is gone, since the timeline sits right below
+- ✅ `SessionLog.summary` — unencrypted one-liner field (max 120 chars) shown on the client page without Fernet decryption; editable in session log form
 - ✅ Tag add/remove UI in the Overview tab; duplicate tags removed from page header
-- ✅ "Details ↓" onboarding link scrolls to the onboarding section further down the Overview tab
+- ✅ "Details ↓" onboarding link scrolls to the onboarding section in the admin mode
 - ✅ Tab buttons show a dot indicator + "Unsaved changes" tooltip when a draft-guarded form inside them has unsaved edits — the browser's own beforeunload dialog can't say which tab the edit is in
 
 ### Focus Queue (P-050)

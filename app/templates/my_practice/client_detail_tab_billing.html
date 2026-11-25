@@ -1,6 +1,6 @@
 {% load i18n payment_tags %}
-<!-- ══ Tab: Abrechnung ════════════════════════════════════════════════════ -->
-<div id="ptab-abrechnung" class="page-tab-content">
+<!-- ══ Admin mode: billing, contact, onboarding ═══════════════════════════ -->
+<div id="ptab-abrechnung" class="page-tab-content" data-mode="admin">
 
     <!-- Billing quick actions -->
     <div class="client-actions mb-3">
@@ -100,6 +100,138 @@
         <div class="chart-wrapper chart-wrapper--sm">
             <canvas id="sessionTimeline"></canvas>
         </div>
+    </div>
+    {% endif %}
+
+
+    <!-- Contact & conditions (previously in sidebar) -->
+    <div class="section-card">
+        <h3>📧 {% trans "Contact & Conditions" %}</h3>
+        <div class="contact-grid">
+            <div>
+                <div class="contact-label">{% trans "Email" %}</div>
+                <div class="contact-value"><span class="sensitive-data">{{ client.email }}</span></div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Phone" %}</div>
+                <div class="contact-value"><span class="sensitive-data">{{ client.phone|default:"–" }}</span></div>
+            </div>
+            {% if client.address %}
+            <div class="contact-grid-full">
+                <div class="contact-label">{% trans "Address" %}</div>
+                <div class="contact-value"><span class="sensitive-data">{{ client.address|linebreaksbr }}</span></div>
+            </div>
+            {% endif %}
+            <div>
+                <div class="contact-label">{% trans "Cost carrier" %}</div>
+                <div class="contact-value"><span class="sensitive-data">{{ client.cost_carrier|default:"–" }}</span></div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Language" %}</div>
+                <div class="contact-value">{{ client.get_language_display }}</div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Session format" %}</div>
+                <div class="contact-value">{% if client.is_online_client %}{% trans "💻 Online" %}{% else %}{% trans "🏢 In-person" %}{% endif %}</div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Hourly rate" %}</div>
+                <div class="stat-value-bold">{{ client.hourly_rate_60|currency_rounded }}</div>
+            </div>
+            <div>
+                <div class="contact-label">{% trans "Total revenue" %}</div>
+                <div class="stat-value-bold">{{ stats.total_revenue|currency }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding widget (previously in sidebar) -->
+    <div id="onboarding" class="section-card onboarding-widget-inline">
+        <details class="onboarding-details" {% if not client.onboarding_complete_date %}open{% endif %}>
+        <summary class="onboarding-summary">
+            {% if client.onboarding_complete_date %}
+            {% blocktrans with date=client.onboarding_complete_date|date:"d.m.Y" %}✅ Intake completed on {{ date }}{% endblocktrans %}
+            {% else %}
+            📋 {% trans "Intake process" %}
+            {% endif %}
+        </summary>
+        <ul class="onboarding-steps">
+            <li class="onboarding-step {% if client.intake_sent_date %}step-done{% else %}step-pending{% endif %}">
+                <span class="step-icon">{% if client.intake_sent_date %}✅{% else %}○{% endif %}</span>
+                <div class="step-body">
+                    <div class="step-title">{% trans "Intake" %}</div>
+                    {% if client.intake_sent_date %}<div class="step-date">{% blocktrans with date=client.intake_sent_date|date:"d.m.Y" %}Handed out on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Send by email or download the PDF and hand it out" %}</div>{% endif %}
+                </div>
+                <div class="step-actions">
+                    {% if client.email %}<a href="{% url 'send_intake_form_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>{% endif %}
+                    <a href="{% url 'intake_form_pdf' client.pk %}" class="btn btn-secondary btn-sm">📄 PDF</a>
+                    {% trans "undo" as lbl_undo %}
+                    {% trans "✓ Done" as lbl_done %}
+                    {% url 'client_onboarding_step' client.pk as onboarding_url %}
+                    {% if client.intake_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_undo button_class='btn-undo' step='intake' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_done button_class='btn btn-sm btn-done' step='intake' %}{% endif %}
+                </div>
+            </li>
+            <li class="onboarding-step {% if client.contract_signed_date %}step-done{% else %}step-pending{% endif %}">
+                <span class="step-icon">{% if client.contract_signed_date %}✅{% else %}○{% endif %}</span>
+                <div class="step-body">
+                    <div class="step-title">{% trans "Contract" %}</div>
+                    {% if client.contract_signed_date %}<div class="step-date">{% blocktrans with date=client.contract_signed_date|date:"d.m.Y" %}Signed on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Send contract by email, receive signed copy back" %}</div>{% endif %}
+                </div>
+                <div class="step-actions">
+                    {% if client.email %}<a href="{% url 'send_contract_email' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>{% endif %}
+                    <a href="{% url 'contract_pdf' client.pk %}" class="btn btn-secondary btn-sm">📄 PDF</a>
+                    {% trans "undo" as lbl_undo %}
+                    {% trans "✓ Done" as lbl_done %}
+                    {% url 'client_onboarding_step' client.pk as onboarding_url %}
+                    {% if client.contract_signed_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_undo button_class='btn-undo' step='contract' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_done button_class='btn btn-sm btn-done' step='contract' %}{% endif %}
+                </div>
+            </li>
+            <li class="onboarding-step {% if client.questionnaire_sent_date %}step-done{% else %}step-pending{% endif %}">
+                <span class="step-icon">{% if client.questionnaire_sent_date %}✅{% else %}○{% endif %}</span>
+                <div class="step-body">
+                    <div class="step-title">{% trans "Anamnesis" %}</div>
+                    {% if client.questionnaire_sent_date %}<div class="step-date">{% blocktrans with date=client.questionnaire_sent_date|date:"d.m.Y" %}Sent on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "Send questionnaire by email" %}</div>{% endif %}
+                </div>
+                <div class="step-actions">
+                    {% if client.email %}<a href="{% url 'send_questionnaire_docx' client.pk %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>
+                    {% else %}<span class="text-muted no-email-hint">{% trans "no email" %}</span>{% endif %}
+                    {% trans "undo" as lbl_undo %}
+                    {% trans "✓ Done" as lbl_done %}
+                    {% url 'client_onboarding_step' client.pk as onboarding_url %}
+                    {% if client.questionnaire_sent_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_undo button_class='btn-undo' step='questionnaire' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_done button_class='btn btn-sm btn-done' step='questionnaire' %}{% endif %}
+                </div>
+            </li>
+            <li class="onboarding-step {% if client.onboarding_complete_date %}step-done{% else %}step-pending{% endif %}">
+                <span class="step-icon">{% if client.onboarding_complete_date %}🎉{% else %}○{% endif %}</span>
+                <div class="step-body">
+                    <div class="step-title">{% trans "Intake complete" %}</div>
+                    {% if client.onboarding_complete_date %}<div class="step-date">{% blocktrans with date=client.onboarding_complete_date|date:"d.m.Y" %}Completed on {{ date }}{% endblocktrans %}</div>
+                    {% else %}<div class="step-pending-hint">{% trans "All documents complete — finalise intake" %}</div>{% endif %}
+                </div>
+                <div class="step-actions">
+                    {% trans "undo" as lbl_undo %}
+                    {% trans "✓ Finalise" as lbl_complete %}
+                    {% url 'client_onboarding_step' client.pk as onboarding_url %}
+                    {% if client.onboarding_complete_date %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_undo button_class='btn-undo' step='complete' reset='1' %}
+                    {% else %}{% include 'includes/inline_post_button.html' with action_url=onboarding_url button_text=lbl_complete button_class='btn btn-sm btn-complete' step='complete' %}{% endif %}
+                </div>
+            </li>
+        </ul>
+        </details>
+    </div>
+
+    {% if client.source_inquiry %}
+    <div class="section-card">
+        <div class="sidebar-section-label">📬 {% trans "Source inquiry" %}</div>
+        <a href="{% url 'inquiry_edit' client.source_inquiry.pk %}" class="sidebar-source-link">
+            {{ client.source_inquiry.get_source_display }} &mdash; {{ client.source_inquiry.inquiry_date|date:"d.m.Y" }}
+        </a>
     </div>
     {% endif %}
 

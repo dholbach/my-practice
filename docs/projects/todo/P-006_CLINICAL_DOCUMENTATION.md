@@ -90,12 +90,16 @@ Each PR is useful on its own. 1–3 need no new clinical data model; 5 and 6 bui
 
 ### PR 3: One clinical page, and session search
 
-- The client page gets a **Clinical / Admin** switch. Clinical: "For next time", the case formulation (still
+Split in two: **3a** (the Clinical / Admin modes) and **3b** (timeline layout and search).
+
+- **3a:** the client page gets a **Clinical / Admin** switch. Clinical: "For next time", the case formulation (still
   the current fields until PR 4), and the session timeline in one scroll. Admin: contact, billing, invoices and
-  onboarding.
-- Timeline rows follow the original template's layout: date, type and interventions in the left column; one-liner and
+  onboarding. Assessments and documents follow the timeline in the clinical mode; contact and the source
+  inquiry sit with onboarding in the admin mode. The overview's recent-sessions card is dropped (the timeline is
+  right below), and a slim intake hint links to the admin mode while onboarding is open.
+- **3b:** timeline rows follow the original template's layout: date, type and interventions in the left column; one-liner and
   tags on the right; the note folds open.
-- **Search** across all entries, older ones included. Done in the browser over decrypted, server-rendered
+- **3b:** search across all entries, older ones included. Done in the browser over decrypted, server-rendered
   entries, since a client has at most a few hundred.
 - *Why:* removes the tab-jumping, and finding something no longer means scrolling.
 
