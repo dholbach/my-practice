@@ -29,6 +29,7 @@ from .chart_helpers import (
     aggregate_invoice_items_by_month,
     prepare_monthly_chart_data,
 )
+from .for_next_time import build_for_next_time
 from .questionnaire_content import list_available_questionnaires
 from .revenue_helpers import RevenueCalculator
 from .tag_helpers import sort_tags_by_category
@@ -311,6 +312,7 @@ class ClientDetailContextBuilder:
             "mood_tag_choices": MoodTag.choices,
             "intake_notes_template": INTAKE_NOTES_TEMPLATE,
             "case_notes_template": CASE_NOTES_TEMPLATE,
+            "for_next_time": build_for_next_time(self.client),
             "documents": self.client.documents.order_by("-document_date", "-created_at"),
             "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,
             "gebueh_diagnostic_count": gebueh_diagnostic_count,

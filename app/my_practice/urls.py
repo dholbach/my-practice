@@ -416,4 +416,19 @@ urlpatterns = [
         views.client_note_delete,
         name="client_note_delete",
     ),
+    path(
+        "clients/<int:pk>/scratch/add/",
+        views.scratch_item_create,
+        name="scratch_item_create",
+    ),
+    path(
+        "clients/<int:pk>/scratch/<int:item_pk>/toggle/",
+        views.scratch_item_toggle,
+        name="scratch_item_toggle",
+    ),
+    path(
+        "clients/<int:pk>/scratch/<int:item_pk>/delete/",
+        views.scratch_item_delete,
+        name="scratch_item_delete",
+    ),
 ]

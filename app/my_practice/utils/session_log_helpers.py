@@ -3,7 +3,7 @@ context shown beside the form."""
 
 from datetime import date
 
-from ..models import Client, ClientProfile, Session, SessionLog
+from ..models import Client, ClientProfile, ScratchItem, Session, SessionLog
 from .markdown_sections import has_content, split_sections
 
 # A whole day: room for intensive or workshop days, while keeping out typos and values
@@ -61,12 +61,14 @@ def set_session_duration(session: Session, minutes: int) -> bool:
     return True
 
 
+FUTURE_WORK_HEADING = "Zukünftige Arbeit / Fragen"
+
 # What the form shows from the case notes while a log is written: (profile field, heading).
 CASE_SHEET_EXCERPT: tuple[tuple[str, str], ...] = (
     ("intake_notes", "Arbeitshypothese"),
     ("intake_notes", "Aktuelle Trigger"),
     ("intake_notes", "Ressourcen"),
-    ("case_notes", "Zukünftige Arbeit / Fragen"),
+    ("case_notes", FUTURE_WORK_HEADING),
 )
 RECENT_LOGS_SHOWN = 3
 
@@ -103,6 +105,7 @@ def build_log_context(client: Client, *, before: date | None, exclude_log_pk: in
         logs = logs.exclude(pk=exclude_log_pk)
     recent = list(logs.order_by("-session__session_date", "-pk")[:RECENT_LOGS_SHOWN])
     return {
+        "scratch_items": list(ScratchItem.objects.filter(client=client, done_at__isnull=True)),
         "previous_log": recent[0] if recent and recent[0].next_session_ideas.strip() else None,
         "recent_logs": [log for log in recent if log.summary],
         "case_sheet_excerpt": case_sheet_excerpt(client),

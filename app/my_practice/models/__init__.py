@@ -8,7 +8,14 @@ from .base import ALL_PRACTICES, TimestampedModel, scope_to_practice
 from .calendar import GoogleCalendarToken, PendingCalendarEvent
 from .client import Client, ClientDocument
 from .client_alias import ClientAlias
-from .clinical import ClientNote, ClientProfile, MoodTag, SessionLog, SupervisionItem
+from .clinical import (
+    ClientNote,
+    ClientProfile,
+    MoodTag,
+    ScratchItem,
+    SessionLog,
+    SupervisionItem,
+)
 from .expense_category_rule import ExpenseCategoryRule
 from .financial import CompanyExpense, CompanyWithdrawal, ExpenseReceipt, TaxYearNote
 from .gebueh import GebuhZiffer, Leistungserfassung
@@ -71,6 +78,7 @@ __all__ = [
     "SessionLog",
     "SupervisionItem",
     "MoodTag",
+    "ScratchItem",
     "CompanyWithdrawal",
     "CompanyExpense",
     "ExpenseCategoryRule",
