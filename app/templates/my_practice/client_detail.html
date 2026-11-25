@@ -13,7 +13,7 @@
 {% block page_subtitle %}
 {% if stats.activity_period %}{{ stats.activity_period }}{% endif %}
 {% if stats.total_hours %} · {{ stats.total_hours|floatformat:1 }} h{% endif %}
-{% if profile.arbeitsdiagnose %} · <span class="sensitive-data">{{ profile.arbeitsdiagnose }}</span>{% endif %}
+{% if case_summary.arbeitsdiagnose %} · <span class="sensitive-data">{{ case_summary.arbeitsdiagnose }}</span>{% endif %}
 {% endblock %}
 
 {% block extra_head_scripts %}

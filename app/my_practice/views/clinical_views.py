@@ -2,7 +2,6 @@
 Clinical documentation views (P-009).
 
 Views for:
-  - ClientProfile: get/create on client detail page, save via POST
   - SessionLog: create/edit per session
   - SupervisionItem: create per client, toggle/resolve status
   - Supervision queue: cross-client view of open items
@@ -22,7 +21,6 @@ from django.views.decorators.http import require_POST
 from ..models import (
     Client,
     ClientNote,
-    ClientProfile,
     PendingCalendarEvent,
     ScratchItem,
     Session,
@@ -121,24 +119,6 @@ def _add_supervision_question(request, client) -> None:
     question = request.POST.get("supervision_question", "").strip()
     if question:
         SupervisionItem.objects.create(client=client, content=question)
-
-
-# ─── ClientProfile ─────────────────────────────────────────────────────────────
-
-
-@require_POST
-def client_profile_save(request, pk):
-    """Save ClientProfile fields for a client. Creates profile if it doesn't exist."""
-    client = get_scoped_client(request, pk)
-    profile, _created = ClientProfile.objects.get_or_create(client=client)
-
-    profile.intake_notes = request.POST.get("intake_notes", profile.intake_notes)
-    profile.case_notes = request.POST.get("case_notes", profile.case_notes)
-    profile.arbeitsdiagnose = request.POST.get("arbeitsdiagnose", profile.arbeitsdiagnose)
-    profile.save()
-
-    messages.success(request, _("Client profile saved."))
-    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-profil")
 
 
 # ─── SessionLog ────────────────────────────────────────────────────────────────

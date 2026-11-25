@@ -33,6 +33,8 @@ REQUIRED_ENCRYPTED = {
     ("SupervisionItem", "content"),
     ("SupervisionItem", "resolution_notes"),
     ("ClientNote", "content"),
+    ("ScratchItem", "text"),
+    ("ClinicalFact", "content"),
     ("GoogleCalendarToken", "token"),
     ("GoogleCalendarToken", "refresh_token"),
     ("GoogleCalendarToken", "client_secret"),

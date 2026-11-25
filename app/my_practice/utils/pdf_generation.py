@@ -20,8 +20,9 @@ from weasyprint.text.fonts import FontConfiguration
 
 from ..models import Client, Invoice, Practice
 from ..validators import PIL_IMAGE_FORMATS
+from .case_sheet import working_diagnosis
 from .contract_form import add_contract_form_fields
-from .gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks, get_arbeitsdiagnose
+from .gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks
 from .questionnaire_content import load_questionnaire
 
 logger = logging.getLogger(__name__)
@@ -123,7 +124,7 @@ def render_invoice_pdf_bytes(
     if invoice.client.needs_gebueh_invoice:
         ctx["gebueh_blocks"] = build_gebueh_blocks(invoice)
         ctx["gebueh_total"] = gebueh_total_for_blocks(ctx["gebueh_blocks"])
-        ctx["arbeitsdiagnose"] = get_arbeitsdiagnose(invoice.client)
+        ctx["arbeitsdiagnose"] = working_diagnosis(invoice.client)
 
     html_string = render_to_string("my_practice/invoice_pdf.html", ctx)
     # base_url lets WeasyPrint resolve static font files (fonts/ dir) relative to the app

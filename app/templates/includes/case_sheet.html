@@ -1,0 +1,40 @@
+{% load i18n markdown_filters %}
+{# The case sheet (P-006): the case formulation as dated lines, one row per topic. Needs `client`, `case_sheet`, `legacy_profile`. #}
+<div id="case-sheet" class="section-card cs-card">
+    <div class="section-card-header">
+        <h3>{% trans "Case sheet" %}</h3>
+        <span class="cs-hint">{% trans "Lines are dated. Changing one keeps the earlier wording." %}</span>
+    </div>
+    {% for rowview in case_sheet %}
+    <div class="cs-row" id="case-row-{{ rowview.row.kind }}">
+        <div class="cs-label">{{ rowview.row.label }}</div>
+        <div class="cs-cells">
+            {% for cell in rowview.cells %}
+            <div class="cs-cell">
+                {% if cell.label %}<div class="cs-cell-label">{{ cell.label }}</div>{% endif %}
+                {% include 'includes/case_sheet_cell.html' %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if legacy_profile and legacy_profile.intake_notes or legacy_profile and legacy_profile.case_notes %}
+<details class="section-card cs-legacy">
+    <summary>{% trans "Previous notes (read-only)" %}</summary>
+    <p class="cs-hint">{% trans "The text these notes held was split into the case sheet above. This copy stays until you have checked that nothing is missing." %}</p>
+    {% if legacy_profile.intake_notes %}
+    <h4>{% trans "Intake & Anamnesis" %}</h4>
+    <div class="md-rendered">{{ legacy_profile.intake_notes|render_markdown }}</div>
+    {% endif %}
+    {% if legacy_profile.case_notes %}
+    <h4>{% trans "Case notes" %}</h4>
+    <div class="md-rendered">{{ legacy_profile.case_notes|render_markdown }}</div>
+    {% endif %}
+    {% if legacy_profile.arbeitsdiagnose %}
+    <h4>{% trans "Working diagnosis" %}</h4>
+    <div class="sensitive-data">{{ legacy_profile.arbeitsdiagnose }}</div>
+    {% endif %}
+</details>
+{% endif %}

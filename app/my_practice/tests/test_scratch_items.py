@@ -8,7 +8,8 @@ from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from ..models import Client, ClientProfile, ScratchItem, Session, SessionLog
+from ..models import Client, ScratchItem, Session, SessionLog
+from ..utils.case_sheet import add_line
 from ..utils.for_next_time import COVERED_SHOWN, build_for_next_time, clean_reminder
 from .test_clinical import TEST_FERNET_KEY, ClinicalTestBase
 from .test_helpers import create_test_practice
@@ -130,10 +131,7 @@ class ForNextTimeTests(ClinicalTestBase):
             client=self.client_obj, session_date=date(2026, 3, 13), duration=60
         )
         log = SessionLog.objects.create(session=session, next_session_ideas="Ressource Hund")
-        ClientProfile.objects.create(
-            client=self.client_obj,
-            case_notes="## Zukünftige Arbeit / Fragen\nTitration klein halten",
-        )
+        add_line(self.client_obj, "future_work", "", "Titration klein halten")
         result = build_for_next_time(self.client_obj)
         self.assertEqual([i.text for i in result["open_items"]], ["open one"])
         self.assertEqual([i.text for i in result["covered_items"]], ["covered one"])

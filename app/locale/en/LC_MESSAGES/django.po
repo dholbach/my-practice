@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 23:00+0100\n"
+"POT-Creation-Date: 2026-11-25 23:28+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -40,8 +40,9 @@ msgstr ""
 
 #: my_practice/admin/bank_statement.py:76 my_practice/admin/client.py:110
 #: my_practice/admin/timeoff.py:42 my_practice/admin/todo.py:49
-#: my_practice/models/calendar.py:141 my_practice/models/clinical.py:322
-#: my_practice/models/inquiry.py:130 my_practice/models/invoice.py:134
+#: my_practice/models/calendar.py:141 my_practice/models/case_sheet.py:156
+#: my_practice/models/clinical.py:233 my_practice/models/inquiry.py:130
+#: my_practice/models/invoice.py:134
 #: templates/includes/calendar_preflight_widget.html:28
 #: templates/my_practice/analytics_tab_clients.html:62
 #: templates/my_practice/bank_import.html:88
@@ -104,11 +105,12 @@ msgstr ""
 
 #: my_practice/admin/calendar.py:28 my_practice/admin/client_alias.py:37
 #: my_practice/admin/clinical.py:23 my_practice/admin/clinical.py:110
-#: my_practice/models/calendar.py:127 my_practice/models/client.py:175
-#: my_practice/models/client.py:247 my_practice/models/client_alias.py:32
-#: my_practice/models/clinical.py:172 my_practice/models/clinical.py:310
-#: my_practice/models/clinical.py:367 my_practice/models/clinical.py:405
-#: my_practice/models/invoice.py:121 my_practice/models/session.py:22
+#: my_practice/models/calendar.py:127 my_practice/models/case_sheet.py:127
+#: my_practice/models/client.py:175 my_practice/models/client.py:247
+#: my_practice/models/client_alias.py:32 my_practice/models/clinical.py:83
+#: my_practice/models/clinical.py:221 my_practice/models/clinical.py:278
+#: my_practice/models/clinical.py:316 my_practice/models/invoice.py:121
+#: my_practice/models/session.py:22
 #: templates/my_practice/billing_open_overview.html:59
 #: templates/my_practice/calendar_import.html:97
 #: templates/my_practice/client_detail.html:6
@@ -191,7 +193,8 @@ msgstr ""
 
 #: my_practice/admin/client.py:114 my_practice/admin/inquiry.py:32
 #: my_practice/admin/operational.py:31 my_practice/models/calendar.py:63
-#: my_practice/models/client.py:145 my_practice/models/practice.py:56
+#: my_practice/models/case_sheet.py:119 my_practice/models/client.py:145
+#: my_practice/models/practice.py:56
 #: templates/my_practice/analytics_tab_clients.html:82
 #: templates/my_practice/client_detail.html:10
 #: templates/my_practice/client_list_cards.html:32
@@ -212,7 +215,7 @@ msgstr "Inactive"
 msgid "Format"
 msgstr ""
 
-#: my_practice/admin/client.py:121 my_practice/models/clinical.py:147
+#: my_practice/admin/client.py:121 my_practice/models/clinical.py:58
 msgid "Online"
 msgstr ""
 
@@ -259,7 +262,7 @@ msgid "Working Diagnosis"
 msgstr ""
 
 #: my_practice/admin/clinical.py:54 my_practice/admin/invoice.py:281
-#: my_practice/models/calendar.py:149 my_practice/models/clinical.py:224
+#: my_practice/models/calendar.py:149 my_practice/models/clinical.py:135
 #: my_practice/models/gebueh.py:89 my_practice/models/invoice.py:428
 #: my_practice/models/session.py:63
 msgid "Session"
@@ -279,7 +282,8 @@ msgid "Client & Status"
 msgstr ""
 
 #: my_practice/admin/clinical.py:92 my_practice/admin/clinical.py:119
-#: my_practice/models/clinical.py:314 my_practice/models/clinical.py:376
+#: my_practice/models/case_sheet.py:135 my_practice/models/clinical.py:225
+#: my_practice/models/clinical.py:287
 msgid "Content"
 msgstr ""
 
@@ -752,7 +756,7 @@ msgid "Fee 90 min (€)"
 msgstr ""
 
 #: my_practice/forms.py:153 my_practice/forms.py:177
-#: my_practice/models/calendar.py:118 my_practice/models/clinical.py:371
+#: my_practice/models/calendar.py:118 my_practice/models/clinical.py:282
 #: my_practice/models/financial.py:56 my_practice/models/financial.py:144
 #: templates/my_practice/bank_import.html:84
 #: templates/my_practice/bank_review.html:187
@@ -1312,6 +1316,51 @@ msgstr ""
 msgid "Client does not belong to the selected practice"
 msgstr ""
 
+#: my_practice/models/case_sheet.py:120
+msgid "Superseded"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:121
+msgid "Resolved"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:131
+msgid "Row"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:132
+msgid "Cell"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:136
+msgid "The line as written (encrypted, Markdown supported)"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:139
+#: templates/includes/case_sheet_cell.html:7
+msgid "Noted on"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:148
+msgid "Source session"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:159
+msgid "Closed on"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:166
+msgid "Superseded by"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:170
+msgid "Case sheet line"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:171
+msgid "Case sheet lines"
+msgstr ""
+
 #: my_practice/models/client.py:41 my_practice/utils/inquiry_analytics.py:188
 #: templates/my_practice/send_cancellation_email.html:7
 #: templates/my_practice/time_off_notice_form.html:54
@@ -1504,244 +1553,243 @@ msgstr ""
 msgid "Client aliases"
 msgstr ""
 
-#: my_practice/models/clinical.py:134
+#: my_practice/models/clinical.py:45
 msgid "Heavy"
 msgstr ""
 
-#: my_practice/models/clinical.py:135 my_practice/models/todo.py:96
+#: my_practice/models/clinical.py:46 my_practice/models/todo.py:96
 msgid "Medium"
 msgstr ""
 
-#: my_practice/models/clinical.py:136
+#: my_practice/models/clinical.py:47
 msgid "Light"
 msgstr ""
 
-#: my_practice/models/clinical.py:139
+#: my_practice/models/clinical.py:50
 msgid "High activation"
 msgstr ""
 
-#: my_practice/models/clinical.py:140
+#: my_practice/models/clinical.py:51
 msgid "Good resources"
 msgstr ""
 
-#: my_practice/models/clinical.py:141
+#: my_practice/models/clinical.py:52
 msgid "Crisis"
 msgstr ""
 
-#: my_practice/models/clinical.py:142
+#: my_practice/models/clinical.py:53
 msgid "Low affect"
 msgstr ""
 
-#: my_practice/models/clinical.py:143
+#: my_practice/models/clinical.py:54
 msgid "Dissociation"
 msgstr ""
 
-#: my_practice/models/clinical.py:144
+#: my_practice/models/clinical.py:55
 msgid "Uncertain"
 msgstr ""
 
-#: my_practice/models/clinical.py:150
+#: my_practice/models/clinical.py:61
 msgid "Progress"
 msgstr ""
 
-#: my_practice/models/clinical.py:151
+#: my_practice/models/clinical.py:62
 msgid "Update / chitchat"
 msgstr ""
 
-#: my_practice/models/clinical.py:152
+#: my_practice/models/clinical.py:63
 msgid "Setback"
 msgstr ""
 
-#: my_practice/models/clinical.py:153
+#: my_practice/models/clinical.py:64
 msgid "Breakthrough"
 msgstr ""
 
-#: my_practice/models/clinical.py:154
+#: my_practice/models/clinical.py:65
 msgid "Directionless"
 msgstr ""
 
-#: my_practice/models/clinical.py:178
+#: my_practice/models/clinical.py:89
 msgid "Intake & anamnesis"
 msgstr ""
 
-#: my_practice/models/clinical.py:179
+#: my_practice/models/clinical.py:90
 msgid "Initial session + clinical assessment (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:185 templates/includes/for_next_time.html:50
-#: templates/my_practice/client_detail_tab_overview.html:92
+#: my_practice/models/clinical.py:96 templates/includes/case_sheet.html:32
+#: templates/includes/for_next_time.html:50
 msgid "Case notes"
 msgstr "Case notes"
 
-#: my_practice/models/clinical.py:186
+#: my_practice/models/clinical.py:97
 msgid "Themes, dynamics, challenges, future work (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:192
+#: my_practice/models/clinical.py:103 templates/includes/case_sheet.html:36
 #: templates/my_practice/client_detail_tab_overview.html:7
-#: templates/my_practice/client_detail_tab_overview.html:76
 msgid "Working diagnosis"
 msgstr "Working diagnosis"
 
-#: my_practice/models/clinical.py:193
+#: my_practice/models/clinical.py:104
 msgid "Clinical working diagnosis (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:197
+#: my_practice/models/clinical.py:108
 msgid "Client profile"
 msgstr ""
 
-#: my_practice/models/clinical.py:198
+#: my_practice/models/clinical.py:109
 msgid "Client profiles"
 msgstr ""
 
-#: my_practice/models/clinical.py:201
+#: my_practice/models/clinical.py:112
 msgid "Profile"
 msgstr "Profile"
 
-#: my_practice/models/clinical.py:214
+#: my_practice/models/clinical.py:125
 msgid "Initial session"
 msgstr ""
 
-#: my_practice/models/clinical.py:215
+#: my_practice/models/clinical.py:126
 msgid "Standard"
 msgstr ""
 
-#: my_practice/models/clinical.py:216
+#: my_practice/models/clinical.py:127
 msgid "Crisis intervention"
 msgstr ""
 
-#: my_practice/models/clinical.py:217
+#: my_practice/models/clinical.py:128
 msgid "Closing phase"
 msgstr ""
 
-#: my_practice/models/clinical.py:218
+#: my_practice/models/clinical.py:129
 msgid "No-show / cancellation"
 msgstr ""
 
-#: my_practice/models/clinical.py:231
+#: my_practice/models/clinical.py:142
 #: templates/my_practice/session_log_form.html:45
 msgid "Session type"
 msgstr ""
 
-#: my_practice/models/clinical.py:237
+#: my_practice/models/clinical.py:148
 #: templates/my_practice/session_log_form.html:58
 msgid "Mood tags"
 msgstr ""
 
-#: my_practice/models/clinical.py:238
+#: my_practice/models/clinical.py:149
 msgid "Selection from predefined signals (unencrypted, for triage)"
 msgstr ""
 
-#: my_practice/models/clinical.py:249
+#: my_practice/models/clinical.py:160
 msgid "Short summary"
 msgstr ""
 
-#: my_practice/models/clinical.py:250
+#: my_practice/models/clinical.py:161
 msgid "One-liner for the overview (encrypted, max. 120 characters)"
 msgstr ""
 
-#: my_practice/models/clinical.py:255
+#: my_practice/models/clinical.py:166
 #: templates/my_practice/client_detail_tab_protocol.html:84
 #: templates/my_practice/session_log_form.html:79
 msgid "Session note"
 msgstr ""
 
-#: my_practice/models/clinical.py:257
+#: my_practice/models/clinical.py:168
 msgid "Pre-filled: feeling afterward / perception / session / what helped (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:263
+#: my_practice/models/clinical.py:174
 #: templates/my_practice/session_log_form.html:113
 msgid "Interventions"
 msgstr ""
 
-#: my_practice/models/clinical.py:264
+#: my_practice/models/clinical.py:175
 msgid "Techniques and interventions applied (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:269
+#: my_practice/models/clinical.py:180
 #: templates/my_practice/client_detail_tab_protocol.html:88
 #: templates/my_practice/session_log_form.html:98
 msgid "Own reflection"
 msgstr "Own reflection"
 
-#: my_practice/models/clinical.py:270
+#: my_practice/models/clinical.py:181
 msgid "How I felt about it — countertransference (encrypted, separate)"
 msgstr ""
 
-#: my_practice/models/clinical.py:275
+#: my_practice/models/clinical.py:186
 #: templates/my_practice/client_detail_tab_protocol.html:94
 #: templates/my_practice/session_log_form.html:119
 msgid "Ideas for next session"
 msgstr ""
 
-#: my_practice/models/clinical.py:276
+#: my_practice/models/clinical.py:187
 msgid "Themes, interventions, homework for the next session (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:280
+#: my_practice/models/clinical.py:191
 #: templates/my_practice/session_log_form.html:5
 #: templates/my_practice/session_log_form.html:6
 msgid "Session log"
 msgstr ""
 
-#: my_practice/models/clinical.py:281
+#: my_practice/models/clinical.py:192
 msgid "Session logs"
 msgstr ""
 
-#: my_practice/models/clinical.py:303
+#: my_practice/models/clinical.py:214
 #: templates/includes/command_palette.html:85
 #: templates/my_practice/bank_import.html:129
 msgid "Open"
 msgstr ""
 
-#: my_practice/models/clinical.py:304
+#: my_practice/models/clinical.py:215
 msgid "Discussed"
 msgstr ""
 
-#: my_practice/models/clinical.py:315
+#: my_practice/models/clinical.py:226
 msgid "Supervision question or topic (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:329
+#: my_practice/models/clinical.py:240
 msgid "Resolution notes"
 msgstr ""
 
-#: my_practice/models/clinical.py:330
+#: my_practice/models/clinical.py:241
 msgid "Feedback or outcome once discussed (optional, encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:336
+#: my_practice/models/clinical.py:247
 #: templates/my_practice/client_detail_tab_protocol.html:190
 msgid "Discussed on"
 msgstr ""
 
-#: my_practice/models/clinical.py:340
+#: my_practice/models/clinical.py:251
 msgid "Supervision topic"
 msgstr ""
 
-#: my_practice/models/clinical.py:341
+#: my_practice/models/clinical.py:252
 msgid "Supervision topics"
 msgstr ""
 
-#: my_practice/models/clinical.py:372
+#: my_practice/models/clinical.py:283
 msgid "Date of the entry (e.g. call, note)"
 msgstr ""
 
-#: my_practice/models/clinical.py:377
+#: my_practice/models/clinical.py:288
 msgid "Note content (encrypted, markdown supported)"
 msgstr ""
 
-#: my_practice/models/clinical.py:381
+#: my_practice/models/clinical.py:292
 msgid "Client note"
 msgstr ""
 
-#: my_practice/models/clinical.py:382
+#: my_practice/models/clinical.py:293
 msgid "Client notes"
 msgstr ""
 
-#: my_practice/models/clinical.py:389 my_practice/models/gebueh.py:44
+#: my_practice/models/clinical.py:300 my_practice/models/gebueh.py:44
 #: templates/includes/calendar_preflight_widget.html:29
 #: templates/my_practice/calendar_approval_queue.html:23
 #: templates/my_practice/inquiry_form.html:122
@@ -1749,27 +1797,27 @@ msgstr ""
 msgid "Note"
 msgstr ""
 
-#: my_practice/models/clinical.py:410 my_practice/models/clinical.py:441
+#: my_practice/models/clinical.py:321 my_practice/models/clinical.py:352
 msgid "Reminder"
 msgstr ""
 
-#: my_practice/models/clinical.py:411
+#: my_practice/models/clinical.py:322
 msgid "Short reminder for next time (encrypted, max. 300 characters)"
 msgstr ""
 
-#: my_practice/models/clinical.py:418
+#: my_practice/models/clinical.py:329
 msgid "Covered on"
 msgstr ""
 
-#: my_practice/models/clinical.py:429
+#: my_practice/models/clinical.py:340
 msgid "Covered in session"
 msgstr ""
 
-#: my_practice/models/clinical.py:433
+#: my_practice/models/clinical.py:344
 msgid "Reminder for next time"
 msgstr ""
 
-#: my_practice/models/clinical.py:434
+#: my_practice/models/clinical.py:345
 msgid "Reminders for next time"
 msgstr ""
 
@@ -3156,12 +3204,12 @@ msgstr ""
 msgid "Sign-in throttles"
 msgstr ""
 
-#: my_practice/signals.py:31 my_practice/views/invoice_views.py:323
+#: my_practice/signals.py:31 my_practice/views/invoice_views.py:324
 #, python-format
 msgid "Invoice %(number)s has been issued and can no longer be changed. Cancel it and create a corrected copy instead."
 msgstr ""
 
-#: my_practice/signals.py:78 my_practice/views/invoice_views.py:450
+#: my_practice/signals.py:78 my_practice/views/invoice_views.py:451
 #, python-format
 msgid "Invoice %(number)s has been issued and must be kept until the end of %(year)s. Cancel it instead of deleting it."
 msgstr ""
@@ -3441,7 +3489,7 @@ msgstr ""
 msgid "Update emergency access plan (P-010) if needed"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:161
+#: my_practice/utils/client_detail_builder.py:158
 #, python-format
 msgid "since %(start)s"
 msgstr ""
@@ -3859,7 +3907,7 @@ msgstr ""
 #: my_practice/views/billing_views.py:276
 #: my_practice/views/billing_views.py:400
 #: my_practice/views/calendar_views.py:264
-#: my_practice/views/invoice_views.py:571
+#: my_practice/views/invoice_views.py:572
 msgid "No active practice found."
 msgstr "No active practice found."
 
@@ -3954,6 +4002,15 @@ msgstr "Event on %(date)s added to invoice %(number)s."
 msgid "Import error. Details are in the server log."
 msgstr "Import error. Details are in the server log."
 
+#: my_practice/views/case_sheet_views.py:29
+msgid "Unknown case sheet row."
+msgstr ""
+
+#: my_practice/views/case_sheet_views.py:32
+#: my_practice/views/case_sheet_views.py:43
+msgid "The line must not be empty."
+msgstr ""
+
 #: my_practice/views/client_views.py:204
 #, python-brace-format
 msgid "Client {obj.full_name} saved successfully!"
@@ -3988,131 +4045,127 @@ msgid "Client %(code)s has been deleted pursuant to GDPR Art. 17."
 msgstr ""
 
 #: my_practice/views/clinical_views.py:140
-msgid "Client profile saved."
-msgstr ""
-
-#: my_practice/views/clinical_views.py:160
 msgid "Session date is required."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:166
-#: my_practice/views/clinical_views.py:436
-#: my_practice/views/clinical_views.py:461
+#: my_practice/views/clinical_views.py:146
+#: my_practice/views/clinical_views.py:416
+#: my_practice/views/clinical_views.py:441
 msgid "Invalid date."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:172
-#: my_practice/views/clinical_views.py:264
-#: my_practice/views/clinical_views.py:524
+#: my_practice/views/clinical_views.py:152
+#: my_practice/views/clinical_views.py:244
+#: my_practice/views/clinical_views.py:504
 msgid "Invalid duration."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:175
+#: my_practice/views/clinical_views.py:155
 msgid "Invalid session type."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:182
+#: my_practice/views/clinical_views.py:162
 msgid "A log already exists for this session."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:200
+#: my_practice/views/clinical_views.py:180
 #, python-format
 msgid "Session log for %(date)s saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:273
+#: my_practice/views/clinical_views.py:253
 msgid "The duration was not changed: this session has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:278
+#: my_practice/views/clinical_views.py:258
 msgid "Session log updated."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:302
-#: my_practice/views/clinical_views.py:454
+#: my_practice/views/clinical_views.py:282
+#: my_practice/views/clinical_views.py:434
 msgid "Content must not be empty."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:306
+#: my_practice/views/clinical_views.py:286
 msgid "Supervision topic added."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:321
+#: my_practice/views/clinical_views.py:301
 msgid "Supervision topic deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:376
+#: my_practice/views/clinical_views.py:356
 msgid "Supervision topic marked discussed."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:430
+#: my_practice/views/clinical_views.py:410
 msgid "Date and content are required."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:440
+#: my_practice/views/clinical_views.py:420
 msgid "Note saved."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:466
+#: my_practice/views/clinical_views.py:446
 msgid "Note updated."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:481
+#: my_practice/views/clinical_views.py:461
 msgid "Note deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:496
+#: my_practice/views/clinical_views.py:476
 msgid "Session log deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:516
+#: my_practice/views/clinical_views.py:496
 #, python-format
 msgid "Session of %(date)s cannot be edited: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:529
+#: my_practice/views/clinical_views.py:509
 #, python-format
 msgid "Session duration updated to %(min)s min."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:548
+#: my_practice/views/clinical_views.py:528
 #, python-format
 msgid "Session of %(date)s cannot be deleted: it has already been billed. Remove the invoice item first."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:556
+#: my_practice/views/clinical_views.py:536
 #, python-format
 msgid "Session of %(date)s deleted."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:567
+#: my_practice/views/clinical_views.py:547
 msgid "Marked as no-show / cancellation."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:679
+#: my_practice/views/clinical_views.py:659
 msgid "GebüH billing is not enabled for this client."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:692
+#: my_practice/views/clinical_views.py:672
 msgid "Invalid input."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:702
+#: my_practice/views/clinical_views.py:682
 #, python-format
 msgid "GebüH entries for %(date)s cleared."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:716
+#: my_practice/views/clinical_views.py:696
 #, python-format
 msgid "Warning: Ziffer %(nr)s may only be billed as a standalone service and must not be combined with other Ziffern."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:741
+#: my_practice/views/clinical_views.py:721
 #, python-format
 msgid "Warning: Ziffer %(nr)s – already billed %(count)s× within %(days)s days (maximum: %(max)s×)."
 msgstr ""
 
-#: my_practice/views/clinical_views.py:772
+#: my_practice/views/clinical_views.py:752
 #, python-format
 msgid "%(count)s GebüH code(s) saved for %(date)s."
 msgstr ""
@@ -4290,99 +4343,99 @@ msgstr ""
 msgid "Client %(name)s (%(code)s) created successfully."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:233
+#: my_practice/views/invoice_views.py:234
 #, python-format
 msgid "Error creating invoice: %(error)s"
 msgstr "Error creating invoice: %(error)s"
 
-#: my_practice/views/invoice_views.py:240
+#: my_practice/views/invoice_views.py:241
 msgid "Error creating invoice. Details are in the server log."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:246
+#: my_practice/views/invoice_views.py:247
 #, python-format
 msgid "Invoice %(num)s created successfully!"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:256
+#: my_practice/views/invoice_views.py:257
 #, python-format
 msgid "Item %(n)s: %(errors)s"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:261
+#: my_practice/views/invoice_views.py:262
 #, python-format
 msgid "Formset errors: %(errors)s"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:310
+#: my_practice/views/invoice_views.py:311
 #, python-brace-format
 msgid "Invoice {obj.invoice_number} updated successfully!"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:386
+#: my_practice/views/invoice_views.py:387
 #, python-format
 msgid "Error updating invoice: %(error)s"
 msgstr "Error updating invoice: %(error)s"
 
-#: my_practice/views/invoice_views.py:393
+#: my_practice/views/invoice_views.py:394
 msgid "Error updating invoice. Details are in the server log."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:409
+#: my_practice/views/invoice_views.py:410
 #, python-format
 msgid "Item %(n)s - %(field)s: %(error)s"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:414
+#: my_practice/views/invoice_views.py:415
 #, python-format
 msgid "Formset: %(error)s"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:423
+#: my_practice/views/invoice_views.py:424
 #, python-format
 msgid "%(label)s: %(error)s"
 msgstr ""
 
-#: my_practice/views/invoice_views.py:436
+#: my_practice/views/invoice_views.py:437
 msgid "Please correct the errors in the form."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:467
+#: my_practice/views/invoice_views.py:468
 #, python-format
 msgid "Invoice %(num)s for %(code)s was deleted successfully."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:494
+#: my_practice/views/invoice_views.py:495
 msgid "Only a sent invoice can be cancelled and corrected."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:506
+#: my_practice/views/invoice_views.py:507
 #, python-format
 msgid "Corrects invoice %(number)s."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:516
+#: my_practice/views/invoice_views.py:517
 #, python-format
 msgid "Invoice %(old)s was cancelled. %(new)s is an editable copy — correct it and send it as usual."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:535
-#: my_practice/views/invoice_views.py:586
+#: my_practice/views/invoice_views.py:536
+#: my_practice/views/invoice_views.py:587
 msgid "No sessions specified."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:551
+#: my_practice/views/invoice_views.py:552
 #, python-format
 msgid "%(count)s session added to %(invoice)s."
 msgid_plural "%(count)s sessions added to %(invoice)s."
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/views/invoice_views.py:558
+#: my_practice/views/invoice_views.py:559
 msgid "No new sessions added (already billed?)."
 msgstr ""
 
-#: my_practice/views/invoice_views.py:601
+#: my_practice/views/invoice_views.py:602
 msgid "Invoice <a href=\"{}\">{}</a> with {} session created."
 msgid_plural "Invoice <a href=\"{}\">{}</a> with {} sessions created."
 msgstr[0] ""
@@ -4760,6 +4813,98 @@ msgstr ""
 msgid "Revenue this month: %(current)s / %(target)s"
 msgstr ""
 
+#: templates/includes/case_sheet.html:5
+msgid "Case sheet"
+msgstr ""
+
+#: templates/includes/case_sheet.html:6
+msgid "Lines are dated. Changing one keeps the earlier wording."
+msgstr ""
+
+#: templates/includes/case_sheet.html:25
+msgid "Previous notes (read-only)"
+msgstr ""
+
+#: templates/includes/case_sheet.html:26
+msgid "The text these notes held was split into the case sheet above. This copy stays until you have checked that nothing is missing."
+msgstr ""
+
+#: templates/includes/case_sheet.html:28
+msgid "Intake & Anamnesis"
+msgstr "Intake & Anamnesis"
+
+#: templates/includes/case_sheet_cell.html:3
+#: templates/includes/focus_queue_row.html:55
+#: templates/my_practice/client_detail_tab_protocol.html:103
+#: templates/my_practice/client_detail_tab_protocol.html:122
+#: templates/my_practice/expense_list.html:127
+#: templates/my_practice/inquiry_list.html:31
+#: templates/my_practice/inquiry_list.html:226
+#: templates/my_practice/inquiry_list.html:274
+#: templates/my_practice/invoice_detail.html:196
+#: templates/my_practice/practice_management.html:44
+#: templates/my_practice/tag_list.html:63
+#: templates/my_practice/tax_quarter_overview.html:178
+#: templates/my_practice/tax_year_summary.html:224
+#: templates/my_practice/time_off_list.html:55
+#: templates/my_practice/time_off_list.html:96
+#: templates/my_practice/withdrawal_list.html:80
+#: templates/my_practice/withdrawal_list.html:131
+msgid "Edit"
+msgstr "Edit"
+
+#: templates/includes/case_sheet_cell.html:7
+msgid "session"
+msgstr ""
+
+#: templates/includes/case_sheet_cell.html:14
+#: templates/includes/for_next_time.html:15
+#: templates/my_practice/client_detail_tab_protocol.html:16
+#: templates/my_practice/client_detail_tab_protocol.html:173
+#: templates/my_practice/expense_form.html:99
+#: templates/my_practice/gebueh_leistung_form.html:41
+#: templates/my_practice/inquiry_form.html:192
+#: templates/my_practice/invoice_edit.html:148
+#: templates/my_practice/marketing_period_form.html:52
+#: templates/my_practice/tag_form.html:56
+#: templates/my_practice/tax_quarter_overview.html:197
+#: templates/my_practice/time_off_form.html:73
+#: templates/my_practice/todo_form.html:81
+#: templates/my_practice/withdrawal_form.html:76
+msgid "Save"
+msgstr "Save"
+
+#: templates/includes/case_sheet_cell.html:19
+msgid "No longer applies"
+msgstr ""
+
+#: templates/includes/case_sheet_cell.html:26
+#: templates/includes/case_sheet_cell.html:31
+msgid "Add a line"
+msgstr ""
+
+#: templates/includes/case_sheet_cell.html:33
+#: templates/includes/for_next_time.html:59
+#: templates/my_practice/client_detail_tab_protocol.html:29
+#: templates/my_practice/inquiry_list.html:35
+msgid "Add"
+msgstr "Add"
+
+#: templates/includes/case_sheet_cell.html:40
+#, python-format
+msgid "%(count)s earlier line"
+msgid_plural "%(count)s earlier lines"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/includes/case_sheet_cell.html:43
+msgid "no longer applies"
+msgstr ""
+
+#: templates/includes/case_sheet_cell.html:43
+msgid "replaced"
+msgstr ""
+
 #: templates/includes/client_card.html:11
 #: templates/my_practice/client_detail_tab_protocol.html:116
 msgid "Log missing"
@@ -5027,25 +5172,6 @@ msgstr ""
 msgid "Snooze 1 week"
 msgstr ""
 
-#: templates/includes/focus_queue_row.html:55
-#: templates/my_practice/client_detail_tab_protocol.html:103
-#: templates/my_practice/client_detail_tab_protocol.html:122
-#: templates/my_practice/expense_list.html:127
-#: templates/my_practice/inquiry_list.html:31
-#: templates/my_practice/inquiry_list.html:226
-#: templates/my_practice/inquiry_list.html:274
-#: templates/my_practice/invoice_detail.html:196
-#: templates/my_practice/practice_management.html:44
-#: templates/my_practice/tag_list.html:63
-#: templates/my_practice/tax_quarter_overview.html:178
-#: templates/my_practice/tax_year_summary.html:224
-#: templates/my_practice/time_off_list.html:55
-#: templates/my_practice/time_off_list.html:96
-#: templates/my_practice/withdrawal_list.html:80
-#: templates/my_practice/withdrawal_list.html:131
-msgid "Edit"
-msgstr "Edit"
-
 #: templates/includes/focus_queue_row.html:56
 #: templates/my_practice/client_gdpr_delete_confirm.html:61
 #: templates/my_practice/client_list_cards.html:122
@@ -5089,22 +5215,6 @@ msgstr ""
 msgid "Edit reminder"
 msgstr ""
 
-#: templates/includes/for_next_time.html:15
-#: templates/my_practice/client_detail_tab_protocol.html:16
-#: templates/my_practice/client_detail_tab_protocol.html:173
-#: templates/my_practice/expense_form.html:99
-#: templates/my_practice/gebueh_leistung_form.html:41
-#: templates/my_practice/inquiry_form.html:192
-#: templates/my_practice/invoice_edit.html:148
-#: templates/my_practice/marketing_period_form.html:52
-#: templates/my_practice/tag_form.html:56
-#: templates/my_practice/tax_quarter_overview.html:197
-#: templates/my_practice/time_off_form.html:73
-#: templates/my_practice/todo_form.html:81
-#: templates/my_practice/withdrawal_form.html:76
-msgid "Save"
-msgstr "Save"
-
 #: templates/includes/for_next_time.html:44
 msgid "Ideas"
 msgstr ""
@@ -5116,12 +5226,6 @@ msgstr ""
 #: templates/includes/for_next_time.html:58
 msgid "e.g. ask about sleep"
 msgstr ""
-
-#: templates/includes/for_next_time.html:59
-#: templates/my_practice/client_detail_tab_protocol.html:29
-#: templates/my_practice/inquiry_list.html:35
-msgid "Add"
-msgstr "Add"
 
 #: templates/includes/for_next_time.html:63
 msgid "Mark as open again"
@@ -6904,42 +7008,6 @@ msgstr ""
 msgid "Edit →"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_overview.html:70
-#: templates/my_practice/session_log_form.html:19
-msgid "You have an unsaved draft from an earlier attempt."
-msgstr ""
-
-#: templates/my_practice/client_detail_tab_overview.html:71
-#: templates/my_practice/session_log_form.html:20
-msgid "Restore draft"
-msgstr ""
-
-#: templates/my_practice/client_detail_tab_overview.html:72
-#: templates/my_practice/session_log_form.html:21
-msgid "Discard"
-msgstr ""
-
-#: templates/my_practice/client_detail_tab_overview.html:81
-msgid "Intake & Anamnesis"
-msgstr "Intake & Anamnesis"
-
-#: templates/my_practice/client_detail_tab_overview.html:83
-msgid "Clinical initial assessment…"
-msgstr "Clinical initial assessment…"
-
-#: templates/my_practice/client_detail_tab_overview.html:86
-#: templates/my_practice/client_detail_tab_overview.html:97
-msgid "Preview"
-msgstr "Preview"
-
-#: templates/my_practice/client_detail_tab_overview.html:94
-msgid "Topics, dynamics, challenges…"
-msgstr "Topics, dynamics, challenges…"
-
-#: templates/my_practice/client_detail_tab_overview.html:103
-msgid "Save profile"
-msgstr "Save profile"
-
 #: templates/my_practice/client_detail_tab_protocol.html:18
 msgid "Note (Markdown supported)…"
 msgstr "Note (Markdown supported)…"
@@ -8515,6 +8583,18 @@ msgstr ""
 msgid "The questionnaire is attached automatically as a PDF (with fillable fields)."
 msgstr ""
 
+#: templates/my_practice/session_log_form.html:19
+msgid "You have an unsaved draft from an earlier attempt."
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:20
+msgid "Restore draft"
+msgstr ""
+
+#: templates/my_practice/session_log_form.html:21
+msgid "Discard"
+msgstr ""
+
 #: templates/my_practice/session_log_form.html:71
 msgid "One-liner summary"
 msgstr ""
@@ -9492,6 +9572,18 @@ msgstr ""
 #: templates/registration/two_factor_settings.html:86
 msgid "Turn on two-factor sign-in"
 msgstr ""
+
+#~ msgid "Clinical initial assessment…"
+#~ msgstr "Clinical initial assessment…"
+
+#~ msgid "Preview"
+#~ msgstr "Preview"
+
+#~ msgid "Topics, dynamics, challenges…"
+#~ msgstr "Topics, dynamics, challenges…"
+
+#~ msgid "Save profile"
+#~ msgstr "Save profile"
 
 #~ msgid "Protocol"
 #~ msgstr "Protocol"

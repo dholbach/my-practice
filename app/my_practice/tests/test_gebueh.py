@@ -275,10 +275,11 @@ class GebuhPdfBlocksTest(TestCase):
     """Tests for _build_gebueh_blocks — the PDF context helper."""
 
     def setUp(self):
-        from ..utils.gebueh_helpers import build_gebueh_blocks, get_arbeitsdiagnose
+        from ..utils.case_sheet import working_diagnosis
+        from ..utils.gebueh_helpers import build_gebueh_blocks
 
         self._build = build_gebueh_blocks
-        self._diagnose = get_arbeitsdiagnose
+        self._diagnose = working_diagnosis
 
         self.practice = _make_practice(slug="gebueh-pdf-test")
         self.client_obj = _make_client(self.practice, code="PDF")
@@ -385,21 +386,27 @@ class GebuhPdfBlocksTest(TestCase):
         blocks = self._build(self.invoice)
         self.assertEqual(gebueh_total_for_blocks(blocks), Decimal("0"))
 
-    def test_get_arbeitsdiagnose_no_profile(self):
-        # No ClientProfile exists yet — should return empty string, not raise
-        result = self._diagnose(self.client_obj)
-        self.assertEqual(result, "")
+    def test_working_diagnosis_without_a_case_sheet(self):
+        # No case sheet lines yet: an empty string, not an error
+        self.assertEqual(self._diagnose(self.client_obj), "")
 
-    # arbeitsdiagnose is an EncryptedCharField, so writing a non-empty value
-    # needs a key. settings.FERNET_KEY is deliberately None in dev/test, which
-    # made this test pass only because a developer's .env happened to set one.
+    # The line is encrypted, so writing one needs a key. settings.FERNET_KEY is
+    # deliberately None in dev/test, which made a test like this pass only because a
+    # developer's .env happened to set one.
     @override_settings(FERNET_KEY=TEST_FERNET_KEY)
-    def test_get_arbeitsdiagnose_with_profile(self):
-        from ..models import ClientProfile
+    def test_working_diagnosis_is_the_current_line_of_the_diagnosis_row(self):
+        from ..utils.case_sheet import add_line
 
-        ClientProfile.objects.create(client=self.client_obj, arbeitsdiagnose="F32.1")
-        result = self._diagnose(self.client_obj)
-        self.assertEqual(result, "F32.1")
+        add_line(self.client_obj, "diagnosis", "", "F32.0")
+        add_line(self.client_obj, "diagnosis", "", "F32.1")  # replaces the first
+        self.assertEqual(self._diagnose(self.client_obj), "F32.1")
+
+    @override_settings(FERNET_KEY=TEST_FERNET_KEY)
+    def test_a_diagnosis_that_no_longer_applies_is_not_billed(self):
+        from ..utils.case_sheet import add_line, resolve_line
+
+        resolve_line(add_line(self.client_obj, "diagnosis", "", "F32.1"))
+        self.assertEqual(self._diagnose(self.client_obj), "")
 
 
 class GebuhPdfTemplateTest(TestCase):

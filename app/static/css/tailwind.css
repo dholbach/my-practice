@@ -608,6 +608,31 @@
   .cn-log-context .cn-next-new-label:first-child { margin-top: 0; }
   .cn-next-covered { margin-top: 0.75rem; font-size: 0.875rem; }
   .cn-next-covered > summary { cursor: pointer; color: var(--color-text-secondary); }
+  /* Case sheet (P-006): one row per topic, label left, dated lines right; sub-cells wrap side by side */
+  .cs-card { padding: 0; overflow: hidden; }
+  .cs-card .section-card-header { padding: 1rem 1.25rem 0.5rem; }
+  .cs-hint { font-size: 0.8rem; color: var(--color-text-secondary); }
+  .cs-row { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); border-top: 1px solid var(--color-border); }
+  .cs-label { padding: 0.5rem 0.75rem; background: var(--color-bg-muted); border-right: 1px solid var(--color-border); font-size: 0.85rem; font-weight: 600; }
+  .cs-cells { display: flex; flex-wrap: wrap; min-width: 0; }
+  .cs-cell { flex: 1 1 11rem; min-width: 0; padding: 0.4rem 0.75rem; }
+  .cs-cell + .cs-cell { border-left: 1px solid var(--color-border); }
+  .cs-cell-label { font-size: 0.75rem; color: var(--color-text-secondary); }
+  .cs-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.5rem; padding: 0.15rem 0; }
+  .cs-line-text { flex: 1 1 12rem; min-width: 0; font-size: 0.9rem; }
+  .cs-line-text > :first-child { margin-top: 0; }
+  .cs-line-text > :last-child { margin-bottom: 0; }
+  .cs-line-date { font-size: 0.72rem; color: var(--color-text-secondary); white-space: nowrap; }
+  .cs-edit > summary, .cs-add > summary { color: var(--color-text-secondary); cursor: pointer; list-style: none; padding: 0 0.25rem; }
+  .cs-edit > summary::-webkit-details-marker, .cs-add > summary::-webkit-details-marker { display: none; }
+  .cs-edit > summary:hover, .cs-add > summary:hover { color: var(--color-link); }
+  .cs-edit[open] { flex: 1 0 100%; }
+  .cs-form { margin: 0.25rem 0; }
+  .cs-form-actions { margin-top: 0.25rem; }
+  .cs-history { margin-top: 0.25rem; font-size: 0.8rem; }
+  .cs-history > summary { color: var(--color-text-secondary); cursor: pointer; }
+  .cs-old { padding: 0.25rem 0; color: var(--color-text-secondary); }
+  .cs-legacy > summary { cursor: pointer; font-weight: 600; }
   /* Prompt chips above the session note: insert a reminder, or jump to a field */
   .cn-prompt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
   .cn-prompt-chip { padding: 0.15rem 0.7rem; border: 1px dashed var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 0.8125rem; cursor: pointer; }
