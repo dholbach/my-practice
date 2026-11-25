@@ -1,6 +1,7 @@
 {% load i18n payment_tags markdown_filters %}
-<!-- ══ Tab: Protokoll ══════════════════════════════════════════════════════ -->
-<div id="ptab-protokoll" class="page-tab-content" x-data="{ showNote: false, showSupervision: false }">
+<!-- ══ Clinical mode, below the overview: protocol timeline, assessments, documents ══ -->
+<div id="ptab-protokoll" class="page-tab-content page-tab-active" data-mode="clinical" data-scroll-on-open
+     x-data="{ showNote: false, showSupervision: false }">
     <div class="cn-actions cn-actions-top">
         <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary btn-sm">{% trans "+ Session log" %}</a>
         <button type="button" class="btn btn-secondary btn-sm" x-on:click="showNote = !showNote">{% trans "+ Note" %}</button>
@@ -207,5 +208,25 @@
     {% else %}
     <p class="cn-empty-state">{% trans "No entries yet. Session logs are created when adding new entries." %}</p>
     {% endif %}
+
+
+    <!-- Clinical questionnaires (P-118/P-119) -->
+    {% if available_questionnaires %}
+    <div class="section-card">
+        <div class="sidebar-section-label">🧠 {% trans "Assessments" %}</div>
+        {% for q in available_questionnaires %}
+        <div class="questionnaire-row">
+            <span class="questionnaire-title">{{ q.title|dict_get:client.language }}</span>
+            <div class="step-actions">
+                {% if client.email %}<a href="{% url 'send_questionnaire_pdf_email' client.pk q.code %}" class="btn btn-secondary btn-sm">📧 {% trans "Send" %}</a>{% endif %}
+                <a href="{% url 'questionnaire_pdf' q.code %}?lang={{ client.language }}" target="_blank" class="btn btn-secondary btn-sm">📄 PDF</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% if not client.email %}<div class="text-muted no-email-hint">{% trans "No email address — hand over or print the PDF." %}</div>{% endif %}
+    </div>
+    {% endif %}
+
+    {% include 'my_practice/client_detail_documents.html' %}
 
 </div><!-- /ptab-protokoll -->

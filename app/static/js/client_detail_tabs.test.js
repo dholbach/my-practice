@@ -1,11 +1,12 @@
 /**
- * Tests for client_detail_tabs.js — the tabs on the client detail page.
+ * Tests for client_detail_tabs.js — the Clinical / Admin modes of the client detail page.
  * Run with: node client_detail_tabs.test.js
  *
  * Browser IIFE that wires itself on load: a throwaway DOM stub, the real source
  * loaded via `vm` (plain `node <file>`, see dev.py cmd_test_js). Pinned: which
- * tab is shown on a click and from the URL hash, the hash that is written back,
- * the cockpit shortcut that clicks a toggle inside a tab, and the "unsaved" mark.
+ * sections are shown on a click and from the URL hash (a mode shows all its sections),
+ * the hash that is written back, the scroll to the protocol, the cockpit shortcut that
+ * clicks a toggle inside a section, and the "unsaved" mark.
  */
 
 const fs = require("fs");
@@ -35,14 +36,25 @@ function classList() {
 }
 
 function load({ hash = "" } = {}) {
+    const modes = { profil: "clinical", protokoll: "clinical", abrechnung: "admin" };
     const tabs = {};
-    const buttons = {};
-    for (const name of ["profil", "protokoll", "abrechnung"]) {
-        tabs[name] = { id: `ptab-${name}`, classList: classList() };
-        buttons[name] = { dataset: { tab: name }, classList: classList(), title: "" };
+    for (const [name, mode] of Object.entries(modes)) {
+        tabs[name] = {
+            id: `ptab-${name}`,
+            dataset: name === "protokoll" ? { mode, scrollOnOpen: "" } : { mode },
+            classList: classList(),
+            scrolled: null,
+            scrollIntoView(options) { this.scrolled = options || true; },
+        };
     }
+    // One button per mode, naming the first section of its mode.
+    const buttons = {
+        clinical: { dataset: { tab: "profil", mode: "clinical" }, classList: classList(), title: "" },
+        admin: { dataset: { tab: "abrechnung", mode: "admin" }, classList: classList(), title: "" },
+    };
     tabs.profil.classList.add("page-tab-active");
-    buttons.profil.classList.add("page-tab-active");
+    tabs.protokoll.classList.add("page-tab-active");
+    buttons.clinical.classList.add("page-tab-active");
     const tabBar = { dataset: { unsavedLabel: "Unsaved changes" } };
     const toggle = { clicks: 0, click() { this.clicks += 1; } };
     const section = { scrolled: null, scrollIntoView(options) { this.scrolled = options; } };
@@ -54,7 +66,7 @@ function load({ hash = "" } = {}) {
         getElementById: (id) => tabs[id.replace("ptab-", "")] || null,
         querySelectorAll: (selector) => (selector === ".page-tab-content" ? Object.values(tabs) : Object.values(buttons)),
         querySelector: (selector) => {
-            let m = selector.match(/^\.page-tab-btn\[data-tab="(\w+)"\]$/) || selector.match(/^\[data-tab="(\w+)"\]$/);
+            const m = selector.match(/^\.page-tab-btn\[data-mode="(\w+)"\]$/);
             if (m) return buttons[m[1]];
             if (selector === ".page-tab-bar") return tabBar;
             if (selector === "#section") return section;
@@ -80,23 +92,44 @@ function click(page, target) {
 }
 
 const active = (page) => Object.keys(page.tabs).filter((n) => page.tabs[n].classList.has("page-tab-active"));
+const activeButtons = (page) => Object.keys(page.buttons).filter((n) => page.buttons[n].classList.has("page-tab-active"));
 
 console.log("client_detail_tabs.js");
 
 {
     const page = load();
-    const event = click(page, (selector) => (selector.startsWith(".page-tab-btn") ? page.buttons.abrechnung : null));
-    check("clicking a tab button shows that tab only", JSON.stringify(active(page)) === '["abrechnung"]' && page.buttons.abrechnung.classList.has("page-tab-active") && !page.buttons.profil.classList.has("page-tab-active"));
-    check("it writes the tab into the URL hash and stops the default", page.urls[0] === "#ptab-abrechnung" && event.prevented);
+    const event = click(page, (selector) => (selector.startsWith(".page-tab-btn") ? page.buttons.admin : null));
+    check("clicking the Admin button shows the admin sections only", JSON.stringify(active(page)) === '["abrechnung"]' && JSON.stringify(activeButtons(page)) === '["admin"]');
+    check("it writes the section into the URL hash and stops the default", page.urls[0] === "#ptab-abrechnung" && event.prevented);
+    check("a mode button does not scroll", page.tabs.abrechnung.scrolled === null);
+}
+{
+    const page = load();
+    click(page, (selector) => (selector.startsWith(".page-tab-btn") ? page.buttons.admin : null));
+    click(page, (selector) => (selector.startsWith(".page-tab-btn") ? page.buttons.clinical : null));
+    check("the Clinical button shows the overview and the protocol together", JSON.stringify(active(page)) === '["profil","protokoll"]' && JSON.stringify(activeButtons(page)) === '["clinical"]');
 }
 {
     const page = load();
     const trigger = { dataset: { pageTab: "protokoll", clickInTab: "showNote" } };
     click(page, (selector) => (selector.startsWith(".page-tab-btn") ? trigger : null));
-    check("a cockpit shortcut opens its tab and marks its button", JSON.stringify(active(page)) === '["protokoll"]' && page.buttons.protokoll.classList.has("page-tab-active"));
+    check("a shortcut to the protocol keeps the clinical mode and scrolls to the protocol", JSON.stringify(active(page)) === '["profil","protokoll"]' && page.tabs.protokoll.scrolled.behavior === "smooth");
     check("and clicks the named toggle after 100 ms", page.timers[0].ms === 100 && page.toggle.clicks === 0);
     page.timers[0].fn();
-    check("the toggle is clicked once the tab is visible", page.toggle.clicks === 1);
+    check("the toggle is clicked once the section is visible", page.toggle.clicks === 1);
+}
+{
+    const page = load();
+    click(page, (selector) => (selector.startsWith(".page-tab-btn") ? page.buttons.admin : null));
+    const trigger = { dataset: { pageTab: "protokoll" } };
+    click(page, (selector) => (selector.startsWith(".page-tab-btn") ? trigger : null));
+    check("a shortcut to the protocol from the admin mode switches back to clinical", JSON.stringify(active(page)) === '["profil","protokoll"]' && JSON.stringify(activeButtons(page)) === '["clinical"]');
+}
+{
+    const page = load();
+    const trigger = { dataset: { pageTab: "abrechnung" } };
+    click(page, (selector) => (selector.startsWith(".page-tab-btn") ? trigger : null));
+    check("a shortcut to billing opens the admin mode without scrolling", JSON.stringify(active(page)) === '["abrechnung"]' && page.tabs.abrechnung.scrolled === null);
 }
 {
     const page = load();
@@ -105,30 +138,38 @@ console.log("client_detail_tabs.js");
         preventDefault() {},
         target: { closest: (selector) => (selector === "[data-smooth-scroll]" ? link : null) },
     });
-    check("a smooth-scroll link scrolls smoothly and does not switch tabs", page.section.scrolled.behavior === "smooth" && JSON.stringify(active(page)) === '["profil"]');
+    check("a smooth-scroll link scrolls smoothly and does not switch modes", page.section.scrolled.behavior === "smooth" && JSON.stringify(active(page)) === '["profil","protokoll"]');
 }
 {
     const page = load();
     click(page, () => null);
-    check("a click elsewhere does nothing", JSON.stringify(active(page)) === '["profil"]' && page.urls.length === 0);
+    check("a click elsewhere does nothing", JSON.stringify(active(page)) === '["profil","protokoll"]' && page.urls.length === 0);
 }
 {
     const page = load({ hash: "#ptab-protokoll" });
-    check("a tab named in the URL hash is shown on load", JSON.stringify(active(page)) === '["protokoll"]' && page.buttons.protokoll.classList.has("page-tab-active"));
+    check("a hash naming the protocol shows the clinical mode and scrolls to it", JSON.stringify(active(page)) === '["profil","protokoll"]' && page.tabs.protokoll.scrolled !== null);
+}
+{
+    const page = load({ hash: "#ptab-abrechnung" });
+    check("a hash naming billing shows the admin mode", JSON.stringify(active(page)) === '["abrechnung"]' && JSON.stringify(activeButtons(page)) === '["admin"]' && page.tabs.abrechnung.scrolled === null);
+}
+{
+    const page = load({ hash: "#ptab-profil" });
+    check("a hash naming the overview stays at the top", JSON.stringify(active(page)) === '["profil","protokoll"]' && page.tabs.profil.scrolled === null);
 }
 {
     const page = load({ hash: "#ptab-unknown" });
-    check("an unknown hash is ignored", JSON.stringify(active(page)) === '["profil"]' && page.urls.length === 0);
+    check("an unknown hash is ignored", JSON.stringify(active(page)) === '["profil","protokoll"]' && page.urls.length === 0);
 }
 {
     const page = load();
     const inProtocol = { closest: () => page.tabs.protokoll };
     page.listeners["draftguard:dirty"]({ target: inProtocol, detail: { dirty: true } });
-    check("an unsaved edit marks its tab button", page.buttons.protokoll.classList.has("page-tab-btn--dirty") && page.buttons.protokoll.title === "Unsaved changes");
+    check("an unsaved edit marks the button of its mode", page.buttons.clinical.classList.has("page-tab-btn--dirty") && page.buttons.clinical.title === "Unsaved changes");
     page.listeners["draftguard:dirty"]({ target: inProtocol, detail: { dirty: false } });
-    check("saving clears the mark", !page.buttons.protokoll.classList.has("page-tab-btn--dirty") && page.buttons.protokoll.title === "");
+    check("saving clears the mark", !page.buttons.clinical.classList.has("page-tab-btn--dirty") && page.buttons.clinical.title === "");
     page.listeners["draftguard:dirty"]({ target: { closest: () => null }, detail: { dirty: true } });
-    check("a form outside any tab is ignored", true);
+    check("a form outside any section is ignored", true);
 }
 
 if (failures > 0) {

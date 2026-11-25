@@ -32,16 +32,14 @@
 </div>
 {% endif %}
 
-<!-- Page-level tab bar; the list/edit actions ride along on the same row rather
-     than taking a band of their own (they push right via margin-left:auto, and
-     drop onto their own line if the tabs wrap). -->
+<!-- Mode bar: Clinical (overview and protocol in one scroll) or Admin (billing, contact,
+     onboarding). The list/edit actions ride along on the same row (margin-left:auto), and
+     drop onto their own line if the buttons wrap. -->
 <div class="page-tab-bar" data-unsaved-label="{% trans "Unsaved changes" %}">
-    <button class="page-tab-btn page-tab-active" data-tab="profil">{% trans "Overview" %}</button>
-    <button class="page-tab-btn" data-tab="protokoll">📝 {% trans "Protocol" %}
-        {% if log_entries %}<span class="cn-badge">{{ log_entries|length }}</span>{% endif %}
+    <button class="page-tab-btn page-tab-active" data-tab="profil" data-mode="clinical">📝 {% trans "Clinical" %}
         {% if open_supervision_count %}<span class="cn-badge cn-badge-warn" title="{% trans 'Open supervision topics' %}">🔍 {{ open_supervision_count }}</span>{% endif %}
     </button>
-    <button class="page-tab-btn" data-tab="abrechnung">💶 {% trans "Billing" %}
+    <button class="page-tab-btn" data-tab="abrechnung" data-mode="admin">💶 {% trans "Admin & billing" %}
         {% if stats.open_amount %}<span class="cn-badge cn-badge-warn">{{ stats.open_amount|currency_rounded }}</span>{% endif %}
     </button>
     <div class="cd-header-actions">

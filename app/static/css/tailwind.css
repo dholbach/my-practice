@@ -981,36 +981,13 @@
   .page-tab-content.page-tab-active { display: block; }
   .cn-badge-warn { background: var(--color-warning-bg); color: var(--color-warning); }
 
-  /* Cockpit: Überblick tab */
+  /* Cockpit: top of the clinical mode */
   .cockpit-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
   @media (max-width: 900px) { .cockpit-stats { grid-template-columns: 1fr 1fr; } }
   .info-card-warn { background: var(--color-warning-bg); border-color: var(--color-warning); }
   .info-card-warn h4 { color: var(--color-warning); }
   .info-card-warn .value { color: var(--color-warning); }
   .cockpit-stat-arrow { font-size: 0.8rem; margin-left: 0.25rem; text-decoration: none; }
-
-  .cockpit-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-  @media (max-width: 900px) { .cockpit-split { grid-template-columns: 1fr; } }
-  .cockpit-right-col { display: flex; flex-direction: column; gap: 1rem; }
-  .cockpit-right-col .section-card { margin-bottom: 0; }
-
-  .cockpit-link { font-size: 0.875rem; text-decoration: none; }
-  .cockpit-link:hover { text-decoration: underline; }
-
-  .cockpit-session-list { display: flex; flex-direction: column; }
-  .cockpit-session-row { display: grid; grid-template-columns: 6.5rem 1fr auto; gap: 0.75rem; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--color-border); }
-  .cockpit-session-row:last-child { border-bottom: none; }
-  .cockpit-session-date { font-size: 0.8rem; color: var(--color-text-secondary); white-space: nowrap; }
-  .cockpit-session-summary { font-size: 0.875rem; color: var(--color-text-primary); }
-  .cockpit-session-badges { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: flex-end; }
-
-  .cockpit-progress-count { font-weight: 600; color: var(--color-text-secondary); font-size: 0.85rem; }
-  .cockpit-progress-bar { height: 6px; background: var(--color-border); border-radius: 3px; overflow: hidden; margin-bottom: 0.75rem; }
-  .cockpit-progress-fill { height: 100%; background: var(--color-primary); border-radius: 3px; }
-  .cockpit-intake-steps { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-  .cockpit-intake-step { font-size: 0.8rem; padding: 0.2rem 0.65rem; border-radius: 4px; background: var(--color-bg-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
-  .cockpit-intake-step.step-done { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success); }
-  .cockpit-intake-detail-link { margin-top: 0.25rem; }
 
   .cockpit-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
 
