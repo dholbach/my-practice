@@ -5,7 +5,7 @@
     <div class="cockpit-stats">
         <div class="info-card">
             <h4>{% trans "Working diagnosis" %}</h4>
-            <div class="value sensitive-data">{% if profile.arbeitsdiagnose %}{{ profile.arbeitsdiagnose }}{% else %}–{% endif %}</div>
+            <div class="value sensitive-data">{% if case_summary.arbeitsdiagnose %}{{ case_summary.arbeitsdiagnose }}{% else %}–{% endif %}</div>
         </div>
         <div class="info-card">
             <h4>{% trans "Last session" %}</h4>
@@ -54,55 +54,17 @@
         {% include 'includes/client_tags.html' with client=client editable=True %}
     </div>
 
-    {% if client.needs_gebueh_invoice and not profile.arbeitsdiagnose %}
+    {% if client.needs_gebueh_invoice and not case_summary.arbeitsdiagnose %}
     <div class="callout {% if gebueh_diagnostic_count >= 5 %}callout-warning{% else %}callout-primary{% endif %}">
         {% if gebueh_diagnostic_count >= 5 %}
         ⚠️ {% trans "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis." %}
         {% else %}
         {% blocktrans %}Diagnosis not yet set — invoices currently show "Probationary phase". Please update once the probationary phase is complete.{% endblocktrans %}
         {% endif %}
-        <a href="#id_arbeitsdiagnose" class="ml-1 whitespace-nowrap">{% trans "Edit →" %}</a>
+        <a href="#case-row-diagnosis" class="ml-1 whitespace-nowrap">{% trans "Edit →" %}</a>
     </div>
     {% endif %}
 
-    <form method="post" action="{% url 'client_profile_save' client.pk %}" id="client-profile-form"
-          data-draft-guard
-          data-draft-message="{% trans "You have an unsaved draft from an earlier attempt." %}"
-          data-draft-restore-label="{% trans "Restore draft" %}"
-          data-draft-discard-label="{% trans "Discard" %}">
-        {% csrf_token %}
-        <div class="section-card">
-            <div class="cn-field">
-                <label class="cn-label" for="id_arbeitsdiagnose">{% trans "Working diagnosis" %}</label>
-                <input type="text" id="id_arbeitsdiagnose" name="arbeitsdiagnose" autocomplete="off"
-                       class="form-control" value="{{ profile.arbeitsdiagnose }}">
-            </div>
-            <div class="cn-field">
-                <label class="cn-label" for="id_intake_notes">{% trans "Intake & Anamnesis" %}</label>
-                <textarea id="id_intake_notes" name="intake_notes" class="form-control cn-textarea-large"
-                          placeholder="{% trans 'Clinical initial assessment…' %}">{{ profile.intake_notes|default:intake_notes_template }}</textarea>
-                {% if profile.intake_notes %}
-                <details class="cn-notes-preview" open>
-                    <summary>📖 {% trans "Preview" %}</summary>
-                    <div class="md-rendered">{{ profile.intake_notes|render_markdown }}</div>
-                </details>
-                {% endif %}
-            </div>
-            <div class="cn-field">
-                <label class="cn-label" for="id_case_notes">{% trans "Case notes" %}</label>
-                <textarea id="id_case_notes" name="case_notes" class="form-control cn-textarea-large"
-                          placeholder="{% trans 'Topics, dynamics, challenges…' %}">{{ profile.case_notes|default:case_notes_template }}</textarea>
-                {% if profile.case_notes %}
-                <details class="cn-notes-preview" open>
-                    <summary>📖 {% trans "Preview" %}</summary>
-                    <div class="md-rendered">{{ profile.case_notes|render_markdown }}</div>
-                </details>
-                {% endif %}
-            </div>
-            <div class="cn-actions">
-                <button type="submit" class="btn btn-primary">{% trans "Save profile" %}</button>
-            </div>
-        </div>
-    </form>
+    {% include 'includes/case_sheet.html' %}
 
 </div><!-- /ptab-profil -->

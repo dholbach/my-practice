@@ -46,12 +46,10 @@ class ClientDetailModesTests(ClinicalTestBase):
         self.assertIn("page-tab-active", protocol[:200])
         self.assertNotIn("page-tab-active", admin[:200])
 
-    def test_clinical_page_has_for_next_time_then_case_formulation_then_the_protocol(self):
+    def test_clinical_page_has_for_next_time_then_the_case_sheet_then_the_protocol(self):
         html = self._html()
         overview, protocol, _admin = self._sections(html)
-        self.assertLess(
-            overview.index('id="for-next-time"'), overview.index('id="client-profile-form"')
-        )
+        self.assertLess(overview.index('id="for-next-time"'), overview.index('id="case-sheet"'))
         self.assertIn("cn-supervision-section", protocol)
 
     def test_contact_onboarding_and_billing_are_admin_only(self):

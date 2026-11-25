@@ -226,46 +226,6 @@ class SupervisionItemTests(ClinicalTestBase):
 
 
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)
-class ClientProfileSaveViewTests(ClinicalTestBase):
-    """Tests for client_profile_save view."""
-
-    def _url(self):
-        return reverse("client_profile_save", kwargs={"pk": self.client_obj.pk})
-
-    def test_save_creates_profile(self):
-        """POST creates a new ClientProfile if none exists."""
-        self.http.post(
-            self._url(),
-            {
-                "arbeitsdiagnose": "F32.1",
-                "intake_notes": "Erstgespräch gut.",
-                "case_notes": "",
-            },
-        )
-        self.assertTrue(ClientProfile.objects.filter(client=self.client_obj).exists())
-
-    def test_save_updates_existing_profile(self):
-        """POST updates an existing ClientProfile."""
-        ClientProfile.objects.create(client=self.client_obj, arbeitsdiagnose="F32.0")
-        self.http.post(
-            self._url(),
-            {
-                "arbeitsdiagnose": "F33.0",
-                "intake_notes": "",
-                "case_notes": "",
-            },
-        )
-        profile = ClientProfile.objects.get(client=self.client_obj)
-        self.assertEqual(profile.arbeitsdiagnose, "F33.0")
-
-    def test_get_not_allowed(self):
-        """GET returns 405 Method Not Allowed."""
-        response = self.http.get(self._url())
-        self.assertEqual(response.status_code, 405)
-
-
-@override_settings(FERNET_KEY=TEST_FERNET_KEY)
-@override_settings(FERNET_KEY=TEST_FERNET_KEY)
 class SessionLogCreateViewTests(ClinicalTestBase):
     """Tests for session_log_create view."""
 

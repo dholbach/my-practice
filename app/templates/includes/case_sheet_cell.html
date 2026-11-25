@@ -1,0 +1,48 @@
+{% load i18n markdown_filters %}
+{# One cell of the case sheet: current lines, an add form where it makes sense, earlier versions. Needs `client` and `cell`. #}
+{% trans "Edit" as lbl_edit %}
+{% for line in cell.lines %}
+<div class="cs-line">
+    <div class="cs-line-text md-rendered">{{ line.content|render_markdown }}</div>
+    <span class="cs-line-date" title="{% trans "Noted on" %}">{{ line.noted_on|date:"d.m.y" }}{% if line.source_session.log %} · <a href="{% url 'session_log_edit' client.pk line.source_session.log.pk %}">{% trans "session" %}</a>{% endif %}</span>
+    <details class="cs-edit">
+        <summary aria-label="{{ lbl_edit }}" title="{{ lbl_edit }}">✎</summary>
+        <form method="post" action="{% url 'case_fact_update' client.pk line.pk %}" class="cs-form">
+            {% csrf_token %}
+            <textarea name="content" rows="3" class="form-control cn-textarea-small" aria-label="{{ lbl_edit }}" required>{{ line.content }}</textarea>
+            <div class="cs-form-actions">
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Save" %}</button>
+            </div>
+        </form>
+        <form method="post" action="{% url 'case_fact_resolve' client.pk line.pk %}" class="cs-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">{% trans "No longer applies" %}</button>
+        </form>
+    </details>
+</div>
+{% endfor %}
+{% if cell.multi or not cell.lines %}
+<details class="cs-add">
+    <summary aria-label="{% trans "Add a line" %}" title="{% trans "Add a line" %}">＋</summary>
+    <form method="post" action="{% url 'case_fact_add' client.pk %}" class="cs-form">
+        {% csrf_token %}
+        <input type="hidden" name="kind" value="{{ cell.row.kind }}">
+        <input type="hidden" name="sub" value="{{ cell.key }}">
+        <textarea name="content" rows="2" class="form-control cn-textarea-small" aria-label="{% trans "Add a line" %}" required></textarea>
+        <div class="cs-form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
+        </div>
+    </form>
+</details>
+{% endif %}
+{% if cell.history %}
+<details class="cs-history">
+    <summary>{% blocktrans count count=cell.history|length %}{{ count }} earlier line{% plural %}{{ count }} earlier lines{% endblocktrans %}</summary>
+    {% for old in cell.history %}
+    <div class="cs-old">
+        <span class="cs-line-date">{{ old.noted_on|date:"d.m.y" }} – {{ old.closed_on|date:"d.m.y" }} · {% if old.status == "resolved" %}{% trans "no longer applies" %}{% else %}{% trans "replaced" %}{% endif %}</span>
+        <div class="md-rendered">{{ old.content|render_markdown }}</div>
+    </div>
+    {% endfor %}
+</details>
+{% endif %}

@@ -25,7 +25,8 @@ from ..models import Client, Invoice, InvoiceItem, Session
 from ..utils import RevenueCalculator, get_next_invoice_number
 from ..utils.billing_helpers import bill_sessions_on_invoice
 from ..utils.calendar_preflight import CalendarPreflightChecker
-from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks, get_arbeitsdiagnose
+from ..utils.case_sheet import working_diagnosis
+from ..utils.gebueh_helpers import build_gebueh_blocks, gebueh_total_for_blocks
 from ..utils.invoice_filter_helper import InvoiceFilterHelper
 from ..utils.view_helpers import get_year_from_request, safe_next
 from .crud_mixins import (
@@ -296,7 +297,7 @@ class InvoiceDetailView(DetailView):
         if invoice.client.needs_gebueh_invoice:
             context["gebueh_blocks"] = build_gebueh_blocks(invoice)
             context["gebueh_total"] = gebueh_total_for_blocks(context["gebueh_blocks"])
-            context["arbeitsdiagnose"] = get_arbeitsdiagnose(invoice.client)
+            context["arbeitsdiagnose"] = working_diagnosis(invoice.client)
         return context
 
 

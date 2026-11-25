@@ -330,11 +330,6 @@ urlpatterns = [
     path("tools/boilerplate/", views.boilerplate_view, name="boilerplate"),
     # Clinical documentation (P-009)
     path(
-        "clients/<int:pk>/documentation/save/",
-        views.client_profile_save,
-        name="client_profile_save",
-    ),
-    path(
         "clients/<int:pk>/sessions/new/",
         views.session_log_create,
         name="session_log_create",
@@ -415,6 +410,21 @@ urlpatterns = [
         "clients/<int:pk>/notes/<int:note_pk>/delete/",
         views.client_note_delete,
         name="client_note_delete",
+    ),
+    path(
+        "clients/<int:pk>/case-sheet/add/",
+        views.case_fact_add,
+        name="case_fact_add",
+    ),
+    path(
+        "clients/<int:pk>/case-sheet/<int:fact_pk>/update/",
+        views.case_fact_update,
+        name="case_fact_update",
+    ),
+    path(
+        "clients/<int:pk>/case-sheet/<int:fact_pk>/resolve/",
+        views.case_fact_resolve,
+        name="case_fact_resolve",
     ),
     path(
         "clients/<int:pk>/scratch/add/",

@@ -3,8 +3,9 @@ context shown beside the form."""
 
 from datetime import date
 
-from ..models import Client, ClientProfile, ScratchItem, Session, SessionLog
-from .markdown_sections import has_content, split_sections
+from ..models import Client, ClinicalFact, ScratchItem, Session, SessionLog
+from ..models.case_sheet import ROWS_BY_KIND
+from .case_sheet import lines_to_markdown
 
 # A whole day: room for intensive or workshop days, while keeping out typos and values
 # that would overflow the integer column. The duration inputs use the same max.
@@ -61,35 +62,28 @@ def set_session_duration(session: Session, minutes: int) -> bool:
     return True
 
 
-FUTURE_WORK_HEADING = "Zukünftige Arbeit / Fragen"
-
-# What the form shows from the case notes while a log is written: (profile field, heading).
-CASE_SHEET_EXCERPT: tuple[tuple[str, str], ...] = (
-    ("intake_notes", "Arbeitshypothese"),
-    ("intake_notes", "Aktuelle Trigger"),
-    ("intake_notes", "Ressourcen"),
-    ("case_notes", FUTURE_WORK_HEADING),
+# What the form shows from the case sheet while a log is written: the rows' kinds, in order.
+CASE_SHEET_EXCERPT_KINDS: tuple[str, ...] = (
+    "hypothesis",
+    "current_triggers",
+    "resources",
+    "future_work",
 )
 RECENT_LOGS_SHOWN = 3
 RECENT_COVERED_SHOWN = 5
 
 
 def case_sheet_excerpt(client: Client) -> list[tuple[str, str]]:
-    """The filled ``(heading, text)`` sections of CASE_SHEET_EXCERPT for the client.
-
-    Reads the profile without creating it: opening a log form must not write.
-    """
-    profile = ClientProfile.objects.filter(client=client).first()
-    if profile is None:
-        return []
-    parsed = {
-        field: split_sections(getattr(profile, field))
-        for field in {f for f, _h in CASE_SHEET_EXCERPT}
-    }
+    """The ``(row label, markdown)`` pairs of CASE_SHEET_EXCERPT_KINDS that have current lines."""
+    lines: dict[str, list[ClinicalFact]] = {}
+    for fact in ClinicalFact.objects.filter(
+        client=client, kind__in=CASE_SHEET_EXCERPT_KINDS, status=ClinicalFact.Status.ACTIVE
+    ):
+        lines.setdefault(fact.kind, []).append(fact)
     return [
-        (heading, parsed[field][heading])
-        for field, heading in CASE_SHEET_EXCERPT
-        if has_content(parsed[field].get(heading, ""))
+        (ROWS_BY_KIND[kind].label, lines_to_markdown(lines[kind]))
+        for kind in CASE_SHEET_EXCERPT_KINDS
+        if kind in lines
     ]
 
 

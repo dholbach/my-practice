@@ -42,8 +42,9 @@ from ...models import (
     UserPractice,
     allow_issued_invoice_writes,
 )
-from ...models.clinical import ClientProfile, SessionLog
+from ...models.clinical import SessionLog
 from ...models.gebueh import Leistungserfassung
+from ...utils.case_sheet import add_line
 from ...utils.date_helpers import DateRangeHelper
 from ...utils.invoice_helpers import get_next_invoice_number
 from ._seed_data import (
@@ -546,32 +547,28 @@ class Command(BaseCommand):
         char_map: dict[int, tuple],
         rng: random.Random,
     ) -> None:
+        """Give each client a small case sheet: a diagnosis, the intake text and the themes."""
         from django.conf import settings
 
         if not settings.FERNET_KEY:
-            self.stdout.write("  ℹ️  Skipping client profiles (FERNET_KEY not set)")
+            self.stdout.write("  ℹ️  Skipping case sheets (FERNET_KEY not set)")
             return
 
         count = 0
         for client in clients:
+            if client.clinical_facts.exists():
+                continue
             code, _, archetype, _, _ = char_map[client.pk]
-            templates = PROFILE_TEMPLATES[archetype]
-            arbeitsdiagnose, intake_notes, case_notes = rng.choice(templates)
+            arbeitsdiagnose, intake_notes, case_notes = rng.choice(PROFILE_TEMPLATES[archetype])
             # Probationary-phase clients have no working diagnosis yet — that is
             # what surfaces the diagnosis callout on the client detail page.
             if GEBUEH_CLIENT_MODES.get(code, "").startswith("probatorik"):
                 arbeitsdiagnose = ""
-            _, created = ClientProfile.objects.get_or_create(
-                client=client,
-                defaults={
-                    "arbeitsdiagnose": arbeitsdiagnose,
-                    "intake_notes": intake_notes,
-                    "case_notes": case_notes,
-                },
-            )
-            if created:
-                count += 1
-        self.stdout.write(f"  ✓ Created {count} client profiles")
+            add_line(client, "diagnosis", "", arbeitsdiagnose)
+            add_line(client, "history", "", intake_notes)
+            add_line(client, "themes", "", case_notes)
+            count += 1
+        self.stdout.write(f"  ✓ Created {count} case sheets")
 
     # ── GebüH service entries ─────────────────────────────────────────────────
 

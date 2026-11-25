@@ -17,13 +17,10 @@ from ..models import (
     InvoiceItem,
     SupervisionItem,
 )
-from ..models.clinical import (
-    CASE_NOTES_TEMPLATE,
-    INTAKE_NOTES_TEMPLATE,
-    MoodTag,
-)
+from ..models.clinical import MoodTag
 from ..models.session import Session
 from .calculations import count_sessions
+from .case_sheet import build_case_sheet, working_diagnosis
 from .chart_helpers import (
     MONTH_ABBREVIATIONS,
     aggregate_invoice_items_by_month,
@@ -225,7 +222,8 @@ class ClientDetailContextBuilder:
     def _build_clinical_context(self) -> dict:
         from ..models import SessionLog
 
-        profile, _created = ClientProfile.objects.get_or_create(client=self.client)
+        # The old free-text notes, shown read-only below the case sheet until they are retired.
+        profile = ClientProfile.objects.filter(client=self.client).first()
 
         # Intake progress: 4 steps tracked as date fields on Client (the overview shows
         # "N of 4" while the intake process is open; the checklist itself is in the admin mode).
@@ -306,7 +304,10 @@ class ClientDetailContextBuilder:
             ).count()
 
         return {
-            "profile": profile,
+            "legacy_profile": profile,
+            "case_sheet": build_case_sheet(self.client),
+            # Named like the field it stands for, so privacy mode treats it as personal data.
+            "case_summary": {"arbeitsdiagnose": working_diagnosis(self.client)},
             "intake_steps_done": intake_steps_done,
             "log_entries": log_entries,
             "open_note_session_id": open_note_session_id,
@@ -317,8 +318,6 @@ class ClientDetailContextBuilder:
             ),
             "session_type_choices": SessionLog.SessionType.choices,
             "mood_tag_choices": MoodTag.choices,
-            "intake_notes_template": INTAKE_NOTES_TEMPLATE,
-            "case_notes_template": CASE_NOTES_TEMPLATE,
             "for_next_time": build_for_next_time(self.client),
             "documents": self.client.documents.order_by("-document_date", "-created_at"),
             "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,

@@ -50,6 +50,9 @@ from .calendar_views import (
     calendar_queue_skip_duplicates,
 )
 
+# Case sheet (P-006)
+from .case_sheet_views import case_fact_add, case_fact_resolve, case_fact_update
+
 # Client views
 from .client_views import (
     ClientIntakeView,
@@ -68,7 +71,6 @@ from .clinical_views import (
     client_note_create,
     client_note_delete,
     client_note_update,
-    client_profile_save,
     client_triage_summary,
     gebueh_leistung_create,
     session_bill,
@@ -340,6 +342,10 @@ __all__ = [
     "checklist_complete",
     "checklist_pause_item",
     "checklist_unpause_item",
+    # Case sheet (P-006)
+    "case_fact_add",
+    "case_fact_resolve",
+    "case_fact_update",
     # Reminders for next time (P-006)
     "scratch_item_create",
     "scratch_item_delete",
@@ -349,7 +355,6 @@ __all__ = [
     "client_note_create",
     "client_note_delete",
     "client_note_update",
-    "client_profile_save",
     "client_triage_summary",
     "gebueh_leistung_create",
     "session_bill",

@@ -105,25 +105,37 @@ Split in two: **3a** (the Clinical / Admin modes) and **3b** (timeline layout an
 
 ### PR 4: The case sheet (ClinicalFact)
 
-- New `ClinicalFact(TimestampedModel)`: client, `kind` (one per row of the case sheet, see below), optional
-  `sub` (sub-cell, e.g. *Beginn*), encrypted `content`, `noted_on`, optional `source_session` / `source_note`,
-  `status` (`active` / `resolved` / `superseded`) and `superseded_by`.
-- Rows: Anliegen, Symptomatik (Beginn | Verschlimmerung/Änderung | Dauer bis), Körperlich, Affektiv,
-  Erst-Auslöser, Akt. Trigger, Anamnestische Besonderheiten, Nervensystem/ANS, Limbisches System
-  (Nähe/Distanz | Empathie | Loyalität/Scham/Schuld), Neocortical (Präsenz/Fokus | Mentalisationsgrad),
-  Glaubenssätze, SIBAM (bevorzugt | fehlend), Ressourcen, Arbeitshypothese, Arbeitsdiagnose, Therapieziel,
-  „Sicherheit“ gestört durch, Prozessaufbau, *In their words* (the client's own phrases). Case-note lists:
-  Themen, Familiendynamik, Ich-Du, Herausforderungen, Zukünftige Arbeit/Fragen.
-- The **case sheet** renders as a compact table: label column, sub-cells side by side, each line with its date
-  and a link to its source. Edit in place; "+" per row. Editing a line supersedes it, and earlier versions
-  stay one click away.
-- **Migration:** split existing `intake_notes` / `case_notes` by their `## ` headings into facts dated with the
-  profile's `updated_at`. Text that matches no heading becomes a "Notes" fact. The old fields stay read-only
-  until the migration is confirmed on real data, then they go.
-- `arbeitsdiagnose` becomes the active Arbeitsdiagnose fact. Invoices (GebüH diagnosis line) read it from there.
-- Kind labels are clinical vocabulary in German (same exemption as the current template, see
-  CODEBASE_STANDARDS § Internationalisation). Whether they need English labels for other self-hosters is
-  decided in this PR.
+As built (migrations 0018 and 0019):
+
+- New `ClinicalFact(TimestampedModel)` in `models/case_sheet.py`: client, `kind` (the row) and `sub` (the
+  cell), encrypted `content`, `noted_on`, optional `source_session`, `status` (`active` / `superseded` /
+  `resolved`), `closed_on` and `superseded_by`. The rows are defined in code (`CASE_SHEET_ROWS`), not as model
+  choices, so adding or renaming one needs no migration. `source_note` was dropped: nothing creates a line
+  from a note yet.
+- Rows follow the old intake form: Anliegen, Symptomatik (Beginn | Verschlimmerung / Änderung | Dauer bis),
+  Körperlich, Affektiv, Erst-Auslöser, Akt. Trigger, Anamnestische Besonderheiten, Nervensystem / ANS,
+  Limbisches System (Nähe-/Distanzmuster | Empathiefähigkeit | Loyalität / Scham / Schuld), Neocortical
+  (Präsenz / Fokusstabilität | Mentalisationsgrad), Glaubenssätze, SIBAM (bevorzugt | fehlend), Ressourcen,
+  Arbeitshypothese, Arbeitsdiagnose, Therapieziel, „Sicherheit“ gestört durch, Prozessaufbau, O-Töne (the
+  client's own phrases), Themen, Familiendynamik, Ich-Du, Herausforderungen, Zukünftige Arbeit / Fragen, and
+  "Weitere Notizen" for text that fits no row. *Multi* rows (triggers, resources, beliefs, themes …) hold
+  several current lines; the others hold one, which a new line supersedes.
+- The **case sheet** is a compact table on the client page's clinical mode, replacing the intake / case notes
+  textareas: label column, sub-cells side by side, every line dated, a line added from a log linking to it.
+  A line is added (＋), reworded (✎: the new wording is a new line, the old one is superseded and stays under
+  "earlier lines") or marked "no longer applies". Nothing is overwritten or deleted.
+- **Migration 0019** splits each profile's `intake_notes` / `case_notes` by `## ` heading into lines dated
+  with the profile's last save: labelled values (`**Beginn:** …`) go to their cells, bullet lists in a multi
+  row become one line per bullet, and anything that matches no row (an unknown heading, text before the first
+  heading, the old "Verlauf" section) goes to "Weitere Notizen" with its heading. The `arbeitsdiagnose` field
+  becomes the diagnosis line and wins over the intake section's text, which is kept as a note when it differs.
+  A client who already has lines is skipped, so running it again duplicates nothing.
+- The old fields stay in the database and show read-only under "Previous notes" until you have checked the
+  split on real data. Retiring them (fields, the section in the page) is a follow-up once that is confirmed.
+- The working diagnosis (invoices, the header, the stat card, the missing-diagnosis callout) is the diagnosis
+  row's current line. The log form's side panel and "For next time" read the sheet as well.
+- Row and cell labels are authored German vocabulary (the same i18n exemption as the old template). Other
+  self-hosters can't change the rows yet; per-practice rows remain an open question.
 - *Why:* gives the case formulation dates, sources and history, and makes the small digests of PR 5 possible.
   This is the change that addresses the root cause.
 

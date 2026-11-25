@@ -1,14 +1,15 @@
 """What to pick up next time with a client, gathered from three places (P-006).
 
 Open reminders (``ScratchItem``) are the only ones that can be ticked off here. The last
-session's "ideas for next time" and the case notes' future-work section are shown beside
+session's "ideas for next time" and the case sheet's future-work row are shown beside
 them so the whole list is in one spot, but they live where they were written.
 """
 
 import re
 
 from ..models import Client, ScratchItem
-from .session_log_helpers import FUTURE_WORK_HEADING, build_log_context
+from .case_sheet import active_lines, lines_to_markdown
+from .session_log_helpers import build_log_context
 
 # Folded away on the card, so showing nearly everything costs no room.
 COVERED_SHOWN = 100
@@ -32,10 +33,8 @@ def build_for_next_time(client: Client) -> dict:
         .order_by("-done_at")[:COVERED_SHOWN]
     )
     context = build_log_context(client, before=None, exclude_log_pk=None)
-    future_work = next(
-        (text for heading, text in context["case_sheet_excerpt"] if heading == FUTURE_WORK_HEADING),
-        "",
-    )
+    future_work_lines = active_lines(client, "future_work")
+    future_work = lines_to_markdown(future_work_lines) if future_work_lines else ""
     return {
         "open_items": context["scratch_items"],
         "covered_items": covered,

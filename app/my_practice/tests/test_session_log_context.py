@@ -4,39 +4,13 @@ import re
 from datetime import date
 from decimal import Decimal
 
-from django.test import SimpleTestCase, override_settings
+from django.test import override_settings
 from django.urls import reverse
 
-from ..models import Client, ClientProfile, Session, SessionLog
-from ..utils.markdown_sections import has_content, split_sections
+from ..models import Client, ClinicalFact, Session, SessionLog
+from ..utils.case_sheet import add_line
 from ..utils.session_log_helpers import build_log_context
 from .test_clinical import TEST_FERNET_KEY, ClinicalTestBase
-
-
-class SplitSectionsTests(SimpleTestCase):
-    def test_splits_on_second_level_headings(self):
-        text = "## Anliegen\nSchlaf\n\n## Ressourcen\nWald\nHund\n"
-        self.assertEqual(split_sections(text), {"Anliegen": "Schlaf", "Ressourcen": "Wald\nHund"})
-
-    def test_text_before_the_first_heading_is_ignored(self):
-        self.assertEqual(split_sections("loose\n## A\nx"), {"A": "x"})
-
-    def test_a_duplicate_heading_keeps_the_first_body(self):
-        self.assertEqual(
-            split_sections("## A\nfirst\n## B\nb\n## A\nsecond"), {"A": "first", "B": "b"}
-        )
-
-    def test_deeper_headings_stay_in_the_body(self):
-        self.assertEqual(split_sections("## A\n### Sub\nx"), {"A": "### Sub\nx"})
-
-    def test_empty_text(self):
-        self.assertEqual(split_sections(""), {})
-
-    def test_has_content_ignores_empty_label_lines(self):
-        self.assertFalse(has_content(""))
-        self.assertFalse(has_content("\n**Beginn:**\n**Verschlimmerung/Änderung:**  \n"))
-        self.assertTrue(has_content("**Beginn:** Frühjahr"))
-        self.assertTrue(has_content("**Beginn:**\nseit Jahren"))
 
 
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)
@@ -100,26 +74,31 @@ class BuildLogContextTests(ClinicalTestBase):
         self.assertEqual(context["recent_logs"], [])
         self.assertIsNone(context["previous_log"])
 
-    def test_case_sheet_excerpt_lists_filled_sections_only(self):
-        ClientProfile.objects.create(
-            client=self.client_obj,
-            intake_notes=(
-                "## Arbeitshypothese\nÜbererregung\n\n## Aktuelle Trigger\n\n"
-                "## Ressourcen\n**Bevorzugt:**\n\n## Glaubenssätze\nnot in the excerpt"
-            ),
-            case_notes="## Zukünftige Arbeit / Fragen\nTitration klein halten",
-        )
+    def test_case_sheet_excerpt_lists_rows_with_current_lines_in_sheet_order(self):
+        add_line(self.client_obj, "future_work", "", "Titration klein halten")
+        add_line(self.client_obj, "hypothesis", "", "Übererregung")
+        add_line(self.client_obj, "resources", "", "Hund")
+        add_line(self.client_obj, "resources", "", "Wald")
+        add_line(self.client_obj, "beliefs", "", "not in the excerpt")
         self.assertEqual(
             self._context()["case_sheet_excerpt"],
             [
                 ("Arbeitshypothese", "Übererregung"),
+                ("Ressourcen", "- Hund\n- Wald"),
                 ("Zukünftige Arbeit / Fragen", "Titration klein halten"),
             ],
         )
 
-    def test_a_missing_profile_is_not_created(self):
+    def test_the_excerpt_leaves_out_replaced_and_resolved_lines(self):
+        first = add_line(self.client_obj, "hypothesis", "", "alt")
+        add_line(self.client_obj, "hypothesis", "", "neu")
+        trigger = add_line(self.client_obj, "current_triggers", "", "weg")
+        ClinicalFact.objects.filter(pk=trigger.pk).update(status="resolved")
+        self.assertEqual(self._context()["case_sheet_excerpt"], [("Arbeitshypothese", "neu")])
+        self.assertEqual(ClinicalFact.objects.get(pk=first.pk).status, "superseded")
+
+    def test_an_empty_sheet_has_no_excerpt(self):
         self.assertEqual(self._context()["case_sheet_excerpt"], [])
-        self.assertFalse(ClientProfile.objects.filter(client=self.client_obj).exists())
 
 
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)
@@ -188,9 +167,7 @@ class SessionLogFormViewTests(ClinicalTestBase):
         SessionLog.objects.create(
             session=session, summary="Telefon als Trigger", next_session_ideas="Ressource Hund"
         )
-        ClientProfile.objects.create(
-            client=self.client_obj, intake_notes="## Arbeitshypothese\nÜbererregung"
-        )
+        add_line(self.client_obj, "hypothesis", "", "Übererregung")
         response = self.http.get(self._create_url())
         self.assertContains(response, "cn-log-context")  # headings are translated, so match markup
         self.assertContains(response, "Ressource Hund")
