@@ -2,6 +2,37 @@
 <!-- ══ Clinical mode, below the overview: protocol timeline, assessments, documents ══ -->
 <div id="ptab-protokoll" class="page-tab-content page-tab-active" data-mode="clinical" data-scroll-on-open
      x-data="{ showNote: false, showSupervision: false }">
+    {% if digest %}
+    <div id="digest-card" class="section-card digest-card">
+        <h3>{% trans "Anything for the case sheet?" %}</h3>
+        <p class="cs-hint">{% blocktrans with date=digest.session.session_date|date:"d.m.Y" %}Session of {{ date }}. One line is enough: it lands in that row with today's date and a link to this session. Skipping costs nothing.{% endblocktrans %}</p>
+        {% if digest.added %}
+        <ul class="digest-added">
+            {% for line in digest.added %}
+            <li><strong>{{ line.row }}{% if line.cell %} › {{ line.cell }}{% endif %}:</strong> {{ line.content }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <form method="post" action="{% url 'case_fact_add' client.pk %}" class="digest-form">
+            {% csrf_token %}
+            <input type="hidden" name="source_session" value="{{ digest.session.pk }}">
+            <input type="hidden" name="next" value="{% url 'client_detail' client.pk %}?digest={{ digest.session.pk }}#digest-card">
+            <label class="cn-label" for="digest-target">{% trans "Row" %}</label>
+            <select id="digest-target" name="target" class="form-control">
+                {% for rowview in case_sheet %}{% for cell in rowview.cells %}
+                <option value="{{ rowview.row.kind }}|{{ cell.key }}">{{ rowview.row.label }}{% if cell.label %} › {{ cell.label }}{% endif %}{% if not cell.multi and cell.lines %} ({% trans "replaces the current line" %}){% endif %}</option>
+                {% endfor %}{% endfor %}
+            </select>
+            <label class="cn-label" for="digest-content">{% trans "Line" %}</label>
+            <textarea id="digest-content" name="content" rows="2" class="form-control cn-textarea-small" required></textarea>
+            <div class="cn-actions">
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
+                <a href="{% url 'client_detail' client.pk %}#ptab-protokoll" class="btn btn-secondary btn-sm">{% if digest.added %}{% trans "Done" %}{% else %}{% trans "Nothing today" %}{% endif %}</a>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
     <div class="cn-actions cn-actions-top">
         <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary btn-sm">{% trans "+ Session log" %}</a>
         <button type="button" class="btn btn-secondary btn-sm" x-on:click="showNote = !showNote">{% trans "+ Note" %}</button>
@@ -101,6 +132,7 @@
         </div>
         <div class="cn-session-actions cn-session-actions-bar">
             <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ {% trans "Edit" %}</a>
+            <a href="{% url 'client_detail' client.pk %}?digest={{ session.pk }}#digest-card" class="btn btn-secondary btn-sm" title="{% trans 'Add a line to the case sheet from this session' %}">📋 {% trans "Case sheet" %}</a>
             {% if client.needs_gebueh_invoice %}
             {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}
@@ -120,6 +152,7 @@
         <div class="cn-session-actions">
             {% if log %}
             <a href="{% url 'session_log_edit' client.pk log.pk %}" class="btn btn-secondary btn-sm">✏️ {% trans "Edit" %}</a>
+            <a href="{% url 'client_detail' client.pk %}?digest={{ session.pk }}#digest-card" class="btn btn-secondary btn-sm" title="{% trans 'Add a line to the case sheet from this session' %}">📋 {% trans "Case sheet" %}</a>
             {% if client.needs_gebueh_invoice %}
             {% include 'includes/gebueh_button.html' with client=client session=session %}
             {% endif %}

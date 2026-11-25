@@ -633,6 +633,10 @@
   .cs-history > summary { color: var(--color-text-secondary); cursor: pointer; }
   .cs-old { padding: 0.25rem 0; color: var(--color-text-secondary); }
   .cs-legacy > summary { cursor: pointer; font-weight: 600; }
+  /* "Anything for the case sheet?" card shown after saving a log (P-006) */
+  .digest-card { border-left: 3px solid var(--color-primary); }
+  .digest-form { display: flex; flex-direction: column; gap: 0.4rem; max-width: 40rem; }
+  .digest-added { margin: 0 0 0.75rem; padding-left: 1.1rem; font-size: 0.9rem; }
   /* Prompt chips above the session note: insert a reminder, or jump to a field */
   .cn-prompt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
   .cn-prompt-chip { padding: 0.15rem 0.7rem; border: 1px dashed var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 0.8125rem; cursor: pointer; }

@@ -141,9 +141,19 @@ As built (migrations 0018 and 0019):
 
 ### PR 5: "Anything for the case sheet?"
 
-- After saving a log, an optional second step: pick a row, write one line, add. "Nothing today" skips it. The
-  line becomes a `ClinicalFact` with the session as its source.
-- The same action, "send a line to the case sheet", is available on any timeline entry.
+As built:
+
+- Saving a **new** log redirects to the client page with `?digest=<session pk>#digest-card`. A card above the
+  timeline names the session, lists the lines already added from it, and has a picker (every cell of the
+  sheet; a single-line cell that already has a current line says it replaces it), a line field and **Add**.
+  Adding returns to the same card, so several lines can follow one another; **Nothing today** / **Done** is a
+  plain link to the client page. Skipping costs one click, or none: the card sits on the page you land on.
+- The line becomes a `ClinicalFact` with the session as its source (`case_fact_add` takes a `target` of
+  "kind|sub" and a `source_session`, which has to be one of the client's sessions, else it is ignored), and
+  shows on the sheet with a link to that log.
+- Every logged session row has a **Case sheet** button that opens the same card for it later ("send a line to
+  the case sheet" from any timeline entry). Editing a log does not open the card by itself.
+- No JavaScript and no new model: the card is server-rendered from the query string.
 - *Why:* most digesting happens here, in seconds, while the session is fresh.
 
 ### PR 6: Review

@@ -179,7 +179,10 @@ def session_log_create(request, pk):
             request,
             _("Session log for %(date)s saved.") % {"date": session_date.strftime("%d.%m.%Y")},
         )
-        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
+        # The client page offers the optional "anything for the case sheet?" step for this session.
+        return redirect(
+            reverse("client_detail", kwargs={"pk": pk}) + f"?digest={session.pk}#digest-card"
+        )
 
     # GET — render form
     prefill_date = request.GET.get("session_date", "")
