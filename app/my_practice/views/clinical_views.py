@@ -24,12 +24,14 @@ from ..models import (
     ClientNote,
     ClientProfile,
     PendingCalendarEvent,
+    ScratchItem,
     Session,
     SessionLog,
     SupervisionItem,
 )
 from ..models.clinical import SESSION_LOG_PROMPTS, MoodTag
 from ..models.gebueh import GebuhZiffer, Leistungserfassung
+from ..utils.for_next_time import clean_reminder
 from ..utils.session_log_helpers import (
     build_log_context,
     find_or_create_session,
@@ -78,6 +80,26 @@ def _narrative(request, current: SessionLog | None = None) -> dict[str, str]:
     return {
         field: "" if value.strip() in _BARE_PROMPTS else value for field, value in posted.items()
     }
+
+
+def _complete_scratch_items(request, client) -> None:
+    """Mark the reminders ticked in the log form's side panel as covered."""
+    ids = [int(raw) for raw in request.POST.getlist("scratch_done") if raw.isdigit()]
+    if ids:
+        ScratchItem.objects.filter(client=client, pk__in=ids, done_at__isnull=True).update(
+            done_at=timezone.now()
+        )
+
+
+MAX_NEW_SCRATCH_ITEMS = 10
+
+
+def _add_scratch_items(request, client) -> None:
+    """Create a reminder for next time per non-empty line of the log form's side panel."""
+    lines = [clean_reminder(line) for line in request.POST.get("scratch_new", "").splitlines()]
+    ScratchItem.objects.bulk_create(
+        [ScratchItem(client=client, text=line) for line in lines if line][:MAX_NEW_SCRATCH_ITEMS]
+    )
 
 
 def _add_supervision_question(request, client) -> None:
@@ -155,6 +177,8 @@ def session_log_create(request, pk):
         )
 
         _add_supervision_question(request, client)
+        _complete_scratch_items(request, client)
+        _add_scratch_items(request, client)
 
         messages.success(
             request,
@@ -215,6 +239,8 @@ def session_log_edit(request, client_pk, log_pk):
         log.save()
 
         _add_supervision_question(request, client)
+        _complete_scratch_items(request, client)
+        _add_scratch_items(request, client)
 
         duration_str = request.POST.get("duration", "").strip()
         new_duration = parse_duration(duration_str) if duration_str else None

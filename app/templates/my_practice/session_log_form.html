@@ -138,8 +138,23 @@
     </form>
 </div>
 
-{% if previous_log or recent_logs or case_sheet_excerpt %}
 <aside class="cn-log-context" aria-label="{% trans "Context for this session" %}">
+    <div class="section-card">
+        {% if scratch_items %}
+        <h3>{% trans "For this session" %}</h3>
+        {% for item in scratch_items %}
+        <label class="cn-next-check">
+            <input type="checkbox" name="scratch_done" value="{{ item.pk }}" form="session-log-form">
+            <span>{{ item.text }}</span>
+        </label>
+        {% endfor %}
+        <p class="cn-log-context-date">{% trans "Ticked reminders count as covered when you save." %}</p>
+        {% endif %}
+        <label class="cn-label cn-next-new-label" for="id_scratch_new">{% trans "For next time" %}</label>
+        <textarea id="id_scratch_new" name="scratch_new" form="session-log-form" rows="2"
+                  class="form-control cn-textarea-small"
+                  placeholder="{% trans "One reminder per line, e.g. ask about sleep" %}"></textarea>
+    </div>
     {% if previous_log %}
     <div class="section-card">
         <h3>{% trans "Ideas from last session" %}</h3>
@@ -170,6 +185,5 @@
     </div>
     {% endif %}
 </aside>
-{% endif %}
 </div>
 {% endblock %}

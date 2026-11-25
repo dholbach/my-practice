@@ -166,6 +166,9 @@ from .practice_views import (
     practice_switch,
 )
 
+# Reminders for next time (P-006)
+from .scratch_views import scratch_item_create, scratch_item_delete, scratch_item_toggle
+
 # Search views
 from .search_views import global_search
 
@@ -332,6 +335,10 @@ __all__ = [
     "checklist_complete",
     "checklist_pause_item",
     "checklist_unpause_item",
+    # Reminders for next time (P-006)
+    "scratch_item_create",
+    "scratch_item_delete",
+    "scratch_item_toggle",
     # Clinical documentation views (P-009)
     "client_note_create",
     "client_note_delete",

@@ -72,12 +72,17 @@ Each PR is useful on its own. 1–3 need no new clinical data model; 5 and 6 bui
 
 ### PR 2: "For next time" and a scratchpad
 
-- New `ScratchItem(TimestampedModel)`: client, encrypted text, `done_at`, optional `source_session`. Practice
-  scoped and deleted with the client (GDPR delete).
+- New `ScratchItem(TimestampedModel)`: client, encrypted text (max 300 characters), `done_at`. Practice
+  scoped through its client and deleted with it (GDPR delete). `source_session` is left out until PR 5 creates
+  items from a log.
 - A "For next time" card at the top of the clinical page and in the log form's context panel. It merges open
   scratch items, last session's ideas and the case notes' future-work list. Items can be ticked as covered;
   unticked ones carry over.
-- Capture from anywhere through the command palette (P-047), e.g. "note XX-1 ask about sleep".
+- Open reminders are also checkboxes in the log form's side panel (new log and edit alike); saving the log marks
+  the ticked ones covered. The panel also has a field for new reminders, one per line, created on save, so a
+  reminder can be added where the work happens without leaving the form.
+- **Follow-up (PR 2b):** capture from anywhere through the command palette (P-047), e.g. "note XX-1 ask about
+  sleep". It needs a command mode in `command_palette.js` (today every entry is a plain link), so it is its own PR.
 - *Why:* gives quick reminders a home that is as fast as a note on paper and shows up at the right moment.
 
 ### PR 3: One clinical page, and session search

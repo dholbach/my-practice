@@ -586,6 +586,21 @@
   .cn-log-context-date { font-size: 0.75rem; color: var(--color-text-secondary); }
   .cn-log-context-row { display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: 0.5rem; padding: 0.25rem 0; font-size: 0.875rem; }
   .cn-log-context-section + .cn-log-context-section { margin-top: 0.75rem; }
+  /* "For next time" reminders on the client page and beside the log form */
+  .cn-next-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.4rem 0; border-top: 1px solid var(--color-border); }
+  .cn-next-row-source { align-items: flex-start; }
+  .cn-next-form { flex: 1; min-width: 0; }
+  .cn-next-body { flex: 1; min-width: 0; font-size: 0.9rem; }
+  .cn-next-check { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0.2rem 0; cursor: pointer; }
+  .cn-next-check input[type="checkbox"] { margin-top: 0.3rem; width: 1rem; height: 1rem; cursor: pointer; }
+  .cn-next-done span { color: var(--color-text-muted); text-decoration: line-through; }
+  .cn-next-source { font-size: 0.75rem; color: var(--color-text-secondary); white-space: nowrap; }
+  .cn-next-add { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+  .cn-next-add .form-control { flex: 1; min-width: 0; }
+  .cn-next-new-label { margin-top: 0.75rem; }
+  .cn-log-context .cn-next-new-label:first-child { margin-top: 0; }
+  .cn-next-covered { margin-top: 0.75rem; font-size: 0.875rem; }
+  .cn-next-covered > summary { cursor: pointer; color: var(--color-text-secondary); }
   /* Prompt chips above the session note: insert a reminder, or jump to a field */
   .cn-prompt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
   .cn-prompt-chip { padding: 0.15rem 0.7rem; border: 1px dashed var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 0.8125rem; cursor: pointer; }

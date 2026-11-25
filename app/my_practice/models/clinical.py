@@ -9,6 +9,8 @@ Models:
   ClientProfile  — per-client intake notes + running case notes + diagnosis
   SessionLog     — per-session reflection entry
   SupervisionItem — supervision agenda items, cross-client queue
+  ClientNote     — dated freeform note per client
+  ScratchItem    — a short "for next time" reminder per client, ticked off when covered
 """
 
 from django.db import models
@@ -385,3 +387,44 @@ class ClientNote(TimestampedModel):
 
     def __str__(self) -> str:
         return f"{_('Note')} {self.client.client_code} – {self.note_date}"
+
+
+class ScratchItem(TimestampedModel):
+    """
+    A short "for next time" reminder for a client (encrypted), e.g. "ask about sleep".
+
+    Quick capture for what would otherwise go on a scrap of paper. Open items are
+    listed on the client page and beside the session log form; ticking one (or
+    saving a log with it ticked) sets ``done_at``, unticked ones carry over.
+    """
+
+    client = models.ForeignKey(
+        Client,
+        on_delete=models.CASCADE,
+        related_name="scratch_items",
+        verbose_name=_("Client"),
+    )
+
+    text = EncryptedCharField(
+        max_length=300,
+        verbose_name=_("Reminder"),
+        help_text=_("Short reminder for next time (encrypted, max. 300 characters)"),
+    )
+
+    # NOT encrypted — only says whether the reminder is still open
+    done_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Covered on"),
+    )
+
+    class Meta:
+        verbose_name = _("Reminder for next time")
+        verbose_name_plural = _("Reminders for next time")
+        ordering = ["created_at", "pk"]
+        indexes = [
+            models.Index(fields=["client", "done_at"], name="scratchitem_client_done_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{_('Reminder')} {self.client.client_code}"

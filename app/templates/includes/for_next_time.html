@@ -1,0 +1,69 @@
+{% load i18n markdown_filters %}
+{# "For next time" (P-006): open reminders (tickable) plus last session's ideas and the case notes' future work. Needs `client` and `for_next_time`. #}
+<div id="for-next-time" class="section-card">
+    <div class="section-card-header">
+        <h3>{% trans "For next time" %}</h3>
+    </div>
+
+    {% if not for_next_time.open_items and not for_next_time.last_ideas_log and not for_next_time.future_work %}
+    <p class="cn-empty-state">{% trans "Nothing planned yet. Jot down what to pick up next time." %}</p>
+    {% endif %}
+
+    {% trans "Mark as covered" as lbl_cover %}
+    {% trans "Delete reminder" as lbl_delete %}
+    {% for item in for_next_time.open_items %}
+    <div class="cn-next-row">
+        <form method="post" action="{% url 'scratch_item_toggle' client.pk item.pk %}" class="cn-next-form">
+            {% csrf_token %}
+            <label class="cn-next-check">
+                <input type="checkbox" data-submit-on-change aria-label="{{ lbl_cover }}">
+                <span>{{ item.text }}</span>
+            </label>
+        </form>
+        <form method="post" action="{% url 'scratch_item_delete' client.pk item.pk %}" class="form-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm" aria-label="{{ lbl_delete }}">🗑️</button>
+        </form>
+    </div>
+    {% endfor %}
+
+    {% if for_next_time.last_ideas_log %}
+    <div class="cn-next-row cn-next-row-source">
+        <div class="cn-next-body md-rendered">{{ for_next_time.last_ideas_log.next_session_ideas|render_markdown }}</div>
+        <span class="cn-next-source">{% trans "Ideas" %} · {{ for_next_time.last_ideas_log.session.session_date|date:"d.m." }}</span>
+    </div>
+    {% endif %}
+    {% if for_next_time.future_work %}
+    <div class="cn-next-row cn-next-row-source">
+        <div class="cn-next-body md-rendered">{{ for_next_time.future_work|render_markdown }}</div>
+        <span class="cn-next-source">{% trans "Case notes" %}</span>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'scratch_item_create' client.pk %}" class="cn-next-add">
+        {% csrf_token %}
+        <input type="text" id="id_scratch_text" name="text" maxlength="300" autocomplete="off" required
+               class="form-control" aria-label="{% trans "New reminder" %}"
+               placeholder="{% trans "e.g. ask about sleep" %}">
+        <button type="submit" class="btn btn-secondary">{% trans "Add" %}</button>
+    </form>
+
+    {% if for_next_time.covered_items %}
+    {% trans "Mark as open again" as lbl_reopen %}
+    <details class="cn-next-covered">
+        <summary>{% blocktrans count count=for_next_time.covered_items|length %}{{ count }} covered reminder{% plural %}{{ count }} covered reminders{% endblocktrans %}</summary>
+        {% for item in for_next_time.covered_items %}
+        <div class="cn-next-row">
+            <form method="post" action="{% url 'scratch_item_toggle' client.pk item.pk %}" class="cn-next-form">
+                {% csrf_token %}
+                <label class="cn-next-check cn-next-done">
+                    <input type="checkbox" checked data-submit-on-change aria-label="{{ lbl_reopen }}">
+                    <span>{{ item.text }}</span>
+                </label>
+            </form>
+            <span class="cn-next-source">{{ item.done_at|date:"d.m." }}</span>
+        </div>
+        {% endfor %}
+    </details>
+    {% endif %}
+</div>
