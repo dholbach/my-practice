@@ -106,9 +106,10 @@ def ignore_already_paid(*, practice: PracticeScope) -> int:
 def ignore_unmatched(*, practice: PracticeScope, expenses_only: bool) -> int:
     """Ignore every unmatched transaction, or only the outgoing ones. Returns how many.
 
-    The rows stay unprocessed, so they remain on the expense tab for review.
+    Like the single "ignore" button, this marks the rows processed, so they leave the
+    review queue and no longer count towards the expense tab.
     """
     unmatched = _unmatched(practice)
     if expenses_only:
         unmatched = unmatched.filter(amount__lt=0)
-    return unmatched.update(match_confidence=BankTransaction.Confidence.IGNORED)
+    return unmatched.update(match_confidence=BankTransaction.Confidence.IGNORED, processed=True)

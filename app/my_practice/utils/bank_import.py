@@ -508,7 +508,9 @@ class BankStatementImporter:
                 notes=f"Auto-created {record_type}: {record}",
                 processed=record_type == "CompanyWithdrawal",
             )
-            self.results["needs_review"] += 1
+            # Auto-withdrawals are trusted (own-IBAN transfers); only expenses need review.
+            if record_type != "CompanyWithdrawal":
+                self.results["needs_review"] += 1
             return True
 
         if skip_negatives:

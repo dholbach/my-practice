@@ -303,11 +303,6 @@ urlpatterns = [
         views.BankExpenseReviewView.as_view(),
         name="bank_expense_review",
     ),
-    path(
-        "bank/withdrawals/",
-        views.BankWithdrawalReviewView.as_view(),
-        name="bank_withdrawal_review",
-    ),
     # Global search
     path("api/search/", views.global_search, name="global_search"),
     # Operational checklist (P-012)

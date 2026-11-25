@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17 21:08+0100\n"
+"POT-Creation-Date: 2026-11-24 19:24+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -68,7 +68,7 @@ msgstr ""
 #: my_practice/models/bank_statement.py:83 my_practice/models/financial.py:60
 #: my_practice/models/financial.py:148
 #: templates/my_practice/bank_import.html:87
-#: templates/my_practice/bank_review.html:196
+#: templates/my_practice/bank_review.html:191
 #: templates/my_practice/client_detail_tab_billing.html:76
 #: templates/my_practice/expense_confirm_delete.html:13
 #: templates/my_practice/expense_list.html:81
@@ -91,8 +91,8 @@ msgstr ""
 
 #: my_practice/admin/bank_statement.py:136 my_practice/admin/session.py:44
 #: my_practice/models/invoice.py:176 my_practice/models/invoice.py:394
-#: templates/my_practice/bank_review.html:269
-#: templates/my_practice/bank_review.html:359
+#: templates/my_practice/bank_review.html:264
+#: templates/my_practice/bank_review.html:354
 #: templates/my_practice/billing_open_overview.html:63
 #: templates/my_practice/invoice_detail.html:6
 #: templates/my_practice/invoice_detail.html:8
@@ -416,7 +416,7 @@ msgid "Amounts are calculated automatically from invoice items"
 msgstr ""
 
 #: my_practice/admin/invoice.py:215 my_practice/models/invoice.py:408
-#: templates/my_practice/bank_review.html:77
+#: templates/my_practice/bank_review.html:72
 #: templates/my_practice/invoice_detail.html:88
 #: templates/my_practice/invoice_list.html:21
 #: templates/my_practice/withdrawal_list.html:31
@@ -757,7 +757,7 @@ msgstr ""
 #: my_practice/models/calendar.py:118 my_practice/models/clinical.py:369
 #: my_practice/models/financial.py:56 my_practice/models/financial.py:144
 #: templates/my_practice/bank_import.html:84
-#: templates/my_practice/bank_review.html:192
+#: templates/my_practice/bank_review.html:187
 #: templates/my_practice/calendar_approval_queue.html:91
 #: templates/my_practice/calendar_import.html:93
 #: templates/my_practice/client_detail_tab_billing.html:30
@@ -1102,7 +1102,7 @@ msgid "Payer/payee IBAN"
 msgstr ""
 
 #: my_practice/models/bank_statement.py:77
-#: templates/my_practice/bank_review.html:217
+#: templates/my_practice/bank_review.html:212
 msgid "Payment reference"
 msgstr ""
 
@@ -1246,7 +1246,6 @@ msgid "expires"
 msgstr ""
 
 #: my_practice/models/calendar.py:99
-#: templates/my_practice/bank_withdrawal_review.html:4
 #: templates/my_practice/client_detail_tab_billing.html:38
 msgid "Pending"
 msgstr ""
@@ -1780,7 +1779,7 @@ msgid "Private transfer"
 msgstr ""
 
 #: my_practice/models/financial.py:34
-#: templates/my_practice/bank_review.html:204
+#: templates/my_practice/bank_review.html:199
 msgid "Capital contribution"
 msgstr ""
 
@@ -1905,7 +1904,7 @@ msgstr ""
 
 #: my_practice/models/financial.py:205
 #: templates/my_practice/bank_import.html:125
-#: templates/my_practice/bank_review.html:202
+#: templates/my_practice/bank_review.html:197
 msgid "Expense"
 msgstr ""
 
@@ -2092,7 +2091,7 @@ msgstr ""
 #: my_practice/models/inquiry.py:118 my_practice/models/tag.py:57
 #: templates/my_practice/analytics_tab_clients.html:61
 #: templates/my_practice/bank_import.html:85
-#: templates/my_practice/bank_review.html:210
+#: templates/my_practice/bank_review.html:205
 #: templates/my_practice/client_list_cards.html:106
 #: templates/my_practice/inquiry_confirm_delete.html:9
 #: templates/my_practice/inquiry_convert_confirm.html:17
@@ -2257,8 +2256,8 @@ msgstr "Total amount"
 #: templates/my_practice/analytics.html:31
 #: templates/my_practice/analytics_tab_clients.html:16
 #: templates/my_practice/analytics_tab_clients.html:66
-#: templates/my_practice/bank_review.html:28
-#: templates/my_practice/bank_review.html:360
+#: templates/my_practice/bank_review.html:23
+#: templates/my_practice/bank_review.html:355
 #: templates/my_practice/invoice_list.html:5
 #: templates/my_practice/invoice_list.html:8
 msgid "Invoices"
@@ -2982,7 +2981,7 @@ msgid "End date cannot be before start date."
 msgstr ""
 
 #: my_practice/models/todo.py:67 templates/my_practice/bank_import.html:113
-#: templates/my_practice/bank_review.html:129
+#: templates/my_practice/bank_review.html:124
 msgid "Manual"
 msgstr ""
 
@@ -3161,25 +3160,25 @@ msgstr ""
 msgid "Wrong account: the CSV file belongs to IBAN %(csv_iban)s, expected the practice IBAN %(practice_iban)s. Import aborted."
 msgstr ""
 
-#: my_practice/utils/bank_import.py:542
+#: my_practice/utils/bank_import.py:544
 msgid "Erroneous booking / correction from private account"
 msgstr ""
 
-#: my_practice/utils/bank_import.py:546
-#: templates/my_practice/bank_review.html:240
+#: my_practice/utils/bank_import.py:548
+#: templates/my_practice/bank_review.html:235
 msgid "Capital contribution from private account"
 msgstr ""
 
-#: my_practice/utils/bank_import.py:566
+#: my_practice/utils/bank_import.py:568
 msgid "Own payment (capital contribution), ignored automatically"
 msgstr ""
 
-#: my_practice/utils/bank_import.py:608
+#: my_practice/utils/bank_import.py:610
 #, python-format
 msgid "Failed to parse row: %(row)s"
 msgstr ""
 
-#: my_practice/utils/bank_import.py:617
+#: my_practice/utils/bank_import.py:619
 #, python-format
 msgid "Row from %(date)s over %(amount)s could not be imported: %(error)s"
 msgstr ""
@@ -3832,17 +3831,6 @@ msgid "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgid_plural "%(count)s transactions successfully grouped into expense: %(amount)s €"
 msgstr[0] "%(count)s transaction successfully grouped into expense: %(amount)s €"
 msgstr[1] "%(count)s transactions successfully grouped into expense: %(amount)s €"
-
-#: my_practice/views/bank_import_views.py:699
-msgid "Bank Import - Assign Withdrawals"
-msgstr ""
-
-#: my_practice/views/bank_import_views.py:704
-#, python-format
-msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
-msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
-msgstr[0] "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
-msgstr[1] "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
 
 #: my_practice/views/billing_views.py:246
 msgid "Cancelled session billed"
@@ -4828,7 +4816,6 @@ msgstr ""
 #: templates/includes/command_palette.html:46
 #: templates/my_practice/analytics.html:24
 #: templates/my_practice/analytics_tab_revenue.html:29
-#: templates/my_practice/bank_review.html:24
 #: templates/my_practice/withdrawal_list.html:48
 msgid "Withdrawals"
 msgstr ""
@@ -4838,7 +4825,6 @@ msgstr ""
 #: templates/my_practice/analytics.html:94
 #: templates/my_practice/analytics_tab_revenue.html:26
 #: templates/my_practice/bank_review.html:19
-#: templates/my_practice/bank_withdrawal_review.html:19
 #: templates/my_practice/expense_list.html:65
 #: templates/my_practice/tax_quarter_overview.html:79
 msgid "Expenses"
@@ -5678,9 +5664,9 @@ msgid "Auto-generated if left empty"
 msgstr ""
 
 #: templates/my_practice/bank_financial_review.html:50
-#: templates/my_practice/bank_review.html:279
-#: templates/my_practice/bank_review.html:296
-#: templates/my_practice/bank_review.html:327
+#: templates/my_practice/bank_review.html:274
+#: templates/my_practice/bank_review.html:291
+#: templates/my_practice/bank_review.html:322
 #: templates/my_practice/client_detail_tab_billing.html:50
 msgid "Ignore"
 msgstr ""
@@ -5730,7 +5716,7 @@ msgid "Reference"
 msgstr ""
 
 #: templates/my_practice/bank_import.html:105
-#: templates/my_practice/bank_review.html:125
+#: templates/my_practice/bank_review.html:120
 msgid "Exact"
 msgstr ""
 
@@ -5739,8 +5725,8 @@ msgid "Fuzzy"
 msgstr ""
 
 #: templates/my_practice/bank_import.html:117
-#: templates/my_practice/bank_review.html:73
-#: templates/my_practice/bank_review.html:156
+#: templates/my_practice/bank_review.html:68
+#: templates/my_practice/bank_review.html:151
 msgid "Ignored"
 msgstr ""
 
@@ -5753,189 +5739,173 @@ msgstr ""
 msgid "Back to import"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:36
+#: templates/my_practice/bank_review.html:31
 msgid "Bulk actions"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:41
+#: templates/my_practice/bank_review.html:36
 #, python-format
 msgid "Ignore %(count)s transaction that matches an already-paid invoice?"
 msgid_plural "Ignore %(count)s transactions that match already-paid invoices?"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/bank_review.html:42
+#: templates/my_practice/bank_review.html:37
 #, python-format
 msgid "Ignore %(count)s already paid"
 msgid_plural "Ignore %(count)s already paid"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/bank_review.html:46
+#: templates/my_practice/bank_review.html:41
 msgid "Automatically ignores all transactions marked \"can be ignored\""
 msgstr ""
 
-#: templates/my_practice/bank_review.html:55
+#: templates/my_practice/bank_review.html:50
 msgid "Import completed"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:59
+#: templates/my_practice/bank_review.html:54
 msgid "Matched automatically"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:63
+#: templates/my_practice/bank_review.html:58
 msgid "Manual review"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:68
+#: templates/my_practice/bank_review.html:63
 msgid "Expenses detected"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:84
+#: templates/my_practice/bank_review.html:79
 #, python-format
 msgid "Assign %(count)s expense"
 msgid_plural "Assign %(count)s expenses"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/bank_review.html:92
+#: templates/my_practice/bank_review.html:87
 #, python-format
 msgid "%(count)s error:"
 msgid_plural "%(count)s errors:"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/my_practice/bank_review.html:108
+#: templates/my_practice/bank_review.html:103
 msgid "Already matched"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:144
+#: templates/my_practice/bank_review.html:139
 msgid "Still open"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:150
+#: templates/my_practice/bank_review.html:145
 msgid "Review expenses"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:166
+#: templates/my_practice/bank_review.html:161
 msgid "Open transactions"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:172
+#: templates/my_practice/bank_review.html:167
 #, python-format
 msgid "Mark %(count)s expenses (negative amounts) as ignored?"
 msgstr "%(count)s expense ignored."
 
-#: templates/my_practice/bank_review.html:173
+#: templates/my_practice/bank_review.html:168
 #, python-format
 msgid "Ignore %(count)s expenses"
 msgstr "%(count)s expense ignored."
 
-#: templates/my_practice/bank_review.html:180
+#: templates/my_practice/bank_review.html:175
 #, python-format
 msgid "Ignore all %(count)s open transactions?"
 msgstr "%(count)s transaction ignored."
 
-#: templates/my_practice/bank_review.html:181
+#: templates/my_practice/bank_review.html:176
 msgid "Ignore all"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:221
+#: templates/my_practice/bank_review.html:216
 msgid "Extracted invoice number:"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:226
+#: templates/my_practice/bank_review.html:221
 msgid "Invoice already paid"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:229
+#: templates/my_practice/bank_review.html:224
 msgid "was already marked as paid"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:235
-#: templates/my_practice/bank_review.html:245
+#: templates/my_practice/bank_review.html:230
+#: templates/my_practice/bank_review.html:240
 msgid "This transaction can be ignored"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:242
+#: templates/my_practice/bank_review.html:237
 msgid "This transaction was transferred from the stored private bank account."
 msgstr ""
 
-#: templates/my_practice/bank_review.html:243
+#: templates/my_practice/bank_review.html:238
 msgid "It is presumably a capital contribution (deposit into business assets)."
 msgstr ""
 
-#: templates/my_practice/bank_review.html:267
+#: templates/my_practice/bank_review.html:262
 msgid "Auto-match available"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:276
+#: templates/my_practice/bank_review.html:271
 msgid "Import automatically"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:288
+#: templates/my_practice/bank_review.html:283
 #, python-format
 msgid "Invoice <strong>%(number)s</strong> already paid"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:293
+#: templates/my_practice/bank_review.html:288
 msgid "Confirm (already paid)"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:304
+#: templates/my_practice/bank_review.html:299
 msgid "Assign invoice manually"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:313
+#: templates/my_practice/bank_review.html:308
 msgid "Save bank name as alias"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:316
+#: templates/my_practice/bank_review.html:311
 msgid "Saves"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:316
+#: templates/my_practice/bank_review.html:311
 msgid "as an alternative name for this client."
 msgstr ""
 
-#: templates/my_practice/bank_review.html:317
+#: templates/my_practice/bank_review.html:312
 msgid "Future payments from this name are then labelled as a known payer; matching itself goes by invoice number and amount."
 msgstr ""
 
-#: templates/my_practice/bank_review.html:324
+#: templates/my_practice/bank_review.html:319
 msgid "Assign manually"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:343
+#: templates/my_practice/bank_review.html:338
 msgid "All transactions are matched!"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:344
+#: templates/my_practice/bank_review.html:339
 msgid "No open transactions remaining."
 msgstr ""
 
-#: templates/my_practice/bank_review.html:357
+#: templates/my_practice/bank_review.html:352
 msgid "matches the transaction"
 msgstr ""
 
-#: templates/my_practice/bank_review.html:358
+#: templates/my_practice/bank_review.html:353
 msgid "Difference:"
-msgstr ""
-
-#: templates/my_practice/bank_withdrawal_review.html:12
-msgid "Group into withdrawal"
-msgstr ""
-
-#: templates/my_practice/bank_withdrawal_review.html:16
-msgid "All withdrawals matched"
-msgstr ""
-
-#: templates/my_practice/bank_withdrawal_review.html:16
-msgid "There are no pending automatically detected withdrawals."
-msgstr ""
-
-#: templates/my_practice/bank_withdrawal_review.html:20
-msgid "Withdrawal list"
 msgstr ""
 
 #: templates/my_practice/billing_open_overview.html:5
@@ -9392,6 +9362,12 @@ msgstr ""
 #: templates/registration/two_factor_settings.html:86
 msgid "Turn on two-factor sign-in"
 msgstr ""
+
+#, python-format
+#~ msgid "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
+#~ msgid_plural "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
+#~ msgstr[0] "%(count)s transaction successfully grouped into withdrawal: %(amount)s €"
+#~ msgstr[1] "%(count)s transactions successfully grouped into withdrawal: %(amount)s €"
 
 #, python-format
 #~ msgid "Import error: %(error)s"

@@ -687,24 +687,3 @@ class BankExpenseReviewView(BankFinancialReviewView):
                     match_key=match_key,
                     defaults={"category": category},
                 )
-
-
-class BankWithdrawalReviewView(BankFinancialReviewView):
-    """Confirm auto-created withdrawal transactions and group them into CompanyWithdrawals."""
-
-    template_name = "my_practice/bank_withdrawal_review.html"
-    record_model = CompanyWithdrawal
-    link_field = "linked_withdrawal"
-    redirect_name = "bank_withdrawal_review"
-    page_title = gettext_lazy("Bank Import - Assign Withdrawals")
-    default_category = "salary"
-    record_label = "Entnahme"
-    grouped_note_prefix = "Zu Entnahme zusammengefasst"
-    group_success_message = ngettext_lazy(
-        "%(count)s transaction successfully grouped into withdrawal: %(amount)s €",
-        "%(count)s transactions successfully grouped into withdrawal: %(amount)s €",
-        "count",
-    )
-
-    def queryset_filter(self) -> dict:
-        return {"match_confidence": BankTransaction.Confidence.AUTO_WITHDRAWAL, "processed": False}

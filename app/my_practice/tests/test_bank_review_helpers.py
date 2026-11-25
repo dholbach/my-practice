@@ -194,7 +194,6 @@ class ReviewPageStatsTests(BankReviewHelperBase):
             stats["stats"], {Confidence.AUTO_EXPENSE: 1, Confidence.AUTO_WITHDRAWAL: 1}
         )
         self.assertEqual(stats["expense_count"], 1)
-        self.assertEqual(stats["withdrawal_count"], 1)
 
     def test_recently_matched_lists_matched_invoices_only(self):
         matched = self.make_transaction("AA-1")
@@ -238,7 +237,7 @@ class IgnoreTests(BankReviewHelperBase):
 
         expense.refresh_from_db()
         income.refresh_from_db()
-        self.assertEqual((expense.match_confidence, expense.processed), (Confidence.IGNORED, False))
+        self.assertEqual((expense.match_confidence, expense.processed), (Confidence.IGNORED, True))
         self.assertEqual(income.match_confidence, Confidence.UNMATCHED)
 
     def test_ignore_unmatched_is_limited_to_the_practice(self):

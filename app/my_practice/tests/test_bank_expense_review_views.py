@@ -11,7 +11,6 @@ from django.urls import reverse
 from ..models import (
     BankTransaction,
     CompanyExpense,
-    CompanyWithdrawal,
     ExpenseCategoryRule,
     ExpenseReceipt,
 )
@@ -217,86 +216,3 @@ class BankExpenseReviewViewTest(BankImportViewBase):
         self.assertEqual(ExpenseCategoryRule.objects.filter(practice=self.practice).count(), 1)
         rule = ExpenseCategoryRule.objects.get(practice=self.practice, match_key="name:vermieter")
         self.assertEqual(rule.category, "miete")
-
-
-class BankWithdrawalReviewViewTest(BankImportViewBase):
-    def _make_withdrawal_transaction(self, ref="Entnahme"):
-        return BankTransaction.objects.create(
-            practice=self.practice,
-            transaction_date=date(2026, 1, 15),
-            value_date=date(2026, 1, 15),
-            payer_name="Praxisinhaber",
-            payer_iban="",
-            reference=ref,
-            amount=Decimal("-500.00"),
-            balance_after=Decimal("500.00"),
-            account_iban=PRACTICE_IBAN,
-            match_confidence="auto-withdrawal",
-            processed=False,
-        )
-
-    def test_get_loads(self):
-        self._make_withdrawal_transaction()
-        response = self.http.get(reverse("bank_withdrawal_review"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "my_practice/bank_withdrawal_review.html")
-        self.assertContains(response, "Entnahme")
-        self.assertContains(response, "Praxisinhaber")
-
-    def test_card_names_the_linked_withdrawal(self):
-        trans = self._make_withdrawal_transaction()
-        trans.linked_withdrawal = CompanyWithdrawal.objects.create(
-            practice=self.practice,
-            date=trans.transaction_date,
-            amount=Decimal("500.00"),
-            description="Entnahme",
-            category="salary",
-        )
-        trans.save()
-        response = self.http.get(reverse("bank_withdrawal_review"))
-        self.assertContains(response, "Auto-Entnahme:")
-
-    def test_empty_state_when_nothing_is_pending(self):
-        response = self.http.get(reverse("bank_withdrawal_review"))
-        self.assertContains(response, "Es gibt keine ausstehenden automatisch erkannten Entnahmen.")
-
-    def test_group_creates_withdrawal(self):
-        trans = self._make_withdrawal_transaction()
-        response = self.http.post(
-            reverse("bank_withdrawal_review"),
-            {
-                "action": "group",
-                "transactions": [trans.id],
-                "category": "salary",
-                "description": "Entnahme Januar",
-            },
-        )
-        self.assertRedirects(response, reverse("bank_withdrawal_review"))
-        self.assertEqual(
-            CompanyWithdrawal.objects.filter(practice=self.practice, category="salary").count(), 1
-        )
-        trans.refresh_from_db()
-        self.assertTrue(trans.processed)
-
-    def test_ignore_deletes_linked_withdrawal(self):
-        wd = CompanyWithdrawal.objects.create(
-            practice=self.practice,
-            date=date(2026, 1, 15),
-            amount=Decimal("500.00"),
-            description="Entnahme",
-            category="salary",
-        )
-        trans = self._make_withdrawal_transaction()
-        trans.linked_withdrawal = wd
-        trans.save()
-
-        self.http.post(
-            reverse("bank_withdrawal_review"),
-            {
-                "action": "ignore",
-                "transactions": [trans.id],
-            },
-        )
-        self.assertFalse(CompanyWithdrawal.objects.filter(id=wd.id).exists())
-        trans.refresh_from_db()
-        self.assertEqual(trans.match_confidence, "ignored")

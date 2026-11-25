@@ -160,6 +160,7 @@ class BankReviewBulkActionsTest(BankReviewViewBase):
         response = self.http.post(reverse("bank_review"), {"action": "ignore_all_unmatched"})
         self.assertRedirects(response, reverse("bank_review"))
         self.assertEqual(BankTransaction.objects.filter(match_confidence="ignored").count(), 2)
+        self.assertFalse(BankTransaction.objects.filter(processed=False).exists())
 
     def test_ignore_all_expenses(self):
         self._make_unmatched(ref="Expense", amount="-120,00")
@@ -168,6 +169,8 @@ class BankReviewBulkActionsTest(BankReviewViewBase):
         ignored = BankTransaction.objects.filter(match_confidence="ignored")
         self.assertEqual(ignored.count(), 1)
         self.assertEqual(ignored.first().reference, "Expense")
+        self.assertTrue(ignored.first().processed)
+        self.assertEqual(self.http.get(reverse("bank_review")).context["expense_count"], 0)
 
     def test_bulk_ignore_paid_matches_paid_invoice(self):
         self._make_invoice(number="BP-1", status="paid", total=Decimal("90.00"), payer="Bulk Payer")

@@ -104,7 +104,6 @@ def review_page_stats(*, practice: PracticeScope) -> dict:
             ],
             amount__lt=0,
         ).count(),
-        "withdrawal_count": unprocessed.filter(match_confidence=Confidence.AUTO_WITHDRAWAL).count(),
         "recently_matched": all_rows.filter(
             match_confidence__in=[Confidence.EXACT, Confidence.FUZZY, Confidence.MANUAL],
             matched_invoice__isnull=False,
