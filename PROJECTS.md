@@ -31,7 +31,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 ## 🔍 Recent Activity
 
 - **2026-11-24 — bank review state (#569)**: bulk "ignore" now marks transactions processed like the single button, and the always-empty auto-withdrawal review page is gone (auto-withdrawals are trusted and created processed).
-- **2026-11-25 — P-006 clinical documentation**: spec merged (#727); PR 1 (#728) reworked the session log form (prompt chips, "More" fields, context panel); PR 2 adds "For next time" reminders (`ScratchItem`, migrations 0016–0017): add from the client page and the log form, edit in place, covered ones link to the log that covered them; PR 3a splits the client page into a Clinical mode (overview and protocol in one scroll) and an Admin & billing mode.
+- **2026-11-25 — P-006 clinical documentation**: spec merged (#727); PR 1 (#728) reworked the session log form (prompt chips, "More" fields, context panel); PR 2 adds "For next time" reminders (`ScratchItem`, migrations 0016–0017): add from the client page and the log form, edit in place, covered ones link to the log that covered them; PR 3a splits the client page into a Clinical mode (overview and protocol in one scroll) and an Admin & billing mode; PR 3b gives the timeline the original paper layout (notes folded) and a search over all entries.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 

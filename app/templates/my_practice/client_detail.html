@@ -55,6 +55,7 @@
 {% include 'my_practice/client_detail_tab_billing.html' %}
 
 <script src="{% static 'js/client_detail_tabs.js' %}"></script>
+<script src="{% static 'js/timeline_search.js' %}"></script>
 
 {% if monthly_sessions %}
 <script type="application/json" id="session-timeline-data">[{% for item in monthly_sessions %}{"month": "{{ item.month|escapejs }}", "hours": {{ item.hours|js_number }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>

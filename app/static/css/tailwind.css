@@ -647,10 +647,23 @@
   .cn-duration-edit-form { display: inline-flex; align-items: center; gap: 0.25rem; }
   .cn-duration-input { width: 4.5rem; padding: 0.2rem 0.4rem; font-size: 0.85rem; }
   /* Session two-column grid */
-  .cn-session-grid { display: grid; grid-template-columns: 90px 1fr; gap: 0.25rem 0.75rem; width: 100%; }
+  .cn-session-grid { display: grid; grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr); gap: 0.25rem 0.75rem; width: 100%; }
   .cn-session-left { display: flex; flex-direction: column; gap: 0.15rem; padding-top: 0.1rem; }
   .cn-session-summary { font-size: 0.875rem; font-weight: 500; color: var(--color-text-primary); margin: 0 0 0.35rem 0; }
-  .cn-session-interventions { font-size: 0.78rem; color: var(--color-text-secondary); font-style: italic; margin-top: 0.35rem; border-top: 1px solid var(--color-border); padding-top: 0.3rem; }
+  .cn-session-interventions { font-size: 0.78rem; color: var(--color-text-secondary); font-style: italic; }
+  .cn-session-headline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; margin-bottom: 0.25rem; }
+  .cn-session-headline .cn-session-summary { margin: 0; }
+  .cn-note-fold > summary { font-size: 0.8rem; color: var(--color-link); cursor: pointer; user-select: none; list-style: none; }
+  .cn-note-fold > summary::before { content: "▸ "; }
+  .cn-note-fold[open] > summary::before { content: "▾ "; }
+  .cn-note-fold[open] > summary { margin-bottom: 0.35rem; }
+  /* Timeline search; entries older than the first ten are folded away until expanded or searched */
+  .cn-timeline-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .cn-timeline-search { flex: 1 1 16rem; max-width: 26rem; }
+  .cn-timeline-count { font-size: 0.85rem; color: var(--color-text-secondary); }
+  .cn-timeline-entry[hidden] { display: none; }
+  .cn-session-list:not(.cn-show-old):not(.cn-searching) .cn-timeline-old { display: none; }
+  .cn-session-list.cn-searching .cn-old-toggle { display: none; }
   .cn-session-actions-bar { justify-content: flex-end; width: 100%; margin-top: 0.35rem; }
   /* GebüH Ziffer chips shown inline on session rows */
   .cn-gebueh-ziffern { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.2rem; }

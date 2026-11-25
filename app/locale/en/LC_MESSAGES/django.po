@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 22:48+0100\n"
+"POT-Creation-Date: 2026-11-25 23:00+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -1642,6 +1642,7 @@ msgid "One-liner for the overview (encrypted, max. 120 characters)"
 msgstr ""
 
 #: my_practice/models/clinical.py:255
+#: templates/my_practice/client_detail_tab_protocol.html:84
 #: templates/my_practice/session_log_form.html:79
 msgid "Session note"
 msgstr ""
@@ -1660,7 +1661,7 @@ msgid "Techniques and interventions applied (encrypted)"
 msgstr ""
 
 #: my_practice/models/clinical.py:269
-#: templates/my_practice/client_detail_tab_protocol.html:73
+#: templates/my_practice/client_detail_tab_protocol.html:88
 #: templates/my_practice/session_log_form.html:98
 msgid "Own reflection"
 msgstr "Own reflection"
@@ -1670,7 +1671,7 @@ msgid "How I felt about it — countertransference (encrypted, separate)"
 msgstr ""
 
 #: my_practice/models/clinical.py:275
-#: templates/my_practice/client_detail_tab_protocol.html:79
+#: templates/my_practice/client_detail_tab_protocol.html:94
 #: templates/my_practice/session_log_form.html:119
 msgid "Ideas for next session"
 msgstr ""
@@ -1712,7 +1713,7 @@ msgid "Feedback or outcome once discussed (optional, encrypted)"
 msgstr ""
 
 #: my_practice/models/clinical.py:336
-#: templates/my_practice/client_detail_tab_protocol.html:173
+#: templates/my_practice/client_detail_tab_protocol.html:190
 msgid "Discussed on"
 msgstr ""
 
@@ -1870,7 +1871,7 @@ msgstr ""
 #: my_practice/models/financial.py:125 my_practice/models/todo.py:71
 #: templates/my_practice/bank_expense_review.html:16
 #: templates/my_practice/client_detail_tab_protocol.html:24
-#: templates/my_practice/client_detail_tab_protocol.html:169
+#: templates/my_practice/client_detail_tab_protocol.html:186
 #: templates/my_practice/supervision_queue.html:5
 msgid "Supervision"
 msgstr "Supervision"
@@ -3440,7 +3441,7 @@ msgstr ""
 msgid "Update emergency access plan (P-010) if needed"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:155
+#: my_practice/utils/client_detail_builder.py:161
 #, python-format
 msgid "since %(start)s"
 msgstr ""
@@ -4760,7 +4761,7 @@ msgid "Revenue this month: %(current)s / %(target)s"
 msgstr ""
 
 #: templates/includes/client_card.html:11
-#: templates/my_practice/client_detail_tab_protocol.html:99
+#: templates/my_practice/client_detail_tab_protocol.html:116
 msgid "Log missing"
 msgstr "Log missing"
 
@@ -5027,8 +5028,8 @@ msgid "Snooze 1 week"
 msgstr ""
 
 #: templates/includes/focus_queue_row.html:55
-#: templates/my_practice/client_detail_tab_protocol.html:86
-#: templates/my_practice/client_detail_tab_protocol.html:105
+#: templates/my_practice/client_detail_tab_protocol.html:103
+#: templates/my_practice/client_detail_tab_protocol.html:122
 #: templates/my_practice/expense_list.html:127
 #: templates/my_practice/inquiry_list.html:31
 #: templates/my_practice/inquiry_list.html:226
@@ -5090,7 +5091,7 @@ msgstr ""
 
 #: templates/includes/for_next_time.html:15
 #: templates/my_practice/client_detail_tab_protocol.html:16
-#: templates/my_practice/client_detail_tab_protocol.html:156
+#: templates/my_practice/client_detail_tab_protocol.html:173
 #: templates/my_practice/expense_form.html:99
 #: templates/my_practice/gebueh_leistung_form.html:41
 #: templates/my_practice/inquiry_form.html:192
@@ -5247,7 +5248,7 @@ msgstr "Yes, delete"
 #: templates/my_practice/_confirm_delete_base.html:31
 #: templates/my_practice/calendar_import.html:82
 #: templates/my_practice/client_detail_documents.html:51
-#: templates/my_practice/client_detail_tab_protocol.html:157
+#: templates/my_practice/client_detail_tab_protocol.html:174
 #: templates/my_practice/client_gdpr_delete_confirm.html:59
 #: templates/my_practice/client_intake.html:144
 #: templates/my_practice/expense_form.html:100
@@ -6670,8 +6671,8 @@ msgid "Pending sessions"
 msgstr ""
 
 #: templates/my_practice/client_detail_tab_billing.html:37
-#: templates/my_practice/client_detail_tab_protocol.html:61
-#: templates/my_practice/client_detail_tab_protocol.html:97
+#: templates/my_practice/client_detail_tab_protocol.html:71
+#: templates/my_practice/client_detail_tab_protocol.html:114
 #: templates/my_practice/gebueh_leistung_form.html:6
 #: templates/my_practice/invoice_detail.html:112
 #: templates/my_practice/invoice_detail.html:144
@@ -6771,7 +6772,7 @@ msgstr "Send by email or download the PDF and hand it out"
 #: templates/my_practice/client_detail_tab_billing.html:167
 #: templates/my_practice/client_detail_tab_billing.html:184
 #: templates/my_practice/client_detail_tab_billing.html:201
-#: templates/my_practice/client_detail_tab_protocol.html:221
+#: templates/my_practice/client_detail_tab_protocol.html:237
 #: templates/my_practice/send_contract_email.html:61
 #: templates/my_practice/send_intake_form_email.html:61
 #: templates/my_practice/send_invoice_email.html:68
@@ -6959,87 +6960,104 @@ msgstr "▾ Show older entries"
 msgid "more"
 msgstr "more"
 
-#: templates/my_practice/client_detail_tab_protocol.html:50
+#: templates/my_practice/client_detail_tab_protocol.html:37
+#, python-brace-format
+msgid "{count} matching entries"
+msgstr ""
+
+#: templates/my_practice/client_detail_tab_protocol.html:42
+msgid "Search sessions and notes"
+msgstr ""
+
+#: templates/my_practice/client_detail_tab_protocol.html:43
+msgid "Search sessions and notes…"
+msgstr ""
+
+#: templates/my_practice/client_detail_tab_protocol.html:46
+msgid "No entries match."
+msgstr ""
+
+#: templates/my_practice/client_detail_tab_protocol.html:60
 msgid "🧾 To invoice"
 msgstr "🧾 To invoice"
 
-#: templates/my_practice/client_detail_tab_protocol.html:51
+#: templates/my_practice/client_detail_tab_protocol.html:61
 msgid "🚷 Non-billable"
 msgstr "🚷 Non-billable"
 
-#: templates/my_practice/client_detail_tab_protocol.html:52
+#: templates/my_practice/client_detail_tab_protocol.html:62
 msgid "✅ Billable"
 msgstr "✅ Billable"
 
-#: templates/my_practice/client_detail_tab_protocol.html:53
+#: templates/my_practice/client_detail_tab_protocol.html:63
 msgid "🚫 No-show"
 msgstr "🚫 No-show"
 
-#: templates/my_practice/client_detail_tab_protocol.html:54
+#: templates/my_practice/client_detail_tab_protocol.html:64
 msgid "Delete session log?"
 msgstr "Delete session log?"
 
-#: templates/my_practice/client_detail_tab_protocol.html:55
+#: templates/my_practice/client_detail_tab_protocol.html:65
 msgid "Delete session?"
 msgstr "Delete session?"
 
-#: templates/my_practice/client_detail_tab_protocol.html:62
-#: templates/my_practice/client_detail_tab_protocol.html:98
+#: templates/my_practice/client_detail_tab_protocol.html:72
+#: templates/my_practice/client_detail_tab_protocol.html:115
 msgid "Unbilled"
 msgstr "Unbilled"
 
-#: templates/my_practice/client_detail_tab_protocol.html:62
-#: templates/my_practice/client_detail_tab_protocol.html:98
+#: templates/my_practice/client_detail_tab_protocol.html:72
+#: templates/my_practice/client_detail_tab_protocol.html:115
 msgid "Non-billable"
 msgstr "Non-billable"
 
-#: templates/my_practice/client_detail_tab_protocol.html:117
+#: templates/my_practice/client_detail_tab_protocol.html:134
 msgid "+ Log"
 msgstr "+ Log"
 
-#: templates/my_practice/client_detail_tab_protocol.html:121
+#: templates/my_practice/client_detail_tab_protocol.html:138
 msgid "Duration in minutes"
 msgstr "Duration in minutes"
 
-#: templates/my_practice/client_detail_tab_protocol.html:122
+#: templates/my_practice/client_detail_tab_protocol.html:139
 msgid "Save min."
 msgstr "Save min."
 
-#: templates/my_practice/client_detail_tab_protocol.html:135
+#: templates/my_practice/client_detail_tab_protocol.html:152
 msgid "Delete note?"
 msgstr "Delete note?"
 
-#: templates/my_practice/client_detail_tab_protocol.html:166
+#: templates/my_practice/client_detail_tab_protocol.html:183
 #: templates/my_practice/supervision_queue.html:31
 msgid "Delete supervision topic?"
 msgstr "Delete supervision topic?"
 
-#: templates/my_practice/client_detail_tab_protocol.html:171
+#: templates/my_practice/client_detail_tab_protocol.html:188
 msgid "Raised on"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_protocol.html:182
-#: templates/my_practice/client_detail_tab_protocol.html:197
+#: templates/my_practice/client_detail_tab_protocol.html:199
+#: templates/my_practice/client_detail_tab_protocol.html:214
 msgid "Mark discussed"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_protocol.html:185
+#: templates/my_practice/client_detail_tab_protocol.html:202
 msgid "↩ Reopen"
 msgstr "↩ Reopen"
 
-#: templates/my_practice/client_detail_tab_protocol.html:196
+#: templates/my_practice/client_detail_tab_protocol.html:213
 msgid "Feedback or outcome (optional, Markdown)…"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_protocol.html:209
+#: templates/my_practice/client_detail_tab_protocol.html:225
 msgid "No entries yet. Session logs are created when adding new entries."
 msgstr "No entries yet. Session logs are created when adding new entries."
 
-#: templates/my_practice/client_detail_tab_protocol.html:216
+#: templates/my_practice/client_detail_tab_protocol.html:232
 msgid "Assessments"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_protocol.html:226
+#: templates/my_practice/client_detail_tab_protocol.html:242
 msgid "No email address — hand over or print the PDF."
 msgstr ""
 
