@@ -12,6 +12,7 @@ from my_practice.models import (
     Client,
     Invoice,
     InvoiceItem,
+    PendingCalendarEvent,
     ServiceType,
     Session,
     allow_issued_invoice_writes,
@@ -372,3 +373,100 @@ class PracticeImageCleanupSignalTests(TestCase):
 
         self.assertFalse(default_storage.exists(logo_name))
         self.assertFalse(default_storage.exists(signature_name))
+
+
+class CalendarEventImportedOnBillingTests(TestCase):
+    """Billing a session takes its calendar event out of the approval queue."""
+
+    def setUp(self):
+        self.practice = create_test_practice(name="Test Practice", slug="signals-calendar")
+        self.client = Client.objects.create(
+            client_code="XX-1",
+            full_name="Max Mustermann",
+            practice=self.practice,
+        )
+        self.service_type = ServiceType.objects.create(
+            name="Test Service",
+            name_de="Testservice",
+            name_en="Test Service",
+            practice=self.practice,
+        )
+        self.session = Session.objects.create(
+            client=self.client, session_date=date.today(), duration=60, calendar_event_id="evt-1"
+        )
+
+    def _event(self, **kwargs):
+        defaults = {
+            "practice": self.practice,
+            "google_event_id": "evt-1",
+            "summary": "XX-1",
+            "event_date": date.today(),
+            "duration_minutes": 60,
+            "matched_client": self.client,
+        }
+        defaults.update(kwargs)
+        return PendingCalendarEvent.objects.create(**defaults)
+
+    def _bill(self):
+        invoice = Invoice.objects.create(
+            client=self.client,
+            invoice_number="INV-001",
+            invoice_date=date.today(),
+            status="draft",
+            practice=self.practice,
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=self.service_type,
+            session=self.session,
+            rate=Decimal("100.00"),
+        )
+
+    def test_linked_event_marked_imported(self):
+        event = self._event(session=self.session)
+        self._bill()
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.IMPORTED)
+
+    def test_event_matched_by_calendar_event_id(self):
+        """An event whose session link was never set is still found through
+        the session's calendar_event_id."""
+        event = self._event()
+        self._bill()
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.IMPORTED)
+
+    def test_skipped_event_left_alone(self):
+        event = self._event(session=self.session, status=PendingCalendarEvent.Status.SKIPPED)
+        self._bill()
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.SKIPPED)
+
+    def test_other_sessions_event_left_alone(self):
+        event = self._event(google_event_id="evt-2")
+        self._bill()
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.PENDING)
+
+    def test_same_event_id_in_other_practice_left_alone(self):
+        other = create_test_practice(name="Other Practice", slug="signals-calendar-other")
+        other_client = Client.objects.create(
+            client_code="YY-2", full_name="Anna Schmidt", practice=other
+        )
+        event = self._event(practice=other, matched_client=other_client)
+        self._bill()
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.PENDING)
+
+    def test_cancelled_invoice_does_not_import(self):
+        """A save of an item on a cancelled invoice (only possible through the
+        guard's escape hatch) does not import the event."""
+        self._bill()
+        event = self._event(session=self.session)
+        item = InvoiceItem.objects.get(session=self.session)
+        Invoice.objects.filter(pk=item.invoice_id).update(status="cancelled")
+        item.refresh_from_db()
+        with allow_issued_invoice_writes():
+            item.save()
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.PENDING)

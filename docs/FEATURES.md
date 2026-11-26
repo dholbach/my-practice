@@ -259,6 +259,7 @@ chronological record; this document only tracks current state.
 - ✅ Cancellation detection with "(cancel)" keyword
 - ✅ Reinstatement: un-cancelling an event in Google Calendar restores the Session on next fetch, refreshing its date/time/duration in the same step
 - ✅ Two-miss cancellation debounce: a session is only auto-cancelled after its calendar event is missing on two consecutive fetches, avoiding false cancellations from transient Google API gaps
+- ✅ The approval queue clears itself: invoicing a session from any screen marks its calendar event imported, and a calendar entry deleted or cancelled after its session was invoiced leaves the billed session alone (the fetch warns instead)
 
 #### Phase 3-4: Smart Workflow
 - ✅ Duplicate detection (checks existing InvoiceItems)

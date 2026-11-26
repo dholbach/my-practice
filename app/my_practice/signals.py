@@ -2,7 +2,8 @@
 Signals for automatic invoice total calculation
 ================================================
 Automatically recalculates Invoice.total when InvoiceItems are saved or deleted.
-Also syncs Session.cancelled and Session.group_size from InvoiceItems (P-035).
+Also syncs Session.cancelled and Session.group_size from InvoiceItems (P-035),
+and marks a billed session's pending calendar event imported.
 
 Also guards issued invoices: once an Invoice leaves DRAFT its content and
 line items are frozen, and it can only be deleted after the § 147 AO
@@ -124,6 +125,37 @@ def update_invoice_total_on_save(
     """Recalculate invoice total when an invoice item is saved."""
     instance.invoice.recalculate_and_save()
     sync_session_fields(instance)
+    mark_calendar_event_imported(instance)
+
+
+def mark_calendar_event_imported(item: InvoiceItem) -> None:
+    """Take a billed session's calendar event out of the approval queue.
+
+    fetch_calendar_events creates the Session as soon as it sees the event but
+    leaves the event pending; only approving it in the queue marked it imported.
+    A session billed from any other screen left its event pending, so the queue
+    filled with work that was already invoiced. Matching on the event's own
+    session link (or the session's calendar_event_id) is exact, unlike the
+    queue's "skip duplicates" date match.
+    """
+    if not item.session_id or item.invoice.status == Invoice.Status.CANCELLED:
+        return
+
+    from django.db.models import Q
+
+    from .models import PendingCalendarEvent, Session
+
+    match = Q(session_id=item.session_id)
+    event_id = (
+        Session.objects.filter(pk=item.session_id)
+        .values_list("calendar_event_id", flat=True)
+        .first()
+    )
+    if event_id:
+        match |= Q(practice_id=item.invoice.practice_id, google_event_id=event_id)
+    PendingCalendarEvent.objects.filter(match, status=PendingCalendarEvent.Status.PENDING).update(
+        status=PendingCalendarEvent.Status.IMPORTED
+    )
 
 
 @receiver(post_delete, sender=InvoiceItem)

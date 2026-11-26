@@ -14,7 +14,14 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from ...models import GoogleCalendarToken, PendingCalendarEvent, Practice, Session
+from ...models import (
+    GoogleCalendarToken,
+    Invoice,
+    InvoiceItem,
+    PendingCalendarEvent,
+    Practice,
+    Session,
+)
 from ...utils.google_calendar import (
     CalendarEventParser,
     GoogleCalendarOAuth,
@@ -403,12 +410,11 @@ class Command(BaseCommand):
             if not dry_run:
                 db_event.status = PendingCalendarEvent.Status.CANCELLED
                 db_event.save(update_fields=["status"])
-                if db_event.session_id:
-                    Session.objects.filter(pk=db_event.session_id).update(cancelled=True)
-                    if db_event.matched_client and affected_clients is not None:
-                        affected_clients.add(db_event.matched_client)
+                if self._cancel_unbilled_session(db_event) and affected_clients is not None:
+                    affected_clients.add(db_event.matched_client)
             code = db_event.matched_client.client_code if db_event.matched_client else "?"
             self.stdout.write(f"  🚫 Cancelled: {code} on {db_event.event_date}")
+            self._warn_if_billed(db_event)
         return cancelled, flagged
 
     def upsert_event(
@@ -476,18 +482,48 @@ class Command(BaseCommand):
             f"({event.get('duration_minutes')} min) status={status}"
         )
 
-    @staticmethod
     def _transition_to_cancelled(
-        obj: "PendingCalendarEvent", event_id: str, affected_clients: set | None
+        self, obj: "PendingCalendarEvent", event_id: str, affected_clients: set | None
     ) -> None:
         PendingCalendarEvent.objects.filter(
             pk=obj.pk,
             status=PendingCalendarEvent.Status.PENDING,
         ).update(status=PendingCalendarEvent.Status.CANCELLED)
-        if obj.session_id:
-            Session.objects.filter(pk=obj.session_id).update(cancelled=True)
-            if obj.matched_client and affected_clients is not None:
-                affected_clients.add(obj.matched_client)
+        if self._cancel_unbilled_session(obj) and affected_clients is not None:
+            affected_clients.add(obj.matched_client)
+        self._warn_if_billed(obj)
+
+    @staticmethod
+    def _session_is_billed(obj: "PendingCalendarEvent") -> bool:
+        return bool(obj.session_id) and (
+            InvoiceItem.objects.filter(session_id=obj.session_id)
+            .exclude(invoice__status=Invoice.Status.CANCELLED)
+            .exists()
+        )
+
+    @classmethod
+    def _cancel_unbilled_session(cls, obj: "PendingCalendarEvent") -> bool:
+        """Mark the event's session cancelled, unless it is already on an invoice.
+
+        A calendar entry deleted or cancelled after the session was billed must
+        not silently flip a billed (maybe paid) session to cancelled; the owner
+        sorts that out on the invoice. Returns True when the session changed and
+        the client's tags need a resync.
+        """
+        if not obj.session_id or cls._session_is_billed(obj):
+            return False
+        Session.objects.filter(pk=obj.session_id).update(cancelled=True)
+        return obj.matched_client is not None
+
+    def _warn_if_billed(self, obj: "PendingCalendarEvent") -> None:
+        if self._session_is_billed(obj):
+            code = obj.matched_client.client_code if obj.matched_client else "?"
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  ⚠️  {code} on {obj.event_date} is gone from the calendar but its "
+                    "session is already invoiced; left the session as it is"
+                )
+            )
 
     def _transition_to_reinstated(
         self,

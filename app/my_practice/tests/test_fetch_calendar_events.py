@@ -18,6 +18,8 @@ from ..models import (
     Client,
     ClientTag,
     GoogleCalendarToken,
+    Invoice,
+    InvoiceItem,
     PendingCalendarEvent,
     Practice,
     ServiceType,
@@ -1198,3 +1200,82 @@ class FetchTagSyncTest(TestCase):
         self.assertIn(self.client_obj, affected)
         session.refresh_from_db()
         self.assertTrue(session.cancelled)
+
+
+class BilledSessionNotCancelledTest(TestCase):
+    """A calendar entry that disappears or is cancelled after its session was
+    invoiced leaves the billed session alone and warns instead."""
+
+    def setUp(self):
+        self.practice = create_test_practice(name="Test Practice", slug="billed-not-cancelled")
+        self.test_client = Client.objects.create(
+            practice=self.practice, client_code="TC", full_name="Max Mustermann"
+        )
+        self.cmd = _make_command()
+        self.future_date = date.today() + timedelta(days=5)
+        self.session = Session.objects.create(
+            client=self.test_client, session_date=self.future_date, duration=60
+        )
+        self.pce = PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id="billed-event",
+            summary="Termin",
+            event_date=self.future_date,
+            duration_minutes=60,
+            matched_client=self.test_client,
+            status=PendingCalendarEvent.Status.PENDING,
+            session=self.session,
+            missing_since=timezone.now() - timedelta(hours=6),
+        )
+
+    def _bill(self):
+        service_type = ServiceType.objects.create(
+            name="Therapy", name_de="Therapie", name_en="Therapy", practice=self.practice
+        )
+        invoice = Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="INV-001",
+            invoice_date=date.today(),
+            status=Invoice.Status.DRAFT,
+            practice=self.practice,
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice, service_type=service_type, session=self.session, rate=100
+        )
+        # The billing signal imports the event; put it back in the queue to
+        # model a row left pending before that signal existed.
+        PendingCalendarEvent.objects.filter(pk=self.pce.pk).update(
+            status=PendingCalendarEvent.Status.PENDING
+        )
+
+    def _cancel_stale(self):
+        return self.cmd.cancel_stale_future_events(
+            self.practice,
+            timezone.now(),
+            timezone.now() + timedelta(days=10),
+            live_ids=set(),
+            dry_run=False,
+        )
+
+    def test_stale_billed_session_not_cancelled(self):
+        self._bill()
+        cancelled, _ = self._cancel_stale()
+        self.assertEqual(cancelled, 1)
+        self.session.refresh_from_db()
+        self.assertFalse(self.session.cancelled)
+        self.assertIn("already invoiced", self.cmd.stdout.getvalue())
+
+    def test_stale_unbilled_session_still_cancelled(self):
+        self._cancel_stale()
+        self.session.refresh_from_db()
+        self.assertTrue(self.session.cancelled)
+        self.assertNotIn("already invoiced", self.cmd.stdout.getvalue())
+
+    def test_cancelled_in_calendar_billed_session_not_cancelled(self):
+        self._bill()
+        self.pce.refresh_from_db()
+        self.cmd._transition_to_cancelled(self.pce, "billed-event", None)
+        self.session.refresh_from_db()
+        self.assertFalse(self.session.cancelled)
+        self.pce.refresh_from_db()
+        self.assertEqual(self.pce.status, PendingCalendarEvent.Status.CANCELLED)
