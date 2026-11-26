@@ -18,11 +18,12 @@ from ..models import (
     InvoiceItem,
     SupervisionItem,
 )
-from ..models.case_sheet import ROWS_BY_KIND, ClinicalFact
+from ..models.case_sheet import ClinicalFact
 from ..models.clinical import MoodTag
 from ..models.session import Session
+from .calculations import held_sessions
 from .case_review import review_invitation
-from .case_sheet import build_case_sheet, working_diagnosis
+from .case_sheet import build_case_sheet, describe_fact, working_diagnosis
 from .chart_helpers import (
     MONTH_ABBREVIATIONS,
     aggregate_invoice_items_by_month,
@@ -108,7 +109,7 @@ class ClientDetailContextBuilder:
         the admin mode stays invoice-based: it is about what was billed.)
         """
         return list(
-            self.client.sessions.filter(cancelled=False, session_date__lte=self.today).values_list(
+            held_sessions(self.client.sessions, today=self.today).values_list(
                 "session_date", "duration"
             )
         )
@@ -131,13 +132,10 @@ class ClientDetailContextBuilder:
         session = self.client.sessions.filter(pk=int(raw)).first() if raw.isdigit() else None
         if session is None:
             return None
-        added = []
-        for fact in ClinicalFact.objects.filter(client=self.client, source_session=session):
-            row = ROWS_BY_KIND.get(fact.kind)
-            cell = next((c.label for c in row.cells if c.key == fact.sub), "") if row else ""
-            added.append(
-                {"row": row.label if row else fact.kind, "cell": cell, "content": fact.content}
-            )
+        added = [
+            describe_fact(fact)
+            for fact in ClinicalFact.objects.filter(client=self.client, source_session=session)
+        ]
         return {"session": session, "added": added}
 
     def _last_invoice_date(self) -> date | None:
@@ -331,11 +329,12 @@ class ClientDetailContextBuilder:
                 ziffer__nummer__in=["1", "19.5", "19.6"],
             ).count()
 
+        case_sheet = build_case_sheet(self.client)
         return {
             "legacy_profile": profile,
-            "case_sheet": build_case_sheet(self.client),
+            "case_sheet": case_sheet,
             # Named like the field it stands for, so privacy mode treats it as personal data.
-            "case_summary": {"arbeitsdiagnose": working_diagnosis(self.client)},
+            "case_summary": {"arbeitsdiagnose": working_diagnosis(self.client, sheet=case_sheet)},
             "intake_steps_done": intake_steps_done,
             "log_entries": log_entries,
             "open_note_session_id": open_note_session_id,

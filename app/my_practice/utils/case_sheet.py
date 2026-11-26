@@ -87,10 +87,25 @@ def active_lines(client: Client, kind: str, sub: str | None = None) -> list[Clin
     return list(lines)
 
 
-def working_diagnosis(client: Client) -> str:
-    """The current working diagnosis (Arbeitsdiagnose), or "" when there is none."""
-    lines = active_lines(client, "diagnosis")
+def working_diagnosis(client: Client, *, sheet: list[RowView] | None = None) -> str:
+    """The current working diagnosis (Arbeitsdiagnose), or "" when there is none.
+
+    Pass the already built ``sheet`` to read it from there instead of querying again.
+    """
+    if sheet is not None:
+        lines = [
+            line for row in sheet if row.row.kind == "diagnosis" for line in row.cells[0].lines
+        ]
+    else:
+        lines = active_lines(client, "diagnosis")
     return lines[-1].content if lines else ""
+
+
+def describe_fact(fact: ClinicalFact) -> dict[str, str]:
+    """A line with the labels of its row and cell, as the digest and review lists show it."""
+    row = ROWS_BY_KIND.get(fact.kind)
+    cell = next((c.label for c in row.cells if c.key == fact.sub), "") if row else ""
+    return {"row": row.label if row else fact.kind, "cell": cell, "content": fact.content}
 
 
 def lines_to_markdown(lines: list[ClinicalFact]) -> str:

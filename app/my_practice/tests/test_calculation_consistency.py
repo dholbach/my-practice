@@ -5,11 +5,12 @@ These tests ensure that session counts, revenue totals, and other metrics
 are calculated consistently regardless of which view or method is used.
 """
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
 
 from my_practice.models import (
     Client,
@@ -21,6 +22,7 @@ from my_practice.models import (
 )
 from my_practice.utils import count_sessions
 from my_practice.utils.analytics_utils import ClientAnalyzer
+from my_practice.utils.calculations import held_sessions
 from my_practice.utils.capacity_helpers import _get_booked_hours
 from my_practice.utils.chart_helpers import aggregate_invoice_items_by_month
 from my_practice.utils.revenue_helpers import RevenueCalculator
@@ -183,6 +185,52 @@ class SessionCountConsistencyTests(TestCase):
         self.assertEqual(direct, 4.0)
         self.assertEqual(chart_total, 4.0)
         self.assertEqual(capacity, 4.0)
+
+
+class HeldSessionHoursTests(TestCase):
+    """A client's hours are the sessions held, on the client page and in the top clients."""
+
+    @allow_issued_invoice_writes()
+    def test_top_clients_count_held_sessions_not_invoiced_ones(self):
+        practice = create_test_practice(name="Test Practice", slug="held-hours-1")
+        client = Client.objects.create(
+            client_code="HH-1",
+            full_name="Max Mustermann",
+            email="max@example.com",
+            hourly_rate_60=Decimal("90.00"),
+            practice=practice,
+        )
+        today = timezone.localdate()
+        invoice = Invoice.objects.create(
+            client=client,
+            invoice_number="HH-001",
+            invoice_date=today,
+            status="paid",
+            total=Decimal("90.00"),
+            practice=practice,
+        )
+        service_type = ServiceType.objects.create(code="individual", name="60", practice=practice)
+        billed = Session.objects.create(client=client, session_date=today, duration=60)
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=service_type,
+            session=billed,
+            quantity=1,
+            rate=Decimal("90.00"),
+        )
+        # Held but not invoiced yet: counts. Cancelled and future ones: do not.
+        Session.objects.create(client=client, session_date=today - timedelta(days=1), duration=90)
+        Session.objects.create(
+            client=client, session_date=today - timedelta(days=2), duration=60, cancelled=True
+        )
+        Session.objects.create(client=client, session_date=today + timedelta(days=3), duration=60)
+
+        top = ClientAnalyzer.get_top_by_revenue(limit=10, practice=practice)
+
+        self.assertEqual(top[0]["session_hours"], 2.5)
+        self.assertEqual(
+            sorted(held_sessions(client.sessions).values_list("duration", flat=True)), [60, 90]
+        )
 
 
 class RevenueConsistencyTests(TestCase):

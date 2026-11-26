@@ -2,8 +2,15 @@
 Financial calculation utilities for invoice and item calculations.
 """
 
+from datetime import date
 from decimal import Decimal
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
+
+from django.db.models import Manager, QuerySet
+from django.utils import timezone
+
+if TYPE_CHECKING:
+    from ..models import Session
 
 
 def to_float(value: Decimal | int | float | str) -> float:
@@ -105,6 +112,18 @@ def count_sessions_rounded(items: Iterable, exclude_cancellations: bool = True) 
         int: Total number of sessions (rounded)
     """
     return round(count_sessions(items, exclude_cancellations))
+
+
+def held_sessions(
+    sessions: "QuerySet[Session] | Manager[Session]", *, today: date | None = None
+) -> "QuerySet[Session]":
+    """The sessions that took place: not cancelled and not after ``today``.
+
+    ``sessions`` is a queryset or a related manager (``client.sessions``). This is what
+    counts as "held" wherever a client's sessions are counted: the client page, the case
+    review and the analytics' top clients.
+    """
+    return sessions.filter(cancelled=False, session_date__lte=today or timezone.localdate())
 
 
 def count_session_hours(

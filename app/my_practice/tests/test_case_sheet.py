@@ -16,6 +16,7 @@ from ..utils.case_sheet import (
     build_case_sheet,
     change_line,
     clean_content,
+    describe_fact,
     resolve_line,
     valid_cell,
     working_diagnosis,
@@ -198,6 +199,31 @@ class BuildCaseSheetTests(ClinicalTestBase):
         add_line(other, "resources", "", "theirs")
         rows = build_case_sheet(self.client_obj)
         self.assertEqual([c.lines for r in rows for c in r.cells if c.lines], [])
+
+
+@override_settings(FERNET_KEY=TEST_FERNET_KEY)
+class DescribeFactTests(ClinicalTestBase):
+    def test_labels_of_row_and_cell(self):
+        fact = add_line(self.client_obj, "symptoms", "onset", "Seit dem Frühjahr")
+        self.assertEqual(
+            describe_fact(fact),
+            {"row": "Symptomatik", "cell": "Beginn", "content": "Seit dem Frühjahr"},
+        )
+
+    def test_single_cell_row_has_no_cell_label(self):
+        fact = add_line(self.client_obj, "concern", "", "x")
+        self.assertEqual(describe_fact(fact)["cell"], "")
+
+    def test_row_that_left_the_sheet_shows_its_kind(self):
+        fact = ClinicalFact(kind="gone_row", sub="", content="old")
+        self.assertEqual(describe_fact(fact), {"row": "gone_row", "cell": "", "content": "old"})
+
+    def test_working_diagnosis_from_a_built_sheet_runs_no_query(self):
+        add_line(self.client_obj, "diagnosis", "", "F43.1")
+        sheet = build_case_sheet(self.client_obj)
+        with self.assertNumQueries(0):
+            self.assertEqual(working_diagnosis(self.client_obj, sheet=sheet), "F43.1")
+        self.assertEqual(working_diagnosis(self.client_obj), "F43.1")
 
 
 @override_settings(FERNET_KEY=TEST_FERNET_KEY)
