@@ -11,7 +11,8 @@ from datetime import date
 from django.utils import timezone
 
 from ..models import CaseReview, Client, ClinicalFact, Session, SupervisionItem
-from .case_sheet import RowView, build_case_sheet
+from .calculations import held_sessions
+from .case_sheet import build_case_sheet, describe_fact
 
 # The client page offers a review once this many sessions have been held since the last one.
 INVITE_AFTER_SESSIONS = 3
@@ -26,9 +27,7 @@ def last_review(client: Client) -> CaseReview | None:
 
 def sessions_since(client: Client, review: CaseReview | None, *, today: date | None = None):
     """Sessions held after ``review`` (all of them if None): not cancelled, none after today."""
-    sessions = client.sessions.filter(
-        cancelled=False, session_date__lte=today or timezone.localdate()
-    )
+    sessions = held_sessions(client.sessions, today=today)
     if review is not None:
         sessions = sessions.filter(session_date__gt=review.reviewed_on)
     return sessions.select_related("log").order_by("session_date", "pk")
@@ -100,23 +99,19 @@ def build_review(client: Client, *, today: date | None = None) -> dict:
         "hypothesis": hypothesis,
         "then_and_now": then_and_now,
         "still_empty": still_empty,
-        "added_today": added_on(client, today, sheet),
+        "added_today": added_on(client, today),
         "open_supervision": list(
             client.supervision_items.filter(status=SupervisionItem.Status.OFFEN)
         ),
     }
 
 
-def added_on(client: Client, day: date, sheet: list[RowView]) -> list[dict]:
+def added_on(client: Client, day: date) -> list[dict]:
     """The lines noted on ``day``, with where they went (the changes of a review in progress)."""
-    labels = {
-        row.row.kind: (row.row.label, {c.key: c.label for c in row.row.cells}) for row in sheet
-    }
-    lines = []
-    for fact in ClinicalFact.objects.filter(client=client, noted_on=day).order_by("pk"):
-        row_label, cells = labels.get(fact.kind, (fact.kind, {}))
-        lines.append({"row": row_label, "cell": cells.get(fact.sub, ""), "content": fact.content})
-    return lines
+    return [
+        describe_fact(fact)
+        for fact in ClinicalFact.objects.filter(client=client, noted_on=day).order_by("pk")
+    ]
 
 
 def finish_review(client: Client, *, today: date | None = None) -> CaseReview:

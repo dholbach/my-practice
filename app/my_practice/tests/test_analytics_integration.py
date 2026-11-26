@@ -337,7 +337,7 @@ class BusiestMonthsIntegrationTest(TestCase):
 
 
 class TopClientsIntegrationTest(TestCase):
-    """Tests for top clients ranking with centralized session counting."""
+    """Top clients: ranked by paid revenue, hours are the sessions held (as on the client page)."""
 
     def setUp(self):
         """Set up test data."""
@@ -383,9 +383,10 @@ class TopClientsIntegrationTest(TestCase):
         )
 
     @allow_issued_invoice_writes()
-    def test_top_clients_respects_quantity(self):
-        """Test that top clients correctly multiplies by quantity."""
-        # Client A: 1 invoice with 3 x 60min sessions
+    def test_top_clients_count_each_session_held_even_when_not_invoiced(self):
+        """Hours come from the sessions, so an uninvoiced session counts and quantity does not."""
+        # Client A: one invoiced 60min session (item quantity 3 is a billing detail) plus
+        # two held sessions that are not invoiced yet
         invoice_a = Invoice.objects.create(
             client=self.client_a,
             invoice_number="A-1",
@@ -406,6 +407,10 @@ class TopClientsIntegrationTest(TestCase):
             rate=Decimal("90.00"),
             quantity=Decimal("3.00"),
         )
+        for day in (6, 7):
+            Session.objects.create(
+                client=self.client_a, session_date=date(2026, 1, day), duration=60
+            )
 
         result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
@@ -416,7 +421,7 @@ class TopClientsIntegrationTest(TestCase):
     @allow_issued_invoice_writes()
     def test_top_clients_respects_duration(self):
         """Test that top clients correctly normalizes by duration."""
-        # Client A: 2 x 90min sessions = 3.0 hours
+        # Client A: one 90min session = 1.5 hours
         invoice_a = Invoice.objects.create(
             client=self.client_a,
             invoice_number="A-1",
@@ -435,12 +440,12 @@ class TopClientsIntegrationTest(TestCase):
                 duration=90,
             ),
             rate=Decimal("130.00"),
-            quantity=Decimal("2.00"),
+            quantity=Decimal("1.00"),
         )
 
         result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
-        self.assertEqual(result[0]["session_hours"], 3.0)
+        self.assertEqual(result[0]["session_hours"], 1.5)
 
     @allow_issued_invoice_writes()
     def test_top_clients_excludes_cancellations(self):
@@ -497,7 +502,7 @@ class TopClientsIntegrationTest(TestCase):
             practice=self.practice,
         )
 
-        # 2 x 60min = 2.0 hours
+        # one 60min session (item quantity 2 does not add a session)
         InvoiceItem.objects.create(
             invoice=invoice_a,
             service_type=self.service_60,
@@ -510,7 +515,7 @@ class TopClientsIntegrationTest(TestCase):
             quantity=Decimal("2.00"),
         )
 
-        # 2 x 90min = 3.0 hours
+        # one 90min session
         InvoiceItem.objects.create(
             invoice=invoice_a,
             service_type=self.service_90,
@@ -550,14 +555,14 @@ class TopClientsIntegrationTest(TestCase):
 
         # Should be sorted by revenue (A first)
         self.assertEqual(result[0]["client"], self.client_a)
-        self.assertEqual(result[0]["session_hours"], 5.0)  # 2.0 + 3.0
+        self.assertEqual(result[0]["session_hours"], 2.5)  # one 60 and one 90 min session
 
         self.assertEqual(result[1]["client"], self.client_b)
         self.assertEqual(result[1]["session_hours"], 1.0)
 
     @allow_issued_invoice_writes()
-    def test_top_clients_only_counts_paid_invoices(self):
-        """Test that only paid invoices are counted."""
+    def test_top_clients_revenue_is_paid_only_but_hours_are_all_sessions_held(self):
+        """Revenue counts paid invoices only; a session on an unpaid invoice was still held."""
         # Paid invoice
         invoice_paid = Invoice.objects.create(
             client=self.client_a,
@@ -605,4 +610,5 @@ class TopClientsIntegrationTest(TestCase):
         result = ClientAnalyzer.get_top_by_revenue(limit=10, practice=self.practice)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["session_hours"], 1.0)  # Only paid invoice counted
+        self.assertEqual(result[0]["total_revenue"], Decimal("90.00"))  # paid invoice only
+        self.assertEqual(result[0]["session_hours"], 2.0)  # both sessions took place

@@ -22,7 +22,7 @@ from ..models import (
     TimeOff,
 )
 from ..models.base import PracticeScope, scope_to_practice
-from .calculations import count_sessions
+from .calculations import count_session_hours, count_sessions, held_sessions
 from .chart_helpers import format_month_key, format_month_label
 from .date_helpers import DateRangeHelper
 from .formatting import round_money
@@ -509,7 +509,7 @@ class ClientAnalyzer:
         """
         Get top clients ranked by total revenue (paid invoices).
         Returns list of {client, total_revenue, invoice_count, session_hours} dicts.
-        Uses centralized session counting for accurate hour calculations.
+        Hours are the sessions held (not cancelled, not in the future), like the client page.
 
         Args:
             practice: Practice instance for multi-practice filtering
@@ -524,23 +524,18 @@ class ClientAnalyzer:
         clients_qs = scope_to_practice(clients_qs, practice)
         clients_with_revenue = list(clients_qs.order_by("-total_revenue")[:limit])
 
-        # One query for every top client's items, grouped in Python, rather than
-        # one query per client inside the loop below. The old shape was an N+1
-        # bounded by `limit` — ten extra round-trips on every /analytics/ load,
-        # which is the same class of problem as #276 and survived it because the
-        # query-count test guarding this page allowed 360 queries.
-        items_by_client: dict[int, list] = defaultdict(list)
-        client_items = InvoiceItem.objects.filter(
-            invoice__client__in=clients_with_revenue, invoice__status=Invoice.Status.PAID
-        ).select_related("invoice", "session", "service_type")
-        for item in client_items:
-            items_by_client[item.invoice.client_id].append(item)
+        # One query for every top client's sessions, grouped in Python, rather than one per
+        # client (an N+1 bounded by `limit` that once hid behind a 360-query allowance, #276).
+        # Hours are the sessions held, as on the client page, so the two figures agree.
+        sessions_by_client: dict[int, list] = defaultdict(list)
+        for session in held_sessions(Session.objects.filter(client__in=clients_with_revenue)):
+            sessions_by_client[session.client_id].append(session)
 
-        # Format results with proper session counting
         result = []
         for client in clients_with_revenue:
-            # Use centralized session counting (handles duration, quantity, and Ausfall)
-            session_hours = count_sessions(items_by_client[client.id], exclude_cancellations=True)
+            session_hours = count_session_hours(
+                sessions_by_client[client.id], therapist_hours=False
+            )
 
             result.append(
                 {
