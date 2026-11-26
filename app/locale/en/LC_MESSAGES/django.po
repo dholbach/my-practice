@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 23:54+0100\n"
+"POT-Creation-Date: 2026-11-26 08:34+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -106,11 +106,11 @@ msgstr ""
 #: my_practice/admin/calendar.py:28 my_practice/admin/client_alias.py:37
 #: my_practice/admin/clinical.py:23 my_practice/admin/clinical.py:110
 #: my_practice/models/calendar.py:127 my_practice/models/case_sheet.py:127
-#: my_practice/models/client.py:175 my_practice/models/client.py:247
-#: my_practice/models/client_alias.py:32 my_practice/models/clinical.py:83
-#: my_practice/models/clinical.py:221 my_practice/models/clinical.py:278
-#: my_practice/models/clinical.py:316 my_practice/models/invoice.py:121
-#: my_practice/models/session.py:22
+#: my_practice/models/case_sheet.py:192 my_practice/models/client.py:175
+#: my_practice/models/client.py:247 my_practice/models/client_alias.py:32
+#: my_practice/models/clinical.py:83 my_practice/models/clinical.py:221
+#: my_practice/models/clinical.py:278 my_practice/models/clinical.py:316
+#: my_practice/models/invoice.py:121 my_practice/models/session.py:22
 #: templates/my_practice/billing_open_overview.html:59
 #: templates/my_practice/calendar_import.html:97
 #: templates/my_practice/client_detail.html:6
@@ -225,7 +225,7 @@ msgstr ""
 
 #: my_practice/admin/client.py:127 my_practice/admin/clinical.py:66
 #: my_practice/models/client.py:166 templates/includes/command_palette.html:58
-#: templates/my_practice/client_detail_tab_overview.html:53
+#: templates/my_practice/client_detail_tab_overview.html:60
 #: templates/my_practice/client_list_cards.html:24
 #: templates/my_practice/tag_list.html:6
 msgid "Tags"
@@ -1324,7 +1324,7 @@ msgstr ""
 msgid "Resolved"
 msgstr ""
 
-#: my_practice/models/case_sheet.py:131
+#: my_practice/models/case_sheet.py:131 templates/includes/review_line.html:11
 #: templates/my_practice/client_detail_tab_protocol.html:20
 msgid "Row"
 msgstr ""
@@ -1360,6 +1360,20 @@ msgstr ""
 
 #: my_practice/models/case_sheet.py:171
 msgid "Case sheet lines"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:194
+msgid "Reviewed on"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:197
+#: templates/my_practice/case_review.html:4
+#: templates/my_practice/case_review.html:5
+msgid "Case review"
+msgstr ""
+
+#: my_practice/models/case_sheet.py:198
+msgid "Case reviews"
 msgstr ""
 
 #: my_practice/models/client.py:41 my_practice/utils/inquiry_analytics.py:188
@@ -1709,7 +1723,7 @@ msgstr ""
 msgid "Techniques and interventions applied (encrypted)"
 msgstr ""
 
-#: my_practice/models/clinical.py:180
+#: my_practice/models/clinical.py:180 templates/my_practice/case_review.html:34
 #: templates/my_practice/client_detail_tab_protocol.html:119
 #: templates/my_practice/session_log_form.html:98
 msgid "Own reflection"
@@ -1719,7 +1733,7 @@ msgstr "Own reflection"
 msgid "How I felt about it — countertransference (encrypted, separate)"
 msgstr ""
 
-#: my_practice/models/clinical.py:186
+#: my_practice/models/clinical.py:186 templates/my_practice/case_review.html:29
 #: templates/my_practice/client_detail_tab_protocol.html:125
 #: templates/my_practice/session_log_form.html:119
 msgid "Ideas for next session"
@@ -1762,7 +1776,7 @@ msgid "Feedback or outcome once discussed (optional, encrypted)"
 msgstr ""
 
 #: my_practice/models/clinical.py:247
-#: templates/my_practice/client_detail_tab_protocol.html:223
+#: templates/my_practice/client_detail_tab_protocol.html:226
 msgid "Discussed on"
 msgstr ""
 
@@ -1920,7 +1934,7 @@ msgstr ""
 #: my_practice/models/financial.py:125 my_practice/models/todo.py:71
 #: templates/my_practice/bank_expense_review.html:16
 #: templates/my_practice/client_detail_tab_protocol.html:55
-#: templates/my_practice/client_detail_tab_protocol.html:219
+#: templates/my_practice/client_detail_tab_protocol.html:222
 #: templates/my_practice/supervision_queue.html:5
 msgid "Supervision"
 msgstr "Supervision"
@@ -3490,7 +3504,7 @@ msgstr ""
 msgid "Update emergency access plan (P-010) if needed"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:181
+#: my_practice/utils/client_detail_builder.py:182
 #, python-format
 msgid "since %(start)s"
 msgstr ""
@@ -4002,6 +4016,10 @@ msgstr "Event on %(date)s added to invoice %(number)s."
 #: my_practice/views/calendar_views.py:651
 msgid "Import error. Details are in the server log."
 msgstr "Import error. Details are in the server log."
+
+#: my_practice/views/case_review_views.py:29
+msgid "Review saved."
+msgstr ""
 
 #: my_practice/views/case_sheet_views.py:37
 msgid "Unknown case sheet row."
@@ -4820,6 +4838,7 @@ msgid "Revenue this month: %(current)s / %(target)s"
 msgstr ""
 
 #: templates/includes/case_sheet.html:5
+#: templates/my_practice/case_review.html:24
 #: templates/my_practice/client_detail_tab_protocol.html:135
 #: templates/my_practice/client_detail_tab_protocol.html:155
 msgid "Case sheet"
@@ -4893,6 +4912,7 @@ msgstr ""
 
 #: templates/includes/case_sheet_cell.html:33
 #: templates/includes/for_next_time.html:59
+#: templates/includes/review_line.html:18
 #: templates/my_practice/client_detail_tab_protocol.html:29
 #: templates/my_practice/client_detail_tab_protocol.html:60
 #: templates/my_practice/inquiry_list.html:35
@@ -4900,6 +4920,7 @@ msgid "Add"
 msgstr "Add"
 
 #: templates/includes/case_sheet_cell.html:40
+#: templates/my_practice/case_review.html:75
 #, python-format
 msgid "%(count)s earlier line"
 msgid_plural "%(count)s earlier lines"
@@ -4915,6 +4936,7 @@ msgid "replaced"
 msgstr ""
 
 #: templates/includes/client_card.html:11
+#: templates/my_practice/case_review.html:26
 #: templates/my_practice/client_detail_tab_protocol.html:148
 msgid "Log missing"
 msgstr "Log missing"
@@ -5320,6 +5342,15 @@ msgstr ""
 
 #: templates/includes/pagination_bar.html:29
 msgid "Last »"
+msgstr ""
+
+#: templates/includes/review_line.html:6
+msgid "Send to the case sheet"
+msgstr ""
+
+#: templates/includes/review_line.html:16
+#: templates/my_practice/client_detail_tab_protocol.html:26
+msgid "Line"
 msgstr ""
 
 #: templates/includes/weekly_focus_widget_content.html:13
@@ -6604,6 +6635,60 @@ msgstr ""
 msgid "No calendars found for this Google account."
 msgstr ""
 
+#: templates/my_practice/case_review.html:15
+#, python-format
+msgid "Since your last review on %(date)s."
+msgstr ""
+
+#: templates/my_practice/case_review.html:15
+msgid "You have not reviewed this case sheet yet: everything since the first session."
+msgstr ""
+
+#: templates/my_practice/case_review.html:16
+msgid "Send a line with → to a row of the case sheet; the text is yours to edit first."
+msgstr ""
+
+#: templates/my_practice/case_review.html:40
+msgid "No sessions since the last review."
+msgstr ""
+
+#: templates/my_practice/case_review.html:45
+msgid "The case sheet"
+msgstr ""
+
+#: templates/my_practice/case_review.html:49
+msgid "Finish review"
+msgstr ""
+
+#: templates/my_practice/case_review.html:51
+msgid "The next review counts from today."
+msgstr ""
+
+#: templates/my_practice/case_review.html:56
+msgid "Added today"
+msgstr ""
+
+#: templates/my_practice/case_review.html:81
+msgid "Edit in the case sheet"
+msgstr ""
+
+#: templates/my_practice/case_review.html:86
+msgid "Then and now"
+msgstr ""
+
+#: templates/my_practice/case_review.html:96
+msgid "Still empty"
+msgstr ""
+
+#: templates/my_practice/case_review.html:97
+msgid "Only a hint: it is fine to leave these."
+msgstr ""
+
+#: templates/my_practice/case_review.html:104
+#: templates/my_practice/client_detail.html:40
+msgid "Open supervision topics"
+msgstr "Open supervision topics"
+
 #: templates/my_practice/checklist.html:13
 msgid "Period:"
 msgstr ""
@@ -6696,10 +6781,6 @@ msgstr ""
 #: templates/my_practice/client_detail.html:39
 msgid "Clinical"
 msgstr ""
-
-#: templates/my_practice/client_detail.html:40
-msgid "Open supervision topics"
-msgstr "Open supervision topics"
 
 #: templates/my_practice/client_detail.html:42
 msgid "Admin & billing"
@@ -6885,7 +6966,7 @@ msgstr "Send by email or download the PDF and hand it out"
 #: templates/my_practice/client_detail_tab_billing.html:167
 #: templates/my_practice/client_detail_tab_billing.html:184
 #: templates/my_practice/client_detail_tab_billing.html:201
-#: templates/my_practice/client_detail_tab_protocol.html:270
+#: templates/my_practice/client_detail_tab_protocol.html:273
 #: templates/my_practice/send_contract_email.html:61
 #: templates/my_practice/send_intake_form_email.html:61
 #: templates/my_practice/send_invoice_email.html:68
@@ -6987,33 +7068,51 @@ msgid "Details →"
 msgstr ""
 
 #: templates/my_practice/client_detail_tab_overview.html:39
+#, python-format
+msgid "%(count)s session since your last review on %(date)s."
+msgid_plural "%(count)s sessions since your last review on %(date)s."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/my_practice/client_detail_tab_overview.html:39
+#, python-format
+msgid "%(count)s session so far, and the case sheet has not been reviewed yet."
+msgid_plural "%(count)s sessions so far, and the case sheet has not been reviewed yet."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/my_practice/client_detail_tab_overview.html:40
+msgid "Start a review →"
+msgstr ""
+
+#: templates/my_practice/client_detail_tab_overview.html:46
 #: templates/my_practice/client_detail_tab_protocol.html:37
 msgid "+ Session log"
 msgstr "+ Session log"
 
-#: templates/my_practice/client_detail_tab_overview.html:40
+#: templates/my_practice/client_detail_tab_overview.html:47
 msgid "+ Task"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_overview.html:42
+#: templates/my_practice/client_detail_tab_overview.html:49
 #: templates/my_practice/client_detail_tab_protocol.html:38
 msgid "+ Note"
 msgstr "+ Note"
 
-#: templates/my_practice/client_detail_tab_overview.html:45
+#: templates/my_practice/client_detail_tab_overview.html:52
 #: templates/my_practice/client_detail_tab_protocol.html:39
 msgid "+ Supervision"
 msgstr "+ Supervision"
 
-#: templates/my_practice/client_detail_tab_overview.html:60
+#: templates/my_practice/client_detail_tab_overview.html:67
 msgid "Diagnosis not yet set — the probationary phase appears to be complete. Please update the diagnosis."
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_overview.html:62
+#: templates/my_practice/client_detail_tab_overview.html:69
 msgid "Diagnosis not yet set — invoices currently show \"Probationary phase\". Please update once the probationary phase is complete."
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_overview.html:64
+#: templates/my_practice/client_detail_tab_overview.html:71
 msgid "Edit →"
 msgstr ""
 
@@ -7028,10 +7127,6 @@ msgstr ""
 
 #: templates/my_practice/client_detail_tab_protocol.html:23
 msgid "replaces the current line"
-msgstr ""
-
-#: templates/my_practice/client_detail_tab_protocol.html:26
-msgid "Line"
 msgstr ""
 
 #: templates/my_practice/client_detail_tab_protocol.html:30
@@ -7134,37 +7229,41 @@ msgstr "Save min."
 msgid "Delete note?"
 msgstr "Delete note?"
 
-#: templates/my_practice/client_detail_tab_protocol.html:216
+#: templates/my_practice/client_detail_tab_protocol.html:215
+msgid "Reviewed on %(date)s"
+msgstr ""
+
+#: templates/my_practice/client_detail_tab_protocol.html:219
 #: templates/my_practice/supervision_queue.html:31
 msgid "Delete supervision topic?"
 msgstr "Delete supervision topic?"
 
-#: templates/my_practice/client_detail_tab_protocol.html:221
+#: templates/my_practice/client_detail_tab_protocol.html:224
 msgid "Raised on"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_protocol.html:232
-#: templates/my_practice/client_detail_tab_protocol.html:247
+#: templates/my_practice/client_detail_tab_protocol.html:235
+#: templates/my_practice/client_detail_tab_protocol.html:250
 msgid "Mark discussed"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_protocol.html:235
+#: templates/my_practice/client_detail_tab_protocol.html:238
 msgid "↩ Reopen"
 msgstr "↩ Reopen"
 
-#: templates/my_practice/client_detail_tab_protocol.html:246
+#: templates/my_practice/client_detail_tab_protocol.html:249
 msgid "Feedback or outcome (optional, Markdown)…"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_protocol.html:258
+#: templates/my_practice/client_detail_tab_protocol.html:261
 msgid "No entries yet. Session logs are created when adding new entries."
 msgstr "No entries yet. Session logs are created when adding new entries."
 
-#: templates/my_practice/client_detail_tab_protocol.html:265
+#: templates/my_practice/client_detail_tab_protocol.html:268
 msgid "Assessments"
 msgstr ""
 
-#: templates/my_practice/client_detail_tab_protocol.html:275
+#: templates/my_practice/client_detail_tab_protocol.html:278
 msgid "No email address — hand over or print the PDF."
 msgstr ""
 
@@ -9614,9 +9713,6 @@ msgstr ""
 
 #~ msgid "Clinical initial assessment…"
 #~ msgstr "Clinical initial assessment…"
-
-#~ msgid "Preview"
-#~ msgstr "Preview"
 
 #~ msgid "Topics, dynamics, challenges…"
 #~ msgstr "Topics, dynamics, challenges…"

@@ -426,6 +426,12 @@ urlpatterns = [
         views.case_fact_resolve,
         name="case_fact_resolve",
     ),
+    path("clients/<int:pk>/review/", views.case_review, name="case_review"),
+    path(
+        "clients/<int:pk>/review/finish/",
+        views.case_review_finish,
+        name="case_review_finish",
+    ),
     path(
         "clients/<int:pk>/scratch/add/",
         views.scratch_item_create,

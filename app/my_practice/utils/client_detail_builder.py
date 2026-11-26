@@ -21,6 +21,7 @@ from ..models import (
 from ..models.case_sheet import ROWS_BY_KIND, ClinicalFact
 from ..models.clinical import MoodTag
 from ..models.session import Session
+from .case_review import review_invitation
 from .case_sheet import build_case_sheet, working_diagnosis
 from .chart_helpers import (
     MONTH_ABBREVIATIONS,
@@ -299,6 +300,10 @@ class ClientDetailContextBuilder:
                 [{"type": "session", "date": s.session_date, "obj": s} for s in sessions_qs],
                 [{"type": "note", "date": n.note_date, "obj": n} for n in notes_qs],
                 [
+                    {"type": "review", "date": r.reviewed_on, "obj": r}
+                    for r in self.client.case_reviews.all()
+                ],
+                [
                     {
                         "type": "supervision",
                         "date": item.resolved_date or item.created_at.date(),
@@ -343,6 +348,7 @@ class ClientDetailContextBuilder:
             "mood_tag_choices": MoodTag.choices,
             "for_next_time": build_for_next_time(self.client),
             "digest": self._digest_context(),
+            "review_invitation": review_invitation(self.client),
             "documents": self.client.documents.order_by("-document_date", "-created_at"),
             "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,
             "gebueh_diagnostic_count": gebueh_diagnostic_count,

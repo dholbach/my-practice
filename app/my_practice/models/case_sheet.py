@@ -176,3 +176,30 @@ class ClinicalFact(TimestampedModel):
 
     def __str__(self) -> str:
         return f"{self.client.client_code} · {self.kind}"
+
+
+class CaseReview(TimestampedModel):
+    """A day on which the therapist went through the case sheet for a client.
+
+    The review view shows what happened since the last one, so each review sets the
+    starting point of the next, and the timeline marks the day.
+    """
+
+    client = models.ForeignKey(
+        Client,
+        on_delete=models.CASCADE,
+        related_name="case_reviews",
+        verbose_name=_("Client"),
+    )
+    reviewed_on = models.DateField(verbose_name=_("Reviewed on"))
+
+    class Meta:
+        verbose_name = _("Case review")
+        verbose_name_plural = _("Case reviews")
+        ordering = ["-reviewed_on", "-pk"]
+        indexes = [
+            models.Index(fields=["client", "reviewed_on"], name="casereview_client_date_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.client.client_code} · {self.reviewed_on}"

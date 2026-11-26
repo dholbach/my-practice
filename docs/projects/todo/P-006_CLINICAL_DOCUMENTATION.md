@@ -158,15 +158,24 @@ As built:
 
 ### PR 6: Review
 
-- New `CaseReview(TimestampedModel)`: client, `reviewed_on`, optional encrypted note.
-- A **Review** view: the sessions and notes since the last review on one side, each line with a "→ row" action;
-  on the other side the changes collected so far, the hypothesis with its earlier versions, "then and now"
-  (early vs recent *In their words*), still-empty fields (as a hint), and open supervision questions.
-  "Finish review" records the `CaseReview`.
-- The timeline shows "Reviewed on …" markers. The clinical page offers "N sessions since your last review" once
-  there are a few. A Focus Queue (P-050) signal is optional and gently worded.
-- *Why:* the deliberate review becomes cheap to start and good for supervision prep, and seeing a case move is
-  the rewarding part.
+As built (migration 0020):
+
+- New `CaseReview(TimestampedModel)`: client and `reviewed_on`. The optional encrypted note from the first
+  sketch was left out: there is nothing yet that would write to it.
+- The client page offers a review (a quiet note with a link, no task, no alarm) once
+  `INVITE_AFTER_SESSIONS` (3) sessions have been held since the last review, or since the start if there never
+  was one.
+- The **review page** (`/clients/<pk>/review/`) shows the held, non-cancelled sessions after the last review
+  day, oldest first. Each session's note and ideas are broken into lines; a **→** opens a small form (row
+  picker, the line prefilled and editable) that posts to `case_fact_add` with the session as source and comes
+  back to the review. The own reflection is shown to read, never offered for the sheet (it stays out of an
+  export). Beside it: lines added today, the hypothesis with its earlier versions, the client's first and
+  latest own words, rows that are still empty (a hint), and open supervision topics.
+- **Finish review** records today (once per day) and returns to the sheet; the next review counts from it. The
+  timeline shows a "Reviewed on" marker.
+- Not built: the Focus Queue signal (optional in the sketch). The invitation on the client page is enough, and
+  a signal would add the nagging this project is meant to avoid.
+- *Why:* the deliberate review becomes cheap to start and good for supervision prep.
 
 ## Open questions
 

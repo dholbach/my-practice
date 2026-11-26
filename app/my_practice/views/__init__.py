@@ -50,6 +50,9 @@ from .calendar_views import (
     calendar_queue_skip_duplicates,
 )
 
+# Case review (P-006)
+from .case_review_views import case_review, case_review_finish
+
 # Case sheet (P-006)
 from .case_sheet_views import case_fact_add, case_fact_resolve, case_fact_update
 
@@ -342,6 +345,9 @@ __all__ = [
     "checklist_complete",
     "checklist_pause_item",
     "checklist_unpause_item",
+    # Case review (P-006)
+    "case_review",
+    "case_review_finish",
     # Case sheet (P-006)
     "case_fact_add",
     "case_fact_resolve",
