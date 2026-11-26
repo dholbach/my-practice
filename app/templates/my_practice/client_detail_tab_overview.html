@@ -34,6 +34,13 @@
     </div>
     {% endif %}
 
+    {% if review_invitation %}
+    <div class="callout callout-primary">
+        {% if review_invitation.since %}{% blocktrans count count=review_invitation.count with date=review_invitation.since|date:"d.m.Y" %}{{ count }} session since your last review on {{ date }}.{% plural %}{{ count }} sessions since your last review on {{ date }}.{% endblocktrans %}{% else %}{% blocktrans count count=review_invitation.count %}{{ count }} session so far, and the case sheet has not been reviewed yet.{% plural %}{{ count }} sessions so far, and the case sheet has not been reviewed yet.{% endblocktrans %}{% endif %}
+        <a href="{% url 'case_review' client.pk %}" class="ml-1 whitespace-nowrap">{% trans "Start a review →" %}</a>
+    </div>
+    {% endif %}
+
     <!-- Cockpit quick actions -->
     <div class="cockpit-actions">
         <a href="{% url 'session_log_create' client.pk %}" class="btn btn-primary">{% trans "+ Session log" %}</a>

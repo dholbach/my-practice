@@ -211,6 +211,9 @@
     </div>
     {% endwith %}
 
+    {% elif entry.type == "review" %}
+    <div class="cn-review-marker{% if forloop.counter > 10 %} cn-timeline-old{% endif %}">✓ {% blocktrans with date=entry.obj.reviewed_on|date:"d.m.Y" %}Reviewed on {{ date }}{% endblocktrans %}</div>
+
     {% elif entry.type == "supervision" %}
     {% with item=entry.obj %}
     {% trans "Delete supervision topic?" as confirm_del_supervision %}

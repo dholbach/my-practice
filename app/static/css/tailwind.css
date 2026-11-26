@@ -637,6 +637,16 @@
   .digest-card { border-left: 3px solid var(--color-primary); }
   .digest-form { display: flex; flex-direction: column; gap: 0.4rem; max-width: 40rem; }
   .digest-added { margin: 0 0 0.75rem; padding-left: 1.1rem; font-size: 0.9rem; }
+  .cn-review-marker { padding: 0.35rem 0.75rem; border-radius: 6px; background: var(--color-success-bg); color: var(--color-success); font-size: 0.8rem; }
+  .cn-session-list:not(.cn-show-old):not(.cn-searching) .cn-review-marker.cn-timeline-old { display: none; }
+  /* Case review (P-006): sessions since the last review, each line can go to the case sheet */
+  .rv-main { flex: 999 1 560px; min-width: 0; }
+  .rv-session { padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .rv-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; margin-bottom: 0.4rem; }
+  .rv-summary { font-weight: 600; }
+  .rv-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.5rem; padding: 0.2rem 0; border-top: 1px solid var(--color-border); font-size: 0.9rem; }
+  .rv-line-text { flex: 1 1 14rem; min-width: 0; }
+  .rv-send[open] { flex: 1 0 100%; }
   /* Prompt chips above the session note: insert a reminder, or jump to a field */
   .cn-prompt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
   .cn-prompt-chip { padding: 0.15rem 0.7rem; border: 1px dashed var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 0.8125rem; cursor: pointer; }

@@ -1,0 +1,22 @@
+{% load i18n %}
+{# One line of a session's text in the review, with a way to send it to the case sheet. Needs client, sheet, session, line, review_url. #}
+<div class="rv-line">
+    <span class="rv-line-text">{{ line }}</span>
+    <details class="cs-edit rv-send">
+        <summary aria-label="{% trans "Send to the case sheet" %}" title="{% trans "Send to the case sheet" %}">→</summary>
+        <form method="post" action="{% url 'case_fact_add' client.pk %}" class="cs-form">
+            {% csrf_token %}
+            <input type="hidden" name="source_session" value="{{ session.pk }}">
+            <input type="hidden" name="next" value="{{ review_url }}">
+            <select name="target" class="form-control" aria-label="{% trans "Row" %}">
+                {% for rowview in sheet %}{% for cell in rowview.cells %}
+                <option value="{{ rowview.row.kind }}|{{ cell.key }}">{{ rowview.row.label }}{% if cell.label %} › {{ cell.label }}{% endif %}</option>
+                {% endfor %}{% endfor %}
+            </select>
+            <textarea name="content" rows="2" class="form-control cn-textarea-small" aria-label="{% trans "Line" %}" required>{{ line }}</textarea>
+            <div class="cs-form-actions">
+                <button type="submit" class="btn btn-primary btn-sm">{% trans "Add" %}</button>
+            </div>
+        </form>
+    </details>
+</div>

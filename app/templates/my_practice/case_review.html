@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load i18n payment_tags markdown_filters %}
+
+{% block title %}{% trans "Case review" %} – {{ client.client_code }}{% endblock %}
+{% block page_title %}🔎 {% trans "Case review" %}{% endblock %}
+{% block page_subtitle %}<span class="sensitive-data">{{ client.full_name }}</span> ({{ client.client_code }}){% endblock %}
+
+{% block content %}
+<p><a href="{% url 'client_detail' client.pk %}#ptab-profil">← {{ client.client_code }}</a></p>
+
+<div class="cn-log-layout">
+    <!-- Left: what happened since the last review -->
+    <div class="rv-main">
+        <p class="cs-hint">
+            {% if last_review %}{% blocktrans with date=last_review.reviewed_on|date:"d.m.Y" %}Since your last review on {{ date }}.{% endblocktrans %}{% else %}{% trans "You have not reviewed this case sheet yet: everything since the first session." %}{% endif %}
+            {% trans "Send a line with → to a row of the case sheet; the text is yours to edit first." %}
+        </p>
+        {% for block in blocks %}
+        <div class="section-card rv-session">
+            <div class="rv-head">
+                <strong>{{ block.session.session_date|date:"d.m.Y" }}</strong>
+                {% if block.summary %}<span class="rv-summary">{{ block.summary }}</span>{% endif %}
+                {% for tag in block.mood_tags %}<span class="cn-tag cn-tag-{{ tag }}">{{ tag|mood_tag_label }}</span>{% endfor %}
+                <a href="{% url 'client_detail' client.pk %}?digest={{ block.session.pk }}#digest-card" class="cs-hint">{% trans "Case sheet" %}</a>
+            </div>
+            {% if not block.has_log %}<p class="cn-empty-state">{% trans "Log missing" %}</p>{% endif %}
+            {% for line in block.note_lines %}{% include 'includes/review_line.html' with line=line session=block.session %}{% endfor %}
+            {% if block.idea_lines %}
+            <div class="cs-cell-label">💡 {% trans "Ideas for next session" %}</div>
+            {% for line in block.idea_lines %}{% include 'includes/review_line.html' with line=line session=block.session %}{% endfor %}
+            {% endif %}
+            {% if block.reflection %}
+            <details class="cn-reflection">
+                <summary class="cn-reflection-label">{% trans "Own reflection" %}</summary>
+                <div class="md-rendered">{{ block.reflection|render_markdown }}</div>
+            </details>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="section-card"><p class="cn-empty-state">{% trans "No sessions since the last review." %}</p></div>
+        {% endfor %}
+    </div>
+
+    <!-- Right: the sheet, and finishing -->
+    <aside class="cn-log-context" aria-label="{% trans "The case sheet" %}">
+        <div class="section-card">
+            <form method="post" action="{% url 'case_review_finish' client.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">{% trans "Finish review" %}</button>
+            </form>
+            <p class="cs-hint">{% trans "The next review counts from today." %}</p>
+        </div>
+
+        {% if added_today %}
+        <div class="section-card">
+            <h3>{% trans "Added today" %}</h3>
+            <ul class="digest-added">
+                {% for line in added_today %}
+                <li><strong>{{ line.row }}{% if line.cell %} › {{ line.cell }}{% endif %}:</strong> {{ line.content }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="section-card">
+            <h3>{{ hypothesis.row.label }}</h3>
+            {% for line in hypothesis.lines %}
+            <div class="md-rendered">{{ line.content|render_markdown }}</div>
+            <span class="cs-line-date">{{ line.noted_on|date:"d.m.y" }}</span>
+            {% empty %}
+            <p class="cn-empty-state">–</p>
+            {% endfor %}
+            {% if hypothesis.history %}
+            <details class="cs-history">
+                <summary>{% blocktrans count count=hypothesis.history|length %}{{ count }} earlier line{% plural %}{{ count }} earlier lines{% endblocktrans %}</summary>
+                {% for old in hypothesis.history %}
+                <div class="cs-old"><span class="cs-line-date">{{ old.noted_on|date:"d.m.y" }}</span><div class="md-rendered">{{ old.content|render_markdown }}</div></div>
+                {% endfor %}
+            </details>
+            {% endif %}
+            <a href="{% url 'client_detail' client.pk %}#case-row-hypothesis" class="cs-hint">{% trans "Edit in the case sheet" %}</a>
+        </div>
+
+        {% if then_and_now %}
+        <div class="section-card">
+            <h3>{% trans "Then and now" %}</h3>
+            {% for line in then_and_now %}
+            <div class="cs-cell-label">{{ line.noted_on|date:"d.m.Y" }}</div>
+            <div class="md-rendered">{{ line.content|render_markdown }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if still_empty %}
+        <div class="section-card">
+            <h3>{% trans "Still empty" %}</h3>
+            <p class="cs-hint">{% trans "Only a hint: it is fine to leave these." %}</p>
+            <p>{{ still_empty|join:" · " }}</p>
+        </div>
+        {% endif %}
+
+        {% if open_supervision %}
+        <div class="section-card">
+            <h3>{% trans "Open supervision topics" %}</h3>
+            {% for item in open_supervision %}<p>{{ item.content }} <span class="cs-hint">{{ item.created_at|date:"d.m." }}</span></p>{% endfor %}
+        </div>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}

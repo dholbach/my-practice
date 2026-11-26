@@ -6,7 +6,7 @@ Split from monolithic models.py into domain-focused modules.
 from .bank_statement import BankTransaction
 from .base import ALL_PRACTICES, TimestampedModel, scope_to_practice
 from .calendar import GoogleCalendarToken, PendingCalendarEvent
-from .case_sheet import ClinicalFact
+from .case_sheet import CaseReview, ClinicalFact
 from .client import Client, ClientDocument
 from .client_alias import ClientAlias
 from .clinical import (
@@ -66,6 +66,7 @@ __all__ = [
     "ClientAlias",
     "ClientTag",
     "ClientProfile",
+    "CaseReview",
     "ClinicalFact",
     "ClientNote",
     "ServiceType",
