@@ -17,12 +17,13 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from ..models import Client, Invoice, InvoiceItem, PendingCalendarEvent, ServiceType
-from ..utils.billing_helpers import resolve_session_rate
+from ..utils.billing_helpers import is_session_already_billed, resolve_session_rate
 from ..utils.calendar_event_processor import (
     CalendarImportProcessor,
     build_user_overrides,
     parse_date_range,
 )
+from ..utils.calendar_import_helpers import session_slot_billed
 from ..utils.google_calendar import (
     GoogleCalendarOAuth,
     list_calendars,
@@ -520,20 +521,6 @@ def _resolve_billing_inputs(
     return service_type, rate
 
 
-def _session_already_billed(client, event: "PendingCalendarEvent", service_type) -> bool:
-    """Guard against duplicates — exclude cancelled invoices so re-import after
-    cancellation works correctly."""
-    return (
-        InvoiceItem.objects.filter(
-            invoice__client=client,
-            session__session_date=event.event_date,
-            service_type=service_type,
-        )
-        .exclude(invoice__status=Invoice.Status.CANCELLED)
-        .exists()
-    )
-
-
 def _resolve_quick_action_invoice(action: str, client, event: "PendingCalendarEvent") -> Invoice:
     from datetime import datetime as dt
 
@@ -552,9 +539,53 @@ def _resolve_quick_action_invoice(action: str, client, event: "PendingCalendarEv
     return get_or_create_invoice_for_month(client, event_dt)
 
 
+class _AlreadyBilled(Exception):
+    """The event's session was billed between the first check and the locked one."""
+
+
+def _event_already_billed(
+    client, event: "PendingCalendarEvent", service_type, *, lock: bool = False
+) -> bool:
+    """Whether the event is already on a non-cancelled invoice.
+
+    Three ways to tell, any one is enough:
+    - its slot (client, date, time) is billed, under any service type;
+    - the session the calendar fetch linked to it is billed;
+    - the client has the same service type billed that day, which catches a
+      session entered by hand without a time.
+
+    The first two are new (#751): the old check was only the third, so an
+    event billed under another type (say 90 min, or a cancellation fee) could
+    be charged twice. lock=True holds the slot's Session row, as the bulk
+    import does, so two quick actions can't both pass.
+    """
+    if session_slot_billed(client, event.event_date, event.event_time, lock=lock):
+        return True
+    if event.session_id is not None and is_session_already_billed(event.session_id):
+        return True
+    return (
+        InvoiceItem.objects.filter(
+            invoice__client=client,
+            session__session_date=event.event_date,
+            service_type=service_type,
+        )
+        .exclude(invoice__status=Invoice.Status.CANCELLED)
+        .exists()
+    )
+
+
+def _mark_event_imported(event: "PendingCalendarEvent") -> None:
+    """The event's session is billed already: take it out of the queue."""
+    PendingCalendarEvent.objects.filter(
+        pk=event.pk, status=PendingCalendarEvent.Status.PENDING
+    ).update(status=PendingCalendarEvent.Status.IMPORTED)
+
+
 def _create_session_and_invoice_item(
-    event: "PendingCalendarEvent", client, service_type, rate, invoice: Invoice
-) -> None:
+    action: str, event: "PendingCalendarEvent", client, service_type, rate
+) -> Invoice:
+    """Bill the event; raise _AlreadyBilled, with nothing written, if its
+    session was billed in the meantime."""
     from django.db import transaction
 
     from ..models import InvoiceItem, Session
@@ -570,6 +601,11 @@ def _create_session_and_invoice_item(
                 "calendar_event_id": event.google_event_id,
             },
         )
+        if _event_already_billed(client, event, service_type, lock=True):
+            raise _AlreadyBilled
+        # Resolved inside the transaction so a refused import leaves no empty
+        # new invoice behind.
+        invoice = _resolve_quick_action_invoice(action, client, event)
         InvoiceItem.objects.create(
             invoice=invoice,
             service_type=service_type,
@@ -582,6 +618,7 @@ def _create_session_and_invoice_item(
         event.session = session
         event.save(update_fields=["status", "session"])
         sync_no_next_session_tag(client)
+    return invoice
 
 
 @require_POST
@@ -630,22 +667,24 @@ def calendar_event_quick_action(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect_target
     service_type, rate = billing_inputs
 
-    if _session_already_billed(client, event, service_type):
-        messages.warning(
-            request,
-            _("Session on %(date)s is already billed.")
-            % {"date": event.event_date.strftime("%d.%m.%Y")},
-        )
+    already_billed_message = _("Session on %(date)s is already billed.") % {
+        "date": event.event_date.strftime("%d.%m.%Y")
+    }
+    if _event_already_billed(client, event, service_type):
+        _mark_event_imported(event)
+        messages.warning(request, already_billed_message)
         return redirect_target
 
     try:
-        invoice = _resolve_quick_action_invoice(action, client, event)
-        _create_session_and_invoice_item(event, client, service_type, rate, invoice)
+        invoice = _create_session_and_invoice_item(action, event, client, service_type, rate)
         messages.success(
             request,
             _("Event on %(date)s added to invoice %(number)s.")
             % {"date": event.event_date.strftime("%d.%m.%Y"), "number": invoice.invoice_number},
         )
+    except _AlreadyBilled:
+        _mark_event_imported(event)
+        messages.warning(request, already_billed_message)
     except Exception:
         logger.exception("Quick action import of a calendar event failed")
         messages.error(request, _("Import error. Details are in the server log."))
