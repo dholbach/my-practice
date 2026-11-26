@@ -5,6 +5,7 @@ Google Calendar API utilities for OAuth2 and event parsing.
 import logging
 import re
 from datetime import datetime
+from enum import StrEnum
 from typing import cast
 
 from django.conf import settings
@@ -13,6 +14,7 @@ from django.utils import timezone
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 from ..models import ALL_PRACTICES, Client, GoogleCalendarToken, ServiceType
 from ..models.base import PracticeScope
@@ -478,6 +480,49 @@ def fetch_all_events(service, calendar_id: str, start, end) -> list[dict]:
         page_token = result.get("nextPageToken")
         if not page_token:
             return events
+
+
+class EventLookup(StrEnum):
+    """What Google says about one event, looked up by its id."""
+
+    LIVE = "live"  # still on the calendar
+    GONE = "gone"  # deleted, or marked cancelled by Google
+    CANCELLED = "cancelled"  # still there, but its title says cancelled
+    UNKNOWN = "unknown"  # no definite answer: network, auth, quota, server error
+
+
+# Only these statuses say the event itself is gone. 403, 429, 5xx and the rest
+# say something about the request, not the event.
+_EVENT_GONE_STATUSES = {404, 410}
+
+
+def lookup_event(service, calendar_id: str, event_id: str) -> EventLookup:
+    """Ask Google about one event, for rows the window fetch can no longer see.
+
+    Anything short of a definite answer is UNKNOWN, so a network failure, an
+    aborted request, a blocked IP or an expired token never counts as the event
+    being gone. Call it only after a list call on the same calendar succeeded in
+    this run, so a 404 means the event and not the calendar.
+    """
+    try:
+        event = service.events().get(calendarId=calendar_id, eventId=event_id).execute()
+    except HttpError as error:
+        status = getattr(error.resp, "status", None)
+        if status in _EVENT_GONE_STATUSES:
+            return EventLookup.GONE
+        logger.warning("Calendar lookup of %s failed with HTTP %s", event_id, status)
+        return EventLookup.UNKNOWN
+    except Exception:
+        logger.warning("Calendar lookup of %s failed", event_id, exc_info=True)
+        return EventLookup.UNKNOWN
+
+    if not isinstance(event, dict):
+        return EventLookup.UNKNOWN
+    if event.get("status") == "cancelled":
+        return EventLookup.GONE
+    if CalendarEventParser.is_cancelled(event.get("summary", "")):
+        return EventLookup.CANCELLED
+    return EventLookup.LIVE
 
 
 def practice_clients(practice) -> "QuerySet[Client]":

@@ -24,8 +24,10 @@ from ...models import (
 )
 from ...utils.google_calendar import (
     CalendarEventParser,
+    EventLookup,
     GoogleCalendarOAuth,
     fetch_all_events,
+    lookup_event,
     practice_clients,
 )
 from ...utils.tag_helpers import sync_no_next_session_tag
@@ -33,6 +35,8 @@ from ...utils.tag_helpers import sync_no_next_session_tag
 logger = logging.getLogger(__name__)
 
 OVERLAP_HOURS = 2  # Re-fetch this many hours of overlap to catch late additions
+# Bounds the one-by-one lookups of past flagged events per practice and run.
+MAX_MISSING_LOOKUPS = 25
 FIRST_RUN_DAYS = 30  # How far back to go on the very first run per practice
 
 
@@ -180,6 +184,9 @@ class Command(BaseCommand):
         )
         counts = self.upsert_all_events(parsed, practice, dry_run, affected_clients)
         self._report_fetch_summary(dry_run, cancelled_count, flagged_count, moved_count, counts)
+        # After the list call above succeeded, so the calendar is reachable and
+        # a 404 from a lookup is about the event, not the calendar.
+        self.resolve_past_missing_events(service, calendar_id, practice, dry_run, affected_clients)
 
         if not dry_run:
             self.sync_no_next_session_tags(affected_clients)
@@ -416,6 +423,61 @@ class Command(BaseCommand):
             self.stdout.write(f"  🚫 Cancelled: {code} on {db_event.event_date}")
             self._warn_if_billed(db_event)
         return cancelled, flagged
+
+    def resolve_past_missing_events(
+        self, service, calendar_id: str, practice, dry_run: bool, affected_clients: set | None
+    ) -> dict[str, int]:
+        """Settle pending events flagged missing whose date has passed (#750).
+
+        cancel_stale_future_events only looks at future events, so one that
+        missed a single fetch shortly before its date kept its flag forever.
+        These are looked up by id instead: gone or cancelled in Google cancels
+        them as the second miss would have, still there clears the flag. A
+        lookup without a definite answer (network, auth, quota, server error)
+        changes nothing and stops the pass, so an outage never counts as a
+        cancellation; the next run tries again.
+        """
+        counts = {"cancelled": 0, "cleared": 0, "unresolved": 0}
+        flagged = (
+            PendingCalendarEvent.objects.filter(
+                practice=practice,
+                status=PendingCalendarEvent.Status.PENDING,
+                missing_since__isnull=False,
+                event_date__lte=timezone.localdate(),
+            )
+            .select_related("matched_client")
+            .order_by("event_date")
+        )
+        remaining = flagged.count()
+        for db_event in flagged[:MAX_MISSING_LOOKUPS]:
+            result = lookup_event(service, calendar_id, db_event.google_event_id)
+            if result == EventLookup.UNKNOWN:
+                break
+            remaining -= 1
+            if result == EventLookup.LIVE:
+                counts["cleared"] += 1
+                if not dry_run:
+                    PendingCalendarEvent.objects.filter(pk=db_event.pk).update(missing_since=None)
+                continue
+            counts["cancelled"] += 1
+            code = db_event.matched_client.client_code if db_event.matched_client else "?"
+            self.stdout.write(
+                f"  🚫 Cancelled (gone from calendar): {code} on {db_event.event_date}"
+            )
+            if not dry_run:
+                PendingCalendarEvent.objects.filter(
+                    pk=db_event.pk, status=PendingCalendarEvent.Status.PENDING
+                ).update(status=PendingCalendarEvent.Status.CANCELLED)
+                if self._cancel_unbilled_session(db_event) and affected_clients is not None:
+                    affected_clients.add(db_event.matched_client)
+            self._warn_if_billed(db_event)
+        counts["unresolved"] = remaining
+        if any(counts.values()):
+            self.stdout.write(
+                f"  🔎 Past events missing from the calendar: {counts['cancelled']} cancelled, "
+                f"{counts['cleared']} still there, {counts['unresolved']} left for the next run"
+            )
+        return counts
 
     def upsert_event(
         self, event, practice, dry_run, affected_clients: set | None = None
