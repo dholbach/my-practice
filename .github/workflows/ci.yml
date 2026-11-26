@@ -282,18 +282,14 @@ jobs:
       # for — the config had that strictness ladder from the start but nothing
       # ever ran it, so "typed" meant whatever survived review. --follow-imports
       # =silent keeps the gate on those modules instead of failing on errors in
-      # everything they happen to import; widen the path list as more of the
+      # everything they happen to import; widen app/mypy_strict_paths.txt as more of the
       # tree is annotated.
       - name: Type check (mypy)
         if: steps.scope.outputs.code == 'true'
         working-directory: app
         run: |
-          mypy --follow-imports=silent \
-            my_practice/models \
-            my_practice/utils/calculations.py \
-            my_practice/utils/date_helpers.py \
-            my_practice/utils/invoice_helpers.py \
-            my_practice/utils/revenue_helpers.py
+          # The path list lives in mypy_strict_paths.txt so `./dev.py review` checks the same set.
+          grep -v '^#' mypy_strict_paths.txt | xargs mypy --follow-imports=silent
 
       # The suite runs with DJANGO_DEBUG=True (see the note on the job env), so
       # the whole `if not DEBUG:` block in config/settings.py — every security

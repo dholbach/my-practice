@@ -667,17 +667,15 @@ nothing ever ran it, so "typed" meant whatever survived review. CI now runs it
 over exactly the modules the ladder declares strict:
 
 ```
-mypy --follow-imports=silent \
-  my_practice/models \
-  my_practice/utils/calculations.py \
-  my_practice/utils/date_helpers.py \
-  my_practice/utils/invoice_helpers.py \
-  my_practice/utils/revenue_helpers.py
+grep -v '^#' mypy_strict_paths.txt | xargs mypy --follow-imports=silent
 ```
+
+The list is `app/mypy_strict_paths.txt`, one path per line. CI and `./dev.py review`
+read the same file, so a module is never strict in one and unchecked in the other.
 
 `--follow-imports=silent` keeps the gate on those modules rather than failing
 on errors in everything they happen to import (133 errors across 34 files
-without it, 0 with it). Widen the path list as more of the tree is annotated —
+without it, 0 with it). Widen `mypy_strict_paths.txt` as more of the tree is annotated —
 and widen `mypy.ini`'s `disallow_untyped_defs` overrides in the same commit, so
 the two never disagree about what "strict" covers.
 
@@ -735,7 +733,7 @@ claim is true.
   `config/settings.py` — every security header, cookie and HSTS setting — is
   otherwise never evaluated by anything.
 - `shellcheck -S warning scripts/*.sh`.
-- `mypy --follow-imports=silent` over the strict modules (§ Type checking).
+- `mypy --follow-imports=silent` over the strict modules (§ Type checking); `./dev.py review` runs it too.
 - `scripts/check_requirements_sync.py` and `scripts/check_shared_helpers.py`
   (§ Files that duplicate content on purpose) also run in pre-commit and
   `./dev.py quality`.

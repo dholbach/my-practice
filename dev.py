@@ -583,8 +583,8 @@ def cmd_quality(args):
         --only-tests: Run only tests
         --verbose: Show full output (default: minimal)
 
-    Note: vulture runs in `./dev.py review`, mypy only in CI (strict modules).
-          Run mypy by hand if needed:
+    Note: vulture and mypy (strict modules) run in `./dev.py review` and in CI,
+          not here. Wider mypy run by hand if needed:
             docker exec my-practice-tools python -m mypy my_practice
     """
     results = []
@@ -819,8 +819,26 @@ def cmd_review(args):
         print("⚠️  Unused symbols found above")
     print()
 
+    # --- 3. Types (mypy over the strict modules, the same list CI uses) ---
+    print("3️⃣  Types (mypy, strict modules)")
+    print("-" * 30)
+    paths_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "app", "mypy_strict_paths.txt"
+    )
+    with open(paths_file) as handle:
+        mypy_paths = [line.strip() for line in handle if line.strip() and not line.startswith("#")]
+    mypy_result = run_docker_command(
+        ["python", "-m", "mypy", "--follow-imports=silent", *mypy_paths]
+    )
+    results.append(("Types (mypy)", mypy_result.returncode))
+    if mypy_result.returncode == 0:
+        print("✅ No type errors in the strict modules")
+    else:
+        print("⚠️  Type errors above")
+    print()
+
     # --- 3. Security: known CVEs (pip-audit + npm audit) ---
-    print("3️⃣  Dependency security (pip-audit + npm audit)")
+    print("4️⃣  Dependency security (pip-audit + npm audit)")
     print("-" * 30)
     # Check if pip-audit is available before running
     check = run_docker_command(["python", "-c", "import pip_audit"])
@@ -847,7 +865,7 @@ def cmd_review(args):
     print()
 
     # --- 4. Outdated packages ---
-    print("4️⃣  Outdated packages (pip list --outdated)")
+    print("5️⃣  Outdated packages (pip list --outdated)")
     print("-" * 30)
     print("App (container / requirements.txt):")
     run_docker_command(["pip", "list", "--outdated", "--format", "columns"])
@@ -857,7 +875,7 @@ def cmd_review(args):
     print()
 
     # --- 5. Test coverage ---
-    print("5️⃣  Test coverage (coverage report)")
+    print("6️⃣  Test coverage (coverage report)")
     print("-" * 30)
     if no_tests:
         print("⏭️  Skipped (--no-tests)")
@@ -890,7 +908,7 @@ def cmd_review(args):
 
     # --- 6. Complexity (quarterly only) ---
     if full:
-        print("6️⃣  Complexity hotspots (radon cc)")
+        print("7️⃣  Complexity hotspots (radon cc)")
         print("-" * 30)
         check = run_docker_command(["python", "-c", "import radon"])
         if check.returncode != 0:
@@ -917,7 +935,7 @@ def cmd_review(args):
         # --- 7. Long files (quarterly only) ---
         # Same threshold and pathspecs as the generated metrics page, so the two
         # never disagree; that page has the month-by-month trend, this is the list.
-        print("7️⃣  Long files (scripts/codebase_metrics.py --largest)")
+        print("8️⃣  Long files (scripts/codebase_metrics.py --largest)")
         print("-" * 30)
         long_result = subprocess.run(
             [sys.executable, "scripts/codebase_metrics.py", "--largest"],
