@@ -61,3 +61,37 @@ def scratch_item_delete(request, pk, item_pk):
     client = get_scoped_client(request, pk)
     get_object_or_404(ScratchItem, pk=item_pk, client=client).delete()
     return _back(request, pk)
+
+
+def update_scratch_items(request, client) -> None:
+    """Save the wording of open reminders edited in the log form's side panel."""
+    edited = {
+        int(name.removeprefix("scratch_edit_")): clean_reminder(value)
+        for name, value in request.POST.items()
+        if name.startswith("scratch_edit_") and name.removeprefix("scratch_edit_").isdigit()
+    }
+    for item in ScratchItem.objects.filter(client=client, pk__in=edited, done_at__isnull=True):
+        # A cleared field leaves the reminder as it was: removing one is the client page's job.
+        if edited[item.pk] and edited[item.pk] != item.text:
+            item.text = edited[item.pk]
+            item.save(update_fields=["text", "updated_at"])
+
+
+def complete_scratch_items(request, client, session) -> None:
+    """Mark the reminders ticked in the log form's side panel as covered in ``session``."""
+    ids = [int(raw) for raw in request.POST.getlist("scratch_done") if raw.isdigit()]
+    if ids:
+        ScratchItem.objects.filter(client=client, pk__in=ids, done_at__isnull=True).update(
+            done_at=timezone.now(), covered_in_session=session
+        )
+
+
+MAX_NEW_SCRATCH_ITEMS = 10
+
+
+def add_scratch_items(request, client) -> None:
+    """Create a reminder for next time per non-empty line of the log form's side panel."""
+    lines = [clean_reminder(line) for line in request.POST.get("scratch_new", "").splitlines()]
+    ScratchItem.objects.bulk_create(
+        [ScratchItem(client=client, text=line) for line in lines if line][:MAX_NEW_SCRATCH_ITEMS]
+    )

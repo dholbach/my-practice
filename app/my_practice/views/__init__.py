@@ -75,20 +75,8 @@ from .clinical_views import (
     client_note_delete,
     client_note_update,
     client_triage_summary,
-    gebueh_leistung_create,
-    session_bill,
-    session_delete,
-    session_duration_edit,
     session_log_create,
-    session_log_delete,
     session_log_edit,
-    session_log_mark_noshow,
-    session_toggle_billable,
-    supervision_item_create,
-    supervision_item_delete,
-    supervision_item_resolve,
-    supervision_item_toggle,
-    supervision_queue,
 )
 
 # Dashboard views
@@ -181,6 +169,22 @@ from .scratch_views import (
 
 # Search views
 from .search_views import global_search
+from .session_views import (
+    gebueh_leistung_create,
+    session_bill,
+    session_delete,
+    session_duration_edit,
+    session_log_delete,
+    session_log_mark_noshow,
+    session_toggle_billable,
+)
+from .supervision_views import (
+    supervision_item_create,
+    supervision_item_delete,
+    supervision_item_resolve,
+    supervision_item_toggle,
+    supervision_queue,
+)
 
 # Tag views
 from .tag_views import (

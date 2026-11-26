@@ -68,13 +68,15 @@ app/my_practice/
 │   ├── calendar_views.py      # Google Calendar OAuth + session import approval
 │   ├── client_views.py        # Client list, detail, intake
 │   ├── case_sheet_views.py    # Case sheet lines: add, reword, resolve (P-006)
-│   ├── clinical_views.py      # SessionLog, ClientNote, SupervisionItem, triage
+│   ├── clinical_views.py      # SessionLog create/edit, ClientNote, triage
 │   ├── dashboard_views.py     # Dashboard (delegates to DashboardContextAssembler)
 │   ├── email_views.py         # Email compose + send (invoice, reminder, contract, …)
 │   ├── expense_views.py       # Expense CRUD + list
 │   ├── focus_queue_views.py   # Focus Queue (P-050) — unified manual + materialized task list
 │   ├── inquiry_views.py       # Lead tracking (analytics: utils/inquiry_analytics.py)
-│   ├── scratch_views.py       # "For next time" reminders: add, edit, tick off, delete (P-006)
+│   ├── scratch_views.py       # "For next time" reminders: add, edit, tick off, delete (P-006); the log form's reminder helpers
+│   ├── session_views.py       # One session: duration, billing, no-show, delete, GebüH entries
+│   ├── supervision_views.py   # Supervision items + the cross-client queue
 │   ├── billing_views.py       # Billing overview + monthly batch billing
 │   ├── invoice_views.py       # Invoice CRUD
 │   ├── operational_views.py   # Operational checklist
@@ -237,7 +239,9 @@ Weekly capacity is no longer hard-coded at 2023-08-01. The `CapacityPeriod` mode
 | `billing_views.py` | Billing overview + monthly batch billing | `billing_helpers` for session items |
 | `invoice_views.py` | Invoice CRUD | `InvoiceFormsetMixin`; `billing_helpers` for session items |
 | `client_views.py` | Client list + intake | `PracticeScopedListView` |
-| `clinical_views.py` | SessionLog, Notes, Supervision, triage | Fernet encryption for notes/sessions |
+| `clinical_views.py` | SessionLog create/edit, Notes, triage | Fernet encryption for notes/sessions |
+| `session_views.py` | One session: duration, billing, no-show, delete, GebüH entries | `session_log_helpers` (frozen once billed) |
+| `supervision_views.py` | Supervision items + queue | |
 | `case_sheet_views.py` | Case sheet lines | Thin: validate, call `utils/case_sheet.py`; nothing is deleted, lines are superseded |
 | `scratch_views.py` | "For next time" reminders | `clean_reminder()` in `utils/for_next_time.py` |
 | `calendar_views.py` | Google Calendar OAuth + event approval | `CalendarImportProcessor`; `resolve_session_rate` |

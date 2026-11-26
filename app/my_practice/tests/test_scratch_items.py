@@ -262,7 +262,7 @@ class AddRemindersFromLogFormTests(ClinicalTestBase):
         self.assertEqual(self._texts(), [])
 
     def test_long_lines_are_cut_and_the_number_is_capped(self):
-        from ..views.clinical_views import MAX_NEW_SCRATCH_ITEMS
+        from ..views.scratch_views import MAX_NEW_SCRATCH_ITEMS
 
         self._post("\n".join(["x" * 400] + [f"line {n}" for n in range(30)]))
         texts = self._texts()
