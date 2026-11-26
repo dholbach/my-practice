@@ -8,6 +8,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
+from google.auth.exceptions import RefreshError, TransportError
+from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
 
 from my_practice.models import (
@@ -19,6 +21,7 @@ from my_practice.models import (
 from my_practice.utils.calendar_import_helpers import _resolve_client
 from my_practice.utils.google_calendar import (
     CalendarEventParser,
+    CalendarUnreachable,
     EventLookup,
     GoogleCalendarOAuth,
     fetch_all_events,
@@ -724,3 +727,81 @@ class LookupEventTest(SimpleTestCase):
 
     def test_unexpected_response_is_unknown(self):
         self.assertEqual(self._lookup(returns=None), EventLookup.UNKNOWN)
+
+
+class TokenRefreshOutcomeTest(TestCase):
+    """get_service tells a rejected token (re-authorise) from Google being out of
+    reach (try again later) (#756)."""
+
+    def setUp(self):
+        self.practice = create_test_practice(name="Test Practice", slug="token-refresh")
+        self.token = GoogleCalendarToken.objects.create(
+            token="old-token",
+            refresh_token="refresh",
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id="client",
+            client_secret="secret",
+            scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            expires_at=timezone.now() - timedelta(hours=1),
+            is_active=True,
+            practice=self.practice,
+        )
+
+    def _get_service(self, refresh_side_effect=None):
+        with (
+            patch.object(Credentials, "refresh", side_effect=refresh_side_effect),
+            patch("my_practice.utils.google_calendar.build") as build,
+        ):
+            return GoogleCalendarOAuth.get_service(practice=self.practice), build
+
+    def _assert_token_unchanged(self):
+        self.token.refresh_from_db()
+        self.assertEqual(self.token.token, "old-token")
+        self.assertTrue(self.token.is_active)
+
+    def test_rejected_token_returns_none(self):
+        """invalid_grant: revoked, or the 7-day cap in testing mode."""
+        error = RefreshError(
+            "invalid_grant: Token has been expired or revoked.",
+            {"error": "invalid_grant", "error_description": "Token has been expired or revoked."},
+        )
+        with self.assertLogs("my_practice.utils.google_calendar", level="ERROR"):
+            service, build = self._get_service(error)
+        self.assertIsNone(service)
+        build.assert_not_called()
+        self._assert_token_unchanged()
+
+    def test_unreachable_google_raises(self):
+        failures = {
+            "connection refused": TransportError(ConnectionRefusedError(111, "Connection refused")),
+            "timeout": TransportError(TimeoutError("timed out")),
+            "retryable 503": RefreshError("server error", {"error": "x"}, retryable=True),
+            "blocker page instead of JSON": RefreshError("<html>blocked</html>"),
+            "unknown OAuth error": RefreshError(
+                "temporarily_unavailable", {"error": "temporarily_unavailable"}
+            ),
+            "plain OSError": OSError("network unreachable"),
+        }
+        for label, error in failures.items():
+            with (
+                self.subTest(label),
+                self.assertLogs("my_practice.utils.google_calendar", level="WARNING"),
+                self.assertRaises(CalendarUnreachable),
+            ):
+                self._get_service(error)
+            self._assert_token_unchanged()
+
+    def test_successful_refresh_saves_the_new_token(self):
+        def refresh(credentials_self, request):
+            credentials_self.token = "new-token"
+            credentials_self.expiry = (timezone.now() + timedelta(hours=1)).replace(tzinfo=None)
+
+        with (
+            patch.object(Credentials, "refresh", autospec=True, side_effect=refresh),
+            patch("my_practice.utils.google_calendar.build") as build,
+        ):
+            service = GoogleCalendarOAuth.get_service(practice=self.practice)
+        self.assertIsNotNone(service)
+        build.assert_called_once()
+        self.token.refresh_from_db()
+        self.assertEqual(self.token.token, "new-token")

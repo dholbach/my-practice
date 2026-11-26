@@ -30,7 +30,7 @@ from ..models import (
     ServiceType,
     Session,
 )
-from ..utils.google_calendar import EventLookup
+from ..utils.google_calendar import CalendarUnreachable, EventLookup
 from .test_helpers import create_test_practice
 
 
@@ -816,6 +816,32 @@ class HandleAndFetchForPracticeTest(TestCase):
             with self.assertRaises(CommandError):
                 call_command("fetch_calendar_events", stdout=out)
         self.assertIn("expired or invalid", out.getvalue())
+
+    def test_unreachable_google_fails_without_asking_to_reauthorise(self):
+        """#756: a refresh that can't reach Google fails the run, but says so
+        instead of calling the token expired."""
+        GoogleCalendarToken.objects.create(
+            practice=self.practice,
+            token="tok",
+            refresh_token="refresh",
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id="test-client",
+            client_secret="test-secret",
+            scopes=["https://www.googleapis.com/auth/calendar.readonly"],
+            is_active=True,
+        )
+        with patch(
+            "my_practice.management.commands.fetch_calendar_events.GoogleCalendarOAuth.get_service",
+            side_effect=CalendarUnreachable("Connection refused"),
+        ):
+            out = StringIO()
+            with self.assertRaises(CommandError):
+                call_command("fetch_calendar_events", stdout=out)
+        output = out.getvalue()
+        self.assertIn("Could not reach Google", output)
+        self.assertIn("Connection refused", output)
+        self.assertNotIn("expired or invalid", output)
+        self.assertNotIn("calendar-auth", output)
 
     def test_fetch_for_practice_no_calendar_selected_warns(self):
         GoogleCalendarToken.objects.create(

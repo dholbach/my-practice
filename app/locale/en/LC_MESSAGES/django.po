@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-26 09:53+0100\n"
+"POT-Creation-Date: 2026-11-26 21:18+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -39,7 +39,7 @@ msgid "Matching"
 msgstr ""
 
 #: my_practice/admin/bank_statement.py:76 my_practice/admin/client.py:110
-#: my_practice/admin/timeoff.py:42 my_practice/admin/todo.py:49
+#: my_practice/admin/timeoff.py:43 my_practice/admin/todo.py:49
 #: my_practice/models/calendar.py:141 my_practice/models/case_sheet.py:156
 #: my_practice/models/clinical.py:233 my_practice/models/inquiry.py:130
 #: my_practice/models/invoice.py:134
@@ -525,19 +525,19 @@ msgstr ""
 msgid "No signature uploaded"
 msgstr ""
 
-#: my_practice/admin/service.py:19 my_practice/models/invoice.py:397
+#: my_practice/admin/service.py:20 my_practice/models/invoice.py:397
 msgid "Service Type"
 msgstr ""
 
-#: my_practice/admin/service.py:22 my_practice/admin/tag.py:31
+#: my_practice/admin/service.py:23 my_practice/admin/tag.py:31
 msgid "Settings"
 msgstr ""
 
-#: my_practice/admin/service.py:25
+#: my_practice/admin/service.py:26
 msgid "Scope"
 msgstr ""
 
-#: my_practice/admin/service.py:30
+#: my_practice/admin/service.py:31
 msgid "GLOBAL"
 msgstr ""
 
@@ -566,19 +566,19 @@ msgid_plural "%(count)s clients"
 msgstr[0] ""
 msgstr[1] ""
 
-#: my_practice/admin/timeoff.py:34
+#: my_practice/admin/timeoff.py:35
 msgid "Additional Information"
 msgstr ""
 
-#: my_practice/admin/timeoff.py:47
+#: my_practice/admin/timeoff.py:48
 msgid "Currently Off"
 msgstr ""
 
-#: my_practice/admin/timeoff.py:50 templates/my_practice/time_off_list.html:53
+#: my_practice/admin/timeoff.py:51 templates/my_practice/time_off_list.html:53
 msgid "Upcoming"
 msgstr ""
 
-#: my_practice/admin/timeoff.py:53 templates/my_practice/time_off_list.html:72
+#: my_practice/admin/timeoff.py:54 templates/my_practice/time_off_list.html:72
 msgid "Past"
 msgstr ""
 
@@ -3219,12 +3219,12 @@ msgstr ""
 msgid "Sign-in throttles"
 msgstr ""
 
-#: my_practice/signals.py:31 my_practice/views/invoice_views.py:324
+#: my_practice/signals.py:32 my_practice/views/invoice_views.py:324
 #, python-format
 msgid "Invoice %(number)s has been issued and can no longer be changed. Cancel it and create a corrected copy instead."
 msgstr ""
 
-#: my_practice/signals.py:78 my_practice/views/invoice_views.py:451
+#: my_practice/signals.py:79 my_practice/views/invoice_views.py:451
 #, python-format
 msgid "Invoice %(number)s has been issued and must be kept until the end of %(year)s. Cancel it instead of deleting it."
 msgstr ""
@@ -3320,12 +3320,12 @@ msgid "Error creating %(summary)s. Details are in the server log."
 msgstr "Error creating %(summary)s. Details are in the server log."
 
 #: my_practice/utils/calendar_import_helpers.py:332
-#: my_practice/views/calendar_views.py:509
+#: my_practice/views/calendar_views.py:527
 msgid "No matching service type found."
 msgstr "No matching service type found."
 
 #: my_practice/utils/calendar_import_helpers.py:336
-#: my_practice/views/calendar_views.py:516
+#: my_practice/views/calendar_views.py:534
 #, python-format
 msgid "No hourly rate set for %(code)s."
 msgstr "No hourly rate set for %(code)s."
@@ -3344,73 +3344,73 @@ msgstr "Error: %(error)s"
 msgid "Session on %(date)s was billed."
 msgstr "Session on %(date)s was billed."
 
-#: my_practice/utils/chart_helpers.py:17
+#: my_practice/utils/chart_helpers.py:20
 #: templates/my_practice/analytics.html:34
 #: templates/my_practice/inquiry_list.html:129
 msgid "Jan"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:18
+#: my_practice/utils/chart_helpers.py:21
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Feb"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:19
+#: my_practice/utils/chart_helpers.py:22
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Mar"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:20
+#: my_practice/utils/chart_helpers.py:23
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Apr"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:21
+#: my_practice/utils/chart_helpers.py:24
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "May"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:22
+#: my_practice/utils/chart_helpers.py:25
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Jun"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:23
+#: my_practice/utils/chart_helpers.py:26
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Jul"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:24
+#: my_practice/utils/chart_helpers.py:27
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Aug"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:25
+#: my_practice/utils/chart_helpers.py:28
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Sep"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:26
+#: my_practice/utils/chart_helpers.py:29
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Oct"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:27
+#: my_practice/utils/chart_helpers.py:30
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Nov"
 msgstr ""
 
-#: my_practice/utils/chart_helpers.py:28
+#: my_practice/utils/chart_helpers.py:31
 #: templates/my_practice/analytics.html:35
 #: templates/my_practice/inquiry_list.html:129
 msgid "Dec"
@@ -3504,7 +3504,7 @@ msgstr ""
 msgid "Update emergency access plan (P-010) if needed"
 msgstr ""
 
-#: my_practice/utils/client_detail_builder.py:182
+#: my_practice/utils/client_detail_builder.py:180
 #, python-format
 msgid "since %(start)s"
 msgstr ""
@@ -3921,99 +3921,103 @@ msgstr ""
 
 #: my_practice/views/billing_views.py:276
 #: my_practice/views/billing_views.py:400
-#: my_practice/views/calendar_views.py:264
+#: my_practice/views/calendar_views.py:282
 #: my_practice/views/invoice_views.py:572
 msgid "No active practice found."
 msgstr "No active practice found."
 
-#: my_practice/views/calendar_views.py:69
+#: my_practice/views/calendar_views.py:41
+msgid "Google Calendar could not be reached. Check the network connection and try again; the calendar connection itself was not changed."
+msgstr ""
+
+#: my_practice/views/calendar_views.py:80
 msgid "OAuth state mismatch. Please try again."
 msgstr "OAuth state mismatch. Please try again."
 
-#: my_practice/views/calendar_views.py:83
+#: my_practice/views/calendar_views.py:94
 msgid "✅ Google Calendar connected successfully!"
 msgstr "✅ Google Calendar connected successfully!"
 
-#: my_practice/views/calendar_views.py:88
+#: my_practice/views/calendar_views.py:99
 msgid "Authorization error. Details are in the server log."
 msgstr ""
 
-#: my_practice/views/calendar_views.py:97
+#: my_practice/views/calendar_views.py:112
 msgid "Please connect your Google Calendar first."
 msgstr "Please connect your Google Calendar first."
 
-#: my_practice/views/calendar_views.py:113
+#: my_practice/views/calendar_views.py:128
 msgid "Calendar selected."
 msgstr ""
 
 #
-#: my_practice/views/calendar_views.py:121
+#: my_practice/views/calendar_views.py:136
 msgid "Error loading calendars. Details are in the server log."
 msgstr "Error loading calendars. Details are in the server log."
 
 #
-#: my_practice/views/calendar_views.py:162
+#: my_practice/views/calendar_views.py:177
 msgid "Error loading calendar events. Details are in the server log."
 msgstr "Error loading calendar events. Details are in the server log."
 
-#: my_practice/views/calendar_views.py:199
+#: my_practice/views/calendar_views.py:214
 msgid "No events selected"
 msgstr "No events selected"
 
-#: my_practice/views/calendar_views.py:214
+#: my_practice/views/calendar_views.py:232
 msgid "Google Calendar not connected"
 msgstr "Google Calendar not connected"
 
-#: my_practice/views/calendar_views.py:218
+#: my_practice/views/calendar_views.py:236
 msgid "No calendar selected"
 msgstr ""
 
-#: my_practice/views/calendar_views.py:226
 #: my_practice/views/calendar_views.py:244
-#: my_practice/views/calendar_views.py:416
+#: my_practice/views/calendar_views.py:262
+#: my_practice/views/calendar_views.py:434
 msgid "Import failed due to an unexpected error. Details are in the server log."
 msgstr ""
 
-#: my_practice/views/calendar_views.py:240
-#: my_practice/views/calendar_views.py:412
+#: my_practice/views/calendar_views.py:258
+#: my_practice/views/calendar_views.py:430
 msgid "Invalid JSON"
 msgstr "Invalid JSON"
 
-#: my_practice/views/calendar_views.py:358
+#: my_practice/views/calendar_views.py:376
 msgid "No events selected."
 msgstr "No events selected."
 
-#: my_practice/views/calendar_views.py:464
-#: my_practice/views/calendar_views.py:606
+#: my_practice/views/calendar_views.py:482
+#: my_practice/views/calendar_views.py:660
 msgid "Event not found."
 msgstr "Event not found."
 
-#: my_practice/views/calendar_views.py:480
+#: my_practice/views/calendar_views.py:498
 #, python-format
 msgid "Event on %(date)s skipped."
 msgstr "Event on %(date)s skipped."
 
-#: my_practice/views/calendar_views.py:621
+#: my_practice/views/calendar_views.py:675
 msgid "Unknown action."
 msgstr "Unknown action."
 
-#: my_practice/views/calendar_views.py:625
+#: my_practice/views/calendar_views.py:679
 msgid "No client assigned to this event."
 msgstr "No client assigned to this event."
 
-#: my_practice/views/calendar_views.py:636
+#: my_practice/views/calendar_views.py:687
 #, python-format
 msgid "Session on %(date)s is already billed."
 msgstr "Session on %(date)s is already billed."
 
-#: my_practice/views/calendar_views.py:646
+#: my_practice/views/calendar_views.py:699
 #, python-format
 msgid "Event on %(date)s added to invoice %(number)s."
 msgstr "Event on %(date)s added to invoice %(number)s."
 
 #
 #
-#: my_practice/views/calendar_views.py:651
+#: my_practice/views/calendar_views.py:707
 msgid "Import error. Details are in the server log."
 msgstr "Import error. Details are in the server log."
 

@@ -22,6 +22,7 @@ from ..models import (
     ServiceType,
     Session,
 )
+from ..utils.google_calendar import CalendarUnreachable
 from ..views import calendar_views
 from .test_helpers import create_test_practice, create_test_user
 
@@ -141,6 +142,17 @@ class CalendarImportViewTest(CalendarViewsTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "my_practice/calendar_connect.html")
 
+    def test_unreachable_google_does_not_offer_reconnecting(self):
+        """#756: Google out of reach is an error message, not the connect page."""
+        with patch(
+            "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
+            side_effect=CalendarUnreachable("Connection refused"),
+        ):
+            response = self.http.get(reverse("calendar_import"), follow=True)
+        self.assertTemplateNotUsed(response, "my_practice/calendar_connect.html")
+        messages = [str(m) for m in response.context["messages"]]
+        self.assertTrue(any("nicht erreicht" in m for m in messages), messages)
+
     def test_no_calendar_selected_shows_picker(self):
         service = MagicMock()
         service.calendarList().list().execute.return_value = {
@@ -214,6 +226,19 @@ class CalendarImportViewTest(CalendarViewsTestBase):
 
 
 class CalendarImportEventsViewTest(CalendarViewsTestBase):
+    def test_unreachable_google_returns_503(self):
+        with patch(
+            "my_practice.views.calendar_views.GoogleCalendarOAuth.get_service",
+            side_effect=CalendarUnreachable("Connection refused"),
+        ):
+            response = self.http.post(
+                reverse("calendar_import_events"),
+                data=json.dumps({"events": [{"id": "evt-1", "action": "import"}]}),
+                content_type="application/json",
+            )
+        self.assertEqual(response.status_code, 503)
+        self.assertFalse(response.json()["success"])
+
     def test_no_events_selected_returns_400(self):
         response = self.http.post(
             reverse("calendar_import_events"),
