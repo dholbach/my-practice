@@ -9,6 +9,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 from django.test import TestCase
+from django.utils import translation
 
 from ..models import Client, Invoice, InvoiceItem, ServiceType, Session
 from ..utils.calendar_import_helpers import (
@@ -76,6 +77,9 @@ class CreateInvoiceItemsFromEventsTest(TestCase):
     """Tests for create_invoice_items_from_events."""
 
     def setUp(self):
+        # The assertions below read German messages; don't depend on whichever
+        # language an earlier test left active (#752).
+        self.enterContext(translation.override("de"))
         self.practice = create_test_practice(slug="create-events")
         self.client_obj = _make_client(self.practice)
         self.therapy_60 = _make_service_type("therapy_60", 60)
@@ -336,6 +340,9 @@ class BillSessionTest(TestCase):
     """Tests for bill_session."""
 
     def setUp(self):
+        # The assertions below read German messages; don't depend on whichever
+        # language an earlier test left active (#752).
+        self.enterContext(translation.override("de"))
         self.practice = create_test_practice(slug="bill-session")
         self.client_obj = _make_client(self.practice)
         self.therapy_60 = _make_service_type("therapy_60", 60)
