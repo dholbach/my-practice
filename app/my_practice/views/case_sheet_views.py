@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from ..models import ClinicalFact
+from ..models.case_sheet import ROWS_BY_KIND
 from ..utils.case_sheet import add_line, change_line, resolve_line, valid_cell
 from ..utils.view_helpers import get_scoped_client, safe_next
 
@@ -21,15 +22,31 @@ def _back(request, client_pk, kind=""):
 
 @require_POST
 def case_fact_add(request, pk):
-    """Add a line to a cell of the case sheet (in a single-line cell it replaces the current one)."""
+    """Add a line to a cell of the case sheet (in a single-line cell it replaces the current one).
+
+    The cell comes as ``kind`` and ``sub``, or as one ``target`` ("kind|sub", the digest card's
+    picker). ``source_session`` names the session the line came from, when it has to belong
+    to this client; anything else is ignored.
+    """
     client = get_scoped_client(request, pk)
-    kind = request.POST.get("kind", "")
-    sub = request.POST.get("sub", "")
+    if "target" in request.POST:
+        kind, _bar, sub = request.POST["target"].partition("|")
+    else:
+        kind, sub = request.POST.get("kind", ""), request.POST.get("sub", "")
     if not valid_cell(kind, sub):
         messages.error(request, _("Unknown case sheet row."))
         return _back(request, pk)
-    if add_line(client, kind, sub, request.POST.get("content", "")) is None:
+    raw_session = request.POST.get("source_session", "")
+    source_session = (
+        client.sessions.filter(pk=int(raw_session)).first() if raw_session.isdigit() else None
+    )
+    if (
+        add_line(client, kind, sub, request.POST.get("content", ""), source_session=source_session)
+        is None
+    ):
         messages.error(request, _("The line must not be empty."))
+    elif source_session is not None:
+        messages.success(request, _("Added to “%(row)s”.") % {"row": ROWS_BY_KIND[kind].label})
     return _back(request, pk, kind)
 
 

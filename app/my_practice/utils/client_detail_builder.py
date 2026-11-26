@@ -18,6 +18,7 @@ from ..models import (
     InvoiceItem,
     SupervisionItem,
 )
+from ..models.case_sheet import ROWS_BY_KIND, ClinicalFact
 from ..models.clinical import MoodTag
 from ..models.session import Session
 from .case_sheet import build_case_sheet, working_diagnosis
@@ -118,6 +119,25 @@ class ClientDetailContextBuilder:
         session_count = len(minutes)
         avg_duration = round(total_minutes / session_count) if session_count else 0
         return total_minutes / 60, session_count, avg_duration
+
+    def _digest_context(self) -> dict | None:
+        """The "anything for the case sheet?" card for ``?digest=<session pk>``, if it names a session.
+
+        Shows the session and the lines already added from it, so several can be added one
+        after the other. A pk that is not a session of this client shows no card.
+        """
+        raw = self.request.GET.get("digest", "")
+        session = self.client.sessions.filter(pk=int(raw)).first() if raw.isdigit() else None
+        if session is None:
+            return None
+        added = []
+        for fact in ClinicalFact.objects.filter(client=self.client, source_session=session):
+            row = ROWS_BY_KIND.get(fact.kind)
+            cell = next((c.label for c in row.cells if c.key == fact.sub), "") if row else ""
+            added.append(
+                {"row": row.label if row else fact.kind, "cell": cell, "content": fact.content}
+            )
+        return {"session": session, "added": added}
 
     def _last_invoice_date(self) -> date | None:
         finalized = [inv for inv in self.invoices if inv.status != Invoice.Status.DRAFT]
@@ -322,6 +342,7 @@ class ClientDetailContextBuilder:
             "session_type_choices": SessionLog.SessionType.choices,
             "mood_tag_choices": MoodTag.choices,
             "for_next_time": build_for_next_time(self.client),
+            "digest": self._digest_context(),
             "documents": self.client.documents.order_by("-document_date", "-created_at"),
             "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,
             "gebueh_diagnostic_count": gebueh_diagnostic_count,
