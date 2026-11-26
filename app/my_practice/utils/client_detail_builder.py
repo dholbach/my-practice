@@ -246,10 +246,51 @@ class ClientDetailContextBuilder:
 
         # The old free-text notes, shown read-only below the case sheet until they are retired.
         profile = ClientProfile.objects.filter(client=self.client).first()
+        case_sheet = build_case_sheet(self.client)
+        supervision_items = list(self.client.supervision_items.order_by("-created_at"))
+        log_entries = self._log_entries(supervision_items)
+        recent_sessions_needing_log, no_log_needed_session_ids = self._sessions_needing_log()
 
-        # Intake progress: 4 steps tracked as date fields on Client (the overview shows
-        # "N of 4" while the intake process is open; the checklist itself is in the admin mode).
-        intake_steps_done = sum(
+        return {
+            "legacy_profile": profile,
+            "case_sheet": case_sheet,
+            # Named like the field it stands for, so privacy mode treats it as personal data.
+            "case_summary": {"arbeitsdiagnose": working_diagnosis(self.client, sheet=case_sheet)},
+            "intake_steps_done": self._intake_steps_done(),
+            "log_entries": log_entries,
+            # The newest session with a note is shown unfolded, so the latest work reads without
+            # a click; older ones fold away, which keeps the timeline scannable.
+            "open_note_session_id": next(
+                (
+                    e["obj"].pk
+                    for e in log_entries
+                    if e["type"] == "session" and _has_note(e["obj"])
+                ),
+                None,
+            ),
+            "recent_sessions_needing_log": recent_sessions_needing_log,
+            "no_log_needed_session_ids": no_log_needed_session_ids,
+            "open_supervision_count": sum(
+                1 for item in supervision_items if item.status == SupervisionItem.Status.OFFEN
+            ),
+            "session_type_choices": SessionLog.SessionType.choices,
+            "mood_tag_choices": MoodTag.choices,
+            "for_next_time": build_for_next_time(self.client),
+            "digest": self._digest_context(),
+            "review_invitation": review_invitation(self.client),
+            "documents": self.client.documents.order_by("-document_date", "-created_at"),
+            "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,
+            "gebueh_diagnostic_count": self._gebueh_diagnostic_count(),
+            "available_questionnaires": list_available_questionnaires(),
+        }
+
+    def _intake_steps_done(self) -> int:
+        """How many of the 4 intake steps (dates on Client) are done.
+
+        The overview shows "N of 4" while the intake process is open; the checklist itself is
+        in the admin mode.
+        """
+        return sum(
             1
             for step_date in (
                 self.client.intake_sent_date,
@@ -260,20 +301,11 @@ class ClientDetailContextBuilder:
             if step_date
         )
 
-        sessions_qs = (
-            self.client.sessions.filter(cancelled=False)
-            .prefetch_related(
-                "log",
-                "invoice_items__invoice",
-                "gebueh_leistungen__ziffer",
-            )
-            .order_by("-session_date")
-        )
-
+    def _sessions_needing_log(self) -> tuple[set[int], set[int]]:
+        """``(recent sessions without a log, cancelled sessions that need none)``, as pks."""
         no_log_needed_session_ids: set[int] = set(
             self.client.sessions.filter(cancelled=True).values_list("pk", flat=True)
         )
-
         recent_cutoff = self.today - timedelta(days=7)
         recent_sessions_needing_log = set(
             self.client.sessions.filter(
@@ -284,19 +316,30 @@ class ClientDetailContextBuilder:
             .exclude(pk__in=no_log_needed_session_ids)
             .values_list("pk", flat=True)
         )
+        return recent_sessions_needing_log, no_log_needed_session_ids
 
-        notes_qs = ClientNote.objects.filter(client=self.client).order_by(
-            "-note_date", "-created_at"
+    def _log_entries(self, supervision_items: list[SupervisionItem]) -> list[dict]:
+        """The timeline: sessions, notes, case reviews and supervision items, newest first.
+
+        Supervision items are interleaved with the sessions so feedback from supervision sits
+        next to the sessions it refers to when preparing the next one. A discussed item lands
+        on the day it was discussed (that's when the feedback arrived); an open one on the day
+        it was raised.
+        """
+        sessions = (
+            self.client.sessions.filter(cancelled=False)
+            .prefetch_related(
+                "log",
+                "invoice_items__invoice",
+                "gebueh_leistungen__ziffer",
+            )
+            .order_by("-session_date")
         )
-        supervision_items = list(self.client.supervision_items.order_by("-created_at"))
-        # Supervision items are interleaved with the session timeline so feedback
-        # from supervision sits next to the sessions it refers to when preparing
-        # the next one. A discussed item lands on the day it was discussed (that's
-        # when the feedback arrived); an open one on the day it was raised.
-        log_entries = sorted(
+        notes = ClientNote.objects.filter(client=self.client).order_by("-note_date", "-created_at")
+        return sorted(
             chain(
-                [{"type": "session", "date": s.session_date, "obj": s} for s in sessions_qs],
-                [{"type": "note", "date": n.note_date, "obj": n} for n in notes_qs],
+                [{"type": "session", "date": s.session_date, "obj": s} for s in sessions],
+                [{"type": "note", "date": n.note_date, "obj": n} for n in notes],
                 [
                     {"type": "review", "date": r.reviewed_on, "obj": r}
                     for r in self.client.case_reviews.all()
@@ -313,43 +356,14 @@ class ClientDetailContextBuilder:
             key=lambda e: e["date"],
             reverse=True,
         )
-        # The newest session with a note is shown unfolded, so the latest work reads without
-        # a click; older ones fold away, which keeps the timeline scannable.
-        open_note_session_id = next(
-            (e["obj"].pk for e in log_entries if e["type"] == "session" and _has_note(e["obj"])),
-            None,
-        )
 
-        gebueh_diagnostic_count = 0
-        if self.client.needs_gebueh_invoice:
-            from ..models.gebueh import Leistungserfassung
+    def _gebueh_diagnostic_count(self) -> int:
+        """Diagnostic GebüH entries (1, 19.5, 19.6) of a client who is billed under GebüH."""
+        if not self.client.needs_gebueh_invoice:
+            return 0
+        from ..models.gebueh import Leistungserfassung
 
-            gebueh_diagnostic_count = Leistungserfassung.objects.filter(
-                session__client=self.client,
-                ziffer__nummer__in=["1", "19.5", "19.6"],
-            ).count()
-
-        case_sheet = build_case_sheet(self.client)
-        return {
-            "legacy_profile": profile,
-            "case_sheet": case_sheet,
-            # Named like the field it stands for, so privacy mode treats it as personal data.
-            "case_summary": {"arbeitsdiagnose": working_diagnosis(self.client, sheet=case_sheet)},
-            "intake_steps_done": intake_steps_done,
-            "log_entries": log_entries,
-            "open_note_session_id": open_note_session_id,
-            "recent_sessions_needing_log": recent_sessions_needing_log,
-            "no_log_needed_session_ids": no_log_needed_session_ids,
-            "open_supervision_count": sum(
-                1 for item in supervision_items if item.status == SupervisionItem.Status.OFFEN
-            ),
-            "session_type_choices": SessionLog.SessionType.choices,
-            "mood_tag_choices": MoodTag.choices,
-            "for_next_time": build_for_next_time(self.client),
-            "digest": self._digest_context(),
-            "review_invitation": review_invitation(self.client),
-            "documents": self.client.documents.order_by("-document_date", "-created_at"),
-            "doc_type_choices": ClientDocument.DOC_TYPE_CHOICES,
-            "gebueh_diagnostic_count": gebueh_diagnostic_count,
-            "available_questionnaires": list_available_questionnaires(),
-        }
+        return Leistungserfassung.objects.filter(
+            session__client=self.client,
+            ziffer__nummer__in=["1", "19.5", "19.6"],
+        ).count()
