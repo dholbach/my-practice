@@ -675,9 +675,12 @@ read the same file, so a module is never strict in one and unchecked in the othe
 
 `--follow-imports=silent` keeps the gate on those modules rather than failing
 on errors in everything they happen to import (133 errors across 34 files
-without it, 0 with it). Widen `mypy_strict_paths.txt` as more of the tree is annotated —
-and widen `mypy.ini`'s `disallow_untyped_defs` overrides in the same commit, so
-the two never disagree about what "strict" covers.
+without it, 0 with it).
+
+The list grows opportunistically, with no dedicated sweep planned: annotate a
+module when you next touch it and add it to `mypy_strict_paths.txt`, and start
+a new module strict. Widen `mypy.ini`'s `disallow_untyped_defs` overrides in
+the same commit, so the two never disagree about what "strict" covers.
 
 `warn_unused_ignores = True` is on, so a `# type: ignore[...]` that stops being
 necessary becomes an error rather than quiet cruft. The ones in `models/` mark
