@@ -6,8 +6,9 @@ from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 from unittest.mock import MagicMock, Mock, patch
 
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
+from googleapiclient.errors import HttpError
 
 from my_practice.models import (
     Client,
@@ -18,9 +19,11 @@ from my_practice.models import (
 from my_practice.utils.calendar_import_helpers import _resolve_client
 from my_practice.utils.google_calendar import (
     CalendarEventParser,
+    EventLookup,
     GoogleCalendarOAuth,
     fetch_all_events,
     list_calendars,
+    lookup_event,
     practice_clients,
 )
 
@@ -661,3 +664,63 @@ class ServiceTypeSuggestionScopeTest(TestCase):
         own = ServiceType.objects.create(code="z_cancel", name="Own cancel", practice=self.own)
         result = CalendarEventParser.parse_event(self.event, [], practice=self.own)
         self.assertEqual(result["suggested_service_type_obj"], own)
+
+
+class LookupEventTest(SimpleTestCase):
+    """lookup_event only reports an event gone on a definite answer from Google
+    (#750); every failure of the request itself is UNKNOWN."""
+
+    def _service(self, *, returns=None, raises=None):
+        service = MagicMock()
+        execute = service.events.return_value.get.return_value.execute
+        if raises is not None:
+            execute.side_effect = raises
+        else:
+            execute.return_value = returns
+        return service
+
+    @staticmethod
+    def _http_error(status):
+        return HttpError(MagicMock(status=status, reason="x"), b"{}")
+
+    def _lookup(self, **kwargs):
+        return lookup_event(self._service(**kwargs), "cal-1", "evt-1")
+
+    def test_live_event(self):
+        self.assertEqual(
+            self._lookup(returns={"status": "confirmed", "summary": "XX-1"}), EventLookup.LIVE
+        )
+
+    def test_deleted_event_marked_cancelled_by_google(self):
+        self.assertEqual(self._lookup(returns={"status": "cancelled"}), EventLookup.GONE)
+
+    def test_cancel_keyword_in_title(self):
+        self.assertEqual(
+            self._lookup(returns={"status": "confirmed", "summary": "XX-1 (cancel)"}),
+            EventLookup.CANCELLED,
+        )
+
+    def test_not_found_and_gone_are_definite(self):
+        for status in (404, 410):
+            with self.subTest(status=status):
+                self.assertEqual(self._lookup(raises=self._http_error(status)), EventLookup.GONE)
+
+    def test_other_http_errors_are_unknown(self):
+        # 401 expired token, 403 forbidden or blocked, 429 quota, 5xx server.
+        for status in (400, 401, 403, 429, 500, 502, 503):
+            with self.subTest(status=status), self.assertLogs(level="WARNING"):
+                self.assertEqual(self._lookup(raises=self._http_error(status)), EventLookup.UNKNOWN)
+
+    def test_network_failures_are_unknown(self):
+        for error in (
+            ConnectionError("refused"),
+            ConnectionResetError("reset"),
+            TimeoutError("timed out"),
+            OSError("network unreachable"),
+            RuntimeError("aborted"),
+        ):
+            with self.subTest(error=type(error).__name__), self.assertLogs(level="WARNING"):
+                self.assertEqual(self._lookup(raises=error), EventLookup.UNKNOWN)
+
+    def test_unexpected_response_is_unknown(self):
+        self.assertEqual(self._lookup(returns=None), EventLookup.UNKNOWN)

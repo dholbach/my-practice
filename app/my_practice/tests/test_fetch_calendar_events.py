@@ -13,7 +13,12 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
 
-from ..management.commands.fetch_calendar_events import FIRST_RUN_DAYS, OVERLAP_HOURS, Command
+from ..management.commands.fetch_calendar_events import (
+    FIRST_RUN_DAYS,
+    MAX_MISSING_LOOKUPS,
+    OVERLAP_HOURS,
+    Command,
+)
 from ..models import (
     Client,
     ClientTag,
@@ -25,6 +30,7 @@ from ..models import (
     ServiceType,
     Session,
 )
+from ..utils.google_calendar import EventLookup
 from .test_helpers import create_test_practice
 
 
@@ -1279,3 +1285,148 @@ class BilledSessionNotCancelledTest(TestCase):
         self.assertFalse(self.session.cancelled)
         self.pce.refresh_from_db()
         self.assertEqual(self.pce.status, PendingCalendarEvent.Status.CANCELLED)
+
+
+class ResolvePastMissingEventsTest(TestCase):
+    """Past pending events flagged missing are settled by asking Google about
+    each one (#750); only a definite answer changes anything."""
+
+    def setUp(self):
+        self.practice = create_test_practice(name="Test Practice", slug="past-missing")
+        self.test_client = Client.objects.create(
+            practice=self.practice, client_code="TC", full_name="Max Mustermann"
+        )
+        self.cmd = _make_command()
+        self.past = date.today() - timedelta(days=30)
+
+    def _flagged(self, event_id, event_date=None, billed=False):
+        event_date = event_date or self.past
+        session = Session.objects.create(
+            client=self.test_client, session_date=event_date, duration=60
+        )
+        if billed:
+            service_type = ServiceType.objects.get_or_create(
+                code="therapy_60",
+                defaults={"name": "Therapy", "name_de": "Therapie", "name_en": "Therapy"},
+            )[0]
+            invoice = Invoice.objects.create(
+                client=self.test_client,
+                invoice_number=f"INV-{event_id}",
+                invoice_date=event_date,
+                status=Invoice.Status.DRAFT,
+                practice=self.practice,
+            )
+            InvoiceItem.objects.create(
+                invoice=invoice, service_type=service_type, session=session, rate=100
+            )
+        return PendingCalendarEvent.objects.create(
+            practice=self.practice,
+            google_event_id=event_id,
+            summary="Termin",
+            event_date=event_date,
+            duration_minutes=60,
+            matched_client=self.test_client,
+            status=PendingCalendarEvent.Status.PENDING,
+            session=session,
+            missing_since=timezone.now() - timedelta(days=40),
+        )
+
+    def _run(self, answers, dry_run=False):
+        """answers: event id -> EventLookup, the lookups the run makes in order."""
+        calls = []
+
+        def fake_lookup(service, calendar_id, event_id):
+            calls.append(event_id)
+            return answers[event_id]
+
+        with patch(
+            "my_practice.management.commands.fetch_calendar_events.lookup_event", fake_lookup
+        ):
+            counts = self.cmd.resolve_past_missing_events(
+                MagicMock(), "cal-1", self.practice, dry_run, set()
+            )
+        return counts, calls
+
+    def test_gone_event_is_cancelled_with_its_session(self):
+        pce = self._flagged("gone")
+        counts, _ = self._run({"gone": EventLookup.GONE})
+        pce.refresh_from_db()
+        self.assertEqual(pce.status, PendingCalendarEvent.Status.CANCELLED)
+        self.assertTrue(pce.session.cancelled)
+        self.assertEqual(counts["cancelled"], 1)
+
+    def test_cancelled_in_title_is_cancelled(self):
+        pce = self._flagged("titled")
+        self._run({"titled": EventLookup.CANCELLED})
+        pce.refresh_from_db()
+        self.assertEqual(pce.status, PendingCalendarEvent.Status.CANCELLED)
+
+    def test_gone_but_billed_keeps_its_session(self):
+        pce = self._flagged("billed", billed=True)
+        # The billing signal imported it; put it back as a row from before #749.
+        PendingCalendarEvent.objects.filter(pk=pce.pk).update(
+            status=PendingCalendarEvent.Status.PENDING
+        )
+        self._run({"billed": EventLookup.GONE})
+        pce.refresh_from_db()
+        self.assertFalse(pce.session.cancelled)
+        self.assertIn("already invoiced", self.cmd.stdout.getvalue())
+
+    def test_live_event_has_its_flag_cleared(self):
+        pce = self._flagged("live")
+        counts, _ = self._run({"live": EventLookup.LIVE})
+        pce.refresh_from_db()
+        self.assertIsNone(pce.missing_since)
+        self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
+        self.assertFalse(pce.session.cancelled)
+        self.assertEqual(counts["cleared"], 1)
+
+    def test_unknown_answer_changes_nothing_and_stops(self):
+        """A failed lookup (network, blocked, quota…) is never a cancellation,
+        and the rest wait for the next run instead of failing one by one."""
+        first = self._flagged("first", event_date=self.past - timedelta(days=1))
+        second = self._flagged("second")
+        counts, calls = self._run({"first": EventLookup.UNKNOWN, "second": EventLookup.GONE})
+        self.assertEqual(calls, ["first"])
+        for pce in (first, second):
+            pce.refresh_from_db()
+            self.assertEqual(pce.status, PendingCalendarEvent.Status.PENDING)
+            self.assertIsNotNone(pce.missing_since)
+            self.assertFalse(pce.session.cancelled)
+        self.assertEqual(counts, {"cancelled": 0, "cleared": 0, "unresolved": 2})
+
+    def test_future_events_are_left_to_the_two_miss_check(self):
+        self._flagged("future", event_date=date.today() + timedelta(days=3))
+        _, calls = self._run({})
+        self.assertEqual(calls, [])
+
+    def test_unflagged_and_settled_rows_are_not_looked_up(self):
+        pce = self._flagged("settled")
+        PendingCalendarEvent.objects.filter(pk=pce.pk).update(
+            status=PendingCalendarEvent.Status.SKIPPED
+        )
+        self._flagged("unflagged")
+        PendingCalendarEvent.objects.filter(google_event_id="unflagged").update(missing_since=None)
+        _, calls = self._run({})
+        self.assertEqual(calls, [])
+
+    def test_dry_run_changes_nothing(self):
+        gone = self._flagged("gone", event_date=self.past - timedelta(days=1))
+        live = self._flagged("live")
+        counts, _ = self._run({"gone": EventLookup.GONE, "live": EventLookup.LIVE}, dry_run=True)
+        self.assertEqual(counts["cancelled"], 1)
+        self.assertEqual(counts["cleared"], 1)
+        gone.refresh_from_db()
+        live.refresh_from_db()
+        self.assertEqual(gone.status, PendingCalendarEvent.Status.PENDING)
+        self.assertFalse(gone.session.cancelled)
+        self.assertIsNotNone(live.missing_since)
+
+    def test_lookups_per_run_are_bounded(self):
+        for i in range(MAX_MISSING_LOOKUPS + 2):
+            self._flagged(f"evt-{i}")
+        counts, calls = self._run(
+            {f"evt-{i}": EventLookup.LIVE for i in range(MAX_MISSING_LOOKUPS + 2)}
+        )
+        self.assertEqual(len(calls), MAX_MISSING_LOOKUPS)
+        self.assertEqual(counts["unresolved"], 2)
