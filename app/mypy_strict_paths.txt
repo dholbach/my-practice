@@ -1,7 +1,19 @@
 # The modules mypy checks in CI and in `./dev.py review`, one path per line (relative to app/).
 # Keep it in step with the `disallow_untyped_defs` sections of mypy.ini.
+my_practice/admin/expense_category_rule.py
+my_practice/admin/service.py
+my_practice/admin/timeoff.py
 my_practice/models
+my_practice/utils/aggregation_helpers.py
 my_practice/utils/calculations.py
+my_practice/utils/case_review.py
+my_practice/utils/case_sheet.py
+my_practice/utils/chart_helpers.py
 my_practice/utils/date_helpers.py
+my_practice/utils/email_utils.py
+my_practice/utils/gebueh_helpers.py
 my_practice/utils/invoice_helpers.py
+my_practice/utils/pdf_generation.py
 my_practice/utils/revenue_helpers.py
+my_practice/utils/two_factor.py
+my_practice/utils/weekly_focus_widget.py

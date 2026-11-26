@@ -10,7 +10,7 @@ from datetime import date, timedelta
 from django.db.models import QuerySet
 from django.utils import timezone
 
-from ..models import PracticeTodo, Session
+from ..models import Practice, PracticeTodo, Session
 
 
 class WeeklyFocusWidgetBuilder:
@@ -27,7 +27,7 @@ class WeeklyFocusWidgetBuilder:
         context = builder.build_context()
     """
 
-    def __init__(self, practice, today: date | None = None):
+    def __init__(self, practice: Practice, today: date | None = None):
         self.practice = practice
         self.today = today or timezone.localdate()
         # Monday and Sunday of current week

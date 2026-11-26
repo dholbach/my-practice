@@ -49,7 +49,7 @@ def _build_sessions_intro(invoice: "Invoice", language: str) -> str:
     session_dates = [
         item.session.session_date
         for item in invoice.items.select_related("session").all()
-        if item.session_id
+        if item.session is not None
     ]
 
     if not session_dates:

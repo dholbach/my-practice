@@ -32,7 +32,7 @@ def build_gebueh_blocks(invoice: Invoice) -> list[dict]:
                     "ziffer__sort_order"
                 )
             )
-            if item.session_id
+            if item.session is not None
             else []
         )
         gebueh_sum = sum((le.betrag for le in leistungen), Decimal("0"))

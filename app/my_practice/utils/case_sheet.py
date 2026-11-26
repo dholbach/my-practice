@@ -64,15 +64,15 @@ def build_case_sheet(client: Client) -> list[RowView]:
         labels = {cell.key: cell.label for cell in row.cells}
         cells = []
         for key in cell_keys(row):
-            facts = by_cell.get((row.kind, key), [])
+            cell_facts = by_cell.get((row.kind, key), [])
             cells.append(
                 CellView(
                     row=row,
                     key=key,
                     label=labels.get(key, ""),
-                    lines=[f for f in facts if f.status == ACTIVE],
+                    lines=[f for f in cell_facts if f.status == ACTIVE],
                     # Newest first: what was written just before is what you look for
-                    history=[f for f in reversed(facts) if f.status != ACTIVE],
+                    history=[f for f in reversed(cell_facts) if f.status != ACTIVE],
                 )
             )
         rows.append(RowView(row=row, cells=cells))
