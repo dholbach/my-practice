@@ -37,14 +37,15 @@ app/my_practice/
 │   ├── timeoff.py              # TimeOffAdmin
 │   └── todo.py                 # PracticeTodoAdmin
 │
-├── models/                     # Domain models package (19 modules)
+├── models/                     # Domain models package (20 modules)
 │   ├── __init__.py            # Package exports with __all__
 │   ├── base.py                # TimestampedModel base class, PracticeScopedManager
 │   ├── bank_statement.py      # BankTransaction
 │   ├── calendar.py            # GoogleCalendarToken, PendingCalendarEvent
 │   ├── client.py              # Client management
 │   ├── client_alias.py        # ClientAlias / search name
-│   ├── clinical.py            # ClientProfile, SessionLog, SupervisionItem, ClientNote
+│   ├── case_sheet.py          # CASE_SHEET_ROWS, ClinicalFact, CaseReview (P-006)
+│   ├── clinical.py            # ClientProfile, SessionLog, SupervisionItem, ClientNote, ScratchItem
 │   ├── expense_category_rule.py # ExpenseCategoryRule — learned counterparty→category mapping
 │   ├── financial.py           # CompanyWithdrawal, CompanyExpense
 │   ├── gebueh.py              # GebuhZiffer, Leistungserfassung (P-046)
@@ -66,12 +67,14 @@ app/my_practice/
 │   ├── bank_import_views.py   # Bank statement CSV import & review
 │   ├── calendar_views.py      # Google Calendar OAuth + session import approval
 │   ├── client_views.py        # Client list, detail, intake
+│   ├── case_sheet_views.py    # Case sheet lines: add, reword, resolve (P-006)
 │   ├── clinical_views.py      # SessionLog, ClientNote, SupervisionItem, triage
 │   ├── dashboard_views.py     # Dashboard (delegates to DashboardContextAssembler)
 │   ├── email_views.py         # Email compose + send (invoice, reminder, contract, …)
 │   ├── expense_views.py       # Expense CRUD + list
 │   ├── focus_queue_views.py   # Focus Queue (P-050) — unified manual + materialized task list
 │   ├── inquiry_views.py       # Lead tracking (analytics: utils/inquiry_analytics.py)
+│   ├── scratch_views.py       # "For next time" reminders: add, edit, tick off, delete (P-006)
 │   ├── billing_views.py       # Billing overview + monthly batch billing
 │   ├── invoice_views.py       # Invoice CRUD
 │   ├── operational_views.py   # Operational checklist
@@ -98,6 +101,8 @@ app/my_practice/
 │   ├── calendar_import_helpers.py  # Calendar event → Session import helpers
 │   ├── calendar_preflight.py       # Calendar connection preflight checks
 │   ├── capacity_helpers.py         # Capacity / utilisation calculations
+│   ├── case_review.py              # Case review: sessions since the last one, what to carry over (P-006)
+│   ├── case_sheet.py               # Case sheet reads and writes: build_case_sheet(), add/change/resolve_line() (P-006)
 │   ├── chart_helpers.py            # Chart data preparation
 │   ├── checklist_items.py          # CHECKLIST_ITEMS: the operational checklist steps (edit for your own setup)
 │   ├── client_detail_builder.py    # ClientDetailContextBuilder
@@ -111,6 +116,7 @@ app/my_practice/
 │   ├── email_utils.py              # Email composition helpers, make_from_email()
 │   ├── file_processing.py          # Uploaded media compression (images, PDFs)
 │   ├── financial_list_context_builder.py  # FinancialListContextBuilder
+│   ├── for_next_time.py            # Open and covered reminders, last ideas, future work (P-006)
 │   ├── formatting.py               # format_currency_de() — shared money formatting for
 │   │                               #   templates, PDFs, and client-facing emails
 │   ├── gebueh_helpers.py           # GebüH block building shared by PDF + invoice detail
@@ -232,6 +238,8 @@ Weekly capacity is no longer hard-coded at 2023-08-01. The `CapacityPeriod` mode
 | `invoice_views.py` | Invoice CRUD | `InvoiceFormsetMixin`; `billing_helpers` for session items |
 | `client_views.py` | Client list + intake | `PracticeScopedListView` |
 | `clinical_views.py` | SessionLog, Notes, Supervision, triage | Fernet encryption for notes/sessions |
+| `case_sheet_views.py` | Case sheet lines | Thin: validate, call `utils/case_sheet.py`; nothing is deleted, lines are superseded |
+| `scratch_views.py` | "For next time" reminders | `clean_reminder()` in `utils/for_next_time.py` |
 | `calendar_views.py` | Google Calendar OAuth + event approval | `CalendarImportProcessor`; `resolve_session_rate` |
 | `email_views.py` | Email compose + send | `BaseClientEmailView` base class; 5 concrete views |
 | `bank_import_views.py` | CSV import + manual review | `utils/bank_review_helpers.py` (invoice matches per transaction); stored `total` |
