@@ -108,7 +108,7 @@ def _resolve_rate(client: Client, service_type: ServiceType) -> tuple[Decimal | 
     return rate, None
 
 
-def _session_billed(client: Client, session_date, session_time, *, lock: bool = False) -> bool:
+def session_slot_billed(client: Client, session_date, session_time, *, lock: bool = False) -> bool:
     """Whether the client's session in this slot already has an item on a
     non-cancelled invoice, however it was billed (session log, quick action,
     an earlier import). A pending event doesn't learn about those, so a stale
@@ -208,7 +208,7 @@ def create_invoice_items_from_events(
             "date": event_date.date(),
         }
         # Also before the invoice, for the same reason.
-        if _session_billed(client, event_date.date(), session_time):
+        if session_slot_billed(client, event_date.date(), session_time):
             errors.append(duplicate_error)
             skipped += 1
             continue
@@ -243,7 +243,7 @@ def create_invoice_items_from_events(
                         "calendar_event_id": event_id or "",
                     },
                 )
-                if _session_billed(client, event_date.date(), session_time, lock=True):
+                if session_slot_billed(client, event_date.date(), session_time, lock=True):
                     raise _AlreadyBilled
                 InvoiceItem.objects.create(
                     invoice=invoice,

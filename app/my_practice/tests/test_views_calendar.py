@@ -4,7 +4,7 @@ import, the approval queue, and the client-detail quick-action endpoint.
 """
 
 import json
-from datetime import date
+from datetime import date, time
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -22,6 +22,7 @@ from ..models import (
     ServiceType,
     Session,
 )
+from ..views import calendar_views
 from .test_helpers import create_test_practice, create_test_user
 
 
@@ -647,6 +648,105 @@ class CalendarEventQuickActionTest(CalendarViewsTestBase):
         )
         messages = list(response.context["messages"])
         self.assertTrue(any("bereits abgerechnet" in str(m) for m in messages))
+
+    def _bill_session(self, session, service_type):
+        invoice = Invoice.objects.create(
+            client=self.test_client,
+            invoice_number="TC-1",
+            invoice_date=date.today(),
+            practice=self.practice,
+        )
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            service_type=service_type,
+            session=session,
+            rate=Decimal("90.00"),
+        )
+
+    def _other_service_type(self):
+        return ServiceType.objects.create(
+            code="therapy_90",
+            name="Therapy 90",
+            name_de="Therapie 90",
+            name_en="Therapy 90",
+            default_duration=90,
+            practice=self.practice,
+        )
+
+    def _quick_import(self, event):
+        return self.http.post(
+            reverse("calendar_event_quick_action", kwargs={"pk": event.pk}),
+            {"action": "new_invoice"},
+            follow=True,
+        )
+
+    def test_linked_session_billed_under_other_type_is_not_billed_again(self):
+        """#751: the old check matched on service type only, so a session
+        billed as 90 min was billed a second time as 60 min."""
+        session = Session.objects.create(
+            client=self.test_client, session_date=date.today(), session_time=time(10, 0)
+        )
+        self._bill_session(session, self._other_service_type())
+        event = self._make_event(event_time=time(10, 0), session=session)
+
+        response = self._quick_import(event)
+
+        messages = list(response.context["messages"])
+        self.assertTrue(any("bereits abgerechnet" in str(m) for m in messages))
+        self.assertEqual(InvoiceItem.objects.filter(session=session).count(), 1)
+        self.assertEqual(Invoice.objects.filter(client=self.test_client).count(), 1)
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.IMPORTED)
+
+    def test_slot_billed_under_other_type_is_not_billed_again(self):
+        """Same, for an event the fetch never linked to its session."""
+        session = Session.objects.create(
+            client=self.test_client, session_date=date.today(), session_time=time(10, 0)
+        )
+        self._bill_session(session, self._other_service_type())
+        event = self._make_event(event_time=time(10, 0))
+
+        self._quick_import(event)
+
+        self.assertEqual(InvoiceItem.objects.count(), 1)
+
+    def test_other_slot_same_day_other_type_is_billed(self):
+        """A second session that day, at another time and of another type,
+        is a real session and still gets billed."""
+        morning = Session.objects.create(
+            client=self.test_client, session_date=date.today(), session_time=time(9, 0)
+        )
+        self._bill_session(morning, self._other_service_type())
+        event = self._make_event(event_time=time(16, 0))
+
+        self._quick_import(event)
+
+        self.assertEqual(InvoiceItem.objects.count(), 2)
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.IMPORTED)
+
+    def test_billed_between_check_and_lock_leaves_no_new_invoice(self):
+        """The check inside the transaction refuses, and the new invoice it
+        would have used is never created."""
+        event = self._make_event(event_time=time(10, 0))
+        calls = []
+
+        def billed_once_locked(*args, **kwargs):
+            # Unbilled at the first check, billed by someone else by the time
+            # the slot is locked.
+            calls.append(kwargs.get("lock", False))
+            return kwargs.get("lock", False)
+
+        with patch.object(calendar_views, "_event_already_billed", billed_once_locked):
+            response = self._quick_import(event)
+
+        self.assertEqual(calls, [False, True])
+        messages = list(response.context["messages"])
+        self.assertTrue(any("bereits abgerechnet" in str(m) for m in messages))
+        self.assertFalse(Invoice.objects.filter(client=self.test_client).exists())
+        self.assertFalse(InvoiceItem.objects.exists())
+        event.refresh_from_db()
+        self.assertEqual(event.status, PendingCalendarEvent.Status.IMPORTED)
 
     def test_new_invoice_action_creates_invoice_and_item(self):
         event = self._make_event()
