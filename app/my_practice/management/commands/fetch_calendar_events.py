@@ -24,6 +24,7 @@ from ...models import (
 )
 from ...utils.google_calendar import (
     CalendarEventParser,
+    CalendarUnreachable,
     EventLookup,
     GoogleCalendarOAuth,
     fetch_all_events,
@@ -129,7 +130,20 @@ class Command(BaseCommand):
     # leading underscore on purpose: the tests drive them one at a time, so their
     # names are a contract and a rename should be a decision, not a refactor side effect.
     def fetch_for_practice(self, practice, calendar_id, dry_run, forced_days, future_days=1):
-        service = GoogleCalendarOAuth.get_service(practice=practice)
+        try:
+            service = GoogleCalendarOAuth.get_service(practice=practice)
+        except CalendarUnreachable as e:
+            self.stdout.write(
+                self.style.ERROR(
+                    "  ✗ Could not reach Google to refresh the calendar token; nothing fetched.\n"
+                    f"    {e}\n"
+                    "    → The token was not changed and is probably fine: check the network\n"
+                    "      (a firewall or DNS blocker refusing oauth2.googleapis.com shows up\n"
+                    "      as 'Connection refused') and run again. Don't re-authorise for this."
+                )
+            )
+            # Fails the run like an expired token, so a lasting outage shows up.
+            return False
         if not service:
             self.stdout.write(
                 self.style.ERROR(

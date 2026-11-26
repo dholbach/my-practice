@@ -11,6 +11,7 @@ from typing import cast
 from django.conf import settings
 from django.db.models import F, Q, QuerySet
 from django.utils import timezone
+from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -31,6 +32,33 @@ DURATION_TO_SERVICE_CODE = {
     (50, 65): "therapy_60",  # 50-60min = Standard session
     (80, 95): "therapy_90",  # 80-90min = Extended session
 }
+
+
+class CalendarUnreachable(Exception):
+    """Google could not be reached to refresh the calendar token. Not a verdict
+    on the token: try again later, on another network, before re-authorising."""
+
+
+# OAuth error codes in Google's token response that do mean the stored
+# credentials are no good. RFC 6749 § 5.2.
+_TOKEN_REJECTED_ERRORS = {
+    "invalid_grant",
+    "invalid_client",
+    "unauthorized_client",
+    "invalid_scope",
+    "access_denied",
+}
+
+
+def _token_rejected(error: Exception) -> bool:
+    """True only when Google answered the refresh with an OAuth error saying the
+    token or client is invalid. A transport error, a retryable status (429,
+    5xx) or a body that isn't Google's JSON (a captive portal's or blocker's
+    page) is not that answer."""
+    if not isinstance(error, RefreshError) or getattr(error, "retryable", False):
+        return False
+    details = error.args[1] if len(error.args) > 1 else None
+    return isinstance(details, dict) and details.get("error") in _TOKEN_REJECTED_ERRORS
 
 
 class GoogleCalendarOAuth:
@@ -134,7 +162,12 @@ class GoogleCalendarOAuth:
                       fallback token.
 
         Returns:
-            Google Calendar API service object or None if no valid token exists
+            Google Calendar API service object, or None if there is no token or
+            Google rejected it (re-authorisation needed).
+
+        Raises:
+            CalendarUnreachable: the token needed a refresh and Google couldn't
+                be reached; the token is unchanged and may well be fine.
         """
         token = GoogleCalendarOAuth.get_active_token(practice)
         if token is None:
@@ -161,27 +194,31 @@ class GoogleCalendarOAuth:
 
             try:
                 credentials.refresh(Request())
-
-                # Update token in database
-                token.token = credentials.token or ""
-                if credentials.expiry:
-                    token.expires_at = (
-                        timezone.make_aware(credentials.expiry)
-                        if timezone.is_naive(credentials.expiry)
-                        else credentials.expiry
-                    )
-                token.save(update_fields=["token", "expires_at"])
-
             except Exception as e:
-                # Token refresh failed — most likely the refresh_token itself
-                # has been revoked (Google caps refresh tokens at 7 days while
-                # the OAuth consent screen's publishing status is "Testing",
-                # regardless of the Test users list — only publishing the app
-                # to "In production" removes the cap). Leave the token active
-                # so subsequent runs report the same clear error rather than
+                if not _token_rejected(e):
+                    # Google couldn't be asked (network down, a firewall or
+                    # Pi-hole refusing the OAuth host, timeout, 5xx). Says
+                    # nothing about the token, so don't send the user through
+                    # re-authorisation for it (#756).
+                    logger.warning("Token refresh could not reach Google: %s", e)
+                    raise CalendarUnreachable(str(e)) from e
+                # Google rejected the refresh token: revoked, or the 7-day cap
+                # Google puts on refresh tokens while the OAuth consent screen
+                # is in "Testing" (the Test users list doesn't lift it; only
+                # publishing the app to "In production" does). Leave the token
+                # active so later runs report the same clear error rather than
                 # "no active tokens found".
-                logger.error(f"Token refresh failed: {e}")
+                logger.error("Token refresh rejected by Google: %s", e)
                 return None
+
+            token.token = credentials.token or ""
+            if credentials.expiry:
+                token.expires_at = (
+                    timezone.make_aware(credentials.expiry)
+                    if timezone.is_naive(credentials.expiry)
+                    else credentials.expiry
+                )
+            token.save(update_fields=["token", "expires_at"])
 
         # Build credentials
         credentials = Credentials(

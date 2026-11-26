@@ -25,12 +25,22 @@ from ..utils.calendar_event_processor import (
 )
 from ..utils.calendar_import_helpers import session_slot_billed
 from ..utils.google_calendar import (
+    CalendarUnreachable,
     GoogleCalendarOAuth,
     list_calendars,
 )
 from ..utils.view_helpers import json_error
 
 logger = logging.getLogger(__name__)
+
+
+def _calendar_unreachable_message() -> str:
+    """Shown when the token refresh couldn't reach Google (#756): the
+    connection is fine as far as anyone knows, so don't suggest reconnecting."""
+    return _(
+        "Google Calendar could not be reached. Check the network connection and try "
+        "again; the calendar connection itself was not changed."
+    )
 
 
 @require_POST
@@ -93,7 +103,11 @@ def calendar_oauth2callback(request: HttpRequest) -> HttpResponse:
 def calendar_import(request: HttpRequest) -> HttpResponse:
     """Show calendar import interface — list events from Google Calendar and allow import."""
     practice = getattr(request, "current_practice", None)
-    service = GoogleCalendarOAuth.get_service(practice=practice)
+    try:
+        service = GoogleCalendarOAuth.get_service(practice=practice)
+    except CalendarUnreachable:
+        messages.error(request, _calendar_unreachable_message())
+        return redirect("dashboard")
     if not service:
         messages.warning(request, _("Please connect your Google Calendar first."))
         return render(request, "my_practice/calendar_connect.html")
@@ -210,7 +224,10 @@ def calendar_import_events(request: HttpRequest) -> JsonResponse:
 
         if not parsed_events:
             practice = getattr(request, "current_practice", None)
-            service = GoogleCalendarOAuth.get_service(practice=practice)
+            try:
+                service = GoogleCalendarOAuth.get_service(practice=practice)
+            except CalendarUnreachable:
+                return json_error(_calendar_unreachable_message(), 503)
             if not service:
                 return json_error(_("Google Calendar not connected"), 401)
             token = GoogleCalendarOAuth.get_active_token(practice)
