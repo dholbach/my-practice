@@ -6,7 +6,7 @@ Covers:
   - ClientProfile get_or_create + Fernet field round-trip
   - SessionLog creation with mood_tags
   - SupervisionItem create + status toggle
-  - clinical_views: client_profile_save, session_log_create, supervision_item_create,
+  - clinical_views, session_views, supervision_views: session_log_create, supervision_item_create,
     supervision_item_toggle, supervision_queue, client_triage_summary,
     session_duration_edit
 """

@@ -3,15 +3,13 @@ Clinical documentation views (P-009).
 
 Views for:
   - SessionLog: create/edit per session
-  - SupervisionItem: create per client, toggle/resolve status
-  - Supervision queue: cross-client view of open items
+  - ClientNote: per-client free-text notes
   - Triage summary: printable emergency overview (no Fernet access)
 """
 
 from datetime import date
 
 from django.contrib import messages
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -22,22 +20,19 @@ from ..models import (
     Client,
     ClientNote,
     PendingCalendarEvent,
-    ScratchItem,
     Session,
     SessionLog,
-    SupervisionItem,
 )
 from ..models.clinical import SESSION_LOG_PROMPTS, MoodTag
-from ..models.gebueh import GebuhZiffer, Leistungserfassung
-from ..utils.for_next_time import clean_reminder
 from ..utils.session_log_helpers import (
     build_log_context,
     find_or_create_session,
-    is_session_billed,
     parse_duration,
     set_session_duration,
 )
 from ..utils.view_helpers import get_scoped_client, safe_next
+from .scratch_views import add_scratch_items, complete_scratch_items, update_scratch_items
+from .supervision_views import add_supervision_question
 
 
 def _session_log_choices(request, default_type: str) -> tuple[str | None, list[str]]:
@@ -78,50 +73,6 @@ def _narrative(request, current: SessionLog | None = None) -> dict[str, str]:
     return {
         field: "" if value.strip() in _BARE_PROMPTS else value for field, value in posted.items()
     }
-
-
-def _update_scratch_items(request, client) -> None:
-    """Save the wording of open reminders edited in the log form's side panel."""
-    edited = {
-        int(name.removeprefix("scratch_edit_")): clean_reminder(value)
-        for name, value in request.POST.items()
-        if name.startswith("scratch_edit_") and name.removeprefix("scratch_edit_").isdigit()
-    }
-    for item in ScratchItem.objects.filter(client=client, pk__in=edited, done_at__isnull=True):
-        # A cleared field leaves the reminder as it was: removing one is the client page's job.
-        if edited[item.pk] and edited[item.pk] != item.text:
-            item.text = edited[item.pk]
-            item.save(update_fields=["text", "updated_at"])
-
-
-def _complete_scratch_items(request, client, session) -> None:
-    """Mark the reminders ticked in the log form's side panel as covered in ``session``."""
-    ids = [int(raw) for raw in request.POST.getlist("scratch_done") if raw.isdigit()]
-    if ids:
-        ScratchItem.objects.filter(client=client, pk__in=ids, done_at__isnull=True).update(
-            done_at=timezone.now(), covered_in_session=session
-        )
-
-
-MAX_NEW_SCRATCH_ITEMS = 10
-
-
-def _add_scratch_items(request, client) -> None:
-    """Create a reminder for next time per non-empty line of the log form's side panel."""
-    lines = [clean_reminder(line) for line in request.POST.get("scratch_new", "").splitlines()]
-    ScratchItem.objects.bulk_create(
-        [ScratchItem(client=client, text=line) for line in lines if line][:MAX_NEW_SCRATCH_ITEMS]
-    )
-
-
-def _add_supervision_question(request, client) -> None:
-    """File the posted supervision question, if any, as an open item for the client."""
-    question = request.POST.get("supervision_question", "").strip()
-    if question:
-        SupervisionItem.objects.create(client=client, content=question)
-
-
-# ─── SessionLog ────────────────────────────────────────────────────────────────
 
 
 def session_log_create(request, pk):
@@ -170,10 +121,10 @@ def session_log_create(request, pk):
             **_narrative(request),
         )
 
-        _add_supervision_question(request, client)
-        _update_scratch_items(request, client)
-        _complete_scratch_items(request, client, session)
-        _add_scratch_items(request, client)
+        add_supervision_question(request, client)
+        update_scratch_items(request, client)
+        complete_scratch_items(request, client, session)
+        add_scratch_items(request, client)
 
         messages.success(
             request,
@@ -236,10 +187,10 @@ def session_log_edit(request, client_pk, log_pk):
             setattr(log, field, value)
         log.save()
 
-        _add_supervision_question(request, client)
-        _update_scratch_items(request, client)
-        _complete_scratch_items(request, client, log.session)
-        _add_scratch_items(request, client)
+        add_supervision_question(request, client)
+        update_scratch_items(request, client)
+        complete_scratch_items(request, client, log.session)
+        add_scratch_items(request, client)
 
         duration_str = request.POST.get("duration", "").strip()
         new_duration = parse_duration(duration_str) if duration_str else None
@@ -271,135 +222,6 @@ def session_log_edit(request, client_pk, log_pk):
         **build_log_context(client, before=log.session.session_date, exclude_log_pk=log.pk),
     }
     return render(request, "my_practice/session_log_form.html", context)
-
-
-# ─── SupervisionItem ───────────────────────────────────────────────────────────
-
-
-@require_POST
-def supervision_item_create(request, pk):
-    """Create a new SupervisionItem for a client."""
-    client = get_scoped_client(request, pk)
-    content = request.POST.get("content", "").strip()
-    if not content:
-        messages.error(request, _("Content must not be empty."))
-        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
-
-    SupervisionItem.objects.create(client=client, content=content)
-    messages.success(request, _("Supervision topic added."))
-    return redirect(
-        safe_next(
-            request,
-            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
-        )
-    )
-
-
-@require_POST
-def supervision_item_delete(request, pk, item_pk):
-    """Delete a SupervisionItem."""
-    client = get_scoped_client(request, pk)
-    item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
-    item.delete()
-    messages.success(request, _("Supervision topic deleted."))
-    return redirect(
-        safe_next(
-            request,
-            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
-        )
-    )
-
-
-@require_POST
-def supervision_item_toggle(request, pk, item_pk):
-    """
-    Toggle SupervisionItem status between offen and besprochen.
-
-    Quick one-click toggle with no resolution notes — used for reopening an
-    item, and for marking one discussed from the cross-client queue where a
-    notes form would be too heavy. To mark discussed with resolution notes
-    from the client detail page, use supervision_item_resolve instead.
-    """
-    client = get_scoped_client(request, pk)
-    item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
-    if item.status == SupervisionItem.Status.OFFEN:
-        item.status = SupervisionItem.Status.BESPROCHEN
-    else:
-        item.status = SupervisionItem.Status.OFFEN
-        item.resolution_notes = ""
-        item.resolved_date = None
-    item.save(update_fields=["status", "resolution_notes", "resolved_date"])
-
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"status": item.status, "label": item.get_status_display()})
-    return redirect(
-        safe_next(
-            request,
-            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
-        )
-    )
-
-
-@require_POST
-def supervision_item_resolve(request, pk, item_pk):
-    """Mark a SupervisionItem discussed, optionally recording resolution notes."""
-    client = get_scoped_client(request, pk)
-    item = get_object_or_404(SupervisionItem, pk=item_pk, client=client)
-
-    resolved_date_str = request.POST.get("resolved_date", "").strip()
-    try:
-        resolved_date = date.fromisoformat(resolved_date_str) if resolved_date_str else date.today()
-    except ValueError:
-        resolved_date = date.today()
-
-    item.status = SupervisionItem.Status.BESPROCHEN
-    item.resolution_notes = request.POST.get("resolution_notes", "").strip()
-    item.resolved_date = resolved_date
-    item.save(update_fields=["status", "resolution_notes", "resolved_date"])
-    messages.success(request, _("Supervision topic marked discussed."))
-    return redirect(
-        safe_next(
-            request,
-            fallback=reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll",
-        )
-    )
-
-
-# ─── Supervision queue ─────────────────────────────────────────────────────────
-
-
-def supervision_queue(request):
-    """
-    Cross-client supervision queue.
-
-    Shows all open SupervisionItems grouped by client.
-    Does not require Fernet key for rendering the grouping structure —
-    item content is decrypted lazily when accessed in the template.
-    """
-    open_items = (
-        SupervisionItem.objects.filter(
-            client__in=Client.objects.for_current_practice(request),
-            status=SupervisionItem.Status.OFFEN,
-        )
-        .select_related("client")
-        .order_by("client__client_code", "-created_at")
-    )
-
-    # Group by client
-    from itertools import groupby
-
-    grouped = []
-    for client, items in groupby(open_items, key=lambda x: x.client):
-        grouped.append({"client": client, "items": list(items)})
-
-    context = {
-        "grouped_items": grouped,
-        "total_open": open_items.count(),
-    }
-    return render(request, "my_practice/supervision_queue.html", context)
-
-
-# ─── ClientNote ────────────────────────────────────────────────────────────────
 
 
 @require_POST
@@ -465,115 +287,6 @@ def client_note_delete(request, pk, note_pk):
     return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
 
 
-@require_POST
-def session_log_delete(request, client_pk, log_pk):
-    """Delete a SessionLog entry (and its linked Session if it has no InvoiceItem)."""
-    client = get_scoped_client(request, client_pk)
-    log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
-    session = log.session
-    log.delete()
-    # Also remove the bare Session if it was created solely for this log
-    # (i.e. no InvoiceItem is linked — not billed)
-    if not session.invoice_items.exists():
-        session.delete()
-    messages.success(request, _("Session log deleted."))
-    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
-
-
-@require_POST
-def session_duration_edit(request, pk, session_pk):
-    """
-    Update a session's duration. Used to correct calendar-imported sessions.
-
-    Blocked if the session already has a linked InvoiceItem: the item's
-    service_type/rate/total are resolved from the duration at billing time
-    and are not recalculated here, so changing the duration afterwards would
-    silently leave the invoice showing stale pricing for the new duration.
-    """
-    client = get_scoped_client(request, pk)
-    session = get_object_or_404(Session, pk=session_pk, client=client)
-    if is_session_billed(session):
-        messages.error(
-            request,
-            _(
-                "Session of %(date)s cannot be edited: it has already been billed. "
-                "Remove the invoice item first."
-            )
-            % {"date": session.session_date.strftime("%d.%m.%Y")},
-        )
-        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
-    new_duration = parse_duration(request.POST.get("duration"))
-    if new_duration is None:
-        messages.error(request, _("Invalid duration."))
-    else:
-        set_session_duration(session, new_duration)  # billed sessions were turned away above
-        messages.success(
-            request,
-            _("Session duration updated to %(min)s min.") % {"min": new_duration},
-        )
-    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
-
-
-@require_POST
-def session_delete(request, client_pk, session_pk):
-    """
-    Delete a bare Session (no log, or log without billed invoice item).
-
-    Blocked if the session has a linked InvoiceItem (already billed).
-    The SessionLog cascades automatically if present.
-    """
-    client = get_scoped_client(request, client_pk)
-    session = get_object_or_404(Session, pk=session_pk, client=client)
-    if session.invoice_items.exists():
-        messages.error(
-            request,
-            _(
-                "Session of %(date)s cannot be deleted: it has already been billed. "
-                "Remove the invoice item first."
-            )
-            % {"date": session.session_date.strftime("%d.%m.%Y")},
-        )
-    else:
-        date_str = session.session_date.strftime("%d.%m.%Y")
-        session.delete()  # SessionLog cascades via OneToOne(on_delete=CASCADE)
-        messages.success(request, _("Session of %(date)s deleted.") % {"date": date_str})
-    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
-
-
-@require_POST
-def session_log_mark_noshow(request, client_pk, log_pk):
-    """Quick-mark a session log as Ausfall / Absage."""
-    client = get_scoped_client(request, client_pk)
-    log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
-    log.session_type = SessionLog.SessionType.AUSFALL
-    log.save(update_fields=["session_type"])
-    messages.success(request, _("Marked as no-show / cancellation."))
-    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
-
-
-@require_POST
-def session_bill(request, pk, session_pk):
-    """
-    Add an unbilled Session to the client's draft invoice (P-036 Phase 2).
-
-    POST-only. Calls bill_session() helper which determines service type / rate
-    from the linked PendingCalendarEvent and creates InvoiceItem + PracticeTodo.
-    """
-    from ..utils.calendar_import_helpers import bill_session as _bill_session
-
-    client = get_scoped_client(request, pk)
-    session = get_object_or_404(Session, pk=session_pk, client=client)
-    success, message = _bill_session(session, request.current_practice)
-    if success:
-        messages.success(request, message)
-    else:
-        messages.error(request, message)
-    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
-
-
-# ─── Triage summary ────────────────────────────────────────────────────────────
-
-
 def client_triage_summary(request):
     """
     Printable triage summary for emergency use (P-010).
@@ -626,145 +339,3 @@ def client_triage_summary(request):
         "generated_date": timezone.localdate(),
     }
     return render(request, "my_practice/client_triage.html", context)
-
-
-@require_POST
-def session_toggle_billable(request, client_pk, session_pk):
-    """Toggle Session.billable — marks intro calls / non-billable sessions as excluded."""
-    client = get_scoped_client(request, client_pk)
-    session = get_object_or_404(Session, pk=session_pk, client=client)
-    session.billable = not session.billable
-    session.save(update_fields=["billable"])
-    return redirect(
-        safe_next(
-            request,
-            fallback=reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll",
-        )
-    )
-
-
-# ─── GebüH Leistungserfassung ──────────────────────────────────────────────────
-
-
-def gebueh_leistung_create(request, client_pk, session_pk):
-    """
-    Quick-entry form for GebüH Ziffern on a session.
-
-    GET: Checkbox list of all Ziffern with satz_max; shows existing entries if re-entering.
-    POST: Replaces existing Leistungserfassung for this session, emits soft warnings for
-          frequency overruns and Alleinleistung conflicts.
-    Only accessible when client.needs_gebueh_invoice is True.
-    """
-    from datetime import timedelta
-
-    client = get_scoped_client(request, client_pk)
-    if not client.needs_gebueh_invoice:
-        messages.error(request, _("GebüH billing is not enabled for this client."))
-        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
-
-    session = get_object_or_404(Session, pk=session_pk, client=client)
-    ziffern = GebuhZiffer.objects.all()
-    existing = list(session.gebueh_leistungen.select_related("ziffer").all())
-    existing_ziffer_ids = {le.ziffer_id for le in existing}
-
-    if request.method == "POST":
-        selected_ids_raw = request.POST.getlist("ziffern")
-        try:
-            selected_ids = [int(x) for x in selected_ids_raw]
-        except ValueError:
-            messages.error(request, _("Invalid input."))
-            return redirect("gebueh_leistung_create", client_pk=client_pk, session_pk=session_pk)
-
-        selected_ziffern = list(GebuhZiffer.objects.filter(pk__in=selected_ids))
-
-        if not selected_ziffern:
-            # Allow clearing — remove all entries for this session
-            session.gebueh_leistungen.all().delete()
-            messages.success(
-                request,
-                _("GebüH entries for %(date)s cleared.")
-                % {"date": session.session_date.strftime("%d.%m.%Y")},
-            )
-            return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
-
-        # ── Soft warnings ──────────────────────────────────────────────────────
-
-        # Alleinleistung: Ziffer 4 must not be combined with others
-        alleinleistung_nummern = {"4"}
-        selected_nummern = {z.nummer for z in selected_ziffern}
-        if alleinleistung_nummern & selected_nummern and len(selected_ziffern) > 1:
-            messages.warning(
-                request,
-                _(
-                    "Warning: Ziffer %(nr)s may only be billed as a standalone service "
-                    "and must not be combined with other Ziffern."
-                )
-                % {"nr": ", ".join(alleinleistung_nummern & selected_nummern)},
-            )
-
-        # Frequency check for Ziffern with bezugszeitraum_tage
-        today = timezone.localdate()
-        for ziffer in selected_ziffern:
-            if ziffer.max_haeufigkeit and ziffer.bezugszeitraum_tage:
-                since = today - timedelta(days=ziffer.bezugszeitraum_tage)
-                count = (
-                    Leistungserfassung.objects.filter(
-                        session__client=client,
-                        ziffer=ziffer,
-                        session__session_date__gte=since,
-                        session__session_date__lte=today,
-                    )
-                    .exclude(session=session)
-                    .count()
-                )
-                if count >= ziffer.max_haeufigkeit:
-                    messages.warning(
-                        request,
-                        _(
-                            "Warning: Ziffer %(nr)s – already billed %(count)s× within "
-                            "%(days)s days (maximum: %(max)s×)."
-                        )
-                        % {
-                            "nr": ziffer.nummer,
-                            "count": count,
-                            "days": ziffer.bezugszeitraum_tage,
-                            "max": ziffer.max_haeufigkeit,
-                        },
-                    )
-
-        # ── Replace existing entries ───────────────────────────────────────────
-        session.gebueh_leistungen.all().delete()
-        vereinbarter_betrag = Leistungserfassung.compute_vereinbarter_betrag(session)
-        remaining = vereinbarter_betrag
-        for ziffer in selected_ziffern:
-            # Ziffer.satz_max is only the fee schedule's ceiling for this code —
-            # never bill more than what's actually charged for the session. When
-            # several codes are selected, each one draws from what's left of the
-            # agreed fee (in sort_order) so the combined total never exceeds it.
-            betrag = min(ziffer.satz_max, remaining)
-            remaining -= betrag
-            Leistungserfassung.objects.create(
-                session=session,
-                ziffer=ziffer,
-                betrag=betrag,
-                vereinbarter_betrag=vereinbarter_betrag,
-            )
-
-        messages.success(
-            request,
-            _("%(count)s GebüH code(s) saved for %(date)s.")
-            % {
-                "count": len(selected_ziffern),
-                "date": session.session_date.strftime("%d.%m.%Y"),
-            },
-        )
-        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
-
-    context = {
-        "client": client,
-        "session": session,
-        "ziffern": ziffern,
-        "existing_ziffer_ids": existing_ziffer_ids,
-        "existing": existing,
-    }
-    return render(request, "my_practice/gebueh_leistung_form.html", context)

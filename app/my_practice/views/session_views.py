@@ -1,0 +1,266 @@
+"""Views that act on a single session (P-009): duration, billing, no-show, deletion and
+GebüH service entries. The session *log* itself is in clinical_views.py."""
+
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import gettext as _
+from django.views.decorators.http import require_POST
+
+from ..models import (
+    Session,
+    SessionLog,
+)
+from ..models.gebueh import GebuhZiffer, Leistungserfassung
+from ..utils.session_log_helpers import (
+    is_session_billed,
+    parse_duration,
+    set_session_duration,
+)
+from ..utils.view_helpers import get_scoped_client, safe_next
+
+
+@require_POST
+def session_log_delete(request, client_pk, log_pk):
+    """Delete a SessionLog entry (and its linked Session if it has no InvoiceItem)."""
+    client = get_scoped_client(request, client_pk)
+    log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
+    session = log.session
+    log.delete()
+    # Also remove the bare Session if it was created solely for this log
+    # (i.e. no InvoiceItem is linked — not billed)
+    if not session.invoice_items.exists():
+        session.delete()
+    messages.success(request, _("Session log deleted."))
+    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
+
+
+@require_POST
+def session_duration_edit(request, pk, session_pk):
+    """
+    Update a session's duration. Used to correct calendar-imported sessions.
+
+    Blocked if the session already has a linked InvoiceItem: the item's
+    service_type/rate/total are resolved from the duration at billing time
+    and are not recalculated here, so changing the duration afterwards would
+    silently leave the invoice showing stale pricing for the new duration.
+    """
+    client = get_scoped_client(request, pk)
+    session = get_object_or_404(Session, pk=session_pk, client=client)
+    if is_session_billed(session):
+        messages.error(
+            request,
+            _(
+                "Session of %(date)s cannot be edited: it has already been billed. "
+                "Remove the invoice item first."
+            )
+            % {"date": session.session_date.strftime("%d.%m.%Y")},
+        )
+        return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
+    new_duration = parse_duration(request.POST.get("duration"))
+    if new_duration is None:
+        messages.error(request, _("Invalid duration."))
+    else:
+        set_session_duration(session, new_duration)  # billed sessions were turned away above
+        messages.success(
+            request,
+            _("Session duration updated to %(min)s min.") % {"min": new_duration},
+        )
+    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
+
+
+@require_POST
+def session_delete(request, client_pk, session_pk):
+    """
+    Delete a bare Session (no log, or log without billed invoice item).
+
+    Blocked if the session has a linked InvoiceItem (already billed).
+    The SessionLog cascades automatically if present.
+    """
+    client = get_scoped_client(request, client_pk)
+    session = get_object_or_404(Session, pk=session_pk, client=client)
+    if session.invoice_items.exists():
+        messages.error(
+            request,
+            _(
+                "Session of %(date)s cannot be deleted: it has already been billed. "
+                "Remove the invoice item first."
+            )
+            % {"date": session.session_date.strftime("%d.%m.%Y")},
+        )
+    else:
+        date_str = session.session_date.strftime("%d.%m.%Y")
+        session.delete()  # SessionLog cascades via OneToOne(on_delete=CASCADE)
+        messages.success(request, _("Session of %(date)s deleted.") % {"date": date_str})
+    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
+
+
+@require_POST
+def session_log_mark_noshow(request, client_pk, log_pk):
+    """Quick-mark a session log as Ausfall / Absage."""
+    client = get_scoped_client(request, client_pk)
+    log = get_object_or_404(SessionLog, pk=log_pk, session__client=client)
+    log.session_type = SessionLog.SessionType.AUSFALL
+    log.save(update_fields=["session_type"])
+    messages.success(request, _("Marked as no-show / cancellation."))
+    return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
+
+
+@require_POST
+def session_bill(request, pk, session_pk):
+    """
+    Add an unbilled Session to the client's draft invoice (P-036 Phase 2).
+
+    POST-only. Calls bill_session() helper which determines service type / rate
+    from the linked PendingCalendarEvent and creates InvoiceItem + PracticeTodo.
+    """
+    from ..utils.calendar_import_helpers import bill_session as _bill_session
+
+    client = get_scoped_client(request, pk)
+    session = get_object_or_404(Session, pk=session_pk, client=client)
+    success, message = _bill_session(session, request.current_practice)
+    if success:
+        messages.success(request, message)
+    else:
+        messages.error(request, message)
+    return redirect(reverse("client_detail", kwargs={"pk": pk}) + "#ptab-protokoll")
+
+
+@require_POST
+def session_toggle_billable(request, client_pk, session_pk):
+    """Toggle Session.billable — marks intro calls / non-billable sessions as excluded."""
+    client = get_scoped_client(request, client_pk)
+    session = get_object_or_404(Session, pk=session_pk, client=client)
+    session.billable = not session.billable
+    session.save(update_fields=["billable"])
+    return redirect(
+        safe_next(
+            request,
+            fallback=reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll",
+        )
+    )
+
+
+def gebueh_leistung_create(request, client_pk, session_pk):
+    """
+    Quick-entry form for GebüH Ziffern on a session.
+
+    GET: Checkbox list of all Ziffern with satz_max; shows existing entries if re-entering.
+    POST: Replaces existing Leistungserfassung for this session, emits soft warnings for
+          frequency overruns and Alleinleistung conflicts.
+    Only accessible when client.needs_gebueh_invoice is True.
+    """
+    from datetime import timedelta
+
+    client = get_scoped_client(request, client_pk)
+    if not client.needs_gebueh_invoice:
+        messages.error(request, _("GebüH billing is not enabled for this client."))
+        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
+
+    session = get_object_or_404(Session, pk=session_pk, client=client)
+    ziffern = GebuhZiffer.objects.all()
+    existing = list(session.gebueh_leistungen.select_related("ziffer").all())
+    existing_ziffer_ids = {le.ziffer_id for le in existing}
+
+    if request.method == "POST":
+        selected_ids_raw = request.POST.getlist("ziffern")
+        try:
+            selected_ids = [int(x) for x in selected_ids_raw]
+        except ValueError:
+            messages.error(request, _("Invalid input."))
+            return redirect("gebueh_leistung_create", client_pk=client_pk, session_pk=session_pk)
+
+        selected_ziffern = list(GebuhZiffer.objects.filter(pk__in=selected_ids))
+
+        if not selected_ziffern:
+            # Allow clearing — remove all entries for this session
+            session.gebueh_leistungen.all().delete()
+            messages.success(
+                request,
+                _("GebüH entries for %(date)s cleared.")
+                % {"date": session.session_date.strftime("%d.%m.%Y")},
+            )
+            return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
+
+        # ── Soft warnings ──────────────────────────────────────────────────────
+
+        # Alleinleistung: Ziffer 4 must not be combined with others
+        alleinleistung_nummern = {"4"}
+        selected_nummern = {z.nummer for z in selected_ziffern}
+        if alleinleistung_nummern & selected_nummern and len(selected_ziffern) > 1:
+            messages.warning(
+                request,
+                _(
+                    "Warning: Ziffer %(nr)s may only be billed as a standalone service "
+                    "and must not be combined with other Ziffern."
+                )
+                % {"nr": ", ".join(alleinleistung_nummern & selected_nummern)},
+            )
+
+        # Frequency check for Ziffern with bezugszeitraum_tage
+        today = timezone.localdate()
+        for ziffer in selected_ziffern:
+            if ziffer.max_haeufigkeit and ziffer.bezugszeitraum_tage:
+                since = today - timedelta(days=ziffer.bezugszeitraum_tage)
+                count = (
+                    Leistungserfassung.objects.filter(
+                        session__client=client,
+                        ziffer=ziffer,
+                        session__session_date__gte=since,
+                        session__session_date__lte=today,
+                    )
+                    .exclude(session=session)
+                    .count()
+                )
+                if count >= ziffer.max_haeufigkeit:
+                    messages.warning(
+                        request,
+                        _(
+                            "Warning: Ziffer %(nr)s – already billed %(count)s× within "
+                            "%(days)s days (maximum: %(max)s×)."
+                        )
+                        % {
+                            "nr": ziffer.nummer,
+                            "count": count,
+                            "days": ziffer.bezugszeitraum_tage,
+                            "max": ziffer.max_haeufigkeit,
+                        },
+                    )
+
+        # ── Replace existing entries ───────────────────────────────────────────
+        session.gebueh_leistungen.all().delete()
+        vereinbarter_betrag = Leistungserfassung.compute_vereinbarter_betrag(session)
+        remaining = vereinbarter_betrag
+        for ziffer in selected_ziffern:
+            # Ziffer.satz_max is only the fee schedule's ceiling for this code —
+            # never bill more than what's actually charged for the session. When
+            # several codes are selected, each one draws from what's left of the
+            # agreed fee (in sort_order) so the combined total never exceeds it.
+            betrag = min(ziffer.satz_max, remaining)
+            remaining -= betrag
+            Leistungserfassung.objects.create(
+                session=session,
+                ziffer=ziffer,
+                betrag=betrag,
+                vereinbarter_betrag=vereinbarter_betrag,
+            )
+
+        messages.success(
+            request,
+            _("%(count)s GebüH code(s) saved for %(date)s.")
+            % {
+                "count": len(selected_ziffern),
+                "date": session.session_date.strftime("%d.%m.%Y"),
+            },
+        )
+        return redirect(reverse("client_detail", kwargs={"pk": client_pk}) + "#ptab-protokoll")
+
+    context = {
+        "client": client,
+        "session": session,
+        "ziffern": ziffern,
+        "existing_ziffer_ids": existing_ziffer_ids,
+        "existing": existing,
+    }
+    return render(request, "my_practice/gebueh_leistung_form.html", context)
