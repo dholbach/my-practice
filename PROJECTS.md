@@ -31,7 +31,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 ## 🔍 Recent Activity
 
 - **2026-11-26 — v0.16.0 released**: P-006 clinical documentation v1 (reminders, Clinical/Admin modes, timeline search, case sheet, case review; migrations 0016–0020). Iteration continues from daily use (#738–#740).
-- **2026-11-25 — P-006 clinical documentation**: spec merged (#727); PR 1 (#728) reworked the session log form (prompt chips, "More" fields, context panel); PR 2 adds "For next time" reminders (`ScratchItem`, migrations 0016–0017): add from the client page and the log form, edit in place, covered ones link to the log that covered them; PR 3a splits the client page into a Clinical mode (overview and protocol in one scroll) and an Admin & billing mode; PR 3b gives the timeline the original paper layout (notes folded) and a search over all entries; PR 4 replaces the intake and case notes textareas with the case sheet (`ClinicalFact`, migrations 0018–0019); PR 5 adds the one-line "anything for the case sheet?" step after saving a log; PR 6 adds the case review (`CaseReview`, migration 0020).
+- **2026-11-26 — Calendar queue clears itself**: billing review found 130 pending calendar events whose sessions were already invoiced (the fetch creates the session, but only queue approval marked the event imported). Invoicing a session now imports its event (signal), migration 0021 clears existing backlogs, and the fetch no longer auto-cancels a session that is already invoiced.
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
