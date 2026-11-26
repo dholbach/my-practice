@@ -2,6 +2,21 @@
 
 Major features and milestones in chronological order.
 
+## 2026-11-26 — v0.16.0 minor release
+
+Clinical documentation, version 1 (P-006): the client page, the session log form and the case notes are reworked so that documenting stays light and the case formulation stays up to date. This is a first version of P-006; it will be iterated on from daily use. Five migrations (0016–0020): two small tables for reminders, one for case sheet lines, one for case reviews, and a data migration that splits the old intake and case notes into case sheet lines. No compose-file change beyond the version.
+
+**Upgrading:** download the new `prod.py` (`./prod.py update` prints the command), then run `./prod.py update`, which takes a backup before restarting and applies the migrations. On the dev stack: `./dev.py restart --force`. The old intake notes, case notes and working diagnosis are not deleted: they stay on the profile and show read-only as "Earlier notes" on the client page. After upgrading, compare them with the new case sheet once; the old fields go in a later release.
+
+- **Feature — lighter session log form**: reflection prompts as chips that write their question into the field, a "More" fold for the rarely used fields, and a context panel with the last sessions and the case sheet excerpt next to the form.
+- **Feature — "For next time" reminders**: short reminders per client (`ScratchItem`), added from the client page or the log form, edited in place, with list markers stripped. A reminder covered in a later session links to that log.
+- **Feature — Clinical and Admin modes**: the client page splits into a Clinical mode (overview and protocol in one scroll) and an Admin & billing mode.
+- **Feature — timeline with search**: the protocol shows the sessions in the layout of the old paper form, notes folded, with a search over all entries.
+- **Feature — case sheet**: the intake and case notes textareas are replaced by dated lines in fixed rows (`ClinicalFact`). Changing a line supersedes it and closing it resolves it; nothing is overwritten or deleted, so earlier wording and dates stay on record.
+- **Feature — case sheet step after a log**: after saving a log, one line asks "anything for the case sheet?".
+- **Feature — case review**: a page that shows what happened since the last review (sessions, new and changed lines) and lets you go through the sheet; the timeline marks review days, and the client page invites one after three sessions.
+- **Fix — last session and hours**: "Last session", session count and hours on the client page come from the sessions held, not from the invoices, so unbilled sessions count and future ones do not.
+
 ## 2026-11-23 — v0.15.0 minor release
 
 Expense receipts and client documents accept Word files, and a bank transfer dated before its invoice can be matched. The image builds faster on a slow link. One migration, which only changes the stored upload-extension validators (no table change); no compose-file change beyond the version.
