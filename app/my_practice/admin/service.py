@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
@@ -23,7 +24,7 @@ class ServiceTypeAdmin(admin.ModelAdmin):
     )
 
     @admin.display(description=gettext_lazy("Scope"))
-    def practice_scope(self, obj):
+    def practice_scope(self, obj: ServiceType) -> str | SafeString:
         if obj.practice:
             return obj.practice.name
         return format_html(

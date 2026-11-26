@@ -17,6 +17,6 @@ class ExpenseCategoryRuleAdmin(admin.ModelAdmin):
     readonly_fields = ["created_at", "updated_at"]
 
     @admin.display(description=gettext_lazy("Category"), ordering="category")
-    def category_display(self, obj):
+    def category_display(self, obj: ExpenseCategoryRule) -> str:
         """Display category with label"""
         return obj.get_category_display()

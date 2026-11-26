@@ -8,6 +8,7 @@ once a few sessions have piled up.
 from dataclasses import dataclass, field
 from datetime import date
 
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from ..models import CaseReview, Client, ClinicalFact, Session, SupervisionItem
@@ -25,7 +26,9 @@ def last_review(client: Client) -> CaseReview | None:
     return client.case_reviews.first()
 
 
-def sessions_since(client: Client, review: CaseReview | None, *, today: date | None = None):
+def sessions_since(
+    client: Client, review: CaseReview | None, *, today: date | None = None
+) -> QuerySet[Session]:
     """Sessions held after ``review`` (all of them if None): not cancelled, none after today."""
     sessions = held_sessions(client.sessions, today=today)
     if review is not None:

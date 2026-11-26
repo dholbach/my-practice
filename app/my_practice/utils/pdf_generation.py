@@ -48,7 +48,7 @@ def prepare_practice_images(
     signature_name = getattr(practice.signature, "name", None) or ""
     cache_key = f"practice_pdf_images:{practice.pk}:{logo_name}:{signature_name}"
 
-    cached = cache.get(cache_key)
+    cached: tuple[str | None, str | None] | None = cache.get(cache_key)
     if cached is not None:
         return cached
 

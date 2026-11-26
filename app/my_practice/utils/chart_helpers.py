@@ -4,11 +4,14 @@ Chart and data aggregation helpers for consistent data formatting across views.
 
 from collections import defaultdict
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any, Iterable
 
 from django.utils.translation import gettext_lazy as _
 
 from ..utils.calculations import count_sessions
+
+if TYPE_CHECKING:
+    from ..models import InvoiceItem
 
 # Localized month abbreviations (index 0 = January, index 11 = December).
 # Reuses the same msgids already established for the analytics chart's
@@ -77,7 +80,9 @@ def format_month_label(month_key: str, format_type: str = "short") -> str:
         return month_date.strftime("%m/%y")  # Default to short
 
 
-def aggregate_invoice_items_by_month(items, exclude_cancellations: bool = True) -> dict[str, float]:
+def aggregate_invoice_items_by_month(
+    items: Iterable[InvoiceItem], exclude_cancellations: bool = True
+) -> dict[str, float]:
     """
     Aggregate InvoiceItems by month, calculating session hours.
 
@@ -99,7 +104,7 @@ def aggregate_invoice_items_by_month(items, exclude_cancellations: bool = True) 
     monthly_totals: dict[str, float] = defaultdict(float)
 
     for item in items:
-        if item.session_id:
+        if item.session is not None:
             month_key = format_month_key(item.session.session_date)
             # Use centralized session counting for accuracy
             hours = count_sessions([item], exclude_cancellations=exclude_cancellations)

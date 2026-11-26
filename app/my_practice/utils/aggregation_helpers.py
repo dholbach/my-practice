@@ -5,7 +5,7 @@ Reusable aggregation helper functions for consistent data aggregation patterns.
 from decimal import Decimal
 from typing import Any, cast
 
-from django.db.models import Count, QuerySet, Sum
+from django.db.models import Count, Q, QuerySet, Sum
 
 
 def get_yearly_totals(
@@ -83,7 +83,11 @@ def get_category_breakdown(
     return cast(list[dict[str, Any]], results)
 
 
-def get_grand_total(queryset, amount_field="amount", filter_condition=None):
+def get_grand_total(
+    queryset: QuerySet[Any],
+    amount_field: str = "amount",
+    filter_condition: Q | None = None,
+) -> Decimal:
     """
     Calculate grand total for a queryset with optional filtering.
 

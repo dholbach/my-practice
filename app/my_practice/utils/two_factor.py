@@ -18,6 +18,7 @@ from urllib.parse import quote, urlencode
 
 import segno
 from django.contrib.auth import SESSION_KEY
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.sessions.models import Session as LoginSession
 from django.db import transaction
 from django.utils import timezone
@@ -135,7 +136,7 @@ def verify_second_factor(device: TwoFactorDevice, code: str) -> bool:
     return verify_totp(device, code) or use_recovery_code(device, code)
 
 
-def end_other_sessions(user, keep_session_key: str | None = None) -> int:
+def end_other_sessions(user: AbstractBaseUser, keep_session_key: str | None = None) -> int:
     """Delete every live session of user except keep_session_key; return how many.
 
     A change to the second factor has to reach sessions that already exist:
