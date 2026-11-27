@@ -562,7 +562,9 @@ class BankStatementImporter:
                 ).first() or CompanyWithdrawal.objects.create(
                     **withdrawal_fields, category=withdrawal_category
                 )
-            self.results["needs_review"] += 1
+                # Trusted like auto-withdrawals: no review page lists these rows.
+            else:
+                self.results["needs_review"] += 1
         elif is_self_payment:
             confidence = BankTransaction.Confidence.IGNORED
             notes = _("Own payment (capital contribution), ignored automatically")
@@ -696,7 +698,7 @@ class BankStatementImporter:
             extracted_invoice_number=invoice_number or "",
             linked_withdrawal=linked_withdrawal,
             notes=notes,
-            processed=matched_invoice is not None,
+            processed=matched_invoice is not None or linked_withdrawal is not None,
         )
 
         if matched_invoice:
