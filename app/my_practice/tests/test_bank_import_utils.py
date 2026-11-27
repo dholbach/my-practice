@@ -512,6 +512,31 @@ class ProcessCSVTest(TestCase):
         self.assertEqual(transaction.match_confidence, BankTransaction.Confidence.AUTO_WITHDRAWAL)
         self.assertTrue(transaction.processed)
 
+    def test_auto_contribution_and_correction_are_processed_and_not_counted_for_review(self):
+        # No review page lists these rows, so they must not count as pending.
+        for slug, ref, confidence in [
+            ("auto-contribution-done", "Einlage", BankTransaction.Confidence.AUTO_CONTRIBUTION),
+            ("auto-correction-done", "Fehlbuchung", BankTransaction.Confidence.AUTO_CORRECTION),
+        ]:
+            with self.subTest(confidence=confidence):
+                practice = _make_practice(slug=slug, private_bank_account=PRIVATE_IBAN)
+                importer = _make_importer(
+                    practice,
+                    [
+                        {
+                            "payer": "Max Mustermann",
+                            "payer_iban": PRIVATE_IBAN,
+                            "amount": "300,00",
+                            "ref": ref,
+                        }
+                    ],
+                )
+                results = importer.process(skip_negatives=True)
+                self.assertEqual(results["needs_review"], 0)
+                transaction = BankTransaction.objects.get(practice=practice)
+                self.assertEqual(transaction.match_confidence, confidence)
+                self.assertTrue(transaction.processed)
+
     def test_negative_skipped_when_not_withdrawal(self):
         # No private IBAN → no withdrawal detection → auto-expense is created regardless
         # but skip_negatives=True should still ignore unknown negatives after auto-create fails
