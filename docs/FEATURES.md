@@ -299,6 +299,7 @@ chronological record; this document only tracks current state.
 - ✅ Quick-add forms return where you started them — adding a tax prepayment from the quarterly overview, a tag from a client's tag picker, or a task from the Focus Queue comes back to that page with its year/filter intact
 - ✅ Draft autosave + unsaved-changes warning on long-text forms (session logs, client case notes) — protects against accidental back/forward navigation wiping out typed content
 - ✅ Command palette (P-047) — `⌘K` / `Ctrl+K` / `/`, or the header 🔍 button, opens a palette combining **search** (clients, open inquiries, invoices — with `c:`/`i:` prefixes), **Springe zu** (21 destinations) and **Aktionen** (8 quick-create shortcuts); type to filter, `↑`/`↓` to move, `↵` to open, `esc` to close. The nav bar is four links — Übersicht, Klienten, Rechnungen, Focus Queue — with everything else in the palette
+- ✅ Quick reminder capture in the command palette (P-006): `note XX-1 ask about sleep` offers one row that saves a "For next time" reminder for that client on `↵` (or click) without leaving the page; unknown codes and empty text save nothing
 
 ### Performance
 - ✅ N+1 query elimination (73-94% reduction)

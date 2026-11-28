@@ -1,15 +1,16 @@
 """Views for the "for next time" reminders (P-006): add, tick off or reopen, delete."""
 
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from ..models import ScratchItem
+from ..models import Client, ScratchItem
 from ..utils.for_next_time import clean_reminder
-from ..utils.view_helpers import get_scoped_client, safe_next
+from ..utils.view_helpers import get_scoped_client, json_error, safe_next
 
 
 def _back(request, client_pk):
@@ -28,6 +29,30 @@ def scratch_item_create(request, pk):
     else:
         ScratchItem.objects.create(client=client, text=text)
     return _back(request, pk)
+
+
+@require_POST
+def scratch_quick_add(request):
+    """Add a reminder from the command palette: ``code`` names the client, ``text`` is the note.
+
+    Answers JSON with the line the palette shows, so the script holds no wording.
+    The code is matched on its own (case-insensitively, within the current
+    practice); an unknown code or empty text saves nothing.
+    """
+    code = request.POST.get("code", "").strip()
+    client = Client.objects.for_current_practice(request).filter(client_code__iexact=code).first()
+    if client is None:
+        return json_error(_("No client with code %(code)s.") % {"code": code}, status=404)
+    text = clean_reminder(request.POST.get("text", ""))
+    if not text:
+        return json_error(_("Reminder must not be empty."))
+    ScratchItem.objects.create(client=client, text=text)
+    return JsonResponse(
+        {
+            "success": True,
+            "message": _("Reminder added for %(code)s.") % {"code": client.client_code},
+        }
+    )
 
 
 @require_POST

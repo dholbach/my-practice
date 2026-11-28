@@ -30,6 +30,18 @@ list scannable.
             {% comment %} Filled from /api/search/ by command_palette.js. The heading and the
                three status lines below are rendered here — empty — so their text
                stays translatable even though the rows themselves are dynamic. {% endcomment %}
+            {% comment %} Quick capture ("note XX-1 text"): shown by command_palette.js only
+               while the input matches that shape. The row's wording travels in data-*
+               ({code} and {text} are filled in by the script); the server answers
+               with the confirmation or error text, so the script holds none. {% endcomment %}
+            <section class="cmd-palette__group" id="cmd-palette-capture-group" hidden>
+                <h2 class="cmd-palette__group-title">{% trans "For next time" %}</h2>
+                <a class="cmd-palette__item" id="cmd-palette-capture" role="option" href="#" hidden
+                   data-url="{% url 'scratch_quick_add' %}"
+                   data-label="{% trans 'Add reminder for {code}: {text}' %}"
+                   data-failed="{% trans 'Could not save the reminder' %}"></a>
+            </section>
+
             <section class="cmd-palette__group" id="cmd-palette-results-group" hidden>
                 <h2 class="cmd-palette__group-title">{% trans "Search results" %}</h2>
                 <div id="cmd-palette-results"></div>
@@ -80,6 +92,7 @@ list scannable.
         <footer class="cmd-palette__hints">
             <span><kbd>c:</kbd> {% trans "Clients" %}</span>
             <span><kbd>i:</kbd> {% trans "Invoices" %}</span>
+            <span><kbd>note</kbd> XX-1 … {% trans "Reminder" %}</span>
             <span><kbd>↑</kbd><kbd>↓</kbd> {% trans "Navigate" %}</span>
             <span><kbd>↵</kbd> {% trans "Open" %}</span>
             <span><kbd>esc</kbd> {% trans "Close" %}</span>

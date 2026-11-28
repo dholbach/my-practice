@@ -12,6 +12,12 @@
  * Filtering reads each static item's own textContent, so no label is duplicated
  * into a data-* attribute and can't drift out of sync with what's rendered.
  *
+ * Quick capture: "note XX-1 ask about sleep" swaps the list for one row that
+ * POSTs a "for next time" reminder instead of navigating. The row's wording
+ * (data-label, data-failed) comes from the template; the server resolves the
+ * client code and answers with the text to show, so nothing translatable lives
+ * here either.
+ *
  * Search rows are built with createElement + textContent rather than an
  * innerHTML string. global-search.js had to escape result labels on the way in
  * (client and inquiry names legitimately contain & and <, which rendered as
@@ -25,6 +31,8 @@
     const ITEM_SELECTOR = '.cmd-palette__item';
     const SEARCH_URL = '/api/search/';
     const SEARCH_DEBOUNCE_MS = 300;
+    // "note <client code> <text>": the capture command.
+    const CAPTURE_PATTERN = /^note\s+(\S+)\s+(\S[\s\S]*)$/i;
 
     let palette = null;
     let input = null;
@@ -35,6 +43,11 @@
     let empty = null;
 
     let groups = [];
+    // The quick-capture row and its group; null where the template has none.
+    let captureItem = null;
+    let captureGroup = null;
+    let captureCommand = null; // {code, text} while the row is offered
+    let capturing = false;
     // Fixed at init; the server-rendered "Jump to" and "Actions" entries.
     let staticItems = [];
     // Rebuilt on every search response.
@@ -70,7 +83,7 @@
 
     function clearSelection() {
         selectedIndex = -1;
-        staticItems.concat(resultItems).forEach(function (item) {
+        staticItems.concat(resultItems, captureItem ? [captureItem] : []).forEach(function (item) {
             item.classList.remove('cmd-palette__item--selected');
             item.removeAttribute('aria-selected');
         });
@@ -106,7 +119,8 @@
 
         visible = resultItems
             .filter(function (item) { return !item.hidden; })
-            .concat(staticItems.filter(function (item) { return !item.hidden; }));
+            .concat(staticItems.filter(function (item) { return !item.hidden; }))
+            .concat(captureItem && !captureItem.hidden ? [captureItem] : []);
 
         loading.hidden = searchState !== 'loading';
         error.hidden = searchState !== 'error';
@@ -219,8 +233,63 @@
             });
     }
 
+    function setCaptureRow(command) {
+        captureCommand = command;
+        captureItem.hidden = command === null;
+        captureGroup.hidden = command === null;
+        if (command !== null) {
+            captureItem.textContent = captureItem.dataset.label
+                .replace('{code}', command.code)
+                .replace('{text}', command.text);
+        }
+    }
+
+    function submitCapture() {
+        if (!captureCommand || capturing) return;
+        const command = captureCommand;
+        capturing = true;
+        MPHttp.postForm(captureItem.dataset.url, { code: command.code, text: command.text })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                capturing = false;
+                if (data.success) {
+                    // Saved: empty the box and show the server's confirmation in
+                    // place of the row; the next keystroke starts afresh.
+                    input.value = '';
+                    captureCommand = null;
+                    captureItem.textContent = data.message;
+                } else {
+                    // Keep the input so a mistyped code can be fixed in place.
+                    captureItem.textContent = data.error;
+                }
+            })
+            .catch(function (err) {
+                console.error('Command palette capture error:', err);
+                capturing = false;
+                captureItem.textContent = captureItem.dataset.failed;
+            });
+    }
+
     function handleInput() {
         const query = input.value.trim();
+
+        if (captureItem) {
+            const match = CAPTURE_PATTERN.exec(query);
+            if (match) {
+                // A command is not a search: hide the entries and drop any
+                // results, so Enter can only mean "save this reminder".
+                if (searchTimeout) {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = null;
+                }
+                clearResults();
+                staticItems.forEach(function (item) { item.hidden = true; });
+                setCaptureRow({ code: match[1], text: match[2].trim() });
+                refresh(false);
+                return;
+            }
+            setCaptureRow(null);
+        }
 
         if (searchTimeout) {
             clearTimeout(searchTimeout);
@@ -254,6 +323,7 @@
         palette.hidden = false;
         document.body.classList.add('cmd-palette-open');
         input.value = '';
+        if (captureItem) setCaptureRow(null);
         filterStaticItems('');
         clearResults();
         refresh(false);
@@ -286,7 +356,10 @@
             setSelected(selectedIndex - 1);
         } else if (event.key === 'Enter') {
             const current = visible[selectedIndex];
-            if (current) {
+            if (current && current === captureItem) {
+                event.preventDefault();
+                submitCapture();
+            } else if (current) {
                 event.preventDefault();
                 window.location.href = current.getAttribute('href');
             }
@@ -327,7 +400,12 @@
         empty = document.getElementById('cmd-palette-empty');
 
         groups = Array.prototype.slice.call(palette.querySelectorAll('.cmd-palette__group'));
-        staticItems = Array.prototype.slice.call(palette.querySelectorAll(ITEM_SELECTOR));
+        captureItem = document.getElementById('cmd-palette-capture');
+        captureGroup = document.getElementById('cmd-palette-capture-group');
+        // The capture row is not a static entry: it must not be filtered by
+        // its label or navigated to.
+        staticItems = Array.prototype.slice.call(palette.querySelectorAll(ITEM_SELECTOR))
+            .filter(function (item) { return item !== captureItem; });
 
         input.addEventListener('input', handleInput);
         input.addEventListener('keydown', handlePaletteKeydown);
@@ -343,6 +421,16 @@
                 selectItem(item);
             });
         });
+
+        if (captureItem) {
+            captureItem.addEventListener('click', function (event) {
+                event.preventDefault();
+                submitCapture();
+            });
+            captureItem.addEventListener('mouseenter', function () {
+                selectItem(captureItem);
+            });
+        }
 
         document.addEventListener('keydown', handleGlobalKeydown);
 

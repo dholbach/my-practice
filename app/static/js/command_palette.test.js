@@ -150,7 +150,7 @@ class FakeNode {
  * results group, two static groups with the given item labels, the three status
  * lines, and the two platform <kbd> variants on the header trigger.
  */
-function buildPalette({ jumpTo, actions }) {
+function buildPalette({ jumpTo, actions, capture = false }) {
     const document = new FakeNode("document");
     document.ownerDocument = document;
     document.readyState = "complete";
@@ -202,6 +202,22 @@ function buildPalette({ jumpTo, actions }) {
     makeGroup(jumpTo);
     makeGroup(actions);
 
+    let captureGroup = null;
+    let captureItem = null;
+    if (capture) {
+        captureGroup = dialog.appendChild(new FakeNode("section"));
+        captureGroup.className = "cmd-palette__group";
+        captureGroup.id = "cmd-palette-capture-group";
+        captureGroup.hidden = true;
+        captureItem = captureGroup.appendChild(new FakeNode("a"));
+        captureItem.className = "cmd-palette__item";
+        captureItem.id = "cmd-palette-capture";
+        captureItem.hidden = true;
+        captureItem.dataset.url = "/api/scratch/quick-add/";
+        captureItem.dataset.label = "Add reminder for {code}: {text}";
+        captureItem.dataset.failed = "Could not save";
+    }
+
     const status = (id) => {
         const el = dialog.appendChild(new FakeNode("p"));
         el.id = id;
@@ -226,7 +242,7 @@ function buildPalette({ jumpTo, actions }) {
 
     return {
         document, palette, input, backdrop, resultsGroup, resultsContainer,
-        loading, error, empty, trigger, kbdMac, kbdOther,
+        loading, error, empty, trigger, kbdMac, kbdOther, captureGroup, captureItem,
     };
 }
 
@@ -250,6 +266,7 @@ function load(dom, { platform = "Linux x86_64" } = {}) {
     const { document } = dom;
     const location = { href: "/dashboard/" };
     const { fetchImpl, calls } = makeFetch();
+    const posts = [];
 
     const timers = new Map();
     let nextTimerId = 1;
@@ -262,6 +279,17 @@ function load(dom, { platform = "Linux x86_64" } = {}) {
         location,
         console: { error: (...args) => errors.push(args.join(" ")) },
         fetch: fetchImpl,
+        MPHttp: {
+            postForm: (url, fields) => {
+                const post = { url, fields };
+                post.promise = new Promise((resolve, reject) => {
+                    post.respond = (body) => resolve({ json: () => Promise.resolve(body) });
+                    post.fail = () => reject(new Error("network down"));
+                });
+                posts.push(post);
+                return post.promise;
+            },
+        },
         setTimeout: (fn) => {
             const id = nextTimerId++;
             timers.set(id, fn);
@@ -278,6 +306,7 @@ function load(dom, { platform = "Linux x86_64" } = {}) {
     return {
         location,
         fetchCalls: calls,
+        posts,
         errors,
         pendingTimers: () => timers.size,
         flushTimers: () => {
@@ -777,6 +806,103 @@ test("closing cancels a pending search", () => {
     assertEqual(dom.pendingTimers(), 0, "timer cleared on close");
     dom.flushTimers();
     assertEqual(dom.fetchCalls.length, 0, "no request fired for a palette the user dismissed");
+});
+
+// ---------------------------------------------------------------------------
+// Quick capture: "note XX-1 text"
+// ---------------------------------------------------------------------------
+
+function setupCapture() {
+    const dom = buildPalette({ jumpTo: JUMP_TO, actions: ACTIONS, capture: true });
+    return Object.assign({}, dom, load(dom));
+}
+
+test("a note command offers one capture row and hides everything else", () => {
+    const dom = setupCapture();
+    openPalette(dom);
+    type(dom, "note XX-1 ask about sleep");
+
+    assertEqual(dom.captureItem.hidden, false, "capture row shown");
+    assertEqual(dom.captureItem.textContent, "Add reminder for XX-1: ask about sleep", "row says what will happen");
+    assertEqual(selectedLabel(dom), "Add reminder for XX-1: ask about sleep", "row pre-selected");
+    assertEqual(visibleLabels(dom).length, 1, "no other entry visible");
+    assertEqual(dom.pendingTimers(), 0, "no search queued for a command");
+});
+
+test("without text, or without the keyword, there is no capture row", () => {
+    const dom = setupCapture();
+    openPalette(dom);
+    for (const text of ["note", "note XX-1", "note XX-1   ", "notes XX-1 hello", "XX-1 note hello"]) {
+        type(dom, text);
+        assertEqual(dom.captureItem.hidden, true, `no capture row for "${text}"`);
+    }
+    type(dom, "note XX-1 hello");
+    type(dom, "note XX-1");
+    assertEqual(dom.captureItem.hidden, true, "row goes away when the text is deleted");
+    assertEqual(dom.location.href, "/dashboard/", "nothing navigated");
+});
+
+test("Enter posts the code and text instead of navigating, then shows the server's answer", async () => {
+    const dom = setupCapture();
+    openPalette(dom);
+    type(dom, "NOTE xx-1 ask about sleep");
+    dom.input.dispatch("keydown", { key: "Enter" });
+
+    assertEqual(dom.posts.length, 1, "one POST");
+    assertEqual(dom.posts[0].url, "/api/scratch/quick-add/", "to the quick-add endpoint");
+    assertEqual(dom.posts[0].fields.code, "xx-1", "code as typed; the server matches it");
+    assertEqual(dom.posts[0].fields.text, "ask about sleep", "reminder text");
+    assertEqual(dom.location.href, "/dashboard/", "Enter did not navigate");
+
+    dom.input.dispatch("keydown", { key: "Enter" });
+    assertEqual(dom.posts.length, 1, "a second Enter while saving posts nothing");
+
+    dom.posts[0].respond({ success: true, message: "Reminder added for XX-1." });
+    await settle();
+    assertEqual(dom.captureItem.textContent, "Reminder added for XX-1.", "confirmation from the server");
+    assertEqual(dom.input.value, "", "input emptied");
+
+    dom.input.dispatch("keydown", { key: "Enter" });
+    assertEqual(dom.posts.length, 1, "Enter on the confirmation saves nothing again");
+});
+
+test("an error answer is shown and the input is kept for fixing", async () => {
+    const dom = setupCapture();
+    openPalette(dom);
+    type(dom, "note ZZ-9 hello");
+    dom.input.dispatch("keydown", { key: "Enter" });
+    dom.posts[0].respond({ success: false, error: "No client with code ZZ-9." });
+    await settle();
+
+    assertEqual(dom.captureItem.textContent, "No client with code ZZ-9.", "server error shown in the row");
+    assertEqual(dom.input.value, "note ZZ-9 hello", "input kept");
+
+    type(dom, "note XX-1 hello");
+    dom.input.dispatch("keydown", { key: "Enter" });
+    assertEqual(dom.posts.length, 2, "corrected command can be sent");
+});
+
+test("a network failure shows the template's fallback text", async () => {
+    const dom = setupCapture();
+    openPalette(dom);
+    type(dom, "note XX-1 hello");
+    dom.input.dispatch("keydown", { key: "Enter" });
+    dom.posts[0].fail();
+    await settle();
+    assertEqual(dom.captureItem.textContent, "Could not save", "fallback shown");
+    assertEqual(dom.errors.length, 1, "failure logged");
+});
+
+test("clicking the capture row saves it too, and reopening resets it", async () => {
+    const dom = setupCapture();
+    openPalette(dom);
+    type(dom, "note XX-1 hello");
+    dom.captureItem.dispatch("click");
+    assertEqual(dom.posts.length, 1, "click posts");
+
+    dom.input.dispatch("keydown", { key: "Escape" });
+    openPalette(dom);
+    assertEqual(dom.captureItem.hidden, true, "capture row hidden after reopening");
 });
 
 // ---------------------------------------------------------------------------
