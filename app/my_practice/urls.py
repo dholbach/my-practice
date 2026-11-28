@@ -432,6 +432,7 @@ urlpatterns = [
         views.case_review_finish,
         name="case_review_finish",
     ),
+    path("api/scratch/quick-add/", views.scratch_quick_add, name="scratch_quick_add"),
     path(
         "clients/<int:pk>/scratch/add/",
         views.scratch_item_create,

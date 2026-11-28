@@ -165,6 +165,7 @@ from .scratch_views import (
     scratch_item_delete,
     scratch_item_toggle,
     scratch_item_update,
+    scratch_quick_add,
 )
 
 # Search views
@@ -358,6 +359,7 @@ __all__ = [
     "case_fact_update",
     # Reminders for next time (P-006)
     "scratch_item_create",
+    "scratch_quick_add",
     "scratch_item_delete",
     "scratch_item_toggle",
     "scratch_item_update",

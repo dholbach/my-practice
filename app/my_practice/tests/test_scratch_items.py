@@ -46,6 +46,40 @@ class ScratchItemViewTests(ClinicalTestBase):
         )
         self.assertTrue(response.url.startswith("/clients/"))
 
+    def test_quick_add_saves_for_the_client_with_that_code(self):
+        response = self.http.post(
+            reverse("scratch_quick_add"),
+            {"code": self.client_obj.client_code.lower(), "text": " - ask about sleep"},
+        )
+        self.assertEqual(response.json()["success"], True)
+        self.assertIn(self.client_obj.client_code, response.json()["message"])
+        item = ScratchItem.objects.get()
+        self.assertEqual((item.client, item.text), (self.client_obj, "ask about sleep"))
+
+    def test_quick_add_unknown_code_or_empty_text_saves_nothing(self):
+        unknown = self.http.post(reverse("scratch_quick_add"), {"code": "ZZ-9", "text": "hi"})
+        self.assertEqual(unknown.status_code, 404)
+        self.assertFalse(unknown.json()["success"])
+        empty = self.http.post(
+            reverse("scratch_quick_add"), {"code": self.client_obj.client_code, "text": " - "}
+        )
+        self.assertEqual(empty.status_code, 400)
+        self.assertFalse(ScratchItem.objects.exists())
+
+    def test_quick_add_ignores_another_practices_client(self):
+        other = create_test_practice(name="Other Practice", slug="scratch-quick-other")
+        stranger = Client.objects.create(
+            client_code="OT-1", full_name="Anna Schmidt", email="mail@example.com", practice=other
+        )
+        response = self.http.post(
+            reverse("scratch_quick_add"), {"code": stranger.client_code, "text": "x"}
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(ScratchItem.objects.exists())
+
+    def test_quick_add_needs_post(self):
+        self.assertEqual(self.http.get(reverse("scratch_quick_add")).status_code, 405)
+
     def test_toggle_covers_and_reopens(self):
         item = self._item()
         self.http.post(self._url("scratch_item_toggle", item.pk))

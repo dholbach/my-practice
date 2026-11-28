@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-28 08:18+0100\n"
+"POT-Creation-Date: 2026-11-28 08:26+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -224,7 +224,7 @@ msgid "On-site"
 msgstr "Vor Ort"
 
 #: my_practice/admin/client.py:127 my_practice/admin/clinical.py:66
-#: my_practice/models/client.py:166 templates/includes/command_palette.html:58
+#: my_practice/models/client.py:166 templates/includes/command_palette.html:71
 #: templates/my_practice/client_detail_tab_overview.html:60
 #: templates/my_practice/client_list_cards.html:24
 #: templates/my_practice/tag_list.html:6
@@ -433,7 +433,7 @@ msgid_plural "%(count)s issued invoices were kept: they are still within their r
 msgstr[0] "%(count)s ausgestellte Rechnung wurde behalten: Sie liegt noch innerhalb ihrer Aufbewahrungsfrist."
 msgstr[1] "%(count)s ausgestellte Rechnungen wurden behalten: Sie liegen noch innerhalb ihrer Aufbewahrungsfrist."
 
-#: my_practice/admin/invoice.py:282 templates/includes/command_palette.html:42
+#: my_practice/admin/invoice.py:282 templates/includes/command_palette.html:55
 msgid "Billing"
 msgstr "Abrechnung"
 
@@ -1486,7 +1486,7 @@ msgid "Check if this client primarily has online sessions"
 msgstr "Ankreuzen, wenn dieser Klient hauptsächlich Online-Sitzungen hat"
 
 #: my_practice/models/client.py:176 templates/base.html:133
-#: templates/includes/command_palette.html:82
+#: templates/includes/command_palette.html:95
 #: templates/my_practice/analytics.html:88
 #: templates/my_practice/analytics_tab_capacity.html:91
 #: templates/my_practice/client_list_cards.html:6
@@ -1754,7 +1754,7 @@ msgid "Session logs"
 msgstr "Sitzungsprotokolle"
 
 #: my_practice/models/clinical.py:214
-#: templates/includes/command_palette.html:85
+#: templates/includes/command_palette.html:99
 #: templates/my_practice/bank_import.html:129
 msgid "Open"
 msgstr "Öffnen"
@@ -1813,6 +1813,7 @@ msgid "Note"
 msgstr "Hinweis"
 
 #: my_practice/models/clinical.py:321 my_practice/models/clinical.py:352
+#: templates/includes/command_palette.html:97
 msgid "Reminder"
 msgstr "Erinnerung"
 
@@ -2247,7 +2248,7 @@ msgstr "Klient:in (nach Aufnahme)"
 msgid "Inquiry"
 msgstr "Anfrage"
 
-#: my_practice/models/inquiry.py:199 templates/includes/command_palette.html:41
+#: my_practice/models/inquiry.py:199 templates/includes/command_palette.html:54
 #: templates/my_practice/inquiry_list.html:6
 #: templates/my_practice/inquiry_list.html:14
 #: templates/my_practice/inquiry_list.html:20
@@ -2338,7 +2339,7 @@ msgid "Total amount"
 msgstr "Gesamtbetrag"
 
 #: my_practice/models/invoice.py:177 templates/base.html:134
-#: templates/includes/command_palette.html:83
+#: templates/includes/command_palette.html:96
 #: templates/my_practice/analytics.html:31
 #: templates/my_practice/analytics_tab_clients.html:16
 #: templates/my_practice/analytics_tab_clients.html:66
@@ -4469,9 +4470,20 @@ msgstr "Sie haben keine Berechtigung, diese Praxis zu löschen."
 msgid "Practice '%(name)s' deactivated."
 msgstr "Praxis '%(name)s' deaktiviert."
 
-#: my_practice/views/scratch_views.py:27 my_practice/views/scratch_views.py:40
+#: my_practice/views/scratch_views.py:28 my_practice/views/scratch_views.py:48
+#: my_practice/views/scratch_views.py:65
 msgid "Reminder must not be empty."
 msgstr "Die Erinnerung darf nicht leer sein."
+
+#: my_practice/views/scratch_views.py:45
+#, python-format
+msgid "No client with code %(code)s."
+msgstr "Kein:e Klient:in mit dem Kürzel %(code)s."
+
+#: my_practice/views/scratch_views.py:53
+#, python-format
+msgid "Reminder added for %(code)s."
+msgstr "Erinnerung für %(code)s hinzugefügt."
 
 #: my_practice/views/session_views.py:35
 msgid "Session log deleted."
@@ -4647,14 +4659,14 @@ msgstr "Hilfe"
 msgid "Open command palette"
 msgstr "Befehlspalette öffnen"
 
-#: templates/base.html:47 templates/includes/command_palette.html:67
+#: templates/base.html:47 templates/includes/command_palette.html:80
 #: templates/my_practice/client_intake.html:4
 #: templates/my_practice/client_intake.html:6
 #: templates/my_practice/client_list_cards.html:27
 msgid "New client"
 msgstr "Neue Klient:in"
 
-#: templates/base.html:48 templates/includes/command_palette.html:66
+#: templates/base.html:48 templates/includes/command_palette.html:79
 #: templates/my_practice/client_detail_tab_billing.html:8
 #: templates/my_practice/invoice_list.html:136
 msgid "New invoice"
@@ -4713,7 +4725,7 @@ msgstr "Befehlspalette"
 msgid "Search"
 msgstr "Suchen"
 
-#: templates/base.html:99 templates/includes/command_palette.html:60
+#: templates/base.html:99 templates/includes/command_palette.html:73
 #: templates/my_practice/practice_management.html:4
 #: templates/my_practice/practice_management.html:6
 msgid "Manage practices"
@@ -4750,7 +4762,7 @@ msgstr "Im Fokus"
 msgid "available"
 msgstr "verfügbar"
 
-#: templates/base.html:153 templates/includes/command_palette.html:86
+#: templates/base.html:153 templates/includes/command_palette.html:100
 msgid "Close"
 msgstr "Schließen"
 
@@ -4985,38 +4997,53 @@ msgstr "Neues Tag erstellen →"
 msgid "Search... (c:client/inquiry, i:invoice)"
 msgstr "Suche... (c:Klient/Anfrage, i:Rechnung)"
 
-#: templates/includes/command_palette.html:35
+#: templates/includes/command_palette.html:40
+#: templates/includes/for_next_time.html:5
+#: templates/my_practice/session_log_form.html:157
+msgid "For next time"
+msgstr "Fürs nächste Mal"
+
+#: templates/includes/command_palette.html:43
+#, python-brace-format
+msgid "Add reminder for {code}: {text}"
+msgstr "Erinnerung für {code} hinzufügen: {text}"
+
+#: templates/includes/command_palette.html:44
+msgid "Could not save the reminder"
+msgstr "Die Erinnerung konnte nicht gespeichert werden"
+
+#: templates/includes/command_palette.html:48
 msgid "Search results"
 msgstr "Suchergebnisse"
 
-#: templates/includes/command_palette.html:40
+#: templates/includes/command_palette.html:53
 msgid "Jump to"
 msgstr "Springe zu"
 
-#: templates/includes/command_palette.html:43
+#: templates/includes/command_palette.html:56
 #: templates/my_practice/send_payment_reminder.html:14
 msgid "Open invoices"
 msgstr "Offene Rechnungen"
 
-#: templates/includes/command_palette.html:44
+#: templates/includes/command_palette.html:57
 #: templates/my_practice/bank_expense_review.html:45
 #: templates/my_practice/bank_import.html:4
 #: templates/my_practice/bank_import.html:9
 msgid "Bank import"
 msgstr "Bank-Import"
 
-#: templates/includes/command_palette.html:45
+#: templates/includes/command_palette.html:58
 msgid "Bank expenses"
 msgstr "Bank-Ausgaben"
 
-#: templates/includes/command_palette.html:46
+#: templates/includes/command_palette.html:59
 #: templates/my_practice/analytics.html:24
 #: templates/my_practice/analytics_tab_revenue.html:29
 #: templates/my_practice/withdrawal_list.html:48
 msgid "Withdrawals"
 msgstr "Entnahmen"
 
-#: templates/includes/command_palette.html:47
+#: templates/includes/command_palette.html:60
 #: templates/my_practice/analytics.html:23
 #: templates/my_practice/analytics.html:94
 #: templates/my_practice/analytics_tab_revenue.html:26
@@ -5026,7 +5053,7 @@ msgstr "Entnahmen"
 msgid "Expenses"
 msgstr "Ausgaben"
 
-#: templates/includes/command_palette.html:48
+#: templates/includes/command_palette.html:61
 #: templates/my_practice/analytics.html:5
 #: templates/my_practice/analytics.html:8
 #: templates/my_practice/inquiry_list.html:41
@@ -5034,53 +5061,53 @@ msgstr "Ausgaben"
 msgid "Analytics"
 msgstr "Analysen"
 
-#: templates/includes/command_palette.html:49
+#: templates/includes/command_palette.html:62
 #: templates/my_practice/revenue_report.html:5
 #: templates/my_practice/revenue_report.html:7
 msgid "Revenue Report"
 msgstr "Umsatzbericht"
 
-#: templates/includes/command_palette.html:50
+#: templates/includes/command_palette.html:63
 msgid "Tax annual overview"
 msgstr "Steuer-Jahresübersicht"
 
-#: templates/includes/command_palette.html:51
+#: templates/includes/command_palette.html:64
 msgid "Tax quarterly overview"
 msgstr "Steuer-Quartalsübersicht"
 
-#: templates/includes/command_palette.html:52
+#: templates/includes/command_palette.html:65
 #: templates/my_practice/tax_workday_audit.html:5
 msgid "Workday Audit"
 msgstr "Arbeitstage-Nachweis"
 
-#: templates/includes/command_palette.html:53
+#: templates/includes/command_palette.html:66
 #: templates/my_practice/calendar_import.html:5
 msgid "Calendar import"
 msgstr "Kalender-Import"
 
-#: templates/includes/command_palette.html:54
+#: templates/includes/command_palette.html:67
 msgid "Calendar approval"
 msgstr "Kalender-Genehmigung"
 
-#: templates/includes/command_palette.html:55
+#: templates/includes/command_palette.html:68
 #: templates/my_practice/analytics_tab_capacity.html:162
 #: templates/my_practice/time_off_list.html:4
 #: templates/my_practice/time_off_list.html:6
 msgid "Time off"
 msgstr "Urlaub"
 
-#: templates/includes/command_palette.html:57
+#: templates/includes/command_palette.html:70
 #: templates/my_practice/client_triage.html:5
 msgid "Triage overview"
 msgstr "Triage-Übersicht"
 
-#: templates/includes/command_palette.html:59
+#: templates/includes/command_palette.html:72
 #: templates/my_practice/boilerplate.html:4
 #: templates/my_practice/boilerplate.html:9
 msgid "Email templates"
 msgstr "E-Mail-Textbausteine"
 
-#: templates/includes/command_palette.html:65
+#: templates/includes/command_palette.html:78
 #: templates/my_practice/billing_open_overview.html:65
 #: templates/my_practice/calendar_import.html:100
 #: templates/my_practice/client_detail_tab_billing.html:30
@@ -5098,14 +5125,14 @@ msgstr "E-Mail-Textbausteine"
 msgid "Actions"
 msgstr "Aktionen"
 
-#: templates/includes/command_palette.html:68
+#: templates/includes/command_palette.html:81
 #: templates/my_practice/inquiry_form.html:5
 #: templates/my_practice/inquiry_form.html:8
 #: templates/my_practice/inquiry_list.html:21
 msgid "New inquiry"
 msgstr "Neue Anfrage"
 
-#: templates/includes/command_palette.html:69
+#: templates/includes/command_palette.html:82
 #: templates/my_practice/expense_form.html:4
 #: templates/my_practice/expense_form.html:7
 #: templates/my_practice/expense_list.html:15
@@ -5113,43 +5140,43 @@ msgstr "Neue Anfrage"
 msgid "New expense"
 msgstr "Neue Ausgabe"
 
-#: templates/includes/command_palette.html:70
+#: templates/includes/command_palette.html:83
 #: templates/my_practice/withdrawal_form.html:4
 #: templates/my_practice/withdrawal_form.html:6
 msgid "New withdrawal"
 msgstr "Neue Entnahme"
 
-#: templates/includes/command_palette.html:71
+#: templates/includes/command_palette.html:84
 #: templates/includes/focus_queue_content.html:21
 #: templates/my_practice/todo_form.html:4
 msgid "New task"
 msgstr "Neue Aufgabe"
 
-#: templates/includes/command_palette.html:72
+#: templates/includes/command_palette.html:85
 #: templates/my_practice/time_off_form.html:4
 #: templates/my_practice/time_off_form.html:6
 #: templates/my_practice/time_off_list.html:13
 msgid "New time off"
 msgstr "Neue Abwesenheit"
 
-#: templates/includes/command_palette.html:73
+#: templates/includes/command_palette.html:86
 #: templates/my_practice/tag_form.html:4
 msgid "New tag"
 msgstr "Neues Tag"
 
-#: templates/includes/command_palette.html:76
+#: templates/includes/command_palette.html:89
 msgid "Searching…"
 msgstr "Suche …"
 
-#: templates/includes/command_palette.html:77
+#: templates/includes/command_palette.html:90
 msgid "Error while searching"
 msgstr "Fehler bei der Suche"
 
-#: templates/includes/command_palette.html:78
+#: templates/includes/command_palette.html:91
 msgid "No results"
 msgstr "Keine Ergebnisse"
 
-#: templates/includes/command_palette.html:84
+#: templates/includes/command_palette.html:98
 msgid "Navigate"
 msgstr "Navigieren"
 
@@ -5232,11 +5259,6 @@ msgstr "1 Woche zurückstellen"
 #: templates/my_practice/withdrawal_list.html:132
 msgid "Delete"
 msgstr "Löschen"
-
-#: templates/includes/for_next_time.html:5
-#: templates/my_practice/session_log_form.html:157
-msgid "For next time"
-msgstr "Fürs nächste Mal"
 
 #: templates/includes/for_next_time.html:9
 msgid "Nothing planned yet. Jot down what to pick up next time."
