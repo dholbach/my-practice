@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: my-practice\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-26 21:18+0100\n"
+"POT-Creation-Date: 2026-11-28 08:18+0100\n"
 "PO-Revision-Date: 2026-06-22 23:01+0200\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -57,7 +57,7 @@ msgstr "Zuordnung"
 #: templates/my_practice/monthly_billing_overview.html:61
 #: templates/my_practice/revenue_report.html:53
 #: templates/my_practice/send_payment_reminder.html:21
-#: templates/my_practice/tax_quarter_overview.html:82
+#: templates/my_practice/tax_quarter_overview.html:83
 msgid "Status"
 msgstr "Status"
 
@@ -76,10 +76,10 @@ msgstr "Zahler"
 #: templates/my_practice/invoice_list.html:170
 #: templates/my_practice/revenue_report.html:54
 #: templates/my_practice/send_payment_reminder.html:22
-#: templates/my_practice/tax_year_summary.html:106
-#: templates/my_practice/tax_year_summary.html:134
-#: templates/my_practice/tax_year_summary.html:172
-#: templates/my_practice/tax_year_summary.html:209
+#: templates/my_practice/tax_year_summary.html:107
+#: templates/my_practice/tax_year_summary.html:135
+#: templates/my_practice/tax_year_summary.html:173
+#: templates/my_practice/tax_year_summary.html:210
 #: templates/my_practice/withdrawal_confirm_delete.html:11
 #: templates/my_practice/withdrawal_list.html:60
 #: templates/my_practice/withdrawal_list.html:111
@@ -99,7 +99,7 @@ msgstr "Zuordnung"
 #: templates/my_practice/invoice_detail.html:8
 #: templates/my_practice/monthly_billing_overview.html:60
 #: templates/my_practice/send_invoice_email.html:7
-#: templates/my_practice/tax_year_summary.html:201
+#: templates/my_practice/tax_year_summary.html:202
 msgid "Invoice"
 msgstr "Rechnung"
 
@@ -118,7 +118,7 @@ msgstr "Rechnung"
 #: templates/my_practice/invoice_list.html:167
 #: templates/my_practice/monthly_billing_overview.html:56
 #: templates/my_practice/revenue_report.html:49
-#: templates/my_practice/tax_year_summary.html:131
+#: templates/my_practice/tax_year_summary.html:132
 msgid "Client"
 msgstr "Klient:in"
 
@@ -300,8 +300,8 @@ msgstr "Metadaten"
 #: templates/my_practice/bank_financial_review.html:31
 #: templates/my_practice/expense_confirm_delete.html:12
 #: templates/my_practice/expense_list.html:80
-#: templates/my_practice/tax_year_summary.html:170
-#: templates/my_practice/tax_year_summary.html:200
+#: templates/my_practice/tax_year_summary.html:171
+#: templates/my_practice/tax_year_summary.html:201
 #: templates/my_practice/withdrawal_confirm_delete.html:12
 #: templates/my_practice/withdrawal_list.html:61
 #: templates/my_practice/withdrawal_list.html:112
@@ -359,7 +359,7 @@ msgstr "Allgemein"
 #: templates/my_practice/invoice_edit.html:134
 #: templates/my_practice/marketing_period_confirm_delete.html:9
 #: templates/my_practice/tag_list.html:27
-#: templates/my_practice/tax_year_summary.html:199
+#: templates/my_practice/tax_year_summary.html:200
 #: templates/my_practice/withdrawal_confirm_delete.html:14
 msgid "Description"
 msgstr "Beschreibung"
@@ -774,7 +774,7 @@ msgstr "Honorar 90 Min (€)"
 #: templates/my_practice/invoice_list.html:168
 #: templates/my_practice/send_payment_reminder.html:20
 #: templates/my_practice/tax_workday_audit.html:60
-#: templates/my_practice/tax_year_summary.html:198
+#: templates/my_practice/tax_year_summary.html:199
 #: templates/my_practice/withdrawal_confirm_delete.html:10
 #: templates/my_practice/withdrawal_list.html:59
 #: templates/my_practice/withdrawal_list.html:110
@@ -874,7 +874,7 @@ msgid "Tax back payment / refund"
 msgstr "Steuernachzahlung / -erstattung"
 
 #: my_practice/forms.py:338 my_practice/models/financial.py:261
-#: templates/my_practice/tax_quarter_overview.html:192
+#: templates/my_practice/tax_quarter_overview.html:193
 msgid "Assessment date"
 msgstr "Bescheiddatum"
 
@@ -978,13 +978,13 @@ msgstr "Das Enddatum muss nach dem Startdatum liegen."
 
 #: my_practice/invoice_forms.py:22 my_practice/models/invoice.py:126
 #: templates/my_practice/revenue_report.html:50
-#: templates/my_practice/tax_year_summary.html:132
+#: templates/my_practice/tax_year_summary.html:133
 msgid "Invoice date"
 msgstr "Rechnungsdatum"
 
 #: my_practice/invoice_forms.py:28 my_practice/models/invoice.py:140
 #: templates/my_practice/invoice_detail.html:23
-#: templates/my_practice/tax_year_summary.html:133
+#: templates/my_practice/tax_year_summary.html:134
 msgid "Paid on"
 msgstr "Bezahlt am"
 
@@ -2430,7 +2430,7 @@ msgid "Checklist type"
 msgstr "Checklisten-Typ"
 
 #: my_practice/models/operational.py:46 templates/my_practice/analytics.html:43
-#: templates/my_practice/tax_quarter_overview.html:77
+#: templates/my_practice/tax_quarter_overview.html:78
 msgid "Period"
 msgstr "Zeitraum"
 
@@ -3255,16 +3255,16 @@ msgstr "Fehlbuchung / Korrektur vom privaten Konto"
 msgid "Capital contribution from private account"
 msgstr "Kapitaleinlage vom privaten Konto"
 
-#: my_practice/utils/bank_import.py:568
+#: my_practice/utils/bank_import.py:570
 msgid "Own payment (capital contribution), ignored automatically"
 msgstr "Eigene Zahlung (Einlage), automatisch ignoriert"
 
-#: my_practice/utils/bank_import.py:610
+#: my_practice/utils/bank_import.py:612
 #, python-format
 msgid "Failed to parse row: %(row)s"
 msgstr "Zeile konnte nicht verarbeitet werden: %(row)s"
 
-#: my_practice/utils/bank_import.py:619
+#: my_practice/utils/bank_import.py:621
 #, python-format
 msgid "Row from %(date)s over %(amount)s could not be imported: %(error)s"
 msgstr "Buchung vom %(date)s über %(amount)s konnte nicht importiert werden: %(error)s"
@@ -4570,19 +4570,19 @@ msgstr "Tag '%(name)s' hinzugefügt"
 msgid "Tag '%(name)s' removed"
 msgstr "Tag '%(name)s' entfernt"
 
-#: my_practice/views/tax_views.py:51
+#: my_practice/views/tax_views.py:61
 msgid "No practice selected"
 msgstr "Keine Praxis ausgewählt"
 
-#: my_practice/views/tax_views.py:56 my_practice/views/tax_views.py:59
+#: my_practice/views/tax_views.py:66 my_practice/views/tax_views.py:69
 msgid "Invalid year"
 msgstr "Ungültiges Jahr"
 
-#: my_practice/views/tax_views.py:74
+#: my_practice/views/tax_views.py:84
 msgid "Invalid amount"
 msgstr "Ungültiger Betrag."
 
-#: my_practice/views/tax_views.py:83
+#: my_practice/views/tax_views.py:93
 msgid "Invalid date"
 msgstr "Ungültiges Datum"
 
@@ -4825,7 +4825,7 @@ msgstr "Std"
 #: templates/includes/capacity_monitoring_widget_content.html:27
 #: templates/my_practice/analytics.html:22
 #: templates/my_practice/analytics.html:85
-#: templates/my_practice/tax_quarter_overview.html:78
+#: templates/my_practice/tax_quarter_overview.html:79
 msgid "Revenue"
 msgstr "Umsatz"
 
@@ -4881,8 +4881,8 @@ msgstr "Aufnahme & Anamnese"
 #: templates/my_practice/invoice_detail.html:196
 #: templates/my_practice/practice_management.html:44
 #: templates/my_practice/tag_list.html:63
-#: templates/my_practice/tax_quarter_overview.html:178
-#: templates/my_practice/tax_year_summary.html:224
+#: templates/my_practice/tax_quarter_overview.html:179
+#: templates/my_practice/tax_year_summary.html:225
 #: templates/my_practice/time_off_list.html:55
 #: templates/my_practice/time_off_list.html:96
 #: templates/my_practice/withdrawal_list.html:80
@@ -4904,7 +4904,7 @@ msgstr "Sitzung"
 #: templates/my_practice/invoice_edit.html:148
 #: templates/my_practice/marketing_period_form.html:52
 #: templates/my_practice/tag_form.html:56
-#: templates/my_practice/tax_quarter_overview.html:197
+#: templates/my_practice/tax_quarter_overview.html:198
 #: templates/my_practice/time_off_form.html:73
 #: templates/my_practice/todo_form.html:81
 #: templates/my_practice/withdrawal_form.html:76
@@ -5022,7 +5022,7 @@ msgstr "Entnahmen"
 #: templates/my_practice/analytics_tab_revenue.html:26
 #: templates/my_practice/bank_review.html:19
 #: templates/my_practice/expense_list.html:65
-#: templates/my_practice/tax_quarter_overview.html:79
+#: templates/my_practice/tax_quarter_overview.html:80
 msgid "Expenses"
 msgstr "Ausgaben"
 
@@ -5363,6 +5363,18 @@ msgstr "In die Fallübersicht übernehmen"
 msgid "Line"
 msgstr "Zeile"
 
+#: templates/includes/unreviewed_expenses_notice.html:3
+#, python-format
+msgid "%(count)s auto-booked expense in %(year)s has not been reviewed yet and already counts in these figures."
+msgid_plural "%(count)s auto-booked expenses in %(year)s have not been reviewed yet and already count in these figures."
+msgstr[0] "%(count)s automatisch gebuchte Ausgabe aus %(year)s wurde noch nicht geprüft und fließt bereits in diese Zahlen ein."
+msgstr[1] "%(count)s automatisch gebuchte Ausgaben aus %(year)s wurden noch nicht geprüft und fließen bereits in diese Zahlen ein."
+
+#: templates/includes/unreviewed_expenses_notice.html:4
+#: templates/my_practice/bank_review.html:145
+msgid "Review expenses"
+msgstr "Ausgaben prüfen"
+
 #: templates/includes/weekly_focus_widget_content.html:13
 msgid "Sessions next week"
 msgstr "Sitzungen nächste Woche"
@@ -5424,7 +5436,7 @@ msgstr "Ja, löschen"
 #: templates/my_practice/session_log_form.html:136
 #: templates/my_practice/tag_confirm_delete.html:37
 #: templates/my_practice/tag_form.html:59
-#: templates/my_practice/tax_quarter_overview.html:199
+#: templates/my_practice/tax_quarter_overview.html:200
 #: templates/my_practice/time_off_form.html:70
 #: templates/my_practice/time_off_notice_form.html:96
 #: templates/my_practice/todo_confirm_delete.html:34
@@ -5571,7 +5583,7 @@ msgid "4-Quarter Trends"
 msgstr "4-Quartals-Trends"
 
 #: templates/my_practice/analytics_tab_capacity.html:89
-#: templates/my_practice/tax_quarter_overview.html:76
+#: templates/my_practice/tax_quarter_overview.html:77
 msgid "Quarter"
 msgstr "Quartal"
 
@@ -5710,8 +5722,8 @@ msgstr "Rang"
 #: templates/my_practice/analytics_tab_clients.html:18
 #: templates/my_practice/client_detail_tab_billing.html:142
 #: templates/my_practice/revenue_report.html:25
-#: templates/my_practice/tax_year_summary.html:37
-#: templates/my_practice/tax_year_summary.html:369
+#: templates/my_practice/tax_year_summary.html:38
+#: templates/my_practice/tax_year_summary.html:370
 msgid "Total revenue"
 msgstr "Gesamtumsatz"
 
@@ -5828,7 +5840,7 @@ msgid "Income"
 msgstr "Einnahmen"
 
 #: templates/my_practice/analytics_tab_revenue.html:27
-#: templates/my_practice/tax_year_summary.html:45
+#: templates/my_practice/tax_year_summary.html:46
 msgid "Profit"
 msgstr "Gewinn"
 
@@ -6030,10 +6042,6 @@ msgstr "Bereits zugeordnet"
 #: templates/my_practice/bank_review.html:139
 msgid "Still open"
 msgstr "Noch offen"
-
-#: templates/my_practice/bank_review.html:145
-msgid "Review expenses"
-msgstr "Ausgaben prüfen"
 
 #: templates/my_practice/bank_review.html:161
 msgid "Open transactions"
@@ -6374,8 +6382,8 @@ msgid "Error while skipping the event."
 msgstr "Fehler beim Überspringen des Termins."
 
 #: templates/my_practice/calendar_approval_queue.html:152
-#: templates/my_practice/tax_quarter_overview.html:145
-#: templates/my_practice/tax_year_summary.html:400
+#: templates/my_practice/tax_quarter_overview.html:146
+#: templates/my_practice/tax_year_summary.html:401
 msgid "Network error."
 msgstr "Netzwerkfehler."
 
@@ -6922,7 +6930,7 @@ msgstr[1] "📝 %(count)s Sitzungen offen"
 
 #: templates/my_practice/client_detail_tab_billing.html:76
 #: templates/my_practice/send_payment_reminder.html:19
-#: templates/my_practice/tax_year_summary.html:130
+#: templates/my_practice/tax_year_summary.html:131
 msgid "Invoice no."
 msgstr "Rechnungsnr."
 
@@ -8223,7 +8231,7 @@ msgstr "Rechnungen %(year)s (ZIP)"
 #: templates/my_practice/invoice_list.html:151
 #: templates/my_practice/tax_quarter_overview.html:25
 #: templates/my_practice/tax_workday_audit.html:17
-#: templates/my_practice/tax_year_summary.html:25
+#: templates/my_practice/tax_year_summary.html:26
 msgid "Year:"
 msgstr "Jahr:"
 
@@ -8467,7 +8475,7 @@ msgid "Digital signature for invoices"
 msgstr "Digitale Unterschrift für Rechnungen"
 
 #: templates/my_practice/practice_form.html:260
-#: templates/my_practice/tax_year_summary.html:297
+#: templates/my_practice/tax_year_summary.html:298
 msgid "Travel costs — commute allowance"
 msgstr "Fahrtkosten — Entfernungspauschale"
 
@@ -8535,7 +8543,7 @@ msgid "Select year:"
 msgstr "Jahr auswählen:"
 
 #: templates/my_practice/revenue_report.html:22
-#: templates/my_practice/tax_year_summary.html:365
+#: templates/my_practice/tax_year_summary.html:366
 #, python-format
 msgid "Summary %(year)s"
 msgstr "Zusammenfassung %(year)s"
@@ -8954,115 +8962,115 @@ msgstr "Vorauszahlungen & Umsatz je Quartal"
 msgid "Tax Year Summary (for tax return)"
 msgstr "Steuer-Jahresübersicht (für Steuererklärung)"
 
-#: templates/my_practice/tax_quarter_overview.html:37
+#: templates/my_practice/tax_quarter_overview.html:38
 msgid "Total Revenue"
 msgstr "Gesamtumsatz"
 
-#: templates/my_practice/tax_quarter_overview.html:42
+#: templates/my_practice/tax_quarter_overview.html:43
 msgid "Deductible Expenses"
 msgstr "Absetzbare Ausgaben"
 
-#: templates/my_practice/tax_quarter_overview.html:47
+#: templates/my_practice/tax_quarter_overview.html:48
 msgid "Tax Advance Payments"
 msgstr "Steuervorauszahlungen"
 
-#: templates/my_practice/tax_quarter_overview.html:59
+#: templates/my_practice/tax_quarter_overview.html:60
 #, python-format
 msgid "Download paid invoices %(year)s (ZIP)"
 msgstr "Bezahlte Rechnungen %(year)s herunterladen (ZIP)"
 
-#: templates/my_practice/tax_quarter_overview.html:65
+#: templates/my_practice/tax_quarter_overview.html:66
 msgid "Record new tax advance payment"
 msgstr "Neue Steuervorauszahlung erfassen"
 
-#: templates/my_practice/tax_quarter_overview.html:70
+#: templates/my_practice/tax_quarter_overview.html:71
 #, python-format
 msgid "Quarterly figures %(year)s"
 msgstr "Quartalszahlen %(year)s"
 
-#: templates/my_practice/tax_quarter_overview.html:80
+#: templates/my_practice/tax_quarter_overview.html:81
 msgid "Net profit"
 msgstr "Nettogewinn"
 
-#: templates/my_practice/tax_quarter_overview.html:81
+#: templates/my_practice/tax_quarter_overview.html:82
 msgid "Advance payment"
 msgstr "Vorauszahlung"
 
-#: templates/my_practice/tax_quarter_overview.html:90
+#: templates/my_practice/tax_quarter_overview.html:91
 msgid "current"
 msgstr "aktuell"
 
-#: templates/my_practice/tax_quarter_overview.html:112
+#: templates/my_practice/tax_quarter_overview.html:113
 msgid "Missing"
 msgstr "Fehlt"
 
-#: templates/my_practice/tax_quarter_overview.html:114
+#: templates/my_practice/tax_quarter_overview.html:115
 msgid "Recorded"
 msgstr "Erfasst"
 
-#: templates/my_practice/tax_quarter_overview.html:116
+#: templates/my_practice/tax_quarter_overview.html:117
 msgid "no revenue"
 msgstr "kein Umsatz"
 
-#: templates/my_practice/tax_quarter_overview.html:118
+#: templates/my_practice/tax_quarter_overview.html:119
 msgid "pending"
 msgstr "ausstehend"
 
-#: templates/my_practice/tax_quarter_overview.html:126
+#: templates/my_practice/tax_quarter_overview.html:127
 #, python-format
 msgid "Total %(year)s"
 msgstr "Gesamt %(year)s"
 
-#: templates/my_practice/tax_quarter_overview.html:144
+#: templates/my_practice/tax_quarter_overview.html:145
 msgid "Save failed."
 msgstr "Speichern fehlgeschlagen."
 
-#: templates/my_practice/tax_quarter_overview.html:146
+#: templates/my_practice/tax_quarter_overview.html:147
 msgid "Tax Assessment (Steuerbescheid)"
 msgstr "Steuerbescheid"
 
-#: templates/my_practice/tax_quarter_overview.html:148
+#: templates/my_practice/tax_quarter_overview.html:149
 msgid "Record the outcome of your annual tax return once the assessment notice arrives."
 msgstr "Erfassen Sie das Ergebnis Ihrer Steuererklärung, sobald der Bescheid vorliegt."
 
-#: templates/my_practice/tax_quarter_overview.html:156
+#: templates/my_practice/tax_quarter_overview.html:157
 msgid "Additional payment (Nachzahlung)"
 msgstr "Nachzahlung ans Finanzamt"
 
-#: templates/my_practice/tax_quarter_overview.html:158
+#: templates/my_practice/tax_quarter_overview.html:159
 msgid "Refund (Erstattung)"
 msgstr "Erstattung vom Finanzamt"
 
-#: templates/my_practice/tax_quarter_overview.html:164
+#: templates/my_practice/tax_quarter_overview.html:165
 msgid "Assessment date:"
 msgstr "Bescheiddatum:"
 
-#: templates/my_practice/tax_quarter_overview.html:170
+#: templates/my_practice/tax_quarter_overview.html:171
 msgid "Net tax paid (advance payments + settlement):"
 msgstr "Tatsächlich gezahlte Steuer (Vorauszahlungen + Bescheid):"
 
-#: templates/my_practice/tax_quarter_overview.html:175
+#: templates/my_practice/tax_quarter_overview.html:176
 msgid "No assessment recorded yet."
 msgstr "Noch kein Steuerbescheid erfasst."
 
-#: templates/my_practice/tax_quarter_overview.html:178
+#: templates/my_practice/tax_quarter_overview.html:179
 msgid "Record assessment"
 msgstr "Bescheid erfassen"
 
-#: templates/my_practice/tax_quarter_overview.html:185
+#: templates/my_practice/tax_quarter_overview.html:186
 msgid "Amount (positive = you owe, negative = refund)"
 msgstr "Betrag (positiv = Nachzahlung, negativ = Erstattung)"
 
-#: templates/my_practice/tax_quarter_overview.html:189
+#: templates/my_practice/tax_quarter_overview.html:190
 msgid "e.g. 320.00 or -150.00"
 msgstr "z. B. 320.00 oder -150.00"
 
-#: templates/my_practice/tax_quarter_overview.html:197
-#: templates/my_practice/tax_year_summary.html:397
+#: templates/my_practice/tax_quarter_overview.html:198
+#: templates/my_practice/tax_year_summary.html:398
 msgid "Saving…"
 msgstr "Wird gespeichert …"
 
-#: templates/my_practice/tax_quarter_overview.html:201
+#: templates/my_practice/tax_quarter_overview.html:202
 msgid "Remove"
 msgstr "Entfernen"
 
@@ -9143,273 +9151,273 @@ msgstr "Übersicht für Steuererklärung"
 msgid "Quarterly Tax Overview (advance payments)"
 msgstr "Steuer-Quartalübersicht (Vorauszahlungen)"
 
-#: templates/my_practice/tax_year_summary.html:41
+#: templates/my_practice/tax_year_summary.html:42
 msgid "Tax-deductible expenses"
 msgstr "Steuerlich absetzbare Ausgaben"
 
-#: templates/my_practice/tax_year_summary.html:52
+#: templates/my_practice/tax_year_summary.html:53
 #, python-format
 msgid "Allowance split for multiple practices (%(counter)s practice)"
 msgid_plural "Allowance split for multiple practices (%(counter)s practices)"
 msgstr[0] "Pauschalen-Aufteilung bei mehreren Tätigkeiten (%(counter)s Praxis)"
 msgstr[1] "Pauschalen-Aufteilung bei mehreren Tätigkeiten (%(counter)s Praxen)"
 
-#: templates/my_practice/tax_year_summary.html:54
+#: templates/my_practice/tax_year_summary.html:55
 msgid "The home office and commuter allowance may only be claimed once per calendar day."
 msgstr "Home-Office- und Entfernungspauschale dürfen pro Kalendertag nur einmal angesetzt werden."
 
-#: templates/my_practice/tax_year_summary.html:55
+#: templates/my_practice/tax_year_summary.html:56
 #, python-format
 msgid "The table shows the calculated share of this practice for %(year)s:"
 msgstr "Die Tabelle zeigt den berechneten Anteil dieser Praxis für %(year)s:"
 
-#: templates/my_practice/tax_year_summary.html:61
+#: templates/my_practice/tax_year_summary.html:62
 msgid "Split key"
 msgstr "Aufteilungsschlüssel"
 
-#: templates/my_practice/tax_year_summary.html:62
+#: templates/my_practice/tax_year_summary.html:63
 msgid "Share"
 msgstr "Anteil"
 
-#: templates/my_practice/tax_year_summary.html:63
+#: templates/my_practice/tax_year_summary.html:64
 msgid "Home office allowance"
 msgstr "Home-Office-Pauschale"
 
-#: templates/my_practice/tax_year_summary.html:64
+#: templates/my_practice/tax_year_summary.html:65
 msgid "Commuter allowance"
 msgstr "Pendler-Pauschale"
 
-#: templates/my_practice/tax_year_summary.html:69
+#: templates/my_practice/tax_year_summary.html:70
 #, python-format
 msgid "Revenue (%(this)s / %(total)s total)"
 msgstr "Einnahmen (%(this)s / %(total)s gesamt)"
 
-#: templates/my_practice/tax_year_summary.html:75
+#: templates/my_practice/tax_year_summary.html:76
 #, python-format
 msgid "Session days (%(this)s / %(total)s total)"
 msgstr "Sitzungstage (%(this)s / %(total)s gesamt)"
 
-#: templates/my_practice/tax_year_summary.html:84
+#: templates/my_practice/tax_year_summary.html:85
 msgid "Choose a split key, document it, and use it consistently for all practices."
 msgstr "Einen Schlüssel wählen, dokumentieren und konsistent für alle Praxen verwenden."
 
-#: templates/my_practice/tax_year_summary.html:91
+#: templates/my_practice/tax_year_summary.html:92
 #, python-format
 msgid "Revenue (%(year)s)"
 msgstr "Umsätze (%(year)s)"
 
-#: templates/my_practice/tax_year_summary.html:93
+#: templates/my_practice/tax_year_summary.html:94
 #, python-format
 msgid "%(counter)s invoice • %(total)s"
 msgid_plural "%(counter)s invoices • %(total)s"
 msgstr[0] "%(counter)s Rechnung • %(total)s"
 msgstr[1] "%(counter)s Rechnungen • %(total)s"
 
-#: templates/my_practice/tax_year_summary.html:99
+#: templates/my_practice/tax_year_summary.html:100
 msgid "Monthly breakdown"
 msgstr "Monatliche Aufschlüsselung"
 
-#: templates/my_practice/tax_year_summary.html:104
+#: templates/my_practice/tax_year_summary.html:105
 msgid "Month"
 msgstr "Monat"
 
-#: templates/my_practice/tax_year_summary.html:105
-#: templates/my_practice/tax_year_summary.html:171
+#: templates/my_practice/tax_year_summary.html:106
+#: templates/my_practice/tax_year_summary.html:172
 msgid "Count"
 msgstr "Anzahl"
 
-#: templates/my_practice/tax_year_summary.html:125
+#: templates/my_practice/tax_year_summary.html:126
 #, python-format
 msgid "Show all invoices (%(invoice_count)s)"
 msgstr "Alle Rechnungen anzeigen (%(invoice_count)s)"
 
-#: templates/my_practice/tax_year_summary.html:157
+#: templates/my_practice/tax_year_summary.html:158
 #, python-format
 msgid "Tax-deductible expenses (%(year)s)"
 msgstr "Steuerlich absetzbare Ausgaben (%(year)s)"
 
-#: templates/my_practice/tax_year_summary.html:159
+#: templates/my_practice/tax_year_summary.html:160
 #, python-format
 msgid "%(counter)s expense • %(total)s"
 msgid_plural "%(counter)s expenses • %(total)s"
 msgstr[0] "%(counter)s Ausgabe • %(total)s"
 msgstr[1] "%(counter)s Ausgaben • %(total)s"
 
-#: templates/my_practice/tax_year_summary.html:165
+#: templates/my_practice/tax_year_summary.html:166
 msgid "By category"
 msgstr "Nach Kategorie"
 
-#: templates/my_practice/tax_year_summary.html:193
+#: templates/my_practice/tax_year_summary.html:194
 #, python-format
 msgid "Show all expenses (%(expense_count)s)"
 msgstr "Alle Ausgaben anzeigen (%(expense_count)s)"
 
-#: templates/my_practice/tax_year_summary.html:204
+#: templates/my_practice/tax_year_summary.html:205
 msgid "Clear sorting"
 msgstr "Sortierung aufheben"
 
-#: templates/my_practice/tax_year_summary.html:206
+#: templates/my_practice/tax_year_summary.html:207
 msgid "Sort by tax return"
 msgstr "Nach Steuererklärung sortieren"
 
-#: templates/my_practice/tax_year_summary.html:237
+#: templates/my_practice/tax_year_summary.html:238
 #, python-format
 msgid "Travel costs — commute allowance (%(year)s)"
 msgstr "Fahrtkosten — Entfernungspauschale (%(year)s)"
 
-#: templates/my_practice/tax_year_summary.html:239
+#: templates/my_practice/tax_year_summary.html:240
 #, python-format
 msgid "%(days)s session days at %(km)s km each —"
 msgstr "%(days)s Sitzungstage à %(km)s km —"
 
-#: templates/my_practice/tax_year_summary.html:240
-#: templates/my_practice/tax_year_summary.html:314
+#: templates/my_practice/tax_year_summary.html:241
+#: templates/my_practice/tax_year_summary.html:315
 #, python-format
 msgid "%(total)s deductible"
 msgstr "%(total)s absetzbar"
 
-#: templates/my_practice/tax_year_summary.html:243
-#: templates/my_practice/tax_year_summary.html:317
+#: templates/my_practice/tax_year_summary.html:244
+#: templates/my_practice/tax_year_summary.html:318
 msgid "Show details"
 msgstr "Details anzeigen"
 
-#: templates/my_practice/tax_year_summary.html:249
-#: templates/my_practice/tax_year_summary.html:323
+#: templates/my_practice/tax_year_summary.html:250
+#: templates/my_practice/tax_year_summary.html:324
 msgid "Configured practice days"
 msgstr "Konfigurierte Praxistage"
 
-#: templates/my_practice/tax_year_summary.html:257
+#: templates/my_practice/tax_year_summary.html:258
 #, python-format
 msgid "Days with sessions in %(year)s"
 msgstr "Tage mit Sitzungen in %(year)s"
 
-#: templates/my_practice/tax_year_summary.html:261
-#: templates/my_practice/tax_year_summary.html:341
+#: templates/my_practice/tax_year_summary.html:262
+#: templates/my_practice/tax_year_summary.html:342
 msgid "Calendar-based (weekdays − public holidays − vacation)"
 msgstr "Kalenderbasiert (Wochentage − Feiertage − Urlaub)"
 
-#: templates/my_practice/tax_year_summary.html:266
+#: templates/my_practice/tax_year_summary.html:267
 msgid "Distance (one-way)"
 msgstr "Entfernung (einfach)"
 
-#: templates/my_practice/tax_year_summary.html:270
+#: templates/my_practice/tax_year_summary.html:271
 #, python-format
 msgid "First 20 km × €0.30 × %(days)s days"
 msgstr "Erste 20 km × 0,30 € × %(days)s Tage"
 
-#: templates/my_practice/tax_year_summary.html:275
+#: templates/my_practice/tax_year_summary.html:276
 #, python-format
 msgid "From km 21 (%(remaining_km)s km) × €0.38 × %(days)s days"
 msgstr "Ab km 21 (%(remaining_km)s km) × 0,38 € × %(days)s Tage"
 
-#: templates/my_practice/tax_year_summary.html:280
+#: templates/my_practice/tax_year_summary.html:281
 msgid "Distance allowance total"
 msgstr "Entfernungspauschale gesamt"
 
-#: templates/my_practice/tax_year_summary.html:287
+#: templates/my_practice/tax_year_summary.html:288
 msgid "§ 9 (1) no. 4 EStG. Enter as a business expense in the EÜR (income/expense statement)."
 msgstr "§ 9 Abs. 1 Nr. 4 EStG. Als Betriebsausgabe in der Einnahmenüberschussrechnung eintragen."
 
-#: templates/my_practice/tax_year_summary.html:290
+#: templates/my_practice/tax_year_summary.html:291
 msgid "Adjust distance / practice days ↗"
 msgstr "Entfernung / Praxistage anpassen ↗"
 
-#: templates/my_practice/tax_year_summary.html:299
+#: templates/my_practice/tax_year_summary.html:300
 msgid "Not configured yet."
 msgstr "Noch nicht konfiguriert."
 
-#: templates/my_practice/tax_year_summary.html:300
+#: templates/my_practice/tax_year_summary.html:301
 msgid "Set up distance and practice days in the practice settings ↗"
 msgstr "Entfernung und Praxistage in den Praxiseinstellungen hinterlegen ↗"
 
-#: templates/my_practice/tax_year_summary.html:308
+#: templates/my_practice/tax_year_summary.html:309
 #, python-format
 msgid "Home office allowance (%(year)s)"
 msgstr "Home-Office-Pauschale (%(year)s)"
 
-#: templates/my_practice/tax_year_summary.html:310
+#: templates/my_practice/tax_year_summary.html:311
 #, python-format
 msgid "%(days)s home office days"
 msgstr "%(days)s Home-Office-Tage"
 
-#: templates/my_practice/tax_year_summary.html:312
+#: templates/my_practice/tax_year_summary.html:313
 #, python-format
 msgid "(of which %(capped)s counted)"
 msgstr "(davon %(capped)s berücksichtigt)"
 
-#: templates/my_practice/tax_year_summary.html:331
+#: templates/my_practice/tax_year_summary.html:332
 msgid "Home office weekdays (not practice)"
 msgstr "Home-Office-Wochentage (nicht Praxis)"
 
-#: templates/my_practice/tax_year_summary.html:336
+#: templates/my_practice/tax_year_summary.html:337
 msgid "None"
 msgstr "Keine"
 
-#: templates/my_practice/tax_year_summary.html:345
+#: templates/my_practice/tax_year_summary.html:346
 #, python-format
 msgid "Flat rate: %(days)s days × €6.00"
 msgstr "Pauschale: %(days)s Tage × 6,00 €"
 
-#: templates/my_practice/tax_year_summary.html:349
+#: templates/my_practice/tax_year_summary.html:350
 msgid "Home office allowance total"
 msgstr "Home-Office-Pauschale gesamt"
 
-#: templates/my_practice/tax_year_summary.html:356
+#: templates/my_practice/tax_year_summary.html:357
 msgid "Enter as a business expense in the EÜR (home office allowance)."
 msgstr "Als Betriebsausgabe in der EÜR erfassen (Home-Office-Pauschale)."
 
-#: templates/my_practice/tax_year_summary.html:373
+#: templates/my_practice/tax_year_summary.html:374
 msgid "Less tax-deductible expenses"
 msgstr "Abzgl. steuerlich absetzbare Ausgaben"
 
-#: templates/my_practice/tax_year_summary.html:378
+#: templates/my_practice/tax_year_summary.html:379
 msgid "Less travel costs (commute allowance)"
 msgstr "Abzgl. Fahrtkosten (Entfernungspauschale)"
 
-#: templates/my_practice/tax_year_summary.html:384
+#: templates/my_practice/tax_year_summary.html:385
 msgid "Less home office allowance"
 msgstr "Abzgl. Home-Office-Pauschale"
 
-#: templates/my_practice/tax_year_summary.html:389
+#: templates/my_practice/tax_year_summary.html:390
 msgid "= Profit"
 msgstr "= Gewinn"
 
-#: templates/my_practice/tax_year_summary.html:398
+#: templates/my_practice/tax_year_summary.html:399
 msgid "Saved: "
 msgstr "Gespeichert: "
 
-#: templates/my_practice/tax_year_summary.html:399
+#: templates/my_practice/tax_year_summary.html:400
 msgid "Error saving."
 msgstr "Fehler beim Speichern."
 
-#: templates/my_practice/tax_year_summary.html:402
+#: templates/my_practice/tax_year_summary.html:403
 msgid "Allocation note (e.g. split key used for allowance allocation)"
 msgstr "Aufteilungsnotiz (z. B. verwendeter Schlüssel für Pauschalen-Aufteilung)"
 
-#: templates/my_practice/tax_year_summary.html:404
+#: templates/my_practice/tax_year_summary.html:405
 #, python-format
 msgid "e.g. revenue share therapy 95%% / coaching 5%% for %(year)s"
 msgstr "z. B. Einnahmenanteil Therapie 95 %% / Coaching 5 %% für %(year)s"
 
-#: templates/my_practice/tax_year_summary.html:409
+#: templates/my_practice/tax_year_summary.html:410
 msgid "Save note"
 msgstr "Notiz speichern"
 
-#: templates/my_practice/tax_year_summary.html:411
+#: templates/my_practice/tax_year_summary.html:412
 #, python-format
 msgid "Last saved: %(date)s"
 msgstr "Zuletzt gespeichert: %(date)s"
 
-#: templates/my_practice/tax_year_summary.html:418
+#: templates/my_practice/tax_year_summary.html:419
 #, python-format
 msgid "Workday Audit %(year)s (printable audit list)"
 msgstr "Arbeitstage-Nachweis %(year)s (druckbare Audit-Liste)"
 
-#: templates/my_practice/tax_year_summary.html:425
+#: templates/my_practice/tax_year_summary.html:426
 msgid "Tip:"
 msgstr "Tipp:"
 
-#: templates/my_practice/tax_year_summary.html:425
+#: templates/my_practice/tax_year_summary.html:426
 msgid "Use <kbd>Ctrl+P</kbd> (or <kbd>Cmd+P</kbd>) to print this page as a PDF"
 msgstr "Verwende <kbd>Strg+P</kbd> (oder <kbd>Cmd+P</kbd>) um diese Seite als PDF zu drucken"
 

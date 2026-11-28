@@ -2,6 +2,7 @@
 Tax year summary view - provides comprehensive financial overview for tax purposes.
 """
 
+from datetime import date
 from decimal import Decimal
 from typing import cast
 from urllib.parse import urlencode
@@ -18,9 +19,17 @@ from django.views.decorators.http import require_POST
 from ..forms import TaxYearNoteForm
 from ..models import CompanyExpense, CompanyWithdrawal, TaxYearNote
 from ..utils import DateRangeHelper, RevenueCalculator, TaxYearContextBuilder
+from ..utils.bank_review_helpers import count_unreviewed_auto_expenses
 from ..utils.practice_days import WorkdayAuditCalculator
 from ..utils.tax_context_builder import available_data_years
 from ..utils.view_helpers import get_year_from_request, json_error
+
+
+def _unreviewed_auto_expenses(practice, year: int) -> int:
+    """Count of unreviewed auto-booked expenses in *year* for the tax-page notice."""
+    return count_unreviewed_auto_expenses(
+        practice=practice, date_from=date(year, 1, 1), date_to=date(year, 12, 31)
+    )
 
 
 def tax_year_summary(request: HttpRequest) -> HttpResponse:
@@ -32,6 +41,7 @@ def tax_year_summary(request: HttpRequest) -> HttpResponse:
     context = TaxYearContextBuilder(year, request.current_practice, request.user).build(
         expense_sort=request.GET.get("sort", "date")
     )
+    context["unreviewed_auto_expenses"] = _unreviewed_auto_expenses(request.current_practice, year)
     return render(request, "my_practice/tax_year_summary.html", context)
 
 
@@ -215,6 +225,7 @@ def tax_quarter_overview(request: HttpRequest) -> HttpResponse:
         {
             "quarters": quarters,
             "year": year,
+            "unreviewed_auto_expenses": _unreviewed_auto_expenses(practice, year),
             "available_years": available_years,
             "total_revenue": total_revenue,
             "total_expenses": total_expenses,

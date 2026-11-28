@@ -1,6 +1,7 @@
 """Read-side helpers for the bank review page: which unmatched transactions already have an invoice."""
 
 from collections import Counter
+from datetime import date
 
 from ..models import BankTransaction, Client, ClientAlias, Invoice
 from ..models.base import PracticeScope, scope_to_practice
@@ -23,6 +24,25 @@ def fetch_invoice_maps(
             if invoice.status in result:
                 result[invoice.status][invoice.invoice_number] = invoice
     return result
+
+
+def count_unreviewed_auto_expenses(
+    *, practice: PracticeScope, date_from: date, date_to: date
+) -> int:
+    """Auto-booked expenses in the period that nobody has reviewed yet.
+
+    They already count in the tax figures, so the tax pages warn about them.
+    The period applies to the booked expense's date, the one the figures use.
+    """
+    return (
+        scope_to_practice(BankTransaction.objects.all(), practice)
+        .filter(
+            match_confidence=BankTransaction.Confidence.AUTO_EXPENSE,
+            processed=False,
+            linked_expense__date__range=(date_from, date_to),
+        )
+        .count()
+    )
 
 
 def known_payer_names(*, practice: PracticeScope) -> set[str]:

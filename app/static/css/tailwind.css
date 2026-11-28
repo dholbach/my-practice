@@ -278,6 +278,7 @@
   .info-box          { background: var(--color-surface); color: var(--color-text-primary); border-left-color: var(--color-info); opacity: 0.95; }
   .alert-box.error   { background: var(--color-surface); color: var(--color-text-primary); border-left-color: var(--color-danger); opacity: 0.95; }
   .alert-box.success { background: var(--color-surface); border-left-color: var(--color-success); opacity: 0.95; }
+  .alert-box.warning { background: var(--color-surface); color: var(--color-text-primary); border-left-color: var(--color-warning); opacity: 0.95; }
 
   /* Data table (canonical) */
   .data-table { width: 100%; border-collapse: collapse; background: var(--color-surface); border-radius: 8px; overflow: hidden; }

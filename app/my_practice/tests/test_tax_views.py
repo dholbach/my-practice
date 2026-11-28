@@ -12,6 +12,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from my_practice.models import (
+    BankTransaction,
     Client,
     CompanyExpense,
     CompanyWithdrawal,
@@ -725,3 +726,87 @@ class TaxQuarterOverviewConsistencyTest(TestCase):
         self.assertRedirects(
             response, reverse("tax_quarter_overview") + "?year=2024", fetch_redirect_response=False
         )
+
+
+class UnreviewedAutoExpenseNoticeTest(TestCase):
+    """Tax pages warn about auto-booked expenses nobody has reviewed yet."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="noticeuser", password="12345")
+        self.http = TestClient()
+        self.http.login(username="noticeuser", password="12345")
+        self.practice = create_test_practice(name="Notice Practice", slug="tax-notice")
+        self.practice.users.add(self.user)
+        select_practice(self.http, self.practice)
+        self._count = 0
+
+    def _auto_expense(self, practice=None, day=date(2025, 3, 5), processed=False):
+        practice = practice or self.practice
+        self._count += 1
+        expense = CompanyExpense.objects.create(
+            date=day,
+            description="Test GmbH",
+            amount=Decimal("20.00"),
+            category="supplies",
+            practice=practice,
+        )
+        return BankTransaction.objects.create(
+            practice=practice,
+            transaction_date=day,
+            value_date=day,
+            payer_name="Test GmbH",
+            payer_iban="",
+            reference=f"Rechnung {self._count}",
+            amount=Decimal("-20.00"),
+            balance_after=Decimal("1000.00"),
+            account_iban="DE89370400440532013000",
+            match_confidence=BankTransaction.Confidence.AUTO_EXPENSE,
+            linked_expense=expense,
+            processed=processed,
+        )
+
+    def _pages(self, year=2025):
+        for name in ("tax_year_summary", "tax_quarter_overview"):
+            yield name, self.http.get(reverse(name), {"year": year})
+
+    def test_notice_shown_for_unreviewed_auto_expense(self):
+        self._auto_expense()
+        for name, response in self._pages():
+            with self.subTest(page=name):
+                self.assertEqual(response.context["unreviewed_auto_expenses"], 1)
+                self.assertContains(response, "noch nicht geprüft")
+
+    def test_notice_gone_once_processed(self):
+        self._auto_expense(processed=True)
+        for name, response in self._pages():
+            with self.subTest(page=name):
+                self.assertEqual(response.context["unreviewed_auto_expenses"], 0)
+                self.assertNotContains(response, "noch nicht geprüft")
+
+    def test_notice_limited_to_shown_year(self):
+        self._auto_expense(day=date(2024, 12, 31))
+        for name, response in self._pages():
+            with self.subTest(page=name):
+                self.assertEqual(response.context["unreviewed_auto_expenses"], 0)
+
+    def test_notice_ignores_other_practices(self):
+        other = create_test_practice(name="Other Practice", slug="tax-notice-other")
+        self._auto_expense(practice=other)
+        for name, response in self._pages():
+            with self.subTest(page=name):
+                self.assertEqual(response.context["unreviewed_auto_expenses"], 0)
+
+    def test_notice_renders_in_german(self):
+        self._auto_expense()
+        self._auto_expense()
+        response = self.http.get(
+            reverse("tax_year_summary"), {"year": 2025}, headers={"accept-language": "de"}
+        )
+        self.assertContains(response, "2 automatisch gebuchte Ausgaben aus 2025")
+
+    def test_notice_renders_in_english(self):
+        self._auto_expense()
+        response = self.http.get(
+            reverse("tax_year_summary"), {"year": 2025}, headers={"accept-language": "en"}
+        )
+        self.assertContains(response, "1 auto-booked expense in 2025 has not been reviewed yet")

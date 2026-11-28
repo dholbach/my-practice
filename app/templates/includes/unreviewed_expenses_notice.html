@@ -1,0 +1,6 @@
+{% load i18n %}{% if unreviewed_auto_expenses %}
+<div class="alert-box warning" role="status">
+    {% blocktrans count count=unreviewed_auto_expenses %}{{ count }} auto-booked expense in {{ year }} has not been reviewed yet and already counts in these figures.{% plural %}{{ count }} auto-booked expenses in {{ year }} have not been reviewed yet and already count in these figures.{% endblocktrans %}
+    <a href="{% url 'bank_expense_review' %}" class="text-link">{% trans "Review expenses" %}</a>
+</div>
+{% endif %}
