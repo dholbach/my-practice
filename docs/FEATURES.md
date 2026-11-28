@@ -174,6 +174,7 @@ chronological record; this document only tracks current state.
 - ✅ Tax Year Summary (Steuererklärung)
 - ✅ Tax Year Summary: Home-Office-Pauschale (calendar-based non-practice weekdays minus holidays/time off), deduction row in Gewinn, improved link contrast
 - ✅ Tax quarter overview: all four quarters now sum exactly to the year total — invoices with no `paid_date` fall into their `invoice_date` quarter (same fallback rule as the year summary)
+- ✅ Tax year summary and quarter overview warn when the year holds auto-booked bank expenses nobody has reviewed yet (they already count in the figures), with a link to the expense review
 - ✅ Annual tax settlement (Steuerbescheid) tracking on the quarterly tax page
 - ✅ Revenue Report with filters — opens on the current year (falling back to the most recent year with paid invoices), rather than an empty page awaiting a dropdown pick
 - ✅ Client detail reports

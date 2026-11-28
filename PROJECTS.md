@@ -30,7 +30,7 @@ grep -rho "P-[0-9]\{3\}" --include=*.md --include=*.py --include=*.html \
 
 ## 🔍 Recent Activity
 
-- **2026-11-26 — v0.16.0 released**: P-006 clinical documentation v1 (reminders, Clinical/Admin modes, timeline search, case sheet, case review; migrations 0016–0020). Iteration continues from daily use (#738–#740).
+- **2026-11-28 — Unreviewed auto-expense notice**: the tax year summary and quarter overview show how many auto-booked bank expenses of the year are still unreviewed (#570).
 - **2026-11-26 — Calendar queue clears itself**: billing review found 130 pending calendar events whose sessions were already invoiced (the fetch creates the session, but only queue approval marked the event imported). Invoicing a session now imports its event (signal), migration 0021 clears existing backlogs, and the fetch no longer auto-cancels a session that is already invoiced. Follow-ups: past events flagged missing are settled by looking them up in Google (#750), the quick-action import refuses a session billed under another service type (#751), and pytest runs reset the active language between tests (#752).
 
 > Ältere Einträge: [docs/CHANGELOG.md](docs/CHANGELOG.md)
